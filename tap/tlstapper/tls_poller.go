@@ -170,7 +170,7 @@ func dissect(extension *api.Extension, reader *tlsReader, isRequest bool, tcpid 
 		Progress: reader.progress,
 		Parent: &api.TcpStream{
 			Origin:          api.Ebpf,
-			SuperIdentifier: &api.SuperIdentifier{},
+			ProtoIdentifier: &api.ProtoIdentifier{},
 		},
 		IsClient:      isRequest,
 		TcpID:         tcpid,

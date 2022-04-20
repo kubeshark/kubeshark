@@ -110,7 +110,7 @@ type SuperTimer struct {
 	CaptureTime time.Time
 }
 
-type SuperIdentifier struct {
+type ProtoIdentifier struct {
 	Protocol       *Protocol
 	IsClosedOthers bool
 }

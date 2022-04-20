@@ -19,7 +19,7 @@ import (
 type TcpStream struct {
 	Id              int64
 	isClosed        bool
-	SuperIdentifier *SuperIdentifier
+	ProtoIdentifier *ProtoIdentifier
 	TcpState        *reassembly.TCPSimpleFSM
 	fsmerr          bool
 	Optchecker      reassembly.TCPOptionCheck
@@ -181,24 +181,24 @@ func (t *TcpStream) Close() {
 }
 
 func (t *TcpStream) CloseOtherProtocolDissectors(protocol *Protocol) {
-	if t.SuperIdentifier.IsClosedOthers {
+	if t.ProtoIdentifier.IsClosedOthers {
 		return
 	}
 
-	t.SuperIdentifier.Protocol = protocol
+	t.ProtoIdentifier.Protocol = protocol
 
 	for i := range t.Clients {
 		reader := &t.Clients[i]
-		if reader.Extension.Protocol != t.SuperIdentifier.Protocol {
+		if reader.Extension.Protocol != t.ProtoIdentifier.Protocol {
 			reader.Close()
 		}
 	}
 	for i := range t.Servers {
 		reader := &t.Servers[i]
-		if reader.Extension.Protocol != t.SuperIdentifier.Protocol {
+		if reader.Extension.Protocol != t.ProtoIdentifier.Protocol {
 			reader.Close()
 		}
 	}
 
-	t.SuperIdentifier.IsClosedOthers = true
+	t.ProtoIdentifier.IsClosedOthers = true
 }

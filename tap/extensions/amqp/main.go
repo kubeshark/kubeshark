@@ -76,7 +76,7 @@ func (d dissecting) Dissect(b *bufio.Reader, reader *api.TcpReader, options *sha
 	var lastMethodFrameMessage Message
 
 	for {
-		if reader.Parent.SuperIdentifier.Protocol != nil && reader.Parent.SuperIdentifier.Protocol != &protocol {
+		if reader.Parent.ProtoIdentifier.Protocol != nil && reader.Parent.ProtoIdentifier.Protocol != &protocol {
 			return errors.New("Identified by another protocol")
 		}
 

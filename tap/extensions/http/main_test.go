@@ -110,7 +110,7 @@ func TestDissect(t *testing.T) {
 			Request:  0,
 			Response: 0,
 		}
-		superIdentifier := &api.SuperIdentifier{}
+		protoIdentifier := &api.ProtoIdentifier{}
 
 		// Request
 		pathClient := _path
@@ -130,7 +130,7 @@ func TestDissect(t *testing.T) {
 			Progress: &api.ReadProgress{},
 			Parent: &api.TcpStream{
 				Origin:          api.Pcap,
-				SuperIdentifier: superIdentifier,
+				ProtoIdentifier: protoIdentifier,
 			},
 			IsClient:      true,
 			TcpID:         tcpIDClient,
@@ -160,7 +160,7 @@ func TestDissect(t *testing.T) {
 			Progress: &api.ReadProgress{},
 			Parent: &api.TcpStream{
 				Origin:          api.Pcap,
-				SuperIdentifier: superIdentifier,
+				ProtoIdentifier: protoIdentifier,
 			},
 			IsClient:      false,
 			TcpID:         tcpIDServer,

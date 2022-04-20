@@ -65,7 +65,7 @@ func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcp *layers.T
 		TcpState:        reassembly.NewTCPSimpleFSM(fsmOptions),
 		Ident:           fmt.Sprintf("%s:%s", net, transport),
 		Optchecker:      reassembly.NewTCPOptionCheck(),
-		SuperIdentifier: &api.SuperIdentifier{},
+		ProtoIdentifier: &api.ProtoIdentifier{},
 		StreamsMap:      factory.streamsMap,
 		Origin:          getPacketOrigin(ac),
 	}
