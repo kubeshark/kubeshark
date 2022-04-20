@@ -67,10 +67,9 @@ func (streamMap *tcpStreamMap) closeTimedoutTcpStreamChannels() {
 		time.Sleep(closeTimedoutTcpChannelsIntervalMs)
 		_debug.FreeOSMemory()
 		streamMap.streams.Range(func(key interface{}, value interface{}) bool {
-			streamWrapper := value.(*tcpStreamWrapper)
-			stream := streamWrapper.stream
+			stream := value.(*tcpStream)
 			if stream.superIdentifier.Protocol == nil {
-				if !stream.isClosed && time.Now().After(streamWrapper.createdAt.Add(tcpStreamChannelTimeout)) {
+				if !stream.isClosed && time.Now().After(stream.createdAt.Add(tcpStreamChannelTimeout)) {
 					stream.Close()
 					diagnose.AppStats.IncDroppedTcpStreams()
 					logger.Log.Debugf("Dropped an unidentified TCP stream because of timeout. Total dropped: %d Total Goroutines: %d Timeout (ms): %d",

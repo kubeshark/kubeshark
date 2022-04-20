@@ -3,7 +3,6 @@ package tap
 import (
 	"fmt"
 	"sync"
-	"time"
 
 	"github.com/up9inc/mizu/shared/logger"
 	"github.com/up9inc/mizu/tap/api"
@@ -25,12 +24,6 @@ type tcpStreamFactory struct {
 	streamsMap *tcpStreamMap
 	ownIps     []string
 	opts       *TapOpts
-}
-
-type tcpStreamWrapper struct {
-	stream        *tcpStream
-	reqResMatcher api.RequestResponseMatcher
-	createdAt     time.Time
 }
 
 func NewTcpStreamFactory(emitter api.Emitter, streamsMap *tcpStreamMap, opts *TapOpts) *tcpStreamFactory {
@@ -123,11 +116,7 @@ func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcp *layers.T
 				reqResMatcher: reqResMatcher,
 			})
 
-			factory.streamsMap.Store(stream.id, &tcpStreamWrapper{
-				stream:        stream,
-				reqResMatcher: reqResMatcher,
-				createdAt:     time.Now(),
-			})
+			factory.streamsMap.Store(stream.id, stream)
 
 			factory.wg.Add(2)
 			// Start reading from channel stream.reader.bytes

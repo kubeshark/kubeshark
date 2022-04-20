@@ -3,6 +3,7 @@ package tap
 import (
 	"encoding/binary"
 	"sync"
+	"time"
 
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers" // pulls in all layers decoders
@@ -30,6 +31,8 @@ type tcpStream struct {
 	servers         []tcpReader
 	ident           string
 	origin          api.Capture
+	reqResMatcher   api.RequestResponseMatcher
+	createdAt       time.Time
 	sync.Mutex
 	streamsMap *tcpStreamMap
 }
@@ -71,9 +74,9 @@ func (t *tcpStream) Accept(tcp *layers.TCP, ci gopacket.CaptureInfo, dir reassem
 	if !accept {
 		diagnose.InternalStats.RejectOpt++
 	}
-	
+
 	*start = true
-	
+
 	return accept
 }
 
