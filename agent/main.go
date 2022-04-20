@@ -320,6 +320,7 @@ func dialSocketWithRetry(socketAddress string, retryAmount int, retryDelay time.
 	for i := 1; i < retryAmount; i++ {
 		socketConnection, _, err := dialer.Dial(socketAddress, nil)
 		if err != nil {
+			lastErr = err
 			if i < retryAmount {
 				logger.Log.Infof("socket connection to %s failed: %v, retrying %d out of %d in %d seconds...", socketAddress, err, i, retryAmount, retryDelay/time.Second)
 				time.Sleep(retryDelay)

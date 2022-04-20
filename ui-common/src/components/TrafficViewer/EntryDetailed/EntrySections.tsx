@@ -1,13 +1,13 @@
 import styles from "./EntrySections.module.sass";
-import React, {useState} from "react";
-import {SyntaxHighlighter} from "../../UI/SyntaxHighlighter/index";
+import React, { useState } from "react";
+import { SyntaxHighlighter } from "../../UI/SyntaxHighlighter/index";
 import CollapsibleContainer from "../../UI/CollapsibleContainer";
 import FancyTextDisplay from "../../UI/FancyTextDisplay";
 import Queryable from "../../UI/Queryable";
 import Checkbox from "../../UI/Checkbox";
 import ProtobufDecoder from "protobuf-decoder";
-import {default as jsonBeautify} from "json-beautify";
-import {default as xmlBeautify} from "xml-formatter";
+import { default as jsonBeautify } from "json-beautify";
+import { default as xmlBeautify } from "xml-formatter";
 
 interface EntryViewLineProps {
     label: string;
@@ -18,40 +18,40 @@ interface EntryViewLineProps {
     useTooltip?: boolean;
 }
 
-const EntryViewLine: React.FC<EntryViewLineProps> = ({label, value, selector = "", overrideQueryValue = "", displayIconOnMouseOver = true, useTooltip = true}) => {
+const EntryViewLine: React.FC<EntryViewLineProps> = ({ label, value, selector = "", overrideQueryValue = "", displayIconOnMouseOver = true, useTooltip = true }) => {
     let query: string;
     if (!selector) {
         query = "";
     } else if (overrideQueryValue) {
         query = `${selector} == ${overrideQueryValue}`;
-    } else if (typeof(value) == "string") {
+    } else if (typeof (value) == "string") {
         query = `${selector} == "${JSON.stringify(value).slice(1, -1)}"`;
     } else {
         query = `${selector} == ${value}`;
     }
     return (label && <tr className={styles.dataLine}>
-                    <td className={`${styles.dataKey}`}>
-                        <Queryable
-                            query={query}
-                            style={{float: "right", height: "18px"}}
-                            iconStyle={{marginRight: "20px"}}
-                            flipped={true}
-                            useTooltip={useTooltip}
-                            displayIconOnMouseOver={displayIconOnMouseOver}
-                        >
-                            {label}
-                        </Queryable>
-                    </td>
-                <td>
-                    <FancyTextDisplay
-                        className={styles.dataValue}
-                        text={value}
-                        applyTextEllipsis={false}
-                        flipped={true}
-                        displayIconOnMouseOver={true}
-                    />
-                </td>
-            </tr>) || null;
+        <td className={`${styles.dataKey}`}>
+            <Queryable
+                query={query}
+                style={{ float: "right", height: "18px" }}
+                iconStyle={{ marginRight: "20px" }}
+                flipped={true}
+                useTooltip={useTooltip}
+                displayIconOnMouseOver={displayIconOnMouseOver}
+            >
+                {label}
+            </Queryable>
+        </td>
+        <td>
+            <FancyTextDisplay
+                className={styles.dataValue}
+                text={value}
+                applyTextEllipsis={false}
+                flipped={true}
+                displayIconOnMouseOver={true}
+            />
+        </td>
+    </tr>) || null;
 }
 
 
@@ -63,11 +63,11 @@ interface EntrySectionCollapsibleTitleProps {
     query?: string,
 }
 
-const EntrySectionCollapsibleTitle: React.FC<EntrySectionCollapsibleTitleProps> = ({title, color, expanded, setExpanded, query = ""}) => {
+const EntrySectionCollapsibleTitle: React.FC<EntrySectionCollapsibleTitleProps> = ({ title, color, expanded, setExpanded, query = "" }) => {
     return <div className={styles.title}>
         <div
             className={`${styles.button} ${expanded ? styles.expanded : ''}`}
-            style={{backgroundColor: color}}
+            style={{ backgroundColor: color }}
             onClick={() => {
                 setExpanded(!expanded)
             }}
@@ -90,12 +90,12 @@ interface EntrySectionContainerProps {
     query?: string,
 }
 
-export const EntrySectionContainer: React.FC<EntrySectionContainerProps> = ({title, color, children, query = ""}) => {
+export const EntrySectionContainer: React.FC<EntrySectionContainerProps> = ({ title, color, children, query = "" }) => {
     const [expanded, setExpanded] = useState(true);
     return <CollapsibleContainer
         className={styles.collapsibleContainer}
         expanded={expanded}
-        title={<EntrySectionCollapsibleTitle title={title} color={color} expanded={expanded} setExpanded={setExpanded} query={query}/>}
+        title={<EntrySectionCollapsibleTitle title={title} color={color} expanded={expanded} setExpanded={setExpanded} query={query} />}
     >
         {children}
     </CollapsibleContainer>
@@ -130,6 +130,7 @@ export const EntryBodySection: React.FC<EntryBodySectionProps> = ({
 
     const isBase64Encoding = encoding === 'base64';
     const supportsPrettying = supportedFormats.some(format => contentType?.indexOf(format) > -1);
+    const [isDecodeGrpc, setIsDecodeGrpc] = useState(true);
 
     const formatTextBody = (body: any): string => {
         if (!decodeBase64) return body;
@@ -141,7 +142,7 @@ export const EntryBodySection: React.FC<EntryBodySectionProps> = ({
             if (jsonLikeFormats.some(format => contentType?.indexOf(format) > -1)) {
                 if (!isPretty) return bodyBuf;
                 return jsonBeautify(JSON.parse(bodyBuf), null, 2, 80);
-            }  else if (xmlLikeFormats.some(format => contentType?.indexOf(format) > -1)) {
+            } else if (xmlLikeFormats.some(format => contentType?.indexOf(format) > -1)) {
                 if (!isPretty) return bodyBuf;
                 return xmlBeautify(bodyBuf, {
                     indentation: '  ',
@@ -157,41 +158,47 @@ export const EntryBodySection: React.FC<EntryBodySectionProps> = ({
                 return jsonBeautify(protobufDecoded, null, 2, 80);
             }
         } catch (error) {
-            console.error(error);
+            if(isDecodeGrpc)
+                setIsDecodeGrpc(false);
+            if (!String(error).includes("More than one message in")){
+                console.error(error);
+            }
         }
         return bodyBuf;
     }
 
     return <React.Fragment>
         {content && content?.length > 0 && <EntrySectionContainer
-                                                title={title}
-                                                color={color}
-                                                query={`${selector} == r".*"`}
-                                            >
-            <div style={{display: 'flex', alignItems: 'center', alignContent: 'center', margin: "5px 0"}}>
-                {supportsPrettying && <div style={{paddingTop: 3}}>
-                    <Checkbox checked={isPretty} onToggle={() => {setIsPretty(!isPretty)}}/>
+            title={title}
+            color={color}
+            query={`${selector} == r".*"`}
+        >
+            <div style={{ display: 'flex', alignItems: 'center', alignContent: 'center', margin: "5px 0" }}>
+                {supportsPrettying && <div style={{ paddingTop: 3 }}>
+                    <Checkbox checked={isPretty} onToggle={() => { setIsPretty(!isPretty) }} />
                 </div>}
-                {supportsPrettying && <span style={{marginLeft: '.2rem'}}>Pretty</span>}
+                {supportsPrettying && <span style={{ marginLeft: '.2rem' }}>Pretty</span>}
 
-                <div style={{paddingTop: 3, paddingLeft: supportsPrettying ? 20 : 0}}>
-                    <Checkbox checked={showLineNumbers} onToggle={() => {setShowLineNumbers(!showLineNumbers)}}/>
+                <div style={{ paddingTop: 3, paddingLeft: supportsPrettying ? 20 : 0 }}>
+                    <Checkbox checked={showLineNumbers} onToggle={() => { setShowLineNumbers(!showLineNumbers) }} />
                 </div>
-                <span style={{marginLeft: '.2rem'}}>Line numbers</span>
-
-                {isBase64Encoding && <div style={{paddingTop: 3, paddingLeft: 20}}>
-                    <Checkbox checked={decodeBase64} onToggle={() => {setDecodeBase64(!decodeBase64)}}/>
+                <span style={{ marginLeft: '.2rem' }}>Line numbers</span>      
+                {isBase64Encoding && <div style={{ paddingTop: 3, paddingLeft: 20 }}>
+                    <Checkbox checked={decodeBase64} onToggle={() => { setDecodeBase64(!decodeBase64) }} />
                 </div>}
-                {isBase64Encoding && <span style={{marginLeft: '.2rem'}}>Decode Base64</span>}
-            </div>
+                {isBase64Encoding && <span style={{ marginLeft: '.2rem' }}>Decode Base64</span>}
+                {!isDecodeGrpc && <span style={{ fontSize: '12px', color: '#DB2156', marginLeft: '.8rem' }}>More than one message in protobuf payload is not supported</span>}
+            </div>  
 
-            <SyntaxHighlighter
+            <SyntaxHighlighter  
                 code={formatTextBody(content)}
                 showLineNumbers={showLineNumbers}
             />
+
         </EntrySectionContainer>}
     </React.Fragment>
 }
+
 
 interface EntrySectionProps {
     title: string,
@@ -199,7 +206,7 @@ interface EntrySectionProps {
     arrayToIterate: any[],
 }
 
-export const EntryTableSection: React.FC<EntrySectionProps> = ({title, color, arrayToIterate}) => {
+export const EntryTableSection: React.FC<EntrySectionProps> = ({ title, color, arrayToIterate }) => {
     let arrayToIterateSorted: any[];
     if (arrayToIterate) {
         arrayToIterateSorted = arrayToIterate.sort((a, b) => {
@@ -220,7 +227,7 @@ export const EntryTableSection: React.FC<EntrySectionProps> = ({title, color, ar
                 <EntrySectionContainer title={title} color={color}>
                     <table>
                         <tbody id={`tbody-${title}`}>
-                            {arrayToIterateSorted.map(({name, value, selector}, index) => <EntryViewLine
+                            {arrayToIterateSorted.map(({ name, value, selector }, index) => <EntryViewLine
                                 key={index}
                                 label={name}
                                 value={value}
@@ -228,7 +235,7 @@ export const EntryTableSection: React.FC<EntrySectionProps> = ({title, color, ar
                             />)}
                         </tbody>
                     </table>
-                </EntrySectionContainer> : <span/>
+                </EntrySectionContainer> : <span />
         }
     </React.Fragment>
 }
@@ -247,7 +254,7 @@ interface EntryPolicySectionCollapsibleTitleProps {
     setExpanded: any;
 }
 
-const EntryPolicySectionCollapsibleTitle: React.FC<EntryPolicySectionCollapsibleTitleProps> = ({label, matched, expanded, setExpanded}) => {
+const EntryPolicySectionCollapsibleTitle: React.FC<EntryPolicySectionCollapsibleTitleProps> = ({ label, matched, expanded, setExpanded }) => {
     return <div className={styles.title}>
         <span
             className={`${styles.button}
@@ -260,8 +267,8 @@ const EntryPolicySectionCollapsibleTitle: React.FC<EntryPolicySectionCollapsible
         </span>
         <span>
             <tr className={styles.dataLine}>
-            <td className={`${styles.dataKey} ${styles.rulesTitleSuccess}`}>{label}</td>
-            <td className={`${styles.dataKey} ${matched === 'Success' ? styles.rulesMatchedSuccess : styles.rulesMatchedFailure}`}>{matched}</td>
+                <td className={`${styles.dataKey} ${styles.rulesTitleSuccess}`}>{label}</td>
+                <td className={`${styles.dataKey} ${matched === 'Success' ? styles.rulesMatchedSuccess : styles.rulesMatchedFailure}`}>{matched}</td>
             </tr>
         </span>
     </div>
@@ -273,28 +280,28 @@ interface EntryPolicySectionContainerProps {
     children?: any;
 }
 
-export const EntryPolicySectionContainer: React.FC<EntryPolicySectionContainerProps> = ({label, matched, children}) => {
+export const EntryPolicySectionContainer: React.FC<EntryPolicySectionContainerProps> = ({ label, matched, children }) => {
     const [expanded, setExpanded] = useState(false);
     return <CollapsibleContainer
         className={styles.collapsibleContainer}
         expanded={expanded}
-        title={<EntryPolicySectionCollapsibleTitle label={label} matched={matched} expanded={expanded} setExpanded={setExpanded}/>}
+        title={<EntryPolicySectionCollapsibleTitle label={label} matched={matched} expanded={expanded} setExpanded={setExpanded} />}
     >
         {children}
     </CollapsibleContainer>
 }
 
-export const EntryTablePolicySection: React.FC<EntryPolicySectionProps> = ({title, color, latency, arrayToIterate}) => {
+export const EntryTablePolicySection: React.FC<EntryPolicySectionProps> = ({ title, color, latency, arrayToIterate }) => {
     return <React.Fragment>
         {
             arrayToIterate && arrayToIterate.length > 0 ?
                 <React.Fragment>
-                <EntrySectionContainer title={title} color={color}>
-                    <table>
-                        <tbody>
-                            {arrayToIterate.map(({rule, matched}, index) => {
+                    <EntrySectionContainer title={title} color={color}>
+                        <table>
+                            <tbody>
+                                {arrayToIterate.map(({ rule, matched }, index) => {
                                     return (
-                                        <EntryPolicySectionContainer key={index} label={rule.Name} matched={matched && (rule.Type === 'slo' ? rule.ResponseTime >= latency : true)? "Success" : "Failure"}>
+                                        <EntryPolicySectionContainer key={index} label={rule.Name} matched={matched && (rule.Type === 'slo' ? rule.ResponseTime >= latency : true) ? "Success" : "Failure"}>
                                             {
                                                 <React.Fragment>
                                                     {
@@ -330,11 +337,11 @@ export const EntryTablePolicySection: React.FC<EntryPolicySectionProps> = ({titl
                                         </EntryPolicySectionContainer>
                                     )
                                 }
-                            )
-                            }
-                        </tbody>
-                    </table>
-                </EntrySectionContainer>
+                                )
+                                }
+                            </tbody>
+                        </table>
+                    </EntrySectionContainer>
                 </React.Fragment> : <span className={styles.noRules}>No rules could be applied to this request.</span>
         }
     </React.Fragment>
@@ -347,7 +354,7 @@ interface EntryContractSectionProps {
     contractContent: string,
 }
 
-export const EntryContractSection: React.FC<EntryContractSectionProps> = ({color, requestReason, responseReason, contractContent}) => {
+export const EntryContractSection: React.FC<EntryContractSectionProps> = ({ color, requestReason, responseReason, contractContent }) => {
     return <React.Fragment>
         {requestReason && <EntrySectionContainer title="Request" color={color}>
             {requestReason}
