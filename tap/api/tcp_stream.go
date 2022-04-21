@@ -157,17 +157,15 @@ func (t *TcpStream) ReassemblyComplete(ac reassembly.AssemblerContext) bool {
 }
 
 func (t *TcpStream) Close() {
-	shouldReturn := false
 	t.Lock()
+	defer t.Unlock()
+
 	if t.isClosed {
-		shouldReturn = true
-	} else {
-		t.isClosed = true
-	}
-	t.Unlock()
-	if shouldReturn {
 		return
 	}
+
+	t.isClosed = true
+
 	t.StreamsMap.Delete(t.Id)
 
 	for i := range t.Clients {
@@ -181,6 +179,9 @@ func (t *TcpStream) Close() {
 }
 
 func (t *TcpStream) CloseOtherProtocolDissectors(protocol *Protocol) {
+	t.Lock()
+	defer t.Unlock()
+
 	if t.ProtoIdentifier.IsClosedOthers {
 		return
 	}
