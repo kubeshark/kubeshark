@@ -75,7 +75,7 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
         try {
             setIsLoading(true)
 
-            let serviceMapData: ServiceMapGraph = await getServiceMapDataApi()
+            const serviceMapData: ServiceMapGraph = await getServiceMapDataApi()
             setServiceMapApiData(serviceMapData)
             const newGraphData: GraphData = { nodes: [], edges: [] }
             newGraphData.nodes = serviceMapData.nodes.map(mapNodesDatatoGraph)
