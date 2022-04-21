@@ -130,7 +130,7 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
         return [...resolved, ...unResolved]
     }, [serviceMapApiData])
 
-    const filterServiceMap = (newProtocolsFilters?: any[], newServiceFilters?: string[]) => {
+    const filterServiceMap = useCallback((newProtocolsFilters?: any[], newServiceFilters?: string[]) => {
         const filterProt = newProtocolsFilters || checkedProtocols
         const filterService = newServiceFilters || checkedServices
         setCheckedProtocols(filterProt)
@@ -140,12 +140,14 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
             edges: serviceMapApiData.edges?.filter(edge => filterProt.includes(edge.protocol.abbr)).map(mapEdgesDatatoGraph)
         }
         setGraphData(newGraphData);
-    }
+    }, [checkedProtocols, checkedServices, serviceMapApiData])
+
+
 
     useEffect(() => {
         if (checkedServices.length > 0) return // only after refresh
         filterServiceMap(checkedProtocols, getServicesForFilter.map(x => x.key).filter(serviceName => !Utils.isIpAddress(serviceName)))
-    }, [getServicesForFilter])
+    }, [getServicesForFilter, checkedServices])
 
     useEffect(() => {
         getServiceMapData()
