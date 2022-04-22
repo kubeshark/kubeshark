@@ -383,6 +383,16 @@ func (provider *Provider) GetMizuApiServerPodObject(opts *ApiServerOptions, moun
 			Volumes:                       volumes,
 			DNSPolicy:                     core.DNSClusterFirstWithHostNet,
 			TerminationGracePeriodSeconds: new(int64),
+			Tolerations: []core.Toleration{
+				{
+					Operator: core.TolerationOpExists,
+					Effect: core.TaintEffectNoExecute,
+				},
+				{
+					Operator: core.TolerationOpExists,
+					Effect: core.TaintEffectNoSchedule,
+				},
+			},
 		},
 	}
 
@@ -805,20 +815,14 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 	agentResources := applyconfcore.ResourceRequirements().WithRequests(agentResourceRequests).WithLimits(agentResourceLimits)
 	agentContainer.WithResources(agentResources)
 
-	matchFields := make([]*applyconfcore.NodeSelectorTermApplyConfiguration, 0)
-	for _, nodeName := range nodeNames {
-		nodeSelectorRequirement := applyconfcore.NodeSelectorRequirement()
-		nodeSelectorRequirement.WithKey("metadata.name")
-		nodeSelectorRequirement.WithOperator(core.NodeSelectorOpIn)
-		nodeSelectorRequirement.WithValues(nodeName)
-
-		nodeSelectorTerm := applyconfcore.NodeSelectorTerm()
-		nodeSelectorTerm.WithMatchFields(nodeSelectorRequirement)
-		matchFields = append(matchFields, nodeSelectorTerm)
-	}
-
+	nodeSelectorRequirement := applyconfcore.NodeSelectorRequirement()
+	nodeSelectorRequirement.WithKey("kubernetes.io/hostname")
+	nodeSelectorRequirement.WithOperator(core.NodeSelectorOpIn)
+	nodeSelectorRequirement.WithValues(nodeNames...)
+	nodeSelectorTerm := applyconfcore.NodeSelectorTerm()
+	nodeSelectorTerm.WithMatchExpressions(nodeSelectorRequirement)
 	nodeSelector := applyconfcore.NodeSelector()
-	nodeSelector.WithNodeSelectorTerms(matchFields...)
+	nodeSelector.WithNodeSelectorTerms(nodeSelectorTerm)
 	nodeAffinity := applyconfcore.NodeAffinity()
 	nodeAffinity.WithRequiredDuringSchedulingIgnoredDuringExecution(nodeSelector)
 	affinity := applyconfcore.Affinity()
