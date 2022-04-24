@@ -13,7 +13,7 @@
     "@types/jest": "^26.0.22",
     "@types/node": "^12.20.10",
     "@uiw/react-textarea-code-editor": "^1.4.12",
-    "@up9/mizu-common": "1.0.147",
+    "@up9/mizu-common": "file:up9-mizu-common-0.0.0.tgz",
     "axios": "^0.25.0",
     "core-js": "^3.20.2",
     "craco-babel-loader": "^1.0.3",
@@ -27,7 +27,6 @@
     "node-fetch": "^3.1.1",
     "node-sass": "^6.0.0",
     "numeral": "^2.0.6",
-    "protobuf-decoder": "^0.1.0",
     "react": "^17.0.2",
     "react-copy-to-clipboard": "^5.0.3",
     "react-dom": "^17.0.2",
@@ -48,7 +47,8 @@
     "npm-link-shared": "^0.5.6",
     "react-app-rewire-alias": "^1.1.7",
     "react-dev-utils": "^12.0.0",
-    "recoil": "^0.5.2"
+    "recoil": "^0.5.2",
+    "react-error-overlay": "6.0.9"
   },
   "scripts": {
     "start": "craco start",

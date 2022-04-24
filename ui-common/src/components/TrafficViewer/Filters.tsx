@@ -16,21 +16,21 @@ import trafficViewerApiAtom from "../../recoil/TrafficViewerApi"
 
 interface FiltersProps {
     backgroundColor: string
-    openWebSocket: (query: string, resetEntries: boolean) => void;
+    reopenConnection: any;
 }
 
-export const Filters: React.FC<FiltersProps> = ({backgroundColor, openWebSocket}) => {
+export const Filters: React.FC<FiltersProps> = ({backgroundColor, reopenConnection}) => {
     return <div className={styles.container}>
         <QueryForm
             backgroundColor={backgroundColor}
-            openWebSocket={openWebSocket}
+            reopenConnection={reopenConnection}
         />
     </div>;
 };
 
 interface QueryFormProps {
     backgroundColor: string
-    openWebSocket: (query: string, resetEntries: boolean) => void;
+    reopenConnection: any;
 }
 
 export const modalStyle = {
@@ -47,11 +47,10 @@ export const modalStyle = {
     color: '#000',
 };
 
-export const QueryForm: React.FC<QueryFormProps> = ({backgroundColor, openWebSocket}) => {
+export const QueryForm: React.FC<QueryFormProps> = ({backgroundColor, reopenConnection}) => {
 
     const formRef = useRef<HTMLFormElement>(null);
     const [query, setQuery] = useRecoilState(queryAtom);
-    const trafficViewerApi = useRecoilValue(trafficViewerApiAtom)
 
     const [openModal, setOpenModal] = useState(false);
 
@@ -63,12 +62,7 @@ export const QueryForm: React.FC<QueryFormProps> = ({backgroundColor, openWebSoc
     }
 
     const handleSubmit = (e) => {
-        trafficViewerApi.webSocket.close()
-        if (query) {
-            openWebSocket(`(${query}) and leftOff(-1)`, true);
-        } else {
-            openWebSocket(`leftOff(-1)`, true);
-        }
+        reopenConnection();
         e.preventDefault();
     }
 

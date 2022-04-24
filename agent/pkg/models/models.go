@@ -9,11 +9,10 @@ import (
 
 	basenine "github.com/up9inc/basenine/client/go"
 	"github.com/up9inc/mizu/shared"
-	"github.com/up9inc/mizu/tap"
 )
 
 type EntriesRequest struct {
-	LeftOff   int    `form:"leftOff" validate:"required,min=-1"`
+	LeftOff   string `form:"leftOff" validate:"required"`
 	Direction int    `form:"direction" validate:"required,oneof='1' '-1'"`
 	Query     string `form:"query"`
 	Limit     int    `form:"limit" validate:"required,min=1"`
@@ -42,11 +41,6 @@ type WebSocketFullEntryMessage struct {
 type WebSocketTappedEntryMessage struct {
 	*shared.WebSocketMessageMetadata
 	Data *tapApi.OutputChannelItem
-}
-
-type WebsocketOutboundLinkMessage struct {
-	*shared.WebSocketMessageMetadata
-	Data *tap.OutboundLink
 }
 
 type AuthStatus struct {

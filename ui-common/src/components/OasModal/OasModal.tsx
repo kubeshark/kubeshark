@@ -8,6 +8,7 @@ import openApiLogo from 'assets/openApiLogo.png'
 import { redocThemeOptions } from "./redocThemeOptions";
 import React from "react";
 import { Select } from "../UI/Select";
+import { TOAST_CONTAINER_ID } from "../../configs/Consts";
 
 
 const modalStyle = {
@@ -42,10 +43,10 @@ const OasModal = ({ openModal, handleCloseModal, getOasServices, getOasByService
     try {
       const data = await getOasByService(selectedService ? selectedService : oasServices[0]);
       setSelectedServiceSpec(data);
-      } catch (e) {
-        toast.error("Error occurred while fetching service OAS spec");
-        console.error(e);
-      }  
+    } catch (e) {
+      toast.error("Error occurred while fetching service OAS spec", { containerId: TOAST_CONTAINER_ID });
+      console.error(e);
+    }
   };
 
   useEffect(() => {
@@ -61,7 +62,7 @@ const OasModal = ({ openModal, handleCloseModal, getOasServices, getOasByService
 
   useEffect(() => {
     onSelectedOASService(null);
-  },[oasServices])
+  }, [oasServices])
 
   return (
     <Modal
@@ -80,28 +81,28 @@ const OasModal = ({ openModal, handleCloseModal, getOasServices, getOasByService
           <div className={style.boxContainer}>
             <div className={style.selectHeader}>
               <div><img src={openApiLogo} alt="openAPI" className={style.openApilogo} /></div>
-              <div className={style.title}>OpenAPI</div>
+              <div className={style.title}>Service Catalog</div>
             </div>
             <div style={{ cursor: "pointer" }}>
               <img src={closeIcon} alt="close" onClick={handleCloseModal} />
             </div>
           </div>
           <div className={style.selectContainer} >
-              <FormControl>
-                <Select
-                  labelId="service-select-label"
-                  id="service-select"
-                  value={selectedServiceName}
-                  onChangeCb={onSelectedOASService}
-                >
-                  {oasServices.map((service) => (
-                    <MenuItem key={service} value={service}>
-                      {service}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-            </div>
+            <FormControl>
+              <Select
+                labelId="service-select-label"
+                id="service-select"
+                value={selectedServiceName}
+                onChangeCb={onSelectedOASService}
+              >
+                {oasServices.map((service) => (
+                  <MenuItem key={service} value={service}>
+                    {service}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </div>
           <div className={style.borderLine}></div>
           <div className={style.redoc}>
             {selectedServiceSpec && <RedocStandalone

@@ -13,10 +13,11 @@ jobs:
       - uses: actions/stale@v3
         with:
           days-before-issue-stale: 30
-          days-before-issue-close: 14
+          days-before-issue-close: -1
+          exempt-issue-labels: "enhancement"
           stale-issue-label: "stale"
           stale-issue-message: "This issue is stale because it has been open for 30 days with no activity."
-          close-issue-message: "This issue was closed because it has been inactive for 14 days since being marked as stale."
+          close-issue-message: ""
           days-before-pr-stale: -1
           days-before-pr-close: -1
           repo-token: ${{ secrets.GITHUB_TOKEN }}

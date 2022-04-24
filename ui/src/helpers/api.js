@@ -25,18 +25,8 @@ export default class Api {
         source = null;
     }
 
-    serviceMapStatus = async () => {
-        const response = await client.get("/servicemap/status");
-        return response.data;
-    }
-
     serviceMapData = async () => {
         const response = await client.get(`/servicemap/get`);
-        return response.data;
-    }
-
-    serviceMapReset = async () => {
-        const response = await client.get(`/servicemap/reset`);
         return response.data;
     }
 
@@ -69,11 +59,6 @@ export default class Api {
             console.error(thrown.message);
             return {};
         });
-        return response.data;
-    }
-
-    getRecentTLSLinks = async () => {
-        const response = await client.get("/status/recentTLSLinks");
         return response.data;
     }
 

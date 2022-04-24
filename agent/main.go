@@ -18,6 +18,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/up9inc/mizu/agent/pkg/dependency"
 	"github.com/up9inc/mizu/agent/pkg/elastic"
+	"github.com/up9inc/mizu/agent/pkg/entries"
 	"github.com/up9inc/mizu/agent/pkg/middlewares"
 	"github.com/up9inc/mizu/agent/pkg/models"
 	"github.com/up9inc/mizu/agent/pkg/oas"
@@ -198,7 +199,7 @@ func runInHarReaderMode() {
 func enableExpFeatureIfNeeded() {
 	if config.Config.OAS {
 		oasGenerator := dependency.GetInstance(dependency.OasGeneratorDependency).(oas.OasGenerator)
-		oasGenerator.Start()
+		oasGenerator.Start(nil)
 	}
 	if config.Config.ServiceMap {
 		serviceMapGenerator := dependency.GetInstance(dependency.ServiceMapGeneratorDependency).(servicemap.ServiceMap)
@@ -319,6 +320,7 @@ func dialSocketWithRetry(socketAddress string, retryAmount int, retryDelay time.
 	for i := 1; i < retryAmount; i++ {
 		socketConnection, _, err := dialer.Dial(socketAddress, nil)
 		if err != nil {
+			lastErr = err
 			if i < retryAmount {
 				logger.Log.Infof("socket connection to %s failed: %v, retrying %d out of %d in %d seconds...", socketAddress, err, i, retryAmount, retryDelay/time.Second)
 				time.Sleep(retryDelay)
@@ -371,4 +373,7 @@ func handleIncomingMessageAsTapper(socketConnection *websocket.Conn) {
 func initializeDependencies() {
 	dependency.RegisterGenerator(dependency.ServiceMapGeneratorDependency, func() interface{} { return servicemap.GetDefaultServiceMapInstance() })
 	dependency.RegisterGenerator(dependency.OasGeneratorDependency, func() interface{} { return oas.GetDefaultOasGeneratorInstance() })
+	dependency.RegisterGenerator(dependency.EntriesProvider, func() interface{} { return &entries.BasenineEntriesProvider{} })
+	dependency.RegisterGenerator(dependency.EntriesSocketStreamer, func() interface{} { return &api.BasenineEntryStreamer{} })
+	dependency.RegisterGenerator(dependency.EntryStreamerSocketConnector, func() interface{} { return &api.DefaultEntryStreamerSocketConnector{} })
 }

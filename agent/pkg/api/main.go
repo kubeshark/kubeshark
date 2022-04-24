@@ -11,6 +11,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/up9inc/mizu/agent/pkg/models"
+
 	"github.com/up9inc/mizu/agent/pkg/dependency"
 	"github.com/up9inc/mizu/agent/pkg/elastic"
 	"github.com/up9inc/mizu/agent/pkg/har"
@@ -19,8 +21,6 @@ import (
 
 	"github.com/up9inc/mizu/agent/pkg/servicemap"
 
-	"github.com/up9inc/mizu/agent/pkg/models"
-	"github.com/up9inc/mizu/agent/pkg/oas"
 	"github.com/up9inc/mizu/agent/pkg/resolver"
 	"github.com/up9inc/mizu/agent/pkg/utils"
 
@@ -103,11 +103,19 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 		panic("Channel of captured messages is nil")
 	}
 
+BasenineReconnect:
 	connection, err := basenine.NewConnection(shared.BasenineHost, shared.BaseninePort)
 	if err != nil {
-		panic(err)
+		logger.Log.Errorf("Can't establish a new connection to Basenine server: %v", err)
+		time.Sleep(shared.BasenineReconnectInterval * time.Second)
+		goto BasenineReconnect
 	}
-	connection.InsertMode()
+	if err = connection.InsertMode(); err != nil {
+		logger.Log.Errorf("Insert mode call failed: %v", err)
+		connection.Close()
+		time.Sleep(shared.BasenineReconnectInterval * time.Second)
+		goto BasenineReconnect
+	}
 
 	disableOASValidation := false
 	ctx := context.Background()
@@ -120,19 +128,24 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 	for item := range outputItems {
 		extension := extensionsMap[item.Protocol.Name]
 		resolvedSource, resolvedDestionation, namespace := resolveIP(item.ConnectionInfo)
+		
+		if namespace == "" && item.Namespace != tapApi.UNKNOWN_NAMESPACE {
+			namespace = item.Namespace
+		}
+		
 		mizuEntry := extension.Dissector.Analyze(item, resolvedSource, resolvedDestionation, namespace)
 		if extension.Protocol.Name == "http" {
 			if !disableOASValidation {
 				var httpPair tapApi.HTTPRequestResponsePair
 				if err := json.Unmarshal([]byte(mizuEntry.HTTPPair), &httpPair); err != nil {
 					logger.Log.Error(err)
+				} else {
+					contract := handleOAS(ctx, doc, router, httpPair.Request.Payload.RawRequest, httpPair.Response.Payload.RawResponse, contractContent)
+					mizuEntry.ContractStatus = contract.Status
+					mizuEntry.ContractRequestReason = contract.RequestReason
+					mizuEntry.ContractResponseReason = contract.ResponseReason
+					mizuEntry.ContractContent = contract.Content
 				}
-
-				contract := handleOAS(ctx, doc, router, httpPair.Request.Payload.RawRequest, httpPair.Response.Payload.RawResponse, contractContent)
-				mizuEntry.ContractStatus = contract.Status
-				mizuEntry.ContractRequestReason = contract.RequestReason
-				mizuEntry.ContractResponseReason = contract.ResponseReason
-				mizuEntry.ContractContent = contract.Content
 			}
 
 			harEntry, err := har.NewEntry(mizuEntry.Request, mizuEntry.Response, mizuEntry.StartTime, mizuEntry.ElapsedTime)
@@ -140,30 +153,22 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 				rules, _, _ := models.RunValidationRulesState(*harEntry, mizuEntry.Destination.Name)
 				mizuEntry.Rules = rules
 			}
-
-			entryWSource := oas.EntryWithSource{
-				Entry:       *harEntry,
-				Source:      mizuEntry.Source.Name,
-				Destination: mizuEntry.Destination.Name,
-				Id:          mizuEntry.Id,
-			}
-
-			if entryWSource.Destination == "" {
-				entryWSource.Destination = mizuEntry.Destination.IP + ":" + mizuEntry.Destination.Port
-			}
-
-			oasGenerator := dependency.GetInstance(dependency.OasGeneratorDependency).(oas.OasGeneratorSink)
-			oasGenerator.PushEntry(&entryWSource)
 		}
 
 		data, err := json.Marshal(mizuEntry)
 		if err != nil {
-			panic(err)
+			logger.Log.Errorf("Error while marshaling entry: %v", err)
+			continue
 		}
 
 		providers.EntryAdded(len(data))
 
-		connection.SendText(string(data))
+		if err = connection.SendText(string(data)); err != nil {
+			logger.Log.Errorf("An error occured while inserting a new record to database: %v", err)
+			connection.Close()
+			time.Sleep(shared.BasenineReconnectInterval * time.Second)
+			goto BasenineReconnect
+		}
 
 		serviceMapGenerator := dependency.GetInstance(dependency.ServiceMapGeneratorDependency).(servicemap.ServiceMapSink)
 		serviceMapGenerator.NewTCPEntry(mizuEntry.Source, mizuEntry.Destination, &item.Protocol)
