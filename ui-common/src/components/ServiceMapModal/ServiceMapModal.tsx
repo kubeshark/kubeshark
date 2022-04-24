@@ -78,15 +78,8 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
             const serviceMapData: ServiceMapGraph = await getServiceMapDataApi()
             setServiceMapApiData(serviceMapData)
             const newGraphData: GraphData = { nodes: [], edges: [] }
-
-            if (serviceMapData.nodes) {
-                newGraphData.nodes = serviceMapData.nodes.map(mapNodesDatatoGraph)
-            }
-
-            if (serviceMapData.edges) {
-                newGraphData.edges = serviceMapData.edges.map(mapEdgesDatatoGraph)
-            }
-
+            newGraphData.nodes = serviceMapData.nodes.map(mapNodesDatatoGraph)
+            newGraphData.edges = serviceMapData.edges.map(mapEdgesDatatoGraph)
             setGraphData(newGraphData)
         } catch (ex) {
             toast.error("An error occurred while loading Mizu Service Map, see console for mode details", { containerId: TOAST_CONTAINER_ID });
@@ -130,7 +123,7 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
         return [...resolved, ...unResolved]
     }, [serviceMapApiData])
 
-    const filterServiceMap = (newProtocolsFilters?: any[], newServiceFilters?: string[]) => {
+    const filterServiceMap = useCallback((newProtocolsFilters?: any[], newServiceFilters?: string[]) => {
         const filterProt = newProtocolsFilters || checkedProtocols
         const filterService = newServiceFilters || checkedServices
         setCheckedProtocols(filterProt)
@@ -140,11 +133,15 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
             edges: serviceMapApiData.edges?.filter(edge => filterProt.includes(edge.protocol.abbr)).map(mapEdgesDatatoGraph)
         }
         setGraphData(newGraphData);
-    }
+    }, [checkedProtocols, checkedServices, serviceMapApiData])
+
+
 
     useEffect(() => {
-        if (checkedServices.length > 0) return // only after refresh
-        filterServiceMap(checkedProtocols, getServicesForFilter.map(x => x.key).filter(serviceName => !Utils.isIpAddress(serviceName)))
+        if (checkedServices.length > 0)
+            filterServiceMap()
+        else
+            filterServiceMap(checkedProtocols, getServicesForFilter.map(x => x.key).filter(serviceName => !Utils.isIpAddress(serviceName)))
     }, [getServicesForFilter])
 
     useEffect(() => {
@@ -176,7 +173,7 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
                 <Box sx={modalStyle}>
                     <div className={styles.modalContainer}>
                         <div className={styles.filterSection}>
-                            <Resizeable minWidth={170}>
+                            <Resizeable minWidth={170} maxWidth={320}>
                                 <div className={styles.filterWrapper}>
                                     <div className={styles.protocolsFilterList}>
                                         <SelectList items={protocols} checkBoxWidth="5%" tableName={"Protocols"} multiSelect={true}
