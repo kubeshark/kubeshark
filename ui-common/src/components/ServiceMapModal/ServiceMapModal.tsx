@@ -178,7 +178,7 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
                 <Box sx={modalStyle}>
                     <div className={styles.modalContainer}>
                         <div className={styles.filterSection}>
-                            <Resizeable minWidth={170}>
+                            <Resizeable minWidth={170} maxWidth={320}>
                                 <div className={styles.filterWrapper}>
                                     <div className={styles.protocolsFilterList}>
                                         <SelectList items={protocols} checkBoxWidth="5%" tableName={"Protocols"} multiSelect={true}
