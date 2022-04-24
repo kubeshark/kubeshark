@@ -142,7 +142,7 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
             filterServiceMap()
         else
             filterServiceMap(checkedProtocols, getServicesForFilter.map(x => x.key).filter(serviceName => !Utils.isIpAddress(serviceName)))
-    }, [getServicesForFilter, checkedServices, checkedProtocols])
+    }, [getServicesForFilter])
 
     useEffect(() => {
         getServiceMapData()
