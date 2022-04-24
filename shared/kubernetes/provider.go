@@ -826,7 +826,7 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 		nodeSelectorTerm.WithMatchFields(nodeSelectorRequirement)
 		matchFields = append(matchFields, nodeSelectorTerm)
 	}
-	
+
 	nodeSelector := applyconfcore.NodeSelector()
 	nodeSelector.WithNodeSelectorTerms(matchFields...)
 	nodeAffinity := applyconfcore.NodeAffinity()
