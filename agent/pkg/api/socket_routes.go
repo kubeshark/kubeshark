@@ -123,22 +123,23 @@ func SendToSocket(socketId int, message []byte) error {
 		return fmt.Errorf("socket %v is disconnected", socketId)
 	}
 
-	var sent = false
-	time.AfterFunc(time.Second*5, func() {
-		if !sent {
-			logger.Log.Error("socket timed out")
-			socketCleanup(socketId, socketObj)
-		}
-	})
-
 	socketObj.lock.Lock() // gorilla socket panics from concurrent writes to a single socket
-	err := socketObj.connection.WriteMessage(1, message)
-	socketObj.lock.Unlock()
-	sent = true
+	defer socketObj.lock.Unlock()
 
-	if err != nil {
-		return fmt.Errorf("failed to write message to socket %v, err: %w", socketId, err)
+	if connectedWebsockets[socketId] == nil {
+		return fmt.Errorf("socket %v is disconnected", socketId)
 	}
+
+	if err := socketObj.connection.SetWriteDeadline(time.Now().Add(time.Second * 10)); err != nil {
+		socketCleanup(socketId, socketObj)
+		return fmt.Errorf("error setting timeout to socket %v, err: %v", socketId, err)
+	}
+
+	if err := socketObj.connection.WriteMessage(websocket.TextMessage, message); err != nil {
+		socketCleanup(socketId, socketObj)
+		return fmt.Errorf("failed to write message to socket %v, err: %v", socketId, err)
+	}
+
 	return nil
 }
 
