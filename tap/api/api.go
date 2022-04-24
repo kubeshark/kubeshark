@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"net"
@@ -18,6 +19,10 @@ import (
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/tap/api/diagnose"
 )
+
+var checksum = flag.Bool("checksum", false, "Check TCP checksum")                                                      // global
+var nooptcheck = flag.Bool("nooptcheck", true, "Do not check TCP options (useful to ignore MSS on captures with TSO)") // global
+var ignorefsmerr = flag.Bool("ignorefsmerr", true, "Ignore TCP FSM errors")                                            // global
 
 const mizuTestEnvVar = "MIZU_TEST"
 const UNKNOWN_NAMESPACE = ""

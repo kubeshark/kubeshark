@@ -45,17 +45,38 @@ func (t *TcpStream) Accept(tcp *layers.TCP, ci gopacket.CaptureInfo, dir reassem
 			t.fsmerr = true
 			diagnose.InternalStats.RejectConnFsm++
 		}
+		if !*ignorefsmerr {
+			return false
+		}
 	}
 	// Options
 	err := t.Optchecker.Accept(tcp, ci, dir, nextSeq, start)
 	if err != nil {
 		diagnose.TapErrors.SilentError("OptionChecker-rejection", "%s: Packet rejected by OptionChecker: %s", t.Ident, err)
 		diagnose.InternalStats.RejectOpt++
+		if !*nooptcheck {
+			return false
+		}
+	}
+	// Checksum
+	accept := true
+	if *checksum {
+		c, err := tcp.ComputeChecksum()
+		if err != nil {
+			diagnose.TapErrors.SilentError("ChecksumCompute", "%s: Got error computing checksum: %s", t.Ident, err)
+			accept = false
+		} else if c != 0x0 {
+			diagnose.TapErrors.SilentError("Checksum", "%s: Invalid checksum: 0x%x", t.Ident, c)
+			accept = false
+		}
+	}
+	if !accept {
+		diagnose.InternalStats.RejectOpt++
 	}
 
 	*start = true
 
-	return true
+	return accept
 }
 
 func (t *TcpStream) ReassembledSG(sg reassembly.ScatterGather, ac reassembly.AssemblerContext) {
