@@ -142,15 +142,16 @@ func (g *defaultOasGenerator) runGenerator() {
 
 func (g *defaultOasGenerator) handleEntry(mizuEntry *api.Entry) {
 	if mizuEntry.Protocol.Name == "http" {
+		dest := mizuEntry.Destination.Name
+		if dest == "" {
+			logger.Log.Debugf("OAS: Unresolved entry %d", mizuEntry.Id)
+			return
+		}
+
 		entry, err := har.NewEntry(mizuEntry.Request, mizuEntry.Response, mizuEntry.StartTime, mizuEntry.ElapsedTime)
 		if err != nil {
 			logger.Log.Warningf("Failed to turn MizuEntry %d into HAR Entry: %s", mizuEntry.Id, err)
 			return
-		}
-
-		dest := mizuEntry.Destination.Name
-		if dest == "" {
-			dest = mizuEntry.Destination.IP + ":" + mizuEntry.Destination.Port
 		}
 
 		entryWSource := &EntryWithSource{
