@@ -123,7 +123,7 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
         return [...resolved, ...unResolved]
     }, [serviceMapApiData])
 
-    const filterServiceMap = (newProtocolsFilters?: any[], newServiceFilters?: string[]) => {
+    const filterServiceMap = useCallback((newProtocolsFilters?: any[], newServiceFilters?: string[]) => {
         const filterProt = newProtocolsFilters || checkedProtocols
         const filterService = newServiceFilters || checkedServices
         setCheckedProtocols(filterProt)
@@ -133,7 +133,9 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
             edges: serviceMapApiData.edges?.filter(edge => filterProt.includes(edge.protocol.abbr)).map(mapEdgesDatatoGraph)
         }
         setGraphData(newGraphData);
-    }
+    }, [checkedProtocols, checkedServices, serviceMapApiData])
+
+
 
     useEffect(() => {
         if (checkedServices.length > 0)
@@ -171,7 +173,7 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
                 <Box sx={modalStyle}>
                     <div className={styles.modalContainer}>
                         <div className={styles.filterSection}>
-                            <Resizeable minWidth={170}>
+                            <Resizeable minWidth={170} maxWidth={320}>
                                 <div className={styles.filterWrapper}>
                                     <div className={styles.protocolsFilterList}>
                                         <SelectList items={protocols} checkBoxWidth="5%" tableName={"Protocols"} multiSelect={true}
