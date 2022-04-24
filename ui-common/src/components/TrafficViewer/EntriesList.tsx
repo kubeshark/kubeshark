@@ -212,7 +212,7 @@ export const EntriesList: React.FC<EntriesListProps> = ({
         <div>Displaying <b id="entries-length">{entries?.length > MAX_ENTRIES ? MAX_ENTRIES : entries?.length}</b> results out of <b
           id="total-entries">{queriedTotal}</b> total
         </div>
-        {startTime !== 0 && <div>Started listening at <span style={{
+        {startTime !== 0 && <div>First traffic entry time <span style={{
           marginRight: 5,
           fontWeight: 600,
           fontSize: 13
