@@ -11,7 +11,6 @@ import (
 	"github.com/up9inc/mizu/cli/uiUtils"
 	"github.com/up9inc/mizu/shared"
 
-	basenine "github.com/up9inc/basenine/server/lib"
 	"github.com/up9inc/mizu/shared/logger"
 	"github.com/up9inc/mizu/shared/units"
 )
@@ -78,10 +77,6 @@ func (config *TapConfig) GetInsertionFilter() string {
 				insertionFilter = string(b)
 			}
 		}
-	}
-	_, err := basenine.Parse(insertionFilter)
-	if err != nil {
-		logger.Log.Warningf(uiUtils.Warning, fmt.Sprintf("Insertion filter syntax error: %v", err))
 	}
 	return insertionFilter
 }
