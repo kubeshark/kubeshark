@@ -78,15 +78,8 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
             const serviceMapData: ServiceMapGraph = await getServiceMapDataApi()
             setServiceMapApiData(serviceMapData)
             const newGraphData: GraphData = { nodes: [], edges: [] }
-
-            if (serviceMapData.nodes) {
-                newGraphData.nodes = serviceMapData.nodes.map(mapNodesDatatoGraph)
-            }
-
-            if (serviceMapData.edges) {
-                newGraphData.edges = serviceMapData.edges.map(mapEdgesDatatoGraph)
-            }
-
+            newGraphData.nodes = serviceMapData.nodes.map(mapNodesDatatoGraph)
+            newGraphData.edges = serviceMapData.edges.map(mapEdgesDatatoGraph)
             setGraphData(newGraphData)
         } catch (ex) {
             toast.error("An error occurred while loading Mizu Service Map, see console for mode details", { containerId: TOAST_CONTAINER_ID });
@@ -145,9 +138,11 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
 
 
     useEffect(() => {
-        if (checkedServices.length > 0) return // only after refresh
-        filterServiceMap(checkedProtocols, getServicesForFilter.map(x => x.key).filter(serviceName => !Utils.isIpAddress(serviceName)))
-    }, [getServicesForFilter, checkedServices])
+        if (checkedServices.length > 0)
+            filterServiceMap()
+        else
+            filterServiceMap(checkedProtocols, getServicesForFilter.map(x => x.key).filter(serviceName => !Utils.isIpAddress(serviceName)))
+    }, [getServicesForFilter])
 
     useEffect(() => {
         getServiceMapData()
