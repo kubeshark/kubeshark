@@ -113,9 +113,9 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({
 
   const ws = useRef(null);
 
-  const openEmptyWebSocket = (resetEntries: boolean = true, leftoffButton = DEFAULT_LEFTOFF, queryTosend: string = query) => {
-    const queryToSend = queryTosend ? `(${queryTosend}) and leftOff("${leftoffButton}")` : `leftOff("${leftoffButton}")`
-    openWebSocket(queryToSend, resetEntries);
+  const openEmptyWebSocket = (resetEntries: boolean = true, leftOffBottom = DEFAULT_LEFTOFF, queryToSend: string = query) => {
+    const queryForWebSocket = queryToSend ? `(${queryToSend}) and leftOff("${leftOffBottom}")` : `leftOff("${leftOffBottom}")`
+    openWebSocket(queryForWebSocket, resetEntries);
     scrollableRef.current.jumpToBottom();
     setIsSnappedToBottom(true);
   }

@@ -60,7 +60,8 @@ export const EntriesList: React.FC<EntriesListProps> = ({
   const [startTime, setStartTime] = useState(0);
   const [truncatedTimestamp, setTruncatedTimestamp] = useState(0);
 
-  const leftOffBottom = entries.length > 0 ? entries[entries.length - 1].id : DEFAULT_LEFTOFF;
+  const getLeftOffBottom = (entriesArr) => entriesArr.length > 0 ? entriesArr[entriesArr.length - 1].id : DEFAULT_LEFTOFF
+  const leftOffBottom = getLeftOffBottom(entries)
   const scrollbarVisible = scrollableRef.current?.childWrapperRef.current.clientHeight > scrollableRef.current?.wrapperRef.current.clientHeight;
 
   useEffect(() => {
@@ -130,8 +131,10 @@ export const EntriesList: React.FC<EntriesListProps> = ({
       if (isShouldStartStreamData && trafficViewerApi?.fetchEntries) {
         setEntries([])
         const oldEntries = await getOldEntries()
-        const leffOffButton = oldEntries.length > 0 ? oldEntries[oldEntries.length - 1].id : DEFAULT_LEFTOFF
-        openEmptyWebSocket(false, leffOffButton)
+        // we calculate LeftOffBottom because we want to know from where to continue 
+        //1) more records were added in the server during api call 
+        //2) entries state wasnt updated yet
+        openEmptyWebSocket(false, getLeftOffBottom(oldEntries))
       }
       setIsShouldStartStreamData(false)
     })();
