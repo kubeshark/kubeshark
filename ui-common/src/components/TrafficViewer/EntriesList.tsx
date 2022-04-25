@@ -104,7 +104,7 @@ export const EntriesList: React.FC<EntriesListProps> = ({
     }
     setIsLoadingTop(false);
     const oldEntries = [...data.data.reverse()]
-    const newEntries = [...data.data.reverse(), ...entries];
+    const newEntries = [...oldEntries, ...entries];
     if (newEntries.length > MAX_ENTRIES) {
       newEntries.splice(MAX_ENTRIES, newEntries.length - MAX_ENTRIES)
     }
