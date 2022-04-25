@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net"
 	"sync"
+	"time"
 
 	"encoding/binary"
 	"encoding/hex"
@@ -167,7 +168,8 @@ func dissect(extension *api.Extension, reader *tlsReader, isRequest bool, tcpid 
 	b := bufio.NewReader(reader)
 
 	tcpReader := &api.TcpReader{
-		Progress: reader.progress,
+		Progress:    reader.progress,
+		CaptureTime: time.Now(),
 		Parent: &api.TcpStream{
 			Origin:          api.Ebpf,
 			ProtoIdentifier: &api.ProtoIdentifier{},

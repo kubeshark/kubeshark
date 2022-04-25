@@ -212,9 +212,10 @@ func DeleteKubeFile(kubeContext string, namespace string, filename string) error
 }
 
 func getDefaultCommandArgs() []string {
+	agentImageValue := os.Getenv("MIZU_CI_IMAGE")
 	setFlag := "--set"
 	telemetry := "telemetry=false"
-	agentImage := "agent-image=mizu/ci:0.0"
+	agentImage := fmt.Sprintf("agent-image=%s", agentImageValue)
 	imagePullPolicy := "image-pull-policy=IfNotPresent"
 	headless := "headless=true"
 
