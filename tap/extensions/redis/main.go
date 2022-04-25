@@ -35,8 +35,8 @@ func (d dissecting) Ping() {
 	log.Printf("pong %s", protocol.Name)
 }
 
-func (d dissecting) Dissect(b *bufio.Reader, reader *api.TcpReader, options *shared.TrafficFilteringOptions) error {
-	reqResMatcher := reader.ReqResMatcher.(*requestResponseMatcher)
+func (d dissecting) Dissect(b *bufio.Reader, reader api.TcpReader, options *shared.TrafficFilteringOptions) error {
+	reqResMatcher := reader.GetReqResMatcher().(*requestResponseMatcher)
 	is := &RedisInputStream{
 		Reader: b,
 		Buf:    make([]byte, 8192),
@@ -48,10 +48,10 @@ func (d dissecting) Dissect(b *bufio.Reader, reader *api.TcpReader, options *sha
 			return err
 		}
 
-		if reader.IsClient {
-			err = handleClientStream(reader.Progress, reader.Parent.Origin, reader.TcpID, reader.CounterPair, reader.CaptureTime, reader.Emitter, redisPacket, reqResMatcher)
+		if reader.GetIsClient() {
+			err = handleClientStream(reader.GetReadProgress(), reader.GetParent().GetOrigin(), reader.GetTcpID(), reader.GetCounterPair(), reader.GetCaptureTime(), reader.GetEmitter(), redisPacket, reqResMatcher)
 		} else {
-			err = handleServerStream(reader.Progress, reader.Parent.Origin, reader.TcpID, reader.CounterPair, reader.CaptureTime, reader.Emitter, redisPacket, reqResMatcher)
+			err = handleServerStream(reader.GetReadProgress(), reader.GetParent().GetOrigin(), reader.GetTcpID(), reader.GetCounterPair(), reader.GetCaptureTime(), reader.GetEmitter(), redisPacket, reqResMatcher)
 		}
 
 		if err != nil {

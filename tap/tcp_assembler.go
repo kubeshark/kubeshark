@@ -36,7 +36,7 @@ func (c *context) GetCaptureInfo() gopacket.CaptureInfo {
 	return c.CaptureInfo
 }
 
-func NewTcpAssembler(outputItems chan *api.OutputChannelItem, streamsMap *api.TcpStreamMap, opts *TapOpts) *tcpAssembler {
+func NewTcpAssembler(outputItems chan *api.OutputChannelItem, streamsMap api.TcpStreamMap, opts *TapOpts) *tcpAssembler {
 	var emitter api.Emitter = &api.Emitting{
 		AppStats:      &diagnose.AppStatsInst,
 		OutputChannel: outputItems,

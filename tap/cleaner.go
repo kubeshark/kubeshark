@@ -22,7 +22,7 @@ type Cleaner struct {
 	connectionTimeout time.Duration
 	stats             CleanerStats
 	statsMutex        sync.Mutex
-	streamsMap        *api.TcpStreamMap
+	streamsMap        api.TcpStreamMap
 }
 
 func (cl *Cleaner) clean() {
@@ -33,8 +33,8 @@ func (cl *Cleaner) clean() {
 	flushed, closed := cl.assembler.FlushCloseOlderThan(startCleanTime.Add(-cl.connectionTimeout))
 	cl.assemblerMutex.Unlock()
 
-	cl.streamsMap.Streams.Range(func(k, v interface{}) bool {
-		reqResMatcher := v.(*api.TcpStream).ReqResMatcher
+	cl.streamsMap.Range(func(k, v interface{}) bool {
+		reqResMatcher := v.(api.TcpStream).GetReqResMatcher()
 		if reqResMatcher == nil {
 			return true
 		}

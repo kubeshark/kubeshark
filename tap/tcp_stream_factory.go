@@ -3,6 +3,7 @@ package tap
 import (
 	"fmt"
 	"sync"
+	"time"
 
 	"github.com/up9inc/mizu/shared/logger"
 	"github.com/up9inc/mizu/tap/api"
@@ -20,13 +21,13 @@ import (
  */
 type tcpStreamFactory struct {
 	wg         sync.WaitGroup
-	Emitter    api.Emitter
-	streamsMap *api.TcpStreamMap
+	emitter    api.Emitter
+	streamsMap api.TcpStreamMap
 	ownIps     []string
 	opts       *TapOpts
 }
 
-func NewTcpStreamFactory(emitter api.Emitter, streamsMap *api.TcpStreamMap, opts *TapOpts) *tcpStreamFactory {
+func NewTcpStreamFactory(emitter api.Emitter, streamsMap api.TcpStreamMap, opts *TapOpts) *tcpStreamFactory {
 	var ownIps []string
 
 	if localhostIPs, err := getLocalhostIPs(); err != nil {
@@ -39,7 +40,7 @@ func NewTcpStreamFactory(emitter api.Emitter, streamsMap *api.TcpStreamMap, opts
 	}
 
 	return &tcpStreamFactory{
-		Emitter:    emitter,
+		emitter:    emitter,
 		streamsMap: streamsMap,
 		ownIps:     ownIps,
 		opts:       opts,
@@ -57,69 +58,64 @@ func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcp *layers.T
 
 	props := factory.getStreamProps(srcIp, srcPort, dstIp, dstPort)
 	isTapTarget := props.isTapTarget
-	stream := &api.TcpStream{
-		Net:             net,
-		Transport:       transport,
-		IsDNS:           tcp.SrcPort == 53 || tcp.DstPort == 53,
-		IsTapTarget:     isTapTarget,
-		TcpState:        reassembly.NewTCPSimpleFSM(fsmOptions),
-		Ident:           fmt.Sprintf("%s:%s", net, transport),
-		Optchecker:      reassembly.NewTCPOptionCheck(),
-		ProtoIdentifier: &api.ProtoIdentifier{},
-		StreamsMap:      factory.streamsMap,
-		Origin:          getPacketOrigin(ac),
-	}
-	if stream.IsTapTarget {
-		stream.Id = factory.streamsMap.NextId()
+	stream := api.NewTcpStream(net, transport, tcp, isTapTarget, fsmOptions, factory.streamsMap, getPacketOrigin(ac))
+	if stream.GetIsTapTarget() {
+		stream.SetId(factory.streamsMap.NextId())
 		for i, extension := range extensions {
 			reqResMatcher := extension.Dissector.NewResponseRequestMatcher()
 			counterPair := &api.CounterPair{
 				Request:  0,
 				Response: 0,
 			}
-			stream.Clients = append(stream.Clients, api.TcpReader{
-				MsgQueue: make(chan api.TcpReaderDataMsg),
-				Progress: &api.ReadProgress{},
-				Ident:    fmt.Sprintf("%s %s", net, transport),
-				TcpID: &api.TcpID{
-					SrcIP:   srcIp,
-					DstIP:   dstIp,
-					SrcPort: srcPort,
-					DstPort: dstPort,
-				},
-				Parent:        stream,
-				IsClient:      true,
-				IsOutgoing:    props.isOutgoing,
-				Extension:     extension,
-				Emitter:       factory.Emitter,
-				CounterPair:   counterPair,
-				ReqResMatcher: reqResMatcher,
-			})
-			stream.Servers = append(stream.Servers, api.TcpReader{
-				MsgQueue: make(chan api.TcpReaderDataMsg),
-				Progress: &api.ReadProgress{},
-				Ident:    fmt.Sprintf("%s %s", net, transport),
-				TcpID: &api.TcpID{
-					SrcIP:   net.Dst().String(),
-					DstIP:   net.Src().String(),
-					SrcPort: transport.Dst().String(),
-					DstPort: transport.Src().String(),
-				},
-				Parent:        stream,
-				IsClient:      false,
-				IsOutgoing:    props.isOutgoing,
-				Extension:     extension,
-				Emitter:       factory.Emitter,
-				CounterPair:   counterPair,
-				ReqResMatcher: reqResMatcher,
-			})
+			stream.AddClient(
+				api.NewTcpReader(
+					make(chan api.TcpReaderDataMsg),
+					&api.ReadProgress{},
+					fmt.Sprintf("%s %s", net, transport),
+					&api.TcpID{
+						SrcIP:   srcIp,
+						DstIP:   dstIp,
+						SrcPort: srcPort,
+						DstPort: dstPort,
+					},
+					time.Time{},
+					stream,
+					true,
+					props.isOutgoing,
+					extension,
+					factory.emitter,
+					counterPair,
+					reqResMatcher,
+				),
+			)
+			stream.AddServer(
+				api.NewTcpReader(
+					make(chan api.TcpReaderDataMsg),
+					&api.ReadProgress{},
+					fmt.Sprintf("%s %s", net, transport),
+					&api.TcpID{
+						SrcIP:   net.Dst().String(),
+						DstIP:   net.Src().String(),
+						SrcPort: transport.Dst().String(),
+						DstPort: transport.Src().String(),
+					},
+					time.Time{},
+					stream,
+					false,
+					props.isOutgoing,
+					extension,
+					factory.emitter,
+					counterPair,
+					reqResMatcher,
+				),
+			)
 
-			factory.streamsMap.Store(stream.Id, stream)
+			factory.streamsMap.Store(stream.GetId(), stream)
 
 			factory.wg.Add(2)
 			// Start reading from channel stream.reader.bytes
-			go stream.Clients[i].Run(filteringOptions, &factory.wg)
-			go stream.Servers[i].Run(filteringOptions, &factory.wg)
+			go stream.ClientRun(i, filteringOptions, &factory.wg)
+			go stream.ServerRun(i, filteringOptions, &factory.wg)
 		}
 	}
 	return stream

@@ -108,7 +108,6 @@ func TestDissect(t *testing.T) {
 			Request:  0,
 			Response: 0,
 		}
-		protoIdentifier := &api.ProtoIdentifier{}
 
 		// Request
 		pathClient := _path
@@ -125,18 +124,21 @@ func TestDissect(t *testing.T) {
 		}
 		reqResMatcher := dissector.NewResponseRequestMatcher()
 		reqResMatcher.SetMaxTry(10)
-		reader := &api.TcpReader{
-			Progress: &api.ReadProgress{},
-			Parent: &api.TcpStream{
-				Origin:          api.Pcap,
-				ProtoIdentifier: protoIdentifier,
-			},
-			IsClient:      true,
-			TcpID:         tcpIDClient,
-			Emitter:       emitter,
-			CounterPair:   counterPair,
-			ReqResMatcher: reqResMatcher,
-		}
+		stream := api.NewTcpStreamDummy(api.Pcap)
+		reader := api.NewTcpReader(
+			make(chan api.TcpReaderDataMsg),
+			&api.ReadProgress{},
+			"",
+			tcpIDClient,
+			time.Time{},
+			stream,
+			true,
+			false,
+			nil,
+			emitter,
+			counterPair,
+			reqResMatcher,
+		)
 		err = dissector.Dissect(bufferClient, reader, options)
 		if err != nil && err != io.EOF && err != io.ErrUnexpectedEOF {
 			log.Println(err)
@@ -155,18 +157,20 @@ func TestDissect(t *testing.T) {
 			SrcPort: "2",
 			DstPort: "1",
 		}
-		reader = &api.TcpReader{
-			Progress: &api.ReadProgress{},
-			Parent: &api.TcpStream{
-				Origin:          api.Pcap,
-				ProtoIdentifier: protoIdentifier,
-			},
-			IsClient:      false,
-			TcpID:         tcpIDServer,
-			Emitter:       emitter,
-			CounterPair:   counterPair,
-			ReqResMatcher: reqResMatcher,
-		}
+		reader = api.NewTcpReader(
+			make(chan api.TcpReaderDataMsg),
+			&api.ReadProgress{},
+			"",
+			tcpIDServer,
+			time.Time{},
+			stream,
+			false,
+			false,
+			nil,
+			emitter,
+			counterPair,
+			reqResMatcher,
+		)
 		err = dissector.Dissect(bufferServer, reader, options)
 		if err != nil && err != io.EOF && err != io.ErrUnexpectedEOF {
 			log.Println(err)

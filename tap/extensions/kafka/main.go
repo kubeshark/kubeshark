@@ -36,25 +36,25 @@ func (d dissecting) Ping() {
 	log.Printf("pong %s", _protocol.Name)
 }
 
-func (d dissecting) Dissect(b *bufio.Reader, reader *api.TcpReader, options *shared.TrafficFilteringOptions) error {
-	reqResMatcher := reader.ReqResMatcher.(*requestResponseMatcher)
+func (d dissecting) Dissect(b *bufio.Reader, reader api.TcpReader, options *shared.TrafficFilteringOptions) error {
+	reqResMatcher := reader.GetReqResMatcher().(*requestResponseMatcher)
 	for {
-		if reader.Parent.ProtoIdentifier.Protocol != nil && reader.Parent.ProtoIdentifier.Protocol != &_protocol {
+		if reader.GetParent().GetProtoIdentifier().Protocol != nil && reader.GetParent().GetProtoIdentifier().Protocol != &_protocol {
 			return errors.New("Identified by another protocol")
 		}
 
-		if reader.IsClient {
-			_, _, err := ReadRequest(b, reader.TcpID, reader.CounterPair, reader.CaptureTime, reqResMatcher)
+		if reader.GetIsClient() {
+			_, _, err := ReadRequest(b, reader.GetTcpID(), reader.GetCounterPair(), reader.GetCaptureTime(), reqResMatcher)
 			if err != nil {
 				return err
 			}
-			reader.Parent.CloseOtherProtocolDissectors(&_protocol)
+			reader.GetParent().CloseOtherProtocolDissectors(&_protocol)
 		} else {
-			err := ReadResponse(b, reader.Parent.Origin, reader.TcpID, reader.CounterPair, reader.CaptureTime, reader.Emitter, reqResMatcher)
+			err := ReadResponse(b, reader.GetParent().GetOrigin(), reader.GetTcpID(), reader.GetCounterPair(), reader.GetCaptureTime(), reader.GetEmitter(), reqResMatcher)
 			if err != nil {
 				return err
 			}
-			reader.Parent.CloseOtherProtocolDissectors(&_protocol)
+			reader.GetParent().CloseOtherProtocolDissectors(&_protocol)
 		}
 	}
 }

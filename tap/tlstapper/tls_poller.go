@@ -167,18 +167,21 @@ func dissect(extension *api.Extension, reader *tlsReader, isRequest bool, tcpid 
 	tlsEmitter *tlsEmitter, options *shared.TrafficFilteringOptions, reqResMatcher api.RequestResponseMatcher) {
 	b := bufio.NewReader(reader)
 
-	tcpReader := &api.TcpReader{
-		Progress:    reader.progress,
-		CaptureTime: time.Now(),
-		Parent: &api.TcpStream{
-			Origin:          api.Ebpf,
-			ProtoIdentifier: &api.ProtoIdentifier{},
-		},
-		IsClient:      isRequest,
-		TcpID:         tcpid,
-		Emitter:       tlsEmitter,
-		ReqResMatcher: reqResMatcher,
-	}
+	tcpStream := api.NewTcpStreamDummy(api.Ebpf)
+	tcpReader := api.NewTcpReader(
+		make(chan api.TcpReaderDataMsg),
+		reader.progress,
+		"",
+		tcpid,
+		time.Now(),
+		tcpStream,
+		isRequest,
+		false,
+		nil,
+		tlsEmitter,
+		&api.CounterPair{},
+		reqResMatcher,
+	)
 
 	err := extension.Dissector.Dissect(b, tcpReader, options)
 

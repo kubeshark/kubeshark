@@ -2,44 +2,86 @@ package api
 
 import (
 	"encoding/binary"
+	"fmt"
 	"sync"
 	"time"
 
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers" // pulls in all layers decoders
 	"github.com/google/gopacket/reassembly"
+	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/tap/api/diagnose"
 )
+
+type TcpStream interface {
+	Accept(tcp *layers.TCP, ci gopacket.CaptureInfo, dir reassembly.TCPFlowDirection, nextSeq reassembly.Sequence, start *bool, ac reassembly.AssemblerContext) bool
+	ReassembledSG(sg reassembly.ScatterGather, ac reassembly.AssemblerContext)
+	ReassemblyComplete(ac reassembly.AssemblerContext) bool
+	Close()
+	CloseOtherProtocolDissectors(protocol *Protocol)
+	AddClient(reader TcpReader)
+	AddServer(reader TcpReader)
+	ClientRun(index int, filteringOptions *shared.TrafficFilteringOptions, wg *sync.WaitGroup)
+	ServerRun(index int, filteringOptions *shared.TrafficFilteringOptions, wg *sync.WaitGroup)
+	GetOrigin() Capture
+	GetProtoIdentifier() *ProtoIdentifier
+	GetReqResMatcher() RequestResponseMatcher
+	GetIsTapTarget() bool
+	GetId() int64
+	SetId(id int64)
+}
 
 /* It's a connection (bidirectional)
  * Implements gopacket.reassembly.Stream interface (Accept, ReassembledSG, ReassemblyComplete)
  * ReassembledSG gets called when new reassembled data is ready (i.e. bytes in order, no duplicates, complete)
  * In our implementation, we pass information from ReassembledSG to the TcpReader through a shared channel.
  */
-type TcpStream struct {
-	Id              int64
+type tcpStream struct {
+	id              int64
 	isClosed        bool
-	ProtoIdentifier *ProtoIdentifier
-	TcpState        *reassembly.TCPSimpleFSM
+	protoIdentifier *ProtoIdentifier
+	tcpState        *reassembly.TCPSimpleFSM
 	fsmerr          bool
-	Optchecker      reassembly.TCPOptionCheck
-	Net, Transport  gopacket.Flow
-	IsDNS           bool
-	IsTapTarget     bool
-	Clients         []TcpReader
-	Servers         []TcpReader
-	Ident           string
-	Origin          Capture
-	ReqResMatcher   RequestResponseMatcher
+	optchecker      reassembly.TCPOptionCheck
+	net, transport  gopacket.Flow
+	isDNS           bool
+	isTapTarget     bool
+	clients         []TcpReader
+	servers         []TcpReader
+	ident           string
+	origin          Capture
+	reqResMatcher   RequestResponseMatcher
 	createdAt       time.Time
-	StreamsMap      *TcpStreamMap
+	streamsMap      TcpStreamMap
 	sync.Mutex
 }
 
-func (t *TcpStream) Accept(tcp *layers.TCP, ci gopacket.CaptureInfo, dir reassembly.TCPFlowDirection, nextSeq reassembly.Sequence, start *bool, ac reassembly.AssemblerContext) bool {
+func NewTcpStream(net gopacket.Flow, transport gopacket.Flow, tcp *layers.TCP, isTapTarget bool, fsmOptions reassembly.TCPSimpleFSMOptions, streamsMap TcpStreamMap, capture Capture) TcpStream {
+	return &tcpStream{
+		net:             net,
+		transport:       transport,
+		isDNS:           tcp.SrcPort == 53 || tcp.DstPort == 53,
+		isTapTarget:     isTapTarget,
+		tcpState:        reassembly.NewTCPSimpleFSM(fsmOptions),
+		ident:           fmt.Sprintf("%s:%s", net, transport),
+		optchecker:      reassembly.NewTCPOptionCheck(),
+		protoIdentifier: &ProtoIdentifier{},
+		streamsMap:      streamsMap,
+		origin:          capture,
+	}
+}
+
+func NewTcpStreamDummy(capture Capture) TcpStream {
+	return &tcpStream{
+		origin:          capture,
+		protoIdentifier: &ProtoIdentifier{},
+	}
+}
+
+func (t *tcpStream) Accept(tcp *layers.TCP, ci gopacket.CaptureInfo, dir reassembly.TCPFlowDirection, nextSeq reassembly.Sequence, start *bool, ac reassembly.AssemblerContext) bool {
 	// FSM
-	if !t.TcpState.CheckState(tcp, dir) {
-		diagnose.TapErrors.SilentError("FSM-rejection", "%s: Packet rejected by FSM (state:%s)", t.Ident, t.TcpState.String())
+	if !t.tcpState.CheckState(tcp, dir) {
+		diagnose.TapErrors.SilentError("FSM-rejection", "%s: Packet rejected by FSM (state:%s)", t.ident, t.tcpState.String())
 		diagnose.InternalStats.RejectFsm++
 		if !t.fsmerr {
 			t.fsmerr = true
@@ -50,9 +92,9 @@ func (t *TcpStream) Accept(tcp *layers.TCP, ci gopacket.CaptureInfo, dir reassem
 		}
 	}
 	// Options
-	err := t.Optchecker.Accept(tcp, ci, dir, nextSeq, start)
+	err := t.optchecker.Accept(tcp, ci, dir, nextSeq, start)
 	if err != nil {
-		diagnose.TapErrors.SilentError("OptionChecker-rejection", "%s: Packet rejected by OptionChecker: %s", t.Ident, err)
+		diagnose.TapErrors.SilentError("OptionChecker-rejection", "%s: Packet rejected by OptionChecker: %s", t.ident, err)
 		diagnose.InternalStats.RejectOpt++
 		if !*nooptcheck {
 			return false
@@ -63,10 +105,10 @@ func (t *TcpStream) Accept(tcp *layers.TCP, ci gopacket.CaptureInfo, dir reassem
 	if *checksum {
 		c, err := tcp.ComputeChecksum()
 		if err != nil {
-			diagnose.TapErrors.SilentError("ChecksumCompute", "%s: Got error computing checksum: %s", t.Ident, err)
+			diagnose.TapErrors.SilentError("ChecksumCompute", "%s: Got error computing checksum: %s", t.ident, err)
 			accept = false
 		} else if c != 0x0 {
-			diagnose.TapErrors.SilentError("Checksum", "%s: Invalid checksum: 0x%x", t.Ident, c)
+			diagnose.TapErrors.SilentError("Checksum", "%s: Invalid checksum: 0x%x", t.ident, c)
 			accept = false
 		}
 	}
@@ -79,7 +121,7 @@ func (t *TcpStream) Accept(tcp *layers.TCP, ci gopacket.CaptureInfo, dir reassem
 	return accept
 }
 
-func (t *TcpStream) ReassembledSG(sg reassembly.ScatterGather, ac reassembly.AssemblerContext) {
+func (t *tcpStream) ReassembledSG(sg reassembly.ScatterGather, ac reassembly.AssemblerContext) {
 	dir, _, _, skip := sg.Info()
 	length, saved := sg.Lengths()
 	// update stats
@@ -113,7 +155,7 @@ func (t *TcpStream) ReassembledSG(sg reassembly.ScatterGather, ac reassembly.Ass
 		return
 	}
 	data := sg.Fetch(length)
-	if t.IsDNS {
+	if t.isDNS {
 		dns := &layers.DNS{}
 		var decoded []gopacket.LayerType
 		if len(data) < 2 {
@@ -140,44 +182,36 @@ func (t *TcpStream) ReassembledSG(sg reassembly.ScatterGather, ac reassembly.Ass
 		if len(data) > 2+int(dnsSize) {
 			sg.KeepFrom(2 + int(dnsSize))
 		}
-	} else if t.IsTapTarget {
+	} else if t.isTapTarget {
 		if length > 0 {
 			// This is where we pass the reassembled information onwards
 			// This channel is read by an tcpReader object
 			diagnose.AppStatsInst.IncReassembledTcpPayloadsCount()
 			timestamp := ac.GetCaptureInfo().Timestamp
 			if dir == reassembly.TCPDirClientToServer {
-				for i := range t.Clients {
-					reader := &t.Clients[i]
-					reader.Lock()
-					if !reader.isClosed {
-						reader.MsgQueue <- TcpReaderDataMsg{data, timestamp}
-					}
-					reader.Unlock()
+				for i := range t.clients {
+					reader := t.clients[i]
+					reader.SendMsgIfNotClosed(NewTcpReaderDataMsg(data, timestamp))
 				}
 			} else {
-				for i := range t.Servers {
-					reader := &t.Servers[i]
-					reader.Lock()
-					if !reader.isClosed {
-						reader.MsgQueue <- TcpReaderDataMsg{data, timestamp}
-					}
-					reader.Unlock()
+				for i := range t.servers {
+					reader := t.servers[i]
+					reader.SendMsgIfNotClosed(NewTcpReaderDataMsg(data, timestamp))
 				}
 			}
 		}
 	}
 }
 
-func (t *TcpStream) ReassemblyComplete(ac reassembly.AssemblerContext) bool {
-	if t.IsTapTarget && !t.isClosed {
+func (t *tcpStream) ReassemblyComplete(ac reassembly.AssemblerContext) bool {
+	if t.isTapTarget && !t.isClosed {
 		t.Close()
 	}
 	// do not remove the connection to allow last ACK
 	return false
 }
 
-func (t *TcpStream) Close() {
+func (t *tcpStream) Close() {
 	t.Lock()
 	defer t.Unlock()
 
@@ -187,40 +221,80 @@ func (t *TcpStream) Close() {
 
 	t.isClosed = true
 
-	t.StreamsMap.Delete(t.Id)
+	t.streamsMap.Delete(t.id)
 
-	for i := range t.Clients {
-		reader := &t.Clients[i]
+	for i := range t.clients {
+		reader := t.clients[i]
 		reader.Close()
 	}
-	for i := range t.Servers {
-		reader := &t.Servers[i]
+	for i := range t.servers {
+		reader := t.servers[i]
 		reader.Close()
 	}
 }
 
-func (t *TcpStream) CloseOtherProtocolDissectors(protocol *Protocol) {
+func (t *tcpStream) CloseOtherProtocolDissectors(protocol *Protocol) {
 	t.Lock()
 	defer t.Unlock()
 
-	if t.ProtoIdentifier.IsClosedOthers {
+	if t.protoIdentifier.IsClosedOthers {
 		return
 	}
 
-	t.ProtoIdentifier.Protocol = protocol
+	t.protoIdentifier.Protocol = protocol
 
-	for i := range t.Clients {
-		reader := &t.Clients[i]
-		if reader.Extension.Protocol != t.ProtoIdentifier.Protocol {
+	for i := range t.clients {
+		reader := t.clients[i]
+		if reader.GetExtension().Protocol != t.protoIdentifier.Protocol {
 			reader.Close()
 		}
 	}
-	for i := range t.Servers {
-		reader := &t.Servers[i]
-		if reader.Extension.Protocol != t.ProtoIdentifier.Protocol {
+	for i := range t.servers {
+		reader := t.servers[i]
+		if reader.GetExtension().Protocol != t.protoIdentifier.Protocol {
 			reader.Close()
 		}
 	}
 
-	t.ProtoIdentifier.IsClosedOthers = true
+	t.protoIdentifier.IsClosedOthers = true
+}
+
+func (t *tcpStream) AddClient(reader TcpReader) {
+	t.clients = append(t.clients, reader)
+}
+
+func (t *tcpStream) AddServer(reader TcpReader) {
+	t.servers = append(t.servers, reader)
+}
+
+func (t *tcpStream) ClientRun(index int, filteringOptions *shared.TrafficFilteringOptions, wg *sync.WaitGroup) {
+	t.clients[index].Run(filteringOptions, wg)
+}
+
+func (t *tcpStream) ServerRun(index int, filteringOptions *shared.TrafficFilteringOptions, wg *sync.WaitGroup) {
+	t.servers[index].Run(filteringOptions, wg)
+}
+
+func (t *tcpStream) GetOrigin() Capture {
+	return t.origin
+}
+
+func (t *tcpStream) GetProtoIdentifier() *ProtoIdentifier {
+	return t.protoIdentifier
+}
+
+func (t *tcpStream) GetReqResMatcher() RequestResponseMatcher {
+	return t.reqResMatcher
+}
+
+func (t *tcpStream) GetIsTapTarget() bool {
+	return t.isTapTarget
+}
+
+func (t *tcpStream) GetId() int64 {
+	return t.id
+}
+
+func (t *tcpStream) SetId(id int64) {
+	t.id = id
 }

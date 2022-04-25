@@ -10,31 +10,43 @@ import (
 	"github.com/up9inc/mizu/tap/api/diagnose"
 )
 
-type TcpStreamMap struct {
-	Streams  *sync.Map
+type TcpStreamMap interface {
+	Range(f func(key, value interface{}) bool)
+	Store(key, value interface{})
+	Delete(key interface{})
+	NextId() int64
+	CloseTimedoutTcpStreamChannels()
+}
+
+type tcpStreamMap struct {
+	streams  *sync.Map
 	streamId int64
 }
 
-func NewTcpStreamMap() *TcpStreamMap {
-	return &TcpStreamMap{
-		Streams: &sync.Map{},
+func NewTcpStreamMap() TcpStreamMap {
+	return &tcpStreamMap{
+		streams: &sync.Map{},
 	}
 }
 
-func (streamMap *TcpStreamMap) Store(key, value interface{}) {
-	streamMap.Streams.Store(key, value)
+func (streamMap *tcpStreamMap) Range(f func(key, value interface{}) bool) {
+	streamMap.streams.Range(f)
 }
 
-func (streamMap *TcpStreamMap) Delete(key interface{}) {
-	streamMap.Streams.Delete(key)
+func (streamMap *tcpStreamMap) Store(key, value interface{}) {
+	streamMap.streams.Store(key, value)
 }
 
-func (streamMap *TcpStreamMap) NextId() int64 {
+func (streamMap *tcpStreamMap) Delete(key interface{}) {
+	streamMap.streams.Delete(key)
+}
+
+func (streamMap *tcpStreamMap) NextId() int64 {
 	streamMap.streamId++
 	return streamMap.streamId
 }
 
-func (streamMap *TcpStreamMap) CloseTimedoutTcpStreamChannels() {
+func (streamMap *tcpStreamMap) CloseTimedoutTcpStreamChannels() {
 	tcpStreamChannelTimeoutMs := GetTcpChannelTimeoutMs()
 	closeTimedoutTcpChannelsIntervalMs := GetCloseTimedoutTcpChannelsInterval()
 	logger.Log.Infof("Using %d ms as the close timedout TCP stream channels interval", closeTimedoutTcpChannelsIntervalMs/time.Millisecond)
@@ -44,9 +56,9 @@ func (streamMap *TcpStreamMap) CloseTimedoutTcpStreamChannels() {
 		<-ticker.C
 
 		debug.FreeOSMemory()
-		streamMap.Streams.Range(func(key interface{}, value interface{}) bool {
-			stream := value.(*TcpStream)
-			if stream.ProtoIdentifier.Protocol == nil {
+		streamMap.streams.Range(func(key interface{}, value interface{}) bool {
+			stream := value.(*tcpStream)
+			if stream.protoIdentifier.Protocol == nil {
 				if !stream.isClosed && time.Now().After(stream.createdAt.Add(tcpStreamChannelTimeoutMs)) {
 					stream.Close()
 					diagnose.AppStatsInst.IncDroppedTcpStreams()
