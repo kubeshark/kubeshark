@@ -1,11 +1,12 @@
 package tlstapper
 
 import (
+	"sync"
+
 	"github.com/cilium/ebpf/rlimit"
 	"github.com/go-errors/errors"
 	"github.com/up9inc/mizu/shared/logger"
 	"github.com/up9inc/mizu/tap/api"
-	"sync"
 )
 
 const GLOABL_TAP_PID = 0
@@ -58,10 +59,10 @@ func (t *TlsTapper) PollForLogging() {
 }
 
 func (t *TlsTapper) GlobalTap(sslLibrary string) error {
-	return t.tapPid(GLOABL_TAP_PID, sslLibrary)
+	return t.tapPid(GLOABL_TAP_PID, sslLibrary, api.UNKNOWN_NAMESPACE)
 }
 
-func (t *TlsTapper) AddPid(procfs string, pid uint32) error {
+func (t *TlsTapper) AddPid(procfs string, pid uint32, namespace string) error {
 	sslLibrary, err := findSsllib(procfs, pid)
 
 	if err != nil {
@@ -69,7 +70,7 @@ func (t *TlsTapper) AddPid(procfs string, pid uint32) error {
 		return nil // hide the error on purpose, its OK for a process to not use libssl.so
 	}
 
-	return t.tapPid(pid, sslLibrary)
+	return t.tapPid(pid, sslLibrary, namespace)
 }
 
 func (t *TlsTapper) RemovePid(pid uint32) error {
@@ -85,12 +86,13 @@ func (t *TlsTapper) RemovePid(pid uint32) error {
 }
 
 func (t *TlsTapper) ClearPids() {
+	t.poller.clearPids()
 	t.registeredPids.Range(func(key, v interface{}) bool {
 		pid := key.(uint32)
 		if pid == GLOABL_TAP_PID {
 			return true
 		}
-		
+
 		if err := t.RemovePid(pid); err != nil {
 			LogError(err)
 		}
@@ -133,7 +135,7 @@ func setupRLimit() error {
 	return nil
 }
 
-func (t *TlsTapper) tapPid(pid uint32, sslLibrary string) error {
+func (t *TlsTapper) tapPid(pid uint32, sslLibrary string, namespace string) error {
 	logger.Log.Infof("Tapping TLS (pid: %v) (sslLibrary: %v)", pid, sslLibrary)
 
 	newSsl := sslHooks{}
@@ -144,12 +146,14 @@ func (t *TlsTapper) tapPid(pid uint32, sslLibrary string) error {
 
 	t.sslHooksStructs = append(t.sslHooksStructs, newSsl)
 
+	t.poller.addPid(pid, namespace)
+
 	pids := t.bpfObjects.tlsTapperMaps.PidsMap
 
 	if err := pids.Put(pid, uint32(1)); err != nil {
 		return errors.Wrap(err, 0)
 	}
-	
+
 	t.registeredPids.Store(pid, true)
 
 	return nil

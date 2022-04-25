@@ -18,6 +18,7 @@ import (
 )
 
 const mizuTestEnvVar = "MIZU_TEST"
+const UNKNOWN_NAMESPACE = ""
 
 var UnknownIp net.IP = net.IP{0, 0, 0, 0}
 var UnknownPort uint16 = 0
@@ -92,14 +93,15 @@ type RequestResponsePair struct {
 	Response GenericMessage `json:"response"`
 }
 
-// `Protocol` is modified in the later stages of data propagation. Therefore it's not a pointer.
 type OutputChannelItem struct {
+	// `Protocol` is modified in later stages of data propagation. Therefore, it's not a pointer.
 	Protocol       Protocol
 	Capture        Capture
 	Timestamp      int64
 	ConnectionInfo *ConnectionInfo
 	Pair           *RequestResponsePair
 	Summary        *BaseEntry
+	Namespace      string
 }
 
 type SuperTimer struct {

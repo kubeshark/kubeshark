@@ -2,6 +2,7 @@ package controllers
 
 import (
 	"net/http"
+
 	core "k8s.io/api/core/v1"
 
 	"github.com/gin-gonic/gin"
@@ -91,10 +92,6 @@ func AnalyzeInformation(c *gin.Context) {
 
 func GetGeneralStats(c *gin.Context) {
 	c.JSON(http.StatusOK, providers.GetGeneralStats())
-}
-
-func GetRecentTLSLinks(c *gin.Context) {
-	c.JSON(http.StatusOK, providers.GetAllRecentTLSAddresses())
 }
 
 func GetCurrentResolvingInformation(c *gin.Context) {

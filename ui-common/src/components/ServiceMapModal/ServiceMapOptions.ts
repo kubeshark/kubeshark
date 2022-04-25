@@ -67,11 +67,11 @@ const ServiceMapOptions = {
             color: '#343434',
             size: 12, // px
             face: 'arial',
-            background: 'none',
+            background: 'rgba(255,255,255,0.7)',
             strokeWidth: 2, // px
             strokeColor: '#ffffff',
             align: 'horizontal',
-            multi: false,
+            multi: false
         },
         labelHighlightBold: true,
         selectionWidth: 1,

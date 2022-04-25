@@ -1,21 +1,20 @@
-name: acceptance tests
+name: Acceptance tests on PR
 
-on:
-  pull_request:
-    branches:
-      - 'main'
-      - 'develop'
-  push:
-    branches:
-      - 'develop'
+on: push
 
 env:
   MIZU_CI_IMAGE: mizu/ci:0.0
 
+concurrency:
+  group: acceptance-tests-on-pr-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
-  run-acceptance-tests:
-    name: Run acceptance tests
+  run-tests:
+    name: Run tests
     runs-on: ubuntu-latest
+    if: ${{ contains(github.event.head_commit.message, '#run_acceptance_tests') }}
+
     steps:
       - name: Set up Go 1.17
         uses: actions/setup-go@v2
@@ -53,15 +52,3 @@ jobs:
 
       - name: Test
         run: make acceptance-test
-
-      - name: Slack notification on failure
-        uses: ravsamhq/notify-slack-action@v1
-        if: always()
-        with:
-          status: ${{ job.status }}
-          notification_title: 'Mizu {workflow} has {status_message}'
-          message_format: '{emoji} *{workflow}* {status_message} during <{run_url}|run>, after commit <{commit_url}|{commit_sha}> by ${{ github.event.head_commit.author.name }} <${{ github.event.head_commit.author.email }}> ```${{ github.event.head_commit.message }}```'
-          footer: 'Linked Repo <{repo_url}|{repo}>'
-          notify_when: 'failure'
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

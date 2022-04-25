@@ -24,11 +24,11 @@ func UpdateTapTargets(tls *TlsTapper, pods *[]v1.Pod, procfs string) error {
 	if err != nil {
 		return err
 	}
-	
+
 	tls.ClearPids()
 
-	for _, pid := range containerPids {
-		if err := tls.AddPid(procfs, pid); err != nil {
+	for pid, pod := range containerPids {
+		if err := tls.AddPid(procfs, pid, pod.Namespace); err != nil {
 			LogError(err)
 		}
 	}
@@ -36,8 +36,8 @@ func UpdateTapTargets(tls *TlsTapper, pods *[]v1.Pod, procfs string) error {
 	return nil
 }
 
-func findContainerPids(procfs string, containerIds map[string]bool) ([]uint32, error) {
-	result := make([]uint32, 0)
+func findContainerPids(procfs string, containerIds map[string]v1.Pod) (map[uint32]v1.Pod, error) {
+	result := make(map[uint32]v1.Pod)
 
 	pids, err := ioutil.ReadDir(procfs)
 
@@ -63,7 +63,9 @@ func findContainerPids(procfs string, containerIds map[string]bool) ([]uint32, e
 			continue
 		}
 
-		if _, ok := containerIds[cgroup]; !ok {
+		pod, ok := containerIds[cgroup]
+
+		if !ok {
 			continue
 		}
 
@@ -73,14 +75,14 @@ func findContainerPids(procfs string, containerIds map[string]bool) ([]uint32, e
 			continue
 		}
 
-		result = append(result, uint32(pidNumber))
+		result[uint32(pidNumber)] = pod
 	}
 
 	return result, nil
 }
 
-func buildContainerIdsMap(pods *[]v1.Pod) map[string]bool {
-	result := make(map[string]bool)
+func buildContainerIdsMap(pods *[]v1.Pod) map[string]v1.Pod {
+	result := make(map[string]v1.Pod)
 
 	for _, pod := range *pods {
 		for _, container := range pod.Status.ContainerStatuses {
@@ -91,7 +93,7 @@ func buildContainerIdsMap(pods *[]v1.Pod) map[string]bool {
 				continue
 			}
 
-			result[url.Host] = true
+			result[url.Host] = pod
 		}
 	}
 
@@ -141,14 +143,14 @@ func extractCgroup(lines []string) string {
 //  /kubepods.slice/kubepods-burstable.slice/kubepods-burstable-pod3beae8e0_164d_4689_a087_efd902d8c2ab.slice/docker-<ID>.scope
 //  /kubepods/besteffort/pod7709c1d5-447c-428f-bed9-8ddec35c93f4/<ID>
 //
-// This function extract the <ID> out of the cgroup path, the <ID> should match 
+// This function extract the <ID> out of the cgroup path, the <ID> should match
 //	the "Container ID:" field when running kubectl describe pod <POD>
 //
 func normalizeCgroup(cgrouppath string) string {
 	basename := strings.TrimSpace(path.Base(cgrouppath))
-	
+
 	if strings.Contains(basename, "-") {
-		basename = basename[strings.Index(basename, "-") + 1:]
+		basename = basename[strings.Index(basename, "-")+1:]
 	}
 
 	if strings.Contains(basename, ".") {

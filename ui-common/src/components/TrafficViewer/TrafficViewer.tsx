@@ -14,7 +14,6 @@ import { RecoilRoot, RecoilState, useRecoilState, useRecoilValue, useSetRecoilSt
 import entriesAtom from "../../recoil/entries";
 import focusedEntryIdAtom from "../../recoil/focusedEntryId";
 import queryAtom from "../../recoil/query";
-import { TLSWarning } from "../TLSWarning/TLSWarning";
 import trafficViewerApiAtom from "../../recoil/TrafficViewerApi"
 import TrafficViewerApi from "./TrafficViewerApi";
 import { StatusBar } from "../UI/StatusBar";
@@ -76,12 +75,6 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({
 
   const setLeftOffTop = useSetRecoilState(leftOffTopAtom);
   const scrollableRef = useRef(null);
-
-  const [showTLSWarning, setShowTLSWarning] = useState(false);
-  const [userDismissedTLSWarning, setUserDismissedTLSWarning] = useState(false);
-  const [addressesWithTLS, setAddressesWithTLS] = useState(new Set<string>());
-
-
 
   const handleQueryChange = useMemo(
     () =>
@@ -279,12 +272,6 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({
           <EntryDetailed />
         </div>
       </div>}
-      <TLSWarning showTLSWarning={showTLSWarning}
-        setShowTLSWarning={setShowTLSWarning}
-        addressesWithTLS={addressesWithTLS}
-        setAddressesWithTLS={setAddressesWithTLS}
-        userDismissedTLSWarning={userDismissedTLSWarning}
-        setUserDismissedTLSWarning={setUserDismissedTLSWarning} />
     </div>
   );
 };
