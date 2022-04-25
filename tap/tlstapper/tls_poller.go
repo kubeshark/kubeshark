@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"net"
 	"sync"
+	"time"
 
 	"encoding/binary"
 	"encoding/hex"
@@ -165,9 +166,13 @@ func (p *tlsPoller) startNewTlsReader(chunk *tlsChunk, ip net.IP, port uint16, k
 func dissect(extension *api.Extension, reader *tlsReader, isRequest bool, tcpid *api.TcpID,
 	tlsEmitter *tlsEmitter, options *api.TrafficFilteringOptions, reqResMatcher api.RequestResponseMatcher) {
 	b := bufio.NewReader(reader)
+	
+	timer := api.SuperTimer{
+		CaptureTime: time.Now(),
+	}
 
 	err := extension.Dissector.Dissect(b, reader.progress, api.Ebpf, isRequest, tcpid, &api.CounterPair{},
-		&api.SuperTimer{}, &api.SuperIdentifier{}, tlsEmitter, options, reqResMatcher)
+		&timer, &api.SuperIdentifier{}, tlsEmitter, options, reqResMatcher)
 
 	if err != nil {
 		logger.Log.Warningf("Error dissecting TLS %v - %v", tcpid, err)
