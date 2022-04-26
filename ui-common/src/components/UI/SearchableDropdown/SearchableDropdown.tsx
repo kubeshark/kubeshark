@@ -53,7 +53,6 @@ const SearchableDropdown: React.FC<SearchableDropdownProps> = ({options, selecte
         getOptionLabel={(option) => option}
         onChange={(event, val) => onChange(val)}
         size={"small"}
-        // closeIcon={<span><span/>}
         popupIcon={<img style={{padding: 7}} alt="iconDown" src={DefaultIconDown}/>}
         renderOption={(option, {selected}) => (
             <div id={`option-${option}`} style={{fontSize: 12, display: "flex", alignItems: "center", overflow: "hidden",  textOverflow: "ellipsis", whiteSpace: "nowrap"}}>
