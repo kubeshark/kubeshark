@@ -59,16 +59,17 @@ func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcpLayer *lay
 
 	props := factory.getStreamProps(srcIp, srcPort, dstIp, dstPort)
 	isTapTarget := props.isTapTarget
-	stream := tcp.NewTcpStream(net, transport, tcpLayer, isTapTarget, fsmOptions, factory.streamsMap, getPacketOrigin(ac))
-	if stream.GetIsTapTarget() {
-		stream.SetId(factory.streamsMap.NextId())
+	tcpStream := tcp.NewTcpStream(tcpLayer, isTapTarget, factory.streamsMap, getPacketOrigin(ac))
+	reassemblyStream := NewTcpReassemblyStream(fmt.Sprintf("%s:%s", net, transport), tcpLayer, fsmOptions, tcpStream)
+	if tcpStream.GetIsTapTarget() {
+		tcpStream.SetId(factory.streamsMap.NextId())
 		for i, extension := range extensions {
 			reqResMatcher := extension.Dissector.NewResponseRequestMatcher()
 			counterPair := &api.CounterPair{
 				Request:  0,
 				Response: 0,
 			}
-			stream.AddClient(
+			tcpStream.AddClient(
 				tcp.NewTcpReader(
 					make(chan api.TcpReaderDataMsg),
 					&api.ReadProgress{},
@@ -80,7 +81,7 @@ func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcpLayer *lay
 						DstPort: dstPort,
 					},
 					time.Time{},
-					stream,
+					tcpStream,
 					true,
 					props.isOutgoing,
 					extension,
@@ -89,7 +90,7 @@ func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcpLayer *lay
 					reqResMatcher,
 				),
 			)
-			stream.AddServer(
+			tcpStream.AddServer(
 				tcp.NewTcpReader(
 					make(chan api.TcpReaderDataMsg),
 					&api.ReadProgress{},
@@ -101,7 +102,7 @@ func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcpLayer *lay
 						DstPort: transport.Src().String(),
 					},
 					time.Time{},
-					stream,
+					tcpStream,
 					false,
 					props.isOutgoing,
 					extension,
@@ -111,15 +112,14 @@ func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcpLayer *lay
 				),
 			)
 
-			factory.streamsMap.Store(stream.GetId(), stream)
+			factory.streamsMap.Store(tcpStream.GetId(), tcpStream)
 
 			factory.wg.Add(2)
-			// Start reading from channel stream.reader.bytes
-			go stream.ClientRun(i, filteringOptions, &factory.wg)
-			go stream.ServerRun(i, filteringOptions, &factory.wg)
+			go tcpStream.GetClient(i).Run(filteringOptions, &factory.wg)
+			go tcpStream.GetServer(i).Run(filteringOptions, &factory.wg)
 		}
 	}
-	return stream
+	return reassemblyStream
 }
 
 func (factory *tcpStreamFactory) WaitGoRoutines() {

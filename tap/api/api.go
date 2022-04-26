@@ -14,9 +14,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/google/gopacket"
-	"github.com/google/gopacket/layers"
-	"github.com/google/gopacket/reassembly"
 	"github.com/google/martian/har"
 	"github.com/up9inc/mizu/shared"
 )
@@ -434,19 +431,19 @@ type TcpReader interface {
 }
 
 type TcpStream interface {
-	Accept(tcp *layers.TCP, ci gopacket.CaptureInfo, dir reassembly.TCPFlowDirection, nextSeq reassembly.Sequence, start *bool, ac reassembly.AssemblerContext) bool
-	ReassembledSG(sg reassembly.ScatterGather, ac reassembly.AssemblerContext)
-	ReassemblyComplete(ac reassembly.AssemblerContext) bool
 	Close()
 	CloseOtherProtocolDissectors(protocol *Protocol)
 	AddClient(reader TcpReader)
 	AddServer(reader TcpReader)
-	ClientRun(index int, filteringOptions *shared.TrafficFilteringOptions, wg *sync.WaitGroup)
-	ServerRun(index int, filteringOptions *shared.TrafficFilteringOptions, wg *sync.WaitGroup)
+	GetClients() []TcpReader
+	GetServers() []TcpReader
+	GetClient(index int) TcpReader
+	GetServer(index int) TcpReader
 	GetOrigin() Capture
 	GetProtoIdentifier() *ProtoIdentifier
 	GetReqResMatcher() RequestResponseMatcher
 	GetIsTapTarget() bool
+	GetIsClosed() bool
 	GetId() int64
 	SetId(id int64)
 }
