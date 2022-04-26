@@ -17,11 +17,9 @@ type tcpStream struct {
 	id              int64
 	isClosed        bool
 	protoIdentifier *api.ProtoIdentifier
-	isDNS           bool
 	isTapTarget     bool
 	clients         []api.TcpReader
 	servers         []api.TcpReader
-	ident           string
 	origin          api.Capture
 	reqResMatcher   api.RequestResponseMatcher
 	createdAt       time.Time
