@@ -24,7 +24,7 @@ interface EntriesListProps {
   setIsSnappedToBottom: any;
   noMoreDataTop: boolean;
   setNoMoreDataTop: (flag: boolean) => void;
-  openEmptyWebSocket: (resetEntries: boolean, leftoffButton?: string, queryToSend?: string) => void;
+  openEmptyWebSocket: (resetEntries: boolean, leftOffBottom?: string, queryToSend?: string) => void;
   scrollableRef: any;
   ws: any;
   isShouldStartStreamData: boolean,
@@ -61,7 +61,7 @@ export const EntriesList: React.FC<EntriesListProps> = ({
   const [truncatedTimestamp, setTruncatedTimestamp] = useState(0);
 
   const getLeftOffBottom = (entriesArr) => entriesArr.length > 0 ? entriesArr[entriesArr.length - 1].id : DEFAULT_LEFTOFF
-  const leftOffBottom = getLeftOffBottom(entries)
+  const leftOffBottom = useMemo(() => getLeftOffBottom(entries), [entries])
   const scrollbarVisible = scrollableRef.current?.childWrapperRef.current.clientHeight > scrollableRef.current?.wrapperRef.current.clientHeight;
 
   useEffect(() => {
@@ -135,8 +135,8 @@ export const EntriesList: React.FC<EntriesListProps> = ({
         //1) more records were added in the server during api call 
         //2) entries state wasnt updated yet
         openEmptyWebSocket(false, getLeftOffBottom(oldEntries))
+        setIsShouldStartStreamData(false)
       }
-      setIsShouldStartStreamData(false)
     })();
   }, [isShouldStartStreamData, trafficViewerApi.fetchEntries]);
 
