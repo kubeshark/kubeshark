@@ -417,6 +417,7 @@ type TcpReader interface {
 	Close()
 	Run(options *shared.TrafficFilteringOptions, wg *sync.WaitGroup)
 	SendMsgIfNotClosed(msg TcpReaderDataMsg)
+	SendChunk(chunk TlsChunk)
 	GetReqResMatcher() RequestResponseMatcher
 	GetIsClient() bool
 	GetReadProgress() *ReadProgress
@@ -456,4 +457,14 @@ type TcpStreamMap interface {
 	Delete(key interface{})
 	NextId() int64
 	CloseTimedoutTcpStreamChannels()
+}
+
+type TlsChunk interface {
+	GetAddress() (net.IP, uint16, error)
+	IsClient() bool
+	IsServer() bool
+	IsRead() bool
+	IsWrite() bool
+	GetRecordedData() []byte
+	IsRequest() bool
 }

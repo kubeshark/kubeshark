@@ -108,6 +108,8 @@ func (reader *tcpReader) SendMsgIfNotClosed(msg api.TcpReaderDataMsg) {
 	reader.Unlock()
 }
 
+func (reader *tcpReader) SendChunk(chunk api.TlsChunk) {}
+
 func (reader *tcpReader) GetReqResMatcher() api.RequestResponseMatcher {
 	return reader.reqResMatcher
 }

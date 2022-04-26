@@ -24,7 +24,7 @@ import (
 
 type tlsPoller struct {
 	tls            *TlsTapper
-	readers        map[string]*tlsReader
+	readers        map[string]api.TcpReader
 	closedReaders  chan string
 	reqResMatcher  api.RequestResponseMatcher
 	chunksReader   *perf.Reader
@@ -36,7 +36,7 @@ type tlsPoller struct {
 func newTlsPoller(tls *TlsTapper, extension *api.Extension, procfs string) *tlsPoller {
 	return &tlsPoller{
 		tls:           tls,
-		readers:       make(map[string]*tlsReader),
+		readers:       make(map[string]api.TcpReader),
 		closedReaders: make(chan string, 100),
 		reqResMatcher: extension.Dissector.NewResponseRequestMatcher(),
 		extension:     extension,
@@ -119,7 +119,7 @@ func (p *tlsPoller) pollChunksPerfBuffer(chunks chan<- *tlsChunk) {
 
 func (p *tlsPoller) handleTlsChunk(chunk *tlsChunk, extension *api.Extension,
 	emitter api.Emitter, options *shared.TrafficFilteringOptions) error {
-	ip, port, err := chunk.getAddress()
+	ip, port, err := chunk.GetAddress()
 
 	if err != nil {
 		return err
@@ -128,29 +128,22 @@ func (p *tlsPoller) handleTlsChunk(chunk *tlsChunk, extension *api.Extension,
 	key := buildTlsKey(chunk, ip, port)
 	reader, exists := p.readers[key]
 
-	tcpStream := tcp.NewTcpStreamDummy(api.Ebpf)
-	tcpReader := tcp.NewTcpReader(
-		make(chan api.TcpReaderDataMsg),
-		reader.progress,
-		"",
-		&api.TcpID{},
-		time.Time{},
-		tcpStream,
-		chunk.isRequest(),
-		false,
-		nil,
-		emitter,
-		&api.CounterPair{},
-		p.reqResMatcher,
+	stream := tcp.NewTcpStreamDummy(api.Ebpf)
+	tlsReader := NewTlsReader(
+		key,
+		func(r *tlsReader) {
+			p.closeReader(key, r)
+		},
+		stream,
 	)
 
 	if !exists {
-		reader = p.startNewTlsReader(chunk, ip, port, key, extension, tcpReader, options)
+		reader = p.startNewTlsReader(chunk, ip, port, key, extension, tlsReader, options)
 		p.readers[key] = reader
 	}
 
-	tcpReader.SetCaptureTime(time.Now())
-	reader.chunks <- chunk
+	reader.SetCaptureTime(time.Now())
+	reader.SendChunk(chunk)
 
 	if os.Getenv("MIZU_VERBOSE_TLS_TAPPER") == "true" {
 		p.logTls(chunk, ip, port)
@@ -160,36 +153,28 @@ func (p *tlsPoller) handleTlsChunk(chunk *tlsChunk, extension *api.Extension,
 }
 
 func (p *tlsPoller) startNewTlsReader(chunk *tlsChunk, ip net.IP, port uint16, key string, extension *api.Extension,
-	tcpReader api.TcpReader, options *shared.TrafficFilteringOptions) *tlsReader {
-
-	reader := &tlsReader{
-		key:    key,
-		chunks: make(chan *tlsChunk, 1),
-		doneHandler: func(r *tlsReader) {
-			p.closeReader(key, r)
-		},
-	}
+	reader api.TcpReader, options *shared.TrafficFilteringOptions) api.TcpReader {
 
 	tcpid := p.buildTcpId(chunk, ip, port)
-	tcpReader.SetTcpID(&tcpid)
+	reader.SetTcpID(&tcpid)
 
-	tcpReader.SetEmitter(&tlsEmitter{
-		delegate:  tcpReader.GetEmitter(),
+	reader.SetEmitter(&tlsEmitter{
+		delegate:  reader.GetEmitter(),
 		namespace: p.getNamespace(chunk.Pid),
 	})
 
-	go dissect(extension, reader, tcpReader, options)
+	go dissect(extension, reader, options)
 	return reader
 }
 
-func dissect(extension *api.Extension, reader *tlsReader, tcpReader api.TcpReader,
+func dissect(extension *api.Extension, reader api.TcpReader,
 	options *shared.TrafficFilteringOptions) {
 	b := bufio.NewReader(reader)
 
-	err := extension.Dissector.Dissect(b, tcpReader, options)
+	err := extension.Dissector.Dissect(b, reader, options)
 
 	if err != nil {
-		logger.Log.Warningf("Error dissecting TLS %v - %v", tcpReader.GetTcpID(), err)
+		logger.Log.Warningf("Error dissecting TLS %v - %v", reader.GetTcpID(), err)
 	}
 }
 
@@ -199,11 +184,11 @@ func (p *tlsPoller) closeReader(key string, r *tlsReader) {
 }
 
 func buildTlsKey(chunk *tlsChunk, ip net.IP, port uint16) string {
-	return fmt.Sprintf("%v:%v-%v:%v", chunk.isClient(), chunk.isRead(), ip, port)
+	return fmt.Sprintf("%v:%v-%v:%v", chunk.IsClient(), chunk.IsRead(), ip, port)
 }
 
 func (p *tlsPoller) buildTcpId(chunk *tlsChunk, ip net.IP, port uint16) api.TcpID {
-	myIp, myPort, err := getAddressBySockfd(p.procfs, chunk.Pid, chunk.Fd, chunk.isClient())
+	myIp, myPort, err := getAddressBySockfd(p.procfs, chunk.Pid, chunk.Fd, chunk.IsClient())
 
 	if err != nil {
 		// May happen if the socket already closed, very likely to happen for localhost
@@ -212,7 +197,7 @@ func (p *tlsPoller) buildTcpId(chunk *tlsChunk, ip net.IP, port uint16) api.TcpI
 		myPort = api.UnknownPort
 	}
 
-	if chunk.isRequest() {
+	if chunk.IsRequest() {
 		return api.TcpID{
 			SrcIP:   myIp.String(),
 			DstIP:   ip.String(),
@@ -261,13 +246,13 @@ func (p *tlsPoller) clearPids() {
 func (p *tlsPoller) logTls(chunk *tlsChunk, ip net.IP, port uint16) {
 	var flagsStr string
 
-	if chunk.isClient() {
+	if chunk.IsClient() {
 		flagsStr = "C"
 	} else {
 		flagsStr = "S"
 	}
 
-	if chunk.isRead() {
+	if chunk.IsRead() {
 		flagsStr += "R"
 	} else {
 		flagsStr += "W"
