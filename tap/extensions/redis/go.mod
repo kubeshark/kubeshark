@@ -5,6 +5,7 @@ go 1.17
 require (
 	github.com/stretchr/testify v1.7.0
 	github.com/up9inc/mizu/shared v0.0.0
+	github.com/up9inc/mizu/tap v0.0.0
 	github.com/up9inc/mizu/tap/api v0.0.0
 )
 
@@ -38,3 +39,5 @@ require (
 replace github.com/up9inc/mizu/tap/api v0.0.0 => ../../api
 
 replace github.com/up9inc/mizu/shared v0.0.0 => ../../../shared
+
+replace github.com/up9inc/mizu/tap v0.0.0 => ../../
