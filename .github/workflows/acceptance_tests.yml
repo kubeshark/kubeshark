@@ -8,6 +8,9 @@ on:
     branches:
       - 'develop'
 
+env:
+  MIZU_CI_IMAGE: mizu/ci:0.0
+
 jobs:
   run-acceptance-tests:
     name: Run acceptance tests
@@ -20,6 +23,19 @@ jobs:
 
       - name: Check out code into the Go module directory
         uses: actions/checkout@v2
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Build
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          push: false
+          load: true
+          tags: ${{ env.MIZU_CI_IMAGE }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
 
       - name: Setup acceptance test
         run: ./acceptanceTests/setup.sh
@@ -43,7 +59,7 @@ jobs:
         with:
           status: ${{ job.status }}
           notification_title: 'Mizu {workflow} has {status_message}'
-          message_format: '{emoji} *{workflow}* {status_message} during <{run_url}|run>, after commit: <{commit_url}|{commit_sha}>'
+          message_format: '{emoji} *{workflow}* {status_message} during <{run_url}|run>, after commit <{commit_url}|{commit_sha}> by ${{ github.event.head_commit.author.name }} <${{ github.event.head_commit.author.email }}> ```${{ github.event.head_commit.message }}```'
           footer: 'Linked Repo <{repo_url}|{repo}>'
           notify_when: 'failure'
         env:

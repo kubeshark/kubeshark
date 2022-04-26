@@ -4,7 +4,7 @@ import SwapHorizIcon from '@material-ui/icons/SwapHoriz';
 import styles from './EntryListItem.module.sass';
 import StatusCode, {getClassification, StatusCodeClassification} from "../../UI/StatusCode";
 import Protocol, {ProtocolInterface} from "../../UI/Protocol"
-import eBPFLogo from '../assets/ebpf.png';
+import eBPFLogo from 'assets/lock.svg';
 import {Summary} from "../../UI/Summary";
 import Queryable from "../../UI/Queryable";
 import ingoingIconSuccess from "assets/ingoing-traffic-success.svg"
@@ -52,6 +52,7 @@ interface EntryProps {
     entry: Entry;
     style: object;
     headingMode: boolean;
+    namespace?: string;
 }
 
 enum CaptureTypes {
@@ -62,11 +63,11 @@ enum CaptureTypes {
     Ebpf = "ebpf",
 }
 
-export const EntryItem: React.FC<EntryProps> = ({entry, style, headingMode}) => {
+export const EntryItem: React.FC<EntryProps> = ({entry, style, headingMode, namespace}) => {
 
     const [focusedEntryId, setFocusedEntryId] = useRecoilState(focusedEntryIdAtom);
     const [queryState, setQuery] = useRecoilState(queryAtom);
-    const isSelected = focusedEntryId === entry.id.toString();
+    const isSelected = focusedEntryId === entry.id;
 
     const classification = getClassification(entry.status)
     const numberOfRules = entry.rules.numberOfRules
@@ -140,17 +141,15 @@ export const EntryItem: React.FC<EntryProps> = ({entry, style, headingMode}) => 
 
 
     const isStatusCodeEnabled = ((entry.proto.name === "http" && "status" in entry) || entry.status !== 0);
-    let endpointServiceContainer = "10px";
-    if (!isStatusCodeEnabled) endpointServiceContainer = "20px";
 
     return <React.Fragment>
         <div
-            id={`entry-${entry.id.toString()}`}
+            id={`entry-${entry.id}`}
             className={`${styles.row}
             ${isSelected && !rule && !contractEnabled ? styles.rowSelected : additionalRulesProperties}`}
             onClick={() => {
                 if (!setFocusedEntryId) return;
-                setFocusedEntryId(entry.id.toString());
+                setFocusedEntryId(entry.id);
             }}
             style={{
                 border: isSelected && !headingMode ? `1px ${entry.proto.backgroundColor} solid` : "1px transparent solid",
@@ -178,7 +177,7 @@ export const EntryItem: React.FC<EntryProps> = ({entry, style, headingMode}) => 
             {isStatusCodeEnabled && <div>
                 <StatusCode statusCode={entry.status} statusQuery={entry.statusQuery}/>
             </div>}
-            <div className={styles.endpointServiceContainer} style={{paddingLeft: endpointServiceContainer}}>
+            <div className={styles.endpointServiceContainer}>
                 <Summary method={entry.method} methodQuery={entry.methodQuery} summary={entry.summary} summaryQuery={entry.summaryQuery}/>
                 <div className={styles.resolvedName}>
                     <Queryable
@@ -226,6 +225,19 @@ export const EntryItem: React.FC<EntryProps> = ({entry, style, headingMode}) => 
                 : ""
             }
             <div className={styles.separatorRight}>
+                {headingMode ? <Queryable
+                        query={`namespace == "${namespace}"`}
+                        displayIconOnMouseOver={true}
+                        flipped={true}
+                        iconStyle={{marginRight: "16px"}}
+                >
+                    <span
+                        className={`${styles.tcpInfo} ${styles.ip}`}
+                        title="Namespace"
+                    >
+                        {namespace}
+                    </span>
+                </Queryable> : null}
                 <Queryable
                         query={`src.ip == "${entry.src.ip}"`}
                         displayIconOnMouseOver={true}

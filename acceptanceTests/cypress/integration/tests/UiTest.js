@@ -1,5 +1,6 @@
 import {findLineAndCheck, getExpectedDetailsDict} from "../testHelpers/StatusBarHelper";
 import {
+    getEntryId,
     leftOnHoverCheck,
     leftTextCheck,
     resizeToHugeMizu,
@@ -26,7 +27,7 @@ it('opening mizu', function () {
 verifyMinimumEntries();
 
 it('top bar check', function () {
-    cy.get('.podsCount').trigger('mouseover');
+    cy.get(`[data-cy="podsCountText"]`).trigger('mouseover');
     podsArray.map(findLineAndCheck);
     cy.reload();
 });
@@ -40,32 +41,23 @@ it('filtering guide check', function () {
 });
 
 it('right side sanity test', function () {
-    cy.get('#entryDetailedTitleBodySize').then(sizeTopLine => {
-        const sizeOnTopLine = sizeTopLine.text().replace(' B', '');
-        cy.contains('Response').click();
-        cy.contains('Body Size (bytes)').parent().next().then(size => {
-            const bodySizeByDetails = size.text();
-            expect(sizeOnTopLine).to.equal(bodySizeByDetails, 'The body size in the top line should match the details in the response');
+    cy.get('#entryDetailedTitleElapsedTime').then(timeInMs => {
+        const time = timeInMs.text();
+        if (time < '0ms') {
+            throw new Error(`The time in the top line cannot be negative ${time}`);
+        }
+    });
 
-            if (parseInt(bodySizeByDetails) < 0) {
-                throw new Error(`The body size cannot be negative. got the size: ${bodySizeByDetails}`)
-            }
+    // temporary fix, change to some "data-cy" attribute,
+    // this will fix the issue that happen because we have "response:" in the header of the right side
+    cy.get('#rightSideContainer > :nth-child(3)').contains('Response').click();
 
-            cy.get('#entryDetailedTitleElapsedTime').then(timeInMs => {
-                const time = timeInMs.text();
-                if (time < '0ms') {
-                    throw new Error(`The time in the top line cannot be negative ${time}`);
-                }
+    cy.get('#rightSideContainer [title="Status Code"]').then(status => {
+        const statusCode = status.text();
+        cy.contains('Status').parent().next().then(statusInDetails => {
+            const statusCodeInDetails = statusInDetails.text();
 
-                cy.get('#rightSideContainer [title="Status Code"]').then(status => {
-                    const statusCode = status.text();
-                    cy.contains('Status').parent().next().then(statusInDetails => {
-                        const statusCodeInDetails = statusInDetails.text();
-
-                        expect(statusCode).to.equal(statusCodeInDetails, 'The status code in the top line should match the status code in details');
-                    });
-                });
-            });
+            expect(statusCode).to.equal(statusCodeInDetails, 'The status code in the top line should match the status code in details');
         });
     });
 });
@@ -157,9 +149,6 @@ function checkFilterNoResults(filterName) {
             // the DOM should show 0 entries
             cy.get('#entries-length').should('have.text', '0');
 
-            // going through every potential entry and verifies that it doesn't exist
-            [...Array(parseInt(totalEntries)).keys()].map(shouldNotExist);
-
             cy.get('[title="Fetch old records"]').click();
             cy.get('#noMoreDataTop', {timeout: refreshWaitTimeout}).should('be.visible');
             cy.get('#entries-length').should('have.text', '0'); // after loading all entries there should still be 0 entries
@@ -169,10 +158,6 @@ function checkFilterNoResults(filterName) {
             cy.get('#total-entries', {timeout: refreshWaitTimeout}).should('have.text', totalEntries);
         });
     });
-}
-
-function shouldNotExist(entryNum) {
-    cy.get(`entry-${entryNum}`).should('not.exist');
 }
 
 function checkIllegalFilter(illegalFilterName) {
@@ -194,29 +179,44 @@ function checkIllegalFilter(illegalFilterName) {
         });
     });
 }
-function checkFilter(filterDetails){
-    const {name, leftSidePath, rightSidePath, rightSideExpectedText, leftSideExpectedText, applyByEnter} = filterDetails;
+
+function checkFilter(filterDetails) {
+    const {
+        name,
+        leftSidePath,
+        rightSidePath,
+        rightSideExpectedText,
+        leftSideExpectedText,
+        applyByEnter
+    } = filterDetails;
+
     const entriesForDeeperCheck = 5;
 
     it(`checking the filter: ${name}`, function () {
         cy.get('#total-entries').should('not.have.text', '0').then(number => {
             const totalEntries = number.text();
 
-            // checks the hover on the last entry (the only one in DOM at the beginning)
-            leftOnHoverCheck(totalEntries - 1, leftSidePath, name);
+            cy.get(`#list [id^=entry]`).last().then(elem => {
+                const element = elem[0];
+                const entryId = getEntryId(element.id);
+                // checks the hover on the last entry (the only one in DOM at the beginning)
+                leftOnHoverCheck(entryId, leftSidePath, name);
 
-            // applying the filter with alt+enter or with the button
-            cy.get('.w-tc-editor-text').type(`${name}${applyByEnter ? '{alt+enter}' : ''}`);
-            cy.get('.w-tc-editor').should('have.attr', 'style').and('include', Cypress.env('greenFilterColor'));
-            if (!applyByEnter)
-                cy.get('[type="submit"]').click();
+                cy.get('.w-tc-editor-text').clear();
+                // applying the filter with alt+enter or with the button
+                cy.get('.w-tc-editor-text').type(`${name}${applyByEnter ? '{alt+enter}' : ''}`);
+                cy.get('.w-tc-editor').should('have.attr', 'style').and('include', Cypress.env('greenFilterColor'));
+                if (!applyByEnter)
+                    cy.get('[type="submit"]').click();
 
-            // only one entry in DOM after filtering, checking all checks on it
-            leftTextCheck(totalEntries - 1, leftSidePath, leftSideExpectedText);
-            leftOnHoverCheck(totalEntries - 1, leftSidePath, name);
-            rightTextCheck(rightSidePath, rightSideExpectedText);
-            rightOnHoverCheck(rightSidePath, name);
-            checkRightSideResponseBody();
+                // only one entry in DOM after filtering, checking all checks on it
+                leftTextCheck(entryId, leftSidePath, leftSideExpectedText);
+                leftOnHoverCheck(entryId, leftSidePath, name);
+
+                rightTextCheck(rightSidePath, rightSideExpectedText);
+                rightOnHoverCheck(rightSidePath, name);
+                checkRightSideResponseBody();
+            });
 
             cy.get('[title="Fetch old records"]').click();
             resizeToHugeMizu();
@@ -225,33 +225,40 @@ function checkFilter(filterDetails){
             cy.get('#entries-length', {timeout: refreshWaitTimeout}).should('have.text', totalEntries);
 
             // checking only 'leftTextCheck' on all entries because the rest of the checks require more time
-            [...Array(parseInt(totalEntries)).keys()].forEach(entryNum => {
-                leftTextCheck(entryNum, leftSidePath, leftSideExpectedText);
+            cy.get(`#list [id^=entry]`).each(elem => {
+                const element = elem[0];
+                let entryId = getEntryId(element.id);
+                leftTextCheck(entryId, leftSidePath, leftSideExpectedText);
             });
 
             // making the other 3 checks on the first X entries (longer time for each check)
-            deeperChcek(leftSidePath, rightSidePath, name, leftSideExpectedText, rightSideExpectedText, entriesForDeeperCheck);
+            deeperCheck(leftSidePath, rightSidePath, name, leftSideExpectedText, rightSideExpectedText, entriesForDeeperCheck);
 
             // reloading then waiting for the entries number to load
             resizeToNormalMizu();
             cy.reload();
             cy.get('#total-entries', {timeout: refreshWaitTimeout}).should('have.text', totalEntries);
-        });
+        })
     });
 }
 
-function deeperChcek(leftSidePath, rightSidePath, filterName, leftSideExpectedText, rightSideExpectedText, entriesNumToCheck) {
-    [...Array(entriesNumToCheck).keys()].forEach(entryNum => {
-        leftOnHoverCheck(entryNum, leftSidePath, filterName);
+function deeperCheck(leftSidePath, rightSidePath, filterName, leftSideExpectedText, rightSideExpectedText, entriesNumToCheck) {
+    cy.get(`#list [id^=entry]`).each((element, index) => {
+        if (index < entriesNumToCheck) {
+            const entryId = getEntryId(element[0].id);
+            leftOnHoverCheck(entryId, leftSidePath, filterName);
 
-        cy.get(`#list #entry-${entryNum}`).click();
-        rightTextCheck(rightSidePath, rightSideExpectedText);
-        rightOnHoverCheck(rightSidePath, filterName);
+            cy.get(`#list #entry-${entryId}`).click();
+            rightTextCheck(rightSidePath, rightSideExpectedText);
+            rightOnHoverCheck(rightSidePath, filterName);
+        }
     });
 }
 
 function checkRightSideResponseBody() {
-    cy.contains('Response').click();
+    // temporary fix, change to some "data-cy" attribute,
+    // this will fix the issue that happen because we have "response:" in the header of the right side
+    cy.get('#rightSideContainer > :nth-child(3)').contains('Response').click();
     clickCheckbox('Decode Base64');
 
     cy.get(`${Cypress.env('bodyJsonClass')}`).then(value => {

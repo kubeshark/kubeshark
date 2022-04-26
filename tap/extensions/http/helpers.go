@@ -53,7 +53,16 @@ func representMapSliceAsTable(mapSlice []interface{}, selectorPrefix string) (re
 		h := item.(map[string]interface{})
 		key := h["name"].(string)
 		value := h["value"]
-		switch reflect.TypeOf(value).Kind() {
+
+		var reflectKind reflect.Kind
+		reflectType := reflect.TypeOf(value)
+		if reflectType == nil {
+			reflectKind = reflect.Interface
+		} else {
+			reflectKind = reflect.TypeOf(value).Kind()
+		}
+
+		switch reflectKind {
 		case reflect.Slice:
 			fallthrough
 		case reflect.Array:

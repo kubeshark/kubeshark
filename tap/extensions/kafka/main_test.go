@@ -123,7 +123,7 @@ func TestDissect(t *testing.T) {
 		}
 		reqResMatcher := dissector.NewResponseRequestMatcher()
 		reqResMatcher.SetMaxTry(10)
-		err = dissector.Dissect(bufferClient, api.Pcap, true, tcpIDClient, counterPair, &api.SuperTimer{}, superIdentifier, emitter, options, reqResMatcher)
+		err = dissector.Dissect(bufferClient, &api.ReadProgress{}, api.Pcap, true, tcpIDClient, counterPair, &api.SuperTimer{}, superIdentifier, emitter, options, reqResMatcher)
 		if err != nil && err != io.EOF && err != io.ErrUnexpectedEOF {
 			log.Println(err)
 		}
@@ -141,7 +141,7 @@ func TestDissect(t *testing.T) {
 			SrcPort: "2",
 			DstPort: "1",
 		}
-		err = dissector.Dissect(bufferServer, api.Pcap, false, tcpIDServer, counterPair, &api.SuperTimer{}, superIdentifier, emitter, options, reqResMatcher)
+		err = dissector.Dissect(bufferServer, &api.ReadProgress{}, api.Pcap, false, tcpIDServer, counterPair, &api.SuperTimer{}, superIdentifier, emitter, options, reqResMatcher)
 		if err != nil && err != io.EOF && err != io.ErrUnexpectedEOF {
 			log.Println(err)
 		}
@@ -320,7 +320,7 @@ func TestRepresent(t *testing.T) {
 
 		var objects []string
 		for _, entry := range entries {
-			object, _, err := dissector.Represent(entry.Request, entry.Response)
+			object, err := dissector.Represent(entry.Request, entry.Response)
 			assert.Nil(t, err)
 			objects = append(objects, string(object))
 		}

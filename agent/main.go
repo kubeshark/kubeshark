@@ -18,6 +18,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/up9inc/mizu/agent/pkg/dependency"
 	"github.com/up9inc/mizu/agent/pkg/elastic"
+	"github.com/up9inc/mizu/agent/pkg/entries"
 	"github.com/up9inc/mizu/agent/pkg/middlewares"
 	"github.com/up9inc/mizu/agent/pkg/models"
 	"github.com/up9inc/mizu/agent/pkg/oas"
@@ -29,8 +30,6 @@ import (
 	"github.com/up9inc/mizu/agent/pkg/api"
 	"github.com/up9inc/mizu/agent/pkg/app"
 	"github.com/up9inc/mizu/agent/pkg/config"
-
-	v1 "k8s.io/api/core/v1"
 
 	"github.com/gorilla/websocket"
 	"github.com/op/go-logging"
@@ -47,7 +46,6 @@ var apiServerAddress = flag.String("api-server-address", "", "Address of mizu AP
 var namespace = flag.String("namespace", "", "Resolve IPs if they belong to resources in this namespace (default is all)")
 var harsReaderMode = flag.Bool("hars-read", false, "Run in hars-read mode")
 var harsDir = flag.String("hars-dir", "", "Directory to read hars from")
-var startTime int64
 
 const (
 	socketConnectionRetries    = 30
@@ -110,7 +108,7 @@ func hostApi(socketHarOutputChannel chan<- *tapApi.OutputChannelItem) *gin.Engin
 
 	app.Use(middlewares.CORSMiddleware()) // This has to be called after the static middleware, does not work if its called before
 
-	api.WebSocketRoutes(app, &eventHandlers, startTime)
+	api.WebSocketRoutes(app, &eventHandlers)
 
 	if config.Config.OAS {
 		routes.OASRoutes(app)
@@ -124,6 +122,7 @@ func hostApi(socketHarOutputChannel chan<- *tapApi.OutputChannelItem) *gin.Engin
 	routes.EntriesRoutes(app)
 	routes.MetadataRoutes(app)
 	routes.StatusRoutes(app)
+	routes.DbRoutes(app)
 
 	return app
 }
@@ -133,7 +132,6 @@ func runInApiServerMode(namespace string) *gin.Engine {
 		logger.Log.Fatalf("Error loading config file %v", err)
 	}
 	app.ConfigureBasenineServer(shared.BasenineHost, shared.BaseninePort, config.Config.MaxDBSizeBytes, config.Config.LogLevel, config.Config.InsertionFilter)
-	startTime = time.Now().UnixNano() / int64(time.Millisecond)
 	api.StartResolving(namespace)
 
 	enableExpFeatureIfNeeded()
@@ -156,11 +154,6 @@ func runInTapperMode() {
 
 	hostMode := os.Getenv(shared.HostModeEnvVar) == "1"
 	tapOpts := &tap.TapOpts{HostMode: hostMode}
-	tapTargets := getTapTargets()
-	if tapTargets != nil {
-		tapOpts.FilterAuthorities = tapTargets
-		logger.Log.Infof("Filtering for the following authorities: %v", tapOpts.FilterAuthorities)
-	}
 
 	filteredOutputItemsChannel := make(chan *tapApi.OutputChannelItem)
 
@@ -206,7 +199,7 @@ func runInHarReaderMode() {
 func enableExpFeatureIfNeeded() {
 	if config.Config.OAS {
 		oasGenerator := dependency.GetInstance(dependency.OasGeneratorDependency).(oas.OasGenerator)
-		oasGenerator.Start()
+		oasGenerator.Start(nil)
 	}
 	if config.Config.ServiceMap {
 		serviceMapGenerator := dependency.GetInstance(dependency.ServiceMapGeneratorDependency).(servicemap.ServiceMap)
@@ -256,28 +249,6 @@ func setUIFlags(uiIndexPath string) error {
 	}
 
 	return nil
-}
-
-func parseEnvVar(env string) map[string][]v1.Pod {
-	var mapOfList map[string][]v1.Pod
-
-	val, present := os.LookupEnv(env)
-
-	if !present {
-		return mapOfList
-	}
-
-	err := json.Unmarshal([]byte(val), &mapOfList)
-	if err != nil {
-		panic(fmt.Sprintf("env var %s's value of %v is invalid! must be map[string][]v1.Pod %v", env, mapOfList, err))
-	}
-	return mapOfList
-}
-
-func getTapTargets() []v1.Pod {
-	nodeName := os.Getenv(shared.NodeNameEnvVar)
-	tappedAddressesPerNodeDict := parseEnvVar(shared.TappedAddressesPerNodeDictEnvVar)
-	return tappedAddressesPerNodeDict[nodeName]
 }
 
 func getTrafficFilteringOptions() *tapApi.TrafficFilteringOptions {
@@ -349,6 +320,7 @@ func dialSocketWithRetry(socketAddress string, retryAmount int, retryDelay time.
 	for i := 1; i < retryAmount; i++ {
 		socketConnection, _, err := dialer.Dial(socketAddress, nil)
 		if err != nil {
+			lastErr = err
 			if i < retryAmount {
 				logger.Log.Infof("socket connection to %s failed: %v, retrying %d out of %d in %d seconds...", socketAddress, err, i, retryAmount, retryDelay/time.Second)
 				time.Sleep(retryDelay)
@@ -382,6 +354,14 @@ func handleIncomingMessageAsTapper(socketConnection *websocket.Conn) {
 					} else {
 						tap.UpdateTapTargets(tapConfigMessage.TapTargets)
 					}
+				case shared.WebSocketMessageTypeUpdateTappedPods:
+					var tappedPodsMessage shared.WebSocketTappedPodsMessage
+					if err := json.Unmarshal(message, &tappedPodsMessage); err != nil {
+						logger.Log.Infof("Could not unmarshal message of message type %s %v", socketMessageBase.MessageType, err)
+						return
+					}
+					nodeName := os.Getenv(shared.NodeNameEnvVar)
+					tap.UpdateTapTargets(tappedPodsMessage.NodeToTappedPodMap[nodeName])
 				default:
 					logger.Log.Warningf("Received socket message of type %s for which no handlers are defined", socketMessageBase.MessageType)
 				}
@@ -393,4 +373,7 @@ func handleIncomingMessageAsTapper(socketConnection *websocket.Conn) {
 func initializeDependencies() {
 	dependency.RegisterGenerator(dependency.ServiceMapGeneratorDependency, func() interface{} { return servicemap.GetDefaultServiceMapInstance() })
 	dependency.RegisterGenerator(dependency.OasGeneratorDependency, func() interface{} { return oas.GetDefaultOasGeneratorInstance() })
+	dependency.RegisterGenerator(dependency.EntriesProvider, func() interface{} { return &entries.BasenineEntriesProvider{} })
+	dependency.RegisterGenerator(dependency.EntriesSocketStreamer, func() interface{} { return &api.BasenineEntryStreamer{} })
+	dependency.RegisterGenerator(dependency.EntryStreamerSocketConnector, func() interface{} { return &api.DefaultEntryStreamerSocketConnector{} })
 }

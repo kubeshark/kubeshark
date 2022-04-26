@@ -5,6 +5,8 @@ import (
 	"bytes"
 	"fmt"
 	"net"
+	"sync"
+	"time"
 
 	"encoding/binary"
 	"encoding/hex"
@@ -19,13 +21,14 @@ import (
 )
 
 type tlsPoller struct {
-	tls           *TlsTapper
-	readers       map[string]*tlsReader
-	closedReaders chan string
-	reqResMatcher api.RequestResponseMatcher
-	chunksReader  *perf.Reader
-	extension     *api.Extension
-	procfs        string
+	tls            *TlsTapper
+	readers        map[string]*tlsReader
+	closedReaders  chan string
+	reqResMatcher  api.RequestResponseMatcher
+	chunksReader   *perf.Reader
+	extension      *api.Extension
+	procfs         string
+	pidToNamespace sync.Map
 }
 
 func newTlsPoller(tls *TlsTapper, extension *api.Extension, procfs string) *tlsPoller {
@@ -146,20 +149,30 @@ func (p *tlsPoller) startNewTlsReader(chunk *tlsChunk, ip net.IP, port uint16, k
 		doneHandler: func(r *tlsReader) {
 			p.closeReader(key, r)
 		},
+		progress: &api.ReadProgress{},
 	}
 
 	tcpid := p.buildTcpId(chunk, ip, port)
 
-	go dissect(extension, reader, chunk.isRequest(), &tcpid, emitter, options, p.reqResMatcher)
+	tlsEmitter := &tlsEmitter{
+		delegate:  emitter,
+		namespace: p.getNamespace(chunk.Pid),
+	}
+
+	go dissect(extension, reader, chunk.isRequest(), &tcpid, tlsEmitter, options, p.reqResMatcher)
 	return reader
 }
 
 func dissect(extension *api.Extension, reader *tlsReader, isRequest bool, tcpid *api.TcpID,
-	emitter api.Emitter, options *api.TrafficFilteringOptions, reqResMatcher api.RequestResponseMatcher) {
+	tlsEmitter *tlsEmitter, options *api.TrafficFilteringOptions, reqResMatcher api.RequestResponseMatcher) {
 	b := bufio.NewReader(reader)
+	
+	timer := api.SuperTimer{
+		CaptureTime: time.Now(),
+	}
 
-	err := extension.Dissector.Dissect(b, api.Ebpf, isRequest, tcpid, &api.CounterPair{},
-		&api.SuperTimer{}, &api.SuperIdentifier{}, emitter, options, reqResMatcher)
+	err := extension.Dissector.Dissect(b, reader.progress, api.Ebpf, isRequest, tcpid, &api.CounterPair{},
+		&timer, &api.SuperIdentifier{}, tlsEmitter, options, reqResMatcher)
 
 	if err != nil {
 		logger.Log.Warningf("Error dissecting TLS %v - %v", tcpid, err)
@@ -204,6 +217,33 @@ func (p *tlsPoller) buildTcpId(chunk *tlsChunk, ip net.IP, port uint16) api.TcpI
 	}
 }
 
+func (p *tlsPoller) addPid(pid uint32, namespace string) {
+	p.pidToNamespace.Store(pid, namespace)
+}
+
+func (p *tlsPoller) getNamespace(pid uint32) string {
+	namespaceIfc, ok := p.pidToNamespace.Load(pid)
+
+	if !ok {
+		return api.UNKNOWN_NAMESPACE
+	}
+
+	namespace, ok := namespaceIfc.(string)
+
+	if !ok {
+		return api.UNKNOWN_NAMESPACE
+	}
+
+	return namespace
+}
+
+func (p *tlsPoller) clearPids() {
+	p.pidToNamespace.Range(func(key, v interface{}) bool {
+		p.pidToNamespace.Delete(key)
+		return true
+	})
+}
+
 func (p *tlsPoller) logTls(chunk *tlsChunk, ip net.IP, port uint16) {
 	var flagsStr string
 
@@ -224,8 +264,8 @@ func (p *tlsPoller) logTls(chunk *tlsChunk, ip net.IP, port uint16) {
 
 	str := strings.ReplaceAll(strings.ReplaceAll(string(chunk.Data[0:chunk.Recorded]), "\n", " "), "\r", "")
 
-	logger.Log.Infof("PID: %v (tid: %v) (fd: %v) (client: %v) (addr: %v:%v) (fdaddr %v:%v>%v:%v) (recorded %v out of %v) - %v - %v",
+	logger.Log.Infof("PID: %v (tid: %v) (fd: %v) (client: %v) (addr: %v:%v) (fdaddr %v:%v>%v:%v) (recorded %v out of %v starting at %v) - %v - %v",
 		chunk.Pid, chunk.Tgid, chunk.Fd, flagsStr, ip, port,
 		srcIp, srcPort, dstIp, dstPort,
-		chunk.Recorded, chunk.Len, str, hex.EncodeToString(chunk.Data[0:chunk.Recorded]))
+		chunk.Recorded, chunk.Len, chunk.Start, str, hex.EncodeToString(chunk.Data[0:chunk.Recorded]))
 }

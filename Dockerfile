@@ -1,13 +1,23 @@
 ARG BUILDARCH=amd64
 ARG TARGETARCH=amd64
 
+### Front-end common
+FROM node:16 AS front-end-common
+
+WORKDIR /app/ui-build
+COPY ui-common/package.json .
+COPY ui-common/package-lock.json .
+RUN npm i
+COPY ui-common .
+RUN npm pack
+
 ### Front-end
 FROM node:16 AS front-end
 
 WORKDIR /app/ui-build
 
-COPY ui/package.json .
-COPY ui/package-lock.json .
+COPY ui/package.json ui/package-lock.json ./
+COPY --from=front-end-common ["/app/ui-build/up9-mizu-common-0.0.0.tgz", "."]
 RUN npm i
 COPY ui .
 RUN npm run build
@@ -15,7 +25,7 @@ RUN npm run build
 ### Base builder image for native builds architecture
 FROM golang:1.17-alpine AS builder-native-base
 ENV CGO_ENABLED=1 GOOS=linux
-RUN apk add libpcap-dev g++ perl-utils
+RUN apk add --no-cache libpcap-dev g++ perl-utils
 
 
 ### Intermediate builder image for x86-64 to x86-64 native builds
@@ -77,17 +87,16 @@ RUN go build -ldflags="-extldflags=-static -s -w \
     -X 'github.com/up9inc/mizu/agent/pkg/version.Ver=${VER}'" -o mizuagent .
 
 # Download Basenine executable, verify the sha1sum
-ADD https://github.com/up9inc/basenine/releases/download/v0.6.3/basenine_linux_${GOARCH} ./basenine_linux_${GOARCH}
-ADD https://github.com/up9inc/basenine/releases/download/v0.6.3/basenine_linux_${GOARCH}.sha256 ./basenine_linux_${GOARCH}.sha256
-RUN shasum -a 256 -c basenine_linux_${GOARCH}.sha256
-RUN chmod +x ./basenine_linux_${GOARCH}
-RUN mv ./basenine_linux_${GOARCH} ./basenine
+ADD https://github.com/up9inc/basenine/releases/download/v0.7.3/basenine_linux_${GOARCH} ./basenine_linux_${GOARCH}
+ADD https://github.com/up9inc/basenine/releases/download/v0.7.3/basenine_linux_${GOARCH}.sha256 ./basenine_linux_${GOARCH}.sha256
 
+RUN shasum -a 256 -c basenine_linux_"${GOARCH}".sha256 && \
+    chmod +x ./basenine_linux_"${GOARCH}" && \
+    mv ./basenine_linux_"${GOARCH}" ./basenine
 
 ### The shipped image
 ARG TARGETARCH=amd64
 FROM ${TARGETARCH}/busybox:latest
-
 # gin-gonic runs in debug mode without this
 ENV GIN_MODE=release
 

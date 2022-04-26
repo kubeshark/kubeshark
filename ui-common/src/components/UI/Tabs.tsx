@@ -15,7 +15,7 @@ interface Props {
     classes?: any,
     tabs: Tab[],
     currentTab: string,
-    color: string,
+    color?: string,
     onChange: (string) => void,
     leftAligned?: boolean,
     dark?: boolean,
@@ -76,6 +76,7 @@ const Tabs: React.FC<Props> = ({classes={}, tabs, currentTab, color, onChange, l
         {tabs.map(({tab, disabled, disabledMessage, highlight, badge}, index) => {
             const active = currentTab === tab;
             const tabLink = <span
+                data-cy={"tab-" + tab}
                 key={tab}
                 className={`${_classes.tab} ${active ? _classes.active : ''} ${disabled ? _classes.disabled : ''} ${highlight ? _classes.highlight : ''} ${dark ? 'dark' : ''}`}
                 onClick={() => !disabled && onChange(tab)}

@@ -29,6 +29,7 @@ type tcpStream struct {
 	clients         []tcpReader
 	servers         []tcpReader
 	ident           string
+	origin          api.Capture
 	sync.Mutex
 	streamsMap *tcpStreamMap
 }
@@ -70,6 +71,9 @@ func (t *tcpStream) Accept(tcp *layers.TCP, ci gopacket.CaptureInfo, dir reassem
 	if !accept {
 		diagnose.InternalStats.RejectOpt++
 	}
+	
+	*start = true
+	
 	return accept
 }
 

@@ -27,9 +27,6 @@ import (
 
 const cleanPeriod = time.Second * 10
 
-//lint:ignore U1000 will be used in the future
-var remoteOnlyOutboundPorts = []int{80, 443}
-
 var maxcount = flag.Int64("c", -1, "Only grab this many packets, then exit")
 var decoder = flag.String("decoder", "", "Name of the decoder to use (default: guess from capture)")
 var statsevery = flag.Int("stats", 60, "Output statistics every N seconds")
@@ -58,8 +55,7 @@ var tls = flag.Bool("tls", false, "Enable TLS tapper")
 var memprofile = flag.String("memprofile", "", "Write memory profile")
 
 type TapOpts struct {
-	HostMode          bool
-	FilterAuthorities []v1.Pod
+	HostMode bool
 }
 
 var extensions []*api.Extension                     // global
@@ -67,39 +63,16 @@ var filteringOptions *api.TrafficFilteringOptions   // global
 var tapTargets []v1.Pod                             // global
 var packetSourceManager *source.PacketSourceManager // global
 var mainPacketInputChan chan source.TcpPacketInfo   // global
-
-func inArrayInt(arr []int, valueToCheck int) bool {
-	for _, value := range arr {
-		if value == valueToCheck {
-			return true
-		}
-	}
-	return false
-}
-
-func inArrayString(arr []string, valueToCheck string) bool {
-	for _, value := range arr {
-		if value == valueToCheck {
-			return true
-		}
-	}
-	return false
-}
+var tlsTapperInstance *tlstapper.TlsTapper          // global
 
 func StartPassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem, extensionsRef []*api.Extension, options *api.TrafficFilteringOptions) {
 	extensions = extensionsRef
 	filteringOptions = options
 
-	if opts.FilterAuthorities == nil {
-		tapTargets = []v1.Pod{}
-	} else {
-		tapTargets = opts.FilterAuthorities
-	}
-
 	if *tls {
 		for _, e := range extensions {
 			if e.Protocol.Name == "http" {
-				startTlsTapper(e, outputItems, options)
+				tlsTapperInstance = startTlsTapper(e, outputItems, options)
 				break
 			}
 		}
@@ -109,24 +82,39 @@ func StartPassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem, 
 		diagnose.StartMemoryProfiler(os.Getenv(MemoryProfilingDumpPath), os.Getenv(MemoryProfilingTimeIntervalSeconds))
 	}
 
-	go startPassiveTapper(opts, outputItems)
+	streamsMap, assembler := initializePassiveTapper(opts, outputItems)
+	go startPassiveTapper(streamsMap, assembler)
 }
 
 func UpdateTapTargets(newTapTargets []v1.Pod) {
+	success := true
+
 	tapTargets = newTapTargets
-	if err := initializePacketSources(); err != nil {
-		logger.Log.Fatal(err)
+
+	packetSourceManager.UpdatePods(tapTargets, !*nodefrag, mainPacketInputChan)
+
+	if tlsTapperInstance != nil {
+		if err := tlstapper.UpdateTapTargets(tlsTapperInstance, &tapTargets, *procfs); err != nil {
+			tlstapper.LogError(err)
+			success = false
+		}
 	}
-	printNewTapTargets()
+
+	printNewTapTargets(success)
 }
 
-func printNewTapTargets() {
+func printNewTapTargets(success bool) {
 	printStr := ""
 	for _, tapTarget := range tapTargets {
 		printStr += fmt.Sprintf("%s (%s), ", tapTarget.Status.PodIP, tapTarget.Name)
 	}
 	printStr = strings.TrimRight(printStr, ", ")
-	logger.Log.Infof("Now tapping: %s", printStr)
+
+	if success {
+		logger.Log.Infof("Now tapping: %s", printStr)
+	} else {
+		logger.Log.Errorf("Failed to start tapping: %s", printStr)
+	}
 }
 
 func printPeriodicStats(cleaner *Cleaner) {
@@ -189,17 +177,12 @@ func initializePacketSources() error {
 	}
 
 	var err error
-	if packetSourceManager, err = source.NewPacketSourceManager(*procfs, *fname, *iface, *servicemesh, tapTargets, behaviour); err != nil {
-		return err
-	} else {
-		packetSourceManager.ReadPackets(!*nodefrag, mainPacketInputChan)
-		return nil
-	}
+	packetSourceManager, err = source.NewPacketSourceManager(*procfs, *fname, *iface, *servicemesh, tapTargets, behaviour, !*nodefrag, mainPacketInputChan)
+	return err
 }
 
-func startPassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem) {
+func initializePassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem) (*tcpStreamMap, *tcpAssembler) {
 	streamsMap := NewTcpStreamMap()
-	go streamsMap.closeTimedoutTcpStreamChannels()
 
 	diagnose.InitializeErrorsMap(*debug, *verbose, *quiet)
 	diagnose.InitializeTapperInternalStats()
@@ -211,6 +194,12 @@ func startPassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem) 
 	}
 
 	assembler := NewTcpAssembler(outputItems, streamsMap, opts)
+
+	return streamsMap, assembler
+}
+
+func startPassiveTapper(streamsMap *tcpStreamMap, assembler *tcpAssembler) {
+	go streamsMap.closeTimedoutTcpStreamChannels()
 
 	diagnose.AppStats.SetStartTime(time.Now())
 
@@ -243,13 +232,19 @@ func startPassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem) 
 	logger.Log.Infof("AppStats: %v", diagnose.AppStats)
 }
 
-func startTlsTapper(extension *api.Extension, outputItems chan *api.OutputChannelItem, options *api.TrafficFilteringOptions) {
+func startTlsTapper(extension *api.Extension, outputItems chan *api.OutputChannelItem, options *api.TrafficFilteringOptions) *tlstapper.TlsTapper {
 	tls := tlstapper.TlsTapper{}
-	tlsPerfBufferSize := os.Getpagesize() * 100
+	chunksBufferSize := os.Getpagesize() * 100
+	logBufferSize := os.Getpagesize()
 
-	if err := tls.Init(tlsPerfBufferSize, *procfs, extension); err != nil {
+	if err := tls.Init(chunksBufferSize, logBufferSize, *procfs, extension); err != nil {
 		tlstapper.LogError(err)
-		return
+		return nil
+	}
+
+	if err := tlstapper.UpdateTapTargets(&tls, &tapTargets, *procfs); err != nil {
+		tlstapper.LogError(err)
+		return nil
 	}
 
 	// A quick way to instrument libssl.so without PID filtering - used for debuging and troubleshooting
@@ -257,13 +252,8 @@ func startTlsTapper(extension *api.Extension, outputItems chan *api.OutputChanne
 	if os.Getenv("MIZU_GLOBAL_SSL_LIBRARY") != "" {
 		if err := tls.GlobalTap(os.Getenv("MIZU_GLOBAL_SSL_LIBRARY")); err != nil {
 			tlstapper.LogError(err)
-			return
+			return nil
 		}
-	}
-
-	if err := tlstapper.UpdateTapTargets(&tls, &tapTargets, *procfs); err != nil {
-		tlstapper.LogError(err)
-		return
 	}
 
 	var emitter api.Emitter = &api.Emitting{
@@ -271,5 +261,8 @@ func startTlsTapper(extension *api.Extension, outputItems chan *api.OutputChanne
 		OutputChannel: outputItems,
 	}
 
+	go tls.PollForLogging()
 	go tls.Poll(emitter, options)
+
+	return &tls
 }

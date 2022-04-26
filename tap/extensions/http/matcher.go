@@ -24,10 +24,11 @@ func (matcher *requestResponseMatcher) GetMap() *sync.Map {
 func (matcher *requestResponseMatcher) SetMaxTry(value int) {
 }
 
-func (matcher *requestResponseMatcher) registerRequest(ident string, request *http.Request, captureTime time.Time, protoMinor int) *api.OutputChannelItem {
+func (matcher *requestResponseMatcher) registerRequest(ident string, request *http.Request, captureTime time.Time, captureSize int, protoMinor int) *api.OutputChannelItem {
 	requestHTTPMessage := api.GenericMessage{
 		IsRequest:   true,
 		CaptureTime: captureTime,
+		CaptureSize: captureSize,
 		Payload: api.HTTPPayload{
 			Type: TypeHttpRequest,
 			Data: request,
@@ -47,10 +48,11 @@ func (matcher *requestResponseMatcher) registerRequest(ident string, request *ht
 	return nil
 }
 
-func (matcher *requestResponseMatcher) registerResponse(ident string, response *http.Response, captureTime time.Time, protoMinor int) *api.OutputChannelItem {
+func (matcher *requestResponseMatcher) registerResponse(ident string, response *http.Response, captureTime time.Time, captureSize int, protoMinor int) *api.OutputChannelItem {
 	responseHTTPMessage := api.GenericMessage{
 		IsRequest:   false,
 		CaptureTime: captureTime,
+		CaptureSize: captureSize,
 		Payload: api.HTTPPayload{
 			Type: TypeHttpResponse,
 			Data: response,

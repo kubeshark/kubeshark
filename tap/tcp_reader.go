@@ -7,12 +7,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/bradleyfalzon/tlsx"
 	"github.com/up9inc/mizu/shared/logger"
 	"github.com/up9inc/mizu/tap/api"
 )
-
-const checkTLSPacketAmount = 100
 
 type tcpReaderDataMsg struct {
 	bytes     []byte
@@ -33,21 +30,21 @@ type ConnectionInfo struct {
  * Implements io.Reader interface (Read)
  */
 type tcpReader struct {
-	ident              string
-	tcpID              *api.TcpID
-	isClosed           bool
-	isClient           bool
-	isOutgoing         bool
-	msgQueue           chan tcpReaderDataMsg // Channel of captured reassembled tcp payload
-	data               []byte
-	superTimer         *api.SuperTimer
-	parent             *tcpStream
-	packetsSeen        uint
-	outboundLinkWriter *OutboundLinkWriter
-	extension          *api.Extension
-	emitter            api.Emitter
-	counterPair        *api.CounterPair
-	reqResMatcher      api.RequestResponseMatcher
+	ident         string
+	tcpID         *api.TcpID
+	isClosed      bool
+	isClient      bool
+	isOutgoing    bool
+	msgQueue      chan tcpReaderDataMsg // Channel of captured reassembled tcp payload
+	data          []byte
+	progress      *api.ReadProgress
+	superTimer    *api.SuperTimer
+	parent        *tcpStream
+	packetsSeen   uint
+	extension     *api.Extension
+	emitter       api.Emitter
+	counterPair   *api.CounterPair
+	reqResMatcher api.RequestResponseMatcher
 	sync.Mutex
 }
 
@@ -63,16 +60,6 @@ func (h *tcpReader) Read(p []byte) (int, error) {
 		if len(h.data) > 0 {
 			h.packetsSeen += 1
 		}
-		if h.packetsSeen < checkTLSPacketAmount && len(msg.bytes) > 5 { // packets with less than 5 bytes cause tlsx to panic
-			clientHello := tlsx.ClientHello{}
-			err := clientHello.Unmarshall(msg.bytes)
-			if err == nil {
-				logger.Log.Debugf("Detected TLS client hello with SNI %s", clientHello.SNI)
-				// TODO: Throws `panic: runtime error: invalid memory address or nil pointer dereference` error.
-				// numericPort, _ := strconv.Atoi(h.tcpID.DstPort)
-				// h.outboundLinkWriter.WriteOutboundLink(h.tcpID.SrcIP, h.tcpID.DstIP, numericPort, clientHello.SNI, TLSProtocol)
-			}
-		}
 	}
 	if !ok || len(h.data) == 0 {
 		return 0, io.EOF
@@ -80,6 +67,8 @@ func (h *tcpReader) Read(p []byte) (int, error) {
 
 	l := copy(p, h.data)
 	h.data = h.data[l:]
+	h.progress.Feed(l)
+
 	return l, nil
 }
 
@@ -95,8 +84,7 @@ func (h *tcpReader) Close() {
 func (h *tcpReader) run(wg *sync.WaitGroup) {
 	defer wg.Done()
 	b := bufio.NewReader(h)
-	// TODO: Add api.Pcap, api.Envoy and api.Linkerd distinction by refactoring NewPacketSourceManager method
-	err := h.extension.Dissector.Dissect(b, api.Pcap, h.isClient, h.tcpID, h.counterPair, h.superTimer, h.parent.superIdentifier, h.emitter, filteringOptions, h.reqResMatcher)
+	err := h.extension.Dissector.Dissect(b, h.progress, h.parent.origin, h.isClient, h.tcpID, h.counterPair, h.superTimer, h.parent.superIdentifier, h.emitter, filteringOptions, h.reqResMatcher)
 	if err != nil {
 		_, err = io.Copy(ioutil.Discard, b)
 		if err != nil {

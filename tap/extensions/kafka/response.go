@@ -265,6 +265,7 @@ func ReadResponse(r io.Reader, capture api.Capture, tcpID *api.TcpID, counterPai
 			Request: api.GenericMessage{
 				IsRequest:   true,
 				CaptureTime: reqResPair.Request.CaptureTime,
+				CaptureSize: int(reqResPair.Request.Size),
 				Payload: KafkaPayload{
 					Data: &KafkaWrapper{
 						Method:  apiNames[apiKey],
@@ -276,6 +277,7 @@ func ReadResponse(r io.Reader, capture api.Capture, tcpID *api.TcpID, counterPai
 			Response: api.GenericMessage{
 				IsRequest:   false,
 				CaptureTime: reqResPair.Response.CaptureTime,
+				CaptureSize: int(reqResPair.Response.Size),
 				Payload: KafkaPayload{
 					Data: &KafkaWrapper{
 						Method:  apiNames[apiKey],
