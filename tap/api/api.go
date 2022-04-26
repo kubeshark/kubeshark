@@ -427,6 +427,8 @@ type TcpReader interface {
 	GetEmitter() Emitter
 	GetIsClosed() bool
 	GetExtension() *Extension
+	SetTcpID(tcpID *TcpID)
+	SetCaptureTime(captureTime time.Time)
 }
 
 type TcpStream interface {

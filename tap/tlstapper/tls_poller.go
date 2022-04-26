@@ -128,11 +128,28 @@ func (p *tlsPoller) handleTlsChunk(chunk *tlsChunk, extension *api.Extension,
 	key := buildTlsKey(chunk, ip, port)
 	reader, exists := p.readers[key]
 
+	tcpStream := tcp.NewTcpStreamDummy(api.Ebpf)
+	tcpReader := tcp.NewTcpReader(
+		make(chan api.TcpReaderDataMsg),
+		reader.progress,
+		"",
+		&api.TcpID{},
+		time.Time{},
+		tcpStream,
+		chunk.isRequest(),
+		false,
+		nil,
+		emitter,
+		&api.CounterPair{},
+		p.reqResMatcher,
+	)
+
 	if !exists {
-		reader = p.startNewTlsReader(chunk, ip, port, key, extension, emitter, options)
+		reader = p.startNewTlsReader(chunk, ip, port, key, extension, tcpReader, options)
 		p.readers[key] = reader
 	}
 
+	tcpReader.SetCaptureTime(time.Now())
 	reader.chunks <- chunk
 
 	if os.Getenv("MIZU_VERBOSE_TLS_TAPPER") == "true" {
@@ -143,7 +160,7 @@ func (p *tlsPoller) handleTlsChunk(chunk *tlsChunk, extension *api.Extension,
 }
 
 func (p *tlsPoller) startNewTlsReader(chunk *tlsChunk, ip net.IP, port uint16, key string, extension *api.Extension,
-	emitter api.Emitter, options *shared.TrafficFilteringOptions) *tlsReader {
+	tcpReader api.TcpReader, options *shared.TrafficFilteringOptions) *tlsReader {
 
 	reader := &tlsReader{
 		key:    key,
@@ -154,40 +171,25 @@ func (p *tlsPoller) startNewTlsReader(chunk *tlsChunk, ip net.IP, port uint16, k
 	}
 
 	tcpid := p.buildTcpId(chunk, ip, port)
+	tcpReader.SetTcpID(&tcpid)
 
 	tlsEmitter := &tlsEmitter{
-		delegate:  emitter,
+		delegate:  tcpReader.GetEmitter(),
 		namespace: p.getNamespace(chunk.Pid),
 	}
 
-	go dissect(extension, reader, chunk.isRequest(), &tcpid, tlsEmitter, options, p.reqResMatcher)
+	go dissect(extension, reader, tcpReader, tlsEmitter, options)
 	return reader
 }
 
-func dissect(extension *api.Extension, reader *tlsReader, isRequest bool, tcpid *api.TcpID,
-	tlsEmitter *tlsEmitter, options *shared.TrafficFilteringOptions, reqResMatcher api.RequestResponseMatcher) {
+func dissect(extension *api.Extension, reader *tlsReader, tcpReader api.TcpReader,
+	tlsEmitter *tlsEmitter, options *shared.TrafficFilteringOptions) {
 	b := bufio.NewReader(reader)
-
-	tcpStream := tcp.NewTcpStreamDummy(api.Ebpf)
-	tcpReader := tcp.NewTcpReader(
-		make(chan api.TcpReaderDataMsg),
-		reader.progress,
-		"",
-		tcpid,
-		time.Now(),
-		tcpStream,
-		isRequest,
-		false,
-		nil,
-		tlsEmitter,
-		&api.CounterPair{},
-		reqResMatcher,
-	)
 
 	err := extension.Dissector.Dissect(b, tcpReader, options)
 
 	if err != nil {
-		logger.Log.Warningf("Error dissecting TLS %v - %v", tcpid, err)
+		logger.Log.Warningf("Error dissecting TLS %v - %v", tcpReader.GetTcpID(), err)
 	}
 }
 

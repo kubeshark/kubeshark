@@ -147,3 +147,11 @@ func (reader *tcpReader) GetIsClosed() bool {
 func (reader *tcpReader) GetExtension() *api.Extension {
 	return reader.extension
 }
+
+func (reader *tcpReader) SetTcpID(tcpID *api.TcpID) {
+	reader.tcpID = tcpID
+}
+
+func (reader *tcpReader) SetCaptureTime(captureTime time.Time) {
+	reader.captureTime = captureTime
+}
