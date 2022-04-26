@@ -1,4 +1,4 @@
-package api
+package tcp
 
 import (
 	"runtime"
@@ -7,23 +7,16 @@ import (
 	"time"
 
 	"github.com/up9inc/mizu/shared/logger"
-	"github.com/up9inc/mizu/tap/api/diagnose"
+	"github.com/up9inc/mizu/tap/api"
+	"github.com/up9inc/mizu/tap/diagnose"
 )
-
-type TcpStreamMap interface {
-	Range(f func(key, value interface{}) bool)
-	Store(key, value interface{})
-	Delete(key interface{})
-	NextId() int64
-	CloseTimedoutTcpStreamChannels()
-}
 
 type tcpStreamMap struct {
 	streams  *sync.Map
 	streamId int64
 }
 
-func NewTcpStreamMap() TcpStreamMap {
+func NewTcpStreamMap() api.TcpStreamMap {
 	return &tcpStreamMap{
 		streams: &sync.Map{},
 	}

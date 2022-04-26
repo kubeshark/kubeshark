@@ -19,6 +19,7 @@ import (
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/shared/logger"
 	"github.com/up9inc/mizu/tap/api"
+	"github.com/up9inc/mizu/tap/tcp"
 )
 
 type tlsPoller struct {
@@ -167,8 +168,8 @@ func dissect(extension *api.Extension, reader *tlsReader, isRequest bool, tcpid 
 	tlsEmitter *tlsEmitter, options *shared.TrafficFilteringOptions, reqResMatcher api.RequestResponseMatcher) {
 	b := bufio.NewReader(reader)
 
-	tcpStream := api.NewTcpStreamDummy(api.Ebpf)
-	tcpReader := api.NewTcpReader(
+	tcpStream := tcp.NewTcpStreamDummy(api.Ebpf)
+	tcpReader := tcp.NewTcpReader(
 		make(chan api.TcpReaderDataMsg),
 		reader.progress,
 		"",

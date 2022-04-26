@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"errors"
-	"flag"
 	"fmt"
 	"io/ioutil"
 	"net"
@@ -15,14 +14,12 @@ import (
 	"sync"
 	"time"
 
+	"github.com/google/gopacket"
+	"github.com/google/gopacket/layers"
+	"github.com/google/gopacket/reassembly"
 	"github.com/google/martian/har"
 	"github.com/up9inc/mizu/shared"
-	"github.com/up9inc/mizu/tap/api/diagnose"
 )
-
-var checksum = flag.Bool("checksum", false, "Check TCP checksum")                                                      // global
-var nooptcheck = flag.Bool("nooptcheck", true, "Do not check TCP options (useful to ignore MSS on captures with TSO)") // global
-var ignorefsmerr = flag.Bool("ignorefsmerr", true, "Ignore TCP FSM errors")                                            // global
 
 const mizuTestEnvVar = "MIZU_TEST"
 const UNKNOWN_NAMESPACE = ""
@@ -147,7 +144,7 @@ type RequestResponseMatcher interface {
 }
 
 type Emitting struct {
-	AppStats      *diagnose.AppStats
+	AppStats      *AppStats
 	OutputChannel chan *OutputChannelItem
 }
 
@@ -408,4 +405,52 @@ func (r *HTTPResponseWrapper) MarshalJSON() ([]byte, error) {
 		Body:     string(body),
 		Response: r.Response,
 	})
+}
+
+type TcpReaderDataMsg interface {
+	GetBytes() []byte
+	GetTimestamp() time.Time
+}
+
+type TcpReader interface {
+	Read(p []byte) (int, error)
+	Close()
+	Run(options *shared.TrafficFilteringOptions, wg *sync.WaitGroup)
+	SendMsgIfNotClosed(msg TcpReaderDataMsg)
+	GetReqResMatcher() RequestResponseMatcher
+	GetIsClient() bool
+	GetReadProgress() *ReadProgress
+	GetParent() TcpStream
+	GetTcpID() *TcpID
+	GetCounterPair() *CounterPair
+	GetCaptureTime() time.Time
+	GetEmitter() Emitter
+	GetIsClosed() bool
+	GetExtension() *Extension
+}
+
+type TcpStream interface {
+	Accept(tcp *layers.TCP, ci gopacket.CaptureInfo, dir reassembly.TCPFlowDirection, nextSeq reassembly.Sequence, start *bool, ac reassembly.AssemblerContext) bool
+	ReassembledSG(sg reassembly.ScatterGather, ac reassembly.AssemblerContext)
+	ReassemblyComplete(ac reassembly.AssemblerContext) bool
+	Close()
+	CloseOtherProtocolDissectors(protocol *Protocol)
+	AddClient(reader TcpReader)
+	AddServer(reader TcpReader)
+	ClientRun(index int, filteringOptions *shared.TrafficFilteringOptions, wg *sync.WaitGroup)
+	ServerRun(index int, filteringOptions *shared.TrafficFilteringOptions, wg *sync.WaitGroup)
+	GetOrigin() Capture
+	GetProtoIdentifier() *ProtoIdentifier
+	GetReqResMatcher() RequestResponseMatcher
+	GetIsTapTarget() bool
+	GetId() int64
+	SetId(id int64)
+}
+
+type TcpStreamMap interface {
+	Range(f func(key, value interface{}) bool)
+	Store(key, value interface{})
+	Delete(key interface{})
+	NextId() int64
+	CloseTimedoutTcpStreamChannels()
 }

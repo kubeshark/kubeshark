@@ -1,7 +1,8 @@
-package api
+package tcp
 
 import (
 	"encoding/binary"
+	"flag"
 	"fmt"
 	"sync"
 	"time"
@@ -10,26 +11,13 @@ import (
 	"github.com/google/gopacket/layers" // pulls in all layers decoders
 	"github.com/google/gopacket/reassembly"
 	"github.com/up9inc/mizu/shared"
-	"github.com/up9inc/mizu/tap/api/diagnose"
+	"github.com/up9inc/mizu/tap/api"
+	"github.com/up9inc/mizu/tap/diagnose"
 )
 
-type TcpStream interface {
-	Accept(tcp *layers.TCP, ci gopacket.CaptureInfo, dir reassembly.TCPFlowDirection, nextSeq reassembly.Sequence, start *bool, ac reassembly.AssemblerContext) bool
-	ReassembledSG(sg reassembly.ScatterGather, ac reassembly.AssemblerContext)
-	ReassemblyComplete(ac reassembly.AssemblerContext) bool
-	Close()
-	CloseOtherProtocolDissectors(protocol *Protocol)
-	AddClient(reader TcpReader)
-	AddServer(reader TcpReader)
-	ClientRun(index int, filteringOptions *shared.TrafficFilteringOptions, wg *sync.WaitGroup)
-	ServerRun(index int, filteringOptions *shared.TrafficFilteringOptions, wg *sync.WaitGroup)
-	GetOrigin() Capture
-	GetProtoIdentifier() *ProtoIdentifier
-	GetReqResMatcher() RequestResponseMatcher
-	GetIsTapTarget() bool
-	GetId() int64
-	SetId(id int64)
-}
+var checksum = flag.Bool("checksum", false, "Check TCP checksum")                                                      // global
+var nooptcheck = flag.Bool("nooptcheck", true, "Do not check TCP options (useful to ignore MSS on captures with TSO)") // global
+var ignorefsmerr = flag.Bool("ignorefsmerr", true, "Ignore TCP FSM errors")                                            // global
 
 /* It's a connection (bidirectional)
  * Implements gopacket.reassembly.Stream interface (Accept, ReassembledSG, ReassemblyComplete)
@@ -39,24 +27,24 @@ type TcpStream interface {
 type tcpStream struct {
 	id              int64
 	isClosed        bool
-	protoIdentifier *ProtoIdentifier
+	protoIdentifier *api.ProtoIdentifier
 	tcpState        *reassembly.TCPSimpleFSM
 	fsmerr          bool
 	optchecker      reassembly.TCPOptionCheck
 	net, transport  gopacket.Flow
 	isDNS           bool
 	isTapTarget     bool
-	clients         []TcpReader
-	servers         []TcpReader
+	clients         []api.TcpReader
+	servers         []api.TcpReader
 	ident           string
-	origin          Capture
-	reqResMatcher   RequestResponseMatcher
+	origin          api.Capture
+	reqResMatcher   api.RequestResponseMatcher
 	createdAt       time.Time
-	streamsMap      TcpStreamMap
+	streamsMap      api.TcpStreamMap
 	sync.Mutex
 }
 
-func NewTcpStream(net gopacket.Flow, transport gopacket.Flow, tcp *layers.TCP, isTapTarget bool, fsmOptions reassembly.TCPSimpleFSMOptions, streamsMap TcpStreamMap, capture Capture) TcpStream {
+func NewTcpStream(net gopacket.Flow, transport gopacket.Flow, tcp *layers.TCP, isTapTarget bool, fsmOptions reassembly.TCPSimpleFSMOptions, streamsMap api.TcpStreamMap, capture api.Capture) api.TcpStream {
 	return &tcpStream{
 		net:             net,
 		transport:       transport,
@@ -65,16 +53,16 @@ func NewTcpStream(net gopacket.Flow, transport gopacket.Flow, tcp *layers.TCP, i
 		tcpState:        reassembly.NewTCPSimpleFSM(fsmOptions),
 		ident:           fmt.Sprintf("%s:%s", net, transport),
 		optchecker:      reassembly.NewTCPOptionCheck(),
-		protoIdentifier: &ProtoIdentifier{},
+		protoIdentifier: &api.ProtoIdentifier{},
 		streamsMap:      streamsMap,
 		origin:          capture,
 	}
 }
 
-func NewTcpStreamDummy(capture Capture) TcpStream {
+func NewTcpStreamDummy(capture api.Capture) api.TcpStream {
 	return &tcpStream{
 		origin:          capture,
-		protoIdentifier: &ProtoIdentifier{},
+		protoIdentifier: &api.ProtoIdentifier{},
 	}
 }
 
@@ -233,7 +221,7 @@ func (t *tcpStream) Close() {
 	}
 }
 
-func (t *tcpStream) CloseOtherProtocolDissectors(protocol *Protocol) {
+func (t *tcpStream) CloseOtherProtocolDissectors(protocol *api.Protocol) {
 	t.Lock()
 	defer t.Unlock()
 
@@ -259,11 +247,11 @@ func (t *tcpStream) CloseOtherProtocolDissectors(protocol *Protocol) {
 	t.protoIdentifier.IsClosedOthers = true
 }
 
-func (t *tcpStream) AddClient(reader TcpReader) {
+func (t *tcpStream) AddClient(reader api.TcpReader) {
 	t.clients = append(t.clients, reader)
 }
 
-func (t *tcpStream) AddServer(reader TcpReader) {
+func (t *tcpStream) AddServer(reader api.TcpReader) {
 	t.servers = append(t.servers, reader)
 }
 
@@ -275,15 +263,15 @@ func (t *tcpStream) ServerRun(index int, filteringOptions *shared.TrafficFilteri
 	t.servers[index].Run(filteringOptions, wg)
 }
 
-func (t *tcpStream) GetOrigin() Capture {
+func (t *tcpStream) GetOrigin() api.Capture {
 	return t.origin
 }
 
-func (t *tcpStream) GetProtoIdentifier() *ProtoIdentifier {
+func (t *tcpStream) GetProtoIdentifier() *api.ProtoIdentifier {
 	return t.protoIdentifier
 }
 
-func (t *tcpStream) GetReqResMatcher() RequestResponseMatcher {
+func (t *tcpStream) GetReqResMatcher() api.RequestResponseMatcher {
 	return t.reqResMatcher
 }
 

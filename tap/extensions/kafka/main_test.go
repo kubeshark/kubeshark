@@ -17,7 +17,6 @@ import (
 	"github.com/stretchr/testify/assert"
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/tap/api"
-	"github.com/up9inc/mizu/tap/api/diagnose"
 )
 
 const (
@@ -85,7 +84,7 @@ func TestDissect(t *testing.T) {
 		// Channel to verify the output
 		itemChannel := make(chan *api.OutputChannelItem)
 		var emitter api.Emitter = &api.Emitting{
-			AppStats:      &diagnose.AppStats{},
+			AppStats:      &api.AppStats{},
 			OutputChannel: itemChannel,
 		}
 

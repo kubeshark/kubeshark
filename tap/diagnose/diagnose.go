@@ -9,9 +9,10 @@ import (
 	"time"
 
 	"github.com/up9inc/mizu/shared/logger"
+	"github.com/up9inc/mizu/tap/api"
 )
 
-var AppStatsInst = AppStats{}
+var AppStatsInst = api.AppStats{}
 
 func StartMemoryProfiler(envDumpPath string, envTimeInterval string) {
 	dumpPath := "/app/pprof"

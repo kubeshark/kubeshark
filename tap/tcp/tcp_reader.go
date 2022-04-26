@@ -1,4 +1,4 @@
-package api
+package tcp
 
 import (
 	"bufio"
@@ -9,24 +9,8 @@ import (
 
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/shared/logger"
+	"github.com/up9inc/mizu/tap/api"
 )
-
-type TcpReader interface {
-	Read(p []byte) (int, error)
-	Close()
-	Run(options *shared.TrafficFilteringOptions, wg *sync.WaitGroup)
-	SendMsgIfNotClosed(msg TcpReaderDataMsg)
-	GetReqResMatcher() RequestResponseMatcher
-	GetIsClient() bool
-	GetReadProgress() *ReadProgress
-	GetParent() TcpStream
-	GetTcpID() *TcpID
-	GetCounterPair() *CounterPair
-	GetCaptureTime() time.Time
-	GetEmitter() Emitter
-	GetIsClosed() bool
-	GetExtension() *Extension
-}
 
 /* TcpReader gets reads from a channel of bytes of tcp payload, and parses it into requests and responses.
  * The payload is written to the channel by a tcpStream object that is dedicated to one tcp connection.
@@ -35,24 +19,24 @@ type TcpReader interface {
  */
 type tcpReader struct {
 	ident         string
-	tcpID         *TcpID
+	tcpID         *api.TcpID
 	isClosed      bool
 	isClient      bool
 	isOutgoing    bool
-	msgQueue      chan TcpReaderDataMsg // Channel of captured reassembled tcp payload
+	msgQueue      chan api.TcpReaderDataMsg // Channel of captured reassembled tcp payload
 	data          []byte
-	progress      *ReadProgress
+	progress      *api.ReadProgress
 	captureTime   time.Time
-	parent        TcpStream
+	parent        api.TcpStream
 	packetsSeen   uint
-	extension     *Extension
-	emitter       Emitter
-	counterPair   *CounterPair
-	reqResMatcher RequestResponseMatcher
+	extension     *api.Extension
+	emitter       api.Emitter
+	counterPair   *api.CounterPair
+	reqResMatcher api.RequestResponseMatcher
 	sync.Mutex
 }
 
-func NewTcpReader(msgQueue chan TcpReaderDataMsg, progress *ReadProgress, ident string, tcpId *TcpID, captureTime time.Time, parent TcpStream, isClient bool, isOutgoing bool, extension *Extension, emitter Emitter, counterPair *CounterPair, reqResMatcher RequestResponseMatcher) TcpReader {
+func NewTcpReader(msgQueue chan api.TcpReaderDataMsg, progress *api.ReadProgress, ident string, tcpId *api.TcpID, captureTime time.Time, parent api.TcpStream, isClient bool, isOutgoing bool, extension *api.Extension, emitter api.Emitter, counterPair *api.CounterPair, reqResMatcher api.RequestResponseMatcher) api.TcpReader {
 	return &tcpReader{
 		msgQueue:      msgQueue,
 		progress:      progress,
@@ -70,7 +54,7 @@ func NewTcpReader(msgQueue chan TcpReaderDataMsg, progress *ReadProgress, ident 
 }
 
 func (reader *tcpReader) Read(p []byte) (int, error) {
-	var msg TcpReaderDataMsg
+	var msg api.TcpReaderDataMsg
 
 	ok := true
 	for ok && len(reader.data) == 0 {
@@ -116,7 +100,7 @@ func (reader *tcpReader) Run(options *shared.TrafficFilteringOptions, wg *sync.W
 	}
 }
 
-func (reader *tcpReader) SendMsgIfNotClosed(msg TcpReaderDataMsg) {
+func (reader *tcpReader) SendMsgIfNotClosed(msg api.TcpReaderDataMsg) {
 	reader.Lock()
 	if !reader.isClosed {
 		reader.msgQueue <- msg
@@ -124,7 +108,7 @@ func (reader *tcpReader) SendMsgIfNotClosed(msg TcpReaderDataMsg) {
 	reader.Unlock()
 }
 
-func (reader *tcpReader) GetReqResMatcher() RequestResponseMatcher {
+func (reader *tcpReader) GetReqResMatcher() api.RequestResponseMatcher {
 	return reader.reqResMatcher
 }
 
@@ -132,19 +116,19 @@ func (reader *tcpReader) GetIsClient() bool {
 	return reader.isClient
 }
 
-func (reader *tcpReader) GetReadProgress() *ReadProgress {
+func (reader *tcpReader) GetReadProgress() *api.ReadProgress {
 	return reader.progress
 }
 
-func (reader *tcpReader) GetParent() TcpStream {
+func (reader *tcpReader) GetParent() api.TcpStream {
 	return reader.parent
 }
 
-func (reader *tcpReader) GetTcpID() *TcpID {
+func (reader *tcpReader) GetTcpID() *api.TcpID {
 	return reader.tcpID
 }
 
-func (reader *tcpReader) GetCounterPair() *CounterPair {
+func (reader *tcpReader) GetCounterPair() *api.CounterPair {
 	return reader.counterPair
 }
 
@@ -152,7 +136,7 @@ func (reader *tcpReader) GetCaptureTime() time.Time {
 	return reader.captureTime
 }
 
-func (reader *tcpReader) GetEmitter() Emitter {
+func (reader *tcpReader) GetEmitter() api.Emitter {
 	return reader.emitter
 }
 
@@ -160,6 +144,6 @@ func (reader *tcpReader) GetIsClosed() bool {
 	return reader.isClosed
 }
 
-func (reader *tcpReader) GetExtension() *Extension {
+func (reader *tcpReader) GetExtension() *api.Extension {
 	return reader.extension
 }

@@ -11,7 +11,7 @@ import (
 	"github.com/google/gopacket/pcap"
 	"github.com/up9inc/mizu/shared/logger"
 	"github.com/up9inc/mizu/tap/api"
-	"github.com/up9inc/mizu/tap/api/diagnose"
+	"github.com/up9inc/mizu/tap/diagnose"
 )
 
 type tcpPacketSource struct {

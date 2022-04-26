@@ -7,6 +7,7 @@ import (
 
 	"github.com/up9inc/mizu/shared/logger"
 	"github.com/up9inc/mizu/tap/api"
+	"github.com/up9inc/mizu/tap/tcp"
 	v1 "k8s.io/api/core/v1"
 
 	"github.com/google/gopacket"
@@ -47,7 +48,7 @@ func NewTcpStreamFactory(emitter api.Emitter, streamsMap api.TcpStreamMap, opts 
 	}
 }
 
-func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcp *layers.TCP, ac reassembly.AssemblerContext) reassembly.Stream {
+func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcpLayer *layers.TCP, ac reassembly.AssemblerContext) reassembly.Stream {
 	fsmOptions := reassembly.TCPSimpleFSMOptions{
 		SupportMissingEstablishment: *allowmissinginit,
 	}
@@ -58,7 +59,7 @@ func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcp *layers.T
 
 	props := factory.getStreamProps(srcIp, srcPort, dstIp, dstPort)
 	isTapTarget := props.isTapTarget
-	stream := api.NewTcpStream(net, transport, tcp, isTapTarget, fsmOptions, factory.streamsMap, getPacketOrigin(ac))
+	stream := tcp.NewTcpStream(net, transport, tcpLayer, isTapTarget, fsmOptions, factory.streamsMap, getPacketOrigin(ac))
 	if stream.GetIsTapTarget() {
 		stream.SetId(factory.streamsMap.NextId())
 		for i, extension := range extensions {
@@ -68,7 +69,7 @@ func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcp *layers.T
 				Response: 0,
 			}
 			stream.AddClient(
-				api.NewTcpReader(
+				tcp.NewTcpReader(
 					make(chan api.TcpReaderDataMsg),
 					&api.ReadProgress{},
 					fmt.Sprintf("%s %s", net, transport),
@@ -89,7 +90,7 @@ func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcp *layers.T
 				),
 			)
 			stream.AddServer(
-				api.NewTcpReader(
+				tcp.NewTcpReader(
 					make(chan api.TcpReaderDataMsg),
 					&api.ReadProgress{},
 					fmt.Sprintf("%s %s", net, transport),

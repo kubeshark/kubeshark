@@ -1,4 +1,4 @@
-package diagnose
+package api
 
 import (
 	"sync/atomic"
