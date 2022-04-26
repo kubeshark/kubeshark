@@ -131,14 +131,37 @@ func (p *tlsPoller) handleTlsChunk(chunk *tlsChunk, extension *api.Extension,
 		p.readers[key] = reader
 	}
 
-	reader.timer.CaptureTime = time.Now()
-	reader.chunks <- chunk
-
+	p.updateTlsReader(chunk, reader, ip, port)
+	
 	if os.Getenv("MIZU_VERBOSE_TLS_TAPPER") == "true" {
-		p.logTls(chunk, key)
+		p.logTls(chunk, key, reader)
 	}
 
 	return nil
+}
+
+func (p *tlsPoller) updateTlsReader(chunk *tlsChunk, reader *tlsReader, ip net.IP, port uint16) {
+	myIp, myPort, err := getAddressBySockfd(p.procfs, chunk.Pid, chunk.Fd, chunk.isClient())
+
+	if err == nil {
+		// Currently tls key is built from the foreign address, pid, thread id and more, it doesn't contains 
+		//	the local address though. The reason is pure technical, and require traversing kernel structs in
+		//	the ebpf (hopefully we'll get to fix it).
+		//
+		// If there are many tcp requests to the same remote address, at around the same time, from different
+		//	connections, they all get the same tls key.
+		//
+		// If we don't update tcpID with the new local address, the requests matcher fails, because it have
+		//	the old tcp id used by the previous connection.
+		//
+		// Yet getAddressBySockfd may fail because the file descriptor already gone, usually for localhost 
+		// 	where everything is CPU, or for the last chunk in a big message. If that happen, its better to 
+		//	stay with the old tcpID which most chances is still valid, instead of replacing it with unknown.
+		//
+		reader.tcpID = p.buildTcpId(chunk, ip, port, myIp, myPort)
+	}
+	
+	reader.newChunk(chunk)
 }
 
 func (p *tlsPoller) startNewTlsReader(chunk *tlsChunk, ip net.IP, port uint16, key string, extension *api.Extension,
@@ -154,28 +177,27 @@ func (p *tlsPoller) startNewTlsReader(chunk *tlsChunk, ip net.IP, port uint16, k
 		timer: api.SuperTimer{
 			CaptureTime: time.Now(),
 		},
+		tcpID: p.buildInitialTcpID(chunk, ip, port),
 	}
-
-	tcpid := p.buildTcpId(chunk, ip, port)
 
 	tlsEmitter := &tlsEmitter{
 		delegate:  emitter,
 		namespace: p.getNamespace(chunk.Pid),
 	}
 
-	go dissect(extension, reader, chunk.isRequest(), &tcpid, tlsEmitter, options, p.reqResMatcher)
+	go dissect(extension, reader, chunk.isRequest(), tlsEmitter, options, p.reqResMatcher)
 	return reader
 }
 
-func dissect(extension *api.Extension, reader *tlsReader, isRequest bool, tcpid *api.TcpID,
+func dissect(extension *api.Extension, reader *tlsReader, isRequest bool,
 	tlsEmitter *tlsEmitter, options *api.TrafficFilteringOptions, reqResMatcher api.RequestResponseMatcher) {
 	b := bufio.NewReader(reader)
 
-	err := extension.Dissector.Dissect(b, reader.progress, api.Ebpf, isRequest, tcpid, &api.CounterPair{},
+	err := extension.Dissector.Dissect(b, reader.progress, api.Ebpf, isRequest, &reader.tcpID, &api.CounterPair{},
 		&reader.timer, &api.SuperIdentifier{}, tlsEmitter, options, reqResMatcher)
 
 	if err != nil {
-		logger.Log.Warningf("Error dissecting TLS %v - %v", tcpid, err)
+		logger.Log.Warningf("Error dissecting TLS %v - %v", reader.tcpID, err)
 	}
 }
 
@@ -198,20 +220,29 @@ func buildTlsKey(chunk *tlsChunk, ip net.IP, port uint16) string {
 	} else {
 		readerStr = "W"
 	}
+	
+	// This same ID used by the ebpf C code
+	//
+	id := uint64(chunk.Pid) | uint64(chunk.Tgid) << 32
 
-	return fmt.Sprintf("%d-%s%s-%v:%d", chunk.Pid, clientStr, readerStr, ip, port)
+	return fmt.Sprintf("%d-%s%s-%v:%d", id, clientStr, readerStr, ip, port)
 }
 
-func (p *tlsPoller) buildTcpId(chunk *tlsChunk, ip net.IP, port uint16) api.TcpID {
+func (p *tlsPoller) buildInitialTcpID(chunk *tlsChunk, ip net.IP, port uint16) api.TcpID {
 	myIp, myPort, err := getAddressBySockfd(p.procfs, chunk.Pid, chunk.Fd, chunk.isClient())
 
 	if err != nil {
-		// May happen if the socket already closed, very likely to happen for localhost
+		// May happen if the socket already closed, very likely to happen for localhost during testing,
+		//  we prefer to fallback to unkonwn address than dropping.
 		//
 		myIp = api.UnknownIp
 		myPort = api.UnknownPort
 	}
 
+	return p.buildTcpId(chunk, ip, port, myIp, myPort)
+}
+
+func (p *tlsPoller) buildTcpId(chunk *tlsChunk, ip net.IP, port uint16, myIp net.IP, myPort uint16) api.TcpID {
 	if chunk.isRequest() {
 		return api.TcpID{
 			SrcIP:   myIp.String(),
@@ -258,14 +289,14 @@ func (p *tlsPoller) clearPids() {
 	})
 }
 
-func (p *tlsPoller) logTls(chunk *tlsChunk, key string) {
+func (p *tlsPoller) logTls(chunk *tlsChunk, key string, reader *tlsReader) {
 	srcIp, srcPort, _ := getAddressBySockfd(p.procfs, chunk.Pid, chunk.Fd, true)
 	dstIp, dstPort, _ := getAddressBySockfd(p.procfs, chunk.Pid, chunk.Fd, false)
 
 	str := strings.ReplaceAll(strings.ReplaceAll(string(chunk.Data[0:chunk.Recorded]), "\n", " "), "\r", "")
 
-	logger.Log.Infof("[%-32s] (tid: %d) (fd: %d) (fdaddr %s:%d>%s:%d) (recorded %d out of %d starting at %d) - %s - %s",
-		key, chunk.Tgid, chunk.Fd,
-		srcIp, srcPort, dstIp, dstPort,
-		chunk.Recorded, chunk.Len, chunk.Start, str, hex.EncodeToString(chunk.Data[0:chunk.Recorded]))
+	logger.Log.Infof("[%-32s] #%-4d (fd: %d %s:%d>%s:%d) (recorded %d/%d:%d) (tcpid: %s) - %s - %s",
+		key, reader.seenChunks, chunk.Fd, srcIp, srcPort, dstIp, dstPort,
+		chunk.Recorded, chunk.Len, chunk.Start, reader.tcpID,
+		str, hex.EncodeToString(chunk.Data[0:chunk.Recorded]))
 }
