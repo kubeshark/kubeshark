@@ -155,3 +155,7 @@ func (reader *tcpReader) SetTcpID(tcpID *api.TcpID) {
 func (reader *tcpReader) SetCaptureTime(captureTime time.Time) {
 	reader.captureTime = captureTime
 }
+
+func (reader *tcpReader) SetEmitter(emitter api.Emitter) {
+	reader.emitter = emitter
+}

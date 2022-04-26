@@ -173,17 +173,17 @@ func (p *tlsPoller) startNewTlsReader(chunk *tlsChunk, ip net.IP, port uint16, k
 	tcpid := p.buildTcpId(chunk, ip, port)
 	tcpReader.SetTcpID(&tcpid)
 
-	tlsEmitter := &tlsEmitter{
+	tcpReader.SetEmitter(&tlsEmitter{
 		delegate:  tcpReader.GetEmitter(),
 		namespace: p.getNamespace(chunk.Pid),
-	}
+	})
 
-	go dissect(extension, reader, tcpReader, tlsEmitter, options)
+	go dissect(extension, reader, tcpReader, options)
 	return reader
 }
 
 func dissect(extension *api.Extension, reader *tlsReader, tcpReader api.TcpReader,
-	tlsEmitter *tlsEmitter, options *shared.TrafficFilteringOptions) {
+	options *shared.TrafficFilteringOptions) {
 	b := bufio.NewReader(reader)
 
 	err := extension.Dissector.Dissect(b, tcpReader, options)

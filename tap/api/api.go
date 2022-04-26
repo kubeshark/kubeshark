@@ -429,6 +429,7 @@ type TcpReader interface {
 	GetExtension() *Extension
 	SetTcpID(tcpID *TcpID)
 	SetCaptureTime(captureTime time.Time)
+	SetEmitter(emitter Emitter)
 }
 
 type TcpStream interface {
