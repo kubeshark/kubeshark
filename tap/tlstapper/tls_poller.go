@@ -135,7 +135,7 @@ func (p *tlsPoller) handleTlsChunk(chunk *tlsChunk, extension *api.Extension,
 	reader.chunks <- chunk
 
 	if os.Getenv("MIZU_VERBOSE_TLS_TAPPER") == "true" {
-		p.logTls(chunk, ip, port)
+		p.logTls(chunk, key)
 	}
 
 	return nil
@@ -185,7 +185,21 @@ func (p *tlsPoller) closeReader(key string, r *tlsReader) {
 }
 
 func buildTlsKey(chunk *tlsChunk, ip net.IP, port uint16) string {
-	return fmt.Sprintf("%v-%v:%v-%v:%v", chunk.Pid, chunk.isClient(), chunk.isRead(), ip, port)
+	var clientStr string
+	if chunk.isClient() {
+		clientStr = "C"
+	} else {
+		clientStr = "S"
+	}
+
+	var readerStr string
+	if chunk.isRead() {
+		readerStr = "R"
+	} else {
+		readerStr = "W"
+	}
+
+	return fmt.Sprintf("%d-%s%s-%v:%d", chunk.Pid, clientStr, readerStr, ip, port)
 }
 
 func (p *tlsPoller) buildTcpId(chunk *tlsChunk, ip net.IP, port uint16) api.TcpID {
@@ -244,28 +258,14 @@ func (p *tlsPoller) clearPids() {
 	})
 }
 
-func (p *tlsPoller) logTls(chunk *tlsChunk, ip net.IP, port uint16) {
-	var flagsStr string
-
-	if chunk.isClient() {
-		flagsStr = "C"
-	} else {
-		flagsStr = "S"
-	}
-
-	if chunk.isRead() {
-		flagsStr += "R"
-	} else {
-		flagsStr += "W"
-	}
-
+func (p *tlsPoller) logTls(chunk *tlsChunk, key string) {
 	srcIp, srcPort, _ := getAddressBySockfd(p.procfs, chunk.Pid, chunk.Fd, true)
 	dstIp, dstPort, _ := getAddressBySockfd(p.procfs, chunk.Pid, chunk.Fd, false)
 
 	str := strings.ReplaceAll(strings.ReplaceAll(string(chunk.Data[0:chunk.Recorded]), "\n", " "), "\r", "")
 
-	logger.Log.Infof("PID: %v (tid: %v) (fd: %v) (client: %v) (addr: %v:%v) (fdaddr %v:%v>%v:%v) (recorded %v out of %v starting at %v) - %v - %v",
-		chunk.Pid, chunk.Tgid, chunk.Fd, flagsStr, ip, port,
+	logger.Log.Infof("[%-32s] (tid: %d) (fd: %d) (fdaddr %s:%d>%s:%d) (recorded %d out of %d starting at %d) - %s - %s",
+		key, chunk.Tgid, chunk.Fd,
 		srcIp, srcPort, dstIp, dstPort,
 		chunk.Recorded, chunk.Len, chunk.Start, str, hex.EncodeToString(chunk.Data[0:chunk.Recorded]))
 }
