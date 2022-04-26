@@ -185,7 +185,7 @@ func (p *tlsPoller) closeReader(key string, r *tlsReader) {
 }
 
 func buildTlsKey(chunk *tlsChunk, ip net.IP, port uint16) string {
-	return fmt.Sprintf("%v:%v-%v:%v", chunk.isClient(), chunk.isRead(), ip, port)
+	return fmt.Sprintf("%v-%v:%v-%v:%v", chunk.Pid, chunk.isClient(), chunk.isRead(), ip, port)
 }
 
 func (p *tlsPoller) buildTcpId(chunk *tlsChunk, ip net.IP, port uint16) api.TcpID {
