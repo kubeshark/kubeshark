@@ -18,10 +18,8 @@ type tlsReader struct {
 	tcpID         *api.TcpID
 	isClosed      bool
 	isClient      bool
-	msgQueue      chan api.TcpReaderDataMsg // Unused
 	captureTime   time.Time
 	parent        api.TcpStream
-	packetsSeen   uint
 	extension     *api.Extension
 	emitter       api.Emitter
 	counterPair   *api.CounterPair
