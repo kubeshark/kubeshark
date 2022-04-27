@@ -1,6 +1,6 @@
 package diagnose
 
-import "github.com/up9inc/mizu/shared/logger"
+import "github.com/up9inc/mizu/logger"
 
 type tapperInternalStats struct {
 	Ipdefrag            int

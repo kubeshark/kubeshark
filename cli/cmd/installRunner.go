@@ -2,9 +2,10 @@ package cmd
 
 import (
 	"fmt"
+
 	"github.com/up9inc/mizu/cli/bucket"
 	"github.com/up9inc/mizu/cli/config"
-	"github.com/up9inc/mizu/shared/logger"
+	"github.com/up9inc/mizu/logger"
 )
 
 func runMizuInstall() {
