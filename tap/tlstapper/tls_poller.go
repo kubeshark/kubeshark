@@ -225,7 +225,7 @@ func (p *tlsPoller) getFallbackAddress(chunk *tlsChunk) (addressPair, error) {
 		return addressPair{}, err
 	}
 
-	if chunk.isClient() {
+	if chunk.isRequest() {
 		return addressPair{
 			srcIp:   api.UnknownIp,
 			srcPort: api.UnknownPort,
@@ -254,16 +254,6 @@ func (p *tlsPoller) buildTcpId(chunk *tlsChunk, address *addressPair) api.TcpID 
 		DstPort: strconv.FormatUint(uint64(address.dstPort), 10),
 		Ident:   "",
 	}
-	// if chunk.isRequest() {
-	// } else {
-	// 	return api.TcpID{
-	// 		SrcIP:   address.dstIp.String(),
-	// 		DstIP:   address.srcIp.String(),
-	// 		SrcPort: strconv.FormatUint(uint64(address.dstPort), 10),
-	// 		DstPort: strconv.FormatUint(uint64(address.srcPort), 10),
-	// 		Ident:   "",
-	// 	}
-	// }
 }
 
 func (p *tlsPoller) addPid(pid uint32, namespace string) {
