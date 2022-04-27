@@ -58,7 +58,7 @@ func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcpLayer *lay
 
 	props := factory.getStreamProps(srcIp, srcPort, dstIp, dstPort)
 	isTapTarget := props.isTapTarget
-	stream := NewTcpStream(tcpLayer, isTapTarget, factory.streamsMap, getPacketOrigin(ac))
+	stream := NewTcpStream(isTapTarget, factory.streamsMap, getPacketOrigin(ac))
 	reassemblyStream := NewTcpReassemblyStream(fmt.Sprintf("%s:%s", net, transport), tcpLayer, fsmOptions, stream)
 	if stream.GetIsTapTarget() {
 		_stream := stream.(*tcpStream)

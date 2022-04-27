@@ -4,7 +4,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/google/gopacket/layers" // pulls in all layers decoders
+	// pulls in all layers decoders
 	"github.com/up9inc/mizu/tap/api"
 )
 
@@ -27,7 +27,7 @@ type tcpStream struct {
 	sync.Mutex
 }
 
-func NewTcpStream(tcp *layers.TCP, isTapTarget bool, streamsMap api.TcpStreamMap, capture api.Capture) api.TcpStream {
+func NewTcpStream(isTapTarget bool, streamsMap api.TcpStreamMap, capture api.Capture) api.TcpStream {
 	return &tcpStream{
 		isTapTarget:     isTapTarget,
 		protoIdentifier: &api.ProtoIdentifier{},
