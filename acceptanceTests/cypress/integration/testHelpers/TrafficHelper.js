@@ -6,7 +6,7 @@ export const valueTabs = {
 
 const maxEntriesInDom = 13;
 
-export function isValueExistsInElement(shouldInclude, content, domPathToContainer){
+export function isValueExistsInElement(shouldInclude, content, domPathToContainer) {
     it(`should ${shouldInclude ? '' : 'not'} include '${content}'`, function () {
         cy.get(domPathToContainer).then(htmlText => {
             const allTextString = htmlText.text();
@@ -57,13 +57,6 @@ export function rightOnHoverCheck(path, expectedText) {
     cy.get(`#rightSideContainer [data-cy='QueryableTooltip']`).invoke('text').should('match', new RegExp(expectedText));
 }
 
-export function checkThatAllEntriesShown() {
-    cy.get('#entries-length').then(number => {
-        if (number.text() === '1')
-            cy.get('[title="Fetch old records"]').click();
-    });
-}
-
 export function checkFilterByMethod(funcDict) {
     const {protocol, method, methodQuery, summary, summaryQuery} = funcDict;
     const summaryDict = getSummaryDict(summary, summaryQuery);
@@ -76,35 +69,29 @@ export function checkFilterByMethod(funcDict) {
         cy.get('[type="submit"]').click();
         cy.get('.w-tc-editor').should('have.attr', 'style').and('include', Cypress.env('greenFilterColor'));
 
-        cy.get('#entries-length').then(number => {
-            // if the entries list isn't expanded it expands here
-            if (number.text() === '0' || number.text() === '1') // todo change when TRA-4262 is fixed
-                cy.get('[title="Fetch old records"]').click();
+        cy.get('#entries-length').should('not.have.text', '0').then(() => {
+            cy.get(`#list [id]`).then(elements => {
+                const listElmWithIdAttr = Object.values(elements);
+                let doneCheckOnFirst = false;
 
-            cy.get('#entries-length').should('not.have.text', '0').and('not.have.text', '1').then(() => {
-                cy.get(`#list [id]`).then(elements => {
-                    const listElmWithIdAttr = Object.values(elements);
-                    let doneCheckOnFirst = false;
+                cy.get('#entries-length').invoke('text').then(len => {
+                    resizeIfNeeded(len);
+                    listElmWithIdAttr.forEach(entry => {
+                        if (entry?.id && entry.id.match(RegExp(/entry-(\d{24})$/gm))) {
+                            const entryId = getEntryId(entry.id);
 
-                    cy.get('#entries-length').invoke('text').then(len => {
-                        resizeIfNeeded(len);
-                        listElmWithIdAttr.forEach(entry => {
-                            if (entry?.id && entry.id.match(RegExp(/entry-(\d{24})$/gm))) {
-                                const entryId = getEntryId(entry.id);
+                            leftTextCheck(entryId, methodDict.pathLeft, methodDict.expectedText);
+                            leftTextCheck(entryId, protocolDict.pathLeft, protocolDict.expectedTextLeft);
+                            if (summaryDict)
+                                leftTextCheck(entryId, summaryDict.pathLeft, summaryDict.expectedText);
 
-                                leftTextCheck(entryId, methodDict.pathLeft, methodDict.expectedText);
-                                leftTextCheck(entryId, protocolDict.pathLeft, protocolDict.expectedTextLeft);
-                                if (summaryDict)
-                                    leftTextCheck(entryId, summaryDict.pathLeft, summaryDict.expectedText);
-
-                                if (!doneCheckOnFirst) {
-                                    deepCheck(funcDict, protocolDict, methodDict, entry);
-                                    doneCheckOnFirst = true;
-                                }
+                            if (!doneCheckOnFirst) {
+                                deepCheck(funcDict, protocolDict, methodDict, entry);
+                                doneCheckOnFirst = true;
                             }
-                        });
-                        resizeIfNeeded(len);
+                        }
                     });
+                    resizeIfNeeded(len);
                 });
             });
         });
@@ -117,7 +104,7 @@ export function getEntryId(id) {
 }
 
 function resizeIfNeeded(entriesLen) {
-    if (entriesLen > maxEntriesInDom){
+    if (entriesLen > maxEntriesInDom) {
         Cypress.config().viewportHeight === Cypress.env('normalMizuHeight') ?
             resizeToHugeMizu() : resizeToNormalMizu()
     }
@@ -164,8 +151,7 @@ function getSummaryDict(value, query) {
             expectedText: value,
             expectedOnHover: query
         };
-    }
-    else {
+    } else {
         return null;
     }
 }
