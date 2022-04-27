@@ -1,13 +1,13 @@
-import React, {useRef, useState} from "react";
+import React, { useRef, useState } from "react";
 import styles from '../style/Filters.module.sass';
-import {Button, Grid, Modal, Box, Typography, Backdrop, Fade, Divider} from "@material-ui/core";
+import { Button, Grid, Modal, Box, Typography, Backdrop, Fade, Divider } from "@material-ui/core";
 import CodeEditor from '@uiw/react-textarea-code-editor';
 import MenuBookIcon from '@material-ui/icons/MenuBook';
-import {SyntaxHighlighter} from "../UI/SyntaxHighlighter/index";
+import { SyntaxHighlighter } from "../UI/SyntaxHighlighter/index";
 import filterUIExample1 from "assets/filter-ui-example-1.png"
 import filterUIExample2 from "assets/filter-ui-example-2.png"
 import variables from '../../variables.module.scss';
-import {useRecoilState, useRecoilValue} from "recoil";
+import { useRecoilState } from "recoil";
 import queryAtom from "../../recoil/query";
 import useKeyPress from "../../hooks/useKeyPress"
 import shortcutsKeyboard from "../../configs/shortcutsKeyboard"
@@ -144,11 +144,11 @@ export const QueryForm: React.FC<QueryFormProps> = ({ backgroundColor }) => {
             BackdropProps={{
                 timeout: 500,
             }}
-            style={{overflow: 'auto'}}
+            style={{ overflow: 'auto' }}
         >
             <Fade in={openModal}>
                 <Box sx={modalStyle}>
-                    <Typography id="modal-modal-title" variant="h5" component="h2" style={{textAlign: 'center'}}>
+                    <Typography id="modal-modal-title" variant="h5" component="h2" style={{ textAlign: 'center' }}>
                         Filtering Guide (Cheatsheet)
                     </Typography>
                     <Typography component={'span'} id="modal-modal-description">
@@ -156,7 +156,7 @@ export const QueryForm: React.FC<QueryFormProps> = ({ backgroundColor }) => {
                         <p>Here are some examples that you can try;</p>
                     </Typography>
                     <Grid container>
-                        <Grid item xs style={{margin: "10px"}}>
+                        <Grid item xs style={{ margin: "10px" }}>
                             <Typography id="modal-modal-description">
                                 This is a simple query that matches to HTTP packets with request path "/catalogue":
                             </Typography>
@@ -207,7 +207,7 @@ export const QueryForm: React.FC<QueryFormProps> = ({ backgroundColor }) => {
                             />
                         </Grid>
                         <Divider className={styles.divider1} orientation="vertical" flexItem />
-                        <Grid item xs style={{margin: "10px"}}>
+                        <Grid item xs style={{ margin: "10px" }}>
                             <Typography id="modal-modal-description">
                                 Since Mizu supports various protocols like gRPC, AMQP, Kafka and Redis. It's possible to write complex queries that match multiple protocols like this:
                             </Typography>
@@ -252,13 +252,13 @@ export const QueryForm: React.FC<QueryFormProps> = ({ backgroundColor }) => {
                             />
                         </Grid>
                         <Divider className={styles.divider2} orientation="vertical" flexItem />
-                        <Grid item xs style={{margin: "10px"}}>
+                        <Grid item xs style={{ margin: "10px" }}>
                             <Typography id="modal-modal-description">
                                 There are a few helper methods included the in the filter language* to help building queries more easily.
                             </Typography>
                             <br></br>
                             <Typography id="modal-modal-description">
-                                true if the given selector's value starts with (similarly <code style={{fontSize: "14px"}}>endsWith</code>, <code style={{fontSize: "14px"}}>contains</code>) the string:
+                                true if the given selector's value starts with (similarly <code style={{ fontSize: "14px" }}>endsWith</code>, <code style={{ fontSize: "14px" }}>contains</code>) the string:
                             </Typography>
                             <SyntaxHighlighter
                                 showLineNumbers={false}
@@ -300,7 +300,7 @@ export const QueryForm: React.FC<QueryFormProps> = ({ backgroundColor }) => {
                         </Grid>
                     </Grid>
                     <br></br>
-                    <Typography id="modal-modal-description" style={{fontSize: 12, fontStyle: 'italic'}}>
+                    <Typography id="modal-modal-description" style={{ fontSize: 12, fontStyle: 'italic' }}>
                         *The filtering functionality is provided through <b>Basenine</b> database server. Please refer to <a href="https://github.com/up9inc/basenine/wiki/BFL-Syntax-Reference"><b>BFL Syntax Reference</b></a> for more information.
                     </Typography>
                 </Box>
