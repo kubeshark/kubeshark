@@ -30,12 +30,9 @@ type tlsPoller struct {
 	extension       *api.Extension
 	procfs          string
 	pidToNamespace  sync.Map
-	id              int64
 	isClosed        bool
 	protoIdentifier *api.ProtoIdentifier
 	isTapTarget     bool
-	clients         []api.TcpReader
-	servers         []api.TcpReader
 	origin          api.Capture
 	createdAt       time.Time
 }
@@ -144,6 +141,7 @@ func (p *tlsPoller) handleTlsChunk(chunk *tlsChunk, extension *api.Extension,
 		func(r *tlsReader) {
 			p.closeReader(key, r)
 		},
+		chunk.IsRequest(),
 		p,
 	)
 
@@ -279,7 +277,9 @@ func (p *tlsPoller) logTls(chunk *tlsChunk, ip net.IP, port uint16) {
 		chunk.Recorded, chunk.Len, chunk.Start, str, hex.EncodeToString(chunk.Data[0:chunk.Recorded]))
 }
 
-func (p *tlsPoller) Close() {}
+func (p *tlsPoller) Close() {
+	// TODO: Implement
+}
 
 func (p *tlsPoller) CloseOtherProtocolDissectors(protocol *api.Protocol) {
 	// TODO: Implement
@@ -290,19 +290,19 @@ func (p *tlsPoller) AddClient(reader api.TcpReader) {}
 func (p *tlsPoller) AddServer(reader api.TcpReader) {}
 
 func (p *tlsPoller) GetClients() []api.TcpReader {
-	return p.clients
+	return []api.TcpReader{}
 }
 
 func (p *tlsPoller) GetServers() []api.TcpReader {
-	return p.servers
+	return []api.TcpReader{}
 }
 
 func (p *tlsPoller) GetClient(index int) api.TcpReader {
-	return p.clients[index]
+	return &tlsReader{}
 }
 
 func (p *tlsPoller) GetServer(index int) api.TcpReader {
-	return p.servers[index]
+	return &tlsReader{}
 }
 
 func (p *tlsPoller) GetOrigin() api.Capture {
@@ -326,9 +326,7 @@ func (p *tlsPoller) GetIsClosed() bool {
 }
 
 func (p *tlsPoller) GetId() int64 {
-	return p.id
+	return 0
 }
 
-func (p *tlsPoller) SetId(id int64) {
-	p.id = id
-}
+func (p *tlsPoller) SetId(id int64) {}
