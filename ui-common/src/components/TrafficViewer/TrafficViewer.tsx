@@ -21,6 +21,7 @@ import tappingStatusAtom from "../../recoil/tappingStatus/atom";
 import { TOAST_CONTAINER_ID } from "../../configs/Consts";
 import leftOffTopAtom from "../../recoil/leftOffTop";
 import { DEFAULT_LEFTOFF } from '../../helpers/Consts';
+import { IsShouldStartStreamDataContext } from "./IsShouldStartStreamDataContext";
 
 const useLayoutStyles = makeStyles(() => ({
   details: {
@@ -248,25 +249,25 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({
       </div>
       {<div className={TrafficViewerStyles.TrafficPageContainer}>
         <div className={TrafficViewerStyles.TrafficPageListContainer}>
-          <Filters
-            backgroundColor={queryBackgroundColor}
-            reopenConnection={reopenConnection}
-          />
-          <div className={styles.container}>
-            <EntriesList
-              listEntryREF={listEntry}
-              onSnapBrokenEvent={onSnapBrokenEvent}
-              isSnappedToBottom={isSnappedToBottom}
-              setIsSnappedToBottom={setIsSnappedToBottom}
-              noMoreDataTop={noMoreDataTop}
-              setNoMoreDataTop={setNoMoreDataTop}
-              openEmptyWebSocket={openEmptyWebSocket}
-              scrollableRef={scrollableRef}
-              ws={ws}
-              isShouldStartStreamData={isShouldStartStreamData}
-              setIsShouldStartStreamData={setIsShouldStartStreamData}
+          <IsShouldStartStreamDataContext.Provider value={{ setIsShouldStartStreamData: setIsShouldStartStreamData, isShouldStartStreamData: isShouldStartStreamData }}>
+            <Filters
+              backgroundColor={queryBackgroundColor}
+              reopenConnection={reopenConnection}
             />
-          </div>
+            <div className={styles.container}>
+              <EntriesList
+                listEntryREF={listEntry}
+                onSnapBrokenEvent={onSnapBrokenEvent}
+                isSnappedToBottom={isSnappedToBottom}
+                setIsSnappedToBottom={setIsSnappedToBottom}
+                noMoreDataTop={noMoreDataTop}
+                setNoMoreDataTop={setNoMoreDataTop}
+                openEmptyWebSocket={openEmptyWebSocket}
+                scrollableRef={scrollableRef}
+                ws={ws}
+              />
+            </div>
+          </IsShouldStartStreamDataContext.Provider>
         </div>
         <div className={classes.details} id="rightSideContainer">
           <EntryDetailed />

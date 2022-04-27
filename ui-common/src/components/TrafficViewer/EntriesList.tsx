@@ -16,6 +16,7 @@ import { MAX_ENTRIES, TOAST_CONTAINER_ID } from "../../configs/Consts";
 import tappingStatusAtom from "../../recoil/tappingStatus";
 import leftOffTopAtom from "../../recoil/leftOffTop";
 import { DEFAULT_LEFTOFF } from "../../helpers/Consts";
+import { IsShouldStartStreamDataContext } from "./IsShouldStartStreamDataContext";
 
 interface EntriesListProps {
   listEntryREF: any;
@@ -27,8 +28,6 @@ interface EntriesListProps {
   openEmptyWebSocket: (resetEntries: boolean, leftOffBottom?: string, queryToSend?: string) => void;
   scrollableRef: any;
   ws: any;
-  isShouldStartStreamData: boolean,
-  setIsShouldStartStreamData: (flag: boolean) => void;
 }
 
 export const EntriesList: React.FC<EntriesListProps> = ({
@@ -40,9 +39,7 @@ export const EntriesList: React.FC<EntriesListProps> = ({
   setNoMoreDataTop,
   openEmptyWebSocket,
   scrollableRef,
-  ws,
-  isShouldStartStreamData,
-  setIsShouldStartStreamData
+  ws
 }) => {
 
   const [entries, setEntries] = useRecoilState(entriesAtom);
@@ -59,6 +56,8 @@ export const EntriesList: React.FC<EntriesListProps> = ({
   const [queriedTotal, setQueriedTotal] = useState(0);
   const [startTime, setStartTime] = useState(0);
   const [truncatedTimestamp, setTruncatedTimestamp] = useState(0);
+
+  const { setIsShouldStartStreamData, isShouldStartStreamData } = React.useContext(IsShouldStartStreamDataContext)
 
   const getLeftOffBottom = (entriesArr) => entriesArr.length > 0 ? entriesArr[entriesArr.length - 1].id : DEFAULT_LEFTOFF
   const leftOffBottom = useMemo(() => getLeftOffBottom(entries), [entries])
@@ -122,9 +121,10 @@ export const EntriesList: React.FC<EntriesListProps> = ({
   }, [trafficViewerApi, setLoadMoreTop, setIsLoadingTop, entries, setEntries, query, setNoMoreDataTop, leftOffTop, setLeftOffTop, setQueriedTotal, setTruncatedTimestamp, scrollableRef]);
 
   useEffect(() => {
-    if (!isWsConnectionClosed || !loadMoreTop || noMoreDataTop) return;
-    getOldEntries();
-  }, [loadMoreTop, noMoreDataTop, getOldEntries, isWsConnectionClosed]);
+    if (loadMoreTop && noMoreDataTop) {
+      getOldEntries();
+    }
+  }, [loadMoreTop, noMoreDataTop, getOldEntries]);
 
   useEffect(() => {
     (async () => {
@@ -161,7 +161,11 @@ export const EntriesList: React.FC<EntriesListProps> = ({
       const message = JSON.parse(e.data);
       switch (message.messageType) {
         case "entry":
-          setEntries(entriesState => [...entriesState, message.data]);
+          setEntries((entriesState) => {
+            // websocket returns 1 last entry which can exist already when open socket after fetch
+            const isExistAlready = entriesState.find(x => x.id === message.data.id)
+            return !isExistAlready ? [...entriesState, message.data] : entriesState
+          });
           break;
         case "status":
           setTappingStatus(message.tappingStatus);

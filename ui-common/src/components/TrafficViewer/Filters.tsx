@@ -11,26 +11,23 @@ import {useRecoilState, useRecoilValue} from "recoil";
 import queryAtom from "../../recoil/query";
 import useKeyPress from "../../hooks/useKeyPress"
 import shortcutsKeyboard from "../../configs/shortcutsKeyboard"
-import trafficViewerApiAtom from "../../recoil/TrafficViewerApi"
+import { IsShouldStartStreamDataContext } from "./IsShouldStartStreamDataContext";
 
 
 interface FiltersProps {
     backgroundColor: string
-    reopenConnection: any;
 }
 
-export const Filters: React.FC<FiltersProps> = ({backgroundColor, reopenConnection}) => {
+export const Filters: React.FC<FiltersProps> = ({ backgroundColor }) => {
     return <div className={styles.container}>
         <QueryForm
             backgroundColor={backgroundColor}
-            reopenConnection={reopenConnection}
         />
     </div>;
 };
 
 interface QueryFormProps {
     backgroundColor: string
-    reopenConnection: any;
 }
 
 export const modalStyle = {
@@ -47,12 +44,13 @@ export const modalStyle = {
     color: '#000',
 };
 
-export const QueryForm: React.FC<QueryFormProps> = ({backgroundColor, reopenConnection}) => {
+export const QueryForm: React.FC<QueryFormProps> = ({ backgroundColor }) => {
 
     const formRef = useRef<HTMLFormElement>(null);
     const [query, setQuery] = useRecoilState(queryAtom);
 
     const [openModal, setOpenModal] = useState(false);
+    const { setIsShouldStartStreamData } = React.useContext(IsShouldStartStreamDataContext)
 
     const handleOpenModal = () => setOpenModal(true);
     const handleCloseModal = () => setOpenModal(false);
@@ -62,7 +60,7 @@ export const QueryForm: React.FC<QueryFormProps> = ({backgroundColor, reopenConn
     }
 
     const handleSubmit = (e) => {
-        reopenConnection();
+        setIsShouldStartStreamData(true)
         e.preventDefault();
     }
 
