@@ -10,7 +10,6 @@ const (
 	ValidationRulesFileName    = "validation-rules.yaml"
 	ContractFileName           = "contract-oas.yaml"
 	ConfigFileName             = "mizu-config.json"
-	GoGCEnvVar                 = "GOGC"
 	DefaultApiServerPort       = 8899
 	LogLevelEnvVar             = "LOG_LEVEL"
 	MizuAgentImageRepo         = "docker.io/up9inc/mizu"
