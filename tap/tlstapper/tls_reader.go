@@ -60,7 +60,7 @@ func (r *tlsReader) Read(p []byte) (int, error) {
 				return 0, io.EOF
 			}
 
-			r.data = chunk.GetRecordedData()
+			r.data = chunk.getRecordedData()
 		case <-time.After(time.Second * 3):
 			r.doneHandler(r)
 			return 0, io.EOF

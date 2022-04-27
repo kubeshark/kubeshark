@@ -126,7 +126,7 @@ func (p *tlsPoller) pollChunksPerfBuffer(chunks chan<- *tlsChunk) {
 
 func (p *tlsPoller) handleTlsChunk(chunk *tlsChunk, extension *api.Extension,
 	emitter api.Emitter, options *api.TrafficFilteringOptions) error {
-	ip, port, err := chunk.GetAddress()
+	ip, port, err := chunk.getAddress()
 
 	if err != nil {
 		return err
@@ -140,7 +140,7 @@ func (p *tlsPoller) handleTlsChunk(chunk *tlsChunk, extension *api.Extension,
 		func(r *tlsReader) {
 			p.closeReader(key, r)
 		},
-		chunk.IsRequest(),
+		chunk.isRequest(),
 		p,
 	)
 
@@ -195,11 +195,11 @@ func (p *tlsPoller) closeReader(key string, r *tlsReader) {
 }
 
 func buildTlsKey(chunk *tlsChunk, ip net.IP, port uint16) string {
-	return fmt.Sprintf("%v:%v-%v:%v", chunk.IsClient(), chunk.IsRead(), ip, port)
+	return fmt.Sprintf("%v:%v-%v:%v", chunk.isClient(), chunk.isRead(), ip, port)
 }
 
 func (p *tlsPoller) buildTcpId(chunk *tlsChunk, ip net.IP, port uint16) api.TcpID {
-	myIp, myPort, err := getAddressBySockfd(p.procfs, chunk.Pid, chunk.Fd, chunk.IsClient())
+	myIp, myPort, err := getAddressBySockfd(p.procfs, chunk.Pid, chunk.Fd, chunk.isClient())
 
 	if err != nil {
 		// May happen if the socket already closed, very likely to happen for localhost
@@ -208,7 +208,7 @@ func (p *tlsPoller) buildTcpId(chunk *tlsChunk, ip net.IP, port uint16) api.TcpI
 		myPort = api.UnknownPort
 	}
 
-	if chunk.IsRequest() {
+	if chunk.isRequest() {
 		return api.TcpID{
 			SrcIP:   myIp.String(),
 			DstIP:   ip.String(),
@@ -257,13 +257,13 @@ func (p *tlsPoller) clearPids() {
 func (p *tlsPoller) logTls(chunk *tlsChunk, ip net.IP, port uint16) {
 	var flagsStr string
 
-	if chunk.IsClient() {
+	if chunk.isClient() {
 		flagsStr = "C"
 	} else {
 		flagsStr = "S"
 	}
 
-	if chunk.IsRead() {
+	if chunk.isRead() {
 		flagsStr += "R"
 	} else {
 		flagsStr += "W"

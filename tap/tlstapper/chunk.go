@@ -27,7 +27,7 @@ type tlsChunk struct {
 	Data     [4096]byte // actual tls data
 }
 
-func (c *tlsChunk) GetAddress() (net.IP, uint16, error) {
+func (c *tlsChunk) getAddress() (net.IP, uint16, error) {
 	address := bytes.NewReader(c.Address[:])
 	var family uint16
 	var port uint16
@@ -50,26 +50,26 @@ func (c *tlsChunk) GetAddress() (net.IP, uint16, error) {
 	return ip, port, nil
 }
 
-func (c *tlsChunk) IsClient() bool {
+func (c *tlsChunk) isClient() bool {
 	return c.Flags&FLAGS_IS_CLIENT_BIT != 0
 }
 
-func (c *tlsChunk) IsServer() bool {
-	return !c.IsClient()
+func (c *tlsChunk) isServer() bool {
+	return !c.isClient()
 }
 
-func (c *tlsChunk) IsRead() bool {
+func (c *tlsChunk) isRead() bool {
 	return c.Flags&FLAGS_IS_READ_BIT != 0
 }
 
-func (c *tlsChunk) IsWrite() bool {
-	return !c.IsRead()
+func (c *tlsChunk) isWrite() bool {
+	return !c.isRead()
 }
 
-func (c *tlsChunk) GetRecordedData() []byte {
+func (c *tlsChunk) getRecordedData() []byte {
 	return c.Data[:c.Recorded]
 }
 
-func (c *tlsChunk) IsRequest() bool {
-	return (c.IsClient() && c.IsWrite()) || (c.IsServer() && c.IsRead())
+func (c *tlsChunk) isRequest() bool {
+	return (c.isClient() && c.isWrite()) || (c.isServer() && c.isRead())
 }
