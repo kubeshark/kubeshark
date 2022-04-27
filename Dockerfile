@@ -58,6 +58,7 @@ WORKDIR /app/agent-build
 
 COPY agent/go.mod agent/go.sum ./
 COPY shared/go.mod shared/go.mod ../shared/
+COPY logger/go.mod logger/go.mod ../logger/
 COPY tap/go.mod tap/go.mod ../tap/
 COPY tap/api/go.mod ../tap/api/
 COPY tap/extensions/amqp/go.mod ../tap/extensions/amqp/
@@ -70,6 +71,7 @@ RUN go list -f '{{.Path}}@{{.Version}}' -m all | sed 1d | grep -e 'go-cache' | x
 
 # Copy and build agent code
 COPY shared ../shared
+COPY logger ../logger
 COPY tap ../tap
 COPY agent .
 

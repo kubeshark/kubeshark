@@ -9,7 +9,7 @@ import (
 	"github.com/up9inc/mizu/agent/pkg/har"
 
 	"github.com/chanced/openapi"
-	"github.com/up9inc/mizu/shared/logger"
+	"github.com/up9inc/mizu/logger"
 )
 
 func exampleResolver(ref string) (*openapi.ExampleObj, error) {

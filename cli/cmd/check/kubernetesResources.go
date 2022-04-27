@@ -3,10 +3,11 @@ package check
 import (
 	"context"
 	"fmt"
+
 	"github.com/up9inc/mizu/cli/config"
 	"github.com/up9inc/mizu/cli/uiUtils"
+	"github.com/up9inc/mizu/logger"
 	"github.com/up9inc/mizu/shared/kubernetes"
-	"github.com/up9inc/mizu/shared/logger"
 )
 
 func KubernetesResources(ctx context.Context, kubernetesProvider *kubernetes.Provider) bool {

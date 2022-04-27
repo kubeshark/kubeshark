@@ -4,15 +4,16 @@ import (
 	"context"
 	"embed"
 	"fmt"
+	"strings"
+
 	"github.com/up9inc/mizu/cli/bucket"
 	"github.com/up9inc/mizu/cli/config"
 	"github.com/up9inc/mizu/cli/uiUtils"
+	"github.com/up9inc/mizu/logger"
 	"github.com/up9inc/mizu/shared/kubernetes"
-	"github.com/up9inc/mizu/shared/logger"
 	rbac "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/scheme"
-	"strings"
 )
 
 func TapKubernetesPermissions(ctx context.Context, embedFS embed.FS, kubernetesProvider *kubernetes.Provider) bool {

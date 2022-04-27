@@ -6,7 +6,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/up9inc/mizu/shared/logger"
+	"github.com/up9inc/mizu/logger"
 )
 
 func AskForConfirmation(s string) bool {

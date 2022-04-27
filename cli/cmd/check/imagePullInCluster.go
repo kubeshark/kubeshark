@@ -3,13 +3,14 @@ package check
 import (
 	"context"
 	"fmt"
-	"github.com/up9inc/mizu/cli/uiUtils"
-	"github.com/up9inc/mizu/shared/kubernetes"
-	"github.com/up9inc/mizu/shared/logger"
-	core "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"regexp"
 	"time"
+
+	"github.com/up9inc/mizu/cli/uiUtils"
+	"github.com/up9inc/mizu/logger"
+	"github.com/up9inc/mizu/shared/kubernetes"
+	core "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func ImagePullInCluster(ctx context.Context, kubernetesProvider *kubernetes.Provider) bool {

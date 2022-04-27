@@ -3,12 +3,13 @@ package resources
 import (
 	"context"
 	"fmt"
+
 	"github.com/up9inc/mizu/cli/errormessage"
 	"github.com/up9inc/mizu/cli/mizu/fsUtils"
 	"github.com/up9inc/mizu/cli/uiUtils"
 	"github.com/up9inc/mizu/cli/utils"
+	"github.com/up9inc/mizu/logger"
 	"github.com/up9inc/mizu/shared/kubernetes"
-	"github.com/up9inc/mizu/shared/logger"
 	"k8s.io/apimachinery/pkg/util/wait"
 )
 
@@ -53,7 +54,6 @@ func cleanUpNonRestrictedMode(ctx context.Context, cancel context.CancelFunc, ku
 			}
 		}
 	}
-
 
 	if resources, err := kubernetesProvider.ListManagedClusterRoleBindings(ctx); err != nil {
 		resourceDesc := "ClusterRoleBindings"

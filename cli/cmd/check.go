@@ -5,7 +5,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/up9inc/mizu/cli/config/configStructs"
 	"github.com/up9inc/mizu/cli/telemetry"
-	"github.com/up9inc/mizu/shared/logger"
+	"github.com/up9inc/mizu/logger"
 )
 
 var checkCmd = &cobra.Command{

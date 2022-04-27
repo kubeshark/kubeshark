@@ -2,10 +2,11 @@ package utils
 
 import (
 	"context"
-	"github.com/up9inc/mizu/shared/logger"
 	"os"
 	"os/signal"
 	"syscall"
+
+	"github.com/up9inc/mizu/logger"
 )
 
 func WaitForFinish(ctx context.Context, cancel context.CancelFunc) {

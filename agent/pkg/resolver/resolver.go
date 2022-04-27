@@ -5,7 +5,7 @@ import (
 	"errors"
 	"fmt"
 
-	"github.com/up9inc/mizu/shared/logger"
+	"github.com/up9inc/mizu/logger"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 
 	cmap "github.com/orcaman/concurrent-map"
