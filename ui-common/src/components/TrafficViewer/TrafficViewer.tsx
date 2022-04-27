@@ -188,11 +188,6 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({
     }
   }
 
-  const reopenConnection = async () => {
-    closeWebSocket()
-    openEmptyWebSocket()
-  }
-
   useEffect(() => {
     return () => {
       closeWebSocket()
@@ -252,7 +247,6 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({
           <IsShouldStartStreamDataContext.Provider value={{ setIsShouldStartStreamData: setIsShouldStartStreamData, isShouldStartStreamData: isShouldStartStreamData }}>
             <Filters
               backgroundColor={queryBackgroundColor}
-              reopenConnection={reopenConnection}
             />
             <div className={styles.container}>
               <EntriesList
