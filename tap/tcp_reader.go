@@ -8,7 +8,6 @@ import (
 	"time"
 
 	"github.com/up9inc/mizu/logger"
-	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/tap/api"
 )
 
@@ -53,7 +52,7 @@ func NewTcpReader(msgQueue chan api.TcpReaderDataMsg, progress *api.ReadProgress
 	}
 }
 
-func (reader *tcpReader) run(options *shared.TrafficFilteringOptions, wg *sync.WaitGroup) {
+func (reader *tcpReader) run(options *api.TrafficFilteringOptions, wg *sync.WaitGroup) {
 	defer wg.Done()
 	b := bufio.NewReader(reader)
 	err := reader.extension.Dissector.Dissect(b, reader, options)

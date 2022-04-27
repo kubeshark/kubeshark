@@ -251,17 +251,17 @@ func setUIFlags(uiIndexPath string) error {
 	return nil
 }
 
-func getTrafficFilteringOptions() *shared.TrafficFilteringOptions {
+func getTrafficFilteringOptions() *tapApi.TrafficFilteringOptions {
 	filteringOptionsJson := os.Getenv(shared.MizuFilteringOptionsEnvVar)
 	if filteringOptionsJson == "" {
-		return &shared.TrafficFilteringOptions{
+		return &tapApi.TrafficFilteringOptions{
 			IgnoredUserAgents: []string{},
 		}
 	}
-	var filteringOptions shared.TrafficFilteringOptions
+	var filteringOptions tapApi.TrafficFilteringOptions
 	err := json.Unmarshal([]byte(filteringOptionsJson), &filteringOptions)
 	if err != nil {
-		panic(fmt.Sprintf("env var %s's value of %s is invalid! json must match the shared.TrafficFilteringOptions struct %v", shared.MizuFilteringOptionsEnvVar, filteringOptionsJson, err))
+		panic(fmt.Sprintf("env var %s's value of %s is invalid! json must match the tapApi.TrafficFilteringOptions struct %v", shared.MizuFilteringOptionsEnvVar, filteringOptionsJson, err))
 	}
 
 	return &filteringOptions

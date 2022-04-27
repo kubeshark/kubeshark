@@ -10,6 +10,7 @@ import (
 	"github.com/up9inc/mizu/logger"
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/shared/debounce"
+	"github.com/up9inc/mizu/tap/api"
 	core "k8s.io/api/core/v1"
 )
 
@@ -43,7 +44,7 @@ type TapperSyncerConfig struct {
 	ImagePullPolicy          core.PullPolicy
 	LogLevel                 logging.Level
 	IgnoredUserAgents        []string
-	MizuApiFilteringOptions  shared.TrafficFilteringOptions
+	MizuApiFilteringOptions  api.TrafficFilteringOptions
 	MizuServiceAccountExists bool
 	ServiceMesh              bool
 	Tls                      bool

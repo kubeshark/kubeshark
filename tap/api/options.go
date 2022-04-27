@@ -1,4 +1,4 @@
-package shared
+package api
 
 type TrafficFilteringOptions struct {
 	IgnoredUserAgents       []string

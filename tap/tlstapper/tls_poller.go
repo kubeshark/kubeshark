@@ -17,7 +17,6 @@ import (
 	"github.com/cilium/ebpf/perf"
 	"github.com/go-errors/errors"
 	"github.com/up9inc/mizu/logger"
-	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/tap/api"
 )
 
@@ -69,7 +68,7 @@ func (p *tlsPoller) close() error {
 	return p.chunksReader.Close()
 }
 
-func (p *tlsPoller) poll(emitter api.Emitter, options *shared.TrafficFilteringOptions) {
+func (p *tlsPoller) poll(emitter api.Emitter, options *api.TrafficFilteringOptions) {
 	chunks := make(chan *tlsChunk)
 
 	go p.pollChunksPerfBuffer(chunks)
@@ -126,7 +125,7 @@ func (p *tlsPoller) pollChunksPerfBuffer(chunks chan<- *tlsChunk) {
 }
 
 func (p *tlsPoller) handleTlsChunk(chunk *tlsChunk, extension *api.Extension,
-	emitter api.Emitter, options *shared.TrafficFilteringOptions) error {
+	emitter api.Emitter, options *api.TrafficFilteringOptions) error {
 	ip, port, err := chunk.GetAddress()
 
 	if err != nil {
@@ -163,7 +162,7 @@ func (p *tlsPoller) handleTlsChunk(chunk *tlsChunk, extension *api.Extension,
 }
 
 func (p *tlsPoller) startNewTlsReader(chunk *tlsChunk, ip net.IP, port uint16, key string, extension *api.Extension,
-	reader api.TcpReader, options *shared.TrafficFilteringOptions) api.TcpReader {
+	reader api.TcpReader, options *api.TrafficFilteringOptions) api.TcpReader {
 
 	tcpid := p.buildTcpId(chunk, ip, port)
 
@@ -180,7 +179,7 @@ func (p *tlsPoller) startNewTlsReader(chunk *tlsChunk, ip net.IP, port uint16, k
 }
 
 func dissect(extension *api.Extension, reader api.TcpReader,
-	options *shared.TrafficFilteringOptions) {
+	options *api.TrafficFilteringOptions) {
 	b := bufio.NewReader(reader)
 
 	err := extension.Dissector.Dissect(b, reader, options)

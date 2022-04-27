@@ -15,7 +15,6 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/tap/api"
 )
 
@@ -74,7 +73,7 @@ func TestDissect(t *testing.T) {
 		log.Fatal(err)
 	}
 
-	options := &shared.TrafficFilteringOptions{
+	options := &api.TrafficFilteringOptions{
 		IgnoredUserAgents: []string{},
 	}
 

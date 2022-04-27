@@ -13,6 +13,7 @@ require (
 	github.com/spf13/pflag v1.0.5
 	github.com/up9inc/mizu/logger v0.0.0
 	github.com/up9inc/mizu/shared v0.0.0
+	github.com/up9inc/mizu/tap/api v0.0.0
 	golang.org/x/oauth2 v0.0.0-20211104180415-d3ed0bb246c8
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
 	k8s.io/api v0.23.3
@@ -51,6 +52,7 @@ require (
 	github.com/google/go-cmp v0.5.7 // indirect
 	github.com/google/go-querystring v1.1.0 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
+	github.com/google/martian v2.1.0+incompatible // indirect
 	github.com/google/shlex v0.0.0-20191202100458-e7afc7fbc510 // indirect
 	github.com/googleapis/gnostic v0.5.5 // indirect
 	github.com/gregjones/httpcache v0.0.0-20190611155906-901d90724c79 // indirect

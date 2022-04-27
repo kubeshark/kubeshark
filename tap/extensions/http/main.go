@@ -12,7 +12,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/tap/api"
 )
 
@@ -87,7 +86,7 @@ func (d dissecting) Ping() {
 	log.Printf("pong %s", http11protocol.Name)
 }
 
-func (d dissecting) Dissect(b *bufio.Reader, reader api.TcpReader, options *shared.TrafficFilteringOptions) error {
+func (d dissecting) Dissect(b *bufio.Reader, reader api.TcpReader, options *api.TrafficFilteringOptions) error {
 	reqResMatcher := reader.GetReqResMatcher().(*requestResponseMatcher)
 
 	var err error
