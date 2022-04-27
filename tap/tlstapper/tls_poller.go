@@ -131,6 +131,7 @@ func (p *tlsPoller) handleTlsChunk(chunk *tlsChunk, extension *api.Extension,
 		p.readers[key] = reader
 	}
 
+	reader.timer.CaptureTime = time.Now()
 	reader.chunks <- chunk
 
 	if os.Getenv("MIZU_VERBOSE_TLS_TAPPER") == "true" {
@@ -150,6 +151,9 @@ func (p *tlsPoller) startNewTlsReader(chunk *tlsChunk, ip net.IP, port uint16, k
 			p.closeReader(key, r)
 		},
 		progress: &api.ReadProgress{},
+		timer: api.SuperTimer{
+			CaptureTime: time.Now(),
+		},
 	}
 
 	tcpid := p.buildTcpId(chunk, ip, port)
@@ -166,13 +170,9 @@ func (p *tlsPoller) startNewTlsReader(chunk *tlsChunk, ip net.IP, port uint16, k
 func dissect(extension *api.Extension, reader *tlsReader, isRequest bool, tcpid *api.TcpID,
 	tlsEmitter *tlsEmitter, options *api.TrafficFilteringOptions, reqResMatcher api.RequestResponseMatcher) {
 	b := bufio.NewReader(reader)
-	
-	timer := api.SuperTimer{
-		CaptureTime: time.Now(),
-	}
 
 	err := extension.Dissector.Dissect(b, reader.progress, api.Ebpf, isRequest, tcpid, &api.CounterPair{},
-		&timer, &api.SuperIdentifier{}, tlsEmitter, options, reqResMatcher)
+		&reader.timer, &api.SuperIdentifier{}, tlsEmitter, options, reqResMatcher)
 
 	if err != nil {
 		logger.Log.Warningf("Error dissecting TLS %v - %v", tcpid, err)
