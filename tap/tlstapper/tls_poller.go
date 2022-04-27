@@ -136,7 +136,7 @@ func (p *tlsPoller) handleTlsChunk(chunk *tlsChunk, extension *api.Extension,
 	key := buildTlsKey(chunk, ip, port)
 	reader, exists := p.readers[key]
 
-	tlsReader := NewTlsReader(
+	newReader := NewTlsReader(
 		key,
 		func(r *tlsReader) {
 			p.closeReader(key, r)
@@ -146,12 +146,14 @@ func (p *tlsPoller) handleTlsChunk(chunk *tlsChunk, extension *api.Extension,
 	)
 
 	if !exists {
-		reader = p.startNewTlsReader(chunk, ip, port, key, extension, tlsReader, options)
+		reader = p.startNewTlsReader(chunk, ip, port, key, extension, newReader, options)
 		p.readers[key] = reader
 	}
 
-	reader.SetCaptureTime(time.Now())
-	reader.SendChunk(chunk)
+	tlsReader := reader.(*tlsReader)
+
+	tlsReader.setCaptureTime(time.Now())
+	tlsReader.sendChunk(chunk)
 
 	if os.Getenv("MIZU_VERBOSE_TLS_TAPPER") == "true" {
 		p.logTls(chunk, ip, port)
@@ -164,9 +166,11 @@ func (p *tlsPoller) startNewTlsReader(chunk *tlsChunk, ip net.IP, port uint16, k
 	reader api.TcpReader, options *shared.TrafficFilteringOptions) api.TcpReader {
 
 	tcpid := p.buildTcpId(chunk, ip, port)
-	reader.SetTcpID(&tcpid)
 
-	reader.SetEmitter(&tlsEmitter{
+	tlsReader := reader.(*tlsReader)
+	tlsReader.setTcpID(&tcpid)
+
+	tlsReader.setEmitter(&tlsEmitter{
 		delegate:  reader.GetEmitter(),
 		namespace: p.getNamespace(chunk.Pid),
 	})
@@ -277,32 +281,8 @@ func (p *tlsPoller) logTls(chunk *tlsChunk, ip net.IP, port uint16) {
 		chunk.Recorded, chunk.Len, chunk.Start, str, hex.EncodeToString(chunk.Data[0:chunk.Recorded]))
 }
 
-func (p *tlsPoller) Close() {
+func (p *tlsPoller) SetProtocol(protocol *api.Protocol) {
 	// TODO: Implement
-}
-
-func (p *tlsPoller) CloseOtherProtocolDissectors(protocol *api.Protocol) {
-	// TODO: Implement
-}
-
-func (p *tlsPoller) AddClient(reader api.TcpReader) {}
-
-func (p *tlsPoller) AddServer(reader api.TcpReader) {}
-
-func (p *tlsPoller) GetClients() []api.TcpReader {
-	return []api.TcpReader{}
-}
-
-func (p *tlsPoller) GetServers() []api.TcpReader {
-	return []api.TcpReader{}
-}
-
-func (p *tlsPoller) GetClient(index int) api.TcpReader {
-	return &tlsReader{}
-}
-
-func (p *tlsPoller) GetServer(index int) api.TcpReader {
-	return &tlsReader{}
 }
 
 func (p *tlsPoller) GetOrigin() api.Capture {
@@ -324,9 +304,3 @@ func (p *tlsPoller) GetIsTapTarget() bool {
 func (p *tlsPoller) GetIsClosed() bool {
 	return p.isClosed
 }
-
-func (p *tlsPoller) GetId() int64 {
-	return 0
-}
-
-func (p *tlsPoller) SetId(id int64) {}

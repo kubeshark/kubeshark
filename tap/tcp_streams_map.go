@@ -1,8 +1,8 @@
-package tcp
+package tap
 
 import (
 	"runtime"
-	"runtime/debug"
+	_debug "runtime/debug"
 	"sync"
 	"time"
 
@@ -48,12 +48,12 @@ func (streamMap *tcpStreamMap) CloseTimedoutTcpStreamChannels() {
 	for {
 		<-ticker.C
 
-		debug.FreeOSMemory()
+		_debug.FreeOSMemory()
 		streamMap.streams.Range(func(key interface{}, value interface{}) bool {
 			stream := value.(*tcpStream)
 			if stream.protoIdentifier.Protocol == nil {
 				if !stream.isClosed && time.Now().After(stream.createdAt.Add(tcpStreamChannelTimeoutMs)) {
-					stream.Close()
+					stream.close()
 					diagnose.AppStatsInst.IncDroppedTcpStreams()
 					logger.Log.Debugf("Dropped an unidentified TCP stream because of timeout. Total dropped: %d Total Goroutines: %d Timeout (ms): %d",
 						diagnose.AppStatsInst.DroppedTcpStreams, runtime.NumGoroutine(), tcpStreamChannelTimeoutMs/time.Millisecond)

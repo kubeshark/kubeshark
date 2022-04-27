@@ -1,4 +1,4 @@
-package tcp
+package tap
 
 import (
 	"sync"
@@ -43,7 +43,15 @@ func NewTcpStreamDummy(capture api.Capture) api.TcpStream {
 	}
 }
 
-func (t *tcpStream) Close() {
+func (t *tcpStream) getId() int64 {
+	return t.id
+}
+
+func (t *tcpStream) setId(id int64) {
+	t.id = id
+}
+
+func (t *tcpStream) close() {
 	t.Lock()
 	defer t.Unlock()
 
@@ -57,15 +65,39 @@ func (t *tcpStream) Close() {
 
 	for i := range t.clients {
 		reader := t.clients[i]
-		reader.Close()
+		reader.(*tcpReader).close()
 	}
 	for i := range t.servers {
 		reader := t.servers[i]
-		reader.Close()
+		reader.(*tcpReader).close()
 	}
 }
 
-func (t *tcpStream) CloseOtherProtocolDissectors(protocol *api.Protocol) {
+func (t *tcpStream) addClient(reader api.TcpReader) {
+	t.clients = append(t.clients, reader)
+}
+
+func (t *tcpStream) addServer(reader api.TcpReader) {
+	t.servers = append(t.servers, reader)
+}
+
+func (t *tcpStream) getClients() []api.TcpReader {
+	return t.clients
+}
+
+func (t *tcpStream) getServers() []api.TcpReader {
+	return t.servers
+}
+
+func (t *tcpStream) getClient(index int) api.TcpReader {
+	return t.clients[index]
+}
+
+func (t *tcpStream) getServer(index int) api.TcpReader {
+	return t.servers[index]
+}
+
+func (t *tcpStream) SetProtocol(protocol *api.Protocol) {
 	t.Lock()
 	defer t.Unlock()
 
@@ -78,41 +110,17 @@ func (t *tcpStream) CloseOtherProtocolDissectors(protocol *api.Protocol) {
 	for i := range t.clients {
 		reader := t.clients[i]
 		if reader.GetExtension().Protocol != t.protoIdentifier.Protocol {
-			reader.Close()
+			reader.(*tcpReader).close()
 		}
 	}
 	for i := range t.servers {
 		reader := t.servers[i]
 		if reader.GetExtension().Protocol != t.protoIdentifier.Protocol {
-			reader.Close()
+			reader.(*tcpReader).close()
 		}
 	}
 
 	t.protoIdentifier.IsClosedOthers = true
-}
-
-func (t *tcpStream) AddClient(reader api.TcpReader) {
-	t.clients = append(t.clients, reader)
-}
-
-func (t *tcpStream) AddServer(reader api.TcpReader) {
-	t.servers = append(t.servers, reader)
-}
-
-func (t *tcpStream) GetClients() []api.TcpReader {
-	return t.clients
-}
-
-func (t *tcpStream) GetServers() []api.TcpReader {
-	return t.servers
-}
-
-func (t *tcpStream) GetClient(index int) api.TcpReader {
-	return t.clients[index]
-}
-
-func (t *tcpStream) GetServer(index int) api.TcpReader {
-	return t.servers[index]
 }
 
 func (t *tcpStream) GetOrigin() api.Capture {
@@ -133,12 +141,4 @@ func (t *tcpStream) GetIsTapTarget() bool {
 
 func (t *tcpStream) GetIsClosed() bool {
 	return t.isClosed
-}
-
-func (t *tcpStream) GetId() int64 {
-	return t.id
-}
-
-func (t *tcpStream) SetId(id int64) {
-	t.id = id
 }

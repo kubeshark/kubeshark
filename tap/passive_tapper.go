@@ -22,7 +22,6 @@ import (
 	"github.com/up9inc/mizu/tap/api"
 	"github.com/up9inc/mizu/tap/diagnose"
 	"github.com/up9inc/mizu/tap/source"
-	"github.com/up9inc/mizu/tap/tcp"
 	"github.com/up9inc/mizu/tap/tlstapper"
 	v1 "k8s.io/api/core/v1"
 )
@@ -184,7 +183,7 @@ func initializePacketSources() error {
 }
 
 func initializePassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem) (api.TcpStreamMap, *tcpAssembler) {
-	streamsMap := tcp.NewTcpStreamMap()
+	streamsMap := NewTcpStreamMap()
 
 	diagnose.InitializeErrorsMap(*debug, *verbose, *quiet)
 	diagnose.InitializeTapperInternalStats()

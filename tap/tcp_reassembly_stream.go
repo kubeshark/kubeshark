@@ -8,7 +8,6 @@ import (
 	"github.com/google/gopacket/reassembly"
 	"github.com/up9inc/mizu/tap/api"
 	"github.com/up9inc/mizu/tap/diagnose"
-	"github.com/up9inc/mizu/tap/tcp"
 )
 
 type ReassemblyStream interface {
@@ -146,15 +145,16 @@ func (t *tcpReassemblyStream) ReassembledSG(sg reassembly.ScatterGather, ac reas
 			// This channel is read by an tcpReader object
 			diagnose.AppStatsInst.IncReassembledTcpPayloadsCount()
 			timestamp := ac.GetCaptureInfo().Timestamp
+			stream := t.tcpStream.(*tcpStream)
 			if dir == reassembly.TCPDirClientToServer {
-				for i := range t.tcpStream.GetClients() {
-					reader := t.tcpStream.GetClient(i)
-					reader.SendMsgIfNotClosed(tcp.NewTcpReaderDataMsg(data, timestamp))
+				for i := range stream.getClients() {
+					reader := stream.getClient(i).(*tcpReader)
+					reader.sendMsgIfNotClosed(NewTcpReaderDataMsg(data, timestamp))
 				}
 			} else {
-				for i := range t.tcpStream.GetServers() {
-					reader := t.tcpStream.GetServer(i)
-					reader.SendMsgIfNotClosed(tcp.NewTcpReaderDataMsg(data, timestamp))
+				for i := range stream.getServers() {
+					reader := stream.getServer(i).(*tcpReader)
+					reader.sendMsgIfNotClosed(NewTcpReaderDataMsg(data, timestamp))
 				}
 			}
 		}
@@ -163,7 +163,7 @@ func (t *tcpReassemblyStream) ReassembledSG(sg reassembly.ScatterGather, ac reas
 
 func (t *tcpReassemblyStream) ReassemblyComplete(ac reassembly.AssemblerContext) bool {
 	if t.tcpStream.GetIsTapTarget() && !t.tcpStream.GetIsClosed() {
-		t.tcpStream.Close()
+		t.tcpStream.(*tcpStream).close()
 	}
 	// do not remove the connection to allow last ACK
 	return false

@@ -7,7 +7,6 @@ import (
 
 	"github.com/up9inc/mizu/shared/logger"
 	"github.com/up9inc/mizu/tap/api"
-	"github.com/up9inc/mizu/tap/tcp"
 	v1 "k8s.io/api/core/v1"
 
 	"github.com/google/gopacket"
@@ -59,18 +58,19 @@ func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcpLayer *lay
 
 	props := factory.getStreamProps(srcIp, srcPort, dstIp, dstPort)
 	isTapTarget := props.isTapTarget
-	tcpStream := tcp.NewTcpStream(tcpLayer, isTapTarget, factory.streamsMap, getPacketOrigin(ac))
-	reassemblyStream := NewTcpReassemblyStream(fmt.Sprintf("%s:%s", net, transport), tcpLayer, fsmOptions, tcpStream)
-	if tcpStream.GetIsTapTarget() {
-		tcpStream.SetId(factory.streamsMap.NextId())
+	stream := NewTcpStream(tcpLayer, isTapTarget, factory.streamsMap, getPacketOrigin(ac))
+	reassemblyStream := NewTcpReassemblyStream(fmt.Sprintf("%s:%s", net, transport), tcpLayer, fsmOptions, stream)
+	if stream.GetIsTapTarget() {
+		_stream := stream.(*tcpStream)
+		_stream.setId(factory.streamsMap.NextId())
 		for i, extension := range extensions {
 			reqResMatcher := extension.Dissector.NewResponseRequestMatcher()
 			counterPair := &api.CounterPair{
 				Request:  0,
 				Response: 0,
 			}
-			tcpStream.AddClient(
-				tcp.NewTcpReader(
+			_stream.addClient(
+				NewTcpReader(
 					make(chan api.TcpReaderDataMsg),
 					&api.ReadProgress{},
 					fmt.Sprintf("%s %s", net, transport),
@@ -81,7 +81,7 @@ func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcpLayer *lay
 						DstPort: dstPort,
 					},
 					time.Time{},
-					tcpStream,
+					stream,
 					true,
 					props.isOutgoing,
 					extension,
@@ -90,8 +90,8 @@ func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcpLayer *lay
 					reqResMatcher,
 				),
 			)
-			tcpStream.AddServer(
-				tcp.NewTcpReader(
+			_stream.addServer(
+				NewTcpReader(
 					make(chan api.TcpReaderDataMsg),
 					&api.ReadProgress{},
 					fmt.Sprintf("%s %s", net, transport),
@@ -102,7 +102,7 @@ func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcpLayer *lay
 						DstPort: transport.Src().String(),
 					},
 					time.Time{},
-					tcpStream,
+					stream,
 					false,
 					props.isOutgoing,
 					extension,
@@ -112,11 +112,11 @@ func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcpLayer *lay
 				),
 			)
 
-			factory.streamsMap.Store(tcpStream.GetId(), tcpStream)
+			factory.streamsMap.Store(stream.(*tcpStream).getId(), stream)
 
 			factory.wg.Add(2)
-			go tcpStream.GetClient(i).Run(filteringOptions, &factory.wg)
-			go tcpStream.GetServer(i).Run(filteringOptions, &factory.wg)
+			go _stream.getClient(i).(*tcpReader).run(filteringOptions, &factory.wg)
+			go _stream.getServer(i).(*tcpReader).run(filteringOptions, &factory.wg)
 		}
 	}
 	return reassemblyStream

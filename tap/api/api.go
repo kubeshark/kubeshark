@@ -411,10 +411,6 @@ type TcpReaderDataMsg interface {
 
 type TcpReader interface {
 	Read(p []byte) (int, error)
-	Close()
-	Run(options *shared.TrafficFilteringOptions, wg *sync.WaitGroup)
-	SendMsgIfNotClosed(msg TcpReaderDataMsg)
-	SendChunk(chunk TlsChunk)
 	GetReqResMatcher() RequestResponseMatcher
 	GetIsClient() bool
 	GetReadProgress() *ReadProgress
@@ -425,27 +421,15 @@ type TcpReader interface {
 	GetEmitter() Emitter
 	GetIsClosed() bool
 	GetExtension() *Extension
-	SetTcpID(tcpID *TcpID)
-	SetCaptureTime(captureTime time.Time)
-	SetEmitter(emitter Emitter)
 }
 
 type TcpStream interface {
-	Close()
-	CloseOtherProtocolDissectors(protocol *Protocol)
-	AddClient(reader TcpReader)
-	AddServer(reader TcpReader)
-	GetClients() []TcpReader
-	GetServers() []TcpReader
-	GetClient(index int) TcpReader
-	GetServer(index int) TcpReader
+	SetProtocol(protocol *Protocol)
 	GetOrigin() Capture
 	GetProtoIdentifier() *ProtoIdentifier
 	GetReqResMatcher() RequestResponseMatcher
 	GetIsTapTarget() bool
 	GetIsClosed() bool
-	GetId() int64
-	SetId(id int64)
 }
 
 type TcpStreamMap interface {
@@ -454,14 +438,4 @@ type TcpStreamMap interface {
 	Delete(key interface{})
 	NextId() int64
 	CloseTimedoutTcpStreamChannels()
-}
-
-type TlsChunk interface {
-	GetAddress() (net.IP, uint16, error)
-	IsClient() bool
-	IsServer() bool
-	IsRead() bool
-	IsWrite() bool
-	GetRecordedData() []byte
-	IsRequest() bool
 }

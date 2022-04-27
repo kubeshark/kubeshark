@@ -2,16 +2,14 @@ package tlstapper
 
 import (
 	"io"
-	"sync"
 	"time"
 
-	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/tap/api"
 )
 
 type tlsReader struct {
 	key           string
-	chunks        chan api.TlsChunk
+	chunks        chan *tlsChunk
 	data          []byte
 	doneHandler   func(r *tlsReader)
 	progress      *api.ReadProgress
@@ -29,14 +27,30 @@ type tlsReader struct {
 func NewTlsReader(key string, doneHandler func(r *tlsReader), isClient bool, stream api.TcpStream) api.TcpReader {
 	return &tlsReader{
 		key:         key,
-		chunks:      make(chan api.TlsChunk, 1),
+		chunks:      make(chan *tlsChunk, 1),
 		doneHandler: doneHandler,
 		parent:      stream,
 	}
 }
 
+func (r *tlsReader) sendChunk(chunk *tlsChunk) {
+	r.chunks <- chunk
+}
+
+func (r *tlsReader) setTcpID(tcpID *api.TcpID) {
+	r.tcpID = tcpID
+}
+
+func (r *tlsReader) setCaptureTime(captureTime time.Time) {
+	r.captureTime = captureTime
+}
+
+func (r *tlsReader) setEmitter(emitter api.Emitter) {
+	r.emitter = emitter
+}
+
 func (r *tlsReader) Read(p []byte) (int, error) {
-	var chunk api.TlsChunk
+	var chunk *tlsChunk
 
 	for len(r.data) == 0 {
 		var ok bool
@@ -62,18 +76,6 @@ func (r *tlsReader) Read(p []byte) (int, error) {
 	r.progress.Feed(l)
 
 	return l, nil
-}
-
-func (r *tlsReader) Close() {
-	r.doneHandler(r)
-}
-
-func (r *tlsReader) Run(options *shared.TrafficFilteringOptions, wg *sync.WaitGroup) {}
-
-func (r *tlsReader) SendMsgIfNotClosed(msg api.TcpReaderDataMsg) {}
-
-func (r *tlsReader) SendChunk(chunk api.TlsChunk) {
-	r.chunks <- chunk
 }
 
 func (r *tlsReader) GetReqResMatcher() api.RequestResponseMatcher {
@@ -114,16 +116,4 @@ func (r *tlsReader) GetIsClosed() bool {
 
 func (r *tlsReader) GetExtension() *api.Extension {
 	return r.extension
-}
-
-func (r *tlsReader) SetTcpID(tcpID *api.TcpID) {
-	r.tcpID = tcpID
-}
-
-func (r *tlsReader) SetCaptureTime(captureTime time.Time) {
-	r.captureTime = captureTime
-}
-
-func (r *tlsReader) SetEmitter(emitter api.Emitter) {
-	r.emitter = emitter
 }

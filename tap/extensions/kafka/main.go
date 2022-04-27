@@ -48,13 +48,13 @@ func (d dissecting) Dissect(b *bufio.Reader, reader api.TcpReader, options *shar
 			if err != nil {
 				return err
 			}
-			reader.GetParent().CloseOtherProtocolDissectors(&_protocol)
+			reader.GetParent().SetProtocol(&_protocol)
 		} else {
 			err := ReadResponse(b, reader.GetParent().GetOrigin(), reader.GetTcpID(), reader.GetCounterPair(), reader.GetCaptureTime(), reader.GetEmitter(), reqResMatcher)
 			if err != nil {
 				return err
 			}
-			reader.GetParent().CloseOtherProtocolDissectors(&_protocol)
+			reader.GetParent().SetProtocol(&_protocol)
 		}
 	}
 }

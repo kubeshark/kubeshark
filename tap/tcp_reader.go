@@ -1,4 +1,4 @@
-package tcp
+package tap
 
 import (
 	"bufio"
@@ -53,6 +53,35 @@ func NewTcpReader(msgQueue chan api.TcpReaderDataMsg, progress *api.ReadProgress
 	}
 }
 
+func (reader *tcpReader) run(options *shared.TrafficFilteringOptions, wg *sync.WaitGroup) {
+	defer wg.Done()
+	b := bufio.NewReader(reader)
+	err := reader.extension.Dissector.Dissect(b, reader, options)
+	if err != nil {
+		_, err = io.Copy(ioutil.Discard, reader)
+		if err != nil {
+			logger.Log.Errorf("%v", err)
+		}
+	}
+}
+
+func (reader *tcpReader) close() {
+	reader.Lock()
+	if !reader.isClosed {
+		reader.isClosed = true
+		close(reader.msgQueue)
+	}
+	reader.Unlock()
+}
+
+func (reader *tcpReader) sendMsgIfNotClosed(msg api.TcpReaderDataMsg) {
+	reader.Lock()
+	if !reader.isClosed {
+		reader.msgQueue <- msg
+	}
+	reader.Unlock()
+}
+
 func (reader *tcpReader) Read(p []byte) (int, error) {
 	var msg api.TcpReaderDataMsg
 
@@ -78,37 +107,6 @@ func (reader *tcpReader) Read(p []byte) (int, error) {
 
 	return l, nil
 }
-
-func (reader *tcpReader) Close() {
-	reader.Lock()
-	if !reader.isClosed {
-		reader.isClosed = true
-		close(reader.msgQueue)
-	}
-	reader.Unlock()
-}
-
-func (reader *tcpReader) Run(options *shared.TrafficFilteringOptions, wg *sync.WaitGroup) {
-	defer wg.Done()
-	b := bufio.NewReader(reader)
-	err := reader.extension.Dissector.Dissect(b, reader, options)
-	if err != nil {
-		_, err = io.Copy(ioutil.Discard, reader)
-		if err != nil {
-			logger.Log.Errorf("%v", err)
-		}
-	}
-}
-
-func (reader *tcpReader) SendMsgIfNotClosed(msg api.TcpReaderDataMsg) {
-	reader.Lock()
-	if !reader.isClosed {
-		reader.msgQueue <- msg
-	}
-	reader.Unlock()
-}
-
-func (reader *tcpReader) SendChunk(chunk api.TlsChunk) {}
 
 func (reader *tcpReader) GetReqResMatcher() api.RequestResponseMatcher {
 	return reader.reqResMatcher
@@ -148,16 +146,4 @@ func (reader *tcpReader) GetIsClosed() bool {
 
 func (reader *tcpReader) GetExtension() *api.Extension {
 	return reader.extension
-}
-
-func (reader *tcpReader) SetTcpID(tcpID *api.TcpID) {
-	reader.tcpID = tcpID
-}
-
-func (reader *tcpReader) SetCaptureTime(captureTime time.Time) {
-	reader.captureTime = captureTime
-}
-
-func (reader *tcpReader) SetEmitter(emitter api.Emitter) {
-	reader.emitter = emitter
 }

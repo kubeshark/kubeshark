@@ -12,7 +12,9 @@ require (
 )
 
 require (
+	github.com/cilium/ebpf v0.8.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
+	github.com/go-errors/errors v1.4.2 // indirect
 	github.com/go-logr/logr v1.2.2 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang-jwt/jwt/v4 v4.2.0 // indirect
@@ -25,6 +27,8 @@ require (
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
+	github.com/vishvananda/netns v0.0.0-20211101163701-50045581ed74 // indirect
+	golang.org/x/sys v0.0.0-20220207234003-57398862261d // indirect
 	golang.org/x/text v0.3.7 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
