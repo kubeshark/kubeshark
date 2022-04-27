@@ -128,7 +128,7 @@ func printPeriodicStats(cleaner *Cleaner) {
 		errorMapLen, errorsSummery := diagnose.TapErrors.GetErrorsSummary()
 
 		logger.Log.Infof("%v (errors: %v, errTypes:%v) - Errors Summary: %s",
-			time.Since(diagnose.AppStatsInst.StartTime),
+			time.Since(diagnose.AppStats.StartTime),
 			diagnose.TapErrors.ErrorsCount,
 			errorMapLen,
 			errorsSummery,
@@ -151,7 +151,7 @@ func printPeriodicStats(cleaner *Cleaner) {
 			cleanStats.closed,
 			cleanStats.deleted,
 		)
-		currentAppStats := diagnose.AppStatsInst.DumpStats()
+		currentAppStats := diagnose.AppStats.DumpStats()
 		appStatsJSON, _ := json.Marshal(currentAppStats)
 		logger.Log.Infof("app stats - %v", string(appStatsJSON))
 	}
@@ -201,7 +201,7 @@ func initializePassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelI
 func startPassiveTapper(streamsMap api.TcpStreamMap, assembler *tcpAssembler) {
 	go streamsMap.CloseTimedoutTcpStreamChannels()
 
-	diagnose.AppStatsInst.SetStartTime(time.Now())
+	diagnose.AppStats.SetStartTime(time.Now())
 
 	staleConnectionTimeout := time.Second * time.Duration(*staleTimeoutSeconds)
 	cleaner := Cleaner{
@@ -229,7 +229,7 @@ func startPassiveTapper(streamsMap api.TcpStreamMap, assembler *tcpAssembler) {
 
 	diagnose.InternalStats.PrintStatsSummary()
 	diagnose.TapErrors.PrintSummary()
-	logger.Log.Infof("AppStats: %v", diagnose.AppStatsInst)
+	logger.Log.Infof("AppStats: %v", diagnose.AppStats)
 }
 
 func startTlsTapper(extension *api.Extension, outputItems chan *api.OutputChannelItem, options *api.TrafficFilteringOptions) *tlstapper.TlsTapper {
@@ -257,7 +257,7 @@ func startTlsTapper(extension *api.Extension, outputItems chan *api.OutputChanne
 	}
 
 	var emitter api.Emitter = &api.Emitting{
-		AppStats:      &diagnose.AppStatsInst,
+		AppStats:      &diagnose.AppStats,
 		OutputChannel: outputItems,
 	}
 

@@ -38,7 +38,7 @@ func (c *context) GetCaptureInfo() gopacket.CaptureInfo {
 
 func NewTcpAssembler(outputItems chan *api.OutputChannelItem, streamsMap api.TcpStreamMap, opts *TapOpts) *tcpAssembler {
 	var emitter api.Emitter = &api.Emitting{
-		AppStats:      &diagnose.AppStatsInst,
+		AppStats:      &diagnose.AppStats,
 		OutputChannel: outputItems,
 	}
 
@@ -65,7 +65,7 @@ func (a *tcpAssembler) processPackets(dumpPacket bool, packets <-chan source.Tcp
 	signal.Notify(signalChan, os.Interrupt)
 
 	for packetInfo := range packets {
-		packetsCount := diagnose.AppStatsInst.IncPacketsCount()
+		packetsCount := diagnose.AppStats.IncPacketsCount()
 
 		if packetsCount%PACKETS_SEEN_LOG_THRESHOLD == 0 {
 			logger.Log.Debugf("Packets seen: #%d", packetsCount)
@@ -73,14 +73,14 @@ func (a *tcpAssembler) processPackets(dumpPacket bool, packets <-chan source.Tcp
 
 		packet := packetInfo.Packet
 		data := packet.Data()
-		diagnose.AppStatsInst.UpdateProcessedBytes(uint64(len(data)))
+		diagnose.AppStats.UpdateProcessedBytes(uint64(len(data)))
 		if dumpPacket {
 			logger.Log.Debugf("Packet content (%d/0x%x) - %s", len(data), len(data), hex.Dump(data))
 		}
 
 		tcp := packet.Layer(layers.LayerTypeTCP)
 		if tcp != nil {
-			diagnose.AppStatsInst.IncTcpPacketsCount()
+			diagnose.AppStats.IncTcpPacketsCount()
 			tcp := tcp.(*layers.TCP)
 
 			c := context{
@@ -93,13 +93,13 @@ func (a *tcpAssembler) processPackets(dumpPacket bool, packets <-chan source.Tcp
 			a.assemblerMutex.Unlock()
 		}
 
-		done := *maxcount > 0 && int64(diagnose.AppStatsInst.PacketsCount) >= *maxcount
+		done := *maxcount > 0 && int64(diagnose.AppStats.PacketsCount) >= *maxcount
 		if done {
 			errorMapLen, _ := diagnose.TapErrors.GetErrorsSummary()
 			logger.Log.Infof("Processed %v packets (%v bytes) in %v (errors: %v, errTypes:%v)",
-				diagnose.AppStatsInst.PacketsCount,
-				diagnose.AppStatsInst.ProcessedBytes,
-				time.Since(diagnose.AppStatsInst.StartTime),
+				diagnose.AppStats.PacketsCount,
+				diagnose.AppStats.ProcessedBytes,
+				time.Since(diagnose.AppStats.StartTime),
 				diagnose.TapErrors.ErrorsCount,
 				errorMapLen)
 		}

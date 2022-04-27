@@ -12,7 +12,7 @@ import (
 	"github.com/up9inc/mizu/tap/api"
 )
 
-var AppStatsInst = api.AppStats{}
+var AppStats = api.AppStats{}
 
 func StartMemoryProfiler(envDumpPath string, envTimeInterval string) {
 	dumpPath := "/app/pprof"
