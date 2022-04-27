@@ -36,13 +36,6 @@ func NewTcpStream(isTapTarget bool, streamsMap api.TcpStreamMap, capture api.Cap
 	}
 }
 
-func NewTcpStreamDummy(capture api.Capture) api.TcpStream {
-	return &tcpStream{
-		origin:          capture,
-		protoIdentifier: &api.ProtoIdentifier{},
-	}
-}
-
 func (t *tcpStream) getId() int64 {
 	return t.id
 }

@@ -17,7 +17,6 @@ import (
 
 	"github.com/stretchr/testify/assert"
 	"github.com/up9inc/mizu/shared"
-	"github.com/up9inc/mizu/tap"
 	"github.com/up9inc/mizu/tap/api"
 )
 
@@ -124,9 +123,8 @@ func TestDissect(t *testing.T) {
 			DstPort: "2",
 		}
 		reqResMatcher := dissector.NewResponseRequestMatcher()
-		stream := tap.NewTcpStreamDummy(api.Pcap)
-		reader := tap.NewTcpReader(
-			make(chan api.TcpReaderDataMsg),
+		stream := NewTcpStream(api.Pcap)
+		reader := NewTcpReader(
 			&api.ReadProgress{},
 			"",
 			tcpIDClient,
@@ -157,8 +155,7 @@ func TestDissect(t *testing.T) {
 			SrcPort: "2",
 			DstPort: "1",
 		}
-		reader = tap.NewTcpReader(
-			make(chan api.TcpReaderDataMsg),
+		reader = NewTcpReader(
 			&api.ReadProgress{},
 			"",
 			tcpIDServer,

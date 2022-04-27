@@ -6,21 +6,17 @@ require (
 	github.com/beevik/etree v1.1.0
 	github.com/stretchr/testify v1.7.0
 	github.com/up9inc/mizu/shared v0.0.0
-	github.com/up9inc/mizu/tap v0.0.0
 	github.com/up9inc/mizu/tap/api v0.0.0
 	golang.org/x/net v0.0.0-20220127200216-cd36cc0744dd
 )
 
 require (
-	github.com/cilium/ebpf v0.8.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/go-errors/errors v1.4.2 // indirect
 	github.com/go-logr/logr v1.2.2 // indirect
 	github.com/gogo/protobuf v1.3.2 // indirect
 	github.com/golang-jwt/jwt/v4 v4.2.0 // indirect
 	github.com/google/go-cmp v0.5.7 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
-	github.com/google/gopacket v1.1.19 // indirect
 	github.com/google/martian v2.1.0+incompatible // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
@@ -28,8 +24,6 @@ require (
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/up9inc/mizu/logger v0.0.0 // indirect
-	github.com/vishvananda/netns v0.0.0-20211101163701-50045581ed74 // indirect
-	golang.org/x/sys v0.0.0-20220207234003-57398862261d // indirect
 	golang.org/x/text v0.3.7 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
@@ -47,5 +41,3 @@ replace github.com/up9inc/mizu/tap/api v0.0.0 => ../../api
 replace github.com/up9inc/mizu/logger v0.0.0 => ../../../logger
 
 replace github.com/up9inc/mizu/shared v0.0.0 => ../../../shared
-
-replace github.com/up9inc/mizu/tap v0.0.0 => ../../
