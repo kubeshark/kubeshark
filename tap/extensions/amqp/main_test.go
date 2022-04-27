@@ -155,7 +155,6 @@ func TestDissect(t *testing.T) {
 			DstPort: "1",
 		}
 		reader = NewTcpReader(
-			make(chan api.TcpReaderDataMsg),
 			&api.ReadProgress{},
 			"",
 			tcpIDServer,
