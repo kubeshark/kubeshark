@@ -16,8 +16,8 @@ import (
 
 	"github.com/cilium/ebpf/perf"
 	"github.com/go-errors/errors"
+	"github.com/up9inc/mizu/logger"
 	"github.com/up9inc/mizu/shared"
-	"github.com/up9inc/mizu/shared/logger"
 	"github.com/up9inc/mizu/tap/api"
 )
 

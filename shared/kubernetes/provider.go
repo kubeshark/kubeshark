@@ -12,8 +12,8 @@ import (
 	"regexp"
 
 	"github.com/op/go-logging"
+	"github.com/up9inc/mizu/logger"
 	"github.com/up9inc/mizu/shared"
-	"github.com/up9inc/mizu/shared/logger"
 	"github.com/up9inc/mizu/shared/semver"
 	auth "k8s.io/api/authorization/v1"
 	core "k8s.io/api/core/v1"

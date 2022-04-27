@@ -25,6 +25,7 @@ require (
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7 // indirect
 	github.com/pmezard/go-difflib v1.0.0 // indirect
+	github.com/up9inc/mizu/logger v0.0.0 // indirect
 	github.com/vishvananda/netns v0.0.0-20211101163701-50045581ed74 // indirect
 	golang.org/x/net v0.0.0-20220127200216-cd36cc0744dd // indirect
 	golang.org/x/sys v0.0.0-20220207234003-57398862261d // indirect
@@ -41,6 +42,8 @@ require (
 )
 
 replace github.com/up9inc/mizu/tap/api v0.0.0 => ../../api
+
+replace github.com/up9inc/mizu/logger v0.0.0 => ../../../logger
 
 replace github.com/up9inc/mizu/shared v0.0.0 => ../../../shared
 

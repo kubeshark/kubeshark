@@ -33,8 +33,8 @@ import (
 
 	"github.com/gorilla/websocket"
 	"github.com/op/go-logging"
+	"github.com/up9inc/mizu/logger"
 	"github.com/up9inc/mizu/shared"
-	"github.com/up9inc/mizu/shared/logger"
 	"github.com/up9inc/mizu/tap"
 	tapApi "github.com/up9inc/mizu/tap/api"
 )

@@ -6,6 +6,7 @@ require (
 	github.com/cilium/ebpf v0.8.0
 	github.com/go-errors/errors v1.4.2
 	github.com/google/gopacket v1.1.19
+	github.com/up9inc/mizu/logger v0.0.0
 	github.com/up9inc/mizu/shared v0.0.0
 	github.com/up9inc/mizu/tap/api v0.0.0
 	github.com/vishvananda/netns v0.0.0-20211101163701-50045581ed74
@@ -35,6 +36,8 @@ require (
 	sigs.k8s.io/json v0.0.0-20211208200746-9f7c6b3444d2 // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.1 // indirect
 )
+
+replace github.com/up9inc/mizu/logger v0.0.0 => ../logger
 
 replace github.com/up9inc/mizu/tap/api v0.0.0 => ./api
 

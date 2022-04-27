@@ -16,7 +16,7 @@ import (
 
 	"github.com/up9inc/mizu/agent/pkg/har"
 
-	"github.com/up9inc/mizu/shared/logger"
+	"github.com/up9inc/mizu/logger"
 )
 
 func getFiles(baseDir string) (result []string, err error) {

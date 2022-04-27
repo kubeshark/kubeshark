@@ -9,8 +9,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/up9inc/mizu/logger"
 	"github.com/up9inc/mizu/shared"
-	"github.com/up9inc/mizu/shared/logger"
 
 	"github.com/creasty/defaults"
 	"github.com/spf13/cobra"

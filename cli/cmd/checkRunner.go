@@ -4,10 +4,11 @@ import (
 	"context"
 	"embed"
 	"fmt"
+
 	"github.com/up9inc/mizu/cli/cmd/check"
 	"github.com/up9inc/mizu/cli/config"
 	"github.com/up9inc/mizu/cli/uiUtils"
-	"github.com/up9inc/mizu/shared/logger"
+	"github.com/up9inc/mizu/logger"
 )
 
 var (
