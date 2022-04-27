@@ -14,8 +14,7 @@ type tlsReader struct {
 	data        []byte
 	doneHandler func(r *tlsReader)
 	progress    *api.ReadProgress
-	timer        api.SuperTimer
-	tcpID 		 api.TcpID
+	timer       api.SuperTimer
 }
 
 func (r *tlsReader) newChunk(chunk *tlsChunk) {
