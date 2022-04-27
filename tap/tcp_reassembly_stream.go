@@ -4,7 +4,7 @@ import (
 	"encoding/binary"
 
 	"github.com/google/gopacket"
-	"github.com/google/gopacket/layers"
+	"github.com/google/gopacket/layers" // pulls in all layers decoders
 	"github.com/google/gopacket/reassembly"
 	"github.com/up9inc/mizu/tap/api"
 	"github.com/up9inc/mizu/tap/diagnose"

@@ -4,7 +4,6 @@ import (
 	"sync"
 	"time"
 
-	// pulls in all layers decoders
 	"github.com/up9inc/mizu/tap/api"
 )
 
