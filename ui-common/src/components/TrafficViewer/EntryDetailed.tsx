@@ -110,8 +110,8 @@ export const EntryDetailed = () => {
     const [entryData, setEntryData] = useState(null);
 
     useEffect(() => {
-        if (!focusedEntryId) return;
-        setEntryData(null);
+      setEntryData(null);
+      if (!focusedEntryId) return;
        setIsLoading(true);
         (async () => {
             try {
