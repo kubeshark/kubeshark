@@ -1,5 +1,5 @@
 import { Box, Fade, FormControl, MenuItem, Modal, Backdrop } from "@material-ui/core";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { RedocStandalone } from "redoc";
 import closeIcon from "assets/closeIcon.svg";
 import { toast } from 'react-toastify';
@@ -58,11 +58,11 @@ const OasModal = ({ openModal, handleCloseModal, getOasServices, getOasByService
         console.error(e);
       }
     })();
-  }, [openModal]);
+  }, [openModal, getOasServices]);
 
   useEffect(() => {
     onSelectedOASService(null);
-  }, [oasServices])
+  }, [oasServices, onSelectedOASService])
 
   return (
     <Modal
