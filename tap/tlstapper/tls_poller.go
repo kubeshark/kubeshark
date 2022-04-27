@@ -19,29 +19,40 @@ import (
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/shared/logger"
 	"github.com/up9inc/mizu/tap/api"
-	"github.com/up9inc/mizu/tap/tcp"
 )
 
 type tlsPoller struct {
-	tls            *TlsTapper
-	readers        map[string]api.TcpReader
-	closedReaders  chan string
-	reqResMatcher  api.RequestResponseMatcher
-	chunksReader   *perf.Reader
-	extension      *api.Extension
-	procfs         string
-	pidToNamespace sync.Map
+	tls             *TlsTapper
+	readers         map[string]api.TcpReader
+	closedReaders   chan string
+	reqResMatcher   api.RequestResponseMatcher
+	chunksReader    *perf.Reader
+	extension       *api.Extension
+	procfs          string
+	pidToNamespace  sync.Map
+	id              int64
+	isClosed        bool
+	protoIdentifier *api.ProtoIdentifier
+	isTapTarget     bool
+	clients         []api.TcpReader
+	servers         []api.TcpReader
+	origin          api.Capture
+	createdAt       time.Time
 }
 
 func newTlsPoller(tls *TlsTapper, extension *api.Extension, procfs string) *tlsPoller {
 	return &tlsPoller{
-		tls:           tls,
-		readers:       make(map[string]api.TcpReader),
-		closedReaders: make(chan string, 100),
-		reqResMatcher: extension.Dissector.NewResponseRequestMatcher(),
-		extension:     extension,
-		chunksReader:  nil,
-		procfs:        procfs,
+		tls:             tls,
+		readers:         make(map[string]api.TcpReader),
+		closedReaders:   make(chan string, 100),
+		reqResMatcher:   extension.Dissector.NewResponseRequestMatcher(),
+		extension:       extension,
+		chunksReader:    nil,
+		procfs:          procfs,
+		protoIdentifier: &api.ProtoIdentifier{},
+		isTapTarget:     true,
+		origin:          api.Ebpf,
+		createdAt:       time.Now(),
 	}
 }
 
@@ -128,13 +139,12 @@ func (p *tlsPoller) handleTlsChunk(chunk *tlsChunk, extension *api.Extension,
 	key := buildTlsKey(chunk, ip, port)
 	reader, exists := p.readers[key]
 
-	stream := tcp.NewTcpStreamDummy(api.Ebpf)
 	tlsReader := NewTlsReader(
 		key,
 		func(r *tlsReader) {
 			p.closeReader(key, r)
 		},
-		stream,
+		p,
 	)
 
 	if !exists {
@@ -267,4 +277,58 @@ func (p *tlsPoller) logTls(chunk *tlsChunk, ip net.IP, port uint16) {
 		chunk.Pid, chunk.Tgid, chunk.Fd, flagsStr, ip, port,
 		srcIp, srcPort, dstIp, dstPort,
 		chunk.Recorded, chunk.Len, chunk.Start, str, hex.EncodeToString(chunk.Data[0:chunk.Recorded]))
+}
+
+func (p *tlsPoller) Close() {}
+
+func (p *tlsPoller) CloseOtherProtocolDissectors(protocol *api.Protocol) {
+	// TODO: Implement
+}
+
+func (p *tlsPoller) AddClient(reader api.TcpReader) {}
+
+func (p *tlsPoller) AddServer(reader api.TcpReader) {}
+
+func (p *tlsPoller) GetClients() []api.TcpReader {
+	return p.clients
+}
+
+func (p *tlsPoller) GetServers() []api.TcpReader {
+	return p.servers
+}
+
+func (p *tlsPoller) GetClient(index int) api.TcpReader {
+	return p.clients[index]
+}
+
+func (p *tlsPoller) GetServer(index int) api.TcpReader {
+	return p.servers[index]
+}
+
+func (p *tlsPoller) GetOrigin() api.Capture {
+	return p.origin
+}
+
+func (p *tlsPoller) GetProtoIdentifier() *api.ProtoIdentifier {
+	return p.protoIdentifier
+}
+
+func (p *tlsPoller) GetReqResMatcher() api.RequestResponseMatcher {
+	return p.reqResMatcher
+}
+
+func (p *tlsPoller) GetIsTapTarget() bool {
+	return p.isTapTarget
+}
+
+func (p *tlsPoller) GetIsClosed() bool {
+	return p.isClosed
+}
+
+func (p *tlsPoller) GetId() int64 {
+	return p.id
+}
+
+func (p *tlsPoller) SetId(id int64) {
+	p.id = id
 }
