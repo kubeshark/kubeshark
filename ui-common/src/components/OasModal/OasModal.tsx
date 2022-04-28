@@ -1,5 +1,5 @@
 import { Box, Fade, FormControl, MenuItem, Modal, Backdrop } from "@material-ui/core";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { RedocStandalone } from "redoc";
 import closeIcon from "assets/closeIcon.svg";
 import { toast } from 'react-toastify';
@@ -7,8 +7,8 @@ import style from './OasModal.module.sass';
 import openApiLogo from 'assets/openApiLogo.png'
 import { redocThemeOptions } from "./redocThemeOptions";
 import React from "react";
-import { Select } from "../UI/Select";
 import { TOAST_CONTAINER_ID } from "../../configs/Consts";
+import SearchableDropdown from "../UI/SearchableDropdown/SearchableDropdown";
 
 
 const modalStyle = {
@@ -30,6 +30,8 @@ const OasModal = ({ openModal, handleCloseModal, getOasServices, getOasByService
   const [oasServices, setOasServices] = useState([] as string[])
   const [selectedServiceName, setSelectedServiceName] = useState("");
   const [selectedServiceSpec, setSelectedServiceSpec] = useState(null);
+  
+  const classes = {root: style.root}
 
   const onSelectedOASService = async (selectedService) => {
     if (oasServices.length === 0) {
@@ -88,19 +90,12 @@ const OasModal = ({ openModal, handleCloseModal, getOasServices, getOasByService
             </div>
           </div>
           <div className={style.selectContainer} >
-            <FormControl>
-              <Select
-                labelId="service-select-label"
-                id="service-select"
-                value={selectedServiceName}
-                onChangeCb={onSelectedOASService}
-              >
-                {oasServices.map((service) => (
-                  <MenuItem key={service} value={service}>
-                    {service}
-                  </MenuItem>
-                ))}
-              </Select>
+            <FormControl classes={classes}>
+              <SearchableDropdown 
+                options={oasServices}
+                selectedValues={selectedServiceName}
+                onChange={onSelectedOASService}
+              />
             </FormControl>
           </div>
           <div className={style.borderLine}></div>
