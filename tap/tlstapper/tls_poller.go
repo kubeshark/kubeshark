@@ -158,17 +158,17 @@ func (p *tlsPoller) startNewTlsReader(chunk *tlsChunk, ip net.IP, port uint16, k
 	}
 
 	reader := &tlsReader{
-		key:         key,
-		chunks:      make(chan *tlsChunk, 1),
-		doneHandler: doneHandler,
-		progress:    &api.ReadProgress{},
-		tcpID:       &tcpid,
-		isClient:    chunk.isClient(),
-		captureTime: time.Now(),
-		parent:      p,
-		extension:   extension,
-		emitter:     tlsEmitter,
-		counterPair: &api.CounterPair{},
+		key:           key,
+		chunks:        make(chan *tlsChunk, 1),
+		doneHandler:   doneHandler,
+		progress:      &api.ReadProgress{},
+		tcpID:         &tcpid,
+		isClient:      chunk.isRequest(),
+		captureTime:   time.Now(),
+		parent:        p,
+		extension:     extension,
+		emitter:       tlsEmitter,
+		counterPair:   &api.CounterPair{},
 		reqResMatcher: p.reqResMatcher,
 	}
 
