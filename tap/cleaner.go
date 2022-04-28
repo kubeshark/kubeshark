@@ -34,7 +34,7 @@ func (cl *Cleaner) clean() {
 	cl.assemblerMutex.Unlock()
 
 	cl.streamsMap.Range(func(k, v interface{}) bool {
-		reqResMatcher := v.(api.TcpStream).GetReqResMatcher()
+		reqResMatcher := v.(*tcpStream).GetReqResMatcher()
 		if reqResMatcher == nil {
 			return true
 		}

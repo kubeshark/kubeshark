@@ -413,22 +413,15 @@ type TcpReader interface {
 	GetReqResMatcher() RequestResponseMatcher
 	GetIsClient() bool
 	GetReadProgress() *ReadProgress
-	GetParent() TcpStream
 	GetTcpID() *TcpID
 	GetCounterPair() *CounterPair
 	GetCaptureTime() time.Time
 	GetEmitter() Emitter
 	GetIsClosed() bool
 	GetExtension() *Extension
-}
-
-type TcpStream interface {
 	SetProtocol(protocol *Protocol)
-	GetOrigin() Capture
 	GetProtoIdentifier() *ProtoIdentifier
-	GetReqResMatcher() RequestResponseMatcher
-	GetIsTapTarget() bool
-	GetIsClosed() bool
+	GetOrigin() Capture
 }
 
 type TcpStreamMap interface {

@@ -6,7 +6,6 @@ import (
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers" // pulls in all layers decoders
 	"github.com/google/gopacket/reassembly"
-	"github.com/up9inc/mizu/tap/api"
 	"github.com/up9inc/mizu/tap/diagnose"
 )
 
@@ -22,10 +21,10 @@ type tcpReassemblyStream struct {
 	fsmerr     bool
 	optchecker reassembly.TCPOptionCheck
 	isDNS      bool
-	tcpStream  api.TcpStream
+	tcpStream  *tcpStream
 }
 
-func NewTcpReassemblyStream(ident string, tcp *layers.TCP, fsmOptions reassembly.TCPSimpleFSMOptions, stream api.TcpStream) ReassemblyStream {
+func NewTcpReassemblyStream(ident string, tcp *layers.TCP, fsmOptions reassembly.TCPSimpleFSMOptions, stream *tcpStream) ReassemblyStream {
 	return &tcpReassemblyStream{
 		ident:      ident,
 		tcpState:   reassembly.NewTCPSimpleFSM(fsmOptions),
@@ -145,15 +144,14 @@ func (t *tcpReassemblyStream) ReassembledSG(sg reassembly.ScatterGather, ac reas
 			// This channel is read by an tcpReader object
 			diagnose.AppStats.IncReassembledTcpPayloadsCount()
 			timestamp := ac.GetCaptureInfo().Timestamp
-			stream := t.tcpStream.(*tcpStream)
 			if dir == reassembly.TCPDirClientToServer {
-				for i := range stream.getClients() {
-					reader := stream.getClient(i).(*tcpReader)
+				for i := range t.tcpStream.getClients() {
+					reader := t.tcpStream.getClient(i).(*tcpReader)
 					reader.sendMsgIfNotClosed(NewTcpReaderDataMsg(data, timestamp))
 				}
 			} else {
-				for i := range stream.getServers() {
-					reader := stream.getServer(i).(*tcpReader)
+				for i := range t.tcpStream.getServers() {
+					reader := t.tcpStream.getServer(i).(*tcpReader)
 					reader.sendMsgIfNotClosed(NewTcpReaderDataMsg(data, timestamp))
 				}
 			}
@@ -163,7 +161,7 @@ func (t *tcpReassemblyStream) ReassembledSG(sg reassembly.ScatterGather, ac reas
 
 func (t *tcpReassemblyStream) ReassemblyComplete(ac reassembly.AssemblerContext) bool {
 	if t.tcpStream.GetIsTapTarget() && !t.tcpStream.GetIsClosed() {
-		t.tcpStream.(*tcpStream).close()
+		t.tcpStream.close()
 	}
 	// do not remove the connection to allow last ACK
 	return false

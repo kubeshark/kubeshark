@@ -75,7 +75,7 @@ func (d dissecting) Dissect(b *bufio.Reader, reader api.TcpReader, options *api.
 	var lastMethodFrameMessage Message
 
 	for {
-		if reader.GetParent().GetProtoIdentifier().Protocol != nil && reader.GetParent().GetProtoIdentifier().Protocol != &protocol {
+		if reader.GetProtoIdentifier().Protocol != nil && reader.GetProtoIdentifier().Protocol != &protocol {
 			return errors.New("Identified by another protocol")
 		}
 
@@ -112,12 +112,12 @@ func (d dissecting) Dissect(b *bufio.Reader, reader api.TcpReader, options *api.
 			switch lastMethodFrameMessage.(type) {
 			case *BasicPublish:
 				eventBasicPublish.Body = f.Body
-				reader.GetParent().SetProtocol(&protocol)
-				emitAMQP(*eventBasicPublish, amqpRequest, basicMethodMap[40], connectionInfo, reader.GetCaptureTime(), reader.GetReadProgress().Current(), reader.GetEmitter(), reader.GetParent().GetOrigin())
+				reader.SetProtocol(&protocol)
+				emitAMQP(*eventBasicPublish, amqpRequest, basicMethodMap[40], connectionInfo, reader.GetCaptureTime(), reader.GetReadProgress().Current(), reader.GetEmitter(), reader.GetOrigin())
 			case *BasicDeliver:
 				eventBasicDeliver.Body = f.Body
-				reader.GetParent().SetProtocol(&protocol)
-				emitAMQP(*eventBasicDeliver, amqpRequest, basicMethodMap[60], connectionInfo, reader.GetCaptureTime(), reader.GetReadProgress().Current(), reader.GetEmitter(), reader.GetParent().GetOrigin())
+				reader.SetProtocol(&protocol)
+				emitAMQP(*eventBasicDeliver, amqpRequest, basicMethodMap[60], connectionInfo, reader.GetCaptureTime(), reader.GetReadProgress().Current(), reader.GetEmitter(), reader.GetOrigin())
 			}
 
 		case *MethodFrame:
@@ -137,8 +137,8 @@ func (d dissecting) Dissect(b *bufio.Reader, reader api.TcpReader, options *api.
 					NoWait:     m.NoWait,
 					Arguments:  m.Arguments,
 				}
-				reader.GetParent().SetProtocol(&protocol)
-				emitAMQP(*eventQueueBind, amqpRequest, queueMethodMap[20], connectionInfo, reader.GetCaptureTime(), reader.GetReadProgress().Current(), reader.GetEmitter(), reader.GetParent().GetOrigin())
+				reader.SetProtocol(&protocol)
+				emitAMQP(*eventQueueBind, amqpRequest, queueMethodMap[20], connectionInfo, reader.GetCaptureTime(), reader.GetReadProgress().Current(), reader.GetEmitter(), reader.GetOrigin())
 
 			case *BasicConsume:
 				eventBasicConsume := &BasicConsume{
@@ -150,8 +150,8 @@ func (d dissecting) Dissect(b *bufio.Reader, reader api.TcpReader, options *api.
 					NoWait:      m.NoWait,
 					Arguments:   m.Arguments,
 				}
-				reader.GetParent().SetProtocol(&protocol)
-				emitAMQP(*eventBasicConsume, amqpRequest, basicMethodMap[20], connectionInfo, reader.GetCaptureTime(), reader.GetReadProgress().Current(), reader.GetEmitter(), reader.GetParent().GetOrigin())
+				reader.SetProtocol(&protocol)
+				emitAMQP(*eventBasicConsume, amqpRequest, basicMethodMap[20], connectionInfo, reader.GetCaptureTime(), reader.GetReadProgress().Current(), reader.GetEmitter(), reader.GetOrigin())
 
 			case *BasicDeliver:
 				eventBasicDeliver.ConsumerTag = m.ConsumerTag
@@ -170,8 +170,8 @@ func (d dissecting) Dissect(b *bufio.Reader, reader api.TcpReader, options *api.
 					NoWait:     m.NoWait,
 					Arguments:  m.Arguments,
 				}
-				reader.GetParent().SetProtocol(&protocol)
-				emitAMQP(*eventQueueDeclare, amqpRequest, queueMethodMap[10], connectionInfo, reader.GetCaptureTime(), reader.GetReadProgress().Current(), reader.GetEmitter(), reader.GetParent().GetOrigin())
+				reader.SetProtocol(&protocol)
+				emitAMQP(*eventQueueDeclare, amqpRequest, queueMethodMap[10], connectionInfo, reader.GetCaptureTime(), reader.GetReadProgress().Current(), reader.GetEmitter(), reader.GetOrigin())
 
 			case *ExchangeDeclare:
 				eventExchangeDeclare := &ExchangeDeclare{
@@ -184,8 +184,8 @@ func (d dissecting) Dissect(b *bufio.Reader, reader api.TcpReader, options *api.
 					NoWait:     m.NoWait,
 					Arguments:  m.Arguments,
 				}
-				reader.GetParent().SetProtocol(&protocol)
-				emitAMQP(*eventExchangeDeclare, amqpRequest, exchangeMethodMap[10], connectionInfo, reader.GetCaptureTime(), reader.GetReadProgress().Current(), reader.GetEmitter(), reader.GetParent().GetOrigin())
+				reader.SetProtocol(&protocol)
+				emitAMQP(*eventExchangeDeclare, amqpRequest, exchangeMethodMap[10], connectionInfo, reader.GetCaptureTime(), reader.GetReadProgress().Current(), reader.GetEmitter(), reader.GetOrigin())
 
 			case *ConnectionStart:
 				eventConnectionStart := &ConnectionStart{
@@ -195,8 +195,8 @@ func (d dissecting) Dissect(b *bufio.Reader, reader api.TcpReader, options *api.
 					Mechanisms:       m.Mechanisms,
 					Locales:          m.Locales,
 				}
-				reader.GetParent().SetProtocol(&protocol)
-				emitAMQP(*eventConnectionStart, amqpRequest, connectionMethodMap[10], connectionInfo, reader.GetCaptureTime(), reader.GetReadProgress().Current(), reader.GetEmitter(), reader.GetParent().GetOrigin())
+				reader.SetProtocol(&protocol)
+				emitAMQP(*eventConnectionStart, amqpRequest, connectionMethodMap[10], connectionInfo, reader.GetCaptureTime(), reader.GetReadProgress().Current(), reader.GetEmitter(), reader.GetOrigin())
 
 			case *ConnectionClose:
 				eventConnectionClose := &ConnectionClose{
@@ -205,8 +205,8 @@ func (d dissecting) Dissect(b *bufio.Reader, reader api.TcpReader, options *api.
 					ClassId:   m.ClassId,
 					MethodId:  m.MethodId,
 				}
-				reader.GetParent().SetProtocol(&protocol)
-				emitAMQP(*eventConnectionClose, amqpRequest, connectionMethodMap[50], connectionInfo, reader.GetCaptureTime(), reader.GetReadProgress().Current(), reader.GetEmitter(), reader.GetParent().GetOrigin())
+				reader.SetProtocol(&protocol)
+				emitAMQP(*eventConnectionClose, amqpRequest, connectionMethodMap[50], connectionInfo, reader.GetCaptureTime(), reader.GetReadProgress().Current(), reader.GetEmitter(), reader.GetOrigin())
 			}
 
 		default:

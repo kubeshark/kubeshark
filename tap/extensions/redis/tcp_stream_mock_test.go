@@ -15,7 +15,7 @@ type tcpStream struct {
 	sync.Mutex
 }
 
-func NewTcpStream(capture api.Capture) api.TcpStream {
+func NewTcpStream(capture api.Capture) *tcpStream {
 	return &tcpStream{
 		origin:          capture,
 		protoIdentifier: &api.ProtoIdentifier{},

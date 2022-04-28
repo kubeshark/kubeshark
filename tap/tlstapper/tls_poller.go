@@ -21,28 +21,25 @@ import (
 )
 
 type tlsPoller struct {
-	tls             *TlsTapper
-	readers         map[string]*tlsReader
-	closedReaders   chan string
-	reqResMatcher   api.RequestResponseMatcher
-	chunksReader    *perf.Reader
-	extension       *api.Extension
-	procfs          string
-	pidToNamespace  sync.Map
-	protoIdentifier *api.ProtoIdentifier
-	origin          api.Capture
+	tls            *TlsTapper
+	readers        map[string]*tlsReader
+	closedReaders  chan string
+	reqResMatcher  api.RequestResponseMatcher
+	chunksReader   *perf.Reader
+	extension      *api.Extension
+	procfs         string
+	pidToNamespace sync.Map
 }
 
 func newTlsPoller(tls *TlsTapper, extension *api.Extension, procfs string) *tlsPoller {
 	return &tlsPoller{
-		tls:             tls,
-		readers:         make(map[string]*tlsReader),
-		closedReaders:   make(chan string, 100),
-		reqResMatcher:   extension.Dissector.NewResponseRequestMatcher(),
-		extension:       extension,
-		chunksReader:    nil,
-		procfs:          procfs,
-		protoIdentifier: &api.ProtoIdentifier{},
+		tls:           tls,
+		readers:       make(map[string]*tlsReader),
+		closedReaders: make(chan string, 100),
+		reqResMatcher: extension.Dissector.NewResponseRequestMatcher(),
+		extension:     extension,
+		chunksReader:  nil,
+		procfs:        procfs,
 	}
 }
 
@@ -158,18 +155,18 @@ func (p *tlsPoller) startNewTlsReader(chunk *tlsChunk, ip net.IP, port uint16, k
 	}
 
 	reader := &tlsReader{
-		key:           key,
-		chunks:        make(chan *tlsChunk, 1),
-		doneHandler:   doneHandler,
-		progress:      &api.ReadProgress{},
-		tcpID:         &tcpid,
-		isClient:      chunk.isRequest(),
-		captureTime:   time.Now(),
-		parent:        p,
-		extension:     extension,
-		emitter:       tlsEmitter,
-		counterPair:   &api.CounterPair{},
-		reqResMatcher: p.reqResMatcher,
+		key:             key,
+		chunks:          make(chan *tlsChunk, 1),
+		doneHandler:     doneHandler,
+		progress:        &api.ReadProgress{},
+		tcpID:           &tcpid,
+		isClient:        chunk.isRequest(),
+		captureTime:     time.Now(),
+		extension:       extension,
+		emitter:         tlsEmitter,
+		counterPair:     &api.CounterPair{},
+		reqResMatcher:   p.reqResMatcher,
+		protoIdentifier: &api.ProtoIdentifier{},
 	}
 
 	go dissect(extension, reader, options)
@@ -275,28 +272,4 @@ func (p *tlsPoller) logTls(chunk *tlsChunk, ip net.IP, port uint16) {
 		chunk.Pid, chunk.Tgid, chunk.Fd, flagsStr, ip, port,
 		srcIp, srcPort, dstIp, dstPort,
 		chunk.Recorded, chunk.Len, chunk.Start, str, hex.EncodeToString(chunk.Data[0:chunk.Recorded]))
-}
-
-func (p *tlsPoller) SetProtocol(protocol *api.Protocol) {
-	// Do nothing, tls is currently http only
-}
-
-func (p *tlsPoller) GetOrigin() api.Capture {
-	return p.origin
-}
-
-func (p *tlsPoller) GetProtoIdentifier() *api.ProtoIdentifier {
-	return p.protoIdentifier
-}
-
-func (p *tlsPoller) GetReqResMatcher() api.RequestResponseMatcher {
-	return p.reqResMatcher
-}
-
-func (p *tlsPoller) GetIsTapTarget() bool {
-	return true
-}
-
-func (p *tlsPoller) GetIsClosed() bool {
-	return false
 }

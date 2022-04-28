@@ -26,7 +26,7 @@ type tcpReader struct {
 	data          []byte
 	progress      *api.ReadProgress
 	captureTime   time.Time
-	parent        api.TcpStream
+	parent        *tcpStream
 	packetsSeen   uint
 	extension     *api.Extension
 	emitter       api.Emitter
@@ -35,7 +35,7 @@ type tcpReader struct {
 	sync.Mutex
 }
 
-func NewTcpReader(msgQueue chan api.TcpReaderDataMsg, progress *api.ReadProgress, ident string, tcpId *api.TcpID, captureTime time.Time, parent api.TcpStream, isClient bool, isOutgoing bool, extension *api.Extension, emitter api.Emitter, counterPair *api.CounterPair, reqResMatcher api.RequestResponseMatcher) api.TcpReader {
+func NewTcpReader(msgQueue chan api.TcpReaderDataMsg, progress *api.ReadProgress, ident string, tcpId *api.TcpID, captureTime time.Time, parent *tcpStream, isClient bool, isOutgoing bool, extension *api.Extension, emitter api.Emitter, counterPair *api.CounterPair, reqResMatcher api.RequestResponseMatcher) *tcpReader {
 	return &tcpReader{
 		msgQueue:      msgQueue,
 		progress:      progress,
@@ -119,10 +119,6 @@ func (reader *tcpReader) GetReadProgress() *api.ReadProgress {
 	return reader.progress
 }
 
-func (reader *tcpReader) GetParent() api.TcpStream {
-	return reader.parent
-}
-
 func (reader *tcpReader) GetTcpID() *api.TcpID {
 	return reader.tcpID
 }
@@ -145,4 +141,16 @@ func (reader *tcpReader) GetIsClosed() bool {
 
 func (reader *tcpReader) GetExtension() *api.Extension {
 	return reader.extension
+}
+
+func (reader *tcpReader) GetOrigin() api.Capture {
+	return reader.parent.GetOrigin()
+}
+
+func (reader *tcpReader) GetProtoIdentifier() *api.ProtoIdentifier {
+	return reader.parent.GetProtoIdentifier()
+}
+
+func (reader *tcpReader) SetProtocol(protocol *api.Protocol) {
+	reader.parent.SetProtocol(protocol)
 }

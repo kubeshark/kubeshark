@@ -116,27 +116,27 @@ func (d dissecting) Dissect(b *bufio.Reader, reader api.TcpReader, options *api.
 			http2Assembler = createHTTP2Assembler(b)
 		}
 
-		if reader.GetParent().GetProtoIdentifier().Protocol != nil && reader.GetParent().GetProtoIdentifier().Protocol != &http11protocol {
+		if reader.GetProtoIdentifier().Protocol != nil && reader.GetProtoIdentifier().Protocol != &http11protocol {
 			return errors.New("Identified by another protocol")
 		}
 
 		if isHTTP2 {
-			err = handleHTTP2Stream(http2Assembler, reader.GetReadProgress(), reader.GetParent().GetOrigin(), reader.GetTcpID(), reader.GetCaptureTime(), reader.GetEmitter(), options, reqResMatcher)
+			err = handleHTTP2Stream(http2Assembler, reader.GetReadProgress(), reader.GetOrigin(), reader.GetTcpID(), reader.GetCaptureTime(), reader.GetEmitter(), options, reqResMatcher)
 			if err == io.EOF || err == io.ErrUnexpectedEOF {
 				break
 			} else if err != nil {
 				continue
 			}
-			reader.GetParent().SetProtocol(&http11protocol)
+			reader.SetProtocol(&http11protocol)
 		} else if reader.GetIsClient() {
 			var req *http.Request
-			switchingProtocolsHTTP2, req, err = handleHTTP1ClientStream(b, reader.GetReadProgress(), reader.GetParent().GetOrigin(), reader.GetTcpID(), reader.GetCounterPair(), reader.GetCaptureTime(), reader.GetEmitter(), options, reqResMatcher)
+			switchingProtocolsHTTP2, req, err = handleHTTP1ClientStream(b, reader.GetReadProgress(), reader.GetOrigin(), reader.GetTcpID(), reader.GetCounterPair(), reader.GetCaptureTime(), reader.GetEmitter(), options, reqResMatcher)
 			if err == io.EOF || err == io.ErrUnexpectedEOF {
 				break
 			} else if err != nil {
 				continue
 			}
-			reader.GetParent().SetProtocol(&http11protocol)
+			reader.SetProtocol(&http11protocol)
 
 			// In case of an HTTP2 upgrade, duplicate the HTTP1 request into HTTP2 with stream ID 1
 			if switchingProtocolsHTTP2 {
@@ -157,22 +157,24 @@ func (d dissecting) Dissect(b *bufio.Reader, reader api.TcpReader, options *api.
 						ServerPort: reader.GetTcpID().DstPort,
 						IsOutgoing: true,
 					}
-					item.Capture = reader.GetParent().GetOrigin()
+					item.Capture = reader.GetOrigin()
 					filterAndEmit(item, reader.GetEmitter(), options)
 				}
 			}
 		} else {
-			switchingProtocolsHTTP2, err = handleHTTP1ServerStream(b, reader.GetReadProgress(), reader.GetParent().GetOrigin(), reader.GetTcpID(), reader.GetCounterPair(), reader.GetCaptureTime(), reader.GetEmitter(), options, reqResMatcher)
+			switchingProtocolsHTTP2, err = handleHTTP1ServerStream(b, reader.GetReadProgress(), reader.GetOrigin(), reader.GetTcpID(), reader.GetCounterPair(), reader.GetCaptureTime(), reader.GetEmitter(), options, reqResMatcher)
+			
 			if err == io.EOF || err == io.ErrUnexpectedEOF {
 				break
 			} else if err != nil {
 				continue
 			}
-			reader.GetParent().SetProtocol(&http11protocol)
+			
+			reader.SetProtocol(&http11protocol)
 		}
 	}
 
-	if reader.GetParent().GetProtoIdentifier().Protocol == nil {
+	if reader.GetProtoIdentifier().Protocol == nil {
 		return err
 	}
 

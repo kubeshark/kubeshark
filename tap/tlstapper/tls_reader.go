@@ -8,19 +8,19 @@ import (
 )
 
 type tlsReader struct {
-	key           string
-	chunks        chan *tlsChunk
-	data          []byte
-	doneHandler   func(r *tlsReader)
-	progress      *api.ReadProgress
-	tcpID         *api.TcpID
-	isClient      bool
-	captureTime   time.Time
-	parent        api.TcpStream
-	extension     *api.Extension
-	emitter       api.Emitter
-	counterPair   *api.CounterPair
-	reqResMatcher api.RequestResponseMatcher
+	key             string
+	chunks          chan *tlsChunk
+	data            []byte
+	doneHandler     func(r *tlsReader)
+	progress        *api.ReadProgress
+	tcpID           *api.TcpID
+	isClient        bool
+	captureTime     time.Time
+	extension       *api.Extension
+	emitter         api.Emitter
+	counterPair     *api.CounterPair
+	reqResMatcher   api.RequestResponseMatcher
+	protoIdentifier *api.ProtoIdentifier
 }
 
 func (r *tlsReader) Read(p []byte) (int, error) {
@@ -64,10 +64,6 @@ func (r *tlsReader) GetReadProgress() *api.ReadProgress {
 	return r.progress
 }
 
-func (r *tlsReader) GetParent() api.TcpStream {
-	return r.parent
-}
-
 func (r *tlsReader) GetTcpID() *api.TcpID {
 	return r.tcpID
 }
@@ -90,4 +86,16 @@ func (r *tlsReader) GetIsClosed() bool {
 
 func (r *tlsReader) GetExtension() *api.Extension {
 	return r.extension
+}
+
+func (r *tlsReader) GetOrigin() api.Capture {
+	return api.Ebpf
+}
+
+func (r *tlsReader) GetProtoIdentifier() *api.ProtoIdentifier {
+	return r.protoIdentifier
+}
+
+func (r *tlsReader) SetProtocol(protocol *api.Protocol) {
+	r.protoIdentifier.Protocol = protocol
 }

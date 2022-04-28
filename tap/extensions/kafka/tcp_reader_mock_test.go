@@ -15,7 +15,7 @@ type tcpReader struct {
 	isOutgoing    bool
 	progress      *api.ReadProgress
 	captureTime   time.Time
-	parent        api.TcpStream
+	parent        *tcpStream
 	extension     *api.Extension
 	emitter       api.Emitter
 	counterPair   *api.CounterPair
@@ -23,7 +23,7 @@ type tcpReader struct {
 	sync.Mutex
 }
 
-func NewTcpReader(progress *api.ReadProgress, ident string, tcpId *api.TcpID, captureTime time.Time, parent api.TcpStream, isClient bool, isOutgoing bool, extension *api.Extension, emitter api.Emitter, counterPair *api.CounterPair, reqResMatcher api.RequestResponseMatcher) api.TcpReader {
+func NewTcpReader(progress *api.ReadProgress, ident string, tcpId *api.TcpID, captureTime time.Time, parent *tcpStream, isClient bool, isOutgoing bool, extension *api.Extension, emitter api.Emitter, counterPair *api.CounterPair, reqResMatcher api.RequestResponseMatcher) api.TcpReader {
 	return &tcpReader{
 		progress:      progress,
 		ident:         ident,
@@ -53,10 +53,6 @@ func (reader *tcpReader) GetIsClient() bool {
 
 func (reader *tcpReader) GetReadProgress() *api.ReadProgress {
 	return reader.progress
-}
-
-func (reader *tcpReader) GetParent() api.TcpStream {
-	return reader.parent
 }
 
 func (reader *tcpReader) GetTcpID() *api.TcpID {
