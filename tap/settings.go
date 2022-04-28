@@ -14,8 +14,8 @@ const (
 	MemoryProfilingTimeIntervalSeconds             = "MEMORY_PROFILING_TIME_INTERVAL"
 	MaxBufferedPagesTotalEnvVarName                = "MAX_BUFFERED_PAGES_TOTAL"
 	MaxBufferedPagesPerConnectionEnvVarName        = "MAX_BUFFERED_PAGES_PER_CONNECTION"
-	MaxBufferedPagesTotalDefaultValue              = 5000
-	MaxBufferedPagesPerConnectionDefaultValue      = 5000
+	MaxBufferedPagesTotalDefaultValue              = 0
+	MaxBufferedPagesPerConnectionDefaultValue      = 0
 	TcpStreamChannelTimeoutMsEnvVarName            = "TCP_STREAM_CHANNEL_TIMEOUT_MS"
 	TcpStreamChannelTimeoutMsDefaultValue          = 10000
 	CloseTimedoutTcpChannelsIntervalMsEnvVarName   = "CLOSE_TIMEDOUT_TCP_STREAM_CHANNELS_INTERVAL_MS"

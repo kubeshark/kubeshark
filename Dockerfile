@@ -25,7 +25,7 @@ RUN npm run build
 ### Base builder image for native builds architecture
 FROM golang:1.17-alpine AS builder-native-base
 ENV CGO_ENABLED=1 GOOS=linux
-RUN apk add --no-cache libpcap-dev g++ perl-utils
+RUN apk add --no-cache libpcap-dev g++ perl-utils linux-headers
 
 
 ### Intermediate builder image for x86-64 to x86-64 native builds
