@@ -5,7 +5,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/up9inc/mizu/shared/logger"
+	"github.com/up9inc/mizu/logger"
 	"github.com/up9inc/mizu/tap/api"
 	v1 "k8s.io/api/core/v1"
 
