@@ -51,11 +51,13 @@
     "react-error-overlay": "6.0.9"
   },
   "scripts": {
+    "prestart": "../devops/ui-common-pack.sh $PWD",
     "start": "craco start",
     "start-dev": "./node_modules/.bin/env-cmd -f .env.dev.basic craco start",
     "build": "./node_modules/.bin/env-cmd -f .env.basic craco build",
     "test": "craco test",
-    "eject": "craco eject"
+    "eject": "craco eject",
+    "eslint": "eslint . --ext .js,.jsx,.ts,.tsx --max-warnings=0"
   },
   "eslintConfig": {
     "extends": [
