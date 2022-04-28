@@ -30,6 +30,8 @@ const OasModal = ({ openModal, handleCloseModal, getOasServices, getOasByService
   const [oasServices, setOasServices] = useState([] as string[])
   const [selectedServiceName, setSelectedServiceName] = useState("");
   const [selectedServiceSpec, setSelectedServiceSpec] = useState(null);
+  
+  const classes = {root: style.root}
 
   const onSelectedOASService = async (selectedService) => {
     if (oasServices.length === 0) {
@@ -88,9 +90,8 @@ const OasModal = ({ openModal, handleCloseModal, getOasServices, getOasByService
             </div>
           </div>
           <div className={style.selectContainer} >
-            <FormControl>
+            <FormControl classes={classes}>
               <SearchableDropdown 
-                inputWidth="216px"
                 options={oasServices}
                 selectedValues={selectedServiceName}
                 onChange={onSelectedOASService}
