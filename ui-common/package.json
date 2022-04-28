@@ -19,7 +19,8 @@
     "test:build": "run-s build",
     "test:lint": "eslint .",
     "predeploy": "cd example && npm install && npm run build",
-    "deploy": "gh-pages -d example/build"
+    "deploy": "gh-pages -d example/build",
+    "eslint": "eslint . --ext .js,.jsx,.ts,.tsx"
   },
   "peerDependencies": {
     "@craco/craco": "^6.4.3",
