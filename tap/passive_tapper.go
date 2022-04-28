@@ -181,7 +181,7 @@ func initializePacketSources() error {
 	return err
 }
 
-func initializePassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem) (*tcpStreamMap, *tcpAssembler) {
+func initializePassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem) (api.TcpStreamMap, *tcpAssembler) {
 	streamsMap := NewTcpStreamMap()
 
 	diagnose.InitializeErrorsMap(*debug, *verbose, *quiet)
@@ -198,8 +198,8 @@ func initializePassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelI
 	return streamsMap, assembler
 }
 
-func startPassiveTapper(streamsMap *tcpStreamMap, assembler *tcpAssembler) {
-	go streamsMap.closeTimedoutTcpStreamChannels()
+func startPassiveTapper(streamsMap api.TcpStreamMap, assembler *tcpAssembler) {
+	go streamsMap.CloseTimedoutTcpStreamChannels()
 
 	diagnose.AppStats.SetStartTime(time.Now())
 

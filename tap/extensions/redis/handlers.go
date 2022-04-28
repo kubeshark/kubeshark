@@ -2,11 +2,12 @@ package redis
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/up9inc/mizu/tap/api"
 )
 
-func handleClientStream(progress *api.ReadProgress, capture api.Capture, tcpID *api.TcpID, counterPair *api.CounterPair, superTimer *api.SuperTimer, emitter api.Emitter, request *RedisPacket, reqResMatcher *requestResponseMatcher) error {
+func handleClientStream(progress *api.ReadProgress, capture api.Capture, tcpID *api.TcpID, counterPair *api.CounterPair, captureTime time.Time, emitter api.Emitter, request *RedisPacket, reqResMatcher *requestResponseMatcher) error {
 	counterPair.Lock()
 	counterPair.Request++
 	requestCounter := counterPair.Request
@@ -21,7 +22,7 @@ func handleClientStream(progress *api.ReadProgress, capture api.Capture, tcpID *
 		requestCounter,
 	)
 
-	item := reqResMatcher.registerRequest(ident, request, superTimer.CaptureTime, progress.Current())
+	item := reqResMatcher.registerRequest(ident, request, captureTime, progress.Current())
 	if item != nil {
 		item.Capture = capture
 		item.ConnectionInfo = &api.ConnectionInfo{
@@ -36,7 +37,7 @@ func handleClientStream(progress *api.ReadProgress, capture api.Capture, tcpID *
 	return nil
 }
 
-func handleServerStream(progress *api.ReadProgress, capture api.Capture, tcpID *api.TcpID, counterPair *api.CounterPair, superTimer *api.SuperTimer, emitter api.Emitter, response *RedisPacket, reqResMatcher *requestResponseMatcher) error {
+func handleServerStream(progress *api.ReadProgress, capture api.Capture, tcpID *api.TcpID, counterPair *api.CounterPair, captureTime time.Time, emitter api.Emitter, response *RedisPacket, reqResMatcher *requestResponseMatcher) error {
 	counterPair.Lock()
 	counterPair.Response++
 	responseCounter := counterPair.Response
@@ -51,7 +52,7 @@ func handleServerStream(progress *api.ReadProgress, capture api.Capture, tcpID *
 		responseCounter,
 	)
 
-	item := reqResMatcher.registerResponse(ident, response, superTimer.CaptureTime, progress.Current())
+	item := reqResMatcher.registerResponse(ident, response, captureTime, progress.Current())
 	if item != nil {
 		item.Capture = capture
 		item.ConnectionInfo = &api.ConnectionInfo{

@@ -11,22 +11,9 @@ import (
 	"github.com/up9inc/mizu/tap/api"
 )
 
-type tcpReaderDataMsg struct {
-	bytes     []byte
-	timestamp time.Time
-}
-
-type ConnectionInfo struct {
-	ClientIP   string
-	ClientPort string
-	ServerIP   string
-	ServerPort string
-	IsOutgoing bool
-}
-
-/* tcpReader gets reads from a channel of bytes of tcp payload, and parses it into requests and responses.
+/* TcpReader gets reads from a channel of bytes of tcp payload, and parses it into requests and responses.
  * The payload is written to the channel by a tcpStream object that is dedicated to one tcp connection.
- * An tcpReader object is unidirectional: it parses either a client stream or a server stream.
+ * An TcpReader object is unidirectional: it parses either a client stream or a server stream.
  * Implements io.Reader interface (Read)
  */
 type tcpReader struct {
@@ -35,11 +22,11 @@ type tcpReader struct {
 	isClosed      bool
 	isClient      bool
 	isOutgoing    bool
-	msgQueue      chan tcpReaderDataMsg // Channel of captured reassembled tcp payload
+	msgQueue      chan api.TcpReaderDataMsg // Channel of captured reassembled tcp payload
 	data          []byte
 	progress      *api.ReadProgress
-	superTimer    *api.SuperTimer
-	parent        *tcpStream
+	captureTime   time.Time
+	parent        api.TcpStream
 	packetsSeen   uint
 	extension     *api.Extension
 	emitter       api.Emitter
@@ -48,47 +35,114 @@ type tcpReader struct {
 	sync.Mutex
 }
 
-func (h *tcpReader) Read(p []byte) (int, error) {
-	var msg tcpReaderDataMsg
-
-	ok := true
-	for ok && len(h.data) == 0 {
-		msg, ok = <-h.msgQueue
-		h.data = msg.bytes
-
-		h.superTimer.CaptureTime = msg.timestamp
-		if len(h.data) > 0 {
-			h.packetsSeen += 1
-		}
+func NewTcpReader(msgQueue chan api.TcpReaderDataMsg, progress *api.ReadProgress, ident string, tcpId *api.TcpID, captureTime time.Time, parent api.TcpStream, isClient bool, isOutgoing bool, extension *api.Extension, emitter api.Emitter, counterPair *api.CounterPair, reqResMatcher api.RequestResponseMatcher) api.TcpReader {
+	return &tcpReader{
+		msgQueue:      msgQueue,
+		progress:      progress,
+		ident:         ident,
+		tcpID:         tcpId,
+		captureTime:   captureTime,
+		parent:        parent,
+		isClient:      isClient,
+		isOutgoing:    isOutgoing,
+		extension:     extension,
+		emitter:       emitter,
+		counterPair:   counterPair,
+		reqResMatcher: reqResMatcher,
 	}
-	if !ok || len(h.data) == 0 {
-		return 0, io.EOF
-	}
-
-	l := copy(p, h.data)
-	h.data = h.data[l:]
-	h.progress.Feed(l)
-
-	return l, nil
 }
 
-func (h *tcpReader) Close() {
-	h.Lock()
-	if !h.isClosed {
-		h.isClosed = true
-		close(h.msgQueue)
-	}
-	h.Unlock()
-}
-
-func (h *tcpReader) run(wg *sync.WaitGroup) {
+func (reader *tcpReader) run(options *api.TrafficFilteringOptions, wg *sync.WaitGroup) {
 	defer wg.Done()
-	b := bufio.NewReader(h)
-	err := h.extension.Dissector.Dissect(b, h.progress, h.parent.origin, h.isClient, h.tcpID, h.counterPair, h.superTimer, h.parent.superIdentifier, h.emitter, filteringOptions, h.reqResMatcher)
+	b := bufio.NewReader(reader)
+	err := reader.extension.Dissector.Dissect(b, reader, options)
 	if err != nil {
-		_, err = io.Copy(ioutil.Discard, b)
+		_, err = io.Copy(ioutil.Discard, reader)
 		if err != nil {
 			logger.Log.Errorf("%v", err)
 		}
 	}
+}
+
+func (reader *tcpReader) close() {
+	reader.Lock()
+	if !reader.isClosed {
+		reader.isClosed = true
+		close(reader.msgQueue)
+	}
+	reader.Unlock()
+}
+
+func (reader *tcpReader) sendMsgIfNotClosed(msg api.TcpReaderDataMsg) {
+	reader.Lock()
+	if !reader.isClosed {
+		reader.msgQueue <- msg
+	}
+	reader.Unlock()
+}
+
+func (reader *tcpReader) Read(p []byte) (int, error) {
+	var msg api.TcpReaderDataMsg
+
+	ok := true
+	for ok && len(reader.data) == 0 {
+		msg, ok = <-reader.msgQueue
+		if msg != nil {
+			reader.data = msg.GetBytes()
+			reader.captureTime = msg.GetTimestamp()
+		}
+
+		if len(reader.data) > 0 {
+			reader.packetsSeen += 1
+		}
+	}
+	if !ok || len(reader.data) == 0 {
+		return 0, io.EOF
+	}
+
+	l := copy(p, reader.data)
+	reader.data = reader.data[l:]
+	reader.progress.Feed(l)
+
+	return l, nil
+}
+
+func (reader *tcpReader) GetReqResMatcher() api.RequestResponseMatcher {
+	return reader.reqResMatcher
+}
+
+func (reader *tcpReader) GetIsClient() bool {
+	return reader.isClient
+}
+
+func (reader *tcpReader) GetReadProgress() *api.ReadProgress {
+	return reader.progress
+}
+
+func (reader *tcpReader) GetParent() api.TcpStream {
+	return reader.parent
+}
+
+func (reader *tcpReader) GetTcpID() *api.TcpID {
+	return reader.tcpID
+}
+
+func (reader *tcpReader) GetCounterPair() *api.CounterPair {
+	return reader.counterPair
+}
+
+func (reader *tcpReader) GetCaptureTime() time.Time {
+	return reader.captureTime
+}
+
+func (reader *tcpReader) GetEmitter() api.Emitter {
+	return reader.emitter
+}
+
+func (reader *tcpReader) GetIsClosed() bool {
+	return reader.isClosed
+}
+
+func (reader *tcpReader) GetExtension() *api.Extension {
+	return reader.extension
 }

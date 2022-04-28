@@ -36,7 +36,7 @@ func (c *context) GetCaptureInfo() gopacket.CaptureInfo {
 	return c.CaptureInfo
 }
 
-func NewTcpAssembler(outputItems chan *api.OutputChannelItem, streamsMap *tcpStreamMap, opts *TapOpts) *tcpAssembler {
+func NewTcpAssembler(outputItems chan *api.OutputChannelItem, streamsMap api.TcpStreamMap, opts *TapOpts) *tcpAssembler {
 	var emitter api.Emitter = &api.Emitting{
 		AppStats:      &diagnose.AppStats,
 		OutputChannel: outputItems,
@@ -82,12 +82,6 @@ func (a *tcpAssembler) processPackets(dumpPacket bool, packets <-chan source.Tcp
 		if tcp != nil {
 			diagnose.AppStats.IncTcpPacketsCount()
 			tcp := tcp.(*layers.TCP)
-			if *checksum {
-				err := tcp.SetNetworkLayerForChecksum(packet.NetworkLayer())
-				if err != nil {
-					logger.Log.Fatalf("Failed to set network layer for checksum: %s", err)
-				}
-			}
 
 			c := context{
 				CaptureInfo: packet.Metadata().CaptureInfo,
