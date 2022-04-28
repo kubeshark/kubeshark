@@ -22,33 +22,27 @@ import (
 
 type tlsPoller struct {
 	tls             *TlsTapper
-	readers         map[string]api.TcpReader
+	readers         map[string]*tlsReader
 	closedReaders   chan string
 	reqResMatcher   api.RequestResponseMatcher
 	chunksReader    *perf.Reader
 	extension       *api.Extension
 	procfs          string
 	pidToNamespace  sync.Map
-	isClosed        bool
 	protoIdentifier *api.ProtoIdentifier
-	isTapTarget     bool
 	origin          api.Capture
-	createdAt       time.Time
 }
 
 func newTlsPoller(tls *TlsTapper, extension *api.Extension, procfs string) *tlsPoller {
 	return &tlsPoller{
 		tls:             tls,
-		readers:         make(map[string]api.TcpReader),
+		readers:         make(map[string]*tlsReader),
 		closedReaders:   make(chan string, 100),
 		reqResMatcher:   extension.Dissector.NewResponseRequestMatcher(),
 		extension:       extension,
 		chunksReader:    nil,
 		procfs:          procfs,
 		protoIdentifier: &api.ProtoIdentifier{},
-		isTapTarget:     true,
-		origin:          api.Ebpf,
-		createdAt:       time.Now(),
 	}
 }
 
@@ -135,24 +129,12 @@ func (p *tlsPoller) handleTlsChunk(chunk *tlsChunk, extension *api.Extension,
 	key := buildTlsKey(chunk, ip, port)
 	reader, exists := p.readers[key]
 
-	newReader := NewTlsReader(
-		key,
-		func(r *tlsReader) {
-			p.closeReader(key, r)
-		},
-		chunk.isRequest(),
-		p,
-	)
-
 	if !exists {
-		reader = p.startNewTlsReader(chunk, ip, port, key, extension, newReader, options)
+		reader = p.startNewTlsReader(chunk, ip, port, key, emitter, extension, options)
 		p.readers[key] = reader
 	}
 
-	tlsReader := reader.(*tlsReader)
-
-	tlsReader.setCaptureTime(time.Now())
-	tlsReader.sendChunk(chunk)
+	reader.chunks <- chunk
 
 	if os.Getenv("MIZU_VERBOSE_TLS_TAPPER") == "true" {
 		p.logTls(chunk, ip, port)
@@ -161,25 +143,40 @@ func (p *tlsPoller) handleTlsChunk(chunk *tlsChunk, extension *api.Extension,
 	return nil
 }
 
-func (p *tlsPoller) startNewTlsReader(chunk *tlsChunk, ip net.IP, port uint16, key string, extension *api.Extension,
-	reader api.TcpReader, options *api.TrafficFilteringOptions) api.TcpReader {
+func (p *tlsPoller) startNewTlsReader(chunk *tlsChunk, ip net.IP, port uint16, key string,
+	emitter api.Emitter, extension *api.Extension, options *api.TrafficFilteringOptions) *tlsReader {
 
 	tcpid := p.buildTcpId(chunk, ip, port)
 
-	tlsReader := reader.(*tlsReader)
-	tlsReader.setTcpID(&tcpid)
+	doneHandler := func(r *tlsReader) {
+		p.closeReader(key, r)
+	}
 
-	tlsReader.setEmitter(&tlsEmitter{
-		delegate:  reader.GetEmitter(),
+	tlsEmitter := &tlsEmitter{
+		delegate:  emitter,
 		namespace: p.getNamespace(chunk.Pid),
-	})
+	}
+
+	reader := &tlsReader{
+		key:         key,
+		chunks:      make(chan *tlsChunk, 1),
+		doneHandler: doneHandler,
+		progress:    &api.ReadProgress{},
+		tcpID:       &tcpid,
+		isClient:    chunk.isClient(),
+		captureTime: time.Now(),
+		parent:      p,
+		extension:   extension,
+		emitter:     tlsEmitter,
+		counterPair: &api.CounterPair{},
+		reqResMatcher: p.reqResMatcher,
+	}
 
 	go dissect(extension, reader, options)
 	return reader
 }
 
-func dissect(extension *api.Extension, reader api.TcpReader,
-	options *api.TrafficFilteringOptions) {
+func dissect(extension *api.Extension, reader *tlsReader, options *api.TrafficFilteringOptions) {
 	b := bufio.NewReader(reader)
 
 	err := extension.Dissector.Dissect(b, reader, options)
@@ -281,7 +278,7 @@ func (p *tlsPoller) logTls(chunk *tlsChunk, ip net.IP, port uint16) {
 }
 
 func (p *tlsPoller) SetProtocol(protocol *api.Protocol) {
-	// TODO: Implement
+	// Do nothing, tls is currently http only
 }
 
 func (p *tlsPoller) GetOrigin() api.Capture {
@@ -297,9 +294,9 @@ func (p *tlsPoller) GetReqResMatcher() api.RequestResponseMatcher {
 }
 
 func (p *tlsPoller) GetIsTapTarget() bool {
-	return p.isTapTarget
+	return true
 }
 
 func (p *tlsPoller) GetIsClosed() bool {
-	return p.isClosed
+	return false
 }
