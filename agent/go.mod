@@ -19,7 +19,6 @@ require (
 	github.com/nav-inc/datetime v0.1.3
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
 	github.com/orcaman/concurrent-map v1.0.0
-    github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/stretchr/testify v1.7.0
 	github.com/up9inc/basenine/client/go v0.0.0-20220419100955-e2ca51087607
 	github.com/up9inc/mizu/logger v0.0.0
