@@ -76,7 +76,7 @@ func newTcpPacketSource(name, filename string, interfaceName string,
 		logger.Log.Infof("Using AF_PACKET socket as the capture source")
 	}
 
-	decoder := gopacket.DecodersByLayerName[fmt.Sprintf("%s", layers.LinkTypeEthernet)]
+	decoder := gopacket.DecodersByLayerName[string(layers.LinkTypeEthernet)]
 	result.Handle.SetDecoder(decoder, behaviour.Lazy, true)
 
 	if behaviour.BpfFilter != "" {

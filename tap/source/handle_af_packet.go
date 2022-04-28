@@ -52,7 +52,7 @@ func (h *afPacketHandle) SetBPF(expr string) (err error) {
 		}
 		bpfIns = append(bpfIns, bpfIns2)
 	}
-	h.capture.SetBPF(bpfIns)
+	err = h.capture.SetBPF(bpfIns)
 	return
 }
 

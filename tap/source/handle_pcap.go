@@ -9,10 +9,8 @@ import (
 )
 
 type pcapHandle struct {
-	source        *gopacket.PacketSource
-	capture       *pcap.Handle
-	decoder       gopacket.Decoder
-	decodeOptions gopacket.DecodeOptions
+	source  *gopacket.PacketSource
+	capture *pcap.Handle
 }
 
 func (h *pcapHandle) NextPacket() (packet gopacket.Packet, err error) {
