@@ -3,23 +3,24 @@ package source
 import (
 	"fmt"
 	"io"
-	"os"
-	"time"
 
 	"github.com/google/gopacket"
-	"github.com/google/gopacket/afpacket"
 	"github.com/google/gopacket/ip4defrag"
 	"github.com/google/gopacket/layers"
-	"github.com/google/gopacket/pcap"
 	"github.com/up9inc/mizu/logger"
 	"github.com/up9inc/mizu/tap/api"
 	"github.com/up9inc/mizu/tap/diagnose"
-	"golang.org/x/net/bpf"
 )
 
+type Handle interface {
+	NextPacket() (packet gopacket.Packet, err error)
+	SetDecoder(decoder gopacket.Decoder, lazy bool, noCopy bool)
+	SetBPF(expr string) (err error)
+	Close()
+}
+
 type tcpPacketSource struct {
-	source    gopacket.ZeroCopyPacketDataSource
-	Handle    *afpacket.TPacket
+	Handle    Handle
 	defragger *ip4defrag.IPv4Defragmenter
 	Behaviour *TcpPacketSourceBehaviour
 	name      string
@@ -27,72 +28,18 @@ type tcpPacketSource struct {
 }
 
 type TcpPacketSourceBehaviour struct {
-	SnapLength  int
-	Promisc     bool
-	Tstype      string
-	DecoderName string
-	Lazy        bool
-	BpfFilter   string
+	SnapLength   int
+	TargetSizeMb int
+	Promisc      bool
+	Tstype       string
+	DecoderName  string
+	Lazy         bool
+	BpfFilter    string
 }
 
 type TcpPacketInfo struct {
 	Packet gopacket.Packet
 	Source *tcpPacketSource
-}
-
-func newAfpacketHandle(device string, snaplen int, block_size int, num_blocks int,
-	useVLAN bool, timeout time.Duration) (*afpacket.TPacket, error) {
-
-	var h *afpacket.TPacket
-	var err error
-
-	if device == "any" {
-		h, err = afpacket.NewTPacket(
-			afpacket.OptFrameSize(snaplen),
-			afpacket.OptBlockSize(block_size),
-			afpacket.OptNumBlocks(num_blocks),
-			afpacket.OptAddVLANHeader(useVLAN),
-			afpacket.OptPollTimeout(timeout),
-			afpacket.SocketRaw,
-			afpacket.TPacketVersion3)
-	} else {
-		h, err = afpacket.NewTPacket(
-			afpacket.OptInterface(device),
-			afpacket.OptFrameSize(snaplen),
-			afpacket.OptBlockSize(block_size),
-			afpacket.OptNumBlocks(num_blocks),
-			afpacket.OptAddVLANHeader(useVLAN),
-			afpacket.OptPollTimeout(timeout),
-			afpacket.SocketRaw,
-			afpacket.TPacketVersion3)
-	}
-	return h, err
-}
-
-// afpacketComputeSize computes the block_size and the num_blocks in such a way that the
-// allocated mmap buffer is close to but smaller than target_size_mb.
-// The restriction is that the block_size must be divisible by both the
-// frame size and page size.
-func afpacketComputeSize(targetSizeMb int, snaplen int, pageSize int) (
-	frameSize int, blockSize int, numBlocks int, err error) {
-
-	fmt.Printf("[afpacketComputeSize] targetSizeMb: %v snaplen: %v pageSize: %v\n", targetSizeMb, snaplen, pageSize)
-
-	if snaplen < pageSize {
-		frameSize = pageSize / (pageSize / snaplen)
-	} else {
-		frameSize = (snaplen/pageSize + 1) * pageSize
-	}
-
-	// 128 is the default from the gopacket library so just use that
-	blockSize = frameSize * 128
-	numBlocks = (targetSizeMb * 1024 * 1024) / blockSize
-
-	if numBlocks == 0 {
-		return 0, 0, 0, fmt.Errorf("Interface buffersize is too small")
-	}
-
-	return frameSize, blockSize, numBlocks, nil
 }
 
 func newTcpPacketSource(name, filename string, interfaceName string,
@@ -106,22 +53,38 @@ func newTcpPacketSource(name, filename string, interfaceName string,
 		Origin:    origin,
 	}
 
-	szFrame, szBlock, numBlocks, err := afpacketComputeSize(8, 65535, os.Getpagesize())
+	result.Handle, err = newAfpacketHandle(
+		interfaceName,
+		behaviour.TargetSizeMb,
+		behaviour.SnapLength,
+	)
 	if err != nil {
-		panic(err)
+		logger.Log.Warning(err)
+		result.Handle, err = newPcapHandle(
+			filename,
+			interfaceName,
+			behaviour.SnapLength,
+			behaviour.Promisc,
+			behaviour.Tstype,
+		)
+		if err != nil {
+			return nil, err
+		} else {
+			logger.Log.Infof("Using libpcap as the capture source")
+		}
+	} else {
+		logger.Log.Infof("Using AF_PACKET socket as the capture source")
 	}
-	result.Handle, err = newAfpacketHandle(interfaceName, szFrame, szBlock, numBlocks, false, pcap.BlockForever)
-	if err != nil {
-		panic(err)
-	}
+
+	decoder := gopacket.DecodersByLayerName[fmt.Sprintf("%s", layers.LinkTypeEthernet)]
+	result.Handle.SetDecoder(decoder, behaviour.Lazy, true)
+
 	if behaviour.BpfFilter != "" {
 		logger.Log.Infof("Using BPF filter %q", behaviour.BpfFilter)
 		if err = result.setBPFFilter(behaviour.BpfFilter); err != nil {
 			return nil, fmt.Errorf("BPF filter error: %v", err)
 		}
 	}
-
-	result.source = gopacket.ZeroCopyPacketDataSource(result.Handle)
 
 	return result, nil
 }
@@ -131,21 +94,7 @@ func (source *tcpPacketSource) String() string {
 }
 
 func (source *tcpPacketSource) setBPFFilter(expr string) (err error) {
-	pcapBPF, err := pcap.CompileBPFFilter(layers.LinkTypeEthernet, 65535, expr)
-	if err != nil {
-		panic(err)
-	}
-	bpfIns := []bpf.RawInstruction{}
-	for _, ins := range pcapBPF {
-		bpfIns2 := bpf.RawInstruction{
-			Op: ins.Code,
-			Jt: ins.Jt,
-			Jf: ins.Jf,
-			K:  ins.K,
-		}
-		bpfIns = append(bpfIns, bpfIns2)
-	}
-	return source.Handle.SetBPF(bpfIns)
+	return source.Handle.SetBPF(expr)
 }
 
 func (source *tcpPacketSource) close() {
@@ -158,15 +107,7 @@ func (source *tcpPacketSource) readPackets(ipdefrag bool, packets chan<- TcpPack
 	logger.Log.Infof("Start reading packets from %v", source.name)
 
 	for {
-		data, ci, err := source.source.ZeroCopyReadPacketData()
-
-		decoder := gopacket.DecodersByLayerName[fmt.Sprintf("%s", layers.LinkTypeEthernet)]
-		decodeOptions := gopacket.DecodeOptions{Lazy: false, NoCopy: true}
-
-		packet := gopacket.NewPacket(data, decoder, decodeOptions)
-		m := packet.Metadata()
-		m.CaptureInfo = ci
-		m.Truncated = m.Truncated || ci.CaptureLength < ci.Length
+		packet, err := source.Handle.NextPacket()
 
 		if err == io.EOF {
 			logger.Log.Infof("Got EOF while reading packets from %v", source.name)
