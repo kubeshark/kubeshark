@@ -78,3 +78,15 @@ func (reader *tcpReader) GetIsClosed() bool {
 func (reader *tcpReader) GetExtension() *api.Extension {
 	return reader.extension
 }
+
+func (reader *tcpReader) GetOrigin() api.Capture {
+	return reader.parent.GetOrigin()
+}
+
+func (reader *tcpReader) GetProtoIdentifier() *api.ProtoIdentifier {
+	return reader.parent.GetProtoIdentifier()
+}
+
+func (reader *tcpReader) SetProtocol(protocol *api.Protocol) {
+	reader.parent.SetProtocol(protocol)
+}
