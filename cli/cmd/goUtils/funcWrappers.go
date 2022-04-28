@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"runtime/debug"
 
-	"github.com/up9inc/mizu/shared/logger"
+	"github.com/up9inc/mizu/logger"
 )
 
 func HandleExcWrapper(fn interface{}, params ...interface{}) (result []reflect.Value) {
