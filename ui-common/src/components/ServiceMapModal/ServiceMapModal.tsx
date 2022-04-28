@@ -120,7 +120,7 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
         const resolved = mapToKeyValForFilter(serviceMapApiData.nodes?.filter(x => x.resolved))
         const unResolved = mapToKeyValForFilter(serviceMapApiData.nodes?.filter(x => !x.resolved))
         return [...resolved, ...unResolved]
-    }, [serviceMapApiData, mapToKeyValForFilter])
+    }, [serviceMapApiData])
 
     useEffect(() => {
         const newGraphData: GraphData = {
@@ -141,9 +141,9 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
     }
 
     useEffect(() => {
-        if (checkedServices.length === 0)
+        if (checkedServices.length == 0)
             setCheckedServices(getServicesForFilter.map(x => x.key).filter(serviceName => !Utils.isIpAddress(serviceName)))
-    }, [getServicesForFilter, checkedServices.length])
+    }, [getServicesForFilter])
 
     useEffect(() => {
         getServiceMapData()

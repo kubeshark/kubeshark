@@ -62,7 +62,7 @@ const SelectList: React.FC<Props> = ({ items, tableName, checkedValues = [], mul
         }
 
         setCheckedValues(newChecked)
-    }, [searchValue, checkedValues, filteredValuesKeys, items])
+    }, [searchValue, checkedValues, filteredValuesKeys])
 
     const dataFieldFunc = (listValue) => listValue.component ? listValue.component :
         <span className={styles.nowrap} title={listValue.value}>

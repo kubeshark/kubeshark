@@ -57,7 +57,7 @@
     "build": "./node_modules/.bin/env-cmd -f .env.basic craco build",
     "test": "craco test",
     "eject": "craco eject",
-    "eslint": "eslint . --ext .js,.jsx,.ts,.tsx"
+    "eslint": "eslint . --ext .js,.jsx,.ts,.tsx --max-warnings=0"
   },
   "eslintConfig": {
     "extends": [
