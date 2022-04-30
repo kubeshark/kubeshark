@@ -65,6 +65,7 @@ func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcpLayer *lay
 		_stream.setId(factory.streamsMap.NextId())
 		for i, extension := range extensions {
 			reqResMatcher := extension.Dissector.NewResponseRequestMatcher()
+			_stream.addReqResMatcher(reqResMatcher)
 			counterPair := &api.CounterPair{
 				Request:  0,
 				Response: 0,

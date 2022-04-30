@@ -20,7 +20,7 @@ type tcpStream struct {
 	clients         []api.TcpReader
 	servers         []api.TcpReader
 	origin          api.Capture
-	reqResMatcher   api.RequestResponseMatcher
+	reqResMatchers  []api.RequestResponseMatcher
 	createdAt       time.Time
 	streamsMap      api.TcpStreamMap
 	sync.Mutex
@@ -89,6 +89,10 @@ func (t *tcpStream) getServer(index int) api.TcpReader {
 	return t.servers[index]
 }
 
+func (t *tcpStream) addReqResMatcher(reqResMatcher api.RequestResponseMatcher) {
+	t.reqResMatchers = append(t.reqResMatchers, reqResMatcher)
+}
+
 func (t *tcpStream) SetProtocol(protocol *api.Protocol) {
 	t.Lock()
 	defer t.Unlock()
@@ -123,8 +127,8 @@ func (t *tcpStream) GetProtoIdentifier() *api.ProtoIdentifier {
 	return t.protoIdentifier
 }
 
-func (t *tcpStream) GetReqResMatcher() api.RequestResponseMatcher {
-	return t.reqResMatcher
+func (t *tcpStream) GetReqResMatchers() []api.RequestResponseMatcher {
+	return t.reqResMatchers
 }
 
 func (t *tcpStream) GetIsTapTarget() bool {

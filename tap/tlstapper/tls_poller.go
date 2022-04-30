@@ -142,6 +142,7 @@ func (p *tlsPoller) handleTlsChunk(chunk *tlsChunk, extension *api.Extension,
 		},
 		chunk.isRequest(),
 		p,
+		p.reqResMatcher,
 	)
 
 	if !exists {
@@ -292,8 +293,8 @@ func (p *tlsPoller) GetProtoIdentifier() *api.ProtoIdentifier {
 	return p.protoIdentifier
 }
 
-func (p *tlsPoller) GetReqResMatcher() api.RequestResponseMatcher {
-	return p.reqResMatcher
+func (p *tlsPoller) GetReqResMatchers() []api.RequestResponseMatcher {
+	return []api.RequestResponseMatcher{p.reqResMatcher}
 }
 
 func (p *tlsPoller) GetIsTapTarget() bool {
