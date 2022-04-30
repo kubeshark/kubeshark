@@ -104,11 +104,7 @@ type OutputChannelItem struct {
 	Namespace      string
 }
 
-type SuperTimer struct {
-	CaptureTime time.Time
-}
-
-type SuperIdentifier struct {
+type ProtoIdentifier struct {
 	Protocol       *Protocol
 	IsClosedOthers bool
 }
@@ -130,7 +126,7 @@ func (p *ReadProgress) Current() (n int) {
 type Dissector interface {
 	Register(*Extension)
 	Ping()
-	Dissect(b *bufio.Reader, progress *ReadProgress, capture Capture, isClient bool, tcpID *TcpID, counterPair *CounterPair, superTimer *SuperTimer, superIdentifier *SuperIdentifier, emitter Emitter, options *TrafficFilteringOptions, reqResMatcher RequestResponseMatcher) error
+	Dissect(b *bufio.Reader, reader TcpReader, options *TrafficFilteringOptions) error
 	Analyze(item *OutputChannelItem, resolvedSource string, resolvedDestination string, namespace string) *Entry
 	Summarize(entry *Entry) *BaseEntry
 	Represent(request map[string]interface{}, response map[string]interface{}) (object []byte, err error)
@@ -405,4 +401,40 @@ func (r *HTTPResponseWrapper) MarshalJSON() ([]byte, error) {
 		Body:     string(body),
 		Response: r.Response,
 	})
+}
+
+type TcpReaderDataMsg interface {
+	GetBytes() []byte
+	GetTimestamp() time.Time
+}
+
+type TcpReader interface {
+	Read(p []byte) (int, error)
+	GetReqResMatcher() RequestResponseMatcher
+	GetIsClient() bool
+	GetReadProgress() *ReadProgress
+	GetParent() TcpStream
+	GetTcpID() *TcpID
+	GetCounterPair() *CounterPair
+	GetCaptureTime() time.Time
+	GetEmitter() Emitter
+	GetIsClosed() bool
+	GetExtension() *Extension
+}
+
+type TcpStream interface {
+	SetProtocol(protocol *Protocol)
+	GetOrigin() Capture
+	GetProtoIdentifier() *ProtoIdentifier
+	GetReqResMatcher() RequestResponseMatcher
+	GetIsTapTarget() bool
+	GetIsClosed() bool
+}
+
+type TcpStreamMap interface {
+	Range(f func(key, value interface{}) bool)
+	Store(key, value interface{})
+	Delete(key interface{})
+	NextId() int64
+	CloseTimedoutTcpStreamChannels()
 }

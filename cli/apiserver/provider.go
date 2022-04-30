@@ -4,15 +4,16 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"github.com/up9inc/mizu/cli/utils"
 	"io/ioutil"
 	"net/http"
 	"net/url"
 	"time"
 
+	"github.com/up9inc/mizu/cli/utils"
+
 	"github.com/up9inc/mizu/cli/config"
+	"github.com/up9inc/mizu/logger"
 	"github.com/up9inc/mizu/shared"
-	"github.com/up9inc/mizu/shared/logger"
 	core "k8s.io/api/core/v1"
 )
 

@@ -5,8 +5,8 @@ import (
 	"sync"
 
 	"github.com/up9inc/mizu/agent/pkg/utils"
+	"github.com/up9inc/mizu/logger"
 	"github.com/up9inc/mizu/shared"
-	"github.com/up9inc/mizu/shared/logger"
 )
 
 const FilePath = shared.DataDirPath + "tappers-status.json"

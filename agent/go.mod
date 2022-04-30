@@ -19,9 +19,9 @@ require (
 	github.com/nav-inc/datetime v0.1.3
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
 	github.com/orcaman/concurrent-map v1.0.0
-    github.com/patrickmn/go-cache v2.1.0+incompatible
 	github.com/stretchr/testify v1.7.0
 	github.com/up9inc/basenine/client/go v0.0.0-20220419100955-e2ca51087607
+	github.com/up9inc/mizu/logger v0.0.0
 	github.com/up9inc/mizu/shared v0.0.0
 	github.com/up9inc/mizu/tap v0.0.0
 	github.com/up9inc/mizu/tap/api v0.0.0
@@ -134,6 +134,8 @@ require (
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.1 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
+
+replace github.com/up9inc/mizu/logger v0.0.0 => ../logger
 
 replace github.com/up9inc/mizu/shared v0.0.0 => ../shared
 
