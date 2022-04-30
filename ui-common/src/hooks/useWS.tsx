@@ -8,6 +8,7 @@ enum WebSocketReadyState {
 }
 
 export const DEFAULT_QUERY = `leftOff("latest")`;
+export const DEFAULT_FETCH = 50;
 
 const useWS = (wsUrl: string) => {
   const [message, setMessage] = useState(null);

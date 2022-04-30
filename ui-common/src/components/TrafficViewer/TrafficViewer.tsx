@@ -20,7 +20,7 @@ import {StatusBar} from "../UI/StatusBar";
 import tappingStatusAtom from "../../recoil/tappingStatus/atom";
 import {TOAST_CONTAINER_ID} from "../../configs/Consts";
 import leftOffTopAtom from "../../recoil/leftOffTop";
-import { DEFAULT_QUERY } from '../../hooks/useWS';
+import { DEFAULT_QUERY, DEFAULT_FETCH } from '../../hooks/useWS';
 
 const useLayoutStyles = makeStyles(() => ({
   details: {
@@ -115,9 +115,9 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({
 
   const openEmptyWebSocket = () => {
     if (query) {
-      openWebSocket(`(${query}) and ${DEFAULT_QUERY}`, true);
+      openWebSocket(`(${query}) and ${DEFAULT_QUERY}`, true, DEFAULT_FETCH);
     } else {
-      openWebSocket(DEFAULT_QUERY, true);
+      openWebSocket(DEFAULT_QUERY, true, DEFAULT_FETCH);
     }
   }
 
@@ -129,7 +129,7 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({
   }
 
   const listEntry = useRef(null);
-  const openWebSocket = (query: string, resetEntries: boolean) => {
+  const openWebSocket = (query: string, resetEntries: boolean, fetch: number) => {
     if (resetEntries) {
       setFocusedEntryId(null);
       setEntries([]);
@@ -138,7 +138,7 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({
     }
     try {
       ws.current = new WebSocket(webSocketUrl);
-      sendQueryWhenWsOpen(query);
+      sendQueryWhenWsOpen(query, fetch);
 
       ws.current.onopen = () => {
         setWsReadyState(ws?.current?.readyState);
@@ -157,12 +157,17 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({
     }
   }
 
-  const sendQueryWhenWsOpen = (query) => {
+  const sendQueryWhenWsOpen = (query: string, _fetch: number) => {
     setTimeout(() => {
       if (ws?.current?.readyState === WebSocket.OPEN) {
-        ws.current.send(JSON.stringify({"query": query, "enableFullEntries": false}));
+        ws.current.send(JSON.stringify({
+          "query": query,
+          "enableFullEntries": false,
+          "fetch": _fetch,
+          "timeoutMs": 3000
+        }));
       } else {
-        sendQueryWhenWsOpen(query);
+        sendQueryWhenWsOpen(query, _fetch);
       }
     }, 500)
   }

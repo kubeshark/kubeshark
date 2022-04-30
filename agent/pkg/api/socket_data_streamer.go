@@ -79,7 +79,7 @@ func (e *BasenineEntryStreamer) Get(ctx context.Context, socketId int, params *W
 	go handleDataChannel(connection, data)
 	go handleMetaChannel(connection, meta)
 
-	if err = connection.Query(query, data, meta); err != nil {
+	if err = connection.Query(query, params.Fetch, params.TimeoutMs, data, meta); err != nil {
 		logger.Log.Errorf("Query mode call failed: %v", err)
 		entryStreamerSocketConnector.CleanupSocket(socketId)
 		return err
