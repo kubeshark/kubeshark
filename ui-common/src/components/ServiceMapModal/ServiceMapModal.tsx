@@ -8,6 +8,8 @@ import debounce from 'lodash/debounce';
 import ServiceMapOptions from './ServiceMapOptions'
 import { useCommonStyles } from "../../helpers/commonStyle";
 import refreshIcon from "assets/refresh.svg";
+import filterIcon from "assets/filter-icon.svg";
+import filterIconClicked from "assets/filter-icon-clicked.svg";
 import closeIcon from "assets/close.svg"
 import styles from './ServiceMapModal.module.sass'
 import SelectList from "../UI/SelectList";
@@ -23,7 +25,7 @@ const modalStyle = {
     transform: 'translate(-50%, 0%)',
     width: '89vw',
     height: '82vh',
-    bgcolor: 'background.paper',
+    bgcolor: '#F0F5FF',
     borderRadius: '5px',
     boxShadow: 24,
     p: 4,
@@ -46,12 +48,12 @@ const LegentLabel: React.FC<LegentLabelProps> = ({ color, name }) => {
 }
 
 const protocols = [
-    { key: "HTTP", value: "HTTP", component: <LegentLabel color="#205cf5" name="HTTP" /> },
-    { key: "HTTP/2", value: "HTTP/2", component: <LegentLabel color='#244c5a' name="HTTP/2" /> },
-    { key: "gRPC", value: "gRPC", component: <LegentLabel color='#244c5a' name="gRPC" /> },
-    { key: "AMQP", value: "AMQP", component: <LegentLabel color='#ff6600' name="AMQP" /> },
-    { key: "KAFKA", value: "KAFKA", component: <LegentLabel color='#000000' name="KAFKA" /> },
-    { key: "REDIS", value: "REDIS", component: <LegentLabel color='#a41e11' name="REDIS" /> },]
+    { key: "HTTP", value: "HTTP", component: <LegentLabel color="#494677" name="HTTP" /> },
+    { key: "HTTP/2", value: "HTTP/2", component: <LegentLabel color='#F7B202' name="HTTP/2" /> },
+    { key: "gRPC", value: "gRPC", component: <LegentLabel color='#219653' name="gRPC" /> },
+    { key: "AMQP", value: "AMQP", component: <LegentLabel color='#F86818' name="AMQP" /> },
+    { key: "KAFKA", value: "KAFKA", component: <LegentLabel color='#0C0B1A' name="KAFKA" /> },
+    { key: "REDIS", value: "REDIS", component: <LegentLabel color='#DB2156' name="REDIS" /> },]
 
 
 interface ServiceMapModalProps {
@@ -70,6 +72,7 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
     const [serviceMapApiData, setServiceMapApiData] = useState<ServiceMapGraph>({ edges: [], nodes: [] })
     const [servicesSearchVal, setServicesSearchVal] = useState("")
     const [graphOptions, setGraphOptions] = useState(ServiceMapOptions);
+    const [isFilterClicked, setIsFilterClicked] = useState(true)
 
     const getServiceMapData = useCallback(async () => {
         try {
@@ -172,15 +175,39 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
             BackdropProps={{ timeout: 500 }}>
             <Fade in={isOpen}>
                 <Box sx={modalStyle}>
+                    <div className={styles.closeIcon}>
+                        <img src={closeIcon} alt="close" onClick={() => onClose()} style={{ cursor: "pointer", userSelect: "none" }}></img>
+                    </div>
+                    <div className={styles.headerContainer}>
+                        <div className={styles.headerSection}>
+                            <span className={styles.title}>Services</span>
+                            <Button size="medium"
+                                variant="contained"
+                                startIcon={<img src={isFilterClicked ? filterIconClicked : filterIcon} className="custom" alt="refresh" style={{ marginRight: "15px" }}></img>}
+                                className={commonClasses.button + " " + commonClasses.imagedButton + " " + `${isFilterClicked ? commonClasses.button : commonClasses.outlinedButton}`}
+                                onClick={() => setIsFilterClicked(prevState => !prevState)}>
+                                Filter
+                            </Button >
+                            <Button style={{ marginLeft: "2%" }}
+                                startIcon={<img src={refreshIcon} className="custom" alt="refresh"></img>}
+                                size="medium"
+                                variant="contained"
+                                className={commonClasses.outlinedButton + " " + commonClasses.imagedButton}
+                                onClick={refreshServiceMap}
+                            >
+                                Refresh
+                            </Button>
+                        </div>
+                    </div>
+
                     <div className={styles.modalContainer}>
-                        <div className={styles.filterSection}>
+                        <div className={styles.filterSection + ` ${isFilterClicked ? styles.show : ""}`}>
                             <Resizeable minWidth={170} maxWidth={320}>
                                 <div className={styles.filterWrapper}>
                                     <div className={styles.protocolsFilterList}>
                                         <SelectList items={protocols} checkBoxWidth="5%" tableName={"Protocols"} multiSelect={true}
                                             checkedValues={checkedProtocols} setCheckedValues={onProtocolsChange} tableClassName={styles.filters} />
                                     </div>
-                                    <div className={styles.separtorLine}></div>
                                     <div className={styles.servicesFilter}>
                                         <input className={commonClasses.textField + ` ${styles.servicesFilterSearch}`} placeholder="search service" value={servicesSearchVal} onChange={(event) => setServicesSearchVal(event.target.value)} />
                                         <div className={styles.servicesFilterList}>
@@ -193,16 +220,7 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
                         </div>
                         <div className={styles.graphSection}>
                             <div style={{ display: "flex", justifyContent: "space-between" }}>
-                                <Button style={{ marginLeft: "3%" }}
-                                    startIcon={<img src={refreshIcon} className="custom" alt="refresh" style={{ marginRight: "8%" }}></img>}
-                                    size="medium"
-                                    variant="contained"
-                                    className={commonClasses.outlinedButton + " " + commonClasses.imagedButton}
-                                    onClick={refreshServiceMap}
-                                >
-                                    Refresh
-                                </Button>
-                                <img src={closeIcon} alt="close" onClick={() => onClose()} style={{ cursor: "pointer", userSelect: "none" }}></img>
+
                             </div>
                             {isLoading && <div className={spinnerStyle.spinnerContainer}>
                                 <img alt="spinner" src={spinnerImg} style={{ height: 50 }} />

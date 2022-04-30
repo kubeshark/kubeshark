@@ -72,7 +72,10 @@ const SelectList: React.FC<Props> = ({ items, tableName, checkedValues = [], mul
     const tableHead = multiSelect ? <tr style={{ borderBottomWidth: "2px" }}>
         <th style={{ width: checkBoxWidth }}><Checkbox data-cy="checkbox-all" checked={headerChecked}
             onToggle={(isChecked) => toggleAll(isChecked)} /></th>
-        <th>{tableName}</th>
+        <th>
+            {tableName}&nbsp;
+            <span className={styles.totalSelected}>{`(${checkedValues.length})`}</span>
+        </th>
     </tr> :
         <tr style={{ borderBottomWidth: "2px" }}>
             <th>{tableName}</th>
