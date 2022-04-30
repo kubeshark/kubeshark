@@ -30,9 +30,9 @@ const modalStyle = {
     boxShadow: 24,
     p: 4,
     color: '#000',
-    padding: "25px 15px"
+    padding: "1px 1px",
+    paddingBottom: "15px"
 };
-
 interface LegentLabelProps {
     color: string,
     name: string
