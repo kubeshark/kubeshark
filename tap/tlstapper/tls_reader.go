@@ -87,7 +87,3 @@ func (r *tlsReader) GetEmitter() api.Emitter {
 func (r *tlsReader) GetIsClosed() bool {
 	return false
 }
-
-func (r *tlsReader) GetExtension() *api.Extension {
-	return r.extension
-}

@@ -104,11 +104,6 @@ type OutputChannelItem struct {
 	Namespace      string
 }
 
-type ProtoIdentifier struct {
-	Protocol       *Protocol
-	IsClosedOthers bool
-}
-
 type ReadProgress struct {
 	readBytes   int
 	lastCurrent int
@@ -419,13 +414,12 @@ type TcpReader interface {
 	GetCaptureTime() time.Time
 	GetEmitter() Emitter
 	GetIsClosed() bool
-	GetExtension() *Extension
 }
 
 type TcpStream interface {
 	SetProtocol(protocol *Protocol)
 	GetOrigin() Capture
-	GetProtoIdentifier() *ProtoIdentifier
+	GetProtocol() *Protocol
 	GetReqResMatchers() []RequestResponseMatcher
 	GetIsTapTarget() bool
 	GetIsClosed() bool
