@@ -3,8 +3,8 @@ package http
 import (
 	"encoding/json"
 
-	"github.com/vektah/gqlparser/v2/ast"
-	"github.com/vektah/gqlparser/v2/parser"
+	"github.com/mertyildiran/gqlparser/v2/ast"
+	"github.com/mertyildiran/gqlparser/v2/parser"
 )
 
 func isGraphQL(request map[string]interface{}) bool {
