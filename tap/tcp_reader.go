@@ -54,8 +54,8 @@ func (reader *tcpReader) run(options *api.TrafficFilteringOptions, wg *sync.Wait
 		reader.reqResMatcher = reader.parent.reqResMatchers[i]
 		reader.counterPair = reader.parent.counterPairs[i]
 		b := bufio.NewReader(reader)
-		extension.Dissector.Dissect(b, reader, options)
-		if reader.parent.protocol != nil {
+		err := extension.Dissector.Dissect(b, reader, options)
+		if err == nil || reader.parent.protocol != nil {
 			break
 		}
 		reader.exhaustBuffer = true

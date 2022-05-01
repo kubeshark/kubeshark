@@ -82,7 +82,7 @@ func (d dissecting) Dissect(b *bufio.Reader, reader api.TcpReader, options *api.
 		frame, err := r.ReadFrame()
 		if err == io.EOF {
 			// We must read until we see an EOF... very important!
-			return nil
+			return err
 		}
 
 		switch f := frame.(type) {
