@@ -22,7 +22,7 @@ import (
 
 type tlsPoller struct {
 	tls             *TlsTapper
-	readers         map[string]api.TcpReader
+	readers         map[string]*tlsReader
 	closedReaders   chan string
 	reqResMatcher   api.RequestResponseMatcher
 	chunksReader    *perf.Reader
@@ -36,7 +36,7 @@ type tlsPoller struct {
 func newTlsPoller(tls *TlsTapper, extension *api.Extension, procfs string) *tlsPoller {
 	return &tlsPoller{
 		tls:             tls,
-		readers:         make(map[string]api.TcpReader),
+		readers:         make(map[string]*tlsReader),
 		closedReaders:   make(chan string, 100),
 		reqResMatcher:   extension.Dissector.NewResponseRequestMatcher(),
 		extension:       extension,
@@ -145,10 +145,8 @@ func (p *tlsPoller) handleTlsChunk(chunk *tlsChunk, extension *api.Extension,
 		p.readers[key] = reader
 	}
 
-	tlsReader := reader.(*tlsReader)
-
-	tlsReader.setCaptureTime(time.Now())
-	tlsReader.sendChunk(chunk)
+	reader.setCaptureTime(time.Now())
+	reader.sendChunk(chunk)
 
 	if os.Getenv("MIZU_VERBOSE_TLS_TAPPER") == "true" {
 		p.logTls(chunk, ip, port)
@@ -158,14 +156,13 @@ func (p *tlsPoller) handleTlsChunk(chunk *tlsChunk, extension *api.Extension,
 }
 
 func (p *tlsPoller) startNewTlsReader(chunk *tlsChunk, ip net.IP, port uint16, key string, extension *api.Extension,
-	reader api.TcpReader, options *api.TrafficFilteringOptions) api.TcpReader {
+	reader *tlsReader, options *api.TrafficFilteringOptions) *tlsReader {
 
 	tcpid := p.buildTcpId(chunk, ip, port)
 
-	tlsReader := reader.(*tlsReader)
-	tlsReader.setTcpID(&tcpid)
+	reader.setTcpID(&tcpid)
 
-	tlsReader.setEmitter(&tlsEmitter{
+	reader.setEmitter(&tlsEmitter{
 		delegate:  reader.GetEmitter(),
 		namespace: p.getNamespace(chunk.Pid),
 	})
@@ -174,7 +171,7 @@ func (p *tlsPoller) startNewTlsReader(chunk *tlsChunk, ip net.IP, port uint16, k
 	return reader
 }
 
-func dissect(extension *api.Extension, reader api.TcpReader,
+func dissect(extension *api.Extension, reader *tlsReader,
 	options *api.TrafficFilteringOptions) {
 	b := bufio.NewReader(reader)
 

@@ -24,7 +24,7 @@ type tlsReader struct {
 	reqResMatcher api.RequestResponseMatcher
 }
 
-func NewTlsReader(key string, doneHandler func(r *tlsReader), isClient bool, stream api.TcpStream, reqResMatcher api.RequestResponseMatcher) api.TcpReader {
+func NewTlsReader(key string, doneHandler func(r *tlsReader), isClient bool, stream api.TcpStream, reqResMatcher api.RequestResponseMatcher) *tlsReader {
 	return &tlsReader{
 		key:           key,
 		chunks:        make(chan *tlsChunk, 1),

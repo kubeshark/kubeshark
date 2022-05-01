@@ -17,8 +17,8 @@ type tcpStream struct {
 	isClosed        bool
 	protoIdentifier *api.ProtoIdentifier
 	isTapTarget     bool
-	clients         []api.TcpReader
-	servers         []api.TcpReader
+	clients         []*tcpReader
+	servers         []*tcpReader
 	origin          api.Capture
 	reqResMatchers  []api.RequestResponseMatcher
 	createdAt       time.Time
@@ -26,7 +26,7 @@ type tcpStream struct {
 	sync.Mutex
 }
 
-func NewTcpStream(isTapTarget bool, streamsMap api.TcpStreamMap, capture api.Capture) api.TcpStream {
+func NewTcpStream(isTapTarget bool, streamsMap api.TcpStreamMap, capture api.Capture) *tcpStream {
 	return &tcpStream{
 		isTapTarget:     isTapTarget,
 		protoIdentifier: &api.ProtoIdentifier{},
@@ -57,35 +57,35 @@ func (t *tcpStream) close() {
 
 	for i := range t.clients {
 		reader := t.clients[i]
-		reader.(*tcpReader).close()
+		reader.close()
 	}
 	for i := range t.servers {
 		reader := t.servers[i]
-		reader.(*tcpReader).close()
+		reader.close()
 	}
 }
 
-func (t *tcpStream) addClient(reader api.TcpReader) {
+func (t *tcpStream) addClient(reader *tcpReader) {
 	t.clients = append(t.clients, reader)
 }
 
-func (t *tcpStream) addServer(reader api.TcpReader) {
+func (t *tcpStream) addServer(reader *tcpReader) {
 	t.servers = append(t.servers, reader)
 }
 
-func (t *tcpStream) getClients() []api.TcpReader {
+func (t *tcpStream) getClients() []*tcpReader {
 	return t.clients
 }
 
-func (t *tcpStream) getServers() []api.TcpReader {
+func (t *tcpStream) getServers() []*tcpReader {
 	return t.servers
 }
 
-func (t *tcpStream) getClient(index int) api.TcpReader {
+func (t *tcpStream) getClient(index int) *tcpReader {
 	return t.clients[index]
 }
 
-func (t *tcpStream) getServer(index int) api.TcpReader {
+func (t *tcpStream) getServer(index int) *tcpReader {
 	return t.servers[index]
 }
 
@@ -106,13 +106,13 @@ func (t *tcpStream) SetProtocol(protocol *api.Protocol) {
 	for i := range t.clients {
 		reader := t.clients[i]
 		if reader.GetExtension().Protocol != t.protoIdentifier.Protocol {
-			reader.(*tcpReader).close()
+			reader.close()
 		}
 	}
 	for i := range t.servers {
 		reader := t.servers[i]
 		if reader.GetExtension().Protocol != t.protoIdentifier.Protocol {
-			reader.(*tcpReader).close()
+			reader.close()
 		}
 	}
 
