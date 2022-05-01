@@ -5,9 +5,10 @@ import styles from './style/Resizeable.module.sass'
 export interface Props {
     children
     minWidth: number
+    maxWidth?: number
 }
 
-const Resizeable: React.FC<Props> = ({ children, minWidth }) => {
+const Resizeable: React.FC<Props> = ({ children, minWidth, maxWidth }) => {
     const resizeble = useRef(null)
     let mousePos = { x: 0, y: 0 }
     let elementDimention = { w: 0, h: 0 }
@@ -47,14 +48,11 @@ const Resizeable: React.FC<Props> = ({ children, minWidth }) => {
     };
 
     return (
-        <React.Fragment>
-            <div className={styles.resizable} ref={resizeble} style={{ width: elemWidth }}>
-                {children}
-                <div className={`${styles.resizer} ${styles.resizerRight}`} onMouseDown={mouseDownHandler}></div>
-                {/* <div className={`${styles.resizer} ${styles.resizerB}`} onMouseDown={mouseDownHandler}></div> -- FutureUse*/}
-            </div>
-
-        </React.Fragment>
+        <div className={styles.resizable} ref={resizeble} style={{ width: elemWidth, maxWidth: maxWidth }}>
+            {children}
+            <div className={`${styles.resizer} ${styles.resizerRight}`} onMouseDown={mouseDownHandler}></div>
+            {/* <div className={`${styles.resizer} ${styles.resizerB}`} onMouseDown={mouseDownHandler}></div> -- FutureUse*/}
+        </div>
     );
 };
 

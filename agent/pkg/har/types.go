@@ -2,9 +2,10 @@ package har
 
 import (
 	"encoding/base64"
-	"github.com/up9inc/mizu/shared/logger"
 	"time"
 	"unicode/utf8"
+
+	"github.com/up9inc/mizu/logger"
 )
 
 /*

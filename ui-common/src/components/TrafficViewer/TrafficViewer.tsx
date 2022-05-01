@@ -14,13 +14,13 @@ import {RecoilRoot, RecoilState, useRecoilState, useRecoilValue, useSetRecoilSta
 import entriesAtom from "../../recoil/entries";
 import focusedEntryIdAtom from "../../recoil/focusedEntryId";
 import queryAtom from "../../recoil/query";
-import {TLSWarning} from "../TLSWarning/TLSWarning";
 import trafficViewerApiAtom from "../../recoil/TrafficViewerApi"
 import TrafficViewerApi from "./TrafficViewerApi";
 import {StatusBar} from "../UI/StatusBar";
 import tappingStatusAtom from "../../recoil/tappingStatus/atom";
 import {TOAST_CONTAINER_ID} from "../../configs/Consts";
 import leftOffTopAtom from "../../recoil/leftOffTop";
+import { DEFAULT_QUERY } from '../../hooks/useWS';
 
 const useLayoutStyles = makeStyles(() => ({
   details: {
@@ -76,10 +76,6 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({
   const setLeftOffTop = useSetRecoilState(leftOffTopAtom);
   const scrollableRef = useRef(null);
 
-  const [showTLSWarning, setShowTLSWarning] = useState(false);
-  const [userDismissedTLSWarning, setUserDismissedTLSWarning] = useState(false);
-  const [addressesWithTLS, setAddressesWithTLS] = useState(new Set<string>());
-
   const handleQueryChange = useMemo(
     () =>
       debounce(async (query: string) => {
@@ -119,9 +115,9 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({
 
   const openEmptyWebSocket = () => {
     if (query) {
-      openWebSocket(`(${query}) and leftOff(-1)`, true);
+      openWebSocket(`(${query}) and ${DEFAULT_QUERY}`, true);
     } else {
-      openWebSocket(`leftOff(-1)`, true);
+      openWebSocket(DEFAULT_QUERY, true);
     }
   }
 
@@ -137,7 +133,7 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({
     if (resetEntries) {
       setFocusedEntryId(null);
       setEntries([]);
-      setLeftOffTop(null);
+      setLeftOffTop("");
       setNoMoreDataTop(false);
     }
     try {
@@ -285,12 +281,6 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({
           <EntryDetailed/>
         </div>
       </div>}
-      <TLSWarning showTLSWarning={showTLSWarning}
-                  setShowTLSWarning={setShowTLSWarning}
-                  addressesWithTLS={addressesWithTLS}
-                  setAddressesWithTLS={setAddressesWithTLS}
-                  userDismissedTLSWarning={userDismissedTLSWarning}
-                  setUserDismissedTLSWarning={setUserDismissedTLSWarning}/>
     </div>
   );
 };

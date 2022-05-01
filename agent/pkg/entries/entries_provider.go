@@ -2,20 +2,21 @@ package entries
 
 import (
 	"encoding/json"
+	"errors"
 	"time"
 
 	basenine "github.com/up9inc/basenine/client/go"
 	"github.com/up9inc/mizu/agent/pkg/app"
 	"github.com/up9inc/mizu/agent/pkg/har"
 	"github.com/up9inc/mizu/agent/pkg/models"
+	"github.com/up9inc/mizu/logger"
 	"github.com/up9inc/mizu/shared"
-	"github.com/up9inc/mizu/shared/logger"
 	tapApi "github.com/up9inc/mizu/tap/api"
 )
 
 type EntriesProvider interface {
 	GetEntries(entriesRequest *models.EntriesRequest) ([]*tapApi.EntryWrapper, *basenine.Metadata, error)
-	GetEntry(singleEntryRequest *models.SingleEntryRequest, entryId int) (*tapApi.EntryWrapper, error)
+	GetEntry(singleEntryRequest *models.SingleEntryRequest, entryId string) (*tapApi.EntryWrapper, error)
 }
 
 type BasenineEntriesProvider struct{}
@@ -56,7 +57,7 @@ func (e *BasenineEntriesProvider) GetEntries(entriesRequest *models.EntriesReque
 	return dataSlice, metadata, nil
 }
 
-func (e *BasenineEntriesProvider) GetEntry(singleEntryRequest *models.SingleEntryRequest, entryId int) (*tapApi.EntryWrapper, error) {
+func (e *BasenineEntriesProvider) GetEntry(singleEntryRequest *models.SingleEntryRequest, entryId string) (*tapApi.EntryWrapper, error) {
 	var entry *tapApi.Entry
 	bytes, err := basenine.Single(shared.BasenineHost, shared.BaseninePort, entryId, singleEntryRequest.Query)
 	if err != nil {
@@ -64,7 +65,7 @@ func (e *BasenineEntriesProvider) GetEntry(singleEntryRequest *models.SingleEntr
 	}
 	err = json.Unmarshal(bytes, &entry)
 	if err != nil {
-		return nil, err
+		return nil, errors.New(string(bytes))
 	}
 
 	extension := app.ExtensionsMap[entry.Protocol.Name]

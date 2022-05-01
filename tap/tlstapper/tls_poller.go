@@ -5,6 +5,8 @@ import (
 	"bytes"
 	"fmt"
 	"net"
+	"sync"
+	"time"
 
 	"encoding/binary"
 	"encoding/hex"
@@ -14,18 +16,19 @@ import (
 
 	"github.com/cilium/ebpf/perf"
 	"github.com/go-errors/errors"
-	"github.com/up9inc/mizu/shared/logger"
+	"github.com/up9inc/mizu/logger"
 	"github.com/up9inc/mizu/tap/api"
 )
 
 type tlsPoller struct {
-	tls           *TlsTapper
-	readers       map[string]*tlsReader
-	closedReaders chan string
-	reqResMatcher api.RequestResponseMatcher
-	chunksReader  *perf.Reader
-	extension     *api.Extension
-	procfs        string
+	tls            *TlsTapper
+	readers        map[string]*tlsReader
+	closedReaders  chan string
+	reqResMatcher  api.RequestResponseMatcher
+	chunksReader   *perf.Reader
+	extension      *api.Extension
+	procfs         string
+	pidToNamespace sync.Map
 }
 
 func newTlsPoller(tls *TlsTapper, extension *api.Extension, procfs string) *tlsPoller {
@@ -56,7 +59,7 @@ func (p *tlsPoller) close() error {
 	return p.chunksReader.Close()
 }
 
-func (p *tlsPoller) poll(emitter api.Emitter, options *api.TrafficFilteringOptions) {
+func (p *tlsPoller) poll(emitter api.Emitter, options *api.TrafficFilteringOptions, streamsMap api.TcpStreamMap) {
 	chunks := make(chan *tlsChunk)
 
 	go p.pollChunksPerfBuffer(chunks)
@@ -68,7 +71,7 @@ func (p *tlsPoller) poll(emitter api.Emitter, options *api.TrafficFilteringOptio
 				return
 			}
 
-			if err := p.handleTlsChunk(chunk, p.extension, emitter, options); err != nil {
+			if err := p.handleTlsChunk(chunk, p.extension, emitter, options, streamsMap); err != nil {
 				LogError(err)
 			}
 		case key := <-p.closedReaders:
@@ -112,8 +115,8 @@ func (p *tlsPoller) pollChunksPerfBuffer(chunks chan<- *tlsChunk) {
 	}
 }
 
-func (p *tlsPoller) handleTlsChunk(chunk *tlsChunk, extension *api.Extension,
-	emitter api.Emitter, options *api.TrafficFilteringOptions) error {
+func (p *tlsPoller) handleTlsChunk(chunk *tlsChunk, extension *api.Extension, emitter api.Emitter,
+	options *api.TrafficFilteringOptions, streamsMap api.TcpStreamMap) error {
 	ip, port, err := chunk.getAddress()
 
 	if err != nil {
@@ -124,10 +127,11 @@ func (p *tlsPoller) handleTlsChunk(chunk *tlsChunk, extension *api.Extension,
 	reader, exists := p.readers[key]
 
 	if !exists {
-		reader = p.startNewTlsReader(chunk, ip, port, key, extension, emitter, options)
+		reader = p.startNewTlsReader(chunk, ip, port, key, emitter, extension, options, streamsMap)
 		p.readers[key] = reader
 	}
 
+	reader.captureTime = time.Now()
 	reader.chunks <- chunk
 
 	if os.Getenv("MIZU_VERBOSE_TLS_TAPPER") == "true" {
@@ -137,33 +141,54 @@ func (p *tlsPoller) handleTlsChunk(chunk *tlsChunk, extension *api.Extension,
 	return nil
 }
 
-func (p *tlsPoller) startNewTlsReader(chunk *tlsChunk, ip net.IP, port uint16, key string, extension *api.Extension,
-	emitter api.Emitter, options *api.TrafficFilteringOptions) *tlsReader {
-
-	reader := &tlsReader{
-		key:    key,
-		chunks: make(chan *tlsChunk, 1),
-		doneHandler: func(r *tlsReader) {
-			p.closeReader(key, r)
-		},
-		progress: &api.ReadProgress{},
-	}
+func (p *tlsPoller) startNewTlsReader(chunk *tlsChunk, ip net.IP, port uint16, key string,
+	emitter api.Emitter, extension *api.Extension, options *api.TrafficFilteringOptions,
+	streamsMap api.TcpStreamMap) *tlsReader {
 
 	tcpid := p.buildTcpId(chunk, ip, port)
 
-	go dissect(extension, reader, chunk.isRequest(), &tcpid, emitter, options, p.reqResMatcher)
+	doneHandler := func(r *tlsReader) {
+		p.closeReader(key, r)
+	}
+
+	tlsEmitter := &tlsEmitter{
+		delegate:  emitter,
+		namespace: p.getNamespace(chunk.Pid),
+	}
+
+	reader := &tlsReader{
+		key:           key,
+		chunks:        make(chan *tlsChunk, 1),
+		doneHandler:   doneHandler,
+		progress:      &api.ReadProgress{},
+		tcpID:         &tcpid,
+		isClient:      chunk.isRequest(),
+		captureTime:   time.Now(),
+		extension:     extension,
+		emitter:       tlsEmitter,
+		counterPair:   &api.CounterPair{},
+		reqResMatcher: p.reqResMatcher,
+	}
+
+	stream := &tlsStream{
+		reader:          reader,
+		protoIdentifier: &api.ProtoIdentifier{},
+	}
+	streamsMap.Store(streamsMap.NextId(), stream)
+
+	reader.parent = stream
+
+	go dissect(extension, reader, options)
 	return reader
 }
 
-func dissect(extension *api.Extension, reader *tlsReader, isRequest bool, tcpid *api.TcpID,
-	emitter api.Emitter, options *api.TrafficFilteringOptions, reqResMatcher api.RequestResponseMatcher) {
+func dissect(extension *api.Extension, reader *tlsReader, options *api.TrafficFilteringOptions) {
 	b := bufio.NewReader(reader)
 
-	err := extension.Dissector.Dissect(b, reader.progress, api.Ebpf, isRequest, tcpid, &api.CounterPair{},
-		&api.SuperTimer{}, &api.SuperIdentifier{}, emitter, options, reqResMatcher)
+	err := extension.Dissector.Dissect(b, reader, options)
 
 	if err != nil {
-		logger.Log.Warningf("Error dissecting TLS %v - %v", tcpid, err)
+		logger.Log.Warningf("Error dissecting TLS %v - %v", reader.GetTcpID(), err)
 	}
 }
 
@@ -203,6 +228,33 @@ func (p *tlsPoller) buildTcpId(chunk *tlsChunk, ip net.IP, port uint16) api.TcpI
 			Ident:   "",
 		}
 	}
+}
+
+func (p *tlsPoller) addPid(pid uint32, namespace string) {
+	p.pidToNamespace.Store(pid, namespace)
+}
+
+func (p *tlsPoller) getNamespace(pid uint32) string {
+	namespaceIfc, ok := p.pidToNamespace.Load(pid)
+
+	if !ok {
+		return api.UNKNOWN_NAMESPACE
+	}
+
+	namespace, ok := namespaceIfc.(string)
+
+	if !ok {
+		return api.UNKNOWN_NAMESPACE
+	}
+
+	return namespace
+}
+
+func (p *tlsPoller) clearPids() {
+	p.pidToNamespace.Range(func(key, v interface{}) bool {
+		p.pidToNamespace.Delete(key)
+		return true
+	})
 }
 
 func (p *tlsPoller) logTls(chunk *tlsChunk, ip net.IP, port uint16) {

@@ -3,11 +3,10 @@ module github.com/up9inc/mizu/tap
 go 1.17
 
 require (
-	github.com/bradleyfalzon/tlsx v0.0.0-20170624122154-28fd0e59bac4
 	github.com/cilium/ebpf v0.8.0
 	github.com/go-errors/errors v1.4.2
 	github.com/google/gopacket v1.1.19
-	github.com/up9inc/mizu/shared v0.0.0
+	github.com/up9inc/mizu/logger v0.0.0
 	github.com/up9inc/mizu/tap/api v0.0.0
 	github.com/vishvananda/netns v0.0.0-20211101163701-50045581ed74
 	k8s.io/api v0.23.3
@@ -33,8 +32,9 @@ require (
 	k8s.io/utils v0.0.0-20220127004650-9b3446523e65 // indirect
 	sigs.k8s.io/json v0.0.0-20211208200746-9f7c6b3444d2 // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.1 // indirect
+	sigs.k8s.io/yaml v1.3.0 // indirect
 )
 
-replace github.com/up9inc/mizu/tap/api v0.0.0 => ./api
+replace github.com/up9inc/mizu/logger v0.0.0 => ../logger
 
-replace github.com/up9inc/mizu/shared v0.0.0 => ../shared
+replace github.com/up9inc/mizu/tap/api v0.0.0 => ./api

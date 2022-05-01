@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"io/ioutil"
 	"net/url"
@@ -15,7 +16,7 @@ import (
 
 	"github.com/up9inc/mizu/agent/pkg/har"
 
-	"github.com/up9inc/mizu/shared/logger"
+	"github.com/up9inc/mizu/logger"
 )
 
 func getFiles(baseDir string) (result []string, err error) {
@@ -124,13 +125,13 @@ func feedFromHAR(file string, isSync bool, gen *defaultOasGenerator) (uint, erro
 	cnt := uint(0)
 	for _, entry := range harDoc.Log.Entries {
 		cnt += 1
-		feedEntry(&entry, "", file, gen, cnt)
+		feedEntry(&entry, "", file, gen, fmt.Sprintf("%024d", cnt))
 	}
 
 	return cnt, nil
 }
 
-func feedEntry(entry *har.Entry, source string, file string, gen *defaultOasGenerator, cnt uint) {
+func feedEntry(entry *har.Entry, source string, file string, gen *defaultOasGenerator, cnt string) {
 	entry.Comment = file
 	if entry.Response.Status == 302 {
 		logger.Log.Debugf("Dropped traffic entry due to permanent redirect status: %s", entry.StartedDateTime)
@@ -192,7 +193,7 @@ func feedFromLDJSON(file string, isSync bool, gen *defaultOasGenerator) (uint, e
 				logger.Log.Warningf("Failed decoding entry: %s", line)
 			} else {
 				cnt += 1
-				feedEntry(&entry, source, file, gen, cnt)
+				feedEntry(&entry, source, file, gen, fmt.Sprintf("%024d", cnt))
 			}
 		}
 	}

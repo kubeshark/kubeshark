@@ -1,10 +1,11 @@
 package servicemap
 
 import (
-	"github.com/jinzhu/copier"
 	"sync"
 
-	"github.com/up9inc/mizu/shared/logger"
+	"github.com/jinzhu/copier"
+
+	"github.com/up9inc/mizu/logger"
 	tapApi "github.com/up9inc/mizu/tap/api"
 )
 

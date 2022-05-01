@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/google/gopacket/reassembly"
-	"github.com/up9inc/mizu/shared/logger"
+	"github.com/up9inc/mizu/logger"
 	"github.com/up9inc/mizu/tap/api"
 )
 
@@ -22,7 +22,7 @@ type Cleaner struct {
 	connectionTimeout time.Duration
 	stats             CleanerStats
 	statsMutex        sync.Mutex
-	streamsMap        *tcpStreamMap
+	streamsMap        api.TcpStreamMap
 }
 
 func (cl *Cleaner) clean() {
@@ -33,13 +33,15 @@ func (cl *Cleaner) clean() {
 	flushed, closed := cl.assembler.FlushCloseOlderThan(startCleanTime.Add(-cl.connectionTimeout))
 	cl.assemblerMutex.Unlock()
 
-	cl.streamsMap.streams.Range(func(k, v interface{}) bool {
-		reqResMatcher := v.(*tcpStreamWrapper).reqResMatcher
-		if reqResMatcher == nil {
-			return true
+	cl.streamsMap.Range(func(k, v interface{}) bool {
+		reqResMatchers := v.(api.TcpStream).GetReqResMatchers()
+		for _, reqResMatcher := range reqResMatchers {
+			if reqResMatcher == nil {
+				continue
+			}
+			deleted := deleteOlderThan(reqResMatcher.GetMap(), startCleanTime.Add(-cl.connectionTimeout))
+			cl.stats.deleted += deleted
 		}
-		deleted := deleteOlderThan(reqResMatcher.GetMap(), startCleanTime.Add(-cl.connectionTimeout))
-		cl.stats.deleted += deleted
 		return true
 	})
 

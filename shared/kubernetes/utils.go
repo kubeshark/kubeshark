@@ -26,7 +26,8 @@ func GetNodeHostToTappedPodsMap(tappedPods []core.Pod) shared.NodeToPodsMap {
 func getMinimizedPod(fullPod core.Pod) core.Pod {
 	return core.Pod{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: fullPod.Name,
+			Name:      fullPod.Name,
+			Namespace: fullPod.Namespace,
 		},
 		Status: core.PodStatus{
 			PodIP:             fullPod.Status.PodIP,

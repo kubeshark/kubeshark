@@ -7,9 +7,9 @@ import (
 	"time"
 
 	"github.com/op/go-logging"
+	"github.com/up9inc/mizu/logger"
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/shared/debounce"
-	"github.com/up9inc/mizu/shared/logger"
 	"github.com/up9inc/mizu/tap/api"
 	core "k8s.io/api/core/v1"
 )
@@ -329,7 +329,7 @@ func (tapperSyncer *MizuTapperSyncer) updateMizuTappers() error {
 			TapperDaemonSetName,
 			tapperSyncer.config.AgentImage,
 			TapperPodName,
-			fmt.Sprintf("%s.%s.svc.cluster.local", ApiServerPodName, tapperSyncer.config.MizuResourcesNamespace),
+			fmt.Sprintf("%s.%s.svc", ApiServerPodName, tapperSyncer.config.MizuResourcesNamespace),
 			nodeNames,
 			serviceAccountName,
 			tapperSyncer.config.TapperResources,

@@ -2,7 +2,6 @@ package controllers
 
 import (
 	"net/http"
-	"strconv"
 
 	"github.com/up9inc/mizu/agent/pkg/dependency"
 	"github.com/up9inc/mizu/agent/pkg/entries"
@@ -11,7 +10,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/up9inc/mizu/shared/logger"
+	"github.com/up9inc/mizu/logger"
 )
 
 func HandleEntriesError(c *gin.Context, err error) bool {
@@ -69,7 +68,7 @@ func GetEntry(c *gin.Context) {
 		c.JSON(http.StatusBadRequest, validationError)
 	}
 
-	id, _ := strconv.Atoi(c.Param("id"))
+	id := c.Param("id")
 
 	entriesProvider := dependency.GetInstance(dependency.EntriesProvider).(entries.EntriesProvider)
 	entry, err := entriesProvider.GetEntry(singleEntryRequest, id)

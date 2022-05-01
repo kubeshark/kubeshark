@@ -17,7 +17,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/up9inc/mizu/shared/logger"
+	"github.com/up9inc/mizu/logger"
 	"github.com/up9inc/mizu/tap/api"
 	"github.com/up9inc/mizu/tap/diagnose"
 	"github.com/up9inc/mizu/tap/source"
@@ -26,9 +26,6 @@ import (
 )
 
 const cleanPeriod = time.Second * 10
-
-//lint:ignore U1000 will be used in the future
-var remoteOnlyOutboundPorts = []int{80, 443}
 
 var maxcount = flag.Int64("c", -1, "Only grab this many packets, then exit")
 var decoder = flag.String("decoder", "", "Name of the decoder to use (default: guess from capture)")
@@ -58,7 +55,7 @@ var tls = flag.Bool("tls", false, "Enable TLS tapper")
 var memprofile = flag.String("memprofile", "", "Write memory profile")
 
 type TapOpts struct {
-	HostMode          bool
+	HostMode bool
 }
 
 var extensions []*api.Extension                     // global
@@ -68,32 +65,16 @@ var packetSourceManager *source.PacketSourceManager // global
 var mainPacketInputChan chan source.TcpPacketInfo   // global
 var tlsTapperInstance *tlstapper.TlsTapper          // global
 
-func inArrayInt(arr []int, valueToCheck int) bool {
-	for _, value := range arr {
-		if value == valueToCheck {
-			return true
-		}
-	}
-	return false
-}
-
-func inArrayString(arr []string, valueToCheck string) bool {
-	for _, value := range arr {
-		if value == valueToCheck {
-			return true
-		}
-	}
-	return false
-}
-
 func StartPassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem, extensionsRef []*api.Extension, options *api.TrafficFilteringOptions) {
 	extensions = extensionsRef
 	filteringOptions = options
 
+	streamsMap := NewTcpStreamMap()
+
 	if *tls {
 		for _, e := range extensions {
 			if e.Protocol.Name == "http" {
-				tlsTapperInstance = startTlsTapper(e, outputItems, options)
+				tlsTapperInstance = startTlsTapper(e, outputItems, options, streamsMap)
 				break
 			}
 		}
@@ -103,7 +84,7 @@ func StartPassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem, 
 		diagnose.StartMemoryProfiler(os.Getenv(MemoryProfilingDumpPath), os.Getenv(MemoryProfilingTimeIntervalSeconds))
 	}
 
-	streamsMap, assembler := initializePassiveTapper(opts, outputItems)
+	assembler := initializePassiveTapper(opts, outputItems, streamsMap)
 	go startPassiveTapper(streamsMap, assembler)
 }
 
@@ -202,9 +183,7 @@ func initializePacketSources() error {
 	return err
 }
 
-func initializePassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem) (*tcpStreamMap, *tcpAssembler) {
-	streamsMap := NewTcpStreamMap()
-
+func initializePassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem, streamsMap api.TcpStreamMap) *tcpAssembler {
 	diagnose.InitializeErrorsMap(*debug, *verbose, *quiet)
 	diagnose.InitializeTapperInternalStats()
 
@@ -216,11 +195,11 @@ func initializePassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelI
 
 	assembler := NewTcpAssembler(outputItems, streamsMap, opts)
 
-	return streamsMap, assembler
+	return assembler
 }
 
-func startPassiveTapper(streamsMap *tcpStreamMap, assembler *tcpAssembler) {
-	go streamsMap.closeTimedoutTcpStreamChannels()
+func startPassiveTapper(streamsMap api.TcpStreamMap, assembler *tcpAssembler) {
+	go streamsMap.CloseTimedoutTcpStreamChannels()
 
 	diagnose.AppStats.SetStartTime(time.Now())
 
@@ -253,7 +232,8 @@ func startPassiveTapper(streamsMap *tcpStreamMap, assembler *tcpAssembler) {
 	logger.Log.Infof("AppStats: %v", diagnose.AppStats)
 }
 
-func startTlsTapper(extension *api.Extension, outputItems chan *api.OutputChannelItem, options *api.TrafficFilteringOptions) *tlstapper.TlsTapper {
+func startTlsTapper(extension *api.Extension, outputItems chan *api.OutputChannelItem,
+	options *api.TrafficFilteringOptions, streamsMap api.TcpStreamMap) *tlstapper.TlsTapper {
 	tls := tlstapper.TlsTapper{}
 	chunksBufferSize := os.Getpagesize() * 100
 	logBufferSize := os.Getpagesize()
@@ -283,7 +263,7 @@ func startTlsTapper(extension *api.Extension, outputItems chan *api.OutputChanne
 	}
 
 	go tls.PollForLogging()
-	go tls.Poll(emitter, options)
+	go tls.Poll(emitter, options, streamsMap)
 
 	return &tls
 }

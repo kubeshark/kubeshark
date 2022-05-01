@@ -6,8 +6,8 @@ import (
 
 	basenine "github.com/up9inc/basenine/client/go"
 	"github.com/up9inc/mizu/agent/pkg/dependency"
+	"github.com/up9inc/mizu/logger"
 	"github.com/up9inc/mizu/shared"
-	"github.com/up9inc/mizu/shared/logger"
 	tapApi "github.com/up9inc/mizu/tap/api"
 )
 
@@ -24,7 +24,7 @@ func (e *BasenineEntryStreamer) Get(ctx context.Context, socketId int, params *W
 
 	connection, err := basenine.NewConnection(shared.BasenineHost, shared.BaseninePort)
 	if err != nil {
-		logger.Log.Errorf("failed to establish a connection to Basenine: %v", err)
+		logger.Log.Errorf("Failed to establish a connection to Basenine: %v", err)
 		entryStreamerSocketConnector.CleanupSocket(socketId)
 		return err
 	}
@@ -49,7 +49,7 @@ func (e *BasenineEntryStreamer) Get(ctx context.Context, socketId int, params *W
 			var entry *tapApi.Entry
 			err = json.Unmarshal(bytes, &entry)
 			if err != nil {
-				logger.Log.Debugf("error unmarshalling entry: %v", err.Error())
+				logger.Log.Debugf("Error unmarshalling entry: %v", err.Error())
 				continue
 			}
 
@@ -79,7 +79,11 @@ func (e *BasenineEntryStreamer) Get(ctx context.Context, socketId int, params *W
 	go handleDataChannel(connection, data)
 	go handleMetaChannel(connection, meta)
 
-	connection.Query(query, data, meta)
+	if err = connection.Query(query, data, meta); err != nil {
+		logger.Log.Errorf("Query mode call failed: %v", err)
+		entryStreamerSocketConnector.CleanupSocket(socketId)
+		return err
+	}
 
 	go func() {
 		<-ctx.Done()

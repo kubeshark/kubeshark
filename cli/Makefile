@@ -36,16 +36,16 @@ build-base: ## Build mizu CLI binary (select platform via GOOS / GOARCH env vari
 	(cd bin && shasum -a 256 mizu_${SUFFIX} > mizu_${SUFFIX}.sha256)
 
 build-all: ## Build for all supported platforms.
-	@echo "Compiling for every OS and Platform"
-	@mkdir -p bin && sed s/_VER_/$(VER)/g README.md.TEMPLATE >  bin/README.md
-	@$(MAKE) build GOOS=linux GOARCH=amd64
-	@$(MAKE) build GOOS=linux GOARCH=arm64
-	@$(MAKE) build GOOS=darwin GOARCH=amd64
-	@$(MAKE) build GOOS=darwin GOARCH=arm64
-	@$(MAKE) build GOOS=windows GOARCH=amd64
-	@mv ./bin/mizu_windows_amd64 ./bin/mizu.exe
-	@echo "---------"
-	@find ./bin -ls
+	echo "Compiling for every OS and Platform" && \
+	mkdir -p bin && sed s/_VER_/$(VER)/g README.md.TEMPLATE >  bin/README.md && \
+	$(MAKE) build GOOS=linux GOARCH=amd64 && \
+	$(MAKE) build GOOS=linux GOARCH=arm64 && \
+	$(MAKE) build GOOS=darwin GOARCH=amd64 && \
+	$(MAKE) build GOOS=darwin GOARCH=arm64 && \
+	$(MAKE) build GOOS=windows GOARCH=amd64 && \
+	mv ./bin/mizu_windows_amd64 ./bin/mizu.exe && \
+	echo "---------" && \
+	find ./bin -ls
 
 clean: ## Clean all build artifacts.
 	go clean

@@ -12,7 +12,7 @@ import TrafficViewerApiAtom from "../../recoil/TrafficViewerApi";
 import TrafficViewerApi from "./TrafficViewerApi";
 import focusedEntryIdAtom from "../../recoil/focusedEntryId";
 import {toast} from "react-toastify";
-import {TOAST_CONTAINER_ID} from "../../configs/Consts";
+import {MAX_ENTRIES, TOAST_CONTAINER_ID} from "../../configs/Consts";
 import tappingStatusAtom from "../../recoil/tappingStatus";
 import leftOffTopAtom from "../../recoil/leftOffTop";
 
@@ -55,7 +55,7 @@ export const EntriesList: React.FC<EntriesListProps> = ({
   const [startTime, setStartTime] = useState(0);
   const [truncatedTimestamp, setTruncatedTimestamp] = useState(0);
 
-  const leftOffBottom = entries.length > 0 ? entries[entries.length - 1].id + 1 : -1;
+  const leftOffBottom = entries.length > 0 ? entries[entries.length - 1].id : "latest";
 
   useEffect(() => {
     const list = document.getElementById('list').firstElementChild;
@@ -76,7 +76,7 @@ export const EntriesList: React.FC<EntriesListProps> = ({
 
   const getOldEntries = useCallback(async () => {
     setLoadMoreTop(false);
-    if (leftOffTop === null || leftOffTop <= 0) {
+    if (leftOffTop === "") {
       return;
     }
     setIsLoadingTop(true);
@@ -89,7 +89,7 @@ export const EntriesList: React.FC<EntriesListProps> = ({
     setLeftOffTop(data.meta.leftOff);
 
     let scrollTo: boolean;
-    if (data.meta.leftOff === 0) {
+    if (data.meta.noMoreData) {
       setNoMoreDataTop(true);
       scrollTo = false;
     } else {
@@ -98,8 +98,8 @@ export const EntriesList: React.FC<EntriesListProps> = ({
     setIsLoadingTop(false);
 
     const newEntries = [...data.data.reverse(), ...entries];
-    if(newEntries.length > 10000) {
-      newEntries.splice(10000, newEntries.length - 10000)
+    if(newEntries.length > MAX_ENTRIES) {
+      newEntries.splice(MAX_ENTRIES, newEntries.length - MAX_ENTRIES)
     }
     setEntries(newEntries);
 
@@ -118,23 +118,28 @@ export const EntriesList: React.FC<EntriesListProps> = ({
 
   const scrollbarVisible = scrollableRef.current?.childWrapperRef.current.clientHeight > scrollableRef.current?.wrapperRef.current.clientHeight;
 
+  useEffect(() => {
+    if (!focusedEntryId && entries.length > 0)
+      setFocusedEntryId(entries[0].id);
+  }, [focusedEntryId, entries])
 
+  useEffect(() => {
+    const newEntries = [...entries];
+    if (newEntries.length > MAX_ENTRIES) {
+      setLeftOffTop(newEntries[0].id);
+      newEntries.splice(0, newEntries.length - MAX_ENTRIES)
+      setNoMoreDataTop(false);
+      setEntries(newEntries);
+    }
+  }, [entries])
 
-  if (ws.current) {
+  if(ws.current && !ws.current.onmessage) {
     ws.current.onmessage = (e) => {
       if (!e?.data) return;
       const message = JSON.parse(e.data);
       switch (message.messageType) {
         case "entry":
-          const entry = message.data;
-          if (!focusedEntryId) setFocusedEntryId(entry.id.toString());
-          const newEntries = [...entries, entry];
-          if (newEntries.length > 10000) {
-            setLeftOffTop(newEntries[0].id);
-            newEntries.splice(0, newEntries.length - 10000)
-            setNoMoreDataTop(false);
-          }
-          setEntries(newEntries);
+          setEntries(entriesState => [...entriesState,  message.data]);
           break;
         case "status":
           setTappingStatus(message.tappingStatus);
@@ -151,14 +156,12 @@ export const EntriesList: React.FC<EntriesListProps> = ({
         case "queryMetadata":
           setTruncatedTimestamp(message.data.truncatedTimestamp);
           setQueriedTotal(message.data.total);
-          if (leftOffTop === null) {
-            setLeftOffTop(message.data.leftOff - 1);
-          }
+          setLeftOffTop(leftOffState => leftOffState === "" ? message.data.leftOff : leftOffState);
           break;
         case "startTime":
           setStartTime(message.data);
           break;
-      };
+      }
     }
   }
 
@@ -180,7 +183,7 @@ export const EntriesList: React.FC<EntriesListProps> = ({
         </ScrollableFeedVirtualized>
         <button type="button"
                 title="Fetch old records"
-                className={`${styles.btnOld} ${!scrollbarVisible && leftOffTop > 0 ? styles.showButton : styles.hideButton}`}
+                className={`${styles.btnOld} ${!scrollbarVisible && leftOffTop !== "" ? styles.showButton : styles.hideButton}`}
                 onClick={(_) => {
                   trafficViewerApi.webSocket.close()
                   getOldEntries();
@@ -193,9 +196,9 @@ export const EntriesList: React.FC<EntriesListProps> = ({
                 onClick={(_) => {
                   if (isWsConnectionClosed) {
                     if (query) {
-                      openWebSocket(`(${query}) and leftOff(${leftOffBottom})`, false);
+                      openWebSocket(`(${query}) and leftOff("${leftOffBottom}")`, false);
                     } else {
-                      openWebSocket(`leftOff(${leftOffBottom})`, false);
+                      openWebSocket(`leftOff("${leftOffBottom}")`, false);
                     }
                   }
                   scrollableRef.current.jumpToBottom();
@@ -206,10 +209,10 @@ export const EntriesList: React.FC<EntriesListProps> = ({
       </div>
 
       <div className={styles.footer}>
-        <div>Displaying <b id="entries-length">{entries?.length}</b> results out of <b
+        <div>Displaying <b id="entries-length">{entries?.length > MAX_ENTRIES ? MAX_ENTRIES : entries?.length}</b> results out of <b
           id="total-entries">{queriedTotal}</b> total
         </div>
-        {startTime !== 0 && <div>Started listening at <span style={{
+        {startTime !== 0 && <div>First traffic entry time <span style={{
           marginRight: 5,
           fontWeight: 600,
           fontSize: 13

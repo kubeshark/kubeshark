@@ -6,6 +6,7 @@ require (
 	github.com/docker/go-units v0.4.0
 	github.com/golang-jwt/jwt/v4 v4.2.0
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
+	github.com/up9inc/mizu/logger v0.0.0
 	github.com/up9inc/mizu/tap/api v0.0.0
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
 	k8s.io/api v0.23.3
@@ -90,5 +91,7 @@ require (
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.1 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
+
+replace github.com/up9inc/mizu/logger v0.0.0 => ../logger
 
 replace github.com/up9inc/mizu/tap/api v0.0.0 => ../tap/api

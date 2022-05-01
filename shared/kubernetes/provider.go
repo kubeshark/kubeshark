@@ -12,8 +12,8 @@ import (
 	"regexp"
 
 	"github.com/op/go-logging"
+	"github.com/up9inc/mizu/logger"
 	"github.com/up9inc/mizu/shared"
-	"github.com/up9inc/mizu/shared/logger"
 	"github.com/up9inc/mizu/shared/semver"
 	"github.com/up9inc/mizu/tap/api"
 	auth "k8s.io/api/authorization/v1"
@@ -768,7 +768,6 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 	agentContainer.WithEnv(
 		applyconfcore.EnvVar().WithName(shared.LogLevelEnvVar).WithValue(logLevel.String()),
 		applyconfcore.EnvVar().WithName(shared.HostModeEnvVar).WithValue("1"),
-		applyconfcore.EnvVar().WithName(shared.GoGCEnvVar).WithValue("12800"),
 		applyconfcore.EnvVar().WithName(shared.MizuFilteringOptionsEnvVar).WithValue(string(mizuApiFilteringOptionsJsonStr)),
 	)
 	agentContainer.WithEnv(
@@ -805,14 +804,20 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 	agentResources := applyconfcore.ResourceRequirements().WithRequests(agentResourceRequests).WithLimits(agentResourceLimits)
 	agentContainer.WithResources(agentResources)
 
-	nodeSelectorRequirement := applyconfcore.NodeSelectorRequirement()
-	nodeSelectorRequirement.WithKey("kubernetes.io/hostname")
-	nodeSelectorRequirement.WithOperator(core.NodeSelectorOpIn)
-	nodeSelectorRequirement.WithValues(nodeNames...)
-	nodeSelectorTerm := applyconfcore.NodeSelectorTerm()
-	nodeSelectorTerm.WithMatchExpressions(nodeSelectorRequirement)
+	matchFields := make([]*applyconfcore.NodeSelectorTermApplyConfiguration, 0)
+	for _, nodeName := range nodeNames {
+		nodeSelectorRequirement := applyconfcore.NodeSelectorRequirement()
+		nodeSelectorRequirement.WithKey("metadata.name")
+		nodeSelectorRequirement.WithOperator(core.NodeSelectorOpIn)
+		nodeSelectorRequirement.WithValues(nodeName)
+
+		nodeSelectorTerm := applyconfcore.NodeSelectorTerm()
+		nodeSelectorTerm.WithMatchFields(nodeSelectorRequirement)
+		matchFields = append(matchFields, nodeSelectorTerm)
+	}
+
 	nodeSelector := applyconfcore.NodeSelector()
-	nodeSelector.WithNodeSelectorTerms(nodeSelectorTerm)
+	nodeSelector.WithNodeSelectorTerms(matchFields...)
 	nodeAffinity := applyconfcore.NodeAffinity()
 	nodeAffinity.WithRequiredDuringSchedulingIgnoredDuringExecution(nodeSelector)
 	affinity := applyconfcore.Affinity()

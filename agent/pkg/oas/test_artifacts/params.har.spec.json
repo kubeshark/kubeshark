@@ -22,10 +22,10 @@
             "content": {
               "application/json": {
                 "example": null,
-                "x-sample-entry": 4
+                "x-sample-entry": "000000000000000000000004"
               }
             },
-            "x-sample-entry": 4
+            "x-sample-entry": "000000000000000000000004"
           }
         },
         "x-counters-per-source": {
@@ -47,7 +47,7 @@
           "sumDuration": 0
         },
         "x-last-seen-ts": 1567750580.04,
-        "x-sample-entry": 4
+        "x-sample-entry": "000000000000000000000004"
       }
     },
     "/appears-twice": {
@@ -61,10 +61,10 @@
             "content": {
               "application/json": {
                 "example": null,
-                "x-sample-entry": 6
+                "x-sample-entry": "000000000000000000000006"
               }
             },
-            "x-sample-entry": 6
+            "x-sample-entry": "000000000000000000000006"
           }
         },
         "x-counters-per-source": {
@@ -86,7 +86,7 @@
           "sumDuration": 1
         },
         "x-last-seen-ts": 1567750581.74,
-        "x-sample-entry": 6
+        "x-sample-entry": "000000000000000000000006"
       }
     },
     "/body-optional": {
@@ -99,10 +99,10 @@
             "description": "Successful call with status 200",
             "content": {
               "": {
-                "x-sample-entry": 12
+                "x-sample-entry": "000000000000000000000012"
               }
             },
-            "x-sample-entry": 12
+            "x-sample-entry": "000000000000000000000012"
           }
         },
         "x-counters-per-source": {
@@ -124,16 +124,16 @@
           "sumDuration": 0.01
         },
         "x-last-seen-ts": 1567750581.75,
-        "x-sample-entry": 12,
+        "x-sample-entry": "000000000000000000000012",
         "requestBody": {
           "description": "Generic request body",
           "content": {
             "application/json": {
               "example": "{\"key\", \"val\"}",
-              "x-sample-entry": 11
+              "x-sample-entry": "000000000000000000000011"
             }
           },
-          "x-sample-entry": 12
+          "x-sample-entry": "000000000000000000000012"
         }
       }
     },
@@ -147,10 +147,10 @@
             "description": "Successful call with status 200",
             "content": {
               "": {
-                "x-sample-entry": 13
+                "x-sample-entry": "000000000000000000000013"
               }
             },
-            "x-sample-entry": 13
+            "x-sample-entry": "000000000000000000000013"
           }
         },
         "x-counters-per-source": {
@@ -172,17 +172,17 @@
           "sumDuration": 0
         },
         "x-last-seen-ts": 1567750581.75,
-        "x-sample-entry": 13,
+        "x-sample-entry": "000000000000000000000013",
         "requestBody": {
           "description": "Generic request body",
           "content": {
             "": {
               "example": "body exists",
-              "x-sample-entry": 13
+              "x-sample-entry": "000000000000000000000013"
             }
           },
           "required": true,
-          "x-sample-entry": 13
+          "x-sample-entry": "000000000000000000000013"
         }
       }
     },
@@ -197,10 +197,10 @@
             "content": {
               "": {
                 "example": {},
-                "x-sample-entry": 9
+                "x-sample-entry": "000000000000000000000009"
               }
             },
-            "x-sample-entry": 9
+            "x-sample-entry": "000000000000000000000009"
           }
         },
         "x-counters-per-source": {
@@ -222,7 +222,7 @@
           "sumDuration": 0
         },
         "x-last-seen-ts": 1567750582.74,
-        "x-sample-entry": 9,
+        "x-sample-entry": "000000000000000000000009",
         "requestBody": {
           "description": "Generic request body",
           "content": {
@@ -250,11 +250,11 @@
                 }
               },
               "example": "--BOUNDARY\r\nContent-Disposition: form-data; name=\"file\"; filename=\"metadata.json\"\r\nContent-Type: application/json\r\n\r\n{\"functions\": 123}\r\n--BOUNDARY\r\nContent-Disposition: form-data; name=\"path\"\r\n\r\n/content/components\r\n--BOUNDARY--\r\n",
-              "x-sample-entry": 9
+              "x-sample-entry": "000000000000000000000009"
             }
           },
           "required": true,
-          "x-sample-entry": 9
+          "x-sample-entry": "000000000000000000000009"
         }
       }
     },
@@ -268,10 +268,10 @@
             "description": "Successful call with status 200",
             "content": {
               "": {
-                "x-sample-entry": 8
+                "x-sample-entry": "000000000000000000000008"
               }
             },
-            "x-sample-entry": 8
+            "x-sample-entry": "000000000000000000000008"
           }
         },
         "x-counters-per-source": {
@@ -293,7 +293,7 @@
           "sumDuration": 1
         },
         "x-last-seen-ts": 1567750581.74,
-        "x-sample-entry": 8,
+        "x-sample-entry": "000000000000000000000008",
         "requestBody": {
           "description": "Generic request body",
           "content": {
@@ -334,11 +334,11 @@
                 }
               },
               "example": "agent-id=ade\u0026callback-url=\u0026token=sometoken",
-              "x-sample-entry": 8
+              "x-sample-entry": "000000000000000000000008"
             }
           },
           "required": true,
-          "x-sample-entry": 8
+          "x-sample-entry": "000000000000000000000008"
         }
       }
     },
@@ -355,10 +355,10 @@
             "description": "Successful call with status 200",
             "content": {
               "": {
-                "x-sample-entry": 14
+                "x-sample-entry": "000000000000000000000014"
               }
             },
-            "x-sample-entry": 14
+            "x-sample-entry": "000000000000000000000014"
           }
         },
         "x-counters-per-source": {
@@ -380,7 +380,7 @@
           "sumDuration": 0
         },
         "x-last-seen-ts": 1567750582,
-        "x-sample-entry": 14
+        "x-sample-entry": "000000000000000000000014"
       },
       "parameters": [
         {
@@ -396,7 +396,7 @@
               "value": "234324"
             }
           },
-          "x-sample-entry": 14
+          "x-sample-entry": "000000000000000000000014"
         }
       ]
     },
@@ -413,10 +413,10 @@
             "description": "Successful call with status 200",
             "content": {
               "": {
-                "x-sample-entry": 18
+                "x-sample-entry": "000000000000000000000018"
               }
             },
-            "x-sample-entry": 18
+            "x-sample-entry": "000000000000000000000018"
           }
         },
         "x-counters-per-source": {
@@ -438,7 +438,7 @@
           "sumDuration": 9.53e-7
         },
         "x-last-seen-ts": 1567750582.00,
-        "x-sample-entry": 18
+        "x-sample-entry": "000000000000000000000018"
       },
       "parameters": [
         {
@@ -467,7 +467,7 @@
               "value": "prefix-gibberish-afterwards"
             }
           },
-          "x-sample-entry": 19
+          "x-sample-entry": "000000000000000000000019"
         }
       ]
     },
@@ -484,10 +484,10 @@
             "description": "Successful call with status 200",
             "content": {
               "": {
-                "x-sample-entry": 15
+                "x-sample-entry": "000000000000000000000015"
               }
             },
-            "x-sample-entry": 15
+            "x-sample-entry": "000000000000000000000015"
           }
         },
         "x-counters-per-source": {
@@ -509,7 +509,7 @@
           "sumDuration": 0
         },
         "x-last-seen-ts": 1567750582.00,
-        "x-sample-entry": 15
+        "x-sample-entry": "000000000000000000000015"
       },
       "parameters": [
         {
@@ -538,7 +538,7 @@
               "value": "prefix-gibberish-afterwards"
             }
           },
-          "x-sample-entry": 19
+          "x-sample-entry": "000000000000000000000019"
         }
       ]
     },
@@ -555,10 +555,10 @@
             "description": "Successful call with status 200",
             "content": {
               "": {
-                "x-sample-entry": 16
+                "x-sample-entry": "000000000000000000000016"
               }
             },
-            "x-sample-entry": 16
+            "x-sample-entry": "000000000000000000000016"
           }
         },
         "x-counters-per-source": {
@@ -580,7 +580,7 @@
           "sumDuration": 0
         },
         "x-last-seen-ts": 1567750582.00,
-        "x-sample-entry": 16
+        "x-sample-entry": "000000000000000000000016"
       },
       "parameters": [
         {
@@ -609,7 +609,7 @@
               "value": "prefix-gibberish-afterwards"
             }
           },
-          "x-sample-entry": 19
+          "x-sample-entry": "000000000000000000000019"
         }
       ]
     },
@@ -626,10 +626,10 @@
             "description": "Successful call with status 200",
             "content": {
               "": {
-                "x-sample-entry": 19
+                "x-sample-entry": "000000000000000000000019"
               }
             },
-            "x-sample-entry": 19
+            "x-sample-entry": "000000000000000000000019"
           }
         },
         "x-counters-per-source": {
@@ -651,7 +651,7 @@
           "sumDuration": 0
         },
         "x-last-seen-ts": 1567750582.00,
-        "x-sample-entry": 19
+        "x-sample-entry": "000000000000000000000019"
       },
       "parameters": [
         {
@@ -667,7 +667,7 @@
               "value": "23421"
             }
           },
-          "x-sample-entry": 19
+          "x-sample-entry": "000000000000000000000019"
         },
         {
           "name": "parampatternId",
@@ -695,7 +695,7 @@
               "value": "prefix-gibberish-afterwards"
             }
           },
-          "x-sample-entry": 19
+          "x-sample-entry": "000000000000000000000019"
         }
       ]
     },
@@ -710,10 +710,10 @@
             "content": {
               "application/json": {
                 "example": null,
-                "x-sample-entry": 3
+                "x-sample-entry": "000000000000000000000003"
               }
             },
-            "x-sample-entry": 3
+            "x-sample-entry": "000000000000000000000003"
           }
         },
         "x-counters-per-source": {
@@ -735,7 +735,7 @@
           "sumDuration": 0
         },
         "x-last-seen-ts": 1567750579.74,
-        "x-sample-entry": 3
+        "x-sample-entry": "000000000000000000000003"
       },
       "parameters": [
         {
@@ -754,7 +754,7 @@
               "value": "<UUID4>"
             }
           },
-          "x-sample-entry": 3
+          "x-sample-entry": "000000000000000000000003"
         }
       ]
     },
@@ -768,10 +768,10 @@
             "description": "Successful call with status 200",
             "content": {
               "text/html": {
-                "x-sample-entry": 1
+                "x-sample-entry": "000000000000000000000001"
               }
             },
-            "x-sample-entry": 1
+            "x-sample-entry": "000000000000000000000001"
           }
         },
         "x-counters-per-source": {
@@ -793,7 +793,7 @@
           "sumDuration": 0
         },
         "x-last-seen-ts": 1567750483.86,
-        "x-sample-entry": 1
+        "x-sample-entry": "000000000000000000000001"
       },
       "parameters": [
         {
@@ -812,7 +812,7 @@
               "value": "<UUID4>"
             }
           },
-          "x-sample-entry": 3
+          "x-sample-entry": "000000000000000000000003"
         }
       ]
     },
@@ -827,10 +827,10 @@
             "content": {
               "application/json": {
                 "example": null,
-                "x-sample-entry": 2
+                "x-sample-entry": "000000000000000000000002"
               }
             },
-            "x-sample-entry": 2
+            "x-sample-entry": "000000000000000000000002"
           }
         },
         "x-counters-per-source": {
@@ -852,7 +852,7 @@
           "sumDuration": 0
         },
         "x-last-seen-ts": 1567750578.74,
-        "x-sample-entry": 2
+        "x-sample-entry": "000000000000000000000002"
       },
       "parameters": [
         {
@@ -871,7 +871,7 @@
               "value": "<UUID4>"
             }
           },
-          "x-sample-entry": 3
+          "x-sample-entry": "000000000000000000000003"
         }
       ]
     }

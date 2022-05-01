@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"github.com/up9inc/mizu/agent/pkg/har"
 	"testing"
+	"time"
 )
 
 func TestOASGen(t *testing.T) {
@@ -38,5 +39,8 @@ func TestOASGen(t *testing.T) {
 	if !gen.IsStarted() {
 		t.Errorf("Should be started")
 	}
+
+	time.Sleep(100 * time.Millisecond)
+
 	gen.Stop()
 }

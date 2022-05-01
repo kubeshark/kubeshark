@@ -18,6 +18,7 @@ import (
 )
 
 const mizuTestEnvVar = "MIZU_TEST"
+const UNKNOWN_NAMESPACE = ""
 
 var UnknownIp net.IP = net.IP{0, 0, 0, 0}
 var UnknownPort uint16 = 0
@@ -92,21 +93,18 @@ type RequestResponsePair struct {
 	Response GenericMessage `json:"response"`
 }
 
-// `Protocol` is modified in the later stages of data propagation. Therefore it's not a pointer.
 type OutputChannelItem struct {
+	// `Protocol` is modified in later stages of data propagation. Therefore, it's not a pointer.
 	Protocol       Protocol
 	Capture        Capture
 	Timestamp      int64
 	ConnectionInfo *ConnectionInfo
 	Pair           *RequestResponsePair
 	Summary        *BaseEntry
+	Namespace      string
 }
 
-type SuperTimer struct {
-	CaptureTime time.Time
-}
-
-type SuperIdentifier struct {
+type ProtoIdentifier struct {
 	Protocol       *Protocol
 	IsClosedOthers bool
 }
@@ -128,7 +126,7 @@ func (p *ReadProgress) Current() (n int) {
 type Dissector interface {
 	Register(*Extension)
 	Ping()
-	Dissect(b *bufio.Reader, progress *ReadProgress, capture Capture, isClient bool, tcpID *TcpID, counterPair *CounterPair, superTimer *SuperTimer, superIdentifier *SuperIdentifier, emitter Emitter, options *TrafficFilteringOptions, reqResMatcher RequestResponseMatcher) error
+	Dissect(b *bufio.Reader, reader TcpReader, options *TrafficFilteringOptions) error
 	Analyze(item *OutputChannelItem, resolvedSource string, resolvedDestination string, namespace string) *Entry
 	Summarize(entry *Entry) *BaseEntry
 	Represent(request map[string]interface{}, response map[string]interface{}) (object []byte, err error)
@@ -156,7 +154,7 @@ func (e *Emitting) Emit(item *OutputChannelItem) {
 }
 
 type Entry struct {
-	Id                     uint                   `json:"id"`
+	Id                     string                 `json:"id"`
 	Protocol               Protocol               `json:"proto"`
 	Capture                Capture                `json:"capture"`
 	Source                 *TCP                   `json:"src"`
@@ -188,7 +186,7 @@ type EntryWrapper struct {
 }
 
 type BaseEntry struct {
-	Id             uint            `json:"id"`
+	Id             string          `json:"id"`
 	Protocol       Protocol        `json:"proto,omitempty"`
 	Capture        Capture         `json:"capture"`
 	Summary        string          `json:"summary,omitempty"`
@@ -403,4 +401,40 @@ func (r *HTTPResponseWrapper) MarshalJSON() ([]byte, error) {
 		Body:     string(body),
 		Response: r.Response,
 	})
+}
+
+type TcpReaderDataMsg interface {
+	GetBytes() []byte
+	GetTimestamp() time.Time
+}
+
+type TcpReader interface {
+	Read(p []byte) (int, error)
+	GetReqResMatcher() RequestResponseMatcher
+	GetIsClient() bool
+	GetReadProgress() *ReadProgress
+	GetParent() TcpStream
+	GetTcpID() *TcpID
+	GetCounterPair() *CounterPair
+	GetCaptureTime() time.Time
+	GetEmitter() Emitter
+	GetIsClosed() bool
+	GetExtension() *Extension
+}
+
+type TcpStream interface {
+	SetProtocol(protocol *Protocol)
+	GetOrigin() Capture
+	GetProtoIdentifier() *ProtoIdentifier
+	GetReqResMatchers() []RequestResponseMatcher
+	GetIsTapTarget() bool
+	GetIsClosed() bool
+}
+
+type TcpStreamMap interface {
+	Range(f func(key, value interface{}) bool)
+	Store(key, value interface{})
+	Delete(key interface{})
+	NextId() int64
+	CloseTimedoutTcpStreamChannels()
 }

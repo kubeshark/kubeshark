@@ -10,7 +10,7 @@ import (
 	basenine "github.com/up9inc/basenine/client/go"
 	"github.com/up9inc/mizu/agent/pkg/api"
 	"github.com/up9inc/mizu/agent/pkg/utils"
-	"github.com/up9inc/mizu/shared/logger"
+	"github.com/up9inc/mizu/logger"
 	tapApi "github.com/up9inc/mizu/tap/api"
 	amqpExt "github.com/up9inc/mizu/tap/extensions/amqp"
 	httpExt "github.com/up9inc/mizu/tap/extensions/http"
@@ -67,7 +67,7 @@ func ConfigureBasenineServer(host string, port string, dbSize int64, logLevel lo
 		wait.WithProto("tcp"),
 		wait.WithWait(200*time.Millisecond),
 		wait.WithBreak(50*time.Millisecond),
-		wait.WithDeadline(5*time.Second),
+		wait.WithDeadline(20*time.Second),
 		wait.WithDebug(logLevel == logging.DEBUG),
 	).Do([]string{fmt.Sprintf("%s:%s", host, port)}) {
 		logger.Log.Panicf("Basenine is not available!")

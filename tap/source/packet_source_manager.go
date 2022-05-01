@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/up9inc/mizu/shared/logger"
+	"github.com/up9inc/mizu/logger"
+	"github.com/up9inc/mizu/tap/api"
 	v1 "k8s.io/api/core/v1"
 )
 
@@ -37,10 +38,10 @@ func NewPacketSourceManager(procfs string, filename string, interfaceName string
 	}
 
 	sourceManager.config = PacketSourceManagerConfig{
-		mtls: mtls,
-		procfs: procfs,
+		mtls:          mtls,
+		procfs:        procfs,
 		interfaceName: interfaceName,
-		behaviour: behaviour,
+		behaviour:     behaviour,
 	}
 
 	go hostSource.readPackets(ipdefrag, packets)
@@ -56,7 +57,7 @@ func newHostPacketSource(filename string, interfaceName string,
 		name = fmt.Sprintf("file-%s", filename)
 	}
 
-	source, err := newTcpPacketSource(name, filename, interfaceName, behaviour)
+	source, err := newTcpPacketSource(name, filename, interfaceName, behaviour, api.Pcap)
 	if err != nil {
 		return nil, err
 	}
@@ -85,9 +86,9 @@ func (m *PacketSourceManager) updateMtlsPods(procfs string, pods []v1.Pod,
 		}
 	}
 
-	for pid := range relevantPids {
+	for pid, origin := range relevantPids {
 		if _, ok := m.sources[pid]; !ok {
-			source, err := newNetnsPacketSource(procfs, pid, interfaceName, behaviour)
+			source, err := newNetnsPacketSource(procfs, pid, interfaceName, behaviour, origin)
 
 			if err == nil {
 				go source.readPackets(ipdefrag, packets)
@@ -97,15 +98,15 @@ func (m *PacketSourceManager) updateMtlsPods(procfs string, pods []v1.Pod,
 	}
 }
 
-func (m *PacketSourceManager) getRelevantPids(procfs string, pods []v1.Pod) map[string]bool {
-	relevantPids := make(map[string]bool)
-	relevantPids[hostSourcePid] = true
+func (m *PacketSourceManager) getRelevantPids(procfs string, pods []v1.Pod) map[string]api.Capture {
+	relevantPids := make(map[string]api.Capture)
+	relevantPids[hostSourcePid] = api.Pcap
 
 	if envoyPids, err := discoverRelevantEnvoyPids(procfs, pods); err != nil {
 		logger.Log.Warningf("Unable to discover envoy pids - %w", err)
 	} else {
 		for _, pid := range envoyPids {
-			relevantPids[pid] = true
+			relevantPids[pid] = api.Envoy
 		}
 	}
 
@@ -113,7 +114,7 @@ func (m *PacketSourceManager) getRelevantPids(procfs string, pods []v1.Pod) map[
 		logger.Log.Warningf("Unable to discover linkerd pids - %w", err)
 	} else {
 		for _, pid := range linkerdPids {
-			relevantPids[pid] = true
+			relevantPids[pid] = api.Linkerd
 		}
 	}
 
@@ -135,9 +136,9 @@ func (m *PacketSourceManager) setBPFFilter(pods []v1.Pod) {
 		logger.Log.Info("No pods provided, skipping pcap bpf filter")
 		return
 	}
-	
+
 	var expr string
-	
+
 	if len(pods) > bpfFilterMaxPods {
 		logger.Log.Info("Too many pods for setting ebpf filter %d, setting just not 443", len(pods))
 		expr = "port not 443"
