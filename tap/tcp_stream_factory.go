@@ -61,15 +61,14 @@ func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcpLayer *lay
 	stream := NewTcpStream(isTapTarget, factory.streamsMap, getPacketOrigin(ac))
 	reassemblyStream := NewTcpReassemblyStream(fmt.Sprintf("%s:%s", net, transport), tcpLayer, fsmOptions, stream)
 	if stream.GetIsTapTarget() {
-		_stream := stream.(*tcpStream)
-		_stream.setId(factory.streamsMap.NextId())
+		stream.setId(factory.streamsMap.NextId())
 		for i, extension := range extensions {
 			reqResMatcher := extension.Dissector.NewResponseRequestMatcher()
 			counterPair := &api.CounterPair{
 				Request:  0,
 				Response: 0,
 			}
-			_stream.addClient(
+			stream.addClient(
 				NewTcpReader(
 					make(chan api.TcpReaderDataMsg),
 					&api.ReadProgress{},
@@ -90,7 +89,7 @@ func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcpLayer *lay
 					reqResMatcher,
 				),
 			)
-			_stream.addServer(
+			stream.addServer(
 				NewTcpReader(
 					make(chan api.TcpReaderDataMsg),
 					&api.ReadProgress{},
@@ -112,11 +111,11 @@ func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcpLayer *lay
 				),
 			)
 
-			factory.streamsMap.Store(stream.(*tcpStream).getId(), stream)
+			factory.streamsMap.Store(stream.getId(), stream)
 
 			factory.wg.Add(2)
-			go _stream.getClient(i).(*tcpReader).run(filteringOptions, &factory.wg)
-			go _stream.getServer(i).(*tcpReader).run(filteringOptions, &factory.wg)
+			go stream.getClient(i).(*tcpReader).run(filteringOptions, &factory.wg)
+			go stream.getServer(i).(*tcpReader).run(filteringOptions, &factory.wg)
 		}
 	}
 	return reassemblyStream
