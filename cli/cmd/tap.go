@@ -14,8 +14,8 @@ import (
 	"github.com/up9inc/mizu/cli/config/configStructs"
 	"github.com/up9inc/mizu/cli/errormessage"
 	"github.com/up9inc/mizu/cli/uiUtils"
+	"github.com/up9inc/mizu/logger"
 	"github.com/up9inc/mizu/shared"
-	"github.com/up9inc/mizu/shared/logger"
 )
 
 const uploadTrafficMessageToConfirm = `NOTE: running mizu with --%s flag will upload recorded traffic for further analysis and enriched presentation options.`

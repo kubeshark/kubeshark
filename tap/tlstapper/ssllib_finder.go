@@ -7,7 +7,7 @@ import (
 	"strings"
 
 	"github.com/go-errors/errors"
-	"github.com/up9inc/mizu/shared/logger"
+	"github.com/up9inc/mizu/logger"
 )
 
 func findSsllib(procfs string, pid uint32) (string, error) {

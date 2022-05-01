@@ -2,14 +2,15 @@ package entries
 
 import (
 	"encoding/json"
+	"errors"
 	"time"
 
 	basenine "github.com/up9inc/basenine/client/go"
 	"github.com/up9inc/mizu/agent/pkg/app"
 	"github.com/up9inc/mizu/agent/pkg/har"
 	"github.com/up9inc/mizu/agent/pkg/models"
+	"github.com/up9inc/mizu/logger"
 	"github.com/up9inc/mizu/shared"
-	"github.com/up9inc/mizu/shared/logger"
 	tapApi "github.com/up9inc/mizu/tap/api"
 )
 
@@ -64,7 +65,7 @@ func (e *BasenineEntriesProvider) GetEntry(singleEntryRequest *models.SingleEntr
 	}
 	err = json.Unmarshal(bytes, &entry)
 	if err != nil {
-		return nil, err
+		return nil, errors.New(string(bytes))
 	}
 
 	extension := app.ExtensionsMap[entry.Protocol.Name]

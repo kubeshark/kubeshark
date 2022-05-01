@@ -141,3 +141,42 @@ jobs:
         with:
           version: latest
           working-directory: tap/extensions/redis
+      
+      - uses: actions/setup-node@v2
+        with:
+          node-version: 16
+        
+      - name: Check modified UI files
+        id: ui_modified_files
+        run: devops/check_modified_files.sh ui/
+      
+      - name: ESLint prerequisites ui
+        if: steps.ui_modified_files.outputs.matched == 'true'
+        run: |
+          sudo npm install -g eslint
+          cd ui
+          npm run prestart
+          npm i
+
+      - name: ESLint ui
+        if: steps.ui_modified_files.outputs.matched == 'true'
+        run: |
+          cd ui
+          npm run eslint
+      
+      - name: Check modified ui-common files
+        id: ui_common_modified_files
+        run: devops/check_modified_files.sh ui-common/
+      
+      - name: ESLint prerequisites ui-common
+        if: steps.ui_common_modified_files.outputs.matched == 'true'
+        run: |
+          sudo npm install -g eslint
+          cd ui-common
+          npm i
+
+      - name: ESLint ui-common
+        if: steps.ui_common_modified_files.outputs.matched == 'true'
+        run: |
+          cd ui-common
+          npm run eslint

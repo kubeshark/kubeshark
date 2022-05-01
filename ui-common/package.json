@@ -19,7 +19,8 @@
     "test:build": "run-s build",
     "test:lint": "eslint .",
     "predeploy": "cd example && npm install && npm run build",
-    "deploy": "gh-pages -d example/build"
+    "deploy": "gh-pages -d example/build",
+    "eslint": "eslint . --ext .js,.jsx,.ts,.tsx"
   },
   "peerDependencies": {
     "@craco/craco": "^6.4.3",
@@ -49,7 +50,7 @@
     "moment": "^2.29.1",
     "node-fetch": "^3.1.1",
     "numeral": "^2.0.6",
-    "protobuf-decoder": "^0.1.0",
+    "protobuf-decoder": "^0.1.2",
     "react-graph-vis": "^1.0.7",
     "react-lowlight": "^3.0.0",
     "react-router-dom": "^6.2.1",

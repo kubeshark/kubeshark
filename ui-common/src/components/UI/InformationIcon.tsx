@@ -1,19 +1,22 @@
-import React, { CSSProperties } from "react";
+import React from "react";
 import styles from "./style/InformationIcon.module.sass"
 
 const DEFUALT_LINK = "https://getmizu.io/docs"
 
-export interface InformationIconProps {
+interface LinkProps {
     link?: string,
-    style?: CSSProperties
+    className?: string
+    title?: string
 }
 
-export const InformationIcon: React.FC<InformationIconProps> = ({ link, style }) => {
-    return <React.Fragment>
-        <a href={DEFUALT_LINK ? DEFUALT_LINK : link} style={style} className={styles.linkStyle} title="documentation" target="_blank">
-            <span>Docs</span>
-        </a>
-    </React.Fragment>
+export const Link: React.FC<LinkProps> = ({ link, className, title, children }) => {
+    return <a href={link} className={className} title={title} target="_blank">
+        {children}
+    </a>
 }
 
-
+export const InformationIcon: React.FC<LinkProps> = ({ className }) => {
+    return <Link title="documentation" className={`${styles.linkStyle} ${className}`} link={DEFUALT_LINK}>
+        <span>Docs</span>
+    </Link>
+}

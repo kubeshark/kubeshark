@@ -57,11 +57,16 @@ kubectl expose deployment rabbitmq --type=LoadBalancer --port=5672 -n mizu-tests
 echo "Starting proxy"
 kubectl proxy --port=8080 &
 
-echo "Setting minikube docker env"
-eval $(minikube docker-env)
+if [[ -z "${CI}" ]]; then
+  echo "Setting env var of mizu ci image"
+  export MIZU_CI_IMAGE="mizu/ci:0.0"
+  echo "Build agent image"
+  docker build -t "${MIZU_CI_IMAGE}" .
+else
+  echo "not building docker image in CI because it is created as separate step"
+fi
 
-echo "Build agent image"
-docker build -t mizu/ci:0.0 .
+minikube image load "${MIZU_CI_IMAGE}"
 
 echo "Build cli"
 cd cli && make build GIT_BRANCH=ci SUFFIX=ci

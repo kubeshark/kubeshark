@@ -27,7 +27,6 @@
     "node-fetch": "^3.1.1",
     "node-sass": "^6.0.0",
     "numeral": "^2.0.6",
-    "protobuf-decoder": "^0.1.0",
     "react": "^17.0.2",
     "react-copy-to-clipboard": "^5.0.3",
     "react-dom": "^17.0.2",
@@ -52,11 +51,13 @@
     "react-error-overlay": "6.0.9"
   },
   "scripts": {
+    "prestart": "../devops/ui-common-pack.sh $PWD",
     "start": "craco start",
     "start-dev": "./node_modules/.bin/env-cmd -f .env.dev.basic craco start",
     "build": "./node_modules/.bin/env-cmd -f .env.basic craco build",
     "test": "craco test",
-    "eject": "craco eject"
+    "eject": "craco eject",
+    "eslint": "eslint . --ext .js,.jsx,.ts,.tsx --max-warnings=0"
   },
   "eslintConfig": {
     "extends": [
