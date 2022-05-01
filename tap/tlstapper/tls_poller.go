@@ -148,7 +148,7 @@ func (p *tlsPoller) handleTlsChunk(chunk *tlsChunk, extension *api.Extension,
 func (p *tlsPoller) startNewTlsReader(chunk *tlsChunk, address *addressPair, key string,
 	emitter api.Emitter, extension *api.Extension, options *api.TrafficFilteringOptions) *tlsReader {
 
-	tcpid := p.buildTcpId(chunk, ip, port)
+	tcpid := p.buildTcpId(chunk, address)
 
 	doneHandler := func(r *tlsReader) {
 		p.closeReader(key, r)
@@ -206,9 +206,9 @@ func (p *tlsPoller) getAddressPair(chunk *tlsChunk) (addressPair, error) {
 	if err == nil {
 		if !chunk.isRequest() {
 			switchedAddress := addressPair{
-				srcIp: address.dstIp,
+				srcIp:   address.dstIp,
 				srcPort: address.dstPort,
-				dstIp: address.srcIp,
+				dstIp:   address.srcIp,
 				dstPort: address.srcPort,
 			}
 			p.fdCache[fdCacheKey] = switchedAddress
@@ -310,7 +310,7 @@ func (p *tlsPoller) logTls(chunk *tlsChunk, key string, reader *tlsReader) {
 
 	str := strings.ReplaceAll(strings.ReplaceAll(string(chunk.Data[0:chunk.Recorded]), "\n", " "), "\r", "")
 
-	logger.Log.Infof("[%-44s] %s%s #%-4d (fd: %d) (recorded %d/%d:%d) - %s - %s",
+	logger.Log.Infof("[%-44s] %s #%-4d (fd: %d) (recorded %d/%d:%d) - %s - %s",
 		key, flagsStr, reader.seenChunks, chunk.Fd,
 		chunk.Recorded, chunk.Len, chunk.Start,
 		str, hex.EncodeToString(chunk.Data[0:chunk.Recorded]))
