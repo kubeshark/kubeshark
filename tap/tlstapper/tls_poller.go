@@ -29,11 +29,8 @@ type tlsPoller struct {
 	extension       *api.Extension
 	procfs          string
 	pidToNamespace  sync.Map
-	isClosed        bool
 	protoIdentifier *api.ProtoIdentifier
-	isTapTarget     bool
 	origin          api.Capture
-	createdAt       time.Time
 }
 
 func newTlsPoller(tls *TlsTapper, extension *api.Extension, procfs string) *tlsPoller {
@@ -46,9 +43,7 @@ func newTlsPoller(tls *TlsTapper, extension *api.Extension, procfs string) *tlsP
 		chunksReader:    nil,
 		procfs:          procfs,
 		protoIdentifier: &api.ProtoIdentifier{},
-		isTapTarget:     true,
 		origin:          api.Ebpf,
-		createdAt:       time.Now(),
 	}
 }
 
@@ -282,7 +277,7 @@ func (p *tlsPoller) logTls(chunk *tlsChunk, ip net.IP, port uint16) {
 }
 
 func (p *tlsPoller) SetProtocol(protocol *api.Protocol) {
-	// TODO: Implement
+	p.protoIdentifier.Protocol = protocol
 }
 
 func (p *tlsPoller) GetOrigin() api.Capture {
@@ -298,9 +293,9 @@ func (p *tlsPoller) GetReqResMatchers() []api.RequestResponseMatcher {
 }
 
 func (p *tlsPoller) GetIsTapTarget() bool {
-	return p.isTapTarget
+	return true
 }
 
 func (p *tlsPoller) GetIsClosed() bool {
-	return p.isClosed
+	return false
 }
