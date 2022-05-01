@@ -12,8 +12,8 @@ import (
 	"regexp"
 
 	"github.com/op/go-logging"
+	"github.com/up9inc/mizu/logger"
 	"github.com/up9inc/mizu/shared"
-	"github.com/up9inc/mizu/shared/logger"
 	"github.com/up9inc/mizu/shared/semver"
 	"github.com/up9inc/mizu/tap/api"
 	auth "k8s.io/api/authorization/v1"
@@ -768,7 +768,6 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 	agentContainer.WithEnv(
 		applyconfcore.EnvVar().WithName(shared.LogLevelEnvVar).WithValue(logLevel.String()),
 		applyconfcore.EnvVar().WithName(shared.HostModeEnvVar).WithValue("1"),
-		applyconfcore.EnvVar().WithName(shared.GoGCEnvVar).WithValue("12800"),
 		applyconfcore.EnvVar().WithName(shared.MizuFilteringOptionsEnvVar).WithValue(string(mizuApiFilteringOptionsJsonStr)),
 	)
 	agentContainer.WithEnv(

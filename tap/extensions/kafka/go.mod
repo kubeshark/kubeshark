@@ -22,3 +22,5 @@ require (
 )
 
 replace github.com/up9inc/mizu/tap/api v0.0.0 => ../../api
+
+replace github.com/up9inc/mizu/logger v0.0.0 => ../../../logger

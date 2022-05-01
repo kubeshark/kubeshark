@@ -16,7 +16,7 @@ import (
 	"k8s.io/client-go/tools/portforward"
 	"k8s.io/client-go/transport/spdy"
 
-	"github.com/up9inc/mizu/shared/logger"
+	"github.com/up9inc/mizu/logger"
 	"k8s.io/kubectl/pkg/proxy"
 )
 

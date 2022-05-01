@@ -58,6 +58,7 @@ WORKDIR /app/agent-build
 
 COPY agent/go.mod agent/go.sum ./
 COPY shared/go.mod shared/go.mod ../shared/
+COPY logger/go.mod logger/go.mod ../logger/
 COPY tap/go.mod tap/go.mod ../tap/
 COPY tap/api/go.mod ../tap/api/
 COPY tap/extensions/amqp/go.mod ../tap/extensions/amqp/
@@ -66,10 +67,12 @@ COPY tap/extensions/kafka/go.mod ../tap/extensions/kafka/
 COPY tap/extensions/redis/go.mod ../tap/extensions/redis/
 RUN go mod download
 # cheap trick to make the build faster (as long as go.mod did not change)
+RUN go get github.com/patrickmn/go-cache
 RUN go list -f '{{.Path}}@{{.Version}}' -m all | sed 1d | grep -e 'go-cache' | xargs go get
 
 # Copy and build agent code
 COPY shared ../shared
+COPY logger ../logger
 COPY tap ../tap
 COPY agent .
 

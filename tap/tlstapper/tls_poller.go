@@ -15,7 +15,7 @@ import (
 
 	"github.com/cilium/ebpf/perf"
 	"github.com/go-errors/errors"
-	"github.com/up9inc/mizu/shared/logger"
+	"github.com/up9inc/mizu/logger"
 	"github.com/up9inc/mizu/tap/api"
 )
 
@@ -118,7 +118,6 @@ func (p *tlsPoller) pollChunksPerfBuffer(chunks chan<- *tlsChunk) {
 
 func (p *tlsPoller) handleTlsChunk(chunk *tlsChunk, extension *api.Extension,
 	emitter api.Emitter, options *api.TrafficFilteringOptions) error {
-
 	address, err := p.getAddressPair(chunk)
 
 	if err != nil {
@@ -133,7 +132,7 @@ func (p *tlsPoller) handleTlsChunk(chunk *tlsChunk, extension *api.Extension,
 	reader, exists := p.readers[key]
 
 	if !exists {
-		reader = p.startNewTlsReader(chunk, &address, key, extension, emitter, options)
+		reader = p.startNewTlsReader(chunk, &address, key, emitter, extension, options)
 		p.readers[key] = reader
 	}
 
@@ -146,19 +145,13 @@ func (p *tlsPoller) handleTlsChunk(chunk *tlsChunk, extension *api.Extension,
 	return nil
 }
 
-func (p *tlsPoller) startNewTlsReader(chunk *tlsChunk, address *addressPair, key string, extension *api.Extension,
-	emitter api.Emitter, options *api.TrafficFilteringOptions) *tlsReader {
+func (p *tlsPoller) startNewTlsReader(chunk *tlsChunk, address *addressPair, key string,
+	emitter api.Emitter, extension *api.Extension, options *api.TrafficFilteringOptions) *tlsReader {
 
-	reader := &tlsReader{
-		key:    key,
-		chunks: make(chan *tlsChunk, 1),
-		doneHandler: func(r *tlsReader) {
-			p.closeReader(key, r)
-		},
-		progress: &api.ReadProgress{},
-		timer: api.SuperTimer{
-			CaptureTime: time.Now(),
-		},
+	tcpid := p.buildTcpId(chunk, ip, port)
+
+	doneHandler := func(r *tlsReader) {
+		p.closeReader(key, r)
 	}
 
 	tlsEmitter := &tlsEmitter{
@@ -166,21 +159,38 @@ func (p *tlsPoller) startNewTlsReader(chunk *tlsChunk, address *addressPair, key
 		namespace: p.getNamespace(chunk.Pid),
 	}
 
-	tcpID := p.buildTcpId(chunk, address)
+	reader := &tlsReader{
+		key:           key,
+		chunks:        make(chan *tlsChunk, 1),
+		doneHandler:   doneHandler,
+		progress:      &api.ReadProgress{},
+		tcpID:         &tcpid,
+		isClient:      chunk.isRequest(),
+		captureTime:   time.Now(),
+		extension:     extension,
+		emitter:       tlsEmitter,
+		counterPair:   &api.CounterPair{},
+		reqResMatcher: p.reqResMatcher,
+	}
 
-	go dissect(extension, reader, chunk.isRequest(), &tcpID, tlsEmitter, options, p.reqResMatcher)
+	stream := &tlsStream{
+		reader:          reader,
+		protoIdentifier: &api.ProtoIdentifier{},
+	}
+
+	reader.parent = stream
+
+	go dissect(extension, reader, options)
 	return reader
 }
 
-func dissect(extension *api.Extension, reader *tlsReader, isRequest bool, tcpID *api.TcpID,
-	tlsEmitter *tlsEmitter, options *api.TrafficFilteringOptions, reqResMatcher api.RequestResponseMatcher) {
+func dissect(extension *api.Extension, reader *tlsReader, options *api.TrafficFilteringOptions) {
 	b := bufio.NewReader(reader)
 
-	err := extension.Dissector.Dissect(b, reader.progress, api.Ebpf, isRequest, tcpID, &api.CounterPair{},
-		&reader.timer, &api.SuperIdentifier{}, tlsEmitter, options, reqResMatcher)
+	err := extension.Dissector.Dissect(b, reader, options)
 
 	if err != nil {
-		logger.Log.Warningf("Error dissecting TLS %v - %v", tcpID, err)
+		logger.Log.Warningf("Error dissecting TLS %v - %v", reader.GetTcpID(), err)
 	}
 }
 
@@ -284,24 +294,24 @@ func (p *tlsPoller) clearPids() {
 }
 
 func (p *tlsPoller) logTls(chunk *tlsChunk, key string, reader *tlsReader) {
-	var clientStr string
+	var flagsStr string
+
 	if chunk.isClient() {
-		clientStr = "C"
+		flagsStr = "C"
 	} else {
-		clientStr = "S"
+		flagsStr = "S"
 	}
 
-	var readerStr string
 	if chunk.isRead() {
-		readerStr = "R"
+		flagsStr += "R"
 	} else {
-		readerStr = "W"
+		flagsStr += "W"
 	}
 
 	str := strings.ReplaceAll(strings.ReplaceAll(string(chunk.Data[0:chunk.Recorded]), "\n", " "), "\r", "")
 
 	logger.Log.Infof("[%-44s] %s%s #%-4d (fd: %d) (recorded %d/%d:%d) - %s - %s",
-		key, clientStr, readerStr, reader.seenChunks, chunk.Fd,
+		key, flagsStr, reader.seenChunks, chunk.Fd,
 		chunk.Recorded, chunk.Len, chunk.Start,
 		str, hex.EncodeToString(chunk.Data[0:chunk.Recorded]))
 }

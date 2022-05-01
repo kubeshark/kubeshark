@@ -13,7 +13,7 @@ import (
 	"time"
 
 	"github.com/chanced/openapi"
-	"github.com/up9inc/mizu/shared/logger"
+	"github.com/up9inc/mizu/logger"
 	"github.com/wI2L/jsondiff"
 
 	basenine "github.com/up9inc/basenine/client/go"

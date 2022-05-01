@@ -10,7 +10,7 @@ import (
 	basenine "github.com/up9inc/basenine/client/go"
 	"github.com/up9inc/mizu/agent/pkg/api"
 	"github.com/up9inc/mizu/agent/pkg/utils"
-	"github.com/up9inc/mizu/shared/logger"
+	"github.com/up9inc/mizu/logger"
 	tapApi "github.com/up9inc/mizu/tap/api"
 	amqpExt "github.com/up9inc/mizu/tap/extensions/amqp"
 	httpExt "github.com/up9inc/mizu/tap/extensions/http"

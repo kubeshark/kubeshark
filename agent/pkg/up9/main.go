@@ -17,8 +17,8 @@ import (
 	"github.com/up9inc/mizu/agent/pkg/utils"
 
 	basenine "github.com/up9inc/basenine/client/go"
+	"github.com/up9inc/mizu/logger"
 	"github.com/up9inc/mizu/shared"
-	"github.com/up9inc/mizu/shared/logger"
 	tapApi "github.com/up9inc/mizu/tap/api"
 )
 
