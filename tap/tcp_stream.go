@@ -26,7 +26,7 @@ type tcpStream struct {
 	sync.Mutex
 }
 
-func NewTcpStream(isTapTarget bool, streamsMap api.TcpStreamMap, capture api.Capture) api.TcpStream {
+func NewTcpStream(isTapTarget bool, streamsMap api.TcpStreamMap, capture api.Capture) *tcpStream {
 	return &tcpStream{
 		isTapTarget:     isTapTarget,
 		protoIdentifier: &api.ProtoIdentifier{},

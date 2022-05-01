@@ -14,39 +14,13 @@ type tlsReader struct {
 	doneHandler   func(r *tlsReader)
 	progress      *api.ReadProgress
 	tcpID         *api.TcpID
-	isClosed      bool
 	isClient      bool
 	captureTime   time.Time
-	parent        api.TcpStream
 	extension     *api.Extension
 	emitter       api.Emitter
 	counterPair   *api.CounterPair
+	parent        api.TcpStream
 	reqResMatcher api.RequestResponseMatcher
-}
-
-func NewTlsReader(key string, doneHandler func(r *tlsReader), isClient bool, stream api.TcpStream) api.TcpReader {
-	return &tlsReader{
-		key:         key,
-		chunks:      make(chan *tlsChunk, 1),
-		doneHandler: doneHandler,
-		parent:      stream,
-	}
-}
-
-func (r *tlsReader) sendChunk(chunk *tlsChunk) {
-	r.chunks <- chunk
-}
-
-func (r *tlsReader) setTcpID(tcpID *api.TcpID) {
-	r.tcpID = tcpID
-}
-
-func (r *tlsReader) setCaptureTime(captureTime time.Time) {
-	r.captureTime = captureTime
-}
-
-func (r *tlsReader) setEmitter(emitter api.Emitter) {
-	r.emitter = emitter
 }
 
 func (r *tlsReader) Read(p []byte) (int, error) {
@@ -111,7 +85,7 @@ func (r *tlsReader) GetEmitter() api.Emitter {
 }
 
 func (r *tlsReader) GetIsClosed() bool {
-	return r.isClosed
+	return false
 }
 
 func (r *tlsReader) GetExtension() *api.Extension {
