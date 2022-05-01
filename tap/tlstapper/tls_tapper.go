@@ -50,8 +50,8 @@ func (t *TlsTapper) Init(chunksBufferSize int, logBufferSize int, procfs string,
 	return t.poller.init(&t.bpfObjects, chunksBufferSize)
 }
 
-func (t *TlsTapper) Poll(emitter api.Emitter, options *api.TrafficFilteringOptions) {
-	t.poller.poll(emitter, options)
+func (t *TlsTapper) Poll(emitter api.Emitter, options *api.TrafficFilteringOptions, streamsMap api.TcpStreamMap) {
+	t.poller.poll(emitter, options, streamsMap)
 }
 
 func (t *TlsTapper) PollForLogging() {

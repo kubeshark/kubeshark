@@ -19,7 +19,7 @@ type tlsReader struct {
 	extension     *api.Extension
 	emitter       api.Emitter
 	counterPair   *api.CounterPair
-	parent        api.TcpStream
+	parent        *tlsStream
 	reqResMatcher api.RequestResponseMatcher
 }
 

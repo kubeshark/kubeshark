@@ -59,7 +59,7 @@ func (p *tlsPoller) close() error {
 	return p.chunksReader.Close()
 }
 
-func (p *tlsPoller) poll(emitter api.Emitter, options *api.TrafficFilteringOptions) {
+func (p *tlsPoller) poll(emitter api.Emitter, options *api.TrafficFilteringOptions, streamsMap api.TcpStreamMap) {
 	chunks := make(chan *tlsChunk)
 
 	go p.pollChunksPerfBuffer(chunks)
@@ -71,7 +71,7 @@ func (p *tlsPoller) poll(emitter api.Emitter, options *api.TrafficFilteringOptio
 				return
 			}
 
-			if err := p.handleTlsChunk(chunk, p.extension, emitter, options); err != nil {
+			if err := p.handleTlsChunk(chunk, p.extension, emitter, options, streamsMap); err != nil {
 				LogError(err)
 			}
 		case key := <-p.closedReaders:
@@ -115,8 +115,8 @@ func (p *tlsPoller) pollChunksPerfBuffer(chunks chan<- *tlsChunk) {
 	}
 }
 
-func (p *tlsPoller) handleTlsChunk(chunk *tlsChunk, extension *api.Extension,
-	emitter api.Emitter, options *api.TrafficFilteringOptions) error {
+func (p *tlsPoller) handleTlsChunk(chunk *tlsChunk, extension *api.Extension, emitter api.Emitter,
+	options *api.TrafficFilteringOptions, streamsMap api.TcpStreamMap) error {
 	ip, port, err := chunk.getAddress()
 
 	if err != nil {
@@ -127,7 +127,7 @@ func (p *tlsPoller) handleTlsChunk(chunk *tlsChunk, extension *api.Extension,
 	reader, exists := p.readers[key]
 
 	if !exists {
-		reader = p.startNewTlsReader(chunk, ip, port, key, emitter, extension, options)
+		reader = p.startNewTlsReader(chunk, ip, port, key, emitter, extension, options, streamsMap)
 		p.readers[key] = reader
 	}
 
@@ -142,7 +142,8 @@ func (p *tlsPoller) handleTlsChunk(chunk *tlsChunk, extension *api.Extension,
 }
 
 func (p *tlsPoller) startNewTlsReader(chunk *tlsChunk, ip net.IP, port uint16, key string,
-	emitter api.Emitter, extension *api.Extension, options *api.TrafficFilteringOptions) *tlsReader {
+	emitter api.Emitter, extension *api.Extension, options *api.TrafficFilteringOptions,
+	streamsMap api.TcpStreamMap) *tlsReader {
 
 	tcpid := p.buildTcpId(chunk, ip, port)
 
@@ -173,6 +174,7 @@ func (p *tlsPoller) startNewTlsReader(chunk *tlsChunk, ip net.IP, port uint16, k
 		reader:          reader,
 		protoIdentifier: &api.ProtoIdentifier{},
 	}
+	streamsMap.Store(streamsMap.NextId(), stream)
 
 	reader.parent = stream
 

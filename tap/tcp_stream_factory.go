@@ -64,6 +64,7 @@ func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcpLayer *lay
 		stream.setId(factory.streamsMap.NextId())
 		for i, extension := range extensions {
 			reqResMatcher := extension.Dissector.NewResponseRequestMatcher()
+			stream.addReqResMatcher(reqResMatcher)
 			counterPair := &api.CounterPair{
 				Request:  0,
 				Response: 0,
@@ -114,8 +115,8 @@ func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcpLayer *lay
 			factory.streamsMap.Store(stream.getId(), stream)
 
 			factory.wg.Add(2)
-			go stream.getClient(i).(*tcpReader).run(filteringOptions, &factory.wg)
-			go stream.getServer(i).(*tcpReader).run(filteringOptions, &factory.wg)
+			go stream.getClient(i).run(filteringOptions, &factory.wg)
+			go stream.getServer(i).run(filteringOptions, &factory.wg)
 		}
 	}
 	return reassemblyStream
