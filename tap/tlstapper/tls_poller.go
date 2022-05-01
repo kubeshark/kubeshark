@@ -15,9 +15,13 @@ import (
 
 	"github.com/cilium/ebpf/perf"
 	"github.com/go-errors/errors"
+	"github.com/hashicorp/golang-lru/simplelru"
 	"github.com/up9inc/mizu/logger"
 	"github.com/up9inc/mizu/tap/api"
 )
+
+const fdCachedItemAvgSize = 40
+const fdCacheMaxItems = 500000 / fdCachedItemAvgSize
 
 type tlsPoller struct {
 	tls            *TlsTapper
@@ -28,11 +32,12 @@ type tlsPoller struct {
 	extension      *api.Extension
 	procfs         string
 	pidToNamespace sync.Map
-	fdCache        map[string]addressPair
+	fdCache        *simplelru.LRU // Actual typs is map[string]addressPair
+	evictedCounter int
 }
 
-func newTlsPoller(tls *TlsTapper, extension *api.Extension, procfs string) *tlsPoller {
-	return &tlsPoller{
+func newTlsPoller(tls *TlsTapper, extension *api.Extension, procfs string) (*tlsPoller, error) {
+	poller := &tlsPoller{
 		tls:           tls,
 		readers:       make(map[string]*tlsReader),
 		closedReaders: make(chan string, 100),
@@ -40,8 +45,16 @@ func newTlsPoller(tls *TlsTapper, extension *api.Extension, procfs string) *tlsP
 		extension:     extension,
 		chunksReader:  nil,
 		procfs:        procfs,
-		fdCache:       make(map[string]addressPair),
 	}
+
+	fdCache, err := simplelru.NewLRU(fdCacheMaxItems, poller.fdCacheEvictCallback)
+
+	if err != nil {
+		return nil, errors.Wrap(err, 0)
+	}
+
+	poller.fdCache = fdCache
+	return poller, nil
 }
 
 func (p *tlsPoller) init(bpfObjects *tlsTapperObjects, bufferSize int) error {
@@ -211,18 +224,24 @@ func (p *tlsPoller) getAddressPair(chunk *tlsChunk) (addressPair, error) {
 				dstIp:   address.srcIp,
 				dstPort: address.srcPort,
 			}
-			p.fdCache[fdCacheKey] = switchedAddress
+			p.fdCache.Add(fdCacheKey, switchedAddress)
 			return switchedAddress, nil
 		} else {
-			p.fdCache[fdCacheKey] = address
+			p.fdCache.Add(fdCacheKey, address)
 			return address, nil
 		}
 	}
 
-	fromCache, ok := p.fdCache[fdCacheKey]
+	fromCacheIfc, ok := p.fdCache.Get(fdCacheKey)
 
 	if !ok {
 		return addressPair{}, err
+	}
+
+	fromCache, ok := fromCacheIfc.(addressPair)
+
+	if !ok {
+		return address, errors.Errorf("Unable to cast %T to addressPair", fromCacheIfc)
 	}
 
 	return fromCache, nil
@@ -314,4 +333,12 @@ func (p *tlsPoller) logTls(chunk *tlsChunk, key string, reader *tlsReader) {
 		key, flagsStr, reader.seenChunks, chunk.Fd,
 		chunk.Recorded, chunk.Len, chunk.Start,
 		str, hex.EncodeToString(chunk.Data[0:chunk.Recorded]))
+}
+
+func (p *tlsPoller) fdCacheEvictCallback(key interface{}, value interface{}) {
+	p.evictedCounter = p.evictedCounter + 1
+
+	if p.evictedCounter%1000000 == 0 {
+		logger.Log.Infof("Tls fdCache evicted %d items", p.evictedCounter)
+	}
 }

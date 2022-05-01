@@ -46,7 +46,13 @@ func (t *TlsTapper) Init(chunksBufferSize int, logBufferSize int, procfs string,
 		return err
 	}
 
-	t.poller = newTlsPoller(t, extension, procfs)
+	var err error
+	t.poller, err = newTlsPoller(t, extension, procfs)
+
+	if err != nil {
+		return err
+	}
+
 	return t.poller.init(&t.bpfObjects, chunksBufferSize)
 }
 
