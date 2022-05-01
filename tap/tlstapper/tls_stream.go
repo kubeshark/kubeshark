@@ -19,8 +19,8 @@ func (t *tlsStream) SetProtocol(protocol *api.Protocol) {
 	t.protoIdentifier.Protocol = protocol
 }
 
-func (t *tlsStream) GetReqResMatcher() api.RequestResponseMatcher {
-	return t.reader.reqResMatcher
+func (t *tlsStream) GetReqResMatchers() []api.RequestResponseMatcher {
+	return []api.RequestResponseMatcher{t.reader.reqResMatcher}
 }
 
 func (t *tlsStream) GetIsTapTarget() bool {
