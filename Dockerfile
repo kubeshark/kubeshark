@@ -73,9 +73,6 @@ COPY tap/extensions/http/go.mod ../tap/extensions/http/
 COPY tap/extensions/kafka/go.mod ../tap/extensions/kafka/
 COPY tap/extensions/redis/go.mod ../tap/extensions/redis/
 RUN go mod download
-# cheap trick to make the build faster (as long as go.mod did not change)
-RUN go get github.com/patrickmn/go-cache
-RUN go list -f '{{.Path}}@{{.Version}}' -m all | sed 1d | grep -e 'go-cache' | xargs go get
 
 # Copy and build agent code
 COPY shared ../shared
