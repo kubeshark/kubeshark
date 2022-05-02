@@ -69,10 +69,12 @@ func StartPassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem, 
 	extensions = extensionsRef
 	filteringOptions = options
 
+	streamsMap := NewTcpStreamMap()
+
 	if *tls {
 		for _, e := range extensions {
 			if e.Protocol.Name == "http" {
-				tlsTapperInstance = startTlsTapper(e, outputItems, options)
+				tlsTapperInstance = startTlsTapper(e, outputItems, options, streamsMap)
 				break
 			}
 		}
@@ -82,7 +84,7 @@ func StartPassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem, 
 		diagnose.StartMemoryProfiler(os.Getenv(MemoryProfilingDumpPath), os.Getenv(MemoryProfilingTimeIntervalSeconds))
 	}
 
-	streamsMap, assembler := initializePassiveTapper(opts, outputItems)
+	assembler := initializePassiveTapper(opts, outputItems, streamsMap)
 	go startPassiveTapper(streamsMap, assembler)
 }
 
@@ -181,9 +183,7 @@ func initializePacketSources() error {
 	return err
 }
 
-func initializePassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem) (api.TcpStreamMap, *tcpAssembler) {
-	streamsMap := NewTcpStreamMap()
-
+func initializePassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem, streamsMap api.TcpStreamMap) *tcpAssembler {
 	diagnose.InitializeErrorsMap(*debug, *verbose, *quiet)
 	diagnose.InitializeTapperInternalStats()
 
@@ -195,7 +195,7 @@ func initializePassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelI
 
 	assembler := NewTcpAssembler(outputItems, streamsMap, opts)
 
-	return streamsMap, assembler
+	return assembler
 }
 
 func startPassiveTapper(streamsMap api.TcpStreamMap, assembler *tcpAssembler) {
@@ -232,7 +232,8 @@ func startPassiveTapper(streamsMap api.TcpStreamMap, assembler *tcpAssembler) {
 	logger.Log.Infof("AppStats: %v", diagnose.AppStats)
 }
 
-func startTlsTapper(extension *api.Extension, outputItems chan *api.OutputChannelItem, options *api.TrafficFilteringOptions) *tlstapper.TlsTapper {
+func startTlsTapper(extension *api.Extension, outputItems chan *api.OutputChannelItem,
+	options *api.TrafficFilteringOptions, streamsMap api.TcpStreamMap) *tlstapper.TlsTapper {
 	tls := tlstapper.TlsTapper{}
 	chunksBufferSize := os.Getpagesize() * 100
 	logBufferSize := os.Getpagesize()
@@ -262,7 +263,7 @@ func startTlsTapper(extension *api.Extension, outputItems chan *api.OutputChanne
 	}
 
 	go tls.PollForLogging()
-	go tls.Poll(emitter, options)
+	go tls.Poll(emitter, options, streamsMap)
 
 	return &tls
 }

@@ -47,6 +47,7 @@ func TestMacros(t *testing.T) {
 		"http":  `proto.name == "http" and proto.version.startsWith("1")`,
 		"http2": `proto.name == "http" and proto.version == "2.0"`,
 		"grpc":  `proto.name == "http" and proto.version == "2.0" and proto.macro == "grpc"`,
+		"gql":   `proto.name == "http" and proto.macro == "gql"`,
 	}
 	dissector := NewDissector()
 	macros := dissector.Macros()
