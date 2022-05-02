@@ -144,7 +144,7 @@ jobs:
 
       - name: Check logger modified files
         id: logger_modified_files
-        run: devops/check_modified_files.sh logger
+        run: devops/check_modified_files.sh logger/
 
       - name: Go lint - logger
         uses: golangci/golangci-lint-action@v2
