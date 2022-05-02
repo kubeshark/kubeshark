@@ -2,6 +2,7 @@ package tap
 
 import (
 	"runtime"
+	_debug "runtime/debug"
 	"sync"
 	"time"
 
@@ -47,6 +48,7 @@ func (streamMap *tcpStreamMap) CloseTimedoutTcpStreamChannels() {
 	for {
 		<-ticker.C
 
+		_debug.FreeOSMemory()
 		streamMap.streams.Range(func(key interface{}, value interface{}) bool {
 			// `*tlsStream` is not yet applicable to this routine.
 			// So, we cast into `(*tcpStream)` and ignore `*tlsStream`
