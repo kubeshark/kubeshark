@@ -44,11 +44,18 @@ ENV CGO_ENABLED=1 GOOS=linux
 ENV GOARCH=arm64 CGO_CFLAGS="-I/work/libpcap"
 
 
+### Builder image for AArch64 to x86-64 cross-compilation
+FROM up9inc/linux-x86_64-musl-go-libpcap AS builder-from-arm64v8-to-amd64
+ENV CGO_ENABLED=1 GOOS=linux
+ENV GOARCH=amd64 CGO_CFLAGS="-I/libpcap"
+
+
 ### Final builder image where the build happens
 # Possible build strategies:
 # BUILDARCH=amd64 TARGETARCH=amd64
 # BUILDARCH=arm64v8 TARGETARCH=arm64v8
 # BUILDARCH=amd64 TARGETARCH=arm64v8
+# BUILDARCH=arm64v8 TARGETARCH=amd64
 ARG BUILDARCH=amd64
 ARG TARGETARCH=amd64
 FROM builder-from-${BUILDARCH}-to-${TARGETARCH} AS builder
