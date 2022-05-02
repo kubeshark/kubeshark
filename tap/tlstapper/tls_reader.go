@@ -10,6 +10,7 @@ import (
 type tlsReader struct {
 	key           string
 	chunks        chan *tlsChunk
+	seenChunks    int
 	data          []byte
 	doneHandler   func(r *tlsReader)
 	progress      *api.ReadProgress
@@ -21,6 +22,12 @@ type tlsReader struct {
 	counterPair   *api.CounterPair
 	parent        *tlsStream
 	reqResMatcher api.RequestResponseMatcher
+}
+
+func (r *tlsReader) newChunk(chunk *tlsChunk) {
+	r.captureTime = time.Now()
+	r.seenChunks = r.seenChunks + 1
+	r.chunks <- chunk
 }
 
 func (r *tlsReader) Read(p []byte) (int, error) {
