@@ -73,7 +73,7 @@ func (p *tlsPoller) close() error {
 	return p.chunksReader.Close()
 }
 
-func (p *tlsPoller) poll(emitter api.Emitter, options *api.TrafficFilteringOptions) {
+func (p *tlsPoller) poll(emitter api.Emitter, options *api.TrafficFilteringOptions, streamsMap api.TcpStreamMap) {
 	chunks := make(chan *tlsChunk)
 
 	go p.pollChunksPerfBuffer(chunks)
@@ -85,7 +85,7 @@ func (p *tlsPoller) poll(emitter api.Emitter, options *api.TrafficFilteringOptio
 				return
 			}
 
-			if err := p.handleTlsChunk(chunk, p.extension, emitter, options); err != nil {
+			if err := p.handleTlsChunk(chunk, p.extension, emitter, options, streamsMap); err != nil {
 				LogError(err)
 			}
 		case key := <-p.closedReaders:
@@ -129,8 +129,8 @@ func (p *tlsPoller) pollChunksPerfBuffer(chunks chan<- *tlsChunk) {
 	}
 }
 
-func (p *tlsPoller) handleTlsChunk(chunk *tlsChunk, extension *api.Extension,
-	emitter api.Emitter, options *api.TrafficFilteringOptions) error {
+func (p *tlsPoller) handleTlsChunk(chunk *tlsChunk, extension *api.Extension, emitter api.Emitter,
+	options *api.TrafficFilteringOptions, streamsMap api.TcpStreamMap) error {
 	address, err := p.getSockfdAddressPair(chunk)
 
 	if err != nil {
@@ -159,7 +159,8 @@ func (p *tlsPoller) handleTlsChunk(chunk *tlsChunk, extension *api.Extension,
 }
 
 func (p *tlsPoller) startNewTlsReader(chunk *tlsChunk, address *addressPair, key string,
-	emitter api.Emitter, extension *api.Extension, options *api.TrafficFilteringOptions) *tlsReader {
+	emitter api.Emitter, extension *api.Extension, options *api.TrafficFilteringOptions,
+	streamsMap api.TcpStreamMap) *tlsReader {
 
 	tcpid := p.buildTcpId(chunk, address)
 
@@ -190,6 +191,7 @@ func (p *tlsPoller) startNewTlsReader(chunk *tlsChunk, address *addressPair, key
 		reader:          reader,
 		protoIdentifier: &api.ProtoIdentifier{},
 	}
+	streamsMap.Store(streamsMap.NextId(), stream)
 
 	reader.parent = stream
 

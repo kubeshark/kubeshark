@@ -34,12 +34,14 @@ func (cl *Cleaner) clean() {
 	cl.assemblerMutex.Unlock()
 
 	cl.streamsMap.Range(func(k, v interface{}) bool {
-		reqResMatcher := v.(api.TcpStream).GetReqResMatcher()
-		if reqResMatcher == nil {
-			return true
+		reqResMatchers := v.(api.TcpStream).GetReqResMatchers()
+		for _, reqResMatcher := range reqResMatchers {
+			if reqResMatcher == nil {
+				continue
+			}
+			deleted := deleteOlderThan(reqResMatcher.GetMap(), startCleanTime.Add(-cl.connectionTimeout))
+			cl.stats.deleted += deleted
 		}
-		deleted := deleteOlderThan(reqResMatcher.GetMap(), startCleanTime.Add(-cl.connectionTimeout))
-		cl.stats.deleted += deleted
 		return true
 	})
 
