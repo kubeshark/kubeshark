@@ -131,10 +131,10 @@ func (p *tlsPoller) pollChunksPerfBuffer(chunks chan<- *tlsChunk) {
 
 func (p *tlsPoller) handleTlsChunk(chunk *tlsChunk, extension *api.Extension,
 	emitter api.Emitter, options *api.TrafficFilteringOptions) error {
-	address, err := p.getAddressPair(chunk)
+	address, err := p.getSockfdAddressPair(chunk)
 
 	if err != nil {
-		address, err = p.getFallbackAddress(chunk)
+		address, err = chunk.getAddressPair()
 
 		if err != nil {
 			return err
@@ -212,7 +212,7 @@ func (p *tlsPoller) closeReader(key string, r *tlsReader) {
 	p.closedReaders <- key
 }
 
-func (p *tlsPoller) getAddressPair(chunk *tlsChunk) (addressPair, error) {
+func (p *tlsPoller) getSockfdAddressPair(chunk *tlsChunk) (addressPair, error) {
 	address, err := getAddressBySockfd(p.procfs, chunk.Pid, chunk.Fd)
 	fdCacheKey := fmt.Sprintf("%d:%d", chunk.Pid, chunk.Fd)
 
@@ -245,30 +245,6 @@ func (p *tlsPoller) getAddressPair(chunk *tlsChunk) (addressPair, error) {
 	}
 
 	return fromCache, nil
-}
-
-func (p *tlsPoller) getFallbackAddress(chunk *tlsChunk) (addressPair, error) {
-	ip, port, err := chunk.getAddress()
-
-	if err != nil {
-		return addressPair{}, err
-	}
-
-	if chunk.isRequest() {
-		return addressPair{
-			srcIp:   api.UnknownIp,
-			srcPort: api.UnknownPort,
-			dstIp:   ip,
-			dstPort: port,
-		}, nil
-	} else {
-		return addressPair{
-			srcIp:   ip,
-			srcPort: port,
-			dstIp:   api.UnknownIp,
-			dstPort: api.UnknownPort,
-		}, nil
-	}
 }
 
 func buildTlsKey(address addressPair) string {
