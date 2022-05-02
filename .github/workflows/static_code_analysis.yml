@@ -10,7 +10,7 @@ permissions:
   contents: read
 
 jobs:
-  golangci:
+  go-lint:
     name: Go lint
     runs-on: ubuntu-latest
     steps:
@@ -141,7 +141,26 @@ jobs:
         with:
           version: latest
           working-directory: tap/extensions/redis
-      
+
+      - name: Check logger modified files
+        id: logger_modified_files
+        run: devops/check_modified_files.sh logger/
+
+      - name: Go lint - logger
+        uses: golangci/golangci-lint-action@v2
+        if: steps.logger_modified_files.outputs.matched == 'true'
+        with:
+          version: latest
+          working-directory: logger
+
+  es-lint:
+    name: ES lint
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 2
+
       - uses: actions/setup-node@v2
         with:
           node-version: 16
