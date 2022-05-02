@@ -7,7 +7,7 @@ require (
 	github.com/mertyildiran/gqlparser/v2 v2.4.6
 	github.com/stretchr/testify v1.7.0
 	github.com/up9inc/mizu/tap/api v0.0.0
-	golang.org/x/net v0.0.0-20211209124913-491a49abca63
+	golang.org/x/net v0.0.0-20220127200216-cd36cc0744dd
 )
 
 require (
