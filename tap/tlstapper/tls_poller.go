@@ -145,7 +145,7 @@ func (p *tlsPoller) handleTlsChunk(chunk *tlsChunk, extension *api.Extension, em
 	reader, exists := p.readers[key]
 
 	if !exists {
-		reader = p.startNewTlsReader(chunk, &address, key, emitter, extension, options)
+		reader = p.startNewTlsReader(chunk, &address, key, emitter, extension, options, streamsMap)
 		p.readers[key] = reader
 	}
 
