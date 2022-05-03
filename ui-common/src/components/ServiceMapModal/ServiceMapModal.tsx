@@ -49,6 +49,7 @@ const protocols = [
     { key: "HTTP", value: "HTTP", component: <LegentLabel color="#205cf5" name="HTTP" /> },
     { key: "HTTP/2", value: "HTTP/2", component: <LegentLabel color='#244c5a' name="HTTP/2" /> },
     { key: "gRPC", value: "gRPC", component: <LegentLabel color='#244c5a' name="gRPC" /> },
+    { key: "GQL", value: "GQL", component: <LegentLabel color='#e10098' name="GQL" /> },
     { key: "AMQP", value: "AMQP", component: <LegentLabel color='#ff6600' name="AMQP" /> },
     { key: "KAFKA", value: "KAFKA", component: <LegentLabel color='#000000' name="KAFKA" /> },
     { key: "REDIS", value: "REDIS", component: <LegentLabel color='#a41e11' name="REDIS" /> },]
@@ -202,7 +203,7 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
                                 >
                                     Refresh
                                 </Button>
-                                <img src={closeIcon} alt="close" onClick={() => onClose()} style={{ cursor: "pointer", userSelect: "none" }}></img>
+                                <img src={closeIcon} alt="close" onClick={() => onClose()} className={styles.closeIcon}></img>
                             </div>
                             {isLoading && <div className={spinnerStyle.spinnerContainer}>
                                 <img alt="spinner" src={spinnerImg} style={{ height: 50 }} />

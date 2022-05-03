@@ -11,7 +11,7 @@ type tcpStream struct {
 	protoIdentifier *api.ProtoIdentifier
 	isTapTarget     bool
 	origin          api.Capture
-	reqResMatcher   api.RequestResponseMatcher
+	reqResMatchers  []api.RequestResponseMatcher
 	sync.Mutex
 }
 
@@ -32,8 +32,8 @@ func (t *tcpStream) GetProtoIdentifier() *api.ProtoIdentifier {
 	return t.protoIdentifier
 }
 
-func (t *tcpStream) GetReqResMatcher() api.RequestResponseMatcher {
-	return t.reqResMatcher
+func (t *tcpStream) GetReqResMatchers() []api.RequestResponseMatcher {
+	return t.reqResMatchers
 }
 
 func (t *tcpStream) GetIsTapTarget() bool {
