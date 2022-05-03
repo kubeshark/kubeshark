@@ -30,10 +30,10 @@ const OasModal = ({ openModal, handleCloseModal, getOasServices, getOasByService
   const [oasServices, setOasServices] = useState([] as string[])
   const [selectedServiceName, setSelectedServiceName] = useState("");
   const [selectedServiceSpec, setSelectedServiceSpec] = useState(null);
-  
-  const classes = {root: style.root}
 
-  const onSelectedOASService = useCallback(async (selectedService) => {
+  const classes = { root: style.root }
+
+  const onSelectedOASService = useCallback (async (selectedService) => {
     if (oasServices.length === 0) {
       setSelectedServiceSpec(null);
       setSelectedServiceName("");
@@ -60,7 +60,9 @@ const OasModal = ({ openModal, handleCloseModal, getOasServices, getOasByService
         console.error(e);
       }
     })();
+    
   }, [openModal, getOasServices]);
+
 
   useEffect(() => {
     onSelectedOASService(null);
@@ -80,18 +82,17 @@ const OasModal = ({ openModal, handleCloseModal, getOasServices, getOasByService
     >
       <Fade in={openModal}>
         <Box sx={modalStyle}>
+          <img src={closeIcon} alt="close" onClick={handleCloseModal} className={style.closeIcon} />
           <div className={style.boxContainer}>
             <div className={style.selectHeader}>
               <div><img src={openApiLogo} alt="openAPI" className={style.openApilogo} /></div>
               <div className={style.title}>Service Catalog</div>
             </div>
-            <div style={{ cursor: "pointer" }}>
-              <img src={closeIcon} alt="close" onClick={handleCloseModal} />
-            </div>
           </div>
+
           <div className={style.selectContainer} >
             <FormControl classes={classes}>
-              <SearchableDropdown 
+              <SearchableDropdown
                 options={oasServices}
                 selectedValues={selectedServiceName}
                 onChange={onSelectedOASService}
