@@ -1,4 +1,4 @@
-import { Box, Fade, FormControl, MenuItem, Modal, Backdrop } from "@material-ui/core";
+import { Box, Fade, FormControl, Modal, Backdrop } from "@material-ui/core";
 import { useEffect, useState } from "react";
 import { RedocStandalone } from "redoc";
 import closeIcon from "assets/closeIcon.svg";
@@ -60,11 +60,13 @@ const OasModal = ({ openModal, handleCloseModal, getOasServices, getOasByService
         console.error(e);
       }
     })();
+    // eslint-disable-next-line
   }, [openModal]);
+
 
   useEffect(() => {
     onSelectedOASService(null);
-  }, [oasServices])
+  }, [oasServices, onSelectedOASService])
 
   return (
     <Modal
