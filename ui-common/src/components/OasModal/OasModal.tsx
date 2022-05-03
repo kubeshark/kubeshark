@@ -43,6 +43,7 @@ const OasModal = ({ openModal, handleCloseModal, getOasServices, getOasByService
       setSelectedServiceName(selectedService ? selectedService : oasServices[0]);
     }
     try {
+       // eslint-disable-next-line
       const data = await getOasByService(selectedService ? selectedService : oasServices[0]);
       setSelectedServiceSpec(data);
     } catch (e) {
