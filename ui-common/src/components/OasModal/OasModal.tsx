@@ -43,13 +43,13 @@ const OasModal = ({ openModal, handleCloseModal, getOasServices, getOasByService
       setSelectedServiceName(selectedService ? selectedService : oasServices[0]);
     }
     try {
-       // eslint-disable-next-line
       const data = await getOasByService(selectedService ? selectedService : oasServices[0]);
       setSelectedServiceSpec(data);
     } catch (e) {
       toast.error("Error occurred while fetching service OAS spec", { containerId: TOAST_CONTAINER_ID });
       console.error(e);
     }
+    // eslint-disable-next-line
   },[oasServices]);
 
   useEffect(() => {
