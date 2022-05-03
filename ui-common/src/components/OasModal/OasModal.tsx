@@ -1,5 +1,5 @@
-import { Box, Fade, FormControl, MenuItem, Modal, Backdrop } from "@material-ui/core";
-import { useEffect, useState } from "react";
+import { Box, Fade, FormControl, Modal, Backdrop } from "@material-ui/core";
+import { useCallback, useEffect, useState } from "react";
 import { RedocStandalone } from "redoc";
 import closeIcon from "assets/closeIcon.svg";
 import { toast } from 'react-toastify';
@@ -30,10 +30,10 @@ const OasModal = ({ openModal, handleCloseModal, getOasServices, getOasByService
   const [oasServices, setOasServices] = useState([] as string[])
   const [selectedServiceName, setSelectedServiceName] = useState("");
   const [selectedServiceSpec, setSelectedServiceSpec] = useState(null);
-  
-  const classes = {root: style.root}
 
-  const onSelectedOASService = async (selectedService) => {
+  const classes = { root: style.root }
+
+  const onSelectedOASService = useCallback (async (selectedService) => {
     if (oasServices.length === 0) {
       setSelectedServiceSpec(null);
       setSelectedServiceName("");
@@ -49,7 +49,8 @@ const OasModal = ({ openModal, handleCloseModal, getOasServices, getOasByService
       toast.error("Error occurred while fetching service OAS spec", { containerId: TOAST_CONTAINER_ID });
       console.error(e);
     }
-  };
+    // eslint-disable-next-line
+  },[oasServices]);
 
   useEffect(() => {
     (async () => {
@@ -60,11 +61,13 @@ const OasModal = ({ openModal, handleCloseModal, getOasServices, getOasByService
         console.error(e);
       }
     })();
+    // eslint-disable-next-line
   }, [openModal]);
+
 
   useEffect(() => {
     onSelectedOASService(null);
-  }, [oasServices])
+  }, [oasServices, onSelectedOASService])
 
   return (
     <Modal
@@ -80,18 +83,17 @@ const OasModal = ({ openModal, handleCloseModal, getOasServices, getOasByService
     >
       <Fade in={openModal}>
         <Box sx={modalStyle}>
+          <img src={closeIcon} alt="close" onClick={handleCloseModal} className={style.closeIcon} />
           <div className={style.boxContainer}>
             <div className={style.selectHeader}>
               <div><img src={openApiLogo} alt="openAPI" className={style.openApilogo} /></div>
               <div className={style.title}>Service Catalog</div>
             </div>
-            <div style={{ cursor: "pointer" }}>
-              <img src={closeIcon} alt="close" onClick={handleCloseModal} />
-            </div>
           </div>
+
           <div className={style.selectContainer} >
             <FormControl classes={classes}>
-              <SearchableDropdown 
+              <SearchableDropdown
                 options={oasServices}
                 selectedValues={selectedServiceName}
                 onChange={onSelectedOASService}
