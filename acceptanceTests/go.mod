@@ -29,6 +29,7 @@ require (
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
+	github.com/up9inc/mizu/logger v0.0.0 // indirect
 	golang.org/x/net v0.0.0-20220127200216-cd36cc0744dd // indirect
 	golang.org/x/oauth2 v0.0.0-20211104180415-d3ed0bb246c8 // indirect
 	golang.org/x/sys v0.0.0-20220207234003-57398862261d // indirect
@@ -47,6 +48,8 @@ require (
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.1 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
+
+replace github.com/up9inc/mizu/logger v0.0.0 => ../logger
 
 replace github.com/up9inc/mizu/shared v0.0.0 => ../shared
 

@@ -48,14 +48,14 @@ static __always_inline int get_count_bytes(struct pt_regs *ctx, struct ssl_info*
 	return countBytes;
 }
 
-static __always_inline void add_address_to_chunk(struct pt_regs *ctx, struct tlsChunk* chunk, __u64 id, __u32 fd) {
+static __always_inline int add_address_to_chunk(struct pt_regs *ctx, struct tlsChunk* chunk, __u64 id, __u32 fd) {
 	__u32 pid = id >> 32;
 	__u64 key = (__u64) pid << 32 | fd;
 	
 	struct fd_info *fdinfo = bpf_map_lookup_elem(&file_descriptor_to_ipv4, &key);
 	
 	if (fdinfo == NULL) {
-		return;
+		return 0;
 	}
 	
 	int err = bpf_probe_read(chunk->address, sizeof(chunk->address), fdinfo->ipv4_addr);
@@ -63,7 +63,10 @@ static __always_inline void add_address_to_chunk(struct pt_regs *ctx, struct tls
 	
 	if (err != 0) {
 		log_error(ctx, LOG_ERROR_READING_FD_ADDRESS, id, err, 0l);
+		return 0;
 	}
+	
+	return 1;
 }
 
 static __always_inline void send_chunk_part(struct pt_regs *ctx, __u8* buffer, __u64 id, 
@@ -143,7 +146,12 @@ static __always_inline void output_ssl_chunk(struct pt_regs *ctx, struct ssl_inf
 	chunk->len = countBytes;
 	chunk->fd = info->fd;
 	
-	add_address_to_chunk(ctx, chunk, id, chunk->fd);
+	if (!add_address_to_chunk(ctx, chunk, id, chunk->fd)) {
+		// Without an address, we drop the chunk because there is not much to do with it in Go
+		//
+		return;
+	}
+	
 	send_chunk(ctx, info->buffer, id, chunk);
 }
 

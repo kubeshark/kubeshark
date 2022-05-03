@@ -5,7 +5,7 @@ import (
 
 	"github.com/cilium/ebpf/rlimit"
 	"github.com/go-errors/errors"
-	"github.com/up9inc/mizu/shared/logger"
+	"github.com/up9inc/mizu/logger"
 	"github.com/up9inc/mizu/tap/api"
 )
 
@@ -46,12 +46,18 @@ func (t *TlsTapper) Init(chunksBufferSize int, logBufferSize int, procfs string,
 		return err
 	}
 
-	t.poller = newTlsPoller(t, extension, procfs)
+	var err error
+	t.poller, err = newTlsPoller(t, extension, procfs)
+
+	if err != nil {
+		return err
+	}
+
 	return t.poller.init(&t.bpfObjects, chunksBufferSize)
 }
 
-func (t *TlsTapper) Poll(emitter api.Emitter, options *api.TrafficFilteringOptions) {
-	t.poller.poll(emitter, options)
+func (t *TlsTapper) Poll(emitter api.Emitter, options *api.TrafficFilteringOptions, streamsMap api.TcpStreamMap) {
+	t.poller.poll(emitter, options, streamsMap)
 }
 
 func (t *TlsTapper) PollForLogging() {

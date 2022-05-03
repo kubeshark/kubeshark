@@ -8,12 +8,26 @@ import (
 )
 
 type tlsReader struct {
-	key         string
-	chunks      chan *tlsChunk
-	data        []byte
-	doneHandler func(r *tlsReader)
-	progress    *api.ReadProgress
-	timer        api.SuperTimer
+	key           string
+	chunks        chan *tlsChunk
+	seenChunks    int
+	data          []byte
+	doneHandler   func(r *tlsReader)
+	progress      *api.ReadProgress
+	tcpID         *api.TcpID
+	isClient      bool
+	captureTime   time.Time
+	extension     *api.Extension
+	emitter       api.Emitter
+	counterPair   *api.CounterPair
+	parent        *tlsStream
+	reqResMatcher api.RequestResponseMatcher
+}
+
+func (r *tlsReader) newChunk(chunk *tlsChunk) {
+	r.captureTime = time.Now()
+	r.seenChunks = r.seenChunks + 1
+	r.chunks <- chunk
 }
 
 func (r *tlsReader) Read(p []byte) (int, error) {
@@ -43,4 +57,44 @@ func (r *tlsReader) Read(p []byte) (int, error) {
 	r.progress.Feed(l)
 
 	return l, nil
+}
+
+func (r *tlsReader) GetReqResMatcher() api.RequestResponseMatcher {
+	return r.reqResMatcher
+}
+
+func (r *tlsReader) GetIsClient() bool {
+	return r.isClient
+}
+
+func (r *tlsReader) GetReadProgress() *api.ReadProgress {
+	return r.progress
+}
+
+func (r *tlsReader) GetParent() api.TcpStream {
+	return r.parent
+}
+
+func (r *tlsReader) GetTcpID() *api.TcpID {
+	return r.tcpID
+}
+
+func (r *tlsReader) GetCounterPair() *api.CounterPair {
+	return r.counterPair
+}
+
+func (r *tlsReader) GetCaptureTime() time.Time {
+	return r.captureTime
+}
+
+func (r *tlsReader) GetEmitter() api.Emitter {
+	return r.emitter
+}
+
+func (r *tlsReader) GetIsClosed() bool {
+	return false
+}
+
+func (r *tlsReader) GetExtension() *api.Extension {
+	return r.extension
 }

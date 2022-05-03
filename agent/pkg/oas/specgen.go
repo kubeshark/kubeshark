@@ -17,7 +17,7 @@ import (
 	"github.com/chanced/openapi"
 	"github.com/google/uuid"
 	"github.com/nav-inc/datetime"
-	"github.com/up9inc/mizu/shared/logger"
+	"github.com/up9inc/mizu/logger"
 
 	"github.com/up9inc/mizu/agent/pkg/har"
 

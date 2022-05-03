@@ -11,6 +11,7 @@ require (
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
 	github.com/spf13/cobra v1.3.0
 	github.com/spf13/pflag v1.0.5
+	github.com/up9inc/mizu/logger v0.0.0
 	github.com/up9inc/mizu/shared v0.0.0
 	github.com/up9inc/mizu/tap/api v0.0.0
 	golang.org/x/oauth2 v0.0.0-20211104180415-d3ed0bb246c8
@@ -97,6 +98,8 @@ require (
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.1 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
+
+replace github.com/up9inc/mizu/logger v0.0.0 => ../logger
 
 replace github.com/up9inc/mizu/shared v0.0.0 => ../shared
 

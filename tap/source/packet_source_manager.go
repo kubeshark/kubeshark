@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/up9inc/mizu/shared/logger"
+	"github.com/up9inc/mizu/logger"
 	"github.com/up9inc/mizu/tap/api"
 	v1 "k8s.io/api/core/v1"
 )
@@ -136,9 +136,9 @@ func (m *PacketSourceManager) setBPFFilter(pods []v1.Pod) {
 		logger.Log.Info("No pods provided, skipping pcap bpf filter")
 		return
 	}
-	
+
 	var expr string
-	
+
 	if len(pods) > bpfFilterMaxPods {
 		logger.Log.Info("Too many pods for setting ebpf filter %d, setting just not 443", len(pods))
 		expr = "port not 443"

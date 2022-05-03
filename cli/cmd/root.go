@@ -11,7 +11,7 @@ import (
 	"github.com/up9inc/mizu/cli/mizu/fsUtils"
 	"github.com/up9inc/mizu/cli/mizu/version"
 	"github.com/up9inc/mizu/cli/uiUtils"
-	"github.com/up9inc/mizu/shared/logger"
+	"github.com/up9inc/mizu/logger"
 )
 
 var rootCmd = &cobra.Command{
