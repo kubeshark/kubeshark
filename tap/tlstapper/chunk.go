@@ -6,6 +6,7 @@ import (
 	"net"
 
 	"github.com/go-errors/errors"
+	"github.com/up9inc/mizu/tap/api"
 )
 
 const FLAGS_IS_CLIENT_BIT uint32 = (1 << 0)
@@ -72,4 +73,28 @@ func (c *tlsChunk) getRecordedData() []byte {
 
 func (c *tlsChunk) isRequest() bool {
 	return (c.isClient() && c.isWrite()) || (c.isServer() && c.isRead())
+}
+
+func (c *tlsChunk) getAddressPair() (addressPair, error) {
+	ip, port, err := c.getAddress()
+
+	if err != nil {
+		return addressPair{}, err
+	}
+
+	if c.isRequest() {
+		return addressPair{
+			srcIp:   api.UnknownIp,
+			srcPort: api.UnknownPort,
+			dstIp:   ip,
+			dstPort: port,
+		}, nil
+	} else {
+		return addressPair{
+			srcIp:   ip,
+			srcPort: port,
+			dstIp:   api.UnknownIp,
+			dstPort: api.UnknownPort,
+		}, nil
+	}
 }
