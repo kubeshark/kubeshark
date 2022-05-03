@@ -113,15 +113,15 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
             },
         }
     }
-    const mapToKeyValForFilter = (arr) => arr.map(mapNodesDatatoGraph)
+    const mapToKeyValForFilter = useCallback((arr) => arr.map(mapNodesDatatoGraph)
         .map((edge) => { return { key: edge.label, value: edge.label } })
-        .sort((a, b) => { return a.key.localeCompare(b.key) });
+        .sort((a, b) => { return a.key.localeCompare(b.key) }), []);
 
     const getServicesForFilter = useMemo(() => {
         const resolved = mapToKeyValForFilter(serviceMapApiData.nodes?.filter(x => x.resolved))
         const unResolved = mapToKeyValForFilter(serviceMapApiData.nodes?.filter(x => !x.resolved))
         return [...resolved, ...unResolved]
-    }, [serviceMapApiData])
+    }, [serviceMapApiData, mapToKeyValForFilter])
 
     useEffect(() => {
         const newGraphData: GraphData = {
@@ -142,9 +142,9 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
     }
 
     useEffect(() => {
-        if (checkedServices.length == 0)
+        if (checkedServices.length === 0)
             setCheckedServices(getServicesForFilter.map(x => x.key).filter(serviceName => !Utils.isIpAddress(serviceName)))
-    }, [getServicesForFilter])
+    }, [getServicesForFilter, checkedServices.length])
 
     useEffect(() => {
         getServiceMapData()

@@ -7,11 +7,10 @@ import {SyntaxHighlighter} from "../UI/SyntaxHighlighter/index";
 import filterUIExample1 from "assets/filter-ui-example-1.png"
 import filterUIExample2 from "assets/filter-ui-example-2.png"
 import variables from '../../variables.module.scss';
-import {useRecoilState, useRecoilValue} from "recoil";
+import {useRecoilState} from "recoil";
 import queryAtom from "../../recoil/query";
 import useKeyPress from "../../hooks/useKeyPress"
 import shortcutsKeyboard from "../../configs/shortcutsKeyboard"
-import trafficViewerApiAtom from "../../recoil/TrafficViewerApi"
 
 
 interface FiltersProps {

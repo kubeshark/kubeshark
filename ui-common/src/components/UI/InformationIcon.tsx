@@ -10,6 +10,7 @@ interface LinkProps {
 }
 
 export const Link: React.FC<LinkProps> = ({ link, className, title, children }) => {
+    /* eslint-disable  */
     return <a href={link} className={className} title={title} target="_blank">
         {children}
     </a>
