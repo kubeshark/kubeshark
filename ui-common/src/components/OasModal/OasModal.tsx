@@ -1,5 +1,5 @@
 import { Box, Fade, FormControl, Modal, Backdrop } from "@material-ui/core";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { RedocStandalone } from "redoc";
 import closeIcon from "assets/closeIcon.svg";
 import { toast } from 'react-toastify';
@@ -33,7 +33,7 @@ const OasModal = ({ openModal, handleCloseModal, getOasServices, getOasByService
 
   const classes = { root: style.root }
 
-  const onSelectedOASService = async (selectedService) => {
+  const onSelectedOASService = useCallback (async (selectedService) => {
     if (oasServices.length === 0) {
       setSelectedServiceSpec(null);
       setSelectedServiceName("");
@@ -49,7 +49,7 @@ const OasModal = ({ openModal, handleCloseModal, getOasServices, getOasByService
       toast.error("Error occurred while fetching service OAS spec", { containerId: TOAST_CONTAINER_ID });
       console.error(e);
     }
-  };
+  },[oasServices]);
 
   useEffect(() => {
     (async () => {
