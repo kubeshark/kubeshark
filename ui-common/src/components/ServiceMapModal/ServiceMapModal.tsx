@@ -203,7 +203,7 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
                                 >
                                     Refresh
                                 </Button>
-                                <img src={closeIcon} alt="close" onClick={() => onClose()} style={{ cursor: "pointer", userSelect: "none" }}></img>
+                                <img src={closeIcon} alt="close" onClick={() => onClose()} className={styles.closeIcon}></img>
                             </div>
                             {isLoading && <div className={spinnerStyle.spinnerContainer}>
                                 <img alt="spinner" src={spinnerImg} style={{ height: 50 }} />
