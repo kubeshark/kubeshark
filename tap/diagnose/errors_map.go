@@ -5,7 +5,7 @@ import (
 	"sync"
 
 	"github.com/google/gopacket/examples/util"
-	"github.com/up9inc/mizu/shared/logger"
+	"github.com/up9inc/mizu/logger"
 )
 
 var TapErrors *errorsMap

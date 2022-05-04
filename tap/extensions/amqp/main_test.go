@@ -106,7 +106,6 @@ func TestDissect(t *testing.T) {
 			Request:  0,
 			Response: 0,
 		}
-		superIdentifier := &api.SuperIdentifier{}
 
 		// Request
 		pathClient := _path
@@ -122,7 +121,21 @@ func TestDissect(t *testing.T) {
 			DstPort: "2",
 		}
 		reqResMatcher := dissector.NewResponseRequestMatcher()
-		err = dissector.Dissect(bufferClient, &api.ReadProgress{}, api.Pcap, true, tcpIDClient, counterPair, &api.SuperTimer{}, superIdentifier, emitter, options, reqResMatcher)
+		stream := NewTcpStream(api.Pcap)
+		reader := NewTcpReader(
+			&api.ReadProgress{},
+			"",
+			tcpIDClient,
+			time.Time{},
+			stream,
+			true,
+			false,
+			nil,
+			emitter,
+			counterPair,
+			reqResMatcher,
+		)
+		err = dissector.Dissect(bufferClient, reader, options)
 		if err != nil && err != io.EOF && err != io.ErrUnexpectedEOF {
 			panic(err)
 		}
@@ -140,7 +153,20 @@ func TestDissect(t *testing.T) {
 			SrcPort: "2",
 			DstPort: "1",
 		}
-		err = dissector.Dissect(bufferServer, &api.ReadProgress{}, api.Pcap, false, tcpIDServer, counterPair, &api.SuperTimer{}, superIdentifier, emitter, options, reqResMatcher)
+		reader = NewTcpReader(
+			&api.ReadProgress{},
+			"",
+			tcpIDServer,
+			time.Time{},
+			stream,
+			false,
+			false,
+			nil,
+			emitter,
+			counterPair,
+			reqResMatcher,
+		)
+		err = dissector.Dissect(bufferServer, reader, options)
 		if err != nil && err != io.EOF && err != io.ErrUnexpectedEOF {
 			panic(err)
 		}

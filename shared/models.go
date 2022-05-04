@@ -5,7 +5,7 @@ import (
 	"strings"
 
 	"github.com/op/go-logging"
-	"github.com/up9inc/mizu/shared/logger"
+	"github.com/up9inc/mizu/logger"
 
 	"gopkg.in/yaml.v3"
 	v1 "k8s.io/api/core/v1"

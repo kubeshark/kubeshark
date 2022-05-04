@@ -1,6 +1,5 @@
 build/
 dist/
-src/
 node_modules/
 .snapshots/
 *.min.js

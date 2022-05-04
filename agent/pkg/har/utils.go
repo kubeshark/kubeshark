@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/up9inc/mizu/shared/logger"
+	"github.com/up9inc/mizu/logger"
 )
 
 // Keep it because we might want cookies in the future

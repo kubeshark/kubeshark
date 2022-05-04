@@ -71,6 +71,34 @@ var grpcProtocol api.Protocol = api.Protocol{
 	Priority:        0,
 }
 
+var graphQL1Protocol api.Protocol = api.Protocol{
+	Name:            "http",
+	LongName:        "Hypertext Transfer Protocol -- HTTP/1.1 [ GraphQL over HTTP/1.1 ]",
+	Abbreviation:    "GQL",
+	Macro:           "gql",
+	Version:         "1.1",
+	BackgroundColor: "#e10098",
+	ForegroundColor: "#ffffff",
+	FontSize:        12,
+	ReferenceLink:   "https://graphql.org/learn/serving-over-http/",
+	Ports:           []string{"80", "443", "8080"},
+	Priority:        0,
+}
+
+var graphQL2Protocol api.Protocol = api.Protocol{
+	Name:            "http",
+	LongName:        "Hypertext Transfer Protocol Version 2 (HTTP/2) [ GraphQL over HTTP/2 ]",
+	Abbreviation:    "GQL",
+	Macro:           "gql",
+	Version:         "2.0",
+	BackgroundColor: "#e10098",
+	ForegroundColor: "#ffffff",
+	FontSize:        12,
+	ReferenceLink:   "https://graphql.org/learn/serving-over-http/",
+	Ports:           []string{"80", "443", "8080", "50051"},
+	Priority:        0,
+}
+
 const (
 	TypeHttpRequest = iota
 	TypeHttpResponse
@@ -86,15 +114,15 @@ func (d dissecting) Ping() {
 	log.Printf("pong %s", http11protocol.Name)
 }
 
-func (d dissecting) Dissect(b *bufio.Reader, progress *api.ReadProgress, capture api.Capture, isClient bool, tcpID *api.TcpID, counterPair *api.CounterPair, superTimer *api.SuperTimer, superIdentifier *api.SuperIdentifier, emitter api.Emitter, options *api.TrafficFilteringOptions, _reqResMatcher api.RequestResponseMatcher) error {
-	reqResMatcher := _reqResMatcher.(*requestResponseMatcher)
+func (d dissecting) Dissect(b *bufio.Reader, reader api.TcpReader, options *api.TrafficFilteringOptions) error {
+	reqResMatcher := reader.GetReqResMatcher().(*requestResponseMatcher)
 
 	var err error
-	isHTTP2, _ := checkIsHTTP2Connection(b, isClient)
+	isHTTP2, _ := checkIsHTTP2Connection(b, reader.GetIsClient())
 
 	var http2Assembler *Http2Assembler
 	if isHTTP2 {
-		err = prepareHTTP2Connection(b, isClient)
+		err = prepareHTTP2Connection(b, reader.GetIsClient())
 		if err != nil {
 			return err
 		}
@@ -105,74 +133,74 @@ func (d dissecting) Dissect(b *bufio.Reader, progress *api.ReadProgress, capture
 	for {
 		if switchingProtocolsHTTP2 {
 			switchingProtocolsHTTP2 = false
-			isHTTP2, err = checkIsHTTP2Connection(b, isClient)
+			isHTTP2, err = checkIsHTTP2Connection(b, reader.GetIsClient())
 			if err != nil {
 				break
 			}
-			err = prepareHTTP2Connection(b, isClient)
+			err = prepareHTTP2Connection(b, reader.GetIsClient())
 			if err != nil {
 				break
 			}
 			http2Assembler = createHTTP2Assembler(b)
 		}
 
-		if superIdentifier.Protocol != nil && superIdentifier.Protocol != &http11protocol {
+		if reader.GetParent().GetProtoIdentifier().Protocol != nil && reader.GetParent().GetProtoIdentifier().Protocol != &http11protocol {
 			return errors.New("Identified by another protocol")
 		}
 
 		if isHTTP2 {
-			err = handleHTTP2Stream(http2Assembler, progress, capture, tcpID, superTimer, emitter, options, reqResMatcher)
+			err = handleHTTP2Stream(http2Assembler, reader.GetReadProgress(), reader.GetParent().GetOrigin(), reader.GetTcpID(), reader.GetCaptureTime(), reader.GetEmitter(), options, reqResMatcher)
 			if err == io.EOF || err == io.ErrUnexpectedEOF {
 				break
 			} else if err != nil {
 				continue
 			}
-			superIdentifier.Protocol = &http11protocol
-		} else if isClient {
+			reader.GetParent().SetProtocol(&http11protocol)
+		} else if reader.GetIsClient() {
 			var req *http.Request
-			switchingProtocolsHTTP2, req, err = handleHTTP1ClientStream(b, progress, capture, tcpID, counterPair, superTimer, emitter, options, reqResMatcher)
+			switchingProtocolsHTTP2, req, err = handleHTTP1ClientStream(b, reader.GetReadProgress(), reader.GetParent().GetOrigin(), reader.GetTcpID(), reader.GetCounterPair(), reader.GetCaptureTime(), reader.GetEmitter(), options, reqResMatcher)
 			if err == io.EOF || err == io.ErrUnexpectedEOF {
 				break
 			} else if err != nil {
 				continue
 			}
-			superIdentifier.Protocol = &http11protocol
+			reader.GetParent().SetProtocol(&http11protocol)
 
 			// In case of an HTTP2 upgrade, duplicate the HTTP1 request into HTTP2 with stream ID 1
 			if switchingProtocolsHTTP2 {
 				ident := fmt.Sprintf(
 					"%s_%s_%s_%s_1_%s",
-					tcpID.SrcIP,
-					tcpID.DstIP,
-					tcpID.SrcPort,
-					tcpID.DstPort,
+					reader.GetTcpID().SrcIP,
+					reader.GetTcpID().DstIP,
+					reader.GetTcpID().SrcPort,
+					reader.GetTcpID().DstPort,
 					"HTTP2",
 				)
-				item := reqResMatcher.registerRequest(ident, req, superTimer.CaptureTime, progress.Current(), req.ProtoMinor)
+				item := reqResMatcher.registerRequest(ident, req, reader.GetCaptureTime(), reader.GetReadProgress().Current(), req.ProtoMinor)
 				if item != nil {
 					item.ConnectionInfo = &api.ConnectionInfo{
-						ClientIP:   tcpID.SrcIP,
-						ClientPort: tcpID.SrcPort,
-						ServerIP:   tcpID.DstIP,
-						ServerPort: tcpID.DstPort,
+						ClientIP:   reader.GetTcpID().SrcIP,
+						ClientPort: reader.GetTcpID().SrcPort,
+						ServerIP:   reader.GetTcpID().DstIP,
+						ServerPort: reader.GetTcpID().DstPort,
 						IsOutgoing: true,
 					}
-					item.Capture = capture
-					filterAndEmit(item, emitter, options)
+					item.Capture = reader.GetParent().GetOrigin()
+					filterAndEmit(item, reader.GetEmitter(), options)
 				}
 			}
 		} else {
-			switchingProtocolsHTTP2, err = handleHTTP1ServerStream(b, progress, capture, tcpID, counterPair, superTimer, emitter, options, reqResMatcher)
+			switchingProtocolsHTTP2, err = handleHTTP1ServerStream(b, reader.GetReadProgress(), reader.GetParent().GetOrigin(), reader.GetTcpID(), reader.GetCounterPair(), reader.GetCaptureTime(), reader.GetEmitter(), options, reqResMatcher)
 			if err == io.EOF || err == io.ErrUnexpectedEOF {
 				break
 			} else if err != nil {
 				continue
 			}
-			superIdentifier.Protocol = &http11protocol
+			reader.GetParent().SetProtocol(&http11protocol)
 		}
 	}
 
-	if superIdentifier.Protocol == nil {
+	if reader.GetParent().GetProtoIdentifier().Protocol == nil {
 		return err
 	}
 
@@ -205,6 +233,14 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, 
 			if h["value"].(string) == "h2c" {
 				isRequestUpgradedH2C = true
 			}
+		}
+	}
+
+	if isGraphQL(reqDetails) {
+		if item.Protocol.Version == "2.0" {
+			item.Protocol = graphQL2Protocol
+		} else {
+			item.Protocol = graphQL1Protocol
 		}
 	}
 
@@ -481,6 +517,7 @@ func (d dissecting) Macros() map[string]string {
 		`http`:  fmt.Sprintf(`proto.name == "%s" and proto.version.startsWith("%c")`, http11protocol.Name, http11protocol.Version[0]),
 		`http2`: fmt.Sprintf(`proto.name == "%s" and proto.version == "%s"`, http11protocol.Name, http2Protocol.Version),
 		`grpc`:  fmt.Sprintf(`proto.name == "%s" and proto.version == "%s" and proto.macro == "%s"`, http11protocol.Name, grpcProtocol.Version, grpcProtocol.Macro),
+		`gql`:   fmt.Sprintf(`proto.name == "%s" and proto.macro == "%s"`, graphQL1Protocol.Name, graphQL1Protocol.Macro),
 	}
 }
 

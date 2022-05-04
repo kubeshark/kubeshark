@@ -44,11 +44,18 @@ ENV CGO_ENABLED=1 GOOS=linux
 ENV GOARCH=arm64 CGO_CFLAGS="-I/work/libpcap"
 
 
+### Builder image for AArch64 to x86-64 cross-compilation
+FROM up9inc/linux-x86_64-musl-go-libpcap AS builder-from-arm64v8-to-amd64
+ENV CGO_ENABLED=1 GOOS=linux
+ENV GOARCH=amd64 CGO_CFLAGS="-I/libpcap"
+
+
 ### Final builder image where the build happens
 # Possible build strategies:
 # BUILDARCH=amd64 TARGETARCH=amd64
 # BUILDARCH=arm64v8 TARGETARCH=arm64v8
 # BUILDARCH=amd64 TARGETARCH=arm64v8
+# BUILDARCH=arm64v8 TARGETARCH=amd64
 ARG BUILDARCH=amd64
 ARG TARGETARCH=amd64
 FROM builder-from-${BUILDARCH}-to-${TARGETARCH} AS builder
@@ -58,6 +65,7 @@ WORKDIR /app/agent-build
 
 COPY agent/go.mod agent/go.sum ./
 COPY shared/go.mod shared/go.mod ../shared/
+COPY logger/go.mod logger/go.mod ../logger/
 COPY tap/go.mod tap/go.mod ../tap/
 COPY tap/api/go.mod ../tap/api/
 COPY tap/extensions/amqp/go.mod ../tap/extensions/amqp/
@@ -65,11 +73,10 @@ COPY tap/extensions/http/go.mod ../tap/extensions/http/
 COPY tap/extensions/kafka/go.mod ../tap/extensions/kafka/
 COPY tap/extensions/redis/go.mod ../tap/extensions/redis/
 RUN go mod download
-# cheap trick to make the build faster (as long as go.mod did not change)
-RUN go list -f '{{.Path}}@{{.Version}}' -m all | sed 1d | grep -e 'go-cache' | xargs go get
 
 # Copy and build agent code
 COPY shared ../shared
+COPY logger ../logger
 COPY tap ../tap
 COPY agent .
 

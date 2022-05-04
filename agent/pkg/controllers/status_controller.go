@@ -13,9 +13,9 @@ import (
 	"github.com/up9inc/mizu/agent/pkg/providers/tappers"
 	"github.com/up9inc/mizu/agent/pkg/up9"
 	"github.com/up9inc/mizu/agent/pkg/validation"
+	"github.com/up9inc/mizu/logger"
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/shared/kubernetes"
-	"github.com/up9inc/mizu/shared/logger"
 )
 
 func HealthCheck(c *gin.Context) {

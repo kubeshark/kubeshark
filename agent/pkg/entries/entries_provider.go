@@ -9,8 +9,8 @@ import (
 	"github.com/up9inc/mizu/agent/pkg/app"
 	"github.com/up9inc/mizu/agent/pkg/har"
 	"github.com/up9inc/mizu/agent/pkg/models"
+	"github.com/up9inc/mizu/logger"
 	"github.com/up9inc/mizu/shared"
-	"github.com/up9inc/mizu/shared/logger"
 	tapApi "github.com/up9inc/mizu/tap/api"
 )
 
