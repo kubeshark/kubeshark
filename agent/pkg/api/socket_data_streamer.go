@@ -106,7 +106,7 @@ func (e *BasenineEntryStreamer) Get(ctx context.Context, socketId int, params *W
 					continue
 				}
 
-				fetchData = e.reverseByteSlice(fetchData)
+				fetchData = e.reverseBytesSlice(fetchData)
 				for _, row := range fetchData {
 					var entry *tapApi.Entry
 					err = json.Unmarshal(row, &entry)
@@ -151,7 +151,7 @@ func (e *BasenineEntryStreamer) Get(ctx context.Context, socketId int, params *W
 }
 
 // Reverses a []byte slice.
-func (e *BasenineEntryStreamer) reverseByteSlice(arr [][]byte) (newArr [][]byte) {
+func (e *BasenineEntryStreamer) reverseBytesSlice(arr [][]byte) (newArr [][]byte) {
 	for i := len(arr) - 1; i >= 0; i-- {
 		newArr = append(newArr, arr[i])
 	}
