@@ -96,7 +96,6 @@ export function checkFilterByMethod(funcDict) {
                 });
             });
         });
-    });
 }
 
 export function getEntryId(id) {
