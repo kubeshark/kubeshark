@@ -3,7 +3,6 @@ package api
 import (
 	"context"
 	"encoding/json"
-	"sync"
 	"time"
 
 	basenine "github.com/up9inc/basenine/client/go"
@@ -18,10 +17,6 @@ type EntryStreamer interface {
 }
 
 type BasenineEntryStreamer struct{}
-
-type FetchLocker struct {
-	sync.Mutex
-}
 
 func (e *BasenineEntryStreamer) Get(ctx context.Context, socketId int, params *WebSocketParams) error {
 	var connection *basenine.Connection
@@ -44,9 +39,9 @@ func (e *BasenineEntryStreamer) Get(ctx context.Context, socketId int, params *W
 		entryStreamerSocketConnector.SendToastError(socketId, err)
 	}
 
-	fetchLocker := &FetchLocker{}
-	if params.Fetch > 0 {
-		fetchLocker.Lock()
+	leftOff, err := e.fetch(socketId, params, entryStreamerSocketConnector)
+	if err != nil {
+		logger.Log.Errorf("Fetch error: %v", err.Error())
 	}
 
 	handleDataChannel := func(c *basenine.Connection, data chan []byte) {
@@ -55,10 +50,6 @@ func (e *BasenineEntryStreamer) Get(ctx context.Context, socketId int, params *W
 
 			if string(bytes) == basenine.CloseChannel {
 				return
-			}
-
-			if params.Fetch > 0 {
-				fetchLocker.Lock()
 			}
 
 			var entry *tapApi.Entry
@@ -87,46 +78,6 @@ func (e *BasenineEntryStreamer) Get(ctx context.Context, socketId int, params *W
 				continue
 			}
 
-			if params.Fetch > 0 {
-				var fetchData [][]byte
-				var fetchMeta []byte
-				fetchData, fetchMeta, err = basenine.Fetch(
-					shared.BasenineHost,
-					shared.BaseninePort,
-					metadata.LeftOff,
-					-1,
-					query,
-					params.Fetch,
-					time.Duration(params.TimeoutMs)*time.Millisecond,
-				)
-
-				if err != nil {
-					entryStreamerSocketConnector.SendMetadata(socketId, metadata)
-					fetchLocker.Unlock()
-					continue
-				}
-
-				fetchData = e.reverseBytesSlice(fetchData)
-				for _, row := range fetchData {
-					var entry *tapApi.Entry
-					err = json.Unmarshal(row, &entry)
-					if err != nil {
-						break
-					}
-
-					entryStreamerSocketConnector.SendEntry(socketId, entry, params)
-				}
-
-				var fetchMetadata *basenine.Metadata
-				err = json.Unmarshal(fetchMeta, &fetchMetadata)
-				if err == nil {
-					entryStreamerSocketConnector.SendMetadata(socketId, fetchMetadata)
-				}
-
-				params.Fetch = 0
-				fetchLocker.Unlock()
-			}
-
 			entryStreamerSocketConnector.SendMetadata(socketId, metadata)
 		}
 	}
@@ -134,7 +85,7 @@ func (e *BasenineEntryStreamer) Get(ctx context.Context, socketId int, params *W
 	go handleDataChannel(connection, data)
 	go handleMetaChannel(connection, meta)
 
-	if err = connection.Query(query, data, meta); err != nil {
+	if err = connection.Query(leftOff, query, data, meta); err != nil {
 		logger.Log.Errorf("Query mode call failed: %v", err)
 		entryStreamerSocketConnector.CleanupSocket(socketId)
 		return err
@@ -148,6 +99,50 @@ func (e *BasenineEntryStreamer) Get(ctx context.Context, socketId int, params *W
 	}()
 
 	return nil
+}
+
+// Reverses a []byte slice.
+func (e *BasenineEntryStreamer) fetch(socketId int, params *WebSocketParams, connector EntryStreamerSocketConnector) (leftOff string, err error) {
+	if params.Fetch <= 0 {
+		leftOff = params.LeftOff
+		return
+	}
+
+	var data [][]byte
+	var firstMeta []byte
+	data, firstMeta, _, err = basenine.Fetch(
+		shared.BasenineHost,
+		shared.BaseninePort,
+		params.LeftOff,
+		-1,
+		params.Query,
+		params.Fetch,
+		time.Duration(params.TimeoutMs)*time.Millisecond,
+	)
+	if err != nil {
+		return
+	}
+
+	data = e.reverseBytesSlice(data)
+	for _, row := range data {
+		var entry *tapApi.Entry
+		err = json.Unmarshal(row, &entry)
+		if err != nil {
+			break
+		}
+
+		connector.SendEntry(socketId, entry, params)
+	}
+
+	var metadata *basenine.Metadata
+	err = json.Unmarshal(firstMeta, &metadata)
+	if err != nil {
+		return
+	}
+
+	connector.SendMetadata(socketId, metadata)
+	leftOff = metadata.LeftOff
+	return
 }
 
 // Reverses a []byte slice.

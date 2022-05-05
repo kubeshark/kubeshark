@@ -20,7 +20,7 @@ import {StatusBar} from "../UI/StatusBar";
 import tappingStatusAtom from "../../recoil/tappingStatus/atom";
 import {TOAST_CONTAINER_ID} from "../../configs/Consts";
 import leftOffTopAtom from "../../recoil/leftOffTop";
-import { DEFAULT_QUERY, DEFAULT_FETCH } from '../../hooks/useWS';
+import { DEFAULT_LEFTOFF, DEFAULT_FETCH } from '../../hooks/useWS';
 
 const useLayoutStyles = makeStyles(() => ({
   details: {
@@ -114,11 +114,7 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({
   const ws = useRef(null);
 
   const openEmptyWebSocket = () => {
-    if (query) {
-      openWebSocket(`(${query}) and ${DEFAULT_QUERY}`, true, DEFAULT_FETCH);
-    } else {
-      openWebSocket(DEFAULT_QUERY, true, DEFAULT_FETCH);
-    }
+    openWebSocket(DEFAULT_LEFTOFF, query, true, DEFAULT_FETCH);
   }
 
   const closeWebSocket = () => {
@@ -129,7 +125,7 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({
   }
 
   const listEntry = useRef(null);
-  const openWebSocket = (query: string, resetEntries: boolean, fetch: number) => {
+  const openWebSocket = (leftOff: string, query: string, resetEntries: boolean, fetch: number) => {
     if (resetEntries) {
       setFocusedEntryId(null);
       setEntries([]);
@@ -138,7 +134,7 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({
     }
     try {
       ws.current = new WebSocket(webSocketUrl);
-      sendQueryWhenWsOpen(query, fetch);
+      sendQueryWhenWsOpen(leftOff, query, fetch);
 
       ws.current.onopen = () => {
         setWsReadyState(ws?.current?.readyState);
@@ -157,17 +153,18 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({
     }
   }
 
-  const sendQueryWhenWsOpen = (query: string, _fetch: number) => {
+  const sendQueryWhenWsOpen = (leftOff: string, query: string, _fetch: number) => {
     setTimeout(() => {
       if (ws?.current?.readyState === WebSocket.OPEN) {
         ws.current.send(JSON.stringify({
+          "leftOff": leftOff,
           "query": query,
           "enableFullEntries": false,
           "fetch": _fetch,
           "timeoutMs": 3000
         }));
       } else {
-        sendQueryWhenWsOpen(query, _fetch);
+        sendQueryWhenWsOpen(leftOff, query, _fetch);
       }
     }, 500)
   }

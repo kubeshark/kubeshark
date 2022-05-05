@@ -22,7 +22,7 @@ type EntriesProvider interface {
 type BasenineEntriesProvider struct{}
 
 func (e *BasenineEntriesProvider) GetEntries(entriesRequest *models.EntriesRequest) ([]*tapApi.EntryWrapper, *basenine.Metadata, error) {
-	data, meta, err := basenine.Fetch(shared.BasenineHost, shared.BaseninePort,
+	data, _, lastMeta, err := basenine.Fetch(shared.BasenineHost, shared.BaseninePort,
 		entriesRequest.LeftOff, entriesRequest.Direction, entriesRequest.Query,
 		entriesRequest.Limit, time.Duration(entriesRequest.TimeoutMs)*time.Millisecond)
 	if err != nil {
@@ -49,7 +49,7 @@ func (e *BasenineEntriesProvider) GetEntries(entriesRequest *models.EntriesReque
 	}
 
 	var metadata *basenine.Metadata
-	err = json.Unmarshal(meta, &metadata)
+	err = json.Unmarshal(lastMeta, &metadata)
 	if err != nil {
 		logger.Log.Debugf("Error recieving metadata: %v", err.Error())
 	}

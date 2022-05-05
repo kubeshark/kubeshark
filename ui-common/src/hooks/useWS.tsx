@@ -7,7 +7,7 @@ enum WebSocketReadyState {
   CLOSED
 }
 
-export const DEFAULT_QUERY = `leftOff("latest")`;
+export const DEFAULT_LEFTOFF = `latest`;
 export const DEFAULT_FETCH = 50;
 
 const useWS = (wsUrl: string) => {
