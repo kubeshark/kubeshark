@@ -148,12 +148,12 @@ func (t *tcpReassemblyStream) ReassembledSG(sg reassembly.ScatterGather, ac reas
 			stream := t.tcpStream.(*tcpStream)
 			if dir == reassembly.TCPDirClientToServer {
 				for i := range stream.getClients() {
-					reader := stream.getClient(i).(*tcpReader)
+					reader := stream.getClient(i)
 					reader.sendMsgIfNotClosed(NewTcpReaderDataMsg(data, timestamp))
 				}
 			} else {
 				for i := range stream.getServers() {
-					reader := stream.getServer(i).(*tcpReader)
+					reader := stream.getServer(i)
 					reader.sendMsgIfNotClosed(NewTcpReaderDataMsg(data, timestamp))
 				}
 			}
