@@ -124,8 +124,8 @@ func NewRequest(request map[string]interface{}) (harRequest *Request, err error)
 
 	postData, _ := request["postData"].(map[string]interface{})
 	mimeType := postData["mimeType"]
-	if mimeType == nil || len(mimeType.(string)) == 0 {
-		mimeType = "text/html"
+	if mimeType == nil {
+		mimeType = ""
 	}
 	text := postData["text"]
 	postDataText := ""
@@ -177,8 +177,8 @@ func NewResponse(response map[string]interface{}) (harResponse *Response, err er
 
 	content, _ := response["content"].(map[string]interface{})
 	mimeType := content["mimeType"]
-	if mimeType == nil || len(mimeType.(string)) == 0 {
-		mimeType = "text/html"
+	if mimeType == nil {
+		mimeType = ""
 	}
 	encoding := content["encoding"]
 	text := content["text"]
