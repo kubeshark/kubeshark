@@ -280,7 +280,7 @@ export const EntryItem: React.FC<EntryProps> = ({entry, style, headingMode, name
                     </Queryable>
                     :
                     <Queryable
-                            query={`outgoing == true`}
+                            query={`outgoing == false`}
                             displayIconOnMouseOver={true}
                             flipped={true}
                             iconStyle={{marginTop: "28px"}}
