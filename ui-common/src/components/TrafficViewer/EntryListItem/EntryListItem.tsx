@@ -274,8 +274,8 @@ export const EntryItem: React.FC<EntryProps> = ({entry, style, headingMode, name
                     >
                         <img
                             src={outgoingIcon}
-                            alt="Ingoing traffic"
-                            title="Ingoing"
+                            alt="Outgoing traffic"
+                            title="Outgoing"
                         />
                     </Queryable>
                     :
@@ -287,8 +287,8 @@ export const EntryItem: React.FC<EntryProps> = ({entry, style, headingMode, name
                     >
                         <img
                             src={ingoingIcon}
-                            alt="Outgoing traffic"
-                            title="Outgoing"
+                            alt="Ingoing traffic"
+                            title="Ingoing"
                             onClick={() => {
                                 const query = `outgoing == false`;
                                 setQuery(queryState ? `${queryState} and ${query}` : query);
