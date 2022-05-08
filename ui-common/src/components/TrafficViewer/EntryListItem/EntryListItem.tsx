@@ -289,10 +289,6 @@ export const EntryItem: React.FC<EntryProps> = ({entry, style, headingMode, name
                             src={ingoingIcon}
                             alt="Ingoing traffic"
                             title="Ingoing"
-                            onClick={() => {
-                                const query = `outgoing == false`;
-                                setQuery(queryState ? `${queryState} and ${query}` : query);
-                            }}
                         />
                     </Queryable>
                 }
