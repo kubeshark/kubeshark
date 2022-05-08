@@ -110,7 +110,8 @@ func (e *BasenineEntryStreamer) fetch(socketId int, params *WebSocketParams, con
 
 	var data [][]byte
 	var firstMeta []byte
-	data, firstMeta, _, err = basenine.Fetch(
+	var lastMeta []byte
+	data, firstMeta, lastMeta, err = basenine.Fetch(
 		shared.BasenineHost,
 		shared.BaseninePort,
 		params.LeftOff,
@@ -123,6 +124,20 @@ func (e *BasenineEntryStreamer) fetch(socketId int, params *WebSocketParams, con
 		return
 	}
 
+	var firstMetadata *basenine.Metadata
+	err = json.Unmarshal(firstMeta, &firstMetadata)
+	if err != nil {
+		return
+	}
+	leftOff = firstMetadata.LeftOff
+
+	var lastMetadata *basenine.Metadata
+	err = json.Unmarshal(lastMeta, &lastMetadata)
+	if err != nil {
+		return
+	}
+	connector.SendMetadata(socketId, lastMetadata)
+
 	data = e.reverseBytesSlice(data)
 	for _, row := range data {
 		var entry *tapApi.Entry
@@ -133,15 +148,6 @@ func (e *BasenineEntryStreamer) fetch(socketId int, params *WebSocketParams, con
 
 		connector.SendEntry(socketId, entry, params)
 	}
-
-	var metadata *basenine.Metadata
-	err = json.Unmarshal(firstMeta, &metadata)
-	if err != nil {
-		return
-	}
-
-	connector.SendMetadata(socketId, metadata)
-	leftOff = metadata.LeftOff
 	return
 }
 
