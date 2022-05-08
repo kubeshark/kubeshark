@@ -56,6 +56,8 @@
       font-weight: 600
       padding-top: 5px
       padding-bottom: 5px
+    th
+      font-size: 12px
 
 .colorBlock
   display: inline-block
@@ -68,31 +70,38 @@
   flex-direction: column
   margin-right: 10px
   width: 100%
-  background: white
   border-radius: 4px
 
 .servicesFilterSearch
-  width: calc(100% - 10px)
-  max-width: 300px
+  width: -moz-available
+  width: -webkit-fill-available
+  width: fill-available
+  max-width: 200px
   box-shadow: 0px 1px 5px #979797
   margin-left: 10px
   margin-bottom: 5px
+  margin-top: 10px
+  margin-right: 10px
 
 .protocolsFilterList, .servicesFilter
   background: white
-  padding: 3px
+  padding: 10px
   border-radius: 4px
 
 .servicesFilter
-  margin-top: 15px
+  margin-top: 10px
   height: 100%
   overflow: hidden
   border-radius: 4px
 
   & .servicesFilterList
-    overflow-y: auto
-    height: calc(100% - 30px - 5px)
+    height: calc(100% - 30px - 52px)
 
 .separtorLine
   margin-top: 10px
   border: 1px solid #E9EBF8
+
+.totalSelected
+  font-size: 12px
+  color: #BCCEFD
+  font-weight: 700

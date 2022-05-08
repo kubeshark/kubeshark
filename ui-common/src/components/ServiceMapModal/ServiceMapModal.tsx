@@ -183,12 +183,13 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
                             <span className={styles.title}>Services</span>
                             <Button size="medium"
                                 variant="contained"
-                                startIcon={<img src={isFilterClicked ? filterIconClicked : filterIcon} className="custom" alt="refresh" style={{ marginRight: "15px" }}></img>}
+                                startIcon={<img src={isFilterClicked ? filterIconClicked : filterIcon} className="custom" alt="refresh" style={{ height: "26px", width: "26px" }}></img>}
                                 className={commonClasses.button + " " + commonClasses.imagedButton + " " + `${isFilterClicked ? commonClasses.button : commonClasses.outlinedButton}`}
-                                onClick={() => setIsFilterClicked(prevState => !prevState)}>
+                                onClick={() => setIsFilterClicked(prevState => !prevState)}
+                                style={{ textTransform: 'unset' }}>
                                 Filter
                             </Button >
-                            <Button style={{ marginLeft: "2%" }}
+                            <Button style={{ marginLeft: "2%", textTransform: 'unset' }}
                                 startIcon={<img src={refreshIcon} className="custom" alt="refresh"></img>}
                                 size="medium"
                                 variant="contained"
@@ -205,13 +206,21 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
                             <Resizeable minWidth={170} maxWidth={320}>
                                 <div className={styles.filterWrapper}>
                                     <div className={styles.protocolsFilterList}>
-                                        <SelectList items={protocols} checkBoxWidth="5%" tableName={"Protocols"} multiSelect={true}
+                                        <h3 className='comfirmation-modal__sub-section-header' style={{ marginLeft: "10px" }}>
+                                            PROTOCOLS
+                                            <span className={styles.totalSelected}>&nbsp;({checkedProtocols.length})</span>
+                                        </h3>
+                                        <SelectList items={protocols} checkBoxWidth="5%" tableName={"All"} multiSelect={true}
                                             checkedValues={checkedProtocols} setCheckedValues={onProtocolsChange} tableClassName={styles.filters} />
                                     </div>
                                     <div className={styles.servicesFilter}>
+                                        <h3 className='comfirmation-modal__sub-section-header' style={{ marginLeft: "10px" }}>
+                                            SERVICES
+                                            <span className={styles.totalSelected}>&nbsp;({checkedServices.length})</span>
+                                        </h3>
                                         <input className={commonClasses.textField + ` ${styles.servicesFilterSearch}`} placeholder="search service" value={servicesSearchVal} onChange={(event) => setServicesSearchVal(event.target.value)} />
                                         <div className={styles.servicesFilterList}>
-                                            <SelectList items={getServicesForFilter} tableName={"Services"} tableClassName={styles.filters} multiSelect={true} searchValue={servicesSearchVal}
+                                            <SelectList items={getServicesForFilter} tableName={"All"} tableClassName={styles.filters} multiSelect={true} searchValue={servicesSearchVal}
                                                 checkBoxWidth="5%" checkedValues={checkedServices} setCheckedValues={onServiceChanges} />
                                         </div>
                                     </div>
