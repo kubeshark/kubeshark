@@ -68,7 +68,7 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
     const commonClasses = useCommonStyles();
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [graphData, setGraphData] = useState<GraphData>({ nodes: [], edges: [] });
-    const [checkedProtocols, setCheckedProtocols] = useState(protocols.map(x => x.key))
+    const [checkedProtocols, setCheckedProtocols] = useState([])
     const [checkedServices, setCheckedServices] = useState([])
     const [serviceMapApiData, setServiceMapApiData] = useState<ServiceMapGraph>({ edges: [], nodes: [] })
     const [servicesSearchVal, setServicesSearchVal] = useState("")
@@ -120,6 +120,12 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
         .map((edge) => { return { key: edge.label, value: edge.label } })
         .sort((a, b) => { return a.key.localeCompare(b.key) });
 
+    const getProtocolsForFilter = useMemo(() => {
+        const newProtocls = serviceMapApiData.edges.map(edge => edge.protocol.abbr)
+        const uniqueProtocls = [...new Set(newProtocls)]
+        return protocols.filter(proto => uniqueProtocls.includes(proto.key))
+    }, [serviceMapApiData])
+
     const getServicesForFilter = useMemo(() => {
         const resolved = mapToKeyValForFilter(serviceMapApiData.nodes?.filter(x => x.resolved))
         const unResolved = mapToKeyValForFilter(serviceMapApiData.nodes?.filter(x => !x.resolved))
@@ -147,7 +153,14 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
     useEffect(() => {
         if (checkedServices.length == 0)
             setCheckedServices(getServicesForFilter.map(x => x.key).filter(serviceName => !Utils.isIpAddress(serviceName)))
+
     }, [getServicesForFilter])
+
+    useEffect(() => {
+        if (checkedProtocols.length == 0) {
+            setCheckedProtocols(getProtocolsForFilter.map(x => x.key))
+        }
+    }, [getProtocolsForFilter])
 
     useEffect(() => {
         getServiceMapData()
@@ -211,7 +224,7 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
                                             PROTOCOLS
                                             <span className={styles.totalSelected}>&nbsp;({checkedProtocols.length})</span>
                                         </h3>
-                                        <SelectList items={protocols} checkBoxWidth="5%" tableName={"All"} multiSelect={true}
+                                        <SelectList items={getProtocolsForFilter} checkBoxWidth="5%" tableName={"All"} multiSelect={true}
                                             checkedValues={checkedProtocols} setCheckedValues={onProtocolsChange} tableClassName={styles.filters} />
                                     </div>
                                     <div className={styles.servicesFilter}>
