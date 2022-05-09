@@ -1,4 +1,5 @@
 @import "../../variables.module"
+@import "../../mixins"
 
 .closeIcon
   position: absolute
@@ -86,6 +87,7 @@
   background: white
   padding: 10px
   border-radius: 4px
+  user-select: none
 
 .servicesFilter
   margin-top: 10px
@@ -104,3 +106,6 @@
   font-size: 12px
   color: #BCCEFD
   font-weight: 700
+
+.subHeader
+  @include sub-section-header

@@ -207,7 +207,7 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
                             <Resizeable minWidth={170} maxWidth={320}>
                                 <div className={styles.filterWrapper}>
                                     <div className={styles.protocolsFilterList}>
-                                        <h3 className='comfirmation-modal__sub-section-header' style={{ marginLeft: "10px" }}>
+                                        <h3 className={styles.subHeader} style={{ marginLeft: "10px" }}>
                                             PROTOCOLS
                                             <span className={styles.totalSelected}>&nbsp;({checkedProtocols.length})</span>
                                         </h3>
@@ -215,7 +215,7 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
                                             checkedValues={checkedProtocols} setCheckedValues={onProtocolsChange} tableClassName={styles.filters} />
                                     </div>
                                     <div className={styles.servicesFilter}>
-                                        <h3 className='comfirmation-modal__sub-section-header' style={{ marginLeft: "10px" }}>
+                                        <h3 className={styles.subHeader} style={{ marginLeft: "10px" }}>
                                             SERVICES
                                             <span className={styles.totalSelected}>&nbsp;({checkedServices.length})</span>
                                         </h3>
