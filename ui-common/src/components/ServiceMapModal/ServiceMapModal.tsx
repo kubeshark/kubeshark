@@ -232,7 +232,7 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
                                             SERVICES
                                             <span className={styles.totalSelected}>&nbsp;({checkedServices.length})</span>
                                         </h3>
-                                        <input className={commonClasses.textField + ` ${styles.servicesFilterSearch}`} placeholder="search service" value={servicesSearchVal} onChange={(event) => setServicesSearchVal(event.target.value)} />
+                                        <input className={commonClasses.textField + ` ${styles.servicesFilterSearch}`} placeholder="Search" value={servicesSearchVal} onChange={(event) => setServicesSearchVal(event.target.value)} />
                                         <div className={styles.servicesFilterList}>
                                             <SelectList items={getServicesForFilter} tableName={"All"} tableClassName={styles.filters} multiSelect={true} searchValue={servicesSearchVal}
                                                 checkBoxWidth="5%" checkedValues={checkedServices} setCheckedValues={onServiceChanges} />
