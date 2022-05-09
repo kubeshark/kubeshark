@@ -218,22 +218,24 @@ function checkFilter(filterDetails) {
                 checkRightSideResponseBody();
             });
 
-            resizeToHugeMizu();
+            setTimeout(function () {
+                resizeToHugeMizu();
 
-            // checking only 'leftTextCheck' on all entries because the rest of the checks require more time
-            cy.get(`#list [id^=entry]`).each(elem => {
-                const element = elem[0];
-                let entryId = getEntryId(element.id);
-                leftTextCheck(entryId, leftSidePath, leftSideExpectedText);
-            });
+                // checking only 'leftTextCheck' on all entries because the rest of the checks require more time
+                cy.get(`#list [id^=entry]`).each(elem => {
+                    const element = elem[0];
+                    let entryId = getEntryId(element.id);
+                    leftTextCheck(entryId, leftSidePath, leftSideExpectedText);
+                });
 
-            // making the other 3 checks on the first X entries (longer time for each check)
-            deeperCheck(leftSidePath, rightSidePath, name, leftSideExpectedText, rightSideExpectedText, entriesForDeeperCheck);
+                // making the other 3 checks on the first X entries (longer time for each check)
+                deeperCheck(leftSidePath, rightSidePath, name, leftSideExpectedText, rightSideExpectedText, entriesForDeeperCheck);
 
-            // reloading then waiting for the entries number to load
-            resizeToNormalMizu();
-            cy.reload();
-            cy.get('#total-entries', {timeout: refreshWaitTimeout}).should('have.text', totalEntries);
+                // reloading then waiting for the entries number to load
+                resizeToNormalMizu();
+                cy.reload();
+                cy.get('#total-entries', {timeout: refreshWaitTimeout}).should('have.text', totalEntries);
+            }, 4000);
         })
     });
 }
