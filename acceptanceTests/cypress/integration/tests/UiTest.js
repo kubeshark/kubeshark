@@ -235,7 +235,7 @@ function checkFilter(filterDetails) {
                 resizeToNormalMizu();
                 cy.reload();
                 cy.get('#total-entries', {timeout: refreshWaitTimeout}).should('have.text', totalEntries);
-            }, 4000);
+            }, 2000);
         })
     });
 }
