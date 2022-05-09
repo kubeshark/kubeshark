@@ -6,6 +6,7 @@ import (
 	"net"
 
 	"github.com/go-errors/errors"
+	"github.com/up9inc/mizu/tap/api"
 )
 
 const FLAGS_IS_CLIENT_BIT uint32 = (1 << 0)
@@ -16,14 +17,14 @@ const FLAGS_IS_READ_BIT uint32 = (1 << 1)
 //	Be careful when editing, alignment and padding should be exactly the same in go/c.
 //
 type tlsChunk struct {
-	Pid      uint32	// process id
-	Tgid     uint32	// thread id inside the process
-	Len      uint32	// the size of the native buffer used to read/write the tls data (may be bigger than tlsChunk.Data[])
-	Start    uint32	// the start offset withing the native buffer
-	Recorded uint32	// number of bytes copied from the native buffer to tlsChunk.Data[]
-	Fd       uint32	// the file descriptor used to read/write the tls data (probably socket file descriptor)
-	Flags    uint32 // bitwise flags
-	Address  [16]byte // ipv4 address and port
+	Pid      uint32     // process id
+	Tgid     uint32     // thread id inside the process
+	Len      uint32     // the size of the native buffer used to read/write the tls data (may be bigger than tlsChunk.Data[])
+	Start    uint32     // the start offset withing the native buffer
+	Recorded uint32     // number of bytes copied from the native buffer to tlsChunk.Data[]
+	Fd       uint32     // the file descriptor used to read/write the tls data (probably socket file descriptor)
+	Flags    uint32     // bitwise flags
+	Address  [16]byte   // ipv4 address and port
 	Data     [4096]byte // actual tls data
 }
 
@@ -72,4 +73,28 @@ func (c *tlsChunk) getRecordedData() []byte {
 
 func (c *tlsChunk) isRequest() bool {
 	return (c.isClient() && c.isWrite()) || (c.isServer() && c.isRead())
+}
+
+func (c *tlsChunk) getAddressPair() (addressPair, error) {
+	ip, port, err := c.getAddress()
+
+	if err != nil {
+		return addressPair{}, err
+	}
+
+	if c.isRequest() {
+		return addressPair{
+			srcIp:   api.UnknownIp,
+			srcPort: api.UnknownPort,
+			dstIp:   ip,
+			dstPort: port,
+		}, nil
+	} else {
+		return addressPair{
+			srcIp:   ip,
+			srcPort: port,
+			dstIp:   api.UnknownIp,
+			dstPort: api.UnknownPort,
+		}, nil
+	}
 }

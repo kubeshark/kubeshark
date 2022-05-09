@@ -3,12 +3,13 @@ package check
 import (
 	"context"
 	"fmt"
+	"regexp"
+
 	"github.com/up9inc/mizu/cli/apiserver"
 	"github.com/up9inc/mizu/cli/config"
 	"github.com/up9inc/mizu/cli/uiUtils"
+	"github.com/up9inc/mizu/logger"
 	"github.com/up9inc/mizu/shared/kubernetes"
-	"github.com/up9inc/mizu/shared/logger"
-	"regexp"
 )
 
 func ServerConnection(kubernetesProvider *kubernetes.Provider) bool {

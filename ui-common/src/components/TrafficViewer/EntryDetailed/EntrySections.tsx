@@ -158,9 +158,10 @@ export const EntryBodySection: React.FC<EntryBodySectionProps> = ({
                 return jsonBeautify(protobufDecoded, null, 2, 80);
             }
         } catch (error) {
-            if(isDecodeGrpc)
+            if (String(error).includes("More than one message in")){
+                if(isDecodeGrpc)
                 setIsDecodeGrpc(false);
-            if (!String(error).includes("More than one message in")){
+            } else {
                 console.error(error);
             }
         }

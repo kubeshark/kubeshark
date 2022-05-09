@@ -20,10 +20,17 @@ const (
 	INODE_FILED_INDEX       = 9
 )
 
+type addressPair struct {
+	srcIp   net.IP
+	srcPort uint16
+	dstIp   net.IP
+	dstPort uint16
+}
+
 // This file helps to extract Ip and Port out of a Socket file descriptor.
-// 
+//
 // The equivalent bash commands are:
-// 
+//
 //  > ls -l /proc/<pid>/fd/<fd>
 // 	    Output something like "socket:[1234]" for sockets - 1234 is the inode of the socket
 //  > cat /proc/<pid>/net/tcp | grep <inode>
@@ -31,18 +38,18 @@ const (
 //      The 1st and 2nd fields are the source and dest ip and ports in a Hex format
 //      0100007F:50 is 127.0.0.1:80
 
-func getAddressBySockfd(procfs string, pid uint32, fd uint32, src bool) (net.IP, uint16, error) {
+func getAddressBySockfd(procfs string, pid uint32, fd uint32) (addressPair, error) {
 	inode, err := getSocketInode(procfs, pid, fd)
 
 	if err != nil {
-		return nil, 0, err
+		return addressPair{}, err
 	}
 
 	tcppath := fmt.Sprintf("%s/%d/net/tcp", procfs, pid)
 	tcp, err := ioutil.ReadFile(tcppath)
 
 	if err != nil {
-		return nil, 0, errors.Wrap(err, 0)
+		return addressPair{}, errors.Wrap(err, 0)
 	}
 
 	for _, line := range strings.Split(string(tcp), "\n") {
@@ -53,15 +60,28 @@ func getAddressBySockfd(procfs string, pid uint32, fd uint32, src bool) (net.IP,
 		}
 
 		if inode == parts[INODE_FILED_INDEX] {
-			if src {
-				return parseHexAddress(parts[SRC_ADDRESS_FILED_INDEX])
-			} else {
-				return parseHexAddress(parts[DST_ADDRESS_FILED_INDEX])
+			srcIp, srcPort, srcErr := parseHexAddress(parts[SRC_ADDRESS_FILED_INDEX])
+
+			if srcErr != nil {
+				return addressPair{}, srcErr
 			}
+
+			dstIp, dstPort, dstErr := parseHexAddress(parts[DST_ADDRESS_FILED_INDEX])
+
+			if dstErr != nil {
+				return addressPair{}, dstErr
+			}
+
+			return addressPair{
+				srcIp:   srcIp,
+				srcPort: srcPort,
+				dstIp:   dstIp,
+				dstPort: dstPort,
+			}, nil
 		}
 	}
 
-	return nil, 0, errors.Errorf("address not found [pid: %d] [sockfd: %d] [inode: %s]", pid, fd, inode)
+	return addressPair{}, errors.Errorf("address not found [pid: %d] [sockfd: %d] [inode: %s]", pid, fd, inode)
 }
 
 func getSocketInode(procfs string, pid uint32, fd uint32) (string, error) {

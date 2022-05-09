@@ -53,3 +53,6 @@ tap/extensions/*/expect
 **/node_modules/**
 **/dist/**
 *.editorconfig
+
+# Ignore *.log files
+*.log
