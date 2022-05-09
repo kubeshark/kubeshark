@@ -85,9 +85,8 @@ func (reader *tcpReader) isProtocolIdentified() bool {
 
 func (reader *tcpReader) Read(p []byte) (int, error) {
 	if reader.exhaustBuffer {
-		l := copy(p, reader.buffer)
+		reader.data = reader.buffer
 		reader.exhaustBuffer = false
-		return l, nil
 	}
 
 	var msg api.TcpReaderDataMsg
@@ -96,7 +95,7 @@ func (reader *tcpReader) Read(p []byte) (int, error) {
 	for ok && len(reader.data) == 0 {
 		msg, ok = <-reader.msgQueue
 		if msg != nil {
-			reader.data = msg.GetBytes()
+			reader.data = append(reader.data, msg.GetBytes()...)
 			reader.captureTime = msg.GetTimestamp()
 		}
 
