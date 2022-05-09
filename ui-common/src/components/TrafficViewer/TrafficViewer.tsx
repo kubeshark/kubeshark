@@ -240,7 +240,7 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({
 
   return (
     <div className={TrafficViewerStyles.TrafficPage}>
-      {tappingStatus && isShowStatusBar && <StatusBar isDemoBannerView={isDemoBannerView}/>}
+      {tappingStatus && isShowStatusBar && <StatusBar disabled={ws?.current?.readyState !== WebSocket.OPEN} isDemoBannerView={isDemoBannerView}/>}
       <div className={TrafficViewerStyles.TrafficPageHeader}>
         <div className={TrafficViewerStyles.TrafficPageStreamStatus}>
           <img className={TrafficViewerStyles.playPauseIcon}
