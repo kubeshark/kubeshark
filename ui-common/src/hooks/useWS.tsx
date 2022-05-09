@@ -9,6 +9,7 @@ enum WebSocketReadyState {
 
 export const DEFAULT_LEFTOFF = `latest`;
 export const DEFAULT_FETCH = 50;
+export const DEFAULT_FETCH_TIMEOUT_MS = 3000;
 
 const useWS = (wsUrl: string) => {
   const [message, setMessage] = useState(null);
