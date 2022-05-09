@@ -153,18 +153,18 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({
     }
   }
 
-  const sendQueryWhenWsOpen = (leftOff: string, query: string, _fetch: number) => {
+  const sendQueryWhenWsOpen = (leftOff: string, query: string, fetch: number) => {
     setTimeout(() => {
       if (ws?.current?.readyState === WebSocket.OPEN) {
         ws.current.send(JSON.stringify({
           "leftOff": leftOff,
           "query": query,
           "enableFullEntries": false,
-          "fetch": _fetch,
+          "fetch": fetch,
           "timeoutMs": 3000
         }));
       } else {
-        sendQueryWhenWsOpen(leftOff, query, _fetch);
+        sendQueryWhenWsOpen(leftOff, query, fetch);
       }
     }, 500)
   }
