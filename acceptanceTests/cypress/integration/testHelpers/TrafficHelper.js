@@ -57,13 +57,6 @@ export function rightOnHoverCheck(path, expectedText) {
     cy.get(`#rightSideContainer [data-cy='QueryableTooltip']`).invoke('text').should('match', new RegExp(expectedText));
 }
 
-export function checkThatAllEntriesShown() {
-    cy.get('#entries-length').then(number => {
-        if (number.text() === '1')
-            cy.get('[title="Fetch old records"]').click();
-    });
-}
-
 export function checkFilterByMethod(funcDict) {
     const {protocol, method, methodQuery, summary, summaryQuery} = funcDict;
     const summaryDict = getSummaryDict(summary, summaryQuery);
@@ -76,12 +69,7 @@ export function checkFilterByMethod(funcDict) {
         cy.get('[type="submit"]').click();
         cy.get('.w-tc-editor').should('have.attr', 'style').and('include', Cypress.env('greenFilterColor'));
 
-        cy.get('#entries-length').then(number => {
-            // if the entries list isn't expanded it expands here
-            if (number.text() === '0' || number.text() === '1') // todo change when TRA-4262 is fixed
-                cy.get('[title="Fetch old records"]').click();
-
-            cy.get('#entries-length').should('not.have.text', '0').and('not.have.text', '1').then(() => {
+            cy.get('#entries-length').should('not.have.text', '0').then(() => {
                 cy.get(`#list [id]`).then(elements => {
                     const listElmWithIdAttr = Object.values(elements);
                     let doneCheckOnFirst = false;
@@ -108,7 +96,6 @@ export function checkFilterByMethod(funcDict) {
                 });
             });
         });
-    });
 }
 
 export function getEntryId(id) {
