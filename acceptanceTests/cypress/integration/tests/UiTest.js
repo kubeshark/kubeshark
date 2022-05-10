@@ -218,11 +218,7 @@ function checkFilter(filterDetails) {
                 checkRightSideResponseBody();
             });
 
-            cy.get('[title="Fetch old records"]').click();
             resizeToHugeMizu();
-
-            // waiting for the entries number to load
-            cy.get('#entries-length', {timeout: refreshWaitTimeout}).should('have.text', totalEntries);
 
             // checking only 'leftTextCheck' on all entries because the rest of the checks require more time
             cy.get(`#list [id^=entry]`).each(elem => {

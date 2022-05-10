@@ -401,8 +401,8 @@ func representRequest(request map[string]interface{}) (repRequest []interface{})
 
 	postData, _ := request["postData"].(map[string]interface{})
 	mimeType := postData["mimeType"]
-	if mimeType == nil || len(mimeType.(string)) == 0 {
-		mimeType = "text/html"
+	if mimeType == nil {
+		mimeType = ""
 	}
 	text := postData["text"]
 	if text != nil {
@@ -483,8 +483,8 @@ func representResponse(response map[string]interface{}) (repResponse []interface
 
 	content, _ := response["content"].(map[string]interface{})
 	mimeType := content["mimeType"]
-	if mimeType == nil || len(mimeType.(string)) == 0 {
-		mimeType = "text/html"
+	if mimeType == nil {
+		mimeType = ""
 	}
 	encoding := content["encoding"]
 	text := content["text"]

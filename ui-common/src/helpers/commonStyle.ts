@@ -1,4 +1,5 @@
-import {makeStyles} from "@material-ui/core";
+import { makeStyles } from "@material-ui/core";
+import variables from "../variables.module.scss"
 
 // @ts-ignore
 export const useCommonStyles = makeStyles(() => ({
@@ -9,11 +10,10 @@ export const useCommonStyles = makeStyles(() => ({
         fontSize: 12,
         padding: "9px 12px",
         borderRadius: "6px ! important",
-
         "&:hover": {
             backgroundColor: "#205cf5",
         },
-        "&:disabled":{
+        "&:disabled": {
             backgroundColor: "rgba(0, 0, 0, 0.26)"
         }
     },
@@ -25,12 +25,17 @@ export const useCommonStyles = makeStyles(() => ({
         padding: "8px 12px",
         border: "1px #205cf5 solid",
         borderRadius: "6px ! important",
-
         "&:hover": {
             backgroundColor: "transparent",
         },
     },
-
+    clickedButton: {
+        color: "white",
+        backgroundColor: "#205cf5",
+        "&:hover": {
+            backgroundColor: "#205cf5",
+        },
+    },
     imagedButton: {
         padding: "1px 14px"
     },
@@ -46,7 +51,7 @@ export const useCommonStyles = makeStyles(() => ({
         height: "30px",
         boxSizing: "border-box"
     },
-    modal :{
+    modal: {
         position: 'absolute',
         top: '40%',
         left: '50%',
