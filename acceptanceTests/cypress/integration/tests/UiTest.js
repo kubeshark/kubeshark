@@ -209,6 +209,10 @@ function checkFilter(filterDetails) {
                 if (!applyByEnter)
                     cy.get('[type="submit"]').click();
 
+                // wait for a second and pause the stream to preserve the DOM
+                cy.wait(1000);
+                cy.get('#pause-icon').click();
+
                 // only one entry in DOM after filtering, checking all checks on it
                 leftTextCheck(entryId, leftSidePath, leftSideExpectedText);
                 leftOnHoverCheck(entryId, leftSidePath, name);
@@ -217,10 +221,6 @@ function checkFilter(filterDetails) {
                 rightOnHoverCheck(rightSidePath, name);
                 checkRightSideResponseBody();
             });
-
-            // wait for a second and pause the stream to preserve the DOM
-            cy.wait(1000);
-            cy.get('#pause-icon').click();
 
             resizeToHugeMizu();
 
