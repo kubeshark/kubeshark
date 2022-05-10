@@ -1,5 +1,4 @@
 import { makeStyles } from "@material-ui/core";
-import variables from "../variables.module.scss"
 
 // @ts-ignore
 export const useCommonStyles = makeStyles(() => ({

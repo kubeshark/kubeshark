@@ -107,25 +107,24 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({
     }
   }, [shouldCloseWebSocket, setShouldCloseWebSocket])
 
-  useEffect(() => {
-    reopenConnection()
-  }, [webSocketUrl])
-
-  const ws = useRef(null);
-
-  const openEmptyWebSocket = () => {
-    openWebSocket(DEFAULT_LEFTOFF, query, true, DEFAULT_FETCH, DEFAULT_FETCH_TIMEOUT_MS);
-  }
-
-  const closeWebSocket = () => {
-    if (ws?.current?.readyState === WebSocket.OPEN) {
-      ws.current.close();
-      return true;
-    }
-  }
+  const sendQueryWhenWsOpen = useCallback((leftOff: string, query: string, fetch: number, fetchTimeoutMs: number) => {
+    setTimeout(() => {
+      if (ws?.current?.readyState === WebSocket.OPEN) {
+        ws.current.send(JSON.stringify({
+          "leftOff": leftOff,
+          "query": query,
+          "enableFullEntries": false,
+          "fetch": fetch,
+          "timeoutMs": fetchTimeoutMs
+        }));
+      } else {
+        sendQueryWhenWsOpen(leftOff, query, fetch, fetchTimeoutMs);
+      }
+    }, 500)
+  }, [])
 
   const listEntry = useRef(null);
-  const openWebSocket = (leftOff: string, query: string, resetEntries: boolean, fetch: number, fetchTimeoutMs: number) => {
+  const openWebSocket = useCallback((leftOff: string, query: string, resetEntries: boolean, fetch: number, fetchTimeoutMs: number) => {
     if (resetEntries) {
       setFocusedEntryId(null);
       setEntries([]);
@@ -153,23 +152,29 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({
     }
   }, [sendQueryWhenWsOpen, setEntries, setFocusedEntryId, setLeftOffTop, webSocketUrl])
 
-  const sendQueryWhenWsOpen = (leftOff: string, query: string, fetch: number, fetchTimeoutMs: number) => {
-    setTimeout(() => {
-      if (ws?.current?.readyState === WebSocket.OPEN) {
-        ws.current.send(JSON.stringify({
-          "leftOff": leftOff,
-          "query": query,
-          "enableFullEntries": false,
-          "fetch": fetch,
-          "timeoutMs": fetchTimeoutMs
-        }));
-      } else {
-        sendQueryWhenWsOpen(leftOff, query, fetch, fetchTimeoutMs);
-      }
-    }, 500)
-  }
+  const openEmptyWebSocket = useCallback(() => {
+    openWebSocket(DEFAULT_LEFTOFF, query, true, DEFAULT_FETCH, DEFAULT_FETCH_TIMEOUT_MS);
+  }, [openWebSocket, query])
 
-  const listEntry = useRef(null);
+  const reopenConnection = useCallback(async () => {
+    closeWebSocket()
+    openEmptyWebSocket();
+    scrollableRef.current.jumpToBottom();
+    setIsSnappedToBottom(true);
+  }, [openEmptyWebSocket])
+
+  useEffect(() => {
+    reopenConnection()
+  }, [webSocketUrl, reopenConnection])
+
+  const ws = useRef(null);
+
+  const closeWebSocket = () => {
+    if (ws?.current?.readyState === WebSocket.OPEN) {
+      ws.current.close();
+      return true;
+    }
+  }
 
   useEffect(() => {
     setTrafficViewerApiState({...trafficViewerApiProp, webSocket: {close: closeWebSocket}});

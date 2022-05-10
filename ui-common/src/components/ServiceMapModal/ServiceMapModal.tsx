@@ -159,7 +159,7 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
         if (checkedProtocols.length === 0) {
             setCheckedProtocols(getProtocolsForFilter.map(x => x.key))
         }
-    }, [getProtocolsForFilter])
+    }, [getProtocolsForFilter, checkedProtocols.length])
 
     useEffect(() => {
         getServiceMapData()
