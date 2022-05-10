@@ -327,7 +327,7 @@ BasenineReconnect:
 	go handleMetaChannel(&wg, connection, meta)
 	wg.Add(2)
 
-	if err = connection.Query(query, data, meta); err != nil {
+	if err = connection.Query("", query, data, meta); err != nil {
 		logger.Log.Errorf("Query mode call failed: %v", err)
 		connection.Close()
 		time.Sleep(shared.BasenineReconnectInterval * time.Second)
