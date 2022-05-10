@@ -51,7 +51,9 @@ jobs:
           kubectl config use-context ${USERNAME_UNRESTRICTED}
 
       - name: Test
-        run: make acceptance-test
+        run: |
+          cd acceptanceTests && npm i
+          make acceptance-test
 
       - name: Slack notification on failure
         uses: ravsamhq/notify-slack-action@v1
