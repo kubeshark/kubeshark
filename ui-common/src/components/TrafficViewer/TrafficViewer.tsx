@@ -20,7 +20,7 @@ import {StatusBar} from "../UI/StatusBar";
 import tappingStatusAtom from "../../recoil/tappingStatus/atom";
 import {TOAST_CONTAINER_ID} from "../../configs/Consts";
 import leftOffTopAtom from "../../recoil/leftOffTop";
-import { DEFAULT_QUERY } from '../../hooks/useWS';
+import { DEFAULT_LEFTOFF, DEFAULT_FETCH, DEFAULT_FETCH_TIMEOUT_MS } from '../../hooks/useWS';
 
 const useLayoutStyles = makeStyles(() => ({
   details: {
@@ -114,11 +114,7 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({
   const ws = useRef(null);
 
   const openEmptyWebSocket = () => {
-    if (query) {
-      openWebSocket(`(${query}) and ${DEFAULT_QUERY}`, true);
-    } else {
-      openWebSocket(DEFAULT_QUERY, true);
-    }
+    openWebSocket(DEFAULT_LEFTOFF, query, true, DEFAULT_FETCH, DEFAULT_FETCH_TIMEOUT_MS);
   }
 
   const closeWebSocket = () => {
@@ -129,7 +125,7 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({
   }
 
   const listEntry = useRef(null);
-  const openWebSocket = (query: string, resetEntries: boolean) => {
+  const openWebSocket = (leftOff: string, query: string, resetEntries: boolean, fetch: number, fetchTimeoutMs: number) => {
     if (resetEntries) {
       setFocusedEntryId(null);
       setEntries([]);
@@ -138,7 +134,7 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({
     }
     try {
       ws.current = new WebSocket(webSocketUrl);
-      sendQueryWhenWsOpen(query);
+      sendQueryWhenWsOpen(leftOff, query, fetch, fetchTimeoutMs);
 
       ws.current.onopen = () => {
         setWsReadyState(ws?.current?.readyState);
@@ -157,12 +153,18 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({
     }
   }
 
-  const sendQueryWhenWsOpen = (query) => {
+  const sendQueryWhenWsOpen = (leftOff: string, query: string, fetch: number, fetchTimeoutMs: number) => {
     setTimeout(() => {
       if (ws?.current?.readyState === WebSocket.OPEN) {
-        ws.current.send(JSON.stringify({"query": query, "enableFullEntries": false}));
+        ws.current.send(JSON.stringify({
+          "leftOff": leftOff,
+          "query": query,
+          "enableFullEntries": false,
+          "fetch": fetch,
+          "timeoutMs": fetchTimeoutMs
+        }));
       } else {
-        sendQueryWhenWsOpen(query);
+        sendQueryWhenWsOpen(leftOff, query, fetch, fetchTimeoutMs);
       }
     }, 500)
   }

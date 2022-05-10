@@ -116,9 +116,9 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
             },
         }
     }
-    const mapToKeyValForFilter = (arr) => arr.map(mapNodesDatatoGraph)
+    const mapToKeyValForFilter = useCallback((arr) => arr.map(mapNodesDatatoGraph)
         .map((edge) => { return { key: edge.label, value: edge.label } })
-        .sort((a, b) => { return a.key.localeCompare(b.key) });
+        .sort((a, b) => { return a.key.localeCompare(b.key) }), [])
 
     const getProtocolsForFilter = useMemo(() => {
         const newProtocls = serviceMapApiData.edges.map(edge => edge.protocol.abbr)
@@ -130,7 +130,7 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
         const resolved = mapToKeyValForFilter(serviceMapApiData.nodes?.filter(x => x.resolved))
         const unResolved = mapToKeyValForFilter(serviceMapApiData.nodes?.filter(x => !x.resolved))
         return [...resolved, ...unResolved]
-    }, [serviceMapApiData])
+    }, [mapToKeyValForFilter, serviceMapApiData.nodes])
 
     useEffect(() => {
         const newGraphData: GraphData = {
@@ -151,9 +151,9 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
     }
 
     useEffect(() => {
-        if (checkedServices.length == 0)
+        if (checkedServices.length === 0)
             setCheckedServices(getServicesForFilter.map(x => x.key).filter(serviceName => !Utils.isIpAddress(serviceName)))
-
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [getServicesForFilter])
 
     useEffect(() => {
@@ -198,7 +198,7 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
                             <Button size="medium"
                                 variant="contained"
                                 startIcon={<img src={isFilterClicked ? filterIconClicked : filterIcon} className="custom" alt="refresh" style={{ height: "26px", width: "26px" }}></img>}
-                                className={commonClasses.button + " " + commonClasses.imagedButton + " " + `${isFilterClicked ? commonClasses.button : commonClasses.outlinedButton}`}
+                                className={commonClasses.outlinedButton + " " + commonClasses.imagedButton + ` ${isFilterClicked ? commonClasses.clickedButton : ""}`}
                                 onClick={() => setIsFilterClicked(prevState => !prevState)}
                                 style={{ textTransform: 'unset' }}>
                                 Filter
@@ -220,15 +220,15 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
                             <Resizeable minWidth={170} maxWidth={320}>
                                 <div className={styles.filterWrapper}>
                                     <div className={styles.protocolsFilterList}>
-                                        <h3 className='comfirmation-modal__sub-section-header' style={{ marginLeft: "10px" }}>
+                                        <h3 className={styles.subSectionHeader} style={{ marginLeft: "10px" }}>
                                             PROTOCOLS
                                             <span className={styles.totalSelected}>&nbsp;({checkedProtocols.length})</span>
                                         </h3>
-                                        <SelectList items={getProtocolsForFilter} checkBoxWidth="5%" tableName={"All"} multiSelect={true}
+                                        <SelectList items={protocols} checkBoxWidth="5%" tableName={"All"} multiSelect={true}
                                             checkedValues={checkedProtocols} setCheckedValues={onProtocolsChange} tableClassName={styles.filters} />
                                     </div>
                                     <div className={styles.servicesFilter}>
-                                        <h3 className='comfirmation-modal__sub-section-header' style={{ marginLeft: "10px" }}>
+                                        <h3 className={styles.subSectionHeader} style={{ marginLeft: "10px" }}>
                                             SERVICES
                                             <span className={styles.totalSelected}>&nbsp;({checkedServices.length})</span>
                                         </h3>

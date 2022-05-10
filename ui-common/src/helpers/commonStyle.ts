@@ -30,8 +30,11 @@ export const useCommonStyles = makeStyles(() => ({
         },
     },
     clickedButton: {
-        background: variables.blueColor,
-        color: "white"
+        color: "white",
+        backgroundColor: "#205cf5",
+        "&:hover": {
+            backgroundColor: "#205cf5",
+        },
     },
     imagedButton: {
         padding: "1px 14px"
