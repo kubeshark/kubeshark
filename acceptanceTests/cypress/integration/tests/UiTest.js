@@ -215,6 +215,7 @@ function checkFilter(filterDetails) {
                 cy.waitUntil(function() {
                     return cy.get('#pause-icon').should('not.be.visible');
                 });
+                cy.wait(1000);
 
                 // only one entry in DOM after filtering, checking all checks on it
                 leftTextCheck(entryId, leftSidePath, leftSideExpectedText);
