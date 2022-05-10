@@ -145,7 +145,7 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
     }
 
     useEffect(() => {
-        if (checkedServices.length == 0)
+        if (checkedServices.length === 0)
             setCheckedServices(getServicesForFilter.map(x => x.key).filter(serviceName => !Utils.isIpAddress(serviceName)))
     }, [getServicesForFilter])
 
@@ -207,7 +207,7 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
                             <Resizeable minWidth={170} maxWidth={320}>
                                 <div className={styles.filterWrapper}>
                                     <div className={styles.protocolsFilterList}>
-                                        <h3 className={styles.subHeader} style={{ marginLeft: "10px" }}>
+                                        <h3 className={styles.subSectionHeader} style={{ marginLeft: "10px" }}>
                                             PROTOCOLS
                                             <span className={styles.totalSelected}>&nbsp;({checkedProtocols.length})</span>
                                         </h3>
@@ -215,7 +215,7 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
                                             checkedValues={checkedProtocols} setCheckedValues={onProtocolsChange} tableClassName={styles.filters} />
                                     </div>
                                     <div className={styles.servicesFilter}>
-                                        <h3 className={styles.subHeader} style={{ marginLeft: "10px" }}>
+                                        <h3 className={styles.subSectionHeader} style={{ marginLeft: "10px" }}>
                                             SERVICES
                                             <span className={styles.totalSelected}>&nbsp;({checkedServices.length})</span>
                                         </h3>

@@ -1,5 +1,5 @@
 @import "../../variables.module"
-@import "../../mixins"
+@import "../../components"
 
 .closeIcon
   position: absolute
@@ -8,7 +8,6 @@
 
 .modalContainer
   display: flex
-  width: calc(100% - 15 - 15px)
   height: calc(100% - 110px)
   background: #F0F5FF
   padding: 0 15px
@@ -106,6 +105,3 @@
   font-size: 12px
   color: #BCCEFD
   font-weight: 700
-
-.subHeader
-  @include sub-section-header
