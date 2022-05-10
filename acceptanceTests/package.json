@@ -1,0 +1,5 @@
+{
+  "devDependencies": {
+    "cypress-wait-until": "^1.7.2"
+  }
+}

@@ -212,6 +212,9 @@ function checkFilter(filterDetails) {
                 // wait for a second and pause the stream to preserve the DOM
                 cy.wait(1000);
                 cy.get('#pause-icon').click();
+                cy.waitUntil(function() {
+                    return cy.get('#pause-icon').should('not.be.visible');
+                });
 
                 // only one entry in DOM after filtering, checking all checks on it
                 leftTextCheck(entryId, leftSidePath, leftSideExpectedText);

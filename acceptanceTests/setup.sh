@@ -78,6 +78,9 @@ minikube image load "${MIZU_CI_IMAGE}"
 echo "Build cli"
 cd cli && make build GIT_BRANCH=ci SUFFIX=ci
 
+echo "Install Node.js modules"
+cd acceptanceTests && npm i
+
 # TODO: need to understand how to fail if password is asked (sudo)
 echo "Starting tunnel"
 rm -f ${TUNNEL_LOG}
