@@ -245,13 +245,18 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({
       {tappingStatus && isShowStatusBar && <StatusBar disabled={ws?.current?.readyState !== WebSocket.OPEN} isDemoBannerView={isDemoBannerView}/>}
       <div className={TrafficViewerStyles.TrafficPageHeader}>
         <div className={TrafficViewerStyles.TrafficPageStreamStatus}>
-          <img className={TrafficViewerStyles.playPauseIcon}
-               style={{visibility: wsReadyState === WebSocket.OPEN ? "visible" : "hidden"}} alt="pause"
-               src={pauseIcon} onClick={toggleConnection}/>
-          <img className={TrafficViewerStyles.playPauseIcon}
+          <img id="pause-icon"
+               className={TrafficViewerStyles.playPauseIcon}
+               style={{visibility: wsReadyState === WebSocket.OPEN ? "visible" : "hidden"}}
+               alt="pause"
+               src={pauseIcon}
+               onClick={toggleConnection}/>
+          <img id="play-icon"
+               className={TrafficViewerStyles.playPauseIcon}
                style={{position: "absolute", visibility: wsReadyState === WebSocket.OPEN ? "hidden" : "visible"}}
                alt="play"
-               src={playIcon} onClick={toggleConnection}/>
+               src={playIcon}
+               onClick={toggleConnection}/>
           <div className={TrafficViewerStyles.connectionText}>
             {getConnectionTitle()}
             {getConnectionIndicator()}

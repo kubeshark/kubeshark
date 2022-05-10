@@ -218,7 +218,9 @@ function checkFilter(filterDetails) {
                 checkRightSideResponseBody();
             });
 
-            cy.wait(4000)
+            // wait for a second and pause the stream to preserve the DOM
+            cy.wait(1000);
+            cy.get('#pause-icon').click();
 
             resizeToHugeMizu();
 
