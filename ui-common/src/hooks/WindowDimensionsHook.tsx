@@ -14,7 +14,7 @@ export function useRequestTextByWidth(windowWidth){
     let responseText = "Response: "
     let elapsedTimeText = "Elapsed Time: "
 
-    if (windowWidth < 1433) {
+    if (windowWidth < 1436) {
         requestText = ""
         responseText = ""
         elapsedTimeText = ""
@@ -38,6 +38,6 @@ export default function useWindowDimensions() {
         window.addEventListener('resize', handleResize);
         return () => window.removeEventListener('resize', handleResize);
     }, []);
-
+    
     return windowDimensions;
 }
