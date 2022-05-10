@@ -52,5 +52,5 @@ jobs:
 
       - name: Test
         run: |
-          cd acceptanceTests && npm i
+          cd acceptanceTests && npm i && cd ..
           make acceptance-test
