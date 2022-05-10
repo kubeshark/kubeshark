@@ -209,17 +209,12 @@ function checkFilter(filterDetails) {
                 if (!applyByEnter)
                     cy.get('[type="submit"]').click();
 
-                // wait for at least 4 seconds and pause the stream to preserve the DOM
+                // wait for at least 2 seconds and pause the stream to preserve the DOM
                 cy.wait(2000);
                 cy.get('#pause-icon').click();
                 cy.waitUntil(function() {
                     return cy.get('#pause-icon').should('not.be.visible');
                 });
-                cy.wait(2000);
-
-                // only one entry in DOM after filtering, checking all checks on it
-                leftTextCheck(entryId, leftSidePath, leftSideExpectedText);
-                leftOnHoverCheck(entryId, leftSidePath, name);
 
                 rightTextCheck(rightSidePath, rightSideExpectedText);
                 rightOnHoverCheck(rightSidePath, name);
@@ -228,11 +223,12 @@ function checkFilter(filterDetails) {
 
             resizeToHugeMizu();
 
-            // checking only 'leftTextCheck' on all entries because the rest of the checks require more time
+            // check on all entries
             cy.get(`#list [id^=entry]`).each(elem => {
                 const element = elem[0];
                 let entryId = getEntryId(element.id);
                 leftTextCheck(entryId, leftSidePath, leftSideExpectedText);
+                leftOnHoverCheck(entryId, leftSidePath, name);
             });
 
             // making the other 3 checks on the first X entries (longer time for each check)
