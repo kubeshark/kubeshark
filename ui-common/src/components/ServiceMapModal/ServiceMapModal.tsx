@@ -8,6 +8,8 @@ import debounce from 'lodash/debounce';
 import ServiceMapOptions from './ServiceMapOptions'
 import { useCommonStyles } from "../../helpers/commonStyle";
 import refreshIcon from "assets/refresh.svg";
+import filterIcon from "assets/filter-icon.svg";
+import filterIconClicked from "assets/filter-icon-clicked.svg";
 import closeIcon from "assets/close.svg"
 import styles from './ServiceMapModal.module.sass'
 import SelectList from "../UI/SelectList";
@@ -23,14 +25,14 @@ const modalStyle = {
     transform: 'translate(-50%, 0%)',
     width: '89vw',
     height: '82vh',
-    bgcolor: 'background.paper',
+    bgcolor: '#F0F5FF',
     borderRadius: '5px',
     boxShadow: 24,
     p: 4,
     color: '#000',
-    padding: "25px 15px"
+    padding: "1px 1px",
+    paddingBottom: "15px"
 };
-
 interface LegentLabelProps {
     color: string,
     name: string
@@ -46,13 +48,13 @@ const LegentLabel: React.FC<LegentLabelProps> = ({ color, name }) => {
 }
 
 const protocols = [
-    { key: "HTTP", value: "HTTP", component: <LegentLabel color="#205cf5" name="HTTP" /> },
-    { key: "HTTP/2", value: "HTTP/2", component: <LegentLabel color='#244c5a' name="HTTP/2" /> },
-    { key: "gRPC", value: "gRPC", component: <LegentLabel color='#244c5a' name="gRPC" /> },
+    { key: "HTTP", value: "HTTP", component: <LegentLabel color="#494677" name="HTTP" /> },
+    { key: "HTTP/2", value: "HTTP/2", component: <LegentLabel color='#F7B202' name="HTTP/2" /> },
+    { key: "gRPC", value: "gRPC", component: <LegentLabel color='#219653' name="gRPC" /> },
     { key: "GQL", value: "GQL", component: <LegentLabel color='#e10098' name="GQL" /> },
-    { key: "AMQP", value: "AMQP", component: <LegentLabel color='#ff6600' name="AMQP" /> },
-    { key: "KAFKA", value: "KAFKA", component: <LegentLabel color='#000000' name="KAFKA" /> },
-    { key: "REDIS", value: "REDIS", component: <LegentLabel color='#a41e11' name="REDIS" /> },]
+    { key: "AMQP", value: "AMQP", component: <LegentLabel color='#F86818' name="AMQP" /> },
+    { key: "KAFKA", value: "KAFKA", component: <LegentLabel color='#0C0B1A' name="KAFKA" /> },
+    { key: "REDIS", value: "REDIS", component: <LegentLabel color='#DB2156' name="REDIS" /> },]
 
 
 interface ServiceMapModalProps {
@@ -71,6 +73,7 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
     const [serviceMapApiData, setServiceMapApiData] = useState<ServiceMapGraph>({ edges: [], nodes: [] })
     const [servicesSearchVal, setServicesSearchVal] = useState("")
     const [graphOptions, setGraphOptions] = useState(ServiceMapOptions);
+    const [isFilterClicked, setIsFilterClicked] = useState(true)
 
     const getServiceMapData = useCallback(async () => {
         try {
@@ -113,15 +116,15 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
             },
         }
     }
-    const mapToKeyValForFilter = (arr) => arr.map(mapNodesDatatoGraph)
+    const mapToKeyValForFilter = useCallback((arr) => arr.map(mapNodesDatatoGraph)
         .map((edge) => { return { key: edge.label, value: edge.label } })
-        .sort((a, b) => { return a.key.localeCompare(b.key) });
+        .sort((a, b) => { return a.key.localeCompare(b.key) }), [])
 
     const getServicesForFilter = useMemo(() => {
         const resolved = mapToKeyValForFilter(serviceMapApiData.nodes?.filter(x => x.resolved))
         const unResolved = mapToKeyValForFilter(serviceMapApiData.nodes?.filter(x => !x.resolved))
         return [...resolved, ...unResolved]
-    }, [serviceMapApiData])
+    }, [mapToKeyValForFilter, serviceMapApiData.nodes])
 
     useEffect(() => {
         const newGraphData: GraphData = {
@@ -142,8 +145,9 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
     }
 
     useEffect(() => {
-        if (checkedServices.length == 0)
+        if (checkedServices.length === 0)
             setCheckedServices(getServicesForFilter.map(x => x.key).filter(serviceName => !Utils.isIpAddress(serviceName)))
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [getServicesForFilter])
 
     useEffect(() => {
@@ -173,19 +177,52 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
             BackdropProps={{ timeout: 500 }}>
             <Fade in={isOpen}>
                 <Box sx={modalStyle}>
+                    <div className={styles.closeIcon}>
+                        <img src={closeIcon} alt="close" onClick={() => onClose()} style={{ cursor: "pointer", userSelect: "none" }}></img>
+                    </div>
+                    <div className={styles.headerContainer}>
+                        <div className={styles.headerSection}>
+                            <span className={styles.title}>Services</span>
+                            <Button size="medium"
+                                variant="contained"
+                                startIcon={<img src={isFilterClicked ? filterIconClicked : filterIcon} className="custom" alt="refresh" style={{ height: "26px", width: "26px" }}></img>}
+                                className={commonClasses.outlinedButton + " " + commonClasses.imagedButton + ` ${isFilterClicked ? commonClasses.clickedButton : ""}`}
+                                onClick={() => setIsFilterClicked(prevState => !prevState)}
+                                style={{ textTransform: 'unset' }}>
+                                Filter
+                            </Button >
+                            <Button style={{ marginLeft: "2%", textTransform: 'unset' }}
+                                startIcon={<img src={refreshIcon} className="custom" alt="refresh"></img>}
+                                size="medium"
+                                variant="contained"
+                                className={commonClasses.outlinedButton + " " + commonClasses.imagedButton}
+                                onClick={refreshServiceMap}
+                            >
+                                Refresh
+                            </Button>
+                        </div>
+                    </div>
+
                     <div className={styles.modalContainer}>
-                        <div className={styles.filterSection}>
+                        <div className={styles.filterSection + ` ${isFilterClicked ? styles.show : ""}`}>
                             <Resizeable minWidth={170} maxWidth={320}>
                                 <div className={styles.filterWrapper}>
                                     <div className={styles.protocolsFilterList}>
-                                        <SelectList items={protocols} checkBoxWidth="5%" tableName={"Protocols"} multiSelect={true}
+                                        <h3 className={styles.subSectionHeader} style={{ marginLeft: "10px" }}>
+                                            PROTOCOLS
+                                            <span className={styles.totalSelected}>&nbsp;({checkedProtocols.length})</span>
+                                        </h3>
+                                        <SelectList items={protocols} checkBoxWidth="5%" tableName={"All"} multiSelect={true}
                                             checkedValues={checkedProtocols} setCheckedValues={onProtocolsChange} tableClassName={styles.filters} />
                                     </div>
-                                    <div className={styles.separtorLine}></div>
                                     <div className={styles.servicesFilter}>
-                                        <input className={commonClasses.textField + ` ${styles.servicesFilterSearch}`} placeholder="search service" value={servicesSearchVal} onChange={(event) => setServicesSearchVal(event.target.value)} />
+                                        <h3 className={styles.subSectionHeader} style={{ marginLeft: "10px" }}>
+                                            SERVICES
+                                            <span className={styles.totalSelected}>&nbsp;({checkedServices.length})</span>
+                                        </h3>
+                                        <input className={commonClasses.textField + ` ${styles.servicesFilterSearch}`} placeholder="Search" value={servicesSearchVal} onChange={(event) => setServicesSearchVal(event.target.value)} />
                                         <div className={styles.servicesFilterList}>
-                                            <SelectList items={getServicesForFilter} tableName={"Services"} tableClassName={styles.filters} multiSelect={true} searchValue={servicesSearchVal}
+                                            <SelectList items={getServicesForFilter} tableName={"All"} tableClassName={styles.filters} multiSelect={true} searchValue={servicesSearchVal}
                                                 checkBoxWidth="5%" checkedValues={checkedServices} setCheckedValues={onServiceChanges} />
                                         </div>
                                     </div>
@@ -194,16 +231,6 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
                         </div>
                         <div className={styles.graphSection}>
                             <div style={{ display: "flex", justifyContent: "space-between" }}>
-                                <Button style={{ marginLeft: "3%" }}
-                                    startIcon={<img src={refreshIcon} className="custom" alt="refresh" style={{ marginRight: "8%" }}></img>}
-                                    size="medium"
-                                    variant="contained"
-                                    className={commonClasses.outlinedButton + " " + commonClasses.imagedButton}
-                                    onClick={refreshServiceMap}
-                                >
-                                    Refresh
-                                </Button>
-                                <img src={closeIcon} alt="close" onClick={() => onClose()} className={styles.closeIcon}></img>
                             </div>
                             {isLoading && <div className={spinnerStyle.spinnerContainer}>
                                 <img alt="spinner" src={spinnerImg} style={{ height: 50 }} />

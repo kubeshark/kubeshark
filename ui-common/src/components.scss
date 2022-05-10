@@ -1,0 +1,22 @@
+.subSectionHeader{
+    position: relative;
+    font-style: normal;
+    font-weight: bold;
+    font-size: 12px;
+    line-height: 15px;
+    color: $font-color;
+    &::after{
+      content: "";
+      border: 1px solid #E9EBF8;
+      transform: rotate(180deg);
+      position: absolute;
+      left: 0px;
+      right: -100%;
+      top: 100%;
+      bottom: 0%;
+      width: 100%;
+      width: -moz-available;
+      width: -webkit-fill-available;
+      width: strech;
+    }
+}
