@@ -209,7 +209,7 @@ function checkFilter(filterDetails) {
                 if (!applyByEnter)
                     cy.get('[type="submit"]').click();
 
-                // wait for at least 2 seconds and pause the stream to preserve the DOM
+                // wait 2 seconds and pause the stream to preserve the DOM
                 cy.wait(2000);
                 cy.get('#pause-icon').click();
                 cy.waitUntil(function() {
