@@ -51,6 +51,4 @@ jobs:
           kubectl config use-context ${USERNAME_UNRESTRICTED}
 
       - name: Test
-        run: |
-          cd acceptanceTests && npm i && cd ..
-          make acceptance-test
+        run: make acceptance-test
