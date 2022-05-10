@@ -47,14 +47,11 @@ const LegentLabel: React.FC<LegentLabelProps> = ({ color, name }) => {
     </React.Fragment>
 }
 
-const protocols = [
-    { key: "HTTP", value: "HTTP", component: <LegentLabel color="#494677" name="HTTP" /> },
-    { key: "HTTP/2", value: "HTTP/2", component: <LegentLabel color='#F7B202' name="HTTP/2" /> },
-    { key: "gRPC", value: "gRPC", component: <LegentLabel color='#219653' name="gRPC" /> },
-    { key: "GQL", value: "GQL", component: <LegentLabel color='#e10098' name="GQL" /> },
-    { key: "AMQP", value: "AMQP", component: <LegentLabel color='#F86818' name="AMQP" /> },
-    { key: "KAFKA", value: "KAFKA", component: <LegentLabel color='#0C0B1A' name="KAFKA" /> },
-    { key: "REDIS", value: "REDIS", component: <LegentLabel color='#DB2156' name="REDIS" /> },]
+type ProtocolType = {
+    key: string;
+    value: string;
+    component: JSX.Element;
+};
 
 
 interface ServiceMapModalProps {
@@ -121,9 +118,11 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
         .sort((a, b) => { return a.key.localeCompare(b.key) }), [])
 
     const getProtocolsForFilter = useMemo(() => {
-        const newProtocls = serviceMapApiData.edges.map(edge => edge.protocol.abbr)
-        const uniqueProtocls = [...new Set(newProtocls)]
-        return protocols.filter(proto => uniqueProtocls.includes(proto.key))
+        return serviceMapApiData.edges.reduce<ProtocolType[]>((returnArr, currentValue, currentIndex, array) => {
+            if (!returnArr.find(prot => prot.key === currentValue.protocol.abbr))
+                returnArr.push({ key: currentValue.protocol.abbr, value: currentValue.protocol.abbr, component: <LegentLabel color={currentValue.protocol.backgroundColor} name={currentValue.protocol.abbr} /> })
+            return returnArr
+        }, new Array<ProtocolType>())
     }, [serviceMapApiData])
 
     const getServicesForFilter = useMemo(() => {
@@ -157,7 +156,7 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
     }, [getServicesForFilter])
 
     useEffect(() => {
-        if (checkedProtocols.length == 0) {
+        if (checkedProtocols.length === 0) {
             setCheckedProtocols(getProtocolsForFilter.map(x => x.key))
         }
     }, [getProtocolsForFilter])
@@ -224,7 +223,7 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
                                             PROTOCOLS
                                             <span className={styles.totalSelected}>&nbsp;({checkedProtocols.length})</span>
                                         </h3>
-                                        <SelectList items={protocols} checkBoxWidth="5%" tableName={"All"} multiSelect={true}
+                                        <SelectList items={getProtocolsForFilter} checkBoxWidth="5%" tableName={"All"} multiSelect={true}
                                             checkedValues={checkedProtocols} setCheckedValues={onProtocolsChange} tableClassName={styles.filters} />
                                     </div>
                                     <div className={styles.servicesFilter}>
