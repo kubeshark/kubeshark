@@ -20,7 +20,7 @@ import {StatusBar} from "../UI/StatusBar";
 import tappingStatusAtom from "../../recoil/tappingStatus/atom";
 import {TOAST_CONTAINER_ID} from "../../configs/Consts";
 import leftOffTopAtom from "../../recoil/leftOffTop";
-import { DEFAULT_QUERY } from '../../hooks/useWS';
+import { DEFAULT_LEFTOFF, DEFAULT_FETCH, DEFAULT_FETCH_TIMEOUT_MS } from '../../hooks/useWS';
 
 const useLayoutStyles = makeStyles(() => ({
   details: {
@@ -107,17 +107,25 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({
     }
   }, [shouldCloseWebSocket, setShouldCloseWebSocket])
 
-  const sendQueryWhenWsOpen = useCallback((query) => {
-    setTimeout(() => {
-      if (ws?.current?.readyState === WebSocket.OPEN) {
-        ws.current.send(JSON.stringify({"query": query, "enableFullEntries": false}));
-      } else {
-        sendQueryWhenWsOpen(query);
-      }
-    }, 500)
-  }, [])
+  useEffect(() => {
+    reopenConnection()
+  }, [webSocketUrl])
 
-  const openWebSocket = useCallback((query: string, resetEntries: boolean) => {
+  const ws = useRef(null);
+
+  const openEmptyWebSocket = () => {
+    openWebSocket(DEFAULT_LEFTOFF, query, true, DEFAULT_FETCH, DEFAULT_FETCH_TIMEOUT_MS);
+  }
+
+  const closeWebSocket = () => {
+    if (ws?.current?.readyState === WebSocket.OPEN) {
+      ws.current.close();
+      return true;
+    }
+  }
+
+  const listEntry = useRef(null);
+  const openWebSocket = (leftOff: string, query: string, resetEntries: boolean, fetch: number, fetchTimeoutMs: number) => {
     if (resetEntries) {
       setFocusedEntryId(null);
       setEntries([]);
@@ -126,7 +134,7 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({
     }
     try {
       ws.current = new WebSocket(webSocketUrl);
-      sendQueryWhenWsOpen(query);
+      sendQueryWhenWsOpen(leftOff, query, fetch, fetchTimeoutMs);
 
       ws.current.onopen = () => {
         setWsReadyState(ws?.current?.readyState);
@@ -145,32 +153,20 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({
     }
   }, [sendQueryWhenWsOpen, setEntries, setFocusedEntryId, setLeftOffTop, webSocketUrl])
 
-  const openEmptyWebSocket = useCallback(() => {
-    if (query) {
-      openWebSocket(`(${query}) and ${DEFAULT_QUERY}`, true);
-    } else {
-      openWebSocket(DEFAULT_QUERY, true);
-    }
-  }, [openWebSocket, query])
-
-  const reopenConnection = useCallback(async () => {
-    closeWebSocket()
-    openEmptyWebSocket();
-    scrollableRef.current.jumpToBottom();
-    setIsSnappedToBottom(true);
-  }, [openEmptyWebSocket])
-
-  useEffect(() => {
-    reopenConnection()
-  }, [webSocketUrl, reopenConnection])
-
-  const ws = useRef(null);
-
-  const closeWebSocket = () => {
-    if (ws?.current?.readyState === WebSocket.OPEN) {
-      ws.current.close();
-      return true;
-    }
+  const sendQueryWhenWsOpen = (leftOff: string, query: string, fetch: number, fetchTimeoutMs: number) => {
+    setTimeout(() => {
+      if (ws?.current?.readyState === WebSocket.OPEN) {
+        ws.current.send(JSON.stringify({
+          "leftOff": leftOff,
+          "query": query,
+          "enableFullEntries": false,
+          "fetch": fetch,
+          "timeoutMs": fetchTimeoutMs
+        }));
+      } else {
+        sendQueryWhenWsOpen(leftOff, query, fetch, fetchTimeoutMs);
+      }
+    }, 500)
   }
 
   const listEntry = useRef(null);
