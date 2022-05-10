@@ -116,15 +116,15 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
             },
         }
     }
-    const mapToKeyValForFilter = (arr) => arr.map(mapNodesDatatoGraph)
+    const mapToKeyValForFilter = useCallback((arr) => arr.map(mapNodesDatatoGraph)
         .map((edge) => { return { key: edge.label, value: edge.label } })
-        .sort((a, b) => { return a.key.localeCompare(b.key) });
+        .sort((a, b) => { return a.key.localeCompare(b.key) }), [])
 
     const getServicesForFilter = useMemo(() => {
         const resolved = mapToKeyValForFilter(serviceMapApiData.nodes?.filter(x => x.resolved))
         const unResolved = mapToKeyValForFilter(serviceMapApiData.nodes?.filter(x => !x.resolved))
         return [...resolved, ...unResolved]
-    }, [serviceMapApiData])
+    }, [mapToKeyValForFilter, serviceMapApiData.nodes])
 
     useEffect(() => {
         const newGraphData: GraphData = {
@@ -147,6 +147,7 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
     useEffect(() => {
         if (checkedServices.length === 0)
             setCheckedServices(getServicesForFilter.map(x => x.key).filter(serviceName => !Utils.isIpAddress(serviceName)))
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [getServicesForFilter])
 
     useEffect(() => {
@@ -185,7 +186,7 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
                             <Button size="medium"
                                 variant="contained"
                                 startIcon={<img src={isFilterClicked ? filterIconClicked : filterIcon} className="custom" alt="refresh" style={{ height: "26px", width: "26px" }}></img>}
-                                className={commonClasses.button + " " + commonClasses.imagedButton + " " + `${isFilterClicked ? commonClasses.button : commonClasses.outlinedButton}`}
+                                className={commonClasses.outlinedButton + " " + commonClasses.imagedButton + ` ${isFilterClicked ? commonClasses.clickedButton : ""}`}
                                 onClick={() => setIsFilterClicked(prevState => !prevState)}
                                 style={{ textTransform: 'unset' }}>
                                 Filter
