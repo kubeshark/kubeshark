@@ -218,7 +218,7 @@ function checkFilter(filterDetails) {
                 checkRightSideResponseBody();
             });
 
-            cy.wait(2000)
+            cy.wait(4000)
 
             resizeToHugeMizu();
 
