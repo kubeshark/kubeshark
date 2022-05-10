@@ -209,13 +209,13 @@ function checkFilter(filterDetails) {
                 if (!applyByEnter)
                     cy.get('[type="submit"]').click();
 
-                // wait for a second and pause the stream to preserve the DOM
-                cy.wait(1000);
+                // wait for at least 4 seconds and pause the stream to preserve the DOM
+                cy.wait(2000);
                 cy.get('#pause-icon').click();
                 cy.waitUntil(function() {
                     return cy.get('#pause-icon').should('not.be.visible');
                 });
-                cy.wait(1000);
+                cy.wait(2000);
 
                 // only one entry in DOM after filtering, checking all checks on it
                 leftTextCheck(entryId, leftSidePath, leftSideExpectedText);
