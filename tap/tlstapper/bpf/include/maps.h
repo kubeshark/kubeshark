@@ -68,7 +68,7 @@ struct fd_info {
 BPF_HASH(pids_map, __u32, __u32);
 BPF_LRU_HASH(ssl_write_context, __u64, struct ssl_info);
 BPF_LRU_HASH(ssl_read_context, __u64, struct ssl_info);
-BPF_HASH(file_descriptor_to_ipv4, __u64, struct fd_info);
+BPF_LRU_HASH(file_descriptor_to_ipv4, __u64, struct fd_info);
 BPF_PERF_OUTPUT(chunks_buffer);
 BPF_PERF_OUTPUT(log_buffer);
 
