@@ -3,6 +3,7 @@ import Radio from "./Radio";
 import styles from './style/SelectList.module.sass'
 import NoDataMessage from "./NoDataMessage";
 import Checkbox from "./Checkbox";
+import { useCommonStyles } from "../../helpers/commonStyle";
 
 
 export interface Props {
@@ -10,20 +11,23 @@ export interface Props {
     tableName: string;
     checkedValues?: string[];
     multiSelect: boolean;
-    searchValue?: string;
     setCheckedValues: (newValues) => void;
-    tableClassName?
-    checkBoxWidth?: string
+    tableClassName?;
+    checkBoxWidth?: string;
+    inputSearchClass? : string
+    isFilterable? : boolean
 }
 
-const SelectList: React.FC<Props> = ({ items, tableName, checkedValues = [], multiSelect = true, searchValue = "", setCheckedValues, tableClassName,
-    checkBoxWidth = 50 }) => {
+const SelectList: React.FC<Props> = ({ items, tableName, checkedValues = [], multiSelect = true, setCheckedValues, tableClassName,
+    checkBoxWidth = 50 ,inputSearchClass,isFilterable = true}) => {
+    const commonClasses = useCommonStyles();
+    const [searchVal, setSearchVal] = useState("")  
     const noItemsMessage = "No items to show";
     const [headerChecked, setHeaderChecked] = useState(false)
 
     const filteredValues = useMemo(() => {
-        return items.filter((listValue) => listValue?.value?.includes(searchValue));
-    }, [items, searchValue])
+        return items.filter((listValue) => listValue?.value?.includes(searchVal));
+    }, [items, searchVal])
 
     const filteredValuesKeys = useMemo(() => {
         return filteredValues.map(x => x.key)
@@ -62,7 +66,7 @@ const SelectList: React.FC<Props> = ({ items, tableName, checkedValues = [], mul
         }
 
         setCheckedValues(newChecked)
-    }, [searchValue, checkedValues, filteredValuesKeys])
+    }, [searchVal, checkedValues, filteredValuesKeys])
 
     const dataFieldFunc = (listValue) => listValue.component ? listValue.component :
         <span className={styles.nowrap} title={listValue.value}>
@@ -73,11 +77,11 @@ const SelectList: React.FC<Props> = ({ items, tableName, checkedValues = [], mul
         <th style={{ width: checkBoxWidth }}><Checkbox data-cy="checkbox-all" checked={headerChecked}
             onToggle={(isChecked) => toggleAll(isChecked)} /></th>
         <th>
-            {tableName}
+            All
         </th>
     </tr> :
         <tr style={{ borderBottomWidth: "2px" }}>
-            <th>{tableName}</th>
+            <th>All</th>
         </tr>
 
     const tableBody = filteredValues.length === 0 ?
@@ -100,7 +104,14 @@ const SelectList: React.FC<Props> = ({ items, tableName, checkedValues = [], mul
         }
         )
 
-    return <div className={tableClassName ? tableClassName + ` ${styles.selectListTable}` : ` ${styles.selectListTable}`}>
+    return <React.Fragment>
+        <h3 className={styles.subSectionHeader}>
+            {tableName}
+            <span className={styles.totalSelected}>&nbsp;({checkedValues.length})</span>
+        </h3>
+        {isFilterable && <input className={commonClasses.textField + ` ${inputSearchClass}`} placeholder="Search" value={searchVal}
+                                onChange={(event) => setSearchVal(event.target.value)} data-cy="searchInput" />}
+        <div className={tableClassName ? tableClassName + ` ${styles.selectListTable}` : ` ${styles.selectListTable}`}>
         <table cellPadding={5} style={{ borderCollapse: "collapse" }}>
             <thead>
                 {tableHead}
@@ -110,6 +121,7 @@ const SelectList: React.FC<Props> = ({ items, tableName, checkedValues = [], mul
             </tbody>
         </table>
     </div>
+    </React.Fragment>
 }
 
 export default SelectList;

@@ -68,7 +68,6 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
     const [checkedProtocols, setCheckedProtocols] = useState([])
     const [checkedServices, setCheckedServices] = useState([])
     const [serviceMapApiData, setServiceMapApiData] = useState<ServiceMapGraph>({ edges: [], nodes: [] })
-    const [servicesSearchVal, setServicesSearchVal] = useState("")
     const [graphOptions, setGraphOptions] = useState(ServiceMapOptions);
     const [isFilterClicked, setIsFilterClicked] = useState(true)
 
@@ -219,22 +218,14 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
                             <Resizeable minWidth={170} maxWidth={320}>
                                 <div className={styles.filterWrapper}>
                                     <div className={styles.protocolsFilterList}>
-                                        <h3 className={styles.subSectionHeader} style={{ marginLeft: "10px" }}>
-                                            PROTOCOLS
-                                            <span className={styles.totalSelected}>&nbsp;({checkedProtocols.length})</span>
-                                        </h3>
-                                        <SelectList items={getProtocolsForFilter} checkBoxWidth="5%" tableName={"All"} multiSelect={true}
-                                            checkedValues={checkedProtocols} setCheckedValues={onProtocolsChange} tableClassName={styles.filters} />
+                                        <SelectList items={getProtocolsForFilter} checkBoxWidth="5%" tableName={"PROTOCOLS"} multiSelect={true}
+                                            checkedValues={checkedProtocols} setCheckedValues={onProtocolsChange} tableClassName={styles.filters}
+                                            inputSearchClass={styles.servicesFilterSearch} isFilterable={false}/>
                                     </div>
                                     <div className={styles.servicesFilter}>
-                                        <h3 className={styles.subSectionHeader} style={{ marginLeft: "10px" }}>
-                                            SERVICES
-                                            <span className={styles.totalSelected}>&nbsp;({checkedServices.length})</span>
-                                        </h3>
-                                        <input className={commonClasses.textField + ` ${styles.servicesFilterSearch}`} placeholder="Search" value={servicesSearchVal} onChange={(event) => setServicesSearchVal(event.target.value)} />
-                                        <div className={styles.servicesFilterList}>
-                                            <SelectList items={getServicesForFilter} tableName={"All"} tableClassName={styles.filters} multiSelect={true} searchValue={servicesSearchVal}
-                                                checkBoxWidth="5%" checkedValues={checkedServices} setCheckedValues={onServiceChanges} />
+                                        <div className={styles.servicesFilterList}> 
+                                            <SelectList items={getServicesForFilter} tableName={"SERVICES"} tableClassName={styles.filters} multiSelect={true}
+                                                checkBoxWidth="5%" checkedValues={checkedServices} setCheckedValues={onServiceChanges} inputSearchClass={styles.servicesFilterSearch}/>
                                         </div>
                                     </div>
                                 </div>
