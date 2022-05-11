@@ -65,70 +65,70 @@ it('right side sanity test', function () {
 checkIllegalFilter('invalid filter');
 
 checkFilter({
-    name: 'http',
+    filter: 'http',
     leftSidePath: '> :nth-child(1) > :nth-child(1)',
     leftSideExpectedText: 'HTTP',
     rightSidePath: '[title=HTTP]',
     rightSideExpectedText: 'Hypertext Transfer Protocol -- HTTP/1.1',
-    applyByEnter: true
+    applyByCtrlEnter: true
 });
 
 checkFilter({
-    name: 'response.status == 200',
+    filter: 'response.status == 200',
     leftSidePath: '[title="Status Code"]',
     leftSideExpectedText: '200',
     rightSidePath: '> :nth-child(2) [title="Status Code"]',
     rightSideExpectedText: '200',
-    applyByEnter: false
+    applyByCtrlEnter: false
 });
 
 if (Cypress.env('shouldCheckSrcAndDest')) {
     serviceMapCheck();
 
     checkFilter({
-        name: 'src.name == ""',
+        filter: 'src.name == ""',
         leftSidePath: '[title="Source Name"]',
         leftSideExpectedText: '[Unresolved]',
         rightSidePath: '> :nth-child(2) [title="Source Name"]',
         rightSideExpectedText: '[Unresolved]',
-        applyByEnter: false
+        applyByCtrlEnter: false
     });
 
     checkFilter({
-        name: `dst.name == "httpbin.mizu-tests"`,
+        filter: `dst.name == "httpbin.mizu-tests"`,
         leftSidePath: '> :nth-child(3) > :nth-child(2) > :nth-child(3) > :nth-child(2)',
         leftSideExpectedText: 'httpbin.mizu-tests',
         rightSidePath: '> :nth-child(2) > :nth-child(2) > :nth-child(2) > :nth-child(3) > :nth-child(2)',
         rightSideExpectedText: 'httpbin.mizu-tests',
-        applyByEnter: false
+        applyByCtrlEnter: false
     });
 }
 
 checkFilter({
-    name: 'request.method == "GET"',
+    filter: 'request.method == "GET"',
     leftSidePath: '> :nth-child(3) > :nth-child(1) > :nth-child(1) > :nth-child(2)',
     leftSideExpectedText: 'GET',
     rightSidePath: '> :nth-child(2) > :nth-child(2) > :nth-child(1) > :nth-child(1) > :nth-child(2)',
     rightSideExpectedText: 'GET',
-    applyByEnter: true
+    applyByCtrlEnter: true
 });
 
 checkFilter({
-    name: 'request.path == "/get"',
+    filter: 'request.path == "/get"',
     leftSidePath: '> :nth-child(3) > :nth-child(1) > :nth-child(2) > :nth-child(2)',
     leftSideExpectedText: '/get',
     rightSidePath: '> :nth-child(2) > :nth-child(2) > :nth-child(1) > :nth-child(2) > :nth-child(2)',
     rightSideExpectedText: '/get',
-    applyByEnter: false
+    applyByCtrlEnter: false
 });
 
 checkFilter({
-    name: 'src.ip == "127.0.0.1"',
+    filter: 'src.ip == "127.0.0.1"',
     leftSidePath: '[title="Source IP"]',
     leftSideExpectedText: '127.0.0.1',
     rightSidePath: '> :nth-child(2) [title="Source IP"]',
     rightSideExpectedText: '127.0.0.1',
-    applyByEnter: false
+    applyByCtrlEnter: false
 });
 
 checkFilterNoResults('request.method == "POST"');
@@ -182,17 +182,19 @@ function checkIllegalFilter(illegalFilterName) {
 
 function checkFilter(filterDetails) {
     const {
-        name,
+        filter,
         leftSidePath,
         rightSidePath,
         rightSideExpectedText,
         leftSideExpectedText,
-        applyByEnter
+        applyByCtrlEnter
     } = filterDetails;
 
     const entriesForDeeperCheck = 5;
 
-    it(`checking the filter: ${name}`, function () {
+    it(`checking the filter: ${filter}`, function () {
+        waitForFetch50AndPause();
+
         cy.get('#total-entries').should('not.have.text', '0').then(number => {
             const totalEntries = number.text();
 
@@ -200,21 +202,23 @@ function checkFilter(filterDetails) {
                 const element = elem[0];
                 const entryId = getEntryId(element.id);
                 // checks the hover on the last entry (the only one in DOM at the beginning)
-                leftOnHoverCheck(entryId, leftSidePath, name);
+                leftOnHoverCheck(entryId, leftSidePath, filter);
 
                 cy.get('.w-tc-editor-text').clear();
                 // applying the filter with alt+enter or with the button
-                cy.get('.w-tc-editor-text').type(`${name}${applyByEnter ? '{alt+enter}' : ''}`);
+                cy.get('.w-tc-editor-text').type(`${filter}${applyByCtrlEnter ? '{ctrl+enter}' : ''}`);
                 cy.get('.w-tc-editor').should('have.attr', 'style').and('include', Cypress.env('greenFilterColor'));
-                if (!applyByEnter)
+                if (!applyByCtrlEnter)
                     cy.get('[type="submit"]').click();
+
+                waitForFetch50AndPause();
 
                 // only one entry in DOM after filtering, checking all checks on it
                 leftTextCheck(entryId, leftSidePath, leftSideExpectedText);
-                leftOnHoverCheck(entryId, leftSidePath, name);
+                leftOnHoverCheck(entryId, leftSidePath, filter);
 
                 rightTextCheck(rightSidePath, rightSideExpectedText);
-                rightOnHoverCheck(rightSidePath, name);
+                rightOnHoverCheck(rightSidePath, filter);
                 checkRightSideResponseBody();
             });
 
@@ -228,7 +232,7 @@ function checkFilter(filterDetails) {
             });
 
             // making the other 3 checks on the first X entries (longer time for each check)
-            deeperCheck(leftSidePath, rightSidePath, name, leftSideExpectedText, rightSideExpectedText, entriesForDeeperCheck);
+            deeperCheck(leftSidePath, rightSidePath, filter, rightSideExpectedText, entriesForDeeperCheck);
 
             // reloading then waiting for the entries number to load
             resizeToNormalMizu();
@@ -238,7 +242,14 @@ function checkFilter(filterDetails) {
     });
 }
 
-function deeperCheck(leftSidePath, rightSidePath, filterName, leftSideExpectedText, rightSideExpectedText, entriesNumToCheck) {
+function waitForFetch50AndPause() {
+    // wait half a second and pause the stream to preserve the DOM
+    cy.wait(500);
+    cy.get('#pause-icon').click();
+    cy.get('#pause-icon').should('not.be.visible');
+}
+
+function deeperCheck(leftSidePath, rightSidePath, filterName, rightSideExpectedText, entriesNumToCheck) {
     cy.get(`#list [id^=entry]`).each((element, index) => {
         if (index < entriesNumToCheck) {
             const entryId = getEntryId(element[0].id);
