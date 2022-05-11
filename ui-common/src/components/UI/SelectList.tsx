@@ -3,6 +3,7 @@ import Radio from "./Radio";
 import styles from './style/SelectList.module.sass'
 import NoDataMessage from "./NoDataMessage";
 import Checkbox from "./Checkbox";
+import { useCommonStyles } from "../../helpers/commonStyle";
 
 
 export interface Props {
@@ -10,14 +11,17 @@ export interface Props {
     tableName: string;
     checkedValues?: string[];
     multiSelect: boolean;
-    searchValue?: string;
     setCheckedValues: (newValues) => void;
-    tableClassName?
-    checkBoxWidth?: string
+    tableClassName?;
+    checkBoxWidth?: string;
+    inputSearchClass? : string
+    isFilterable? : boolean
 }
 
-const SelectList: React.FC<Props> = ({ items, tableName, checkedValues = [], multiSelect = true, searchValue = "", setCheckedValues, tableClassName,
-    checkBoxWidth = 50 }) => {
+const SelectList: React.FC<Props> = ({ items, tableName, checkedValues = [], multiSelect = true, setCheckedValues, tableClassName,
+    checkBoxWidth = 50 ,inputSearchClass,isFilterable = true}) => {
+    const commonClasses = useCommonStyles();
+    const [searchValue, setSearchValue] = useState("")  
     const noItemsMessage = "No items to show";
     const [headerChecked, setHeaderChecked] = useState(false)
 
@@ -73,11 +77,10 @@ const SelectList: React.FC<Props> = ({ items, tableName, checkedValues = [], mul
         <th style={{ width: checkBoxWidth }}><Checkbox data-cy="checkbox-all" checked={headerChecked}
             onToggle={(isChecked) => toggleAll(isChecked)} /></th>
         <th>
-            {tableName}
+            All
         </th>
     </tr> :
-        <tr style={{ borderBottomWidth: "2px" }}>
-            <th>{tableName}</th>
+        <tr>
         </tr>
 
     const tableBody = filteredValues.length === 0 ?
@@ -100,7 +103,14 @@ const SelectList: React.FC<Props> = ({ items, tableName, checkedValues = [], mul
         }
         )
 
-    return <div className={tableClassName ? tableClassName + ` ${styles.selectListTable}` : ` ${styles.selectListTable}`}>
+    return <React.Fragment>
+        <h3 className={styles.subSectionHeader}>
+            {tableName}
+            <span className={styles.totalSelected}>&nbsp;({checkedValues.length})</span>
+        </h3>
+        {isFilterable && <input className={commonClasses.textField + ` ${inputSearchClass}`} placeholder="Search" value={searchValue}
+                                onChange={(event) => setSearchValue(event.target.value)} data-cy="searchInput" />}
+        <div className={tableClassName ? tableClassName + ` ${styles.selectListTable}` : ` ${styles.selectListTable}`} style={{marginTop: !multiSelect ? "20px":  ""}}>
         <table cellPadding={5} style={{ borderCollapse: "collapse" }}>
             <thead>
                 {tableHead}
@@ -110,6 +120,7 @@ const SelectList: React.FC<Props> = ({ items, tableName, checkedValues = [], mul
             </tbody>
         </table>
     </div>
+    </React.Fragment>
 }
 
 export default SelectList;
