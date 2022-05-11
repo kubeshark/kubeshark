@@ -43,6 +43,7 @@ cypress.env.json
 */cypress/plugins
 */cypress/screenshots
 */cypress/videos
+*/cypress/support
 
 # Ignore test data in extensions
 tap/extensions/*/bin
