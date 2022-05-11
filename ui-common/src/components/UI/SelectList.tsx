@@ -21,13 +21,13 @@ export interface Props {
 const SelectList: React.FC<Props> = ({ items, tableName, checkedValues = [], multiSelect = true, setCheckedValues, tableClassName,
     checkBoxWidth = 50 ,inputSearchClass,isFilterable = true}) => {
     const commonClasses = useCommonStyles();
-    const [searchVal, setSearchVal] = useState("")  
+    const [searchValue, setSearchValue] = useState("")  
     const noItemsMessage = "No items to show";
     const [headerChecked, setHeaderChecked] = useState(false)
 
     const filteredValues = useMemo(() => {
-        return items.filter((listValue) => listValue?.value?.includes(searchVal));
-    }, [items, searchVal])
+        return items.filter((listValue) => listValue?.value?.includes(searchValue));
+    }, [items, searchValue])
 
     const filteredValuesKeys = useMemo(() => {
         return filteredValues.map(x => x.key)
@@ -66,7 +66,7 @@ const SelectList: React.FC<Props> = ({ items, tableName, checkedValues = [], mul
         }
 
         setCheckedValues(newChecked)
-    }, [searchVal, checkedValues, filteredValuesKeys])
+    }, [searchValue, checkedValues, filteredValuesKeys])
 
     const dataFieldFunc = (listValue) => listValue.component ? listValue.component :
         <span className={styles.nowrap} title={listValue.value}>
@@ -108,8 +108,8 @@ const SelectList: React.FC<Props> = ({ items, tableName, checkedValues = [], mul
             {tableName}
             <span className={styles.totalSelected}>&nbsp;({checkedValues.length})</span>
         </h3>
-        {isFilterable && <input className={commonClasses.textField + ` ${inputSearchClass}`} placeholder="Search" value={searchVal}
-                                onChange={(event) => setSearchVal(event.target.value)} data-cy="searchInput" />}
+        {isFilterable && <input className={commonClasses.textField + ` ${inputSearchClass}`} placeholder="Search" value={searchValue}
+                                onChange={(event) => setSearchValue(event.target.value)} data-cy="searchInput" />}
         <div className={tableClassName ? tableClassName + ` ${styles.selectListTable}` : ` ${styles.selectListTable}`} style={{marginTop: !multiSelect ? "20px":  ""}}>
         <table cellPadding={5} style={{ borderCollapse: "collapse" }}>
             <thead>
