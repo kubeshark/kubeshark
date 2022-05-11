@@ -246,9 +246,7 @@ function waitForFetch50AndPause() {
     // wait half a second and pause the stream to preserve the DOM
     cy.wait(500);
     cy.get('#pause-icon').click();
-    cy.waitUntil(function() {
-        return cy.get('#pause-icon').should('not.be.visible');
-    });
+    cy.get('#pause-icon').should('not.be.visible');
 }
 
 function deeperCheck(leftSidePath, rightSidePath, filterName, rightSideExpectedText, entriesNumToCheck) {
