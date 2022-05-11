@@ -80,8 +80,7 @@ const SelectList: React.FC<Props> = ({ items, tableName, checkedValues = [], mul
             All
         </th>
     </tr> :
-        <tr style={{ borderBottomWidth: "2px" }}>
-            <th>All</th>
+        <tr>
         </tr>
 
     const tableBody = filteredValues.length === 0 ?
@@ -111,7 +110,7 @@ const SelectList: React.FC<Props> = ({ items, tableName, checkedValues = [], mul
         </h3>
         {isFilterable && <input className={commonClasses.textField + ` ${inputSearchClass}`} placeholder="Search" value={searchVal}
                                 onChange={(event) => setSearchVal(event.target.value)} data-cy="searchInput" />}
-        <div className={tableClassName ? tableClassName + ` ${styles.selectListTable}` : ` ${styles.selectListTable}`}>
+        <div className={tableClassName ? tableClassName + ` ${styles.selectListTable}` : ` ${styles.selectListTable}`} style={{marginTop: !multiSelect ? "20px":  ""}}>
         <table cellPadding={5} style={{ borderCollapse: "collapse" }}>
             <thead>
                 {tableHead}
