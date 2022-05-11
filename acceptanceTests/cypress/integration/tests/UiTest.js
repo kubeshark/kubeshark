@@ -193,12 +193,7 @@ function checkFilter(filterDetails) {
     const entriesForDeeperCheck = 5;
 
     it(`checking the filter: ${filter}`, function () {
-        // wait half a second and pause the stream to preserve the DOM
-        cy.wait(500);
-        cy.get('#pause-icon').click();
-        cy.waitUntil(function() {
-            return cy.get('#pause-icon').should('not.be.visible');
-        });
+        waitForFetch50AndPause();
 
         cy.get('#total-entries').should('not.have.text', '0').then(number => {
             const totalEntries = number.text();
@@ -216,12 +211,7 @@ function checkFilter(filterDetails) {
                 if (!applyByCtrlEnter)
                     cy.get('[type="submit"]').click();
 
-                // wait half a second and pause the stream to preserve the DOM
-                cy.wait(500);
-                cy.get('#pause-icon').click();
-                cy.waitUntil(function() {
-                    return cy.get('#pause-icon').should('not.be.visible');
-                });
+                waitForFetch50AndPause();
 
                 // only one entry in DOM after filtering, checking all checks on it
                 leftTextCheck(entryId, leftSidePath, leftSideExpectedText);
@@ -249,6 +239,15 @@ function checkFilter(filterDetails) {
             cy.reload();
             cy.get('#total-entries', {timeout: refreshWaitTimeout}).should('have.text', totalEntries);
         })
+    });
+}
+
+function waitForFetch50AndPause() {
+    // wait half a second and pause the stream to preserve the DOM
+    cy.wait(500);
+    cy.get('#pause-icon').click();
+    cy.waitUntil(function() {
+        return cy.get('#pause-icon').should('not.be.visible');
     });
 }
 
