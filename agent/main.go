@@ -64,7 +64,7 @@ func main() {
 	app.LoadExtensions()
 
 	if !*tapperMode && !*apiServerMode && !*standaloneMode && !*harsReaderMode {
-		panic("One of the flags --tap, --api or --standalone or --hars-read must be provided")
+		panic("One of the flags --tap, --api-server, --standalone or --hars-read must be provided")
 	}
 
 	if *standaloneMode {
