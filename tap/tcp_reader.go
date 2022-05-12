@@ -54,7 +54,7 @@ func (reader *tcpReader) run(options *api.TrafficFilteringOptions, wg *sync.Wait
 		reader.counterPair = reader.parent.counterPairs[i]
 		b := bufio.NewReader(reader)
 		err := extension.Dissector.Dissect(b, reader, options)
-		if err == nil || reader.isProtocolIdentified() {
+		if reader.isProtocolIdentified() {
 			break
 		}
 		reader.rewind()
