@@ -14,7 +14,7 @@ import (
 	core "k8s.io/api/core/v1"
 )
 
-func CreateTapMizuResources(ctx context.Context, kubernetesProvider *kubernetes.Provider, serializedValidationRules string, serializedContract string, serializedMizuConfig string, isNsRestrictedMode bool, mizuResourcesNamespace string, agentImage string, syncEntriesConfig *shared.SyncEntriesConfig, maxEntriesDBSizeBytes int64, apiServerResources shared.Resources, imagePullPolicy core.PullPolicy, logLevel logging.Level) (bool, error) {
+func CreateTapMizuResources(ctx context.Context, kubernetesProvider *kubernetes.Provider, serializedValidationRules string, serializedContract string, serializedMizuConfig string, isNsRestrictedMode bool, mizuResourcesNamespace string, agentImage string, syncEntriesConfig *shared.SyncEntriesConfig, maxEntriesDBSizeBytes int64, apiServerResources shared.Resources, imagePullPolicy core.PullPolicy, logLevel logging.Level, profiler bool) (bool, error) {
 	if !isNsRestrictedMode {
 		if err := createMizuNamespace(ctx, kubernetesProvider, mizuResourcesNamespace); err != nil {
 			return false, err
@@ -50,6 +50,7 @@ func CreateTapMizuResources(ctx context.Context, kubernetesProvider *kubernetes.
 		Resources:             apiServerResources,
 		ImagePullPolicy:       imagePullPolicy,
 		LogLevel:              logLevel,
+		Profiler:              profiler,
 	}
 
 	if err := createMizuApiServerPod(ctx, kubernetesProvider, opts); err != nil {
