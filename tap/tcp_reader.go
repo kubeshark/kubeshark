@@ -21,7 +21,7 @@ type tcpReader struct {
 	isClient      bool
 	isOutgoing    bool
 	msgQueue      chan api.TcpReaderDataMsg // Channel of captured reassembled tcp payload
-	buffer        []byte
+	pastData      []byte
 	data          []byte
 	progress      *api.ReadProgress
 	captureTime   time.Time
@@ -83,7 +83,7 @@ func (reader *tcpReader) isProtocolIdentified() bool {
 }
 
 func (reader *tcpReader) rewind() {
-	reader.data = reader.buffer
+	reader.data = reader.pastData
 }
 
 func (reader *tcpReader) Read(p []byte) (int, error) {
@@ -96,7 +96,7 @@ func (reader *tcpReader) Read(p []byte) (int, error) {
 			reader.data = msg.GetBytes()
 			reader.captureTime = msg.GetTimestamp()
 			if !reader.isProtocolIdentified() {
-				reader.buffer = append(reader.buffer, reader.data...)
+				reader.pastData = append(reader.pastData, reader.data...)
 			}
 		}
 
