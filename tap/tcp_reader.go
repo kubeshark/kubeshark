@@ -83,7 +83,7 @@ func (reader *tcpReader) isProtocolIdentified() bool {
 }
 
 func (reader *tcpReader) rewind() {
-	reader.data = reader.pastData
+	copy(reader.data, reader.pastData)
 }
 
 func (reader *tcpReader) Read(p []byte) (int, error) {
