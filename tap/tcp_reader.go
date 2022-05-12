@@ -97,6 +97,9 @@ func (reader *tcpReader) Read(p []byte) (int, error) {
 		if msg != nil {
 			reader.data = msg.GetBytes()
 			reader.captureTime = msg.GetTimestamp()
+			if !reader.isProtocolIdentified() {
+				reader.buffer = append(reader.buffer, reader.data...)
+			}
 		}
 
 		if len(reader.data) > 0 {
@@ -108,9 +111,6 @@ func (reader *tcpReader) Read(p []byte) (int, error) {
 	}
 
 	l := copy(p, reader.data)
-	if !reader.isProtocolIdentified() {
-		reader.buffer = append(reader.buffer, reader.data...)
-	}
 	reader.data = reader.data[l:]
 	reader.progress.Feed(l)
 
