@@ -8,6 +8,8 @@ import debounce from 'lodash/debounce';
 import ServiceMapOptions from './ServiceMapOptions'
 import { useCommonStyles } from "../../helpers/commonStyle";
 import refreshIcon from "assets/refresh.svg";
+import filterIcon from "assets/filter-icon.svg";
+import filterIconClicked from "assets/filter-icon-clicked.svg";
 import closeIcon from "assets/close.svg"
 import styles from './ServiceMapModal.module.sass'
 import SelectList from "../UI/SelectList";
@@ -23,14 +25,14 @@ const modalStyle = {
     transform: 'translate(-50%, 0%)',
     width: '89vw',
     height: '82vh',
-    bgcolor: 'background.paper',
+    bgcolor: '#F0F5FF',
     borderRadius: '5px',
     boxShadow: 24,
     p: 4,
     color: '#000',
-    padding: "25px 15px"
+    padding: "1px 1px",
+    paddingBottom: "15px"
 };
-
 interface LegentLabelProps {
     color: string,
     name: string
@@ -45,14 +47,11 @@ const LegentLabel: React.FC<LegentLabelProps> = ({ color, name }) => {
     </React.Fragment>
 }
 
-const protocols = [
-    { key: "HTTP", value: "HTTP", component: <LegentLabel color="#205cf5" name="HTTP" /> },
-    { key: "HTTP/2", value: "HTTP/2", component: <LegentLabel color='#244c5a' name="HTTP/2" /> },
-    { key: "gRPC", value: "gRPC", component: <LegentLabel color='#244c5a' name="gRPC" /> },
-    { key: "GQL", value: "GQL", component: <LegentLabel color='#e10098' name="GQL" /> },
-    { key: "AMQP", value: "AMQP", component: <LegentLabel color='#ff6600' name="AMQP" /> },
-    { key: "KAFKA", value: "KAFKA", component: <LegentLabel color='#000000' name="KAFKA" /> },
-    { key: "REDIS", value: "REDIS", component: <LegentLabel color='#a41e11' name="REDIS" /> },]
+type ProtocolType = {
+    key: string;
+    value: string;
+    component: JSX.Element;
+};
 
 
 interface ServiceMapModalProps {
@@ -66,11 +65,11 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
     const commonClasses = useCommonStyles();
     const [isLoading, setIsLoading] = useState<boolean>(true);
     const [graphData, setGraphData] = useState<GraphData>({ nodes: [], edges: [] });
-    const [checkedProtocols, setCheckedProtocols] = useState(protocols.map(x => x.key))
+    const [checkedProtocols, setCheckedProtocols] = useState([])
     const [checkedServices, setCheckedServices] = useState([])
     const [serviceMapApiData, setServiceMapApiData] = useState<ServiceMapGraph>({ edges: [], nodes: [] })
-    const [servicesSearchVal, setServicesSearchVal] = useState("")
     const [graphOptions, setGraphOptions] = useState(ServiceMapOptions);
+    const [isFilterClicked, setIsFilterClicked] = useState(true)
 
     const getServiceMapData = useCallback(async () => {
         try {
@@ -113,15 +112,23 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
             },
         }
     }
-    const mapToKeyValForFilter = (arr) => arr.map(mapNodesDatatoGraph)
+    const mapToKeyValForFilter = useCallback((arr) => arr.map(mapNodesDatatoGraph)
         .map((edge) => { return { key: edge.label, value: edge.label } })
-        .sort((a, b) => { return a.key.localeCompare(b.key) });
+        .sort((a, b) => { return a.key.localeCompare(b.key) }), [])
+
+    const getProtocolsForFilter = useMemo(() => {
+        return serviceMapApiData.edges.reduce<ProtocolType[]>((returnArr, currentValue, currentIndex, array) => {
+            if (!returnArr.find(prot => prot.key === currentValue.protocol.abbr))
+                returnArr.push({ key: currentValue.protocol.abbr, value: currentValue.protocol.abbr, component: <LegentLabel color={currentValue.protocol.backgroundColor} name={currentValue.protocol.abbr} /> })
+            return returnArr
+        }, new Array<ProtocolType>())
+    }, [serviceMapApiData])
 
     const getServicesForFilter = useMemo(() => {
         const resolved = mapToKeyValForFilter(serviceMapApiData.nodes?.filter(x => x.resolved))
         const unResolved = mapToKeyValForFilter(serviceMapApiData.nodes?.filter(x => !x.resolved))
         return [...resolved, ...unResolved]
-    }, [serviceMapApiData])
+    }, [mapToKeyValForFilter, serviceMapApiData.nodes])
 
     useEffect(() => {
         const newGraphData: GraphData = {
@@ -142,9 +149,16 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
     }
 
     useEffect(() => {
-        if (checkedServices.length == 0)
+        if (checkedServices.length === 0)
             setCheckedServices(getServicesForFilter.map(x => x.key).filter(serviceName => !Utils.isIpAddress(serviceName)))
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [getServicesForFilter])
+
+    useEffect(() => {
+        if (checkedProtocols.length === 0) {
+            setCheckedProtocols(getProtocolsForFilter.map(x => x.key))
+        }
+    }, [getProtocolsForFilter])
 
     useEffect(() => {
         getServiceMapData()
@@ -173,20 +187,45 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
             BackdropProps={{ timeout: 500 }}>
             <Fade in={isOpen}>
                 <Box sx={modalStyle}>
+                    <div className={styles.closeIcon}>
+                        <img src={closeIcon} alt="close" onClick={() => onClose()} style={{ cursor: "pointer", userSelect: "none" }}></img>
+                    </div>
+                    <div className={styles.headerContainer}>
+                        <div className={styles.headerSection}>
+                            <span className={styles.title}>Services</span>
+                            <Button size="medium"
+                                variant="contained"
+                                startIcon={<img src={isFilterClicked ? filterIconClicked : filterIcon} className="custom" alt="refresh" style={{ height: "26px", width: "26px" }}></img>}
+                                className={commonClasses.outlinedButton + " " + commonClasses.imagedButton + ` ${isFilterClicked ? commonClasses.clickedButton : ""}`}
+                                onClick={() => setIsFilterClicked(prevState => !prevState)}
+                                style={{ textTransform: 'unset' }}>
+                                Filter
+                            </Button >
+                            <Button style={{ marginLeft: "2%", textTransform: 'unset' }}
+                                startIcon={<img src={refreshIcon} className="custom" alt="refresh"></img>}
+                                size="medium"
+                                variant="contained"
+                                className={commonClasses.outlinedButton + " " + commonClasses.imagedButton}
+                                onClick={refreshServiceMap}
+                            >
+                                Refresh
+                            </Button>
+                        </div>
+                    </div>
+
                     <div className={styles.modalContainer}>
-                        <div className={styles.filterSection}>
+                        <div className={styles.filterSection + ` ${isFilterClicked ? styles.show : ""}`}>
                             <Resizeable minWidth={170} maxWidth={320}>
                                 <div className={styles.filterWrapper}>
                                     <div className={styles.protocolsFilterList}>
-                                        <SelectList items={protocols} checkBoxWidth="5%" tableName={"Protocols"} multiSelect={true}
-                                            checkedValues={checkedProtocols} setCheckedValues={onProtocolsChange} tableClassName={styles.filters} />
+                                        <SelectList items={getProtocolsForFilter} checkBoxWidth="5%" tableName={"PROTOCOLS"} multiSelect={true}
+                                            checkedValues={checkedProtocols} setCheckedValues={onProtocolsChange} tableClassName={styles.filters}
+                                            inputSearchClass={styles.servicesFilterSearch} isFilterable={false}/>
                                     </div>
-                                    <div className={styles.separtorLine}></div>
                                     <div className={styles.servicesFilter}>
-                                        <input className={commonClasses.textField + ` ${styles.servicesFilterSearch}`} placeholder="search service" value={servicesSearchVal} onChange={(event) => setServicesSearchVal(event.target.value)} />
-                                        <div className={styles.servicesFilterList}>
-                                            <SelectList items={getServicesForFilter} tableName={"Services"} tableClassName={styles.filters} multiSelect={true} searchValue={servicesSearchVal}
-                                                checkBoxWidth="5%" checkedValues={checkedServices} setCheckedValues={onServiceChanges} />
+                                        <div className={styles.servicesFilterList}> 
+                                            <SelectList items={getServicesForFilter} tableName={"SERVICES"} tableClassName={styles.filters} multiSelect={true}
+                                                checkBoxWidth="5%" checkedValues={checkedServices} setCheckedValues={onServiceChanges} inputSearchClass={styles.servicesFilterSearch}/>
                                         </div>
                                     </div>
                                 </div>
@@ -194,16 +233,6 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
                         </div>
                         <div className={styles.graphSection}>
                             <div style={{ display: "flex", justifyContent: "space-between" }}>
-                                <Button style={{ marginLeft: "3%" }}
-                                    startIcon={<img src={refreshIcon} className="custom" alt="refresh" style={{ marginRight: "8%" }}></img>}
-                                    size="medium"
-                                    variant="contained"
-                                    className={commonClasses.outlinedButton + " " + commonClasses.imagedButton}
-                                    onClick={refreshServiceMap}
-                                >
-                                    Refresh
-                                </Button>
-                                <img src={closeIcon} alt="close" onClick={() => onClose()} className={styles.closeIcon}></img>
                             </div>
                             {isLoading && <div className={spinnerStyle.spinnerContainer}>
                                 <img alt="spinner" src={spinnerImg} style={{ height: 50 }} />
