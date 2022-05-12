@@ -14,6 +14,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/gin-contrib/pprof"
 	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/gin"
 	"github.com/up9inc/mizu/agent/pkg/dependency"
@@ -46,6 +47,7 @@ var apiServerAddress = flag.String("api-server-address", "", "Address of mizu AP
 var namespace = flag.String("namespace", "", "Resolve IPs if they belong to resources in this namespace (default is all)")
 var harsReaderMode = flag.Bool("hars-read", false, "Run in hars-read mode")
 var harsDir = flag.String("hars-dir", "", "Directory to read hars from")
+var profiler = flag.Bool("profiler", false, "Run pprof server")
 
 const (
 	socketConnectionRetries    = 30
@@ -70,7 +72,14 @@ func main() {
 	} else if *tapperMode {
 		runInTapperMode()
 	} else if *apiServerMode {
-		utils.StartServer(runInApiServerMode(*namespace))
+		app := runInApiServerMode(*namespace)
+
+		if *profiler {
+			pprof.Register(app)
+		}
+
+		utils.StartServer(app)
+
 	} else if *harsReaderMode {
 		runInHarReaderMode()
 	}
