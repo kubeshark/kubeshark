@@ -104,7 +104,7 @@ func (g *defaultOasGenerator) runGenerator() {
 	g.dbMutex.Lock()
 	defer g.dbMutex.Unlock()
 	logger.Log.Infof("Querying DB for OAS generator with query '%s'", g.entriesQuery)
-	if err := g.dbConn.Query("", g.entriesQuery, dataChan, metaChan); err != nil {
+	if err := g.dbConn.Query("latest", g.entriesQuery, dataChan, metaChan); err != nil {
 		logger.Log.Errorf("Query mode call failed: %v", err)
 	}
 
