@@ -100,6 +100,7 @@ func (reader *tcpReader) rewind() {
 func (reader *tcpReader) Read(p []byte) (int, error) {
 	var msg api.TcpReaderDataMsg
 
+	// TODO: There are problems in AMQP and Kafka
 	if reader.exhaustBuffer && len(reader.data) == 0 {
 		if len(reader.msgBuffer) > 0 {
 			// Pop first message
@@ -134,6 +135,7 @@ func (reader *tcpReader) Read(p []byte) (int, error) {
 			reader.packetsSeen += 1
 		}
 	}
+
 	if !ok || len(reader.data) == 0 {
 		return 0, io.EOF
 	}
