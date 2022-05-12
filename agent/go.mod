@@ -8,6 +8,7 @@ require (
 	github.com/djherbis/atime v1.1.0
 	github.com/elastic/go-elasticsearch/v7 v7.17.0
 	github.com/getkin/kin-openapi v0.89.0
+	github.com/gin-contrib/pprof v1.3.0
 	github.com/gin-contrib/static v0.0.1
 	github.com/gin-gonic/gin v1.7.7
 	github.com/go-playground/locales v0.14.0
