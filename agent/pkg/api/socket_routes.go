@@ -34,8 +34,11 @@ type SocketConnection struct {
 }
 
 type WebSocketParams struct {
+	LeftOff           string `json:"leftOff"`
 	Query             string `json:"query"`
 	EnableFullEntries bool   `json:"enableFullEntries"`
+	Fetch             int    `json:"fetch"`
+	TimeoutMs         int    `json:"timeoutMs"`
 }
 
 var (
