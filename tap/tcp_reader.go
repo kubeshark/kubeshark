@@ -95,7 +95,7 @@ func (reader *tcpReader) Read(p []byte) (int, error) {
 	for ok && len(reader.data) == 0 {
 		msg, ok = <-reader.msgQueue
 		if msg != nil {
-			reader.data = append(reader.data, msg.GetBytes()...)
+			reader.data = msg.GetBytes()
 			reader.captureTime = msg.GetTimestamp()
 		}
 
