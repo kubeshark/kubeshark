@@ -22,7 +22,6 @@ type tcpReader struct {
 	isOutgoing    bool
 	msgQueue      chan api.TcpReaderDataMsg // Channel of captured reassembled tcp payload
 	buffer        []byte
-	exhaustBuffer bool
 	data          []byte
 	progress      *api.ReadProgress
 	captureTime   time.Time
@@ -58,7 +57,7 @@ func (reader *tcpReader) run(options *api.TrafficFilteringOptions, wg *sync.Wait
 		if err == nil || reader.isProtocolIdentified() {
 			break
 		}
-		reader.exhaustBuffer = true
+		reader.rewind()
 	}
 }
 
@@ -83,12 +82,11 @@ func (reader *tcpReader) isProtocolIdentified() bool {
 	return reader.parent.protocol != nil
 }
 
-func (reader *tcpReader) Read(p []byte) (int, error) {
-	if reader.exhaustBuffer {
-		reader.data = reader.buffer
-		reader.exhaustBuffer = false
-	}
+func (reader *tcpReader) rewind() {
+	reader.data = reader.buffer
+}
 
+func (reader *tcpReader) Read(p []byte) (int, error) {
 	var msg api.TcpReaderDataMsg
 
 	ok := true
