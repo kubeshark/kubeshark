@@ -18,6 +18,7 @@ import (
 	"time"
 
 	"github.com/shirou/gopsutil/cpu"
+	"github.com/struCoder/pidusage"
 	"github.com/up9inc/mizu/logger"
 	"github.com/up9inc/mizu/tap/api"
 	"github.com/up9inc/mizu/tap/diagnose"
@@ -140,23 +141,27 @@ func printPeriodicStats(cleaner *Cleaner) {
 		// At this moment
 		memStats := runtime.MemStats{}
 		runtime.ReadMemStats(&memStats)
-		cpuPercent, err := cpu.Percent(0, false)
+		
+		sysInfo, err := pidusage.GetStat(os.Getpid())
 		if err != nil {
-			logger.Log.Errorf("error getting cpu usage: %v", err)
-			cpuPercent = []float64{}
+			sysInfo = &pidusage.SysInfo{
+				CPU:    -1,
+				Memory: -1,
+			}
 		}
-		numCores, _ := cpu.Counts(true)
+		
+		numCores, err := cpu.Counts(true)
 		if err != nil {
-			logger.Log.Errorf("error getting cores count: %v", err)
 			numCores = -1
 		}
+		
 		logger.Log.Infof(
-			"mem: %d, goroutines: %d, cpu: %v, cores: %d",
+			"mem: %d, goroutines: %d, cpu: %f, cores: %d, rss: %f",
 			memStats.HeapAlloc,
 			runtime.NumGoroutine(),
-			cpuPercent,
+			sysInfo.CPU,
 			numCores,
-		)
+			sysInfo.Memory)
 
 		// Since the last print
 		cleanStats := cleaner.dumpStats()
