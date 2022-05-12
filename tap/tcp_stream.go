@@ -69,8 +69,12 @@ func (t *tcpStream) addReqResMatcher(reqResMatcher api.RequestResponseMatcher) {
 
 func (t *tcpStream) SetProtocol(protocol *api.Protocol) {
 	t.protocol = protocol
-	t.client.pastData = []byte{}
-	t.server.pastData = []byte{}
+
+	// Clean the buffers
+	t.client.msgBuffer = []api.TcpReaderDataMsg{}
+	t.client.msgBufferMaster = []api.TcpReaderDataMsg{}
+	t.server.msgBuffer = []api.TcpReaderDataMsg{}
+	t.server.msgBufferMaster = []api.TcpReaderDataMsg{}
 }
 
 func (t *tcpStream) GetOrigin() api.Capture {

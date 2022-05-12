@@ -15,21 +15,23 @@ import (
  * Implements io.Reader interface (Read)
  */
 type tcpReader struct {
-	ident         string
-	tcpID         *api.TcpID
-	isClosed      bool
-	isClient      bool
-	isOutgoing    bool
-	msgQueue      chan api.TcpReaderDataMsg // Channel of captured reassembled tcp payload
-	pastData      []byte
-	data          []byte
-	progress      *api.ReadProgress
-	captureTime   time.Time
-	parent        *tcpStream
-	packetsSeen   uint
-	emitter       api.Emitter
-	counterPair   *api.CounterPair
-	reqResMatcher api.RequestResponseMatcher
+	ident           string
+	tcpID           *api.TcpID
+	isClosed        bool
+	isClient        bool
+	isOutgoing      bool
+	msgQueue        chan api.TcpReaderDataMsg // Channel of captured reassembled tcp payload
+	msgBuffer       []api.TcpReaderDataMsg
+	msgBufferMaster []api.TcpReaderDataMsg
+	exhaustBuffer   bool
+	data            []byte
+	progress        *api.ReadProgress
+	captureTime     time.Time
+	parent          *tcpStream
+	packetsSeen     uint
+	emitter         api.Emitter
+	counterPair     *api.CounterPair
+	reqResMatcher   api.RequestResponseMatcher
 	sync.Mutex
 }
 
@@ -83,12 +85,39 @@ func (reader *tcpReader) isProtocolIdentified() bool {
 }
 
 func (reader *tcpReader) rewind() {
-	reader.data = make([]byte, len(reader.pastData))
-	copy(reader.data, reader.pastData)
+	// Tell Read to exhaust the msgBuffer
+	reader.exhaustBuffer = true
+
+	// Reset the data and msgBuffer from the master record
+	reader.data = []byte{}
+	reader.msgBuffer = make([]api.TcpReaderDataMsg, len(reader.msgBufferMaster))
+	copy(reader.msgBuffer, reader.msgBufferMaster)
+
+	// Reset the read progress
+	reader.progress.Reset()
 }
 
 func (reader *tcpReader) Read(p []byte) (int, error) {
 	var msg api.TcpReaderDataMsg
+
+	if reader.exhaustBuffer && len(reader.data) == 0 {
+		if len(reader.msgBuffer) > 0 {
+			// Pop first message
+			msg, reader.msgBuffer = reader.msgBuffer[0], reader.msgBuffer[1:]
+
+			// Get the bytes
+			reader.data = msg.GetBytes()
+			reader.captureTime = msg.GetTimestamp()
+
+			// Set exhaustBuffer to false if we exhaust the msgBuffer
+			if len(reader.msgBuffer) == 0 {
+				reader.exhaustBuffer = false
+			}
+		} else {
+			// Buffer is empty
+			reader.exhaustBuffer = false
+		}
+	}
 
 	ok := true
 	for ok && len(reader.data) == 0 {
@@ -97,7 +126,7 @@ func (reader *tcpReader) Read(p []byte) (int, error) {
 			reader.data = msg.GetBytes()
 			reader.captureTime = msg.GetTimestamp()
 			if !reader.isProtocolIdentified() {
-				reader.pastData = append(reader.pastData, reader.data...)
+				reader.msgBufferMaster = append(reader.msgBufferMaster, msg)
 			}
 		}
 

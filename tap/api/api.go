@@ -118,6 +118,11 @@ func (p *ReadProgress) Current() (n int) {
 	return p.lastCurrent
 }
 
+func (p *ReadProgress) Reset() {
+	p.readBytes = 0
+	p.lastCurrent = 0
+}
+
 type Dissector interface {
 	Register(*Extension)
 	Ping()
