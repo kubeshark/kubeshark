@@ -1,6 +1,5 @@
 @import '../../../variables.module'
 @import '../../../components'
-      
 
 .selectListTable
     overflow: auto
@@ -11,21 +10,35 @@
         width: 100%
         margin-top: 20px
         border-collapse: collapse
+        table-layout: fixed
+        height: 100%
 
-        th
-            color: $blue-gray
-            text-align: left
-            padding: 10px
-            position: sticky
-            top: 0
-            background: $main-background-color
-            font-size: 12px
+    tbody
+        overflow-y: overlay
+        display: block
+        height: 100%
+        width: 100%
+        overflow-y: auto
+        overflow-x: hidden
 
-        tr
-            border-bottom-width: 1px
-            border-bottom-color: $data-background-color
-            border-bottom-style: solid
-            width: 100%
+    tbody tr:hover
+        background: $header-background-color
+
+    th
+        color: $blue-gray
+        text-align: left
+        padding: 10px
+        background: $main-background-color
+        font-size: 12px
+
+    tr
+        border-bottom-width: 1px
+        border-bottom-color: $data-background-color
+        border-bottom-style: solid
+        table-layout: fixed
+        width: 100%
+        display: block
+        position: relative
 
         td
             color: $light-gray
@@ -39,6 +52,9 @@
     white-space: nowrap
 
 .totalSelected
-  font-size: 12px
-  color: $light-blue-color
-  font-weight: 700
+    font-size: 12px
+    color: $light-blue-color
+    font-weight: 700
+
+.displayBlock
+    display: block
