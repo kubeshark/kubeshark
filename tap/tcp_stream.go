@@ -32,6 +32,7 @@ func NewTcpStream(isTapTarget bool, streamsMap api.TcpStreamMap, capture api.Cap
 		isTapTarget: isTapTarget,
 		streamsMap:  streamsMap,
 		origin:      capture,
+		createdAt:   time.Now(),
 	}
 }
 
