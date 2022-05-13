@@ -1,6 +1,7 @@
 package tap
 
 import (
+	"bytes"
 	"sync"
 	"time"
 
@@ -71,8 +72,8 @@ func (t *tcpStream) SetProtocol(protocol *api.Protocol) {
 	t.protocol = protocol
 
 	// Clean the buffers
-	t.client.msgBufferMaster = make([]api.TcpReaderDataMsg, 0)
-	t.server.msgBufferMaster = make([]api.TcpReaderDataMsg, 0)
+	t.client.msgBufferMaster = bytes.NewBuffer(make([]byte, 0))
+	t.server.msgBufferMaster = bytes.NewBuffer(make([]byte, 0))
 }
 
 func (t *tcpStream) GetOrigin() api.Capture {
