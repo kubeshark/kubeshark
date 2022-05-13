@@ -33,17 +33,16 @@ type tcpReader struct {
 	sync.Mutex
 }
 
-func NewTcpReader(msgQueue chan api.TcpReaderDataMsg, progress *api.ReadProgress, ident string, tcpId *api.TcpID, captureTime time.Time, parent *tcpStream, isClient bool, isOutgoing bool, emitter api.Emitter) *tcpReader {
+func NewTcpReader(ident string, tcpId *api.TcpID, parent *tcpStream, isClient bool, isOutgoing bool, emitter api.Emitter) *tcpReader {
 	return &tcpReader{
-		msgQueue:    msgQueue,
-		progress:    progress,
-		ident:       ident,
-		tcpID:       tcpId,
-		captureTime: captureTime,
-		parent:      parent,
-		isClient:    isClient,
-		isOutgoing:  isOutgoing,
-		emitter:     emitter,
+		msgQueue:   make(chan api.TcpReaderDataMsg),
+		progress:   &api.ReadProgress{},
+		ident:      ident,
+		tcpID:      tcpId,
+		parent:     parent,
+		isClient:   isClient,
+		isOutgoing: isOutgoing,
+		emitter:    emitter,
 	}
 }
 

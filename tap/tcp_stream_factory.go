@@ -3,7 +3,6 @@ package tap
 import (
 	"fmt"
 	"sync"
-	"time"
 
 	"github.com/up9inc/mizu/logger"
 	"github.com/up9inc/mizu/tap/api"
@@ -74,8 +73,6 @@ func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcpLayer *lay
 		}
 
 		stream.client = NewTcpReader(
-			make(chan api.TcpReaderDataMsg),
-			&api.ReadProgress{},
 			fmt.Sprintf("%s %s", net, transport),
 			&api.TcpID{
 				SrcIP:   srcIp,
@@ -83,7 +80,6 @@ func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcpLayer *lay
 				SrcPort: srcPort,
 				DstPort: dstPort,
 			},
-			time.Time{},
 			stream,
 			true,
 			props.isOutgoing,
@@ -91,8 +87,6 @@ func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcpLayer *lay
 		)
 
 		stream.server = NewTcpReader(
-			make(chan api.TcpReaderDataMsg),
-			&api.ReadProgress{},
 			fmt.Sprintf("%s %s", net, transport),
 			&api.TcpID{
 				SrcIP:   net.Dst().String(),
@@ -100,7 +94,6 @@ func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcpLayer *lay
 				SrcPort: transport.Dst().String(),
 				DstPort: transport.Src().String(),
 			},
-			time.Time{},
 			stream,
 			false,
 			props.isOutgoing,
