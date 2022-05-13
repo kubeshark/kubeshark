@@ -16,38 +16,36 @@ import (
  * Implements io.Reader interface (Read)
  */
 type tcpReader struct {
-	ident           string
-	tcpID           *api.TcpID
-	isClosed        bool
-	isClient        bool
-	isOutgoing      bool
-	msgQueue        chan api.TcpReaderDataMsg // Channel of captured reassembled tcp payload
-	msgBuffer       *bytes.Buffer
-	msgBufferMaster *bytes.Buffer
-	data            []byte
-	progress        *api.ReadProgress
-	captureTime     time.Time
-	parent          *tcpStream
-	packetsSeen     uint
-	emitter         api.Emitter
-	counterPair     *api.CounterPair
-	reqResMatcher   api.RequestResponseMatcher
+	ident         string
+	tcpID         *api.TcpID
+	isClosed      bool
+	isClient      bool
+	isOutgoing    bool
+	msgQueue      chan api.TcpReaderDataMsg // Channel of captured reassembled tcp payload
+	msgBuffer     *bytes.Buffer
+	data          []byte
+	progress      *api.ReadProgress
+	captureTime   time.Time
+	parent        *tcpStream
+	packetsSeen   uint
+	emitter       api.Emitter
+	counterPair   *api.CounterPair
+	reqResMatcher api.RequestResponseMatcher
 	sync.Mutex
 }
 
 func NewTcpReader(msgQueue chan api.TcpReaderDataMsg, progress *api.ReadProgress, ident string, tcpId *api.TcpID, captureTime time.Time, parent *tcpStream, isClient bool, isOutgoing bool, emitter api.Emitter) *tcpReader {
 	return &tcpReader{
-		msgQueue:        msgQueue,
-		msgBuffer:       bytes.NewBuffer(make([]byte, 0)),
-		msgBufferMaster: bytes.NewBuffer(make([]byte, 0)),
-		progress:        progress,
-		ident:           ident,
-		tcpID:           tcpId,
-		captureTime:     captureTime,
-		parent:          parent,
-		isClient:        isClient,
-		isOutgoing:      isOutgoing,
-		emitter:         emitter,
+		msgQueue:    msgQueue,
+		msgBuffer:   bytes.NewBuffer(make([]byte, 0)),
+		progress:    progress,
+		ident:       ident,
+		tcpID:       tcpId,
+		captureTime: captureTime,
+		parent:      parent,
+		isClient:    isClient,
+		isOutgoing:  isOutgoing,
+		emitter:     emitter,
 	}
 }
 
@@ -88,21 +86,15 @@ func (reader *tcpReader) isProtocolIdentified() bool {
 
 func (reader *tcpReader) rewind() {
 	// Reset the data and msgBuffer from the master record
-	reader.data = make([]byte, 0)
-	buffer := reader.msgBufferMaster.Bytes()
-	reader.msgBuffer = bytes.NewBuffer(make([]byte, 0))
-	reader.msgBuffer.Write(buffer)
+	buffer := reader.msgBuffer.Bytes()
+	reader.data = make([]byte, len(buffer))
+	copy(reader.data, buffer)
 
 	// Reset the read progress
 	reader.progress.Reset()
 }
 
 func (reader *tcpReader) Read(p []byte) (int, error) {
-	if reader.msgBuffer.Len() > 0 {
-		reader.data = reader.msgBuffer.Bytes()
-		reader.msgBuffer = bytes.NewBuffer(make([]byte, 0))
-	}
-
 	var msg api.TcpReaderDataMsg
 	ok := true
 	for ok && len(reader.data) == 0 {
@@ -112,7 +104,7 @@ func (reader *tcpReader) Read(p []byte) (int, error) {
 			reader.captureTime = msg.GetTimestamp()
 
 			if !reader.isProtocolIdentified() {
-				reader.msgBufferMaster.Write(reader.data)
+				reader.msgBuffer.Write(reader.data)
 			}
 		}
 
