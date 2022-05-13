@@ -93,7 +93,7 @@ func (reader *tcpReader) rewind() {
 }
 
 func (reader *tcpReader) populateData(msg api.TcpReaderDataMsg) {
-	reader.data = msg.NewBytes()
+	reader.data = msg.GetBytes()
 	reader.captureTime = msg.GetTimestamp()
 }
 
@@ -122,7 +122,7 @@ func (reader *tcpReader) Read(p []byte) (int, error) {
 			if !reader.isProtocolIdentified() {
 				reader.msgBufferMaster = append(
 					reader.msgBufferMaster,
-					NewTcpReaderDataMsg(msg.NewBytes(), msg.GetTimestamp()),
+					msg,
 				)
 			}
 		}

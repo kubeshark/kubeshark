@@ -22,9 +22,3 @@ func (dataMsg *tcpReaderDataMsg) GetBytes() []byte {
 func (dataMsg *tcpReaderDataMsg) GetTimestamp() time.Time {
 	return dataMsg.timestamp
 }
-
-func (dataMsg *tcpReaderDataMsg) NewBytes() []byte {
-	newBytes := make([]byte, len(dataMsg.bytes))
-	copy(newBytes, dataMsg.bytes)
-	return newBytes
-}

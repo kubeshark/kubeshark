@@ -406,7 +406,6 @@ func (r *HTTPResponseWrapper) MarshalJSON() ([]byte, error) {
 type TcpReaderDataMsg interface {
 	GetBytes() []byte
 	GetTimestamp() time.Time
-	NewBytes() []byte
 }
 
 type TcpReader interface {
