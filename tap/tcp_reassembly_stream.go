@@ -10,12 +10,6 @@ import (
 	"github.com/up9inc/mizu/tap/diagnose"
 )
 
-type ReassemblyStream interface {
-	Accept(tcp *layers.TCP, ci gopacket.CaptureInfo, dir reassembly.TCPFlowDirection, nextSeq reassembly.Sequence, start *bool, ac reassembly.AssemblerContext) bool
-	ReassembledSG(sg reassembly.ScatterGather, ac reassembly.AssemblerContext)
-	ReassemblyComplete(ac reassembly.AssemblerContext) bool
-}
-
 type tcpReassemblyStream struct {
 	ident      string
 	tcpState   *reassembly.TCPSimpleFSM
@@ -25,7 +19,7 @@ type tcpReassemblyStream struct {
 	tcpStream  api.TcpStream
 }
 
-func NewTcpReassemblyStream(ident string, tcp *layers.TCP, fsmOptions reassembly.TCPSimpleFSMOptions, stream api.TcpStream) ReassemblyStream {
+func NewTcpReassemblyStream(ident string, tcp *layers.TCP, fsmOptions reassembly.TCPSimpleFSMOptions, stream api.TcpStream) reassembly.Stream {
 	return &tcpReassemblyStream{
 		ident:      ident,
 		tcpState:   reassembly.NewTCPSimpleFSM(fsmOptions),
