@@ -37,7 +37,9 @@ def extract_samples(f: typing.IO) -> typing.Tuple[pd.Series, pd.Series, pd.Serie
 if __name__ == '__main__':
     filenames = sys.argv[1:]
 
-    fig = plt.figure(1)
+    cpu_samples_all_files = []
+    rss_samples_all_files = []
+    count_samples_all_files = []
 
     for ii, filename in enumerate(filenames):
         with open(filename, 'r') as f:
@@ -47,28 +49,30 @@ if __name__ == '__main__':
         rss_samples.name = pathlib.Path(filename).name
         count_samples.name = pathlib.Path(filename).name
 
-        plt.subplot(3, 1, 1)
-        cpu_samples.plot()
+        cpu_samples_all_files.append(cpu_samples)
+        rss_samples_all_files.append(rss_samples)
+        count_samples_all_files.append(count_samples)
 
-        plt.subplot(3, 1, 2)
-        (rss_samples / 1024 / 1024).plot()
+    cpu_samples_df = pd.concat(cpu_samples_all_files, axis=1)
+    rss_samples_df = pd.concat(rss_samples_all_files, axis=1)
+    count_samples_df = pd.concat(count_samples_all_files, axis=1)
 
-        plt.subplot(3, 1, 3)
-        count_samples.plot()
-
-    plt.subplot(3, 1, 1)
-    plt.legend()
+    ax = plt.subplot(3, 1, 1)
+    cpu_samples_df.plot(ax=ax)
     plt.title('cpu')
+    plt.legend()
     plt.xlabel('# sample')
     plt.ylabel('cpu (%)')
 
-    plt.subplot(3, 1, 2)
+    ax = plt.subplot(3, 1, 2)
+    rss_samples_df.plot(ax=ax)
     plt.title('rss')
     plt.legend()
     plt.xlabel('# sample')
     plt.ylabel('mem (MB)')
 
-    plt.subplot(3, 1, 3)
+    ax = plt.subplot(3, 1, 3)
+    count_samples_df.plot(ax=ax)
     plt.title('packetsCount')
     plt.legend()
     plt.xlabel('# sample')
