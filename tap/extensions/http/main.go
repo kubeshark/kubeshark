@@ -66,7 +66,7 @@ var grpcProtocol api.Protocol = api.Protocol{
 	BackgroundColor: "#244c5a",
 	ForegroundColor: "#ffffff",
 	FontSize:        11,
-	ReferenceLink:   "https://grpc.github.io/grpc/core/md_doc_statuscodes.html",
+	ReferenceLink:   "https://grpc.github.io/grpc/core/md_doc__p_r_o_t_o_c_o_l-_h_t_t_p2.html",
 	Ports:           []string{"80", "443", "8080", "50051"},
 	Priority:        0,
 }
