@@ -35,6 +35,7 @@ def extract_samples(f: typing.IO) -> typing.Tuple[pd.Series, pd.Series, pd.Serie
     return cpu_samples, rss_samples, count_samples
 
 if __name__ == '__main__':
+    COLORMAP = plt.get_cmap('turbo')
     filenames = sys.argv[1:]
 
     cpu_samples_all_files = []
@@ -58,21 +59,21 @@ if __name__ == '__main__':
     count_samples_df = pd.concat(count_samples_all_files, axis=1)
 
     ax = plt.subplot(3, 1, 1)
-    cpu_samples_df.plot(ax=ax)
+    cpu_samples_df.plot(cmap=COLORMAP, ax=ax)
     plt.title('cpu')
     plt.legend()
     plt.xlabel('# sample')
     plt.ylabel('cpu (%)')
 
     ax = plt.subplot(3, 1, 2)
-    rss_samples_df.plot(ax=ax)
+    rss_samples_df.plot(cmap=COLORMAP, ax=ax)
     plt.title('rss')
     plt.legend()
     plt.xlabel('# sample')
     plt.ylabel('mem (MB)')
 
     ax = plt.subplot(3, 1, 3)
-    count_samples_df.plot(ax=ax)
+    count_samples_df.plot(cmap=COLORMAP, ax=ax)
     plt.title('packetsCount')
     plt.legend()
     plt.xlabel('# sample')
