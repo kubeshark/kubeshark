@@ -5,6 +5,7 @@ import re
 import sys
 import typing
 
+COLORMAP = plt.get_cmap('turbo')
 
 # Extract cpu and rss samples from log files and plot them
 # Input: List of log files
@@ -35,7 +36,6 @@ def extract_samples(f: typing.IO) -> typing.Tuple[pd.Series, pd.Series, pd.Serie
     return cpu_samples, rss_samples, count_samples
 
 if __name__ == '__main__':
-    COLORMAP = plt.get_cmap('turbo')
     filenames = sys.argv[1:]
 
     cpu_samples_all_files = []
