@@ -35,6 +35,13 @@ def extract_samples(f: typing.IO) -> typing.Tuple[pd.Series, pd.Series, pd.Serie
 
     return cpu_samples, rss_samples, count_samples
 
+def plot(df: pd.DataFrame, title: str, xlabel: str, ylabel: str):
+    df.plot(cmap=COLORMAP, ax=ax)
+    plt.title(title)
+    plt.legend()
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+
 if __name__ == '__main__':
     filenames = sys.argv[1:]
 
@@ -59,24 +66,12 @@ if __name__ == '__main__':
     count_samples_df = pd.concat(count_samples_all_files, axis=1)
 
     ax = plt.subplot(3, 1, 1)
-    cpu_samples_df.plot(cmap=COLORMAP, ax=ax)
-    plt.title('cpu')
-    plt.legend()
-    plt.xlabel('# sample')
-    plt.ylabel('cpu (%)')
+    plot(cpu_samples_df, 'cpu', '# sample', 'cpu (%)')
 
     ax = plt.subplot(3, 1, 2)
-    (rss_samples_df / 1024 / 1024).plot(cmap=COLORMAP, ax=ax)
-    plt.title('rss')
-    plt.legend()
-    plt.xlabel('# sample')
-    plt.ylabel('mem (MB)')
+    plot(rss_samples_df, 'rss', '# sample', 'mem (MB)')
 
     ax = plt.subplot(3, 1, 3)
-    count_samples_df.plot(cmap=COLORMAP, ax=ax)
-    plt.title('packetsCount')
-    plt.legend()
-    plt.xlabel('# sample')
-    plt.ylabel('packetsCount')
+    plot(count_samples_df, 'packetsCount', '# sample', 'packetsCount')
 
     plt.show()
