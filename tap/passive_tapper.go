@@ -55,7 +55,8 @@ var tls = flag.Bool("tls", false, "Enable TLS tapper")
 var memprofile = flag.String("memprofile", "", "Write memory profile")
 
 type TapOpts struct {
-	HostMode bool
+	HostMode         bool
+	ApiServerAddress string
 }
 
 var extensions []*api.Extension                     // global

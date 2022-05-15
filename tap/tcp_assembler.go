@@ -2,8 +2,10 @@ package tap
 
 import (
 	"encoding/hex"
+	"net/url"
 	"os"
 	"os/signal"
+	"strconv"
 	"sync"
 	"time"
 
@@ -11,6 +13,7 @@ import (
 	"github.com/google/gopacket/layers"
 	"github.com/google/gopacket/reassembly"
 	"github.com/up9inc/mizu/logger"
+	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/tap/api"
 	"github.com/up9inc/mizu/tap/diagnose"
 	"github.com/up9inc/mizu/tap/source"
@@ -23,6 +26,7 @@ type tcpAssembler struct {
 	streamPool     *reassembly.StreamPool
 	streamFactory  *tcpStreamFactory
 	assemblerMutex sync.Mutex
+	apiServerPort  uint16
 }
 
 // Context
@@ -57,6 +61,7 @@ func NewTcpAssembler(outputItems chan *api.OutputChannelItem, streamsMap api.Tcp
 		Assembler:     assembler,
 		streamPool:    streamPool,
 		streamFactory: streamFactory,
+		apiServerPort: extractApiServerPort(opts.ApiServerAddress),
 	}
 }
 
@@ -83,14 +88,18 @@ func (a *tcpAssembler) processPackets(dumpPacket bool, packets <-chan source.Tcp
 			diagnose.AppStats.IncTcpPacketsCount()
 			tcp := tcp.(*layers.TCP)
 
-			c := context{
-				CaptureInfo: packet.Metadata().CaptureInfo,
-				Origin:      packetInfo.Source.Origin,
+			if uint16(tcp.DstPort) == a.apiServerPort {
+				diagnose.AppStats.IncTapperPacketsCount()
+			} else {
+				c := context{
+					CaptureInfo: packet.Metadata().CaptureInfo,
+					Origin:      packetInfo.Source.Origin,
+				}
+				diagnose.InternalStats.Totalsz += len(tcp.Payload)
+				a.assemblerMutex.Lock()
+				a.AssembleWithContext(packet.NetworkLayer().NetworkFlow(), tcp, &c)
+				a.assemblerMutex.Unlock()
 			}
-			diagnose.InternalStats.Totalsz += len(tcp.Payload)
-			a.assemblerMutex.Lock()
-			a.AssembleWithContext(packet.NetworkLayer().NetworkFlow(), tcp, &c)
-			a.assemblerMutex.Unlock()
 		}
 
 		done := *maxcount > 0 && int64(diagnose.AppStats.PacketsCount) >= *maxcount
@@ -131,4 +140,27 @@ func (a *tcpAssembler) waitAndDump() {
 	a.assemblerMutex.Lock()
 	logger.Log.Debugf("%s", a.Dump())
 	a.assemblerMutex.Unlock()
+}
+
+func extractApiServerPort(apiServerAddress string) uint16 {
+	url, err := url.Parse(apiServerAddress)
+
+	if err != nil {
+		logger.Log.Warningf("Failed to parse api server url %t", err)
+		return shared.DefaultApiServerPort
+	} else {
+		portStr := url.Port()
+
+		if portStr == "" {
+			return shared.DefaultApiServerPort
+		} else {
+			apiServerPort, err := strconv.ParseInt(portStr, 10, 16)
+
+			if err != nil {
+				logger.Log.Warningf("Failed to convert api server port to number %t", err)
+			}
+
+			return uint16(apiServerPort)
+		}
+	}
 }
