@@ -158,6 +158,7 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
         if (checkedProtocols.length === 0) {
             setCheckedProtocols(getProtocolsForFilter.map(x => x.key))
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [getProtocolsForFilter])
 
     useEffect(() => {
