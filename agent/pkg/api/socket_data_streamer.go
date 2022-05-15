@@ -35,9 +35,12 @@ func (e *BasenineEntryStreamer) Get(ctx context.Context, socketId int, params *W
 
 	query := params.Query
 	if err = basenine.Validate(shared.BasenineHost, shared.BaseninePort, query); err != nil {
-		if err = entryStreamerSocketConnector.SendToastError(socketId, err); err != nil {
+		if err := entryStreamerSocketConnector.SendToastError(socketId, err); err != nil {
 			return err
 		}
+
+		entryStreamerSocketConnector.CleanupSocket(socketId)
+		return err
 	}
 
 	leftOff, err := e.fetch(socketId, params, entryStreamerSocketConnector)
