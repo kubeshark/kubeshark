@@ -25,10 +25,7 @@ import (
 	"github.com/up9inc/mizu/agent/pkg/utils"
 
 	"github.com/up9inc/mizu/logger"
-	"github.com/up9inc/mizu/shared"
 	tapApi "github.com/up9inc/mizu/tap/api"
-
-	basenine "github.com/up9inc/basenine/client/go"
 )
 
 var k8sResolver *resolver.Resolver
@@ -103,20 +100,6 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 		panic("Channel of captured messages is nil")
 	}
 
-BasenineReconnect:
-	connection, err := basenine.NewConnection(shared.BasenineHost, shared.BaseninePort)
-	if err != nil {
-		logger.Log.Errorf("Can't establish a new connection to Basenine server: %v", err)
-		time.Sleep(shared.BasenineReconnectInterval * time.Second)
-		goto BasenineReconnect
-	}
-	if err = connection.InsertMode(); err != nil {
-		logger.Log.Errorf("Insert mode call failed: %v", err)
-		connection.Close()
-		time.Sleep(shared.BasenineReconnectInterval * time.Second)
-		goto BasenineReconnect
-	}
-
 	disableOASValidation := false
 	ctx := context.Background()
 	doc, contractContent, router, err := loadOAS(ctx)
@@ -163,11 +146,9 @@ BasenineReconnect:
 
 		providers.EntryAdded(len(data))
 
-		if err = connection.SendText(string(data)); err != nil {
-			logger.Log.Errorf("An error occured while inserting a new record to database: %v", err)
-			connection.Close()
-			time.Sleep(shared.BasenineReconnectInterval * time.Second)
-			goto BasenineReconnect
+		entryInserter := dependency.GetInstance(dependency.EntriesInserter).(EntryInserter)
+		if err := entryInserter.Insert(mizuEntry); err != nil {
+			logger.Log.Errorf("Error inserting entry, err: %v", err)
 		}
 
 		serviceMapGenerator := dependency.GetInstance(dependency.ServiceMapGeneratorDependency).(servicemap.ServiceMapSink)
