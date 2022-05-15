@@ -1,44 +1,70 @@
 @import '../../../variables.module'
 @import '../../../components'
-      
 
 .selectListTable
-    overflow: auto
-    height: 100%
     user-select: none // when resizble moved we get unwanted beheviour
+    height: 100%
 
     table
         width: 100%
-        margin-top: 20px
         border-collapse: collapse
+        table-layout: fixed
+        height: 100%
+        display: flex
+        flex-flow: column
+        height: 100%
 
-        th
-            color: $blue-gray
-            text-align: left
-            padding: 10px
-            position: sticky
-            top: 0
-            background: $main-background-color
-            font-size: 12px
+    thead
+        display: table
+        table-layout: fixed
+        flex: 0 0 auto
+        width: calc(100% - 0.9em)
 
-        tr
-            border-bottom-width: 1px
-            border-bottom-color: $data-background-color
-            border-bottom-style: solid
-            width: 100%
+    tbody
+        display: block
+        overflow: auto
+        width: 100%
+        height: 100%
+        flex: 1 1 auto
 
-        td
-            color: $light-gray
-            padding: 10px
-            font-size: 11px
-            font-weight: 600
-            padding-top: 5px
-            padding-bottom: 5px
+    tbody tr:hover
+        background: $header-background-color
+
+    th
+        color: $blue-gray
+        text-align: left
+        padding: 10px
+        background: $main-background-color
+        font-size: 12px
+
+    tr
+        border-bottom-width: 1px
+        border-bottom-color: $data-background-color
+        border-bottom-style: solid
+        width: 100%
+        display: block
+        position: relative
+        display: table
+        table-layout: fixed
+
+    td
+        color: $light-gray
+        padding: 10px
+        font-size: 11px
+        font-weight: 600
+        padding-top: 5px
+        padding-bottom: 5px
 
 .nowrap
     white-space: nowrap
 
 .totalSelected
-  font-size: 12px
-  color: $light-blue-color
-  font-weight: 700
+    font-size: 12px
+    color: $light-blue-color
+    font-weight: 700
+
+.displayBlock
+    display: block
+
+.filterInput
+    margin-bottom: 20px
