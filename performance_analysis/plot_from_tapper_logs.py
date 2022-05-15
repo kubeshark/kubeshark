@@ -66,7 +66,7 @@ if __name__ == '__main__':
     plt.ylabel('cpu (%)')
 
     ax = plt.subplot(3, 1, 2)
-    rss_samples_df.plot(cmap=COLORMAP, ax=ax)
+    (rss_samples_df / 1024 / 1024).plot(cmap=COLORMAP, ax=ax)
     plt.title('rss')
     plt.legend()
     plt.xlabel('# sample')
