@@ -7,6 +7,7 @@ import (
 	"github.com/up9inc/mizu/logger"
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/tap/api"
+	"sync"
 	"time"
 )
 
@@ -14,8 +15,19 @@ type EntryInserter interface {
 	Insert(entry *api.Entry) error
 }
 
-type BasenineEntryInserter struct{
+type BasenineEntryInserter struct {
 	connection *basenine.Connection
+}
+
+var instance *BasenineEntryInserter
+var once sync.Once
+
+func GetBasenineEntryInserterInstance() *BasenineEntryInserter {
+	once.Do(func() {
+		instance = &BasenineEntryInserter{}
+	})
+
+	return instance
 }
 
 func (e *BasenineEntryInserter) Insert(entry *api.Entry) error {
