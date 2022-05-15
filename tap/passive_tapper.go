@@ -189,7 +189,7 @@ func initializePassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelI
 	diagnose.InitializeErrorsMap(*debug, *verbose, *quiet)
 	diagnose.InitializeTapperInternalStats()
 
-	mainPacketInputChan = make(chan source.TcpPacketInfo)
+	mainPacketInputChan = make(chan source.TcpPacketInfo, 1000)
 
 	if err := initializePacketSources(); err != nil {
 		logger.Log.Fatal(err)
