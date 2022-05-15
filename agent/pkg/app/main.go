@@ -24,6 +24,8 @@ var (
 )
 
 func LoadExtensions() {
+	// (DEBUG_PERF 5) Comment out paragraphs to disable extensions
+	//   Remember to fix indices: Length of Extensions slice, index in assignment to Extensions
 	Extensions = make([]*tapApi.Extension, 4)
 	ExtensionsMap = make(map[string]*tapApi.Extension)
 

@@ -132,6 +132,7 @@ func (t *tcpStream) GetReqResMatchers() []api.RequestResponseMatcher {
 }
 
 func (t *tcpStream) GetIsTapTarget() bool {
+	// (DEBUG_PERF 3) Return false to disable Dissecting
 	return t.isTapTarget
 }
 

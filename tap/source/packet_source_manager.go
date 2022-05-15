@@ -44,6 +44,7 @@ func NewPacketSourceManager(procfs string, filename string, interfaceName string
 		behaviour:     behaviour,
 	}
 
+	// (DEBUG_PERF 1) Comment out to disable host pcap (do not pass --tls or --service-mesh)
 	go hostSource.readPackets(ipdefrag, packets)
 	return sourceManager, nil
 }

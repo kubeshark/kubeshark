@@ -78,6 +78,7 @@ func (a *tcpAssembler) processPackets(dumpPacket bool, packets <-chan source.Tcp
 			logger.Log.Debugf("Packet content (%d/0x%x) - %s", len(data), len(data), hex.Dump(data))
 		}
 
+		// (DEBUG_PERF 2) Comment out to disable assembler
 		tcp := packet.Layer(layers.LayerTypeTCP)
 		if tcp != nil {
 			diagnose.AppStats.IncTcpPacketsCount()

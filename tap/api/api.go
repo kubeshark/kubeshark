@@ -149,6 +149,7 @@ type Emitter interface {
 }
 
 func (e *Emitting) Emit(item *OutputChannelItem) {
+	// (DEBUG_PERF 6) Comment out to disable emitting from tapper to api-server
 	e.OutputChannel <- item
 	e.AppStats.IncMatchedPairs()
 }
