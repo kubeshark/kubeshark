@@ -90,7 +90,7 @@ if __name__ == '__main__':
     plot(cpu_samples_df, 'cpu', '# sample', 'cpu (%)', group_pattern)
 
     ax = plt.subplot(3, 1, 2)
-    plot(rss_samples_df, 'rss', '# sample', 'mem (MB)', group_pattern)
+    plot((rss_samples_df / 1024 / 1024), 'rss', '# sample', 'mem (MB)', group_pattern)
 
     ax = plt.subplot(3, 1, 3)
     plot(count_samples_df, 'packetsCount', '# sample', 'packetsCount', group_pattern)
