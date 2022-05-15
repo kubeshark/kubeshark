@@ -1,6 +1,7 @@
 package tap
 
 import (
+	"os"
 	"sync"
 	"time"
 
@@ -132,7 +133,10 @@ func (t *tcpStream) GetReqResMatchers() []api.RequestResponseMatcher {
 }
 
 func (t *tcpStream) GetIsTapTarget() bool {
-	// (DEBUG_PERF 3) Return false to disable Dissecting
+	if os.Getenv("MIZU_TAPPER_NO_TAP_TARGET") == "true" {
+		return false
+	}
+	
 	return t.isTapTarget
 }
 

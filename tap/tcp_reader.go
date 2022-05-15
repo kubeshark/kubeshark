@@ -1,6 +1,7 @@
 package tap
 
 import (
+	"os"
 	"bufio"
 	"io"
 	"io/ioutil"
@@ -55,8 +56,12 @@ func NewTcpReader(msgQueue chan api.TcpReaderDataMsg, progress *api.ReadProgress
 func (reader *tcpReader) run(options *api.TrafficFilteringOptions, wg *sync.WaitGroup) {
 	defer wg.Done()
 	b := bufio.NewReader(reader)
-	// (DEBUG_PERF 4) Swap with next line to disable dissectors
-	// _, _ = io.ReadAll(b)
+	
+	if os.Getenv("MIZU_TAPPER_NO_DISSECTORS") == "true" {
+		io.ReadAll(b)
+		return
+	}
+	
 	err := reader.extension.Dissector.Dissect(b, reader, options)
 	if err != nil {
 		_, err = io.Copy(ioutil.Discard, reader)

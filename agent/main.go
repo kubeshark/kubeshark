@@ -292,9 +292,12 @@ func pipeTapChannelToSocket(connection *websocket.Conn, messageDataChannel <-cha
 			continue
 		}
 
+		if os.Getenv("MIZU_TAPPER_NO_SENDING") == "true" {
+			continue
+		}
+
 		// NOTE: This is where the `*tapApi.OutputChannelItem` leaves the code
 		// and goes into the intermediate WebSocket.
-		// (DEBUG_PERF 7) Comment out to disable writing to WebSocket
 		err = connection.WriteMessage(websocket.TextMessage, marshaledData)
 		if err != nil {
 			logger.Log.Errorf("error sending message through socket server %v, err: %s, (%v,%+v)", messageData, err, err, err)

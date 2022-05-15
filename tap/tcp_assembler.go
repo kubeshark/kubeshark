@@ -78,7 +78,6 @@ func (a *tcpAssembler) processPackets(dumpPacket bool, packets <-chan source.Tcp
 			logger.Log.Debugf("Packet content (%d/0x%x) - %s", len(data), len(data), hex.Dump(data))
 		}
 
-		// (DEBUG_PERF 2) Comment out to disable assembler
 		tcp := packet.Layer(layers.LayerTypeTCP)
 		if tcp != nil {
 			diagnose.AppStats.IncTcpPacketsCount()
@@ -90,7 +89,9 @@ func (a *tcpAssembler) processPackets(dumpPacket bool, packets <-chan source.Tcp
 			}
 			diagnose.InternalStats.Totalsz += len(tcp.Payload)
 			a.assemblerMutex.Lock()
-			a.AssembleWithContext(packet.NetworkLayer().NetworkFlow(), tcp, &c)
+			if os.Getenv("MIZU_TAPPER_NO_ASSEMBLER") != "true" {
+				a.AssembleWithContext(packet.NetworkLayer().NetworkFlow(), tcp, &c)
+			}
 			a.assemblerMutex.Unlock()
 		}
 

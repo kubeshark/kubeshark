@@ -149,7 +149,10 @@ type Emitter interface {
 }
 
 func (e *Emitting) Emit(item *OutputChannelItem) {
-	// (DEBUG_PERF 6) Comment out to disable emitting from tapper to api-server
+	if os.Getenv("MIZU_TAPPER_NO_EMITTER") == "true" {
+		return
+	}
+	
 	e.OutputChannel <- item
 	e.AppStats.IncMatchedPairs()
 }
