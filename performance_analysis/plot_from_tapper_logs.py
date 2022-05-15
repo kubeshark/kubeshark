@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 import pathlib
 import re
@@ -9,6 +10,7 @@ COLORMAP = plt.get_cmap('turbo')
 
 # Extract cpu and rss samples from log files and plot them
 # Input: List of log files
+
 
 def append_sample(name: str, line: str, samples: typing.List[float]):
     pattern = name + r': ?(\d+(\.\d+)?)'
@@ -35,12 +37,29 @@ def extract_samples(f: typing.IO) -> typing.Tuple[pd.Series, pd.Series, pd.Serie
 
     return cpu_samples, rss_samples, count_samples
 
-def plot(df: pd.DataFrame, title: str, xlabel: str, ylabel: str):
-    df.plot(cmap=COLORMAP, ax=ax)
+
+def plot(df: pd.DataFrame, title: str, xlabel: str, ylabel: str, group_pattern: typing.Optional[str]):
+    if group_pattern:
+        color = get_group_color(df.columns, group_pattern)
+        df.plot(color=color, ax=ax)
+    else:
+        df.plot(cmap=COLORMAP, ax=ax)
+
     plt.title(title)
     plt.legend()
     plt.xlabel(xlabel)
     plt.ylabel(ylabel)
+
+
+def get_group_color(names, pattern):
+    props = [int(re.findall(pattern, pathlib.Path(name).name)[0]) for name in names]
+    key = dict(zip(sorted(list(set(props))), range(len(set(props)))))
+    n_colors = len(key)
+    color_options = plt.get_cmap('jet')(np.linspace(0, 1, n_colors))
+    groups = [key[prop] for prop in props]
+    color = color_options[groups]  # type: ignore
+    return color
+
 
 if __name__ == '__main__':
     filenames = sys.argv[1:]
@@ -65,13 +84,15 @@ if __name__ == '__main__':
     rss_samples_df = pd.concat(rss_samples_all_files, axis=1)
     count_samples_df = pd.concat(count_samples_all_files, axis=1)
 
+    group_pattern = r'^\d+'
+
     ax = plt.subplot(3, 1, 1)
-    plot(cpu_samples_df, 'cpu', '# sample', 'cpu (%)')
+    plot(cpu_samples_df, 'cpu', '# sample', 'cpu (%)', group_pattern)
 
     ax = plt.subplot(3, 1, 2)
-    plot(rss_samples_df, 'rss', '# sample', 'mem (MB)')
+    plot(rss_samples_df, 'rss', '# sample', 'mem (MB)', group_pattern)
 
     ax = plt.subplot(3, 1, 3)
-    plot(count_samples_df, 'packetsCount', '# sample', 'packetsCount')
+    plot(count_samples_df, 'packetsCount', '# sample', 'packetsCount', group_pattern)
 
     plt.show()
