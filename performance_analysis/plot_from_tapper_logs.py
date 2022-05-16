@@ -10,6 +10,13 @@ COLORMAP = plt.get_cmap('turbo')
 
 # Extract cpu and rss samples from log files and plot them
 # Input: List of log files
+#
+# example:
+#   python plot_from_tapper_logs.py 01_no_pcap_01.log 99_normal_00.log
+#
+# The script assumes that the log file names start with a number (pattern '\d+')
+# and groups based on this number. Files that start will the same number will be plotted with the same color.
+# Change group_pattern to an empty string to disable this, or change to a regex of your liking.
 
 
 def append_sample(name: str, line: str, samples: typing.List[float]):
