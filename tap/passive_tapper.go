@@ -17,7 +17,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/pkg/profile"
 	"github.com/shirou/gopsutil/cpu"
 	"github.com/struCoder/pidusage"
 	"github.com/up9inc/mizu/logger"
