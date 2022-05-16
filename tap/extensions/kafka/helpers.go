@@ -3,12 +3,13 @@ package kafka
 import (
 	"encoding/json"
 	"fmt"
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
 	"reflect"
 	"sort"
 	"strconv"
 	"strings"
+
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 
 	"github.com/fatih/camelcase"
 	"github.com/ohler55/ojg/jp"
@@ -37,8 +38,13 @@ type KafkaWrapper struct {
 func representRequestHeader(data map[string]interface{}, rep []interface{}) []interface{} {
 	requestHeader, _ := json.Marshal([]api.TableData{
 		{
+			Name:     "ApiKeyName",
+			Value:    data["apiKeyName"].(string),
+			Selector: `request.apiKeyName`,
+		},
+		{
 			Name:     "ApiKey",
-			Value:    apiNames[int(data["apiKey"].(float64))],
+			Value:    int(data["apiKey"].(float64)),
 			Selector: `request.apiKey`,
 		},
 		{

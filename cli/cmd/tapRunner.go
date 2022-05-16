@@ -164,7 +164,6 @@ func getTapMizuAgentConfig() *shared.MizuAgentConfig {
 		ServiceMap:             config.Config.ServiceMap,
 		OAS:                    config.Config.OAS,
 		Telemetry:              config.Config.Telemetry,
-		Elastic:                config.Config.Elastic,
 	}
 
 	return &mizuAgentConfig
