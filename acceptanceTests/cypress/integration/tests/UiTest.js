@@ -193,6 +193,8 @@ function checkFilter(filterDetails) {
     const entriesForDeeperCheck = 5;
 
     it(`checking the filter: ${filter}`, function () {
+        waitForFetch();
+
         cy.get(`#list [id^=entry]`).last().then(elem => {
             const element = elem[0];
             const entryId = getEntryId(element.id);
@@ -206,7 +208,8 @@ function checkFilter(filterDetails) {
             if (!applyByCtrlEnter)
                 cy.get('[type="submit"]').click();
 
-            waitForFetchAndPause();
+            waitForFetch();
+            pauseStream();
 
             // only one entry in DOM after filtering, checking all checks on it
             leftTextCheck(entryId, leftSidePath, leftSideExpectedText);
@@ -232,14 +235,18 @@ function checkFilter(filterDetails) {
         // reloading then waiting for the entries number to load
         resizeToNormalMizu();
         cy.reload();
-        waitForFetchAndPause();
+        waitForFetch();
+        pauseStream();
     });
 }
 
-function waitForFetchAndPause() {
+function waitForFetch() {
     cy.get('#entries-length', {timeout: refreshWaitTimeout}).should((el) => {
         expect(parseInt(el.text().trim(), 10)).to.be.greaterThan(20);
     });
+}
+
+function pauseStream() {
     cy.get('#pause-icon').click();
     cy.get('#pause-icon').should('not.be.visible');
 }
