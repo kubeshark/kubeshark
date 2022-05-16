@@ -85,7 +85,7 @@ const SelectList: React.FC<Props> = ({ items, tableName, checkedValues = [], mul
 
     const tableBody = filteredValues.length === 0 ?
         <tr>
-            <td colSpan={2}>
+            <td colSpan={2} className={styles.displayBlock}>
                 <NoDataMessage messageText={noItemsMessage} />
             </td>
         </tr>

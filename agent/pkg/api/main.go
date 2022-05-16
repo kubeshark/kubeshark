@@ -14,7 +14,6 @@ import (
 	"github.com/up9inc/mizu/agent/pkg/models"
 
 	"github.com/up9inc/mizu/agent/pkg/dependency"
-	"github.com/up9inc/mizu/agent/pkg/elastic"
 	"github.com/up9inc/mizu/agent/pkg/har"
 	"github.com/up9inc/mizu/agent/pkg/holder"
 	"github.com/up9inc/mizu/agent/pkg/providers"
@@ -153,8 +152,6 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 
 		serviceMapGenerator := dependency.GetInstance(dependency.ServiceMapGeneratorDependency).(servicemap.ServiceMapSink)
 		serviceMapGenerator.NewTCPEntry(mizuEntry.Source, mizuEntry.Destination, &item.Protocol)
-
-		elastic.GetInstance().PushEntry(mizuEntry)
 	}
 }
 
