@@ -17,7 +17,6 @@ import (
 	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/gin"
 	"github.com/up9inc/mizu/agent/pkg/dependency"
-	"github.com/up9inc/mizu/agent/pkg/elastic"
 	"github.com/up9inc/mizu/agent/pkg/entries"
 	"github.com/up9inc/mizu/agent/pkg/middlewares"
 	"github.com/up9inc/mizu/agent/pkg/models"
@@ -205,7 +204,6 @@ func enableExpFeatureIfNeeded() {
 		serviceMapGenerator := dependency.GetInstance(dependency.ServiceMapGeneratorDependency).(servicemap.ServiceMap)
 		serviceMapGenerator.Enable()
 	}
-	elastic.GetInstance().Configure(config.Config.Elastic)
 }
 
 func getSyncEntriesConfig() *shared.SyncEntriesConfig {
@@ -373,6 +371,7 @@ func handleIncomingMessageAsTapper(socketConnection *websocket.Conn) {
 func initializeDependencies() {
 	dependency.RegisterGenerator(dependency.ServiceMapGeneratorDependency, func() interface{} { return servicemap.GetDefaultServiceMapInstance() })
 	dependency.RegisterGenerator(dependency.OasGeneratorDependency, func() interface{} { return oas.GetDefaultOasGeneratorInstance() })
+	dependency.RegisterGenerator(dependency.EntriesInserter, func() interface{} { return api.GetBasenineEntryInserterInstance() })
 	dependency.RegisterGenerator(dependency.EntriesProvider, func() interface{} { return &entries.BasenineEntriesProvider{} })
 	dependency.RegisterGenerator(dependency.EntriesSocketStreamer, func() interface{} { return &api.BasenineEntryStreamer{} })
 	dependency.RegisterGenerator(dependency.EntryStreamerSocketConnector, func() interface{} { return &api.DefaultEntryStreamerSocketConnector{} })
