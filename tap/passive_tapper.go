@@ -55,8 +55,7 @@ var staleTimeoutSeconds = flag.Int("staletimout", 120, "Max time in seconds to k
 var servicemesh = flag.Bool("servicemesh", false, "Record decrypted traffic if the cluster is configured with a service mesh and with mtls")
 var tls = flag.Bool("tls", false, "Enable TLS tapper")
 
-var cpuprofile = flag.String("tap.cpuprofile", "", "Write cpu profile") // cpuprofile flag clashes with one of the dependencies
-var memprofile = flag.String("tap.memprofile", "", "Write memory profile")
+var memprofile = flag.String("memprofile", "", "Write memory profile")
 
 type TapOpts struct {
 	HostMode bool
@@ -70,15 +69,6 @@ var mainPacketInputChan chan source.TcpPacketInfo   // global
 var tlsTapperInstance *tlstapper.TlsTapper          // global
 
 func StartPassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem, extensionsRef []*api.Extension, options *api.TrafficFilteringOptions) {
-	if *cpuprofile != "" {
-		p := profile.Start(profile.CPUProfile, profile.ProfilePath(*cpuprofile), profile.NoShutdownHook)
-		go func() {
-			<-time.After(time.Second * 90)
-			p.Stop()
-			logger.Log.Info("Stopped CPU profiling")
-		}()
-	}
-
 	extensions = extensionsRef
 	filteringOptions = options
 
