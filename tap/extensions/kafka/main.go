@@ -38,7 +38,7 @@ func (d dissecting) Ping() {
 func (d dissecting) Dissect(b *bufio.Reader, reader api.TcpReader, options *api.TrafficFilteringOptions) error {
 	reqResMatcher := reader.GetReqResMatcher().(*requestResponseMatcher)
 	for {
-		if reader.GetParent().GetProtoIdentifier().Protocol != nil && reader.GetParent().GetProtoIdentifier().Protocol != &_protocol {
+		if reader.GetParent().GetProtocol() != nil && reader.GetParent().GetProtocol() != &_protocol {
 			return errors.New("Identified by another protocol")
 		}
 

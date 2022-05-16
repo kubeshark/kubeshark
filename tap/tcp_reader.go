@@ -3,11 +3,9 @@ package tap
 import (
 	"bufio"
 	"io"
-	"io/ioutil"
 	"sync"
 	"time"
 
-	"github.com/up9inc/mizu/logger"
 	"github.com/up9inc/mizu/tap/api"
 )
 
@@ -17,50 +15,48 @@ import (
  * Implements io.Reader interface (Read)
  */
 type tcpReader struct {
-	ident         string
-	tcpID         *api.TcpID
-	isClosed      bool
-	isClient      bool
-	isOutgoing    bool
-	msgQueue      chan api.TcpReaderDataMsg // Channel of captured reassembled tcp payload
-	data          []byte
-	progress      *api.ReadProgress
-	captureTime   time.Time
-	parent        *tcpStream
-	packetsSeen   uint
-	extension     *api.Extension
-	emitter       api.Emitter
-	counterPair   *api.CounterPair
-	reqResMatcher api.RequestResponseMatcher
+	ident           string
+	tcpID           *api.TcpID
+	isClosed        bool
+	isClient        bool
+	isOutgoing      bool
+	msgQueue        chan api.TcpReaderDataMsg // Channel of captured reassembled tcp payload
+	msgBuffer       []api.TcpReaderDataMsg
+	msgBufferMaster []api.TcpReaderDataMsg
+	data            []byte
+	progress        *api.ReadProgress
+	captureTime     time.Time
+	parent          *tcpStream
+	emitter         api.Emitter
+	counterPair     *api.CounterPair
+	reqResMatcher   api.RequestResponseMatcher
 	sync.Mutex
 }
 
-func NewTcpReader(msgQueue chan api.TcpReaderDataMsg, progress *api.ReadProgress, ident string, tcpId *api.TcpID, captureTime time.Time, parent *tcpStream, isClient bool, isOutgoing bool, extension *api.Extension, emitter api.Emitter, counterPair *api.CounterPair, reqResMatcher api.RequestResponseMatcher) *tcpReader {
+func NewTcpReader(ident string, tcpId *api.TcpID, parent *tcpStream, isClient bool, isOutgoing bool, emitter api.Emitter) *tcpReader {
 	return &tcpReader{
-		msgQueue:      msgQueue,
-		progress:      progress,
-		ident:         ident,
-		tcpID:         tcpId,
-		captureTime:   captureTime,
-		parent:        parent,
-		isClient:      isClient,
-		isOutgoing:    isOutgoing,
-		extension:     extension,
-		emitter:       emitter,
-		counterPair:   counterPair,
-		reqResMatcher: reqResMatcher,
+		msgQueue:   make(chan api.TcpReaderDataMsg),
+		progress:   &api.ReadProgress{},
+		ident:      ident,
+		tcpID:      tcpId,
+		parent:     parent,
+		isClient:   isClient,
+		isOutgoing: isOutgoing,
+		emitter:    emitter,
 	}
 }
 
 func (reader *tcpReader) run(options *api.TrafficFilteringOptions, wg *sync.WaitGroup) {
 	defer wg.Done()
-	b := bufio.NewReader(reader)
-	err := reader.extension.Dissector.Dissect(b, reader, options)
-	if err != nil {
-		_, err = io.Copy(ioutil.Discard, reader)
-		if err != nil {
-			logger.Log.Errorf("%v", err)
+	for i, extension := range extensions {
+		reader.reqResMatcher = reader.parent.reqResMatchers[i]
+		reader.counterPair = reader.parent.counterPairs[i]
+		b := bufio.NewReader(reader)
+		extension.Dissector.Dissect(b, reader, options) //nolint
+		if reader.isProtocolIdentified() {
+			break
 		}
+		reader.rewind()
 	}
 }
 
@@ -81,21 +77,56 @@ func (reader *tcpReader) sendMsgIfNotClosed(msg api.TcpReaderDataMsg) {
 	reader.Unlock()
 }
 
+func (reader *tcpReader) isProtocolIdentified() bool {
+	return reader.parent.protocol != nil
+}
+
+func (reader *tcpReader) rewind() {
+	// Reset the data and msgBuffer from the master record
+	reader.data = make([]byte, 0)
+	reader.msgBuffer = make([]api.TcpReaderDataMsg, len(reader.msgBufferMaster))
+	copy(reader.msgBuffer, reader.msgBufferMaster)
+
+	// Reset the read progress
+	reader.progress.Reset()
+}
+
+func (reader *tcpReader) populateData(msg api.TcpReaderDataMsg) {
+	reader.data = msg.GetBytes()
+	reader.captureTime = msg.GetTimestamp()
+}
+
 func (reader *tcpReader) Read(p []byte) (int, error) {
 	var msg api.TcpReaderDataMsg
+
+	for len(reader.msgBuffer) > 0 && len(reader.data) == 0 {
+		// Pop first message
+		if len(reader.msgBuffer) > 1 {
+			msg, reader.msgBuffer = reader.msgBuffer[0], reader.msgBuffer[1:]
+		} else {
+			msg = reader.msgBuffer[0]
+			reader.msgBuffer = make([]api.TcpReaderDataMsg, 0)
+		}
+
+		// Get the bytes
+		reader.populateData(msg)
+	}
 
 	ok := true
 	for ok && len(reader.data) == 0 {
 		msg, ok = <-reader.msgQueue
 		if msg != nil {
-			reader.data = msg.GetBytes()
-			reader.captureTime = msg.GetTimestamp()
-		}
+			reader.populateData(msg)
 
-		if len(reader.data) > 0 {
-			reader.packetsSeen += 1
+			if !reader.isProtocolIdentified() {
+				reader.msgBufferMaster = append(
+					reader.msgBufferMaster,
+					msg,
+				)
+			}
 		}
 	}
+
 	if !ok || len(reader.data) == 0 {
 		return 0, io.EOF
 	}
@@ -141,8 +172,4 @@ func (reader *tcpReader) GetEmitter() api.Emitter {
 
 func (reader *tcpReader) GetIsClosed() bool {
 	return reader.isClosed
-}
-
-func (reader *tcpReader) GetExtension() *api.Extension {
-	return reader.extension
 }

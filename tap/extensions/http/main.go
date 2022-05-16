@@ -144,7 +144,7 @@ func (d dissecting) Dissect(b *bufio.Reader, reader api.TcpReader, options *api.
 			http2Assembler = createHTTP2Assembler(b)
 		}
 
-		if reader.GetParent().GetProtoIdentifier().Protocol != nil && reader.GetParent().GetProtoIdentifier().Protocol != &http11protocol {
+		if reader.GetParent().GetProtocol() != nil && reader.GetParent().GetProtocol() != &http11protocol {
 			return errors.New("Identified by another protocol")
 		}
 
@@ -200,7 +200,7 @@ func (d dissecting) Dissect(b *bufio.Reader, reader api.TcpReader, options *api.
 		}
 	}
 
-	if reader.GetParent().GetProtoIdentifier().Protocol == nil {
+	if reader.GetParent().GetProtocol() == nil {
 		return err
 	}
 
