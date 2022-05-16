@@ -195,8 +195,6 @@ function checkFilter(filterDetails) {
     it(`checking the filter: ${filter}`, function () {
         waitForFetchAndPause();
 
-        const totalEntries = number.text();
-
         cy.get(`#list [id^=entry]`).last().then(elem => {
             const element = elem[0];
             const entryId = getEntryId(element.id);
@@ -236,12 +234,12 @@ function checkFilter(filterDetails) {
         // reloading then waiting for the entries number to load
         resizeToNormalMizu();
         cy.reload();
-        cy.get('#total-entries', {timeout: refreshWaitTimeout}).should('have.text', totalEntries);
+        waitForFetchAndPause();
     });
 }
 
 function waitForFetchAndPause() {
-    cy.get('#total-entries').should('to.be.greaterThan', '20');
+    cy.get('#total-entries', {timeout: refreshWaitTimeout}).should('to.be.greaterThan', '20');
     cy.get('#pause-icon').click();
     cy.get('#pause-icon').should('not.be.visible');
 }
