@@ -11,6 +11,7 @@ import (
 
 type Request struct {
 	Size          int32       `json:"size"`
+	ApiKeyName    string      `json:"apiKeyName"`
 	ApiKey        ApiKey      `json:"apiKey"`
 	ApiVersion    int16       `json:"apiVersion"`
 	CorrelationID int32       `json:"correlationID"`
@@ -202,6 +203,7 @@ func ReadRequest(r io.Reader, tcpID *api.TcpID, counterPair *api.CounterPair, ca
 
 	request := &Request{
 		Size:          size,
+		ApiKeyName:    apiNames[apiKey],
 		ApiKey:        apiKey,
 		ApiVersion:    apiVersion,
 		CorrelationID: correlationID,
