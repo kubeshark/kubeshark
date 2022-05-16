@@ -131,6 +131,14 @@ export const EntryBodySection: React.FC<EntryBodySectionProps> = ({
     const isBase64Encoding = encoding === 'base64';
     const supportsPrettying = supportedFormats.some(format => contentType?.indexOf(format) > -1);
     const [isDecodeGrpc, setIsDecodeGrpc] = useState(true);
+    const [isLineNumbersGreaterThenOne, setIsLineNumbersGreaterThenOne] = useState(true);
+
+    const lineNumbersGreaterThenOneSetter = (index) => {
+        if(index < 2) {
+            setIsLineNumbersGreaterThenOne(false);
+            setShowLineNumbers(false);
+        }
+    }    
 
     const formatTextBody = (body: any): string => {
         if (!decodeBase64) return body;
@@ -158,9 +166,11 @@ export const EntryBodySection: React.FC<EntryBodySectionProps> = ({
                 return jsonBeautify(protobufDecoded, null, 2, 80);
             }
         } catch (error) {
-            if (String(error).includes("More than one message in")){
-                if(isDecodeGrpc)
-                setIsDecodeGrpc(false);
+            if (String(error).includes("More than one message in")) {
+                if (isDecodeGrpc)
+                    setIsDecodeGrpc(false);
+            } else if (String(error).includes("Failed to parse")) {
+                console.warn(error);
             } else {
                 console.error(error);
             }
@@ -180,20 +190,22 @@ export const EntryBodySection: React.FC<EntryBodySectionProps> = ({
                 </div>}
                 {supportsPrettying && <span style={{ marginLeft: '.2rem' }}>Pretty</span>}
 
-                <div style={{ paddingTop: 3, paddingLeft: supportsPrettying ? 20 : 0 }}>
+                {isLineNumbersGreaterThenOne && <div style={{ paddingTop: 3, paddingLeft: supportsPrettying ? 20 : 0 }}>
                     <Checkbox checked={showLineNumbers} onToggle={() => { setShowLineNumbers(!showLineNumbers) }} />
-                </div>
-                <span style={{ marginLeft: '.2rem' }}>Line numbers</span>      
-                {isBase64Encoding && <div style={{ paddingTop: 3, paddingLeft: 20 }}>
+                </div>}
+                {isLineNumbersGreaterThenOne && <span style={{ marginLeft: '.2rem' }}>Line numbers</span>}
+
+                {isBase64Encoding && <div style={{ paddingTop: 3, paddingLeft: (isLineNumbersGreaterThenOne || supportsPrettying) ? 20 : 0}}>
                     <Checkbox checked={decodeBase64} onToggle={() => { setDecodeBase64(!decodeBase64) }} />
                 </div>}
                 {isBase64Encoding && <span style={{ marginLeft: '.2rem' }}>Decode Base64</span>}
                 {!isDecodeGrpc && <span style={{ fontSize: '12px', color: '#DB2156', marginLeft: '.8rem' }}>More than one message in protobuf payload is not supported</span>}
-            </div>  
+            </div>
 
-            <SyntaxHighlighter  
+            <SyntaxHighlighter
                 code={formatTextBody(content)}
                 showLineNumbers={showLineNumbers}
+                lineNumbersGreaterThenOneSetter={lineNumbersGreaterThenOneSetter}
             />
 
         </EntrySectionContainer>}
