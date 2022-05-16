@@ -243,8 +243,8 @@ function checkFilter(filterDetails) {
 }
 
 function waitForFetch50AndPause() {
-    // wait a second and pause the stream to preserve the DOM
-    cy.wait(1000);
+    // wait half a second and pause the stream to preserve the DOM
+    cy.wait(500);
     cy.get('#pause-icon').click();
     cy.get('#pause-icon').should('not.be.visible');
 }
