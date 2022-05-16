@@ -56,6 +56,10 @@ func (h *afPacketHandle) SetBPF(expr string) (err error) {
 	return
 }
 
+func (h *afPacketHandle) LinkType() layers.LinkType {
+	return layers.LinkTypeEthernet
+}
+
 func (h *afPacketHandle) Close() {
 	h.capture.Close()
 }

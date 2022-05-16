@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/google/gopacket"
+	"github.com/google/gopacket/layers"
 	"github.com/google/gopacket/pcap"
 )
 
@@ -24,6 +25,10 @@ func (h *pcapHandle) SetDecoder(decoder gopacket.Decoder, lazy bool, noCopy bool
 
 func (h *pcapHandle) SetBPF(expr string) (err error) {
 	return h.capture.SetBPFFilter(expr)
+}
+
+func (h *pcapHandle) LinkType() layers.LinkType {
+	return h.capture.LinkType()
 }
 
 func (h *pcapHandle) Close() {

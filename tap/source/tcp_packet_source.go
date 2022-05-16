@@ -16,6 +16,7 @@ type Handle interface {
 	NextPacket() (packet gopacket.Packet, err error)
 	SetDecoder(decoder gopacket.Decoder, lazy bool, noCopy bool)
 	SetBPF(expr string) (err error)
+	LinkType() layers.LinkType
 	Close()
 }
 
@@ -76,7 +77,14 @@ func newTcpPacketSource(name, filename string, interfaceName string,
 		logger.Log.Infof("Using AF_PACKET socket as the capture source")
 	}
 
-	decoder := gopacket.DecodersByLayerName[layers.LinkTypeEthernet.String()]
+	var decoder gopacket.Decoder
+	var ok bool
+	if behaviour.DecoderName == "" {
+		behaviour.DecoderName = result.Handle.LinkType().String()
+	}
+	if decoder, ok = gopacket.DecodersByLayerName[behaviour.DecoderName]; !ok {
+		return nil, fmt.Errorf("no decoder named %v", behaviour.DecoderName)
+	}
 	result.Handle.SetDecoder(decoder, behaviour.Lazy, true)
 
 	if behaviour.BpfFilter != "" {
