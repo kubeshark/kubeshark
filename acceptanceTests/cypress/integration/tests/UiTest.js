@@ -193,8 +193,6 @@ function checkFilter(filterDetails) {
     const entriesForDeeperCheck = 5;
 
     it(`checking the filter: ${filter}`, function () {
-        waitForFetchAndPause();
-
         cy.get(`#list [id^=entry]`).last().then(elem => {
             const element = elem[0];
             const entryId = getEntryId(element.id);
@@ -239,7 +237,9 @@ function checkFilter(filterDetails) {
 }
 
 function waitForFetchAndPause() {
-    cy.get('#total-entries', {timeout: refreshWaitTimeout}).should('to.be.greaterThan', '20');
+    cy.get('#entries-length', {timeout: refreshWaitTimeout}).should((el) => {
+        expect(parseInt(el.text().trim(), 10)).to.be.greaterThan(20);
+    });
     cy.get('#pause-icon').click();
     cy.get('#pause-icon').should('not.be.visible');
 }
