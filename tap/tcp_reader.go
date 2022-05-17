@@ -82,10 +82,14 @@ func (reader *tcpReader) isProtocolIdentified() bool {
 }
 
 func (reader *tcpReader) rewind() {
-	// Reset the data and msgBuffer from the master record
+	// Reset the data
 	reader.data = make([]byte, 0)
+
+	// Reset msgBuffer from the master record
+	reader.parent.Lock()
 	reader.msgBuffer = make([]api.TcpReaderDataMsg, len(reader.msgBufferMaster))
 	copy(reader.msgBuffer, reader.msgBufferMaster)
+	reader.parent.Unlock()
 
 	// Reset the read progress
 	reader.progress.Reset()
