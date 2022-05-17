@@ -1,11 +1,11 @@
 package tap
 
 import (
-	"os"
 	"sync"
 	"time"
 
 	"github.com/up9inc/mizu/tap/api"
+	"github.com/up9inc/mizu/tap/dbgctl"
 )
 
 /* It's a connection (bidirectional)
@@ -90,7 +90,7 @@ func (t *tcpStream) GetReqResMatchers() []api.RequestResponseMatcher {
 }
 
 func (t *tcpStream) GetIsTapTarget() bool {
-	if os.Getenv("MIZU_TAPPER_DISABLE_TAP_TARGET") == "true" {
+	if dbgctl.MizuTapperDisableTapTarget {
 		return false
 	}
 	return t.isTapTarget

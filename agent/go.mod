@@ -25,6 +25,7 @@ require (
 	github.com/up9inc/mizu/shared v0.0.0
 	github.com/up9inc/mizu/tap v0.0.0
 	github.com/up9inc/mizu/tap/api v0.0.0
+	github.com/up9inc/mizu/tap/dbgctl v0.0.0
 	github.com/up9inc/mizu/tap/extensions/amqp v0.0.0
 	github.com/up9inc/mizu/tap/extensions/http v0.0.0
 	github.com/up9inc/mizu/tap/extensions/kafka v0.0.0
@@ -159,3 +160,5 @@ replace github.com/up9inc/mizu/tap/extensions/http v0.0.0 => ../tap/extensions/h
 replace github.com/up9inc/mizu/tap/extensions/kafka v0.0.0 => ../tap/extensions/kafka
 
 replace github.com/up9inc/mizu/tap/extensions/redis v0.0.0 => ../tap/extensions/redis
+
+replace github.com/up9inc/mizu/tap/dbgctl v0.0.0 => ../tap/dbgctl

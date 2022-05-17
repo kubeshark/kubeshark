@@ -1,7 +1,6 @@
 package source
 
 import (
-	"os"
 	"fmt"
 	"io"
 	"time"
@@ -12,6 +11,7 @@ import (
 	"github.com/google/gopacket/pcap"
 	"github.com/up9inc/mizu/logger"
 	"github.com/up9inc/mizu/tap/api"
+	"github.com/up9inc/mizu/tap/dbgctl"
 	"github.com/up9inc/mizu/tap/diagnose"
 )
 
@@ -117,7 +117,7 @@ func (source *tcpPacketSource) close() {
 }
 
 func (source *tcpPacketSource) readPackets(ipdefrag bool, packets chan<- TcpPacketInfo) {
-	if os.Getenv("MIZU_TAPPER_DISABLE_PCAP") == "true" {
+	if dbgctl.MizuTapperDisablePcap {
 		return
 	}
 	logger.Log.Infof("Start reading packets from %v", source.name)

@@ -1,13 +1,13 @@
 package tap
 
 import (
-	"os"
 	"bufio"
 	"io"
 	"sync"
 	"time"
 
 	"github.com/up9inc/mizu/tap/api"
+	"github.com/up9inc/mizu/tap/dbgctl"
 )
 
 /* TcpReader gets reads from a channel of bytes of tcp payload, and parses it into requests and responses.
@@ -50,7 +50,7 @@ func NewTcpReader(ident string, tcpId *api.TcpID, parent *tcpStream, isClient bo
 func (reader *tcpReader) run(options *api.TrafficFilteringOptions, wg *sync.WaitGroup) {
 	defer wg.Done()
 
-	if os.Getenv("MIZU_TAPPER_DISABLE_DISSECTORS") == "true" {
+	if dbgctl.MizuTapperDisableDissectors {
 		b := bufio.NewReader(reader)
 		io.ReadAll(b)
 		return

@@ -10,6 +10,7 @@ require (
 	github.com/shirou/gopsutil v3.21.11+incompatible
 	github.com/up9inc/mizu/logger v0.0.0
 	github.com/up9inc/mizu/tap/api v0.0.0
+	github.com/up9inc/mizu/tap/dbgctl v0.0.0
 	github.com/vishvananda/netns v0.0.0-20211101163701-50045581ed74
 	k8s.io/api v0.23.3
 )
@@ -46,3 +47,5 @@ require (
 replace github.com/up9inc/mizu/logger v0.0.0 => ../logger
 
 replace github.com/up9inc/mizu/tap/api v0.0.0 => ./api
+
+replace github.com/up9inc/mizu/tap/dbgctl v0.0.0 => ./dbgctl

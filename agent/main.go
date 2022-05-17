@@ -37,6 +37,7 @@ import (
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/tap"
 	tapApi "github.com/up9inc/mizu/tap/api"
+	"github.com/up9inc/mizu/tap/dbgctl"
 )
 
 var tapperMode = flag.Bool("tap", false, "Run in tapper mode without API")
@@ -290,7 +291,7 @@ func pipeTapChannelToSocket(connection *websocket.Conn, messageDataChannel <-cha
 			continue
 		}
 
-		if os.Getenv("MIZU_TAPPER_DISABLE_SENDING") == "true" {
+		if dbgctl.MizuTapperDisableSending {
 			continue
 		}
 
