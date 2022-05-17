@@ -141,7 +141,6 @@ func printPeriodicStats(cleaner *Cleaner) {
 		// At this moment
 		memStats := runtime.MemStats{}
 		runtime.ReadMemStats(&memStats)
-		
 		sysInfo, err := pidusage.GetStat(os.Getpid())
 		if err != nil {
 			sysInfo = &pidusage.SysInfo{
