@@ -56,7 +56,7 @@ var memprofile = flag.String("memprofile", "", "Write memory profile")
 
 type TapOpts struct {
 	HostMode         bool
-	ApiServerAddress string
+	IgnoredPorts     []uint16
 }
 
 var extensions []*api.Extension                     // global

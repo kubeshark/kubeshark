@@ -26,7 +26,7 @@ type tcpAssembler struct {
 	streamPool     *reassembly.StreamPool
 	streamFactory  *tcpStreamFactory
 	assemblerMutex sync.Mutex
-	apiServerPort  uint16
+	ignoredPorts   []uint16
 }
 
 // Context
@@ -57,11 +57,17 @@ func NewTcpAssembler(outputItems chan *api.OutputChannelItem, streamsMap api.Tcp
 	assembler.AssemblerOptions.MaxBufferedPagesTotal = maxBufferedPagesTotal
 	assembler.AssemblerOptions.MaxBufferedPagesPerConnection = maxBufferedPagesPerConnection
 
+	ignoredPorts := opts.IgnoredPorts
+
+	if ignoredPorts == nil {
+		ignoredPorts = make([]uint16, 0)
+	}
+
 	return &tcpAssembler{
 		Assembler:     assembler,
 		streamPool:    streamPool,
 		streamFactory: streamFactory,
-		apiServerPort: extractApiServerPort(opts.ApiServerAddress),
+		ignoredPorts:  ignoredPorts,
 	}
 }
 
@@ -88,7 +94,7 @@ func (a *tcpAssembler) processPackets(dumpPacket bool, packets <-chan source.Tcp
 			diagnose.AppStats.IncTcpPacketsCount()
 			tcp := tcp.(*layers.TCP)
 
-			if uint16(tcp.DstPort) == a.apiServerPort {
+			if a.shouldIgnorePort(uint16(tcp.DstPort)) {
 				diagnose.AppStats.IncTapperPacketsCount()
 			} else {
 				c := context{
@@ -140,6 +146,16 @@ func (a *tcpAssembler) waitAndDump() {
 	a.assemblerMutex.Lock()
 	logger.Log.Debugf("%s", a.Dump())
 	a.assemblerMutex.Unlock()
+}
+
+func (a *tcpAssembler) shouldIgnorePort(port uint16) bool {
+	for _, p := range a.ignoredPorts {
+		if port == p {
+			return true
+		}
+	}
+
+	return false
 }
 
 func extractApiServerPort(apiServerAddress string) uint16 {
