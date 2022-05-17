@@ -125,9 +125,14 @@ func printPeriodicStats(cleaner *Cleaner) {
 	statsPeriod := time.Second * time.Duration(*statsevery)
 	ticker := time.NewTicker(statsPeriod)
 
-	numCores, err := cpu.Counts(true)
+	logicalCoreCount, err := cpu.Counts(true)
 	if err != nil {
-		numCores = -1
+		logicalCoreCount = -1
+	}
+
+	physicalCoreCount, err := cpu.Counts(false)
+	if err != nil {
+		physicalCoreCount = -1
 	}
 
 	for {
@@ -154,11 +159,12 @@ func printPeriodicStats(cleaner *Cleaner) {
 			}
 		}
 		logger.Log.Infof(
-			"mem: %d, goroutines: %d, cpu: %f, cores: %d, rss: %f",
+			"mem: %d, goroutines: %d, cpu: %f, cores: %d/%d, rss: %f",
 			memStats.HeapAlloc,
 			runtime.NumGoroutine(),
 			sysInfo.CPU,
-			numCores,
+			logicalCoreCount,
+			physicalCoreCount,
 			sysInfo.Memory)
 
 		// Since the last print
