@@ -683,7 +683,6 @@ github.com/ugorji/go/codec v1.2.6 h1:7kbGefxLoDBuYXOms4yD7223OpNMMPNPZxXk5TvFcyQ
 github.com/ugorji/go/codec v1.2.6/go.mod h1:V6TCNZ4PHqoHGFZuSG1W8nrCzzdgA2DozYxWFFpvxTw=
 github.com/up9inc/basenine/client/go v0.0.0-20220509204026-c37adfc587f4 h1:nNOrU1HVH0fnaG7GNhxCc8kNPVL035Iix7ihUF6lZT8=
 github.com/up9inc/basenine/client/go v0.0.0-20220509204026-c37adfc587f4/go.mod h1:SvJGPoa/6erhUQV7kvHBwM/0x5LyO6XaG2lUaCaKiUI=
-github.com/up9inc/mizu/shared v0.0.0-20220515064232-5fc3e38c1a85/go.mod h1:k3xLxQVWK5oj5q0fAqPHHLBzkimPXZTM2uW3Kqtv5cM=
 github.com/vishvananda/netns v0.0.0-20211101163701-50045581ed74 h1:gga7acRE695APm9hlsSMoOoE65U4/TcqNj90mc69Rlg=
 github.com/vishvananda/netns v0.0.0-20211101163701-50045581ed74/go.mod h1:DD4vA1DwXk04H54A1oHXtwZmA0grkVMdPxx/VGLCah0=
 github.com/wI2L/jsondiff v0.1.1 h1:r2TkoEet7E4JMO5+s1RCY2R0LrNPNHY6hbDeow2hRHw=
