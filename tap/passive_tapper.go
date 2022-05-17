@@ -149,7 +149,6 @@ func printPeriodicStats(cleaner *Cleaner) {
 				Memory: -1,
 			}
 		}
-		
 		numCores, err := cpu.Counts(true)
 		if err != nil {
 			numCores = -1
