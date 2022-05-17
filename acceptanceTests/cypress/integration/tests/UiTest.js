@@ -193,23 +193,19 @@ function checkFilter(filterDetails) {
     const entriesForDeeperCheck = 5;
 
     it(`checking the filter: ${filter}`, function () {
+        cy.get('.w-tc-editor-text').clear();
+        // applying the filter with alt+enter or with the button
+        cy.get('.w-tc-editor-text').type(`${filter}${applyByCtrlEnter ? '{ctrl+enter}' : ''}`);
+        cy.get('.w-tc-editor').should('have.attr', 'style').and('include', Cypress.env('greenFilterColor'));
+        if (!applyByCtrlEnter)
+            cy.get('[type="submit"]').click();
+
         waitForFetch();
+        pauseStream();
 
         cy.get(`#list [id^=entry]`).last().then(elem => {
             const element = elem[0];
             const entryId = getEntryId(element.id);
-            // checks the hover on the last entry (the only one in DOM at the beginning)
-            leftOnHoverCheck(entryId, leftSidePath, filter);
-
-            cy.get('.w-tc-editor-text').clear();
-            // applying the filter with alt+enter or with the button
-            cy.get('.w-tc-editor-text').type(`${filter}${applyByCtrlEnter ? '{ctrl+enter}' : ''}`);
-            cy.get('.w-tc-editor').should('have.attr', 'style').and('include', Cypress.env('greenFilterColor'));
-            if (!applyByCtrlEnter)
-                cy.get('[type="submit"]').click();
-
-            waitForFetch();
-            pauseStream();
 
             // only one entry in DOM after filtering, checking all checks on it
             leftTextCheck(entryId, leftSidePath, leftSideExpectedText);
