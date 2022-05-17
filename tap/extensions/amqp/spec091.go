@@ -580,9 +580,9 @@ func (msg *QueueDeclare) read(r io.Reader) (err error) {
 }
 
 type QueueDeclareOk struct {
-	Queue         string
-	MessageCount  uint32
-	ConsumerCount uint32
+	Queue         string `json:"queue"`
+	MessageCount  uint32 `json:"messageCount"`
+	ConsumerCount uint32 `json:"consumerCount"`
 }
 
 func (msg *QueueDeclareOk) read(r io.Reader) (err error) {

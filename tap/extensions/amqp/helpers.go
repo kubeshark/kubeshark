@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"sort"
 	"strconv"
-	"time"
 
 	"github.com/up9inc/mizu/tap/api"
 )
@@ -94,29 +93,43 @@ type AMQPWrapper struct {
 	Details interface{} `json:"details"`
 }
 
-func emitAMQP(event interface{}, _type string, method string, connectionInfo *api.ConnectionInfo, captureTime time.Time, captureSize int, emitter api.Emitter, capture api.Capture) {
-	request := &api.GenericMessage{
-		IsRequest:   true,
-		CaptureTime: captureTime,
-		Payload: AMQPPayload{
-			Data: &AMQPWrapper{
-				Method:  method,
-				Url:     "",
-				Details: event,
-			},
-		},
+func getIdent(reader api.TcpReader, methodFrame *MethodFrame) (ident string) {
+	tcpID := reader.GetTcpID()
+	// counterPair := reader.GetCounterPair()
+
+	if reader.GetIsClient() {
+		// counterPair.Lock()
+		// counterPair.Request++
+		// requestCounter := counterPair.Request
+		// counterPair.Unlock()
+
+		ident = fmt.Sprintf(
+			"%s_%s_%s_%s_%d",
+			tcpID.SrcIP,
+			tcpID.DstIP,
+			tcpID.SrcPort,
+			tcpID.DstPort,
+			methodFrame.ChannelId,
+			// requestCounter,
+		)
+	} else {
+		// counterPair.Lock()
+		// counterPair.Request++
+		// responseCounter := counterPair.Response
+		// counterPair.Unlock()
+
+		ident = fmt.Sprintf(
+			"%s_%s_%s_%s_%d",
+			tcpID.DstIP,
+			tcpID.SrcIP,
+			tcpID.DstPort,
+			tcpID.SrcPort,
+			methodFrame.ChannelId,
+			// responseCounter,
+		)
 	}
-	item := &api.OutputChannelItem{
-		Protocol:       protocol,
-		Capture:        capture,
-		Timestamp:      captureTime.UnixNano() / int64(time.Millisecond),
-		ConnectionInfo: connectionInfo,
-		Pair: &api.RequestResponsePair{
-			Request:  *request,
-			Response: api.GenericMessage{},
-		},
-	}
-	emitter.Emit(item)
+
+	return
 }
 
 func representProperties(properties map[string]interface{}, rep []interface{}) ([]interface{}, string, string) {
@@ -456,6 +469,36 @@ func representQueueDeclare(event map[string]interface{}) []interface{} {
 			Data:  string(headersMarshaled),
 		})
 	}
+
+	return rep
+}
+
+func representQueueDeclareOk(event map[string]interface{}) []interface{} {
+	rep := make([]interface{}, 0)
+
+	details, _ := json.Marshal([]api.TableData{
+		{
+			Name:     "Queue",
+			Value:    event["queue"].(string),
+			Selector: `request.queue`,
+		},
+		{
+			Name:     "Message Count",
+			Value:    fmt.Sprintf("%g", event["messageCount"].(float64)),
+			Selector: `request.messageCount`,
+		},
+		{
+			Name:     "Consumer Count",
+			Value:    fmt.Sprintf("%g", event["consumerCount"].(float64)),
+			Selector: `request.consumerCount`,
+		},
+	})
+
+	rep = append(rep, api.SectionData{
+		Type:  api.TABLE,
+		Title: "Details",
+		Data:  string(details),
+	})
 
 	return rep
 }

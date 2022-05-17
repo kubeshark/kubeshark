@@ -45,14 +45,6 @@ func (d dissecting) Dissect(b *bufio.Reader, reader api.TcpReader, options *api.
 	var remaining int
 	var header *HeaderFrame
 
-	connectionInfo := &api.ConnectionInfo{
-		ClientIP:   reader.GetTcpID().SrcIP,
-		ClientPort: reader.GetTcpID().SrcPort,
-		ServerIP:   reader.GetTcpID().DstIP,
-		ServerPort: reader.GetTcpID().DstPort,
-		IsOutgoing: true,
-	}
-
 	eventBasicPublish := &BasicPublish{
 		Exchange:   "",
 		RoutingKey: "",
@@ -74,6 +66,10 @@ func (d dissecting) Dissect(b *bufio.Reader, reader api.TcpReader, options *api.
 
 	var lastMethodFrameMessage Message
 
+	var ident string
+	isClient := reader.GetIsClient()
+	reqResMatcher := reader.GetReqResMatcher().(*requestResponseMatcher)
+
 	for {
 		if reader.GetParent().GetProtocol() != nil && reader.GetParent().GetProtocol() != &protocol {
 			return errors.New("Identified by another protocol")
@@ -84,6 +80,10 @@ func (d dissecting) Dissect(b *bufio.Reader, reader api.TcpReader, options *api.
 			// We must read until we see an EOF... very important!
 			return err
 		}
+
+		// if !isClient {
+		// 	fmt.Printf("type: %T frame: %+v isClient: %v\n", frame, frame, isClient)
+		// }
 
 		switch f := frame.(type) {
 		case *HeartbeatFrame:
@@ -112,16 +112,18 @@ func (d dissecting) Dissect(b *bufio.Reader, reader api.TcpReader, options *api.
 			switch lastMethodFrameMessage.(type) {
 			case *BasicPublish:
 				eventBasicPublish.Body = f.Body
-				reader.GetParent().SetProtocol(&protocol)
-				emitAMQP(*eventBasicPublish, amqpRequest, basicMethodMap[40], connectionInfo, reader.GetCaptureTime(), reader.GetReadProgress().Current(), reader.GetEmitter(), reader.GetParent().GetOrigin())
+				reqResMatcher.emitEvent(isClient, ident, basicMethodMap[40], *eventBasicPublish, reader)
+
 			case *BasicDeliver:
 				eventBasicDeliver.Body = f.Body
-				reader.GetParent().SetProtocol(&protocol)
-				emitAMQP(*eventBasicDeliver, amqpRequest, basicMethodMap[60], connectionInfo, reader.GetCaptureTime(), reader.GetReadProgress().Current(), reader.GetEmitter(), reader.GetParent().GetOrigin())
+				reqResMatcher.emitEvent(isClient, ident, basicMethodMap[60], *eventBasicDeliver, reader)
 			}
 
 		case *MethodFrame:
 			lastMethodFrameMessage = f.Method
+
+			ident = getIdent(reader, f)
+
 			switch m := f.Method.(type) {
 			case *BasicPublish:
 				eventBasicPublish.Exchange = m.Exchange
@@ -137,8 +139,7 @@ func (d dissecting) Dissect(b *bufio.Reader, reader api.TcpReader, options *api.
 					NoWait:     m.NoWait,
 					Arguments:  m.Arguments,
 				}
-				reader.GetParent().SetProtocol(&protocol)
-				emitAMQP(*eventQueueBind, amqpRequest, queueMethodMap[20], connectionInfo, reader.GetCaptureTime(), reader.GetReadProgress().Current(), reader.GetEmitter(), reader.GetParent().GetOrigin())
+				reqResMatcher.emitEvent(isClient, ident, queueMethodMap[20], *eventQueueBind, reader)
 
 			case *BasicConsume:
 				eventBasicConsume := &BasicConsume{
@@ -150,8 +151,7 @@ func (d dissecting) Dissect(b *bufio.Reader, reader api.TcpReader, options *api.
 					NoWait:      m.NoWait,
 					Arguments:   m.Arguments,
 				}
-				reader.GetParent().SetProtocol(&protocol)
-				emitAMQP(*eventBasicConsume, amqpRequest, basicMethodMap[20], connectionInfo, reader.GetCaptureTime(), reader.GetReadProgress().Current(), reader.GetEmitter(), reader.GetParent().GetOrigin())
+				reqResMatcher.emitEvent(isClient, ident, basicMethodMap[20], *eventBasicConsume, reader)
 
 			case *BasicDeliver:
 				eventBasicDeliver.ConsumerTag = m.ConsumerTag
@@ -170,8 +170,14 @@ func (d dissecting) Dissect(b *bufio.Reader, reader api.TcpReader, options *api.
 					NoWait:     m.NoWait,
 					Arguments:  m.Arguments,
 				}
-				reader.GetParent().SetProtocol(&protocol)
-				emitAMQP(*eventQueueDeclare, amqpRequest, queueMethodMap[10], connectionInfo, reader.GetCaptureTime(), reader.GetReadProgress().Current(), reader.GetEmitter(), reader.GetParent().GetOrigin())
+				reqResMatcher.emitEvent(isClient, ident, queueMethodMap[10], *eventQueueDeclare, reader)
+
+				fmt.Printf("QueueDeclare: %v\n", ident)
+
+			case *QueueDeclareOk:
+				reqResMatcher.emitEvent(isClient, ident, queueMethodMap[11], m, reader)
+
+				fmt.Printf("QueueDeclareOk: %v\n", ident)
 
 			case *ExchangeDeclare:
 				eventExchangeDeclare := &ExchangeDeclare{
@@ -184,8 +190,7 @@ func (d dissecting) Dissect(b *bufio.Reader, reader api.TcpReader, options *api.
 					NoWait:     m.NoWait,
 					Arguments:  m.Arguments,
 				}
-				reader.GetParent().SetProtocol(&protocol)
-				emitAMQP(*eventExchangeDeclare, amqpRequest, exchangeMethodMap[10], connectionInfo, reader.GetCaptureTime(), reader.GetReadProgress().Current(), reader.GetEmitter(), reader.GetParent().GetOrigin())
+				reqResMatcher.emitEvent(isClient, ident, exchangeMethodMap[10], *eventExchangeDeclare, reader)
 
 			case *ConnectionStart:
 				eventConnectionStart := &ConnectionStart{
@@ -195,8 +200,10 @@ func (d dissecting) Dissect(b *bufio.Reader, reader api.TcpReader, options *api.
 					Mechanisms:       m.Mechanisms,
 					Locales:          m.Locales,
 				}
-				reader.GetParent().SetProtocol(&protocol)
-				emitAMQP(*eventConnectionStart, amqpRequest, connectionMethodMap[10], connectionInfo, reader.GetCaptureTime(), reader.GetReadProgress().Current(), reader.GetEmitter(), reader.GetParent().GetOrigin())
+				reqResMatcher.emitEvent(isClient, ident, connectionMethodMap[10], *eventConnectionStart, reader)
+
+			case *ConnectionStartOk:
+				reqResMatcher.emitEvent(isClient, ident, connectionMethodMap[11], m, reader)
 
 			case *ConnectionClose:
 				eventConnectionClose := &ConnectionClose{
@@ -205,8 +212,7 @@ func (d dissecting) Dissect(b *bufio.Reader, reader api.TcpReader, options *api.
 					ClassId:   m.ClassId,
 					MethodId:  m.MethodId,
 				}
-				reader.GetParent().SetProtocol(&protocol)
-				emitAMQP(*eventConnectionClose, amqpRequest, connectionMethodMap[50], connectionInfo, reader.GetCaptureTime(), reader.GetReadProgress().Current(), reader.GetEmitter(), reader.GetParent().GetOrigin())
+				reqResMatcher.emitEvent(isClient, ident, connectionMethodMap[50], *eventConnectionClose, reader)
 			}
 
 		default:
@@ -217,9 +223,17 @@ func (d dissecting) Dissect(b *bufio.Reader, reader api.TcpReader, options *api.
 
 func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, resolvedDestination string, namespace string) *api.Entry {
 	request := item.Pair.Request.Payload.(map[string]interface{})
+	response := item.Pair.Response.Payload.(map[string]interface{})
 	reqDetails := request["details"].(map[string]interface{})
+	resDetails := response["details"].(map[string]interface{})
+
+	elapsedTime := item.Pair.Response.CaptureTime.Sub(item.Pair.Request.CaptureTime).Round(time.Millisecond).Milliseconds()
+	if elapsedTime < 0 {
+		elapsedTime = 0
+	}
 
 	reqDetails["method"] = request["method"]
+	resDetails["method"] = response["method"]
 	return &api.Entry{
 		Protocol: protocol,
 		Capture:  item.Capture,
@@ -233,13 +247,15 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, 
 			IP:   item.ConnectionInfo.ServerIP,
 			Port: item.ConnectionInfo.ServerPort,
 		},
-		Namespace:   namespace,
-		Outgoing:    item.ConnectionInfo.IsOutgoing,
-		Request:     reqDetails,
-		RequestSize: item.Pair.Request.CaptureSize,
-		Timestamp:   item.Timestamp,
-		StartTime:   item.Pair.Request.CaptureTime,
-		ElapsedTime: 0,
+		Namespace:    namespace,
+		Outgoing:     item.ConnectionInfo.IsOutgoing,
+		Request:      reqDetails,
+		Response:     resDetails,
+		RequestSize:  item.Pair.Request.CaptureSize,
+		ResponseSize: item.Pair.Response.CaptureSize,
+		Timestamp:    item.Timestamp,
+		StartTime:    item.Pair.Request.CaptureTime,
+		ElapsedTime:  elapsedTime,
 	}
 
 }
@@ -305,6 +321,8 @@ func (d dissecting) Summarize(entry *api.Entry) *api.BaseEntry {
 func (d dissecting) Represent(request map[string]interface{}, response map[string]interface{}) (object []byte, err error) {
 	representation := make(map[string]interface{})
 	var repRequest []interface{}
+	var repResponse []interface{}
+
 	switch request["method"].(string) {
 	case basicMethodMap[40]:
 		repRequest = representBasicPublish(request)
@@ -323,8 +341,19 @@ func (d dissecting) Represent(request map[string]interface{}, response map[strin
 	case basicMethodMap[20]:
 		repRequest = representBasicConsume(request)
 	}
+
+	fmt.Printf("request: %+v\n", request)
+	fmt.Printf("response: %+v\n", response)
+
+	switch response["method"].(string) {
+	case queueMethodMap[11]:
+		repResponse = representQueueDeclareOk(response)
+	}
+
 	representation["request"] = repRequest
+	representation["response"] = repResponse
 	object, err = json.Marshal(representation)
+
 	return
 }
 
@@ -335,7 +364,7 @@ func (d dissecting) Macros() map[string]string {
 }
 
 func (d dissecting) NewResponseRequestMatcher() api.RequestResponseMatcher {
-	return nil
+	return createResponseRequestMatcher()
 }
 
 var Dissector dissecting
