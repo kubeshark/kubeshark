@@ -11,4 +11,5 @@ var (
 	MizuTapperDisableDissectors    bool = os.Getenv("MIZU_TAPPER_DISABLE_DISSECTORS") == "true"
 	MizuTapperDisableEmitting      bool = os.Getenv("MIZU_TAPPER_DISABLE_EMITTING") == "true"
 	MizuTapperDisableSending       bool = os.Getenv("MIZU_TAPPER_DISABLE_SENDING") == "true"
+	MizuTapperDisableExtensions    bool = os.Getenv("MIZU_TAPPER_DISABLE_EXTENSIONS") == "true"
 )
