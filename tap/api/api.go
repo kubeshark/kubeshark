@@ -152,7 +152,6 @@ func (e *Emitting) Emit(item *OutputChannelItem) {
 	if os.Getenv("MIZU_TAPPER_NO_EMITTER") == "true" {
 		return
 	}
-	
 	e.OutputChannel <- item
 	e.AppStats.IncMatchedPairs()
 }
