@@ -25,7 +25,7 @@ function run_single_bench() {
 		nohup ./agent/build/mizuagent --tap --api-server-address ws://localhost:8899/wsTapper -i lo -stats 10 > tapper.log 2>&1 &
 
 		log "  $i: Running client (hey)"
-		hey -z $MIZU_BENCHMARK_CLIENT_PERIOD -c MIZU_BENCHMARK_CLIENTS_COUNT -q $MIZU_BENCHMARK_QPS $MIZU_BENCHMARK_URL > /dev/null || return 1
+		hey -z $MIZU_BENCHMARK_CLIENT_PERIOD -c $MIZU_BENCHMARK_CLIENTS_COUNT -q $MIZU_BENCHMARK_QPS $MIZU_BENCHMARK_URL > /dev/null || return 1
 
 		log "  $i: Killing tapper"
 		kill -9 $(ps -ef | grep agent/build/mizuagent | grep tap | grep -v grep | awk '{ print $2 }') > /dev/null 2>&1
