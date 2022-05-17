@@ -206,8 +206,6 @@ function checkFilter(filterDetails) {
         cy.get(`#list [id^=entry]`).last().then(elem => {
             const element = elem[0];
             const entryId = getEntryId(element.id);
-            // checks the hover on the last entry (the only one in DOM at the beginning)
-            leftOnHoverCheck(entryId, leftSidePath, filter);
 
             // only one entry in DOM after filtering, checking all checks on it
             leftTextCheck(entryId, leftSidePath, leftSideExpectedText);
