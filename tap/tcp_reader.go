@@ -121,7 +121,7 @@ func (reader *tcpReader) Read(p []byte) (int, error) {
 			if !reader.isProtocolIdentified() {
 				reader.msgBufferMaster = append(
 					reader.msgBufferMaster,
-					msg,
+					NewTcpReaderDataMsg(msg.GetBytes(), msg.GetTimestamp()),
 				)
 			}
 		}
