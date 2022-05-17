@@ -7,7 +7,7 @@ This directory contains tools for analyzing tapper performance.
 
 In tapper logs there are some periodic lines that shows its internal state and consumed resources.
 
-Internal state example line (formatted and commented):
+Internal state example (formatted and commented):
 ```
 stats - {
 	"processedBytes":468940592, // how many bytes we read from pcap
@@ -19,7 +19,7 @@ stats - {
 }
 ```
 
-Consumed resources example line (formatted and commented):
+Consumed resources example (formatted and commented):
 ```
 mem: 24441240, // golang heap size
 goroutines: 29, // how many goroutines
@@ -30,7 +30,7 @@ rss: 87052288 // how many bytes held by the tapper process
 
 # Plot tapper logs
 
-In order to plot a tapper log or many logs into a graph, use the plot_from_tapper_logs.py util.
+In order to plot a tapper log or many logs into a graph, use the `plot_from_tapper_logs.py` util.
 
 It gets a list of tapper logs as a parameter, and output an image with a nice graph.
 
@@ -79,7 +79,7 @@ In order to run the benchmark you probably want:
 
 ## Running the benchmark
 
-In order to run a benchmark use the run_tapper_benchmark.sh script.
+In order to run a benchmark use the `run_tapper_benchmark.sh` script.
 
 Example run:
 ```
@@ -100,7 +100,7 @@ export=MIZU_BENCHMARK_CLIENTS_COUNT=5 # How many clients should run in parallel 
 
 # Example output graph
 
-An example output graph from a 15 min run with 15K payload and 100 QPS looks like
+An example output graph from a 15 min run with 15K payload and 1000 QPS looks like
 
 ![Example Graph](https://github.com/up9inc/mizu/blob/debug/profile-tapper-benchmark/performance_analysis/example-graph.png)
 
