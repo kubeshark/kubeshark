@@ -125,6 +125,11 @@ func printPeriodicStats(cleaner *Cleaner) {
 	statsPeriod := time.Second * time.Duration(*statsevery)
 	ticker := time.NewTicker(statsPeriod)
 
+	numCores, err := cpu.Counts(true)
+	if err != nil {
+		numCores = -1
+	}
+
 	for {
 		<-ticker.C
 
@@ -147,10 +152,6 @@ func printPeriodicStats(cleaner *Cleaner) {
 				CPU:    -1,
 				Memory: -1,
 			}
-		}
-		numCores, err := cpu.Counts(true)
-		if err != nil {
-			numCores = -1
 		}
 		logger.Log.Infof(
 			"mem: %d, goroutines: %d, cpu: %f, cores: %d, rss: %f",
