@@ -2,10 +2,8 @@ package tap
 
 import (
 	"encoding/hex"
-	"net/url"
 	"os"
 	"os/signal"
-	"strconv"
 	"sync"
 	"time"
 
@@ -13,7 +11,6 @@ import (
 	"github.com/google/gopacket/layers"
 	"github.com/google/gopacket/reassembly"
 	"github.com/up9inc/mizu/logger"
-	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/tap/api"
 	"github.com/up9inc/mizu/tap/diagnose"
 	"github.com/up9inc/mizu/tap/source"
@@ -156,27 +153,4 @@ func (a *tcpAssembler) shouldIgnorePort(port uint16) bool {
 	}
 
 	return false
-}
-
-func extractApiServerPort(apiServerAddress string) uint16 {
-	url, err := url.Parse(apiServerAddress)
-
-	if err != nil {
-		logger.Log.Warningf("Failed to parse api server url %t", err)
-		return shared.DefaultApiServerPort
-	} else {
-		portStr := url.Port()
-
-		if portStr == "" {
-			return shared.DefaultApiServerPort
-		} else {
-			apiServerPort, err := strconv.ParseInt(portStr, 10, 16)
-
-			if err != nil {
-				logger.Log.Warningf("Failed to convert api server port to number %t", err)
-			}
-
-			return uint16(apiServerPort)
-		}
-	}
 }
