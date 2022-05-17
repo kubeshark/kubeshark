@@ -93,7 +93,6 @@ func (t *tcpStream) GetIsTapTarget() bool {
 	if os.Getenv("MIZU_TAPPER_NO_TAP_TARGET") == "true" {
 		return false
 	}
-	
 	return t.isTapTarget
 }
 
