@@ -72,8 +72,10 @@ func (t *tcpStream) SetProtocol(protocol *api.Protocol) {
 	t.protocol = protocol
 
 	// Clean the buffers
+	t.Lock()
 	t.client.msgBufferMaster = make([]api.TcpReaderDataMsg, 0)
 	t.server.msgBufferMaster = make([]api.TcpReaderDataMsg, 0)
+	t.Unlock()
 }
 
 func (t *tcpStream) GetOrigin() api.Capture {
