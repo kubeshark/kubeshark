@@ -158,6 +158,7 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
         if (checkedProtocols.length === 0) {
             setCheckedProtocols(getProtocolsForFilter.map(x => x.key))
         }
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [getProtocolsForFilter])
 
     useEffect(() => {
@@ -217,13 +218,13 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
                         <div className={styles.filterSection + ` ${isFilterClicked ? styles.show : ""}`}>
                             <Resizeable minWidth={170} maxWidth={320}>
                                 <div className={styles.filterWrapper}>
-                                    <div className={styles.protocolsFilterList}>
+                                    <div className={styles.card}>
                                         <SelectList items={getProtocolsForFilter} checkBoxWidth="5%" tableName={"PROTOCOLS"} multiSelect={true}
                                             checkedValues={checkedProtocols} setCheckedValues={onProtocolsChange} tableClassName={styles.filters}
                                             inputSearchClass={styles.servicesFilterSearch} isFilterable={false}/>
                                     </div>
-                                    <div className={styles.servicesFilter}>
-                                        <div className={styles.servicesFilterList}> 
+                                    <div className={styles.servicesFilterWrapper + ` ${styles.card}`}>
+                                        <div className={styles.servicesFilterList}>
                                             <SelectList items={getServicesForFilter} tableName={"SERVICES"} tableClassName={styles.filters} multiSelect={true}
                                                 checkBoxWidth="5%" checkedValues={checkedServices} setCheckedValues={onServiceChanges} inputSearchClass={styles.servicesFilterSearch}/>
                                         </div>

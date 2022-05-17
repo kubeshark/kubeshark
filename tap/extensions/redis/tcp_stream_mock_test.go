@@ -7,18 +7,17 @@ import (
 )
 
 type tcpStream struct {
-	isClosed        bool
-	protoIdentifier *api.ProtoIdentifier
-	isTapTarget     bool
-	origin          api.Capture
-	reqResMatchers  []api.RequestResponseMatcher
+	isClosed       bool
+	protocol       *api.Protocol
+	isTapTarget    bool
+	origin         api.Capture
+	reqResMatchers []api.RequestResponseMatcher
 	sync.Mutex
 }
 
 func NewTcpStream(capture api.Capture) api.TcpStream {
 	return &tcpStream{
-		origin:          capture,
-		protoIdentifier: &api.ProtoIdentifier{},
+		origin: capture,
 	}
 }
 
@@ -28,8 +27,8 @@ func (t *tcpStream) GetOrigin() api.Capture {
 	return t.origin
 }
 
-func (t *tcpStream) GetProtoIdentifier() *api.ProtoIdentifier {
-	return t.protoIdentifier
+func (t *tcpStream) GetProtocol() *api.Protocol {
+	return t.protocol
 }
 
 func (t *tcpStream) GetReqResMatchers() []api.RequestResponseMatcher {

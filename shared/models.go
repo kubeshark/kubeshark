@@ -45,13 +45,6 @@ type MizuAgentConfig struct {
 	ServiceMap             bool          `json:"serviceMap"`
 	OAS                    bool          `json:"oas"`
 	Telemetry              bool          `json:"telemetry"`
-	Elastic                ElasticConfig `json:"elastic"`
-}
-
-type ElasticConfig struct {
-	User     string `yaml:"user,omitempty" default:"" readonly:""`
-	Password string `yaml:"password,omitempty" default:"" readonly:""`
-	Url      string `yaml:"url,omitempty" default:"" readonly:""`
 }
 
 type WebSocketMessageMetadata struct {

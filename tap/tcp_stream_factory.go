@@ -3,7 +3,6 @@ package tap
 import (
 	"fmt"
 	"sync"
-	"time"
 
 	"github.com/up9inc/mizu/logger"
 	"github.com/up9inc/mizu/tap/api"
@@ -62,62 +61,50 @@ func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcpLayer *lay
 	reassemblyStream := NewTcpReassemblyStream(fmt.Sprintf("%s:%s", net, transport), tcpLayer, fsmOptions, stream)
 	if stream.GetIsTapTarget() {
 		stream.setId(factory.streamsMap.NextId())
-		for i, extension := range extensions {
-			reqResMatcher := extension.Dissector.NewResponseRequestMatcher()
-			stream.addReqResMatcher(reqResMatcher)
+		for _, extension := range extensions {
 			counterPair := &api.CounterPair{
 				Request:  0,
 				Response: 0,
 			}
-			stream.addClient(
-				NewTcpReader(
-					make(chan api.TcpReaderDataMsg),
-					&api.ReadProgress{},
-					fmt.Sprintf("%s %s", net, transport),
-					&api.TcpID{
-						SrcIP:   srcIp,
-						DstIP:   dstIp,
-						SrcPort: srcPort,
-						DstPort: dstPort,
-					},
-					time.Time{},
-					stream,
-					true,
-					props.isOutgoing,
-					extension,
-					factory.emitter,
-					counterPair,
-					reqResMatcher,
-				),
-			)
-			stream.addServer(
-				NewTcpReader(
-					make(chan api.TcpReaderDataMsg),
-					&api.ReadProgress{},
-					fmt.Sprintf("%s %s", net, transport),
-					&api.TcpID{
-						SrcIP:   net.Dst().String(),
-						DstIP:   net.Src().String(),
-						SrcPort: transport.Dst().String(),
-						DstPort: transport.Src().String(),
-					},
-					time.Time{},
-					stream,
-					false,
-					props.isOutgoing,
-					extension,
-					factory.emitter,
-					counterPair,
-					reqResMatcher,
-				),
-			)
+			stream.addCounterPair(counterPair)
 
-			factory.streamsMap.Store(stream.getId(), stream)
-
-			factory.wg.Add(2)
-			go stream.getClient(i).run(filteringOptions, &factory.wg)
-			go stream.getServer(i).run(filteringOptions, &factory.wg)
+			reqResMatcher := extension.Dissector.NewResponseRequestMatcher()
+			stream.addReqResMatcher(reqResMatcher)
 		}
+
+		stream.client = NewTcpReader(
+			fmt.Sprintf("%s %s", net, transport),
+			&api.TcpID{
+				SrcIP:   srcIp,
+				DstIP:   dstIp,
+				SrcPort: srcPort,
+				DstPort: dstPort,
+			},
+			stream,
+			true,
+			props.isOutgoing,
+			factory.emitter,
+		)
+
+		stream.server = NewTcpReader(
+			fmt.Sprintf("%s %s", net, transport),
+			&api.TcpID{
+				SrcIP:   net.Dst().String(),
+				DstIP:   net.Src().String(),
+				SrcPort: transport.Dst().String(),
+				DstPort: transport.Src().String(),
+			},
+			stream,
+			false,
+			props.isOutgoing,
+			factory.emitter,
+		)
+
+		factory.streamsMap.Store(stream.getId(), stream)
+
+		factory.wg.Add(2)
+		go stream.client.run(filteringOptions, &factory.wg)
+		go stream.server.run(filteringOptions, &factory.wg)
 	}
 	return reassemblyStream
 }

@@ -104,11 +104,6 @@ type OutputChannelItem struct {
 	Namespace      string
 }
 
-type ProtoIdentifier struct {
-	Protocol       *Protocol
-	IsClosedOthers bool
-}
-
 type ReadProgress struct {
 	readBytes   int
 	lastCurrent int
@@ -121,6 +116,11 @@ func (p *ReadProgress) Feed(n int) {
 func (p *ReadProgress) Current() (n int) {
 	p.lastCurrent = p.readBytes - p.lastCurrent
 	return p.lastCurrent
+}
+
+func (p *ReadProgress) Reset() {
+	p.readBytes = 0
+	p.lastCurrent = 0
 }
 
 type Dissector interface {
@@ -419,13 +419,12 @@ type TcpReader interface {
 	GetCaptureTime() time.Time
 	GetEmitter() Emitter
 	GetIsClosed() bool
-	GetExtension() *Extension
 }
 
 type TcpStream interface {
 	SetProtocol(protocol *Protocol)
 	GetOrigin() Capture
-	GetProtoIdentifier() *ProtoIdentifier
+	GetProtocol() *Protocol
 	GetReqResMatchers() []RequestResponseMatcher
 	GetIsTapTarget() bool
 	GetIsClosed() bool
