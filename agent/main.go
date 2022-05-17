@@ -290,7 +290,7 @@ func pipeTapChannelToSocket(connection *websocket.Conn, messageDataChannel <-cha
 			continue
 		}
 
-		if os.Getenv("MIZU_TAPPER_NO_SENDING") == "true" {
+		if os.Getenv("MIZU_TAPPER_DISABLE_SENDING") == "true" {
 			continue
 		}
 

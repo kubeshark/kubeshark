@@ -149,7 +149,7 @@ type Emitter interface {
 }
 
 func (e *Emitting) Emit(item *OutputChannelItem) {
-	if os.Getenv("MIZU_TAPPER_NO_EMITTER") == "true" {
+	if os.Getenv("MIZU_TAPPER_DISABLE_EMITTING") == "true" {
 		return
 	}
 	e.OutputChannel <- item

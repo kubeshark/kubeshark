@@ -50,7 +50,7 @@ func NewTcpReader(ident string, tcpId *api.TcpID, parent *tcpStream, isClient bo
 func (reader *tcpReader) run(options *api.TrafficFilteringOptions, wg *sync.WaitGroup) {
 	defer wg.Done()
 
-	if os.Getenv("MIZU_TAPPER_NO_DISSECTORS") == "true" {
+	if os.Getenv("MIZU_TAPPER_DISABLE_DISSECTORS") == "true" {
 		b := bufio.NewReader(reader)
 		io.ReadAll(b)
 		return

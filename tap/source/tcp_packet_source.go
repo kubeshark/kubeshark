@@ -117,7 +117,7 @@ func (source *tcpPacketSource) close() {
 }
 
 func (source *tcpPacketSource) readPackets(ipdefrag bool, packets chan<- TcpPacketInfo) {
-	if os.Getenv("MIZU_TAPPER_NO_PCAP") == "true" {
+	if os.Getenv("MIZU_TAPPER_DISABLE_PCAP") == "true" {
 		return
 	}
 	logger.Log.Infof("Start reading packets from %v", source.name)

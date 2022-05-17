@@ -89,7 +89,7 @@ func (a *tcpAssembler) processPackets(dumpPacket bool, packets <-chan source.Tcp
 			}
 			diagnose.InternalStats.Totalsz += len(tcp.Payload)
 			a.assemblerMutex.Lock()
-			if os.Getenv("MIZU_TAPPER_NO_ASSEMBLER") != "true" {
+			if os.Getenv("MIZU_TAPPER_DISABLE_TCP_REASSEMBLY") != "true" {
 				a.AssembleWithContext(packet.NetworkLayer().NetworkFlow(), tcp, &c)
 			}
 			a.assemblerMutex.Unlock()
