@@ -153,7 +153,6 @@ func printPeriodicStats(cleaner *Cleaner) {
 		if err != nil {
 			numCores = -1
 		}
-		
 		logger.Log.Infof(
 			"mem: %d, goroutines: %d, cpu: %f, cores: %d, rss: %f",
 			memStats.HeapAlloc,
