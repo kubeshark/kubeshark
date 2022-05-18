@@ -196,12 +196,8 @@ func initializePassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelI
 		logger.Log.Fatal(err)
 	}
 
-	if opts.IgnoredPorts == nil {
-		opts.IgnoredPorts = buildIgnoredPortsList(*ignoredPorts)
-	} else {
-		opts.IgnoredPorts = append(opts.IgnoredPorts, buildIgnoredPortsList(*ignoredPorts)...)
-	}
-	
+	opts.IgnoredPorts = append(opts.IgnoredPorts, buildIgnoredPortsList(*ignoredPorts)...)
+
 	assembler := NewTcpAssembler(outputItems, streamsMap, opts)
 
 	return assembler
