@@ -50,10 +50,10 @@ def extract_samples(f: typing.IO) -> typing.Tuple[pd.Series, pd.Series, pd.Serie
     for line in f:
         append_sample('cpu', line, cpu_samples)
         append_sample('rss', line, rss_samples)
-        tapper_packets_count = get_sample('"tapperPacketsCount"', line, -1)
+        ignored_packets_count = get_sample('"ignoredPacketsCount"', line, -1)
         packets_count = get_sample('"packetsCount"', line, -1)
-        if tapper_packets_count != -1 and packets_count != -1:
-            count_samples.append(packets_count - tapper_packets_count)
+        if ignored_packets_count != -1 and packets_count != -1:
+            count_samples.append(packets_count - ignored_packets_count)
         append_sample('"matchedPairs"', line, matched_samples)
         append_sample('"liveTcpStreams"', line, live_samples)
         append_sample('"processedBytes"', line, processed_samples)
