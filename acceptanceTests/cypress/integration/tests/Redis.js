@@ -12,7 +12,7 @@ checkFilterByMethod({
     methodQuery: 'request.command == "PING"',
     summary: null,
     summaryQuery: '',
-    numberOfRecords: 20,
+    numberOfRecords: 10,
     value: null
 })
 
@@ -22,7 +22,7 @@ checkFilterByMethod({
     methodQuery: 'request.command == "SET"',
     summary: 'key',
     summaryQuery: 'request.key == "key"',
-    numberOfRecords: 20,
+    numberOfRecords: 10,
     value: {tab: valueTabs.request, regex: /^\[value, keepttl]$/mg}
 })
 
@@ -32,7 +32,7 @@ checkFilterByMethod({
     methodQuery: 'request.command == "EXISTS"',
     summary: 'key',
     summaryQuery: 'request.key == "key"',
-    numberOfRecords: 20,
+    numberOfRecords: 10,
     value: {tab: valueTabs.response, regex: /^1$/mg}
 })
 
@@ -42,7 +42,7 @@ checkFilterByMethod({
     methodQuery: 'request.command == "GET"',
     summary: 'key',
     summaryQuery: 'request.key == "key"',
-    numberOfRecords: 20,
+    numberOfRecords: 10,
     value: {tab: valueTabs.response, regex: /^value$/mg}
 })
 
@@ -52,6 +52,6 @@ checkFilterByMethod({
     methodQuery: 'request.command == "DEL"',
     summary: 'key',
     summaryQuery: 'request.key == "key"',
-    numberOfRecords: 20,
+    numberOfRecords: 10,
     value: {tab: valueTabs.response, regex: /^1$|^0$/mg}
 })
