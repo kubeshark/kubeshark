@@ -43,7 +43,7 @@ def extract_samples(f: typing.IO) -> typing.Tuple[pd.Series, pd.Series, pd.Serie
     rss_samples = []
     count_samples = []
     matched_samples = []
-    dropped_samples = []
+    live_samples = []
     processed_samples = []
     heap_samples = []
     goroutines_samples = []
@@ -55,7 +55,7 @@ def extract_samples(f: typing.IO) -> typing.Tuple[pd.Series, pd.Series, pd.Serie
         if tapper_packets_count != -1 and packets_count != -1:
             count_samples.append(packets_count - tapper_packets_count)
         append_sample('"matchedPairs"', line, matched_samples)
-        append_sample('"droppedTcpStreams"', line, dropped_samples)
+        append_sample('"liveTcpStreams"', line, live_samples)
         append_sample('"processedBytes"', line, processed_samples)
         append_sample('mem', line, heap_samples)
         append_sample('goroutines', line, goroutines_samples)
@@ -64,12 +64,12 @@ def extract_samples(f: typing.IO) -> typing.Tuple[pd.Series, pd.Series, pd.Serie
     rss_samples = pd.Series(rss_samples)
     count_samples = pd.Series(count_samples)
     matched_samples = pd.Series(matched_samples)
-    dropped_samples = pd.Series(dropped_samples)
+    live_samples = pd.Series(live_samples)
     processed_samples = pd.Series(processed_samples)
     heap_samples = pd.Series(heap_samples)
     goroutines_samples = pd.Series(goroutines_samples)
 
-    return cpu_samples, rss_samples, count_samples, matched_samples, dropped_samples, processed_samples, heap_samples, goroutines_samples
+    return cpu_samples, rss_samples, count_samples, matched_samples, live_samples, processed_samples, heap_samples, goroutines_samples
 
 
 def plot(ax, df: pd.DataFrame, title: str, xlabel: str, ylabel: str, group_pattern: typing.Optional[str]):
@@ -103,7 +103,7 @@ if __name__ == '__main__':
     rss_samples_all_files = []
     count_samples_all_files = []
     matched_samples_all_files = []
-    dropped_samples_all_files = []
+    live_samples_all_files = []
     processed_samples_all_files = []
     heap_samples_all_files = []
     goroutines_samples_all_files = []
@@ -114,13 +114,13 @@ if __name__ == '__main__':
 
         print("Analyzing {}".format(filename))
         with open(filename, 'r') as f:
-            cpu_samples, rss_samples, count_samples, matched_samples, dropped_samples, processed_samples, heap_samples, goroutines_samples = extract_samples(f)
+            cpu_samples, rss_samples, count_samples, matched_samples, live_samples, processed_samples, heap_samples, goroutines_samples = extract_samples(f)
 
         cpu_samples.name = pathlib.Path(filename).name
         rss_samples.name = pathlib.Path(filename).name
         count_samples.name = pathlib.Path(filename).name
         matched_samples.name = pathlib.Path(filename).name
-        dropped_samples.name = pathlib.Path(filename).name
+        live_samples.name = pathlib.Path(filename).name
         processed_samples.name = pathlib.Path(filename).name
         heap_samples.name = pathlib.Path(filename).name
         goroutines_samples.name = pathlib.Path(filename).name
@@ -129,7 +129,7 @@ if __name__ == '__main__':
         rss_samples_all_files.append(rss_samples)
         count_samples_all_files.append(count_samples)
         matched_samples_all_files.append(matched_samples)
-        dropped_samples_all_files.append(dropped_samples)
+        live_samples_all_files.append(live_samples)
         processed_samples_all_files.append(processed_samples)
         heap_samples_all_files.append(processed_samples)
         goroutines_samples_all_files.append(processed_samples)
@@ -138,7 +138,7 @@ if __name__ == '__main__':
     rss_samples_df = pd.concat(rss_samples_all_files, axis=1)
     count_samples_df = pd.concat(count_samples_all_files, axis=1)
     matched_samples_df = pd.concat(matched_samples_all_files, axis=1)
-    dropped_samples_df = pd.concat(dropped_samples_all_files, axis=1)
+    live_samples_df = pd.concat(live_samples_all_files, axis=1)
     processed_samples_df = pd.concat(processed_samples_all_files, axis=1)
 
     heap_samples_df = pd.concat(heap_samples_all_files, axis=1)
@@ -162,9 +162,9 @@ if __name__ == '__main__':
     plot(matched_plot, matched_samples_df, 'matchedCount', '', 'matchedCount', group_pattern)
     matched_plot.legend().remove()
 
-    dropped_plot = plt.subplot(8, 2, 5)
-    plot(dropped_plot, dropped_samples_df, 'droppedCount', '', 'droppedCount', group_pattern)
-    dropped_plot.legend().remove()
+    live_plot = plt.subplot(8, 2, 5)
+    plot(live_plot, live_samples_df, 'liveStreamsCount', '', 'liveStreamsCount', group_pattern)
+    live_plot.legend().remove()
 
     processed_plot = plt.subplot(8, 2, 6)
     plot(processed_plot, (processed_samples_df / 1024 / 1024), 'processedBytes', '', 'bytes (mega)', group_pattern)

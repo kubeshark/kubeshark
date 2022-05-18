@@ -28,10 +28,12 @@ func (streamMap *tcpStreamMap) Range(f func(key, value interface{}) bool) {
 
 func (streamMap *tcpStreamMap) Store(key, value interface{}) {
 	streamMap.streams.Store(key, value)
+	diagnose.AppStats.IncLiveTcpStreams()
 }
 
 func (streamMap *tcpStreamMap) Delete(key interface{}) {
 	streamMap.streams.Delete(key)
+	diagnose.AppStats.DecLiveTcpStreams()
 }
 
 func (streamMap *tcpStreamMap) NextId() int64 {
