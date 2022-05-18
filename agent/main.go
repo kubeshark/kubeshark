@@ -162,7 +162,9 @@ func runInTapperMode() {
 	}
 
 	hostMode := os.Getenv(shared.HostModeEnvVar) == "1"
-	tapOpts := &tap.TapOpts{HostMode: hostMode}
+	tapOpts := &tap.TapOpts{
+		HostMode:     hostMode,
+	}
 
 	filteredOutputItemsChannel := make(chan *tapApi.OutputChannelItem)
 

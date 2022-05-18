@@ -22,8 +22,8 @@ export const StatusBar: React.FC<StatusBarProps> = ({isDemoBannerView, disabled}
     const {uniqueNamespaces, amountOfPods, amountOfTappedPods, amountOfUntappedPods} = useRecoilValue(tappingStatusDetails);
     return <div style={{opacity: disabled ? 0.4 : 1}} className={`${isDemoBannerView ? `${style.banner}` : ''} ${style.statusBar} ${(expandedBar && !disabled ? `${style.expandedStatusBar}` : "")}`} onMouseOver={() => setExpandedBar(true)} onMouseLeave={() => setExpandedBar(false)} data-cy="expandedStatusBar">
         <div className={style.podsCount}>
-        {tappingStatus.some(pod => !pod.isTapped) && <img src={warningIcon} alt="warning"/>}
-          {disabled &&  <Tooltip title={"Tapping status is not updated when streaming is paused"} isSimple><img src={warningIcon} alt="warning"/></Tooltip>}
+          {!disabled && tappingStatus.some(pod => !pod.isTapped) && <img src={warningIcon} alt="warning"/>}
+          {disabled && <Tooltip title={"Tapping status is not updated when streaming is paused"} isSimple><img src={warningIcon} alt="warning"/></Tooltip>}
             <span className={style.podsCountText} data-cy="podsCountText">
                 {`Tapping ${amountOfUntappedPods > 0 ? amountOfTappedPods + " / " + amountOfPods : amountOfPods} ${pluralize('pod', amountOfPods)} in ${pluralize('namespace', uniqueNamespaces.length)} ${uniqueNamespaces.join(", ")}`}
             </span>
