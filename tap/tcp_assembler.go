@@ -92,7 +92,7 @@ func (a *tcpAssembler) processPackets(dumpPacket bool, packets <-chan source.Tcp
 			tcp := tcp.(*layers.TCP)
 
 			if a.shouldIgnorePort(uint16(tcp.DstPort)) {
-				diagnose.AppStats.IncTapperPacketsCount()
+				diagnose.AppStats.IncIgnoredPacketsCount()
 			} else {
 				c := context{
 					CaptureInfo: packet.Metadata().CaptureInfo,
