@@ -12,7 +12,7 @@ checkFilterByMethod({
     methodQuery: 'request.method == "exchange declare"',
     summary: 'exchange',
     summaryQuery: 'request.exchange == "exchange"',
-    numberOfRecords: 10,
+    numberOfRecords: 5,
     value: null
 });
 
@@ -22,7 +22,7 @@ checkFilterByMethod({
     methodQuery: 'request.method == "queue declare"',
     summary: 'queue',
     summaryQuery: 'request.queue == "queue"',
-    numberOfRecords: 10,
+    numberOfRecords: 5,
     value: null
 });
 
@@ -32,7 +32,7 @@ checkFilterByMethod({
     methodQuery: 'request.method == "queue bind"',
     summary: 'queue',
     summaryQuery: 'request.queue == "queue"',
-    numberOfRecords: 10,
+    numberOfRecords: 5,
     value: null
 });
 
@@ -51,7 +51,7 @@ checkFilterByMethod({
     methodQuery: 'request.method == "basic consume"',
     summary: 'queue',
     summaryQuery: 'request.queue == "queue"',
-    numberOfRecords: 10,
+    numberOfRecords: 5,
     value: null
 });
 
@@ -61,6 +61,6 @@ checkFilterByMethod({
     methodQuery: 'request.method == "basic deliver"',
     summary: 'exchange',
     summaryQuery: 'request.queue == "exchange"',
-    numberOfRecords: 10,
+    numberOfRecords: 5,
     value: {tab: valueTabs.request, regex: /^message$/mg}
 });
