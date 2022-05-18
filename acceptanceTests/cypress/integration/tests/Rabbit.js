@@ -42,6 +42,7 @@ checkFilterByMethod({
     methodQuery: 'request.method == "basic publish"',
     summary: 'exchange',
     summaryQuery: 'request.exchange == "exchange"',
+    numberOfRecords: 5,
     value: {tab: valueTabs.request, regex: /^message$/mg}
 });
 
