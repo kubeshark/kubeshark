@@ -50,43 +50,43 @@ log "Writing output to $MIZU_BENCHMARK_OUTPUT_DIR"
 cd $MIZU_HOME || exit 1
 
 export HOST_MODE=0
-export MIZU_TAPPER_DISABLE_PCAP=false
-export MIZU_TAPPER_DISABLE_TCP_REASSEMBLY=false
-export MIZU_TAPPER_DISABLE_TCP_STREAM=false
-export MIZU_TAPPER_DISABLE_NON_HTTP_EXTENSSION=false
-export MIZU_TAPPER_DISABLE_DISSECTORS=false
-export MIZU_TAPPER_DISABLE_EMITTING=false
-export MIZU_TAPPER_DISABLE_SENDING=false
+export MIZU_DEBUG_DISABLE_PCAP=false
+export MIZU_DEBUG_DISABLE_TCP_REASSEMBLY=false
+export MIZU_DEBUG_DISABLE_TCP_STREAM=false
+export MIZU_DEBUG_DISABLE_NON_HTTP_EXTENSSION=false
+export MIZU_DEBUG_DISABLE_DISSECTORS=false
+export MIZU_DEBUG_DISABLE_EMITTING=false
+export MIZU_DEBUG_DISABLE_SENDING=false
 
-export MIZU_TAPPER_DISABLE_PCAP=true
-run_single_bench "1" "no_pcap" || exit 1
-export MIZU_TAPPER_DISABLE_PCAP=false
+export MIZU_DEBUG_DISABLE_PCAP=true
+run_single_bench "01" "no_pcap" || exit 1
+export MIZU_DEBUG_DISABLE_PCAP=false
 
-export MIZU_TAPPER_DISABLE_TCP_REASSEMBLY=true
-run_single_bench "2" "no_assembler" || exit 1
-export MIZU_TAPPER_DISABLE_TCP_REASSEMBLY=false
+export MIZU_DEBUG_DISABLE_TCP_REASSEMBLY=true
+run_single_bench "02" "no_assembler" || exit 1
+export MIZU_DEBUG_DISABLE_TCP_REASSEMBLY=false
 
-export MIZU_TAPPER_DISABLE_TCP_STREAM=true
-run_single_bench "3" "no_tcp_stream" || exit 1
-export MIZU_TAPPER_DISABLE_TCP_STREAM=false
+export MIZU_DEBUG_DISABLE_TCP_STREAM=true
+run_single_bench "03" "no_tcp_stream" || exit 1
+export MIZU_DEBUG_DISABLE_TCP_STREAM=false
 
-export MIZU_TAPPER_DISABLE_NON_HTTP_EXTENSSION=true
-run_single_bench "4" "only_http" || exit 1
-export MIZU_TAPPER_DISABLE_NON_HTTP_EXTENSSION=false
+export MIZU_DEBUG_DISABLE_NON_HTTP_EXTENSSION=true
+run_single_bench "04" "only_http" || exit 1
+export MIZU_DEBUG_DISABLE_NON_HTTP_EXTENSSION=false
 
-export MIZU_TAPPER_DISABLE_DISSECTORS=true
-run_single_bench "5" "no_dissectors" || exit 1
-export MIZU_TAPPER_DISABLE_DISSECTORS=false
+export MIZU_DEBUG_DISABLE_DISSECTORS=true
+run_single_bench "05" "no_dissectors" || exit 1
+export MIZU_DEBUG_DISABLE_DISSECTORS=false
 
-export MIZU_TAPPER_DISABLE_EMITTING=true
-run_single_bench "6" "no_emit" || exit 1
-export MIZU_TAPPER_DISABLE_EMITTING=false
+export MIZU_DEBUG_DISABLE_EMITTING=true
+run_single_bench "06" "no_emit" || exit 1
+export MIZU_DEBUG_DISABLE_EMITTING=false
 
-export MIZU_TAPPER_DISABLE_SENDING=true
-run_single_bench "7" "no_send" || exit 1
-export MIZU_TAPPER_DISABLE_SENDING=false
+export MIZU_DEBUG_DISABLE_SENDING=true
+run_single_bench "07" "no_send" || exit 1
+export MIZU_DEBUG_DISABLE_SENDING=false
 
-run_single_bench "8" "normal" || exit 1
+run_single_bench "08" "normal" || exit 1
 
 generate_bench_graph || exit 1
 log "Output written to to $MIZU_BENCHMARK_OUTPUT_DIR"
