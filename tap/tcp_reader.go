@@ -52,7 +52,7 @@ func (reader *tcpReader) run(options *api.TrafficFilteringOptions, wg *sync.Wait
 
 	if dbgctl.MizuTapperDisableDissectors {
 		b := bufio.NewReader(reader)
-		io.ReadAll(b)
+		_, _ = io.ReadAll(b)
 		return
 	}
 
