@@ -16,6 +16,7 @@ import (
 	"runtime"
 	"strings"
 	"time"
+	"strconv"
 
 	"github.com/up9inc/mizu/logger"
 	"github.com/up9inc/mizu/tap/api"
@@ -41,6 +42,7 @@ var debug = flag.Bool("debug", false, "Display debug information")
 var quiet = flag.Bool("quiet", false, "Be quiet regarding errors")
 var hexdumppkt = flag.Bool("dumppkt", false, "Dump packet as hex")
 var procfs = flag.String("procfs", "/proc", "The procfs directory, used when mapping host volumes into a container")
+var ignoredPorts = flag.String("ignore-ports", "", "A comma separated list of ports to ignore")
 
 // capture
 var iface = flag.String("i", "en0", "Interface to read packets from")
@@ -194,6 +196,12 @@ func initializePassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelI
 		logger.Log.Fatal(err)
 	}
 
+	if opts.IgnoredPorts == nil {
+		opts.IgnoredPorts = buildIgnoredPortsList(*ignoredPorts)
+	} else {
+		opts.IgnoredPorts = append(opts.IgnoredPorts, buildIgnoredPortsList(*ignoredPorts)...)
+	}
+	
 	assembler := NewTcpAssembler(outputItems, streamsMap, opts)
 
 	return assembler
@@ -267,4 +275,20 @@ func startTlsTapper(extension *api.Extension, outputItems chan *api.OutputChanne
 	go tls.Poll(emitter, options, streamsMap)
 
 	return &tls
+}
+
+func buildIgnoredPortsList(ignoredPorts string) []uint16 {
+	tmp := strings.Split(ignoredPorts, ",")
+	result := make([]uint16, len(tmp))
+
+	for i, raw := range tmp {
+		v, err := strconv.Atoi(raw)
+		if err != nil {
+			continue
+		}
+
+		result[i] = uint16(v)
+	}
+
+	return result
 }

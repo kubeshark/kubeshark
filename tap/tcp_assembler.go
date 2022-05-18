@@ -49,8 +49,8 @@ func NewTcpAssembler(outputItems chan *api.OutputChannelItem, streamsMap api.Tcp
 
 	maxBufferedPagesTotal := GetMaxBufferedPagesPerConnection()
 	maxBufferedPagesPerConnection := GetMaxBufferedPagesTotal()
-	logger.Log.Infof("Assembler options: maxBufferedPagesTotal=%d, maxBufferedPagesPerConnection=%d",
-		maxBufferedPagesTotal, maxBufferedPagesPerConnection)
+	logger.Log.Infof("Assembler options: maxBufferedPagesTotal=%d, maxBufferedPagesPerConnection=%d, opts=%v",
+		maxBufferedPagesTotal, maxBufferedPagesPerConnection, opts)
 	assembler.AssemblerOptions.MaxBufferedPagesTotal = maxBufferedPagesTotal
 	assembler.AssemblerOptions.MaxBufferedPagesPerConnection = maxBufferedPagesPerConnection
 

@@ -45,7 +45,6 @@ var apiServerAddress = flag.String("api-server-address", "", "Address of mizu AP
 var namespace = flag.String("namespace", "", "Resolve IPs if they belong to resources in this namespace (default is all)")
 var harsReaderMode = flag.Bool("hars-read", false, "Run in hars-read mode")
 var harsDir = flag.String("hars-dir", "", "Directory to read hars from")
-var ignoredPorts = flag.String("ignore-ports", "", "A comma separated list of ports to ignore")
 
 const (
 	socketConnectionRetries    = 30
@@ -155,7 +154,6 @@ func runInTapperMode() {
 	hostMode := os.Getenv(shared.HostModeEnvVar) == "1"
 	tapOpts := &tap.TapOpts{
 		HostMode:     hostMode,
-		IgnoredPorts: buildIgnoredPortsList(*ignoredPorts),
 	}
 
 	filteredOutputItemsChannel := make(chan *tapApi.OutputChannelItem)
@@ -379,20 +377,4 @@ func initializeDependencies() {
 	dependency.RegisterGenerator(dependency.EntriesProvider, func() interface{} { return &entries.BasenineEntriesProvider{} })
 	dependency.RegisterGenerator(dependency.EntriesSocketStreamer, func() interface{} { return &api.BasenineEntryStreamer{} })
 	dependency.RegisterGenerator(dependency.EntryStreamerSocketConnector, func() interface{} { return &api.DefaultEntryStreamerSocketConnector{} })
-}
-
-func buildIgnoredPortsList(ignoredPorts string) []uint16 {
-	tmp := strings.Split(ignoredPorts, ",")
-	result := make([]uint16, len(tmp))
-
-	for i, raw := range tmp {
-		v, err := strconv.Atoi(raw)
-		if err != nil {
-			continue
-		}
-
-		result[i] = uint16(v)
-	}
-
-	return result
 }
