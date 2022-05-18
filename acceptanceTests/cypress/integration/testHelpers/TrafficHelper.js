@@ -58,7 +58,7 @@ export function rightOnHoverCheck(path, expectedText) {
 }
 
 export function checkFilterByMethod(funcDict) {
-    const {protocol, method, methodQuery, summary, summaryQuery} = funcDict;
+    const {protocol, method, methodQuery, summary, summaryQuery, numberOfRecords} = funcDict;
     const summaryDict = getSummaryDict(summary, summaryQuery);
     const methodDict = getMethodDict(method, methodQuery);
     const protocolDict = getProtocolDict(protocol.name, protocol.text);
@@ -69,7 +69,7 @@ export function checkFilterByMethod(funcDict) {
         cy.get('[type="submit"]').click();
         cy.get('.w-tc-editor').should('have.attr', 'style').and('include', Cypress.env('greenFilterColor'));
 
-        waitForFetch();
+        waitForFetch(numberOfRecords);
         pauseStream();
 
         cy.get(`#list [id^=entry]`).then(elements => {
@@ -99,9 +99,9 @@ export function checkFilterByMethod(funcDict) {
 
 export const refreshWaitTimeout = 10000;
 
-export function waitForFetch() {
+export function waitForFetch(gt) {
     cy.get('#entries-length', {timeout: refreshWaitTimeout}).should((el) => {
-        expect(parseInt(el.text().trim(), 10)).to.be.greaterThan(20);
+        expect(parseInt(el.text().trim(), 10)).to.be.greaterThan(gt);
     });
 }
 
