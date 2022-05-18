@@ -50,41 +50,41 @@ log "Writing output to $MIZU_BENCHMARK_OUTPUT_DIR"
 cd $MIZU_HOME || exit 1
 
 export HOST_MODE=0
-export MIZU_TAPPER_NO_PCAP=false
-export MIZU_TAPPER_NO_ASSEMBLER=false
-export MIZU_TAPPER_NO_TAP_TARGET=false
-export MIZU_TAPPER_NO_OTHER_EXTENSSIONS=false
-export MIZU_TAPPER_NO_DISSECTORS=false
-export MIZU_TAPPER_NO_EMITTER=false
-export MIZU_TAPPER_NO_SENDING=false
+export MIZU_TAPPER_DISABLE_PCAP=false
+export MIZU_TAPPER_DISABLE_TCP_REASSEMBLY=false
+export MIZU_TAPPER_DISABLE_TCP_STREAM=false
+export MIZU_TAPPER_DISABLE_EXTENSIONS=false
+export MIZU_TAPPER_DISABLE_DISSECTORS=false
+export MIZU_TAPPER_DISABLE_EMITTING=false
+export MIZU_TAPPER_DISABLE_SENDING=false
 
-export MIZU_TAPPER_NO_PCAP=true
+export MIZU_TAPPER_DISABLE_PCAP=true
 run_single_bench "1" "no_pcap" || exit 1
-export MIZU_TAPPER_NO_PCAP=false
+export MIZU_TAPPER_DISABLE_PCAP=false
 
-export MIZU_TAPPER_NO_ASSEMBLER=true
+export MIZU_TAPPER_DISABLE_TCP_REASSEMBLY=true
 run_single_bench "2" "no_assembler" || exit 1
-export MIZU_TAPPER_NO_ASSEMBLER=false
+export MIZU_TAPPER_DISABLE_TCP_REASSEMBLY=false
 
-export MIZU_TAPPER_NO_TAP_TARGET=true
-run_single_bench "3" "no_tap_targets" || exit 1
-export MIZU_TAPPER_NO_TAP_TARGET=false
+export MIZU_TAPPER_DISABLE_TCP_STREAM=true
+run_single_bench "3" "no_tcp_stream" || exit 1
+export MIZU_TAPPER_DISABLE_TCP_STREAM=false
 
-export MIZU_TAPPER_NO_OTHER_EXTENSSIONS=true
+export MIZU_TAPPER_DISABLE_EXTENSIONS=true
 run_single_bench "4" "only_http" || exit 1
-export MIZU_TAPPER_NO_OTHER_EXTENSSIONS=false
+export MIZU_TAPPER_DISABLE_EXTENSIONS=false
 
-export MIZU_TAPPER_NO_DISSECTORS=true
+export MIZU_TAPPER_DISABLE_DISSECTORS=true
 run_single_bench "5" "no_dissectors" || exit 1
-export MIZU_TAPPER_NO_DISSECTORS=false
+export MIZU_TAPPER_DISABLE_DISSECTORS=false
 
-export MIZU_TAPPER_NO_EMITTER=true
+export MIZU_TAPPER_DISABLE_EMITTING=true
 run_single_bench "6" "no_emit" || exit 1
-export MIZU_TAPPER_NO_EMITTER=false
+export MIZU_TAPPER_DISABLE_EMITTING=false
 
-export MIZU_TAPPER_NO_SENDING=true
+export MIZU_TAPPER_DISABLE_SENDING=true
 run_single_bench "7" "no_send" || exit 1
-export MIZU_TAPPER_NO_SENDING=false
+export MIZU_TAPPER_DISABLE_SENDING=false
 
 run_single_bench "8" "normal" || exit 1
 

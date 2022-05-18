@@ -50,14 +50,15 @@ python plot_from_tapper_logs.py 00_tapper.log
 Every packet seen by the tapper is processed in a pipeline that contains various stages. 
 * Pcap - Read the packet from libpcap
 * Assembler - Assemble the packet into a TcpStream
-* Dissectors - Read and recognize the packet content and protocol.
+* TcpStream - Hold stream information and TcpReaders
+* Dissectors - Read from TcpReader and recognize the packet content and protocol.
 * Emit - Marshal the request response pair into a Json
 * Send - Send the Json to Api Server
 
 Tapper can be run with various debug modes:
 * No Pcap - Start the tapper process, but don't read from any packets from pcap
 * No Assembler - Read packets from pcap, but don't assemble them
-* No Tap Target - Assemble the packets, but don't create TcpStream for them
+* No TcpStream - Assemble the packets, but don't create TcpStream for them
 * No Dissectors - Create a TcpStream for the packets, but don't dissect their content
 * No Emit - Dissect the TcpStream, but don't emit the matched request response pair 
 * No Send - Emit the request response pair, but don't send them to the Api Server.

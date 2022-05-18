@@ -90,7 +90,7 @@ func (t *tcpStream) GetReqResMatchers() []api.RequestResponseMatcher {
 }
 
 func (t *tcpStream) GetIsTapTarget() bool {
-	if dbgctl.MizuTapperDisableTapTarget {
+	if dbgctl.MizuTapperDisableTcpStream {
 		return false
 	}
 	return t.isTapTarget
