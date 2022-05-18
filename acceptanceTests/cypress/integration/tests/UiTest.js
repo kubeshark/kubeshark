@@ -7,11 +7,11 @@ import {
     resizeToNormalMizu,
     rightOnHoverCheck,
     rightTextCheck,
-    verifyMinimumEntries
+    verifyMinimumEntries,
+    refreshWaitTimeout,
+    waitForFetch,
+    pauseStream
 } from "../testHelpers/TrafficHelper";
-
-const refreshWaitTimeout = 10000;
-
 
 const fullParam = Cypress.env('arrayDict'); // "Name:fooNamespace:barName:foo1Namespace:bar1"
 const podsArray = fullParam.split('Name:').slice(1); // ["fooNamespace:bar", "foo1Namespace:bar1"]
@@ -234,17 +234,6 @@ function checkFilter(filterDetails) {
         waitForFetch();
         pauseStream();
     });
-}
-
-function waitForFetch() {
-    cy.get('#entries-length', {timeout: refreshWaitTimeout}).should((el) => {
-        expect(parseInt(el.text().trim(), 10)).to.be.greaterThan(20);
-    });
-}
-
-function pauseStream() {
-    cy.get('#pause-icon').click();
-    cy.get('#pause-icon').should('not.be.visible');
 }
 
 function deeperCheck(leftSidePath, rightSidePath, filterName, rightSideExpectedText, entriesNumToCheck) {
