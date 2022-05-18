@@ -5,11 +5,11 @@ import (
 )
 
 var (
-	MizuTapperDisablePcap          bool = os.Getenv("MIZU_TAPPER_DISABLE_PCAP") == "true"
-	MizuTapperDisableTcpReassembly bool = os.Getenv("MIZU_TAPPER_DISABLE_TCP_REASSEMBLY") == "true"
-	MizuTapperDisableTcpStream     bool = os.Getenv("MIZU_TAPPER_DISABLE_TCP_STREAM") == "true"
-	MizuTapperDisableDissectors    bool = os.Getenv("MIZU_TAPPER_DISABLE_DISSECTORS") == "true"
-	MizuTapperDisableEmitting      bool = os.Getenv("MIZU_TAPPER_DISABLE_EMITTING") == "true"
-	MizuTapperDisableSending       bool = os.Getenv("MIZU_TAPPER_DISABLE_SENDING") == "true"
-	MizuTapperDisableExtensions    bool = os.Getenv("MIZU_TAPPER_DISABLE_EXTENSIONS") == "true"
+	MizuTapperDisablePcap              bool = os.Getenv("MIZU_TAPPER_DISABLE_PCAP") == "true"
+	MizuTapperDisableTcpReassembly     bool = os.Getenv("MIZU_TAPPER_DISABLE_TCP_REASSEMBLY") == "true"
+	MizuTapperDisableTcpStream         bool = os.Getenv("MIZU_TAPPER_DISABLE_TCP_STREAM") == "true"
+	MizuTapperDisableDissectors        bool = os.Getenv("MIZU_TAPPER_DISABLE_DISSECTORS") == "true"
+	MizuTapperDisableEmitting          bool = os.Getenv("MIZU_TAPPER_DISABLE_EMITTING") == "true"
+	MizuTapperDisableSending           bool = os.Getenv("MIZU_TAPPER_DISABLE_SENDING") == "true"
+	MizuTapperDisableNonHttpExtensions bool = os.Getenv("MIZU_TAPPER_DISABLE_NON_HTTP_EXTENSSION") == "true"
 )

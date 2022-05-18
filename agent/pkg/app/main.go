@@ -35,7 +35,7 @@ func LoadExtensions() {
 	Extensions = append(Extensions, extensionHttp)
 	ExtensionsMap[extensionHttp.Protocol.Name] = extensionHttp
 
-	if dbgctl.MizuTapperDisableExtensions {
+	if !dbgctl.MizuTapperDisableNonHttpExtensions {
 		extensionAmqp := &tapApi.Extension{}
 		dissectorAmqp := amqpExt.NewDissector()
 		dissectorAmqp.Register(extensionAmqp)

@@ -31,15 +31,15 @@ function run_single_bench() {
 		kill -9 $(ps -ef | grep agent/build/mizuagent | grep tap | grep -v grep | awk '{ print $2 }') > /dev/null 2>&1
 
 		local output_file=$MIZU_BENCHMARK_OUTPUT_DIR/${mode_num}_${mode_str}_${i}.log
-		log "  $i: Copying output to $output_file"
-		cp tapper.log $output_file || return 1
+		log "  $i: Moving output to $output_file"
+		mv tapper.log $output_file || return 1
 	done
 }
 
 function generate_bench_graph() {
 	cd performance_analysis/ || return 1
 	source venv/bin/activate
-	python plot_from_tapper_logs.py $MIZU_BENCHMARK_OUTPUT_DIR/* || return 1
+	python plot_from_tapper_logs.py $MIZU_BENCHMARK_OUTPUT_DIR/*.log || return 1
 	mv graph.png $MIZU_BENCHMARK_OUTPUT_DIR || return 1
 }
 
@@ -53,7 +53,7 @@ export HOST_MODE=0
 export MIZU_TAPPER_DISABLE_PCAP=false
 export MIZU_TAPPER_DISABLE_TCP_REASSEMBLY=false
 export MIZU_TAPPER_DISABLE_TCP_STREAM=false
-export MIZU_TAPPER_DISABLE_EXTENSIONS=false
+export MIZU_TAPPER_DISABLE_NON_HTTP_EXTENSSION=false
 export MIZU_TAPPER_DISABLE_DISSECTORS=false
 export MIZU_TAPPER_DISABLE_EMITTING=false
 export MIZU_TAPPER_DISABLE_SENDING=false
@@ -70,9 +70,9 @@ export MIZU_TAPPER_DISABLE_TCP_STREAM=true
 run_single_bench "3" "no_tcp_stream" || exit 1
 export MIZU_TAPPER_DISABLE_TCP_STREAM=false
 
-export MIZU_TAPPER_DISABLE_EXTENSIONS=true
+export MIZU_TAPPER_DISABLE_NON_HTTP_EXTENSSION=true
 run_single_bench "4" "only_http" || exit 1
-export MIZU_TAPPER_DISABLE_EXTENSIONS=false
+export MIZU_TAPPER_DISABLE_NON_HTTP_EXTENSSION=false
 
 export MIZU_TAPPER_DISABLE_DISSECTORS=true
 run_single_bench "5" "no_dissectors" || exit 1

@@ -109,9 +109,6 @@ if __name__ == '__main__':
     goroutines_samples_all_files = []
 
     for ii, filename in enumerate(filenames):
-        if not filename.endswith(".log"):
-            continue
-
         print("Analyzing {}".format(filename))
         with open(filename, 'r') as f:
             cpu_samples, rss_samples, count_samples, matched_samples, live_samples, processed_samples, heap_samples, goroutines_samples = extract_samples(f)
