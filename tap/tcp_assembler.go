@@ -54,17 +54,11 @@ func NewTcpAssembler(outputItems chan *api.OutputChannelItem, streamsMap api.Tcp
 	assembler.AssemblerOptions.MaxBufferedPagesTotal = maxBufferedPagesTotal
 	assembler.AssemblerOptions.MaxBufferedPagesPerConnection = maxBufferedPagesPerConnection
 
-	ignoredPorts := opts.IgnoredPorts
-
-	if ignoredPorts == nil {
-		ignoredPorts = make([]uint16, 0)
-	}
-
 	return &tcpAssembler{
 		Assembler:     assembler,
 		streamPool:    streamPool,
 		streamFactory: streamFactory,
-		ignoredPorts:  ignoredPorts,
+		ignoredPorts:  opts.IgnoredPorts,
 	}
 }
 
