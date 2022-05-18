@@ -12,6 +12,7 @@ import (
 	"github.com/google/gopacket/reassembly"
 	"github.com/up9inc/mizu/logger"
 	"github.com/up9inc/mizu/tap/api"
+	"github.com/up9inc/mizu/tap/dbgctl"
 	"github.com/up9inc/mizu/tap/diagnose"
 	"github.com/up9inc/mizu/tap/source"
 )
@@ -93,9 +94,11 @@ func (a *tcpAssembler) processPackets(dumpPacket bool, packets <-chan source.Tcp
 					Origin:      packetInfo.Source.Origin,
 				}
 				diagnose.InternalStats.Totalsz += len(tcp.Payload)
-				a.assemblerMutex.Lock()
-				a.AssembleWithContext(packet.NetworkLayer().NetworkFlow(), tcp, &c)
-				a.assemblerMutex.Unlock()
+				if !dbgctl.MizuTapperDisableTcpReassembly {
+					a.assemblerMutex.Lock()
+					a.AssembleWithContext(packet.NetworkLayer().NetworkFlow(), tcp, &c)
+					a.assemblerMutex.Unlock()
+				}
 			}
 		}
 

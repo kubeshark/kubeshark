@@ -15,6 +15,7 @@ type AppStats struct {
 	TlsConnectionsCount         uint64    `json:"tlsConnectionsCount"`
 	MatchedPairs                uint64    `json:"matchedPairs"`
 	DroppedTcpStreams           uint64    `json:"droppedTcpStreams"`
+	LiveTcpStreams              uint64    `json:"liveTcpStreams"`
 }
 
 func (as *AppStats) IncMatchedPairs() {
@@ -46,6 +47,14 @@ func (as *AppStats) IncTlsConnectionsCount() {
 	atomic.AddUint64(&as.TlsConnectionsCount, 1)
 }
 
+func (as *AppStats) IncLiveTcpStreams() {
+	atomic.AddUint64(&as.LiveTcpStreams, 1)
+}
+
+func (as *AppStats) DecLiveTcpStreams() {
+	atomic.AddUint64(&as.LiveTcpStreams, ^uint64(0))
+}
+
 func (as *AppStats) UpdateProcessedBytes(size uint64) {
 	atomic.AddUint64(&as.ProcessedBytes, size)
 }
@@ -65,6 +74,7 @@ func (as *AppStats) DumpStats() *AppStats {
 	currentAppStats.TlsConnectionsCount = resetUint64(&as.TlsConnectionsCount)
 	currentAppStats.MatchedPairs = resetUint64(&as.MatchedPairs)
 	currentAppStats.DroppedTcpStreams = resetUint64(&as.DroppedTcpStreams)
+	currentAppStats.LiveTcpStreams = as.LiveTcpStreams
 
 	return currentAppStats
 }

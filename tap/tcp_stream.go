@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/up9inc/mizu/tap/api"
+	"github.com/up9inc/mizu/tap/dbgctl"
 )
 
 /* It's a connection (bidirectional)
@@ -91,6 +92,9 @@ func (t *tcpStream) GetReqResMatchers() []api.RequestResponseMatcher {
 }
 
 func (t *tcpStream) GetIsTapTarget() bool {
+	if dbgctl.MizuTapperDisableTcpStream {
+		return false
+	}
 	return t.isTapTarget
 }
 

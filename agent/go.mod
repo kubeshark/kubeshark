@@ -7,6 +7,7 @@ require (
 	github.com/chanced/openapi v0.0.8
 	github.com/djherbis/atime v1.1.0
 	github.com/getkin/kin-openapi v0.89.0
+	github.com/gin-contrib/pprof v1.3.0
 	github.com/gin-contrib/static v0.0.1
 	github.com/gin-gonic/gin v1.7.7
 	github.com/go-playground/locales v0.14.0
@@ -24,6 +25,7 @@ require (
 	github.com/up9inc/mizu/shared v0.0.0
 	github.com/up9inc/mizu/tap v0.0.0
 	github.com/up9inc/mizu/tap/api v0.0.0
+	github.com/up9inc/mizu/tap/dbgctl v0.0.0
 	github.com/up9inc/mizu/tap/extensions/amqp v0.0.0
 	github.com/up9inc/mizu/tap/extensions/http v0.0.0
 	github.com/up9inc/mizu/tap/extensions/kafka v0.0.0
@@ -60,6 +62,7 @@ require (
 	github.com/gin-contrib/sse v0.1.0 // indirect
 	github.com/go-errors/errors v1.4.2 // indirect
 	github.com/go-logr/logr v1.2.2 // indirect
+	github.com/go-ole/go-ole v1.2.6 // indirect
 	github.com/go-openapi/jsonpointer v0.19.5 // indirect
 	github.com/go-openapi/jsonreference v0.19.6 // indirect
 	github.com/go-openapi/swag v0.21.1 // indirect
@@ -101,15 +104,20 @@ require (
 	github.com/russross/blackfriday v1.6.0 // indirect
 	github.com/santhosh-tekuri/jsonschema/v5 v5.0.0 // indirect
 	github.com/segmentio/kafka-go v0.4.27 // indirect
+	github.com/shirou/gopsutil v3.21.11+incompatible // indirect
 	github.com/spf13/cobra v1.3.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
+	github.com/struCoder/pidusage v0.2.1 // indirect
 	github.com/tidwall/gjson v1.14.0 // indirect
 	github.com/tidwall/match v1.1.1 // indirect
 	github.com/tidwall/pretty v1.2.0 // indirect
 	github.com/tidwall/sjson v1.2.4 // indirect
+	github.com/tklauser/go-sysconf v0.3.10 // indirect
+	github.com/tklauser/numcpus v0.4.0 // indirect
 	github.com/ugorji/go/codec v1.2.6 // indirect
 	github.com/vishvananda/netns v0.0.0-20211101163701-50045581ed74 // indirect
 	github.com/xlab/treeprint v1.1.0 // indirect
+	github.com/yusufpapurcu/wmi v1.2.2 // indirect
 	go.starlark.net v0.0.0-20220203230714-bb14e151c28f // indirect
 	golang.org/x/crypto v0.0.0-20220314234659-1baeb1ce4c0b // indirect
 	golang.org/x/net v0.0.0-20220127200216-cd36cc0744dd // indirect
@@ -151,3 +159,5 @@ replace github.com/up9inc/mizu/tap/extensions/http v0.0.0 => ../tap/extensions/h
 replace github.com/up9inc/mizu/tap/extensions/kafka v0.0.0 => ../tap/extensions/kafka
 
 replace github.com/up9inc/mizu/tap/extensions/redis v0.0.0 => ../tap/extensions/redis
+
+replace github.com/up9inc/mizu/tap/dbgctl v0.0.0 => ../tap/dbgctl

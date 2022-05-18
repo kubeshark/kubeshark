@@ -18,6 +18,8 @@ import (
 	"time"
 	"strconv"
 
+	"github.com/shirou/gopsutil/cpu"
+	"github.com/struCoder/pidusage"
 	"github.com/up9inc/mizu/logger"
 	"github.com/up9inc/mizu/tap/api"
 	"github.com/up9inc/mizu/tap/diagnose"
@@ -126,6 +128,16 @@ func printPeriodicStats(cleaner *Cleaner) {
 	statsPeriod := time.Second * time.Duration(*statsevery)
 	ticker := time.NewTicker(statsPeriod)
 
+	logicalCoreCount, err := cpu.Counts(true)
+	if err != nil {
+		logicalCoreCount = -1
+	}
+
+	physicalCoreCount, err := cpu.Counts(false)
+	if err != nil {
+		physicalCoreCount = -1
+	}
+
 	for {
 		<-ticker.C
 
@@ -142,11 +154,21 @@ func printPeriodicStats(cleaner *Cleaner) {
 		// At this moment
 		memStats := runtime.MemStats{}
 		runtime.ReadMemStats(&memStats)
+		sysInfo, err := pidusage.GetStat(os.Getpid())
+		if err != nil {
+			sysInfo = &pidusage.SysInfo{
+				CPU:    -1,
+				Memory: -1,
+			}
+		}
 		logger.Log.Infof(
-			"mem: %d, goroutines: %d",
+			"mem: %d, goroutines: %d, cpu: %f, cores: %d/%d, rss: %f",
 			memStats.HeapAlloc,
 			runtime.NumGoroutine(),
-		)
+			sysInfo.CPU,
+			logicalCoreCount,
+			physicalCoreCount,
+			sysInfo.Memory)
 
 		// Since the last print
 		cleanStats := cleaner.dumpStats()
