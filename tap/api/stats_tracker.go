@@ -10,6 +10,7 @@ type AppStats struct {
 	ProcessedBytes              uint64    `json:"processedBytes"`
 	PacketsCount                uint64    `json:"packetsCount"`
 	TcpPacketsCount             uint64    `json:"tcpPacketsCount"`
+	IgnoredPacketsCount         uint64    `json:"ignoredPacketsCount"`
 	ReassembledTcpPayloadsCount uint64    `json:"reassembledTcpPayloadsCount"`
 	TlsConnectionsCount         uint64    `json:"tlsConnectionsCount"`
 	MatchedPairs                uint64    `json:"matchedPairs"`
@@ -31,6 +32,10 @@ func (as *AppStats) IncPacketsCount() uint64 {
 
 func (as *AppStats) IncTcpPacketsCount() {
 	atomic.AddUint64(&as.TcpPacketsCount, 1)
+}
+
+func (as *AppStats) IncIgnoredPacketsCount() {
+	atomic.AddUint64(&as.IgnoredPacketsCount, 1)
 }
 
 func (as *AppStats) IncReassembledTcpPayloadsCount() {
@@ -55,6 +60,7 @@ func (as *AppStats) DumpStats() *AppStats {
 	currentAppStats.ProcessedBytes = resetUint64(&as.ProcessedBytes)
 	currentAppStats.PacketsCount = resetUint64(&as.PacketsCount)
 	currentAppStats.TcpPacketsCount = resetUint64(&as.TcpPacketsCount)
+	currentAppStats.IgnoredPacketsCount = resetUint64(&as.IgnoredPacketsCount)
 	currentAppStats.ReassembledTcpPayloadsCount = resetUint64(&as.ReassembledTcpPayloadsCount)
 	currentAppStats.TlsConnectionsCount = resetUint64(&as.TlsConnectionsCount)
 	currentAppStats.MatchedPairs = resetUint64(&as.MatchedPairs)

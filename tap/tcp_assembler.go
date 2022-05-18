@@ -23,6 +23,7 @@ type tcpAssembler struct {
 	streamPool     *reassembly.StreamPool
 	streamFactory  *tcpStreamFactory
 	assemblerMutex sync.Mutex
+	ignoredPorts   []uint16
 }
 
 // Context
@@ -48,8 +49,8 @@ func NewTcpAssembler(outputItems chan *api.OutputChannelItem, streamsMap api.Tcp
 
 	maxBufferedPagesTotal := GetMaxBufferedPagesPerConnection()
 	maxBufferedPagesPerConnection := GetMaxBufferedPagesTotal()
-	logger.Log.Infof("Assembler options: maxBufferedPagesTotal=%d, maxBufferedPagesPerConnection=%d",
-		maxBufferedPagesTotal, maxBufferedPagesPerConnection)
+	logger.Log.Infof("Assembler options: maxBufferedPagesTotal=%d, maxBufferedPagesPerConnection=%d, opts=%v",
+		maxBufferedPagesTotal, maxBufferedPagesPerConnection, opts)
 	assembler.AssemblerOptions.MaxBufferedPagesTotal = maxBufferedPagesTotal
 	assembler.AssemblerOptions.MaxBufferedPagesPerConnection = maxBufferedPagesPerConnection
 
@@ -57,6 +58,7 @@ func NewTcpAssembler(outputItems chan *api.OutputChannelItem, streamsMap api.Tcp
 		Assembler:     assembler,
 		streamPool:    streamPool,
 		streamFactory: streamFactory,
+		ignoredPorts:  opts.IgnoredPorts,
 	}
 }
 
@@ -83,14 +85,18 @@ func (a *tcpAssembler) processPackets(dumpPacket bool, packets <-chan source.Tcp
 			diagnose.AppStats.IncTcpPacketsCount()
 			tcp := tcp.(*layers.TCP)
 
-			c := context{
-				CaptureInfo: packet.Metadata().CaptureInfo,
-				Origin:      packetInfo.Source.Origin,
+			if a.shouldIgnorePort(uint16(tcp.DstPort)) {
+				diagnose.AppStats.IncIgnoredPacketsCount()
+			} else {
+				c := context{
+					CaptureInfo: packet.Metadata().CaptureInfo,
+					Origin:      packetInfo.Source.Origin,
+				}
+				diagnose.InternalStats.Totalsz += len(tcp.Payload)
+				a.assemblerMutex.Lock()
+				a.AssembleWithContext(packet.NetworkLayer().NetworkFlow(), tcp, &c)
+				a.assemblerMutex.Unlock()
 			}
-			diagnose.InternalStats.Totalsz += len(tcp.Payload)
-			a.assemblerMutex.Lock()
-			a.AssembleWithContext(packet.NetworkLayer().NetworkFlow(), tcp, &c)
-			a.assemblerMutex.Unlock()
 		}
 
 		done := *maxcount > 0 && int64(diagnose.AppStats.PacketsCount) >= *maxcount
@@ -131,4 +137,14 @@ func (a *tcpAssembler) waitAndDump() {
 	a.assemblerMutex.Lock()
 	logger.Log.Debugf("%s", a.Dump())
 	a.assemblerMutex.Unlock()
+}
+
+func (a *tcpAssembler) shouldIgnorePort(port uint16) bool {
+	for _, p := range a.ignoredPorts {
+		if port == p {
+			return true
+		}
+	}
+
+	return false
 }

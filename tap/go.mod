@@ -6,6 +6,7 @@ require (
 	github.com/cilium/ebpf v0.8.0
 	github.com/go-errors/errors v1.4.2
 	github.com/google/gopacket v1.1.19
+	github.com/hashicorp/golang-lru v0.5.4
 	github.com/up9inc/mizu/logger v0.0.0
 	github.com/up9inc/mizu/tap/api v0.0.0
 	github.com/vishvananda/netns v0.0.0-20211101163701-50045581ed74
@@ -18,7 +19,6 @@ require (
 	github.com/google/go-cmp v0.5.7 // indirect
 	github.com/google/gofuzz v1.2.0 // indirect
 	github.com/google/martian v2.1.0+incompatible // indirect
-	github.com/hashicorp/golang-lru v0.5.4 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
@@ -33,7 +33,6 @@ require (
 	k8s.io/utils v0.0.0-20220127004650-9b3446523e65 // indirect
 	sigs.k8s.io/json v0.0.0-20211208200746-9f7c6b3444d2 // indirect
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.1 // indirect
-	sigs.k8s.io/yaml v1.3.0 // indirect
 )
 
 replace github.com/up9inc/mizu/logger v0.0.0 => ../logger
