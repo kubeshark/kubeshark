@@ -125,6 +125,9 @@ export const EntriesList: React.FC<EntriesListProps> = ({
 
   useEffect(() => {
     const newEntries = [...entries];
+    if(leftOffTop === "" && newEntries.length > 0) {
+      setLeftOffTop(newEntries[0].id);
+    }
     if (newEntries.length > MAX_ENTRIES) {
       setLeftOffTop(newEntries[0].id);
       newEntries.splice(0, newEntries.length - MAX_ENTRIES)
@@ -156,7 +159,6 @@ export const EntriesList: React.FC<EntriesListProps> = ({
         case "queryMetadata":
           setTruncatedTimestamp(message.data.truncatedTimestamp);
           setQueriedTotal(message.data.total);
-          setLeftOffTop(leftOffState => leftOffState === "" ? message.data.leftOff : leftOffState);
           break;
         case "startTime":
           setStartTime(message.data);
