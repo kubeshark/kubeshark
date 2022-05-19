@@ -424,7 +424,6 @@ type TcpReader interface {
 type TcpStream interface {
 	SetProtocol(protocol *Protocol)
 	GetOrigin() Capture
-	GetProtocol() *Protocol
 	GetReqResMatchers() []RequestResponseMatcher
 	GetIsTapTarget() bool
 	GetIsClosed() bool
