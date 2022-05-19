@@ -22,7 +22,14 @@ function run_single_bench() {
 	for ((i=0;i<"$MIZU_BENCHMARK_RUN_COUNT";i++)); do
 		log "  $i: Running tapper"
 		rm -f tapper.log
-		nohup ./agent/build/mizuagent --tap --api-server-address ws://localhost:8899/wsTapper -i lo -stats 10 > tapper.log 2>&1 &
+		tapper_args=("--tap" "--api-server-address" "ws://localhost:8899/wsTapper" "-stats" "10")
+		if [[ $(uname) == "Darwin" ]]
+		then
+			tapper_args+=("-i" "lo0" "-"decoder "Loopback")
+		else
+			tapper_args+=("-i" "lo")
+		fi
+		nohup ./agent/build/mizuagent ${tapper_args[@]} > tapper.log 2>&1 &
 
 		log "  $i: Running client (hey)"
 		hey -z $MIZU_BENCHMARK_CLIENT_PERIOD -c $MIZU_BENCHMARK_CLIENTS_COUNT -q $MIZU_BENCHMARK_QPS $MIZU_BENCHMARK_URL > /dev/null || return 1
