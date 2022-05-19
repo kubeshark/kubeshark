@@ -7,11 +7,11 @@ import {
     resizeToNormalMizu,
     rightOnHoverCheck,
     rightTextCheck,
-    verifyMinimumEntries
+    verifyMinimumEntries,
+    refreshWaitTimeout,
+    waitForFetch,
+    pauseStream
 } from "../testHelpers/TrafficHelper";
-
-const refreshWaitTimeout = 10000;
-
 
 const fullParam = Cypress.env('arrayDict'); // "Name:fooNamespace:barName:foo1Namespace:bar1"
 const podsArray = fullParam.split('Name:').slice(1); // ["fooNamespace:bar", "foo1Namespace:bar1"]
@@ -70,7 +70,8 @@ checkFilter({
     leftSideExpectedText: 'HTTP',
     rightSidePath: '[title=HTTP]',
     rightSideExpectedText: 'Hypertext Transfer Protocol -- HTTP/1.1',
-    applyByCtrlEnter: true
+    applyByCtrlEnter: true,
+    numberOfRecords: 20,
 });
 
 checkFilter({
@@ -79,7 +80,8 @@ checkFilter({
     leftSideExpectedText: '200',
     rightSidePath: '> :nth-child(2) [title="Status Code"]',
     rightSideExpectedText: '200',
-    applyByCtrlEnter: false
+    applyByCtrlEnter: false,
+    numberOfRecords: 20
 });
 
 if (Cypress.env('shouldCheckSrcAndDest')) {
@@ -91,7 +93,8 @@ if (Cypress.env('shouldCheckSrcAndDest')) {
         leftSideExpectedText: '[Unresolved]',
         rightSidePath: '> :nth-child(2) [title="Source Name"]',
         rightSideExpectedText: '[Unresolved]',
-        applyByCtrlEnter: false
+        applyByCtrlEnter: false,
+        numberOfRecords: 20
     });
 
     checkFilter({
@@ -100,7 +103,8 @@ if (Cypress.env('shouldCheckSrcAndDest')) {
         leftSideExpectedText: 'httpbin.mizu-tests',
         rightSidePath: '> :nth-child(2) > :nth-child(2) > :nth-child(2) > :nth-child(3) > :nth-child(2)',
         rightSideExpectedText: 'httpbin.mizu-tests',
-        applyByCtrlEnter: false
+        applyByCtrlEnter: false,
+        numberOfRecords: 20
     });
 }
 
@@ -110,7 +114,8 @@ checkFilter({
     leftSideExpectedText: 'GET',
     rightSidePath: '> :nth-child(2) > :nth-child(2) > :nth-child(1) > :nth-child(1) > :nth-child(2)',
     rightSideExpectedText: 'GET',
-    applyByCtrlEnter: true
+    applyByCtrlEnter: true,
+    numberOfRecords: 20
 });
 
 checkFilter({
@@ -119,7 +124,8 @@ checkFilter({
     leftSideExpectedText: '/get',
     rightSidePath: '> :nth-child(2) > :nth-child(2) > :nth-child(1) > :nth-child(2) > :nth-child(2)',
     rightSideExpectedText: '/get',
-    applyByCtrlEnter: false
+    applyByCtrlEnter: false,
+    numberOfRecords: 20
 });
 
 checkFilter({
@@ -128,7 +134,8 @@ checkFilter({
     leftSideExpectedText: '127.0.0.1',
     rightSidePath: '> :nth-child(2) [title="Source IP"]',
     rightSideExpectedText: '127.0.0.1',
-    applyByCtrlEnter: false
+    applyByCtrlEnter: false,
+    numberOfRecords: 20
 });
 
 checkFilterNoResults('request.method == "POST"');
@@ -187,7 +194,8 @@ function checkFilter(filterDetails) {
         rightSidePath,
         rightSideExpectedText,
         leftSideExpectedText,
-        applyByCtrlEnter
+        applyByCtrlEnter,
+        numberOfRecords
     } = filterDetails;
 
     const entriesForDeeperCheck = 5;
@@ -200,7 +208,7 @@ function checkFilter(filterDetails) {
         if (!applyByCtrlEnter)
             cy.get('[type="submit"]').click();
 
-        waitForFetch();
+        waitForFetch(numberOfRecords);
         pauseStream();
 
         cy.get(`#list [id^=entry]`).last().then(elem => {
@@ -231,20 +239,9 @@ function checkFilter(filterDetails) {
         // reloading then waiting for the entries number to load
         resizeToNormalMizu();
         cy.reload();
-        waitForFetch();
+        waitForFetch(numberOfRecords);
         pauseStream();
     });
-}
-
-function waitForFetch() {
-    cy.get('#entries-length', {timeout: refreshWaitTimeout}).should((el) => {
-        expect(parseInt(el.text().trim(), 10)).to.be.greaterThan(20);
-    });
-}
-
-function pauseStream() {
-    cy.get('#pause-icon').click();
-    cy.get('#pause-icon').should('not.be.visible');
 }
 
 function deeperCheck(leftSidePath, rightSidePath, filterName, rightSideExpectedText, entriesNumToCheck) {
