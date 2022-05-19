@@ -15,6 +15,8 @@ import (
 	"time"
 
 	"github.com/google/martian/har"
+
+	"github.com/up9inc/mizu/tap/dbgctl"
 )
 
 const mizuTestEnvVar = "MIZU_TEST"
@@ -149,8 +151,13 @@ type Emitter interface {
 }
 
 func (e *Emitting) Emit(item *OutputChannelItem) {
-	e.OutputChannel <- item
 	e.AppStats.IncMatchedPairs()
+
+	if dbgctl.MizuTapperDisableEmitting {
+		return
+	}
+
+	e.OutputChannel <- item
 }
 
 type Entry struct {
