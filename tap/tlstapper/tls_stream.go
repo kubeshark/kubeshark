@@ -11,10 +11,6 @@ func (t *tlsStream) GetOrigin() api.Capture {
 	return api.Ebpf
 }
 
-func (t *tlsStream) GetProtocol() *api.Protocol {
-	return t.protocol
-}
-
 func (t *tlsStream) SetProtocol(protocol *api.Protocol) {
 	t.protocol = protocol
 }

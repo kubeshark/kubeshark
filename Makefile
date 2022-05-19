@@ -83,6 +83,7 @@ test-lint:  ## Run lint on all modules
 	cd cli && golangci-lint run
 	cd acceptanceTests && golangci-lint run
 	cd tap/api && golangci-lint run
+	cd tap/dbgctl && golangci-lint run
 	cd tap/extensions/ && for D in */; do cd $$D && golangci-lint run && cd ..; done
 
 test-cli:  ## Run cli tests

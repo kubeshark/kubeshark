@@ -8,7 +8,6 @@ import (
 
 type tcpStream struct {
 	isClosed       bool
-	protocol       *api.Protocol
 	isTapTarget    bool
 	origin         api.Capture
 	reqResMatchers []api.RequestResponseMatcher
@@ -25,10 +24,6 @@ func (t *tcpStream) SetProtocol(protocol *api.Protocol) {}
 
 func (t *tcpStream) GetOrigin() api.Capture {
 	return t.origin
-}
-
-func (t *tcpStream) GetProtocol() *api.Protocol {
-	return t.protocol
 }
 
 func (t *tcpStream) GetReqResMatchers() []api.RequestResponseMatcher {
