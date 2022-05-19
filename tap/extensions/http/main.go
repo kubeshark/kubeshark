@@ -3,7 +3,6 @@ package http
 import (
 	"bufio"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -144,10 +143,6 @@ func (d dissecting) Dissect(b *bufio.Reader, reader api.TcpReader, options *api.
 			http2Assembler = createHTTP2Assembler(b)
 		}
 
-		if reader.GetParent().GetProtocol() != nil && reader.GetParent().GetProtocol() != &http11protocol {
-			return errors.New("Identified by another protocol")
-		}
-
 		if isHTTP2 {
 			err = handleHTTP2Stream(http2Assembler, reader.GetReadProgress(), reader.GetParent().GetOrigin(), reader.GetTcpID(), reader.GetCaptureTime(), reader.GetEmitter(), options, reqResMatcher)
 			if err == io.EOF || err == io.ErrUnexpectedEOF {
@@ -198,10 +193,6 @@ func (d dissecting) Dissect(b *bufio.Reader, reader api.TcpReader, options *api.
 			}
 			reader.GetParent().SetProtocol(&http11protocol)
 		}
-	}
-
-	if reader.GetParent().GetProtocol() == nil {
-		return err
 	}
 
 	return nil
