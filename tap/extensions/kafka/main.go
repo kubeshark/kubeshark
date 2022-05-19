@@ -3,7 +3,6 @@ package kafka
 import (
 	"bufio"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -38,10 +37,6 @@ func (d dissecting) Ping() {
 func (d dissecting) Dissect(b *bufio.Reader, reader api.TcpReader, options *api.TrafficFilteringOptions) error {
 	reqResMatcher := reader.GetReqResMatcher().(*requestResponseMatcher)
 	for {
-		if reader.GetParent().GetProtocol() != nil && reader.GetParent().GetProtocol() != &_protocol {
-			return errors.New("Identified by another protocol")
-		}
-
 		if reader.GetIsClient() {
 			_, _, err := ReadRequest(b, reader.GetTcpID(), reader.GetCounterPair(), reader.GetCaptureTime(), reqResMatcher)
 			if err != nil {

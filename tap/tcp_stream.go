@@ -83,10 +83,6 @@ func (t *tcpStream) GetOrigin() api.Capture {
 	return t.origin
 }
 
-func (t *tcpStream) GetProtocol() *api.Protocol {
-	return t.protocol
-}
-
 func (t *tcpStream) GetReqResMatchers() []api.RequestResponseMatcher {
 	return t.reqResMatchers
 }
