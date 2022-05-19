@@ -5,6 +5,7 @@ it('opening mizu', function () {
 });
 
 const rabbitProtocolDetails = {name: 'AMQP', text: 'Advanced Message Queuing Protocol 0-9-1'};
+const numberOfRecords = 5;
 
 checkFilterByMethod({
     protocol: rabbitProtocolDetails,
@@ -12,7 +13,7 @@ checkFilterByMethod({
     methodQuery: 'request.method == "exchange declare"',
     summary: 'exchange',
     summaryQuery: 'request.exchange == "exchange"',
-    numberOfRecords: 5,
+    numberOfRecords: numberOfRecords,
     value: null
 });
 
@@ -22,7 +23,7 @@ checkFilterByMethod({
     methodQuery: 'request.method == "queue declare"',
     summary: 'queue',
     summaryQuery: 'request.queue == "queue"',
-    numberOfRecords: 5,
+    numberOfRecords: numberOfRecords,
     value: null
 });
 
@@ -32,7 +33,7 @@ checkFilterByMethod({
     methodQuery: 'request.method == "queue bind"',
     summary: 'queue',
     summaryQuery: 'request.queue == "queue"',
-    numberOfRecords: 5,
+    numberOfRecords: numberOfRecords,
     value: null
 });
 
@@ -42,7 +43,7 @@ checkFilterByMethod({
     methodQuery: 'request.method == "basic publish"',
     summary: 'exchange',
     summaryQuery: 'request.exchange == "exchange"',
-    numberOfRecords: 5,
+    numberOfRecords: numberOfRecords,
     value: {tab: valueTabs.request, regex: /^message$/mg}
 });
 
@@ -52,7 +53,7 @@ checkFilterByMethod({
     methodQuery: 'request.method == "basic consume"',
     summary: 'queue',
     summaryQuery: 'request.queue == "queue"',
-    numberOfRecords: 5,
+    numberOfRecords: numberOfRecords,
     value: null
 });
 
@@ -62,6 +63,6 @@ checkFilterByMethod({
     methodQuery: 'request.method == "basic deliver"',
     summary: 'exchange',
     summaryQuery: 'request.queue == "exchange"',
-    numberOfRecords: 5,
+    numberOfRecords: numberOfRecords,
     value: {tab: valueTabs.request, regex: /^message$/mg}
 });
