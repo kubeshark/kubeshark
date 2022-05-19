@@ -3,11 +3,12 @@ package acceptanceTests
 import (
 	"context"
 	"fmt"
-	"github.com/go-redis/redis/v8"
-	amqp "github.com/rabbitmq/amqp091-go"
 	"os/exec"
 	"testing"
 	"time"
+
+	"github.com/go-redis/redis/v8"
+	amqp "github.com/rabbitmq/amqp091-go"
 )
 
 func TestRedis(t *testing.T) {
@@ -167,7 +168,7 @@ func TestAmqp(t *testing.T) {
 	defer conn.Close()
 
 	// Temporary fix for missing amqp entries
-	time.Sleep(10 * time.Second)
+	time.Sleep(5 * time.Second)
 
 	for i := 0; i < DefaultEntriesCount/5; i++ {
 		ch, err := conn.Channel()
