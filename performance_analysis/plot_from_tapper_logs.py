@@ -128,8 +128,8 @@ if __name__ == '__main__':
         matched_samples_all_files.append(matched_samples)
         live_samples_all_files.append(live_samples)
         processed_samples_all_files.append(processed_samples)
-        heap_samples_all_files.append(processed_samples)
-        goroutines_samples_all_files.append(processed_samples)
+        heap_samples_all_files.append(heap_samples)
+        goroutines_samples_all_files.append(goroutines_samples)
 
     cpu_samples_df = pd.concat(cpu_samples_all_files, axis=1)
     rss_samples_df = pd.concat(rss_samples_all_files, axis=1)
@@ -137,7 +137,6 @@ if __name__ == '__main__':
     matched_samples_df = pd.concat(matched_samples_all_files, axis=1)
     live_samples_df = pd.concat(live_samples_all_files, axis=1)
     processed_samples_df = pd.concat(processed_samples_all_files, axis=1)
-
     heap_samples_df = pd.concat(heap_samples_all_files, axis=1)
     goroutines_samples_df = pd.concat(goroutines_samples_all_files, axis=1)
 
@@ -172,7 +171,7 @@ if __name__ == '__main__':
     heap_plot.legend().remove()
 
     goroutines_plot = plt.subplot(8, 2, 8)
-    plot(goroutines_plot, (goroutines_samples_df / 1024 / 1024), 'goroutines', '', 'goroutines', group_pattern)
+    plot(goroutines_plot, goroutines_samples_df, 'goroutines', '', 'goroutines', group_pattern)
     goroutines_plot.legend().remove()
 
     fig = plt.gcf()
