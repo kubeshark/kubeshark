@@ -8,7 +8,6 @@ import (
 
 type tcpStream struct {
 	isClosed       bool
-	protocol       *api.Protocol
 	isTapTarget    bool
 	origin         api.Capture
 	reqResMatchers []api.RequestResponseMatcher
