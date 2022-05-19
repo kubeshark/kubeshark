@@ -392,6 +392,16 @@ func (provider *Provider) GetMizuApiServerPodObject(opts *ApiServerOptions, moun
 			Volumes:                       volumes,
 			DNSPolicy:                     core.DNSClusterFirstWithHostNet,
 			TerminationGracePeriodSeconds: new(int64),
+			Tolerations: []core.Toleration{
+				{
+					Operator: core.TolerationOpExists,
+					Effect: core.TaintEffectNoExecute,
+				},
+				{
+					Operator: core.TolerationOpExists,
+					Effect: core.TaintEffectNoSchedule,
+				},
+			},
 		},
 	}
 
