@@ -181,6 +181,7 @@ type ApiServerOptions struct {
 	Resources             shared.Resources
 	ImagePullPolicy       core.PullPolicy
 	LogLevel              logging.Level
+	Profiler              bool
 }
 
 func (provider *Provider) GetMizuApiServerPodObject(opts *ApiServerOptions, mountVolumeClaim bool, volumeClaimName string, createAuthContainer bool) (*core.Pod, error) {
@@ -212,7 +213,15 @@ func (provider *Provider) GetMizuApiServerPodObject(opts *ApiServerOptions, moun
 		return nil, fmt.Errorf("invalid memory request for %s container", opts.PodName)
 	}
 
-	command := []string{"./mizuagent", "--api-server"}
+	command := []string{
+		"./mizuagent",
+		"--api-server",
+	}
+
+	if opts.Profiler {
+		command = append(command, "--profiler")
+	}
+
 	if opts.IsNamespaceRestricted {
 		command = append(command, "--namespace", opts.Namespace)
 	}

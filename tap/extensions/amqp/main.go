@@ -75,14 +75,14 @@ func (d dissecting) Dissect(b *bufio.Reader, reader api.TcpReader, options *api.
 	var lastMethodFrameMessage Message
 
 	for {
-		if reader.GetParent().GetProtoIdentifier().Protocol != nil && reader.GetParent().GetProtoIdentifier().Protocol != &protocol {
+		if reader.GetParent().GetProtocol() != nil && reader.GetParent().GetProtocol() != &protocol {
 			return errors.New("Identified by another protocol")
 		}
 
 		frame, err := r.ReadFrame()
 		if err == io.EOF {
 			// We must read until we see an EOF... very important!
-			return nil
+			return err
 		}
 
 		switch f := frame.(type) {

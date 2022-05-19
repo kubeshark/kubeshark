@@ -5,6 +5,7 @@ import (
 	"time"
 
 	"github.com/up9inc/mizu/tap/api"
+	"github.com/up9inc/mizu/tap/dbgctl"
 )
 
 /* It's a connection (bidirectional)
@@ -13,25 +14,26 @@ import (
  * In our implementation, we pass information from ReassembledSG to the TcpReader through a shared channel.
  */
 type tcpStream struct {
-	id              int64
-	isClosed        bool
-	protoIdentifier *api.ProtoIdentifier
-	isTapTarget     bool
-	clients         []*tcpReader
-	servers         []*tcpReader
-	origin          api.Capture
-	reqResMatchers  []api.RequestResponseMatcher
-	createdAt       time.Time
-	streamsMap      api.TcpStreamMap
+	id             int64
+	isClosed       bool
+	protocol       *api.Protocol
+	isTapTarget    bool
+	client         *tcpReader
+	server         *tcpReader
+	origin         api.Capture
+	counterPairs   []*api.CounterPair
+	reqResMatchers []api.RequestResponseMatcher
+	createdAt      time.Time
+	streamsMap     api.TcpStreamMap
 	sync.Mutex
 }
 
 func NewTcpStream(isTapTarget bool, streamsMap api.TcpStreamMap, capture api.Capture) *tcpStream {
 	return &tcpStream{
-		isTapTarget:     isTapTarget,
-		protoIdentifier: &api.ProtoIdentifier{},
-		streamsMap:      streamsMap,
-		origin:          capture,
+		isTapTarget: isTapTarget,
+		streamsMap:  streamsMap,
+		origin:      capture,
+		createdAt:   time.Now(),
 	}
 }
 
@@ -55,38 +57,12 @@ func (t *tcpStream) close() {
 
 	t.streamsMap.Delete(t.id)
 
-	for i := range t.clients {
-		reader := t.clients[i]
-		reader.close()
-	}
-	for i := range t.servers {
-		reader := t.servers[i]
-		reader.close()
-	}
+	t.client.close()
+	t.server.close()
 }
 
-func (t *tcpStream) addClient(reader *tcpReader) {
-	t.clients = append(t.clients, reader)
-}
-
-func (t *tcpStream) addServer(reader *tcpReader) {
-	t.servers = append(t.servers, reader)
-}
-
-func (t *tcpStream) getClients() []*tcpReader {
-	return t.clients
-}
-
-func (t *tcpStream) getServers() []*tcpReader {
-	return t.servers
-}
-
-func (t *tcpStream) getClient(index int) *tcpReader {
-	return t.clients[index]
-}
-
-func (t *tcpStream) getServer(index int) *tcpReader {
-	return t.servers[index]
+func (t *tcpStream) addCounterPair(counterPair *api.CounterPair) {
+	t.counterPairs = append(t.counterPairs, counterPair)
 }
 
 func (t *tcpStream) addReqResMatcher(reqResMatcher api.RequestResponseMatcher) {
@@ -94,37 +70,21 @@ func (t *tcpStream) addReqResMatcher(reqResMatcher api.RequestResponseMatcher) {
 }
 
 func (t *tcpStream) SetProtocol(protocol *api.Protocol) {
+	t.protocol = protocol
+
+	// Clean the buffers
 	t.Lock()
-	defer t.Unlock()
-
-	if t.protoIdentifier.IsClosedOthers {
-		return
-	}
-
-	t.protoIdentifier.Protocol = protocol
-
-	for i := range t.clients {
-		reader := t.clients[i]
-		if reader.GetExtension().Protocol != t.protoIdentifier.Protocol {
-			reader.close()
-		}
-	}
-	for i := range t.servers {
-		reader := t.servers[i]
-		if reader.GetExtension().Protocol != t.protoIdentifier.Protocol {
-			reader.close()
-		}
-	}
-
-	t.protoIdentifier.IsClosedOthers = true
+	t.client.msgBufferMaster = make([]api.TcpReaderDataMsg, 0)
+	t.server.msgBufferMaster = make([]api.TcpReaderDataMsg, 0)
+	t.Unlock()
 }
 
 func (t *tcpStream) GetOrigin() api.Capture {
 	return t.origin
 }
 
-func (t *tcpStream) GetProtoIdentifier() *api.ProtoIdentifier {
-	return t.protoIdentifier
+func (t *tcpStream) GetProtocol() *api.Protocol {
+	return t.protocol
 }
 
 func (t *tcpStream) GetReqResMatchers() []api.RequestResponseMatcher {
@@ -132,6 +92,9 @@ func (t *tcpStream) GetReqResMatchers() []api.RequestResponseMatcher {
 }
 
 func (t *tcpStream) GetIsTapTarget() bool {
+	if dbgctl.MizuTapperDisableTcpStream {
+		return false
+	}
 	return t.isTapTarget
 }
 
