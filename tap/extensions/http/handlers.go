@@ -18,7 +18,7 @@ func filterAndEmit(item *api.OutputChannelItem, emitter api.Emitter, options *ap
 		return
 	}
 
-	if !options.DisableRedaction {
+	if options.EnableRedaction {
 		FilterSensitiveData(item, options)
 	}
 
