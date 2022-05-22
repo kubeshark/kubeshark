@@ -343,6 +343,7 @@ func TestTapRedact(t *testing.T) {
 
 	tapNamespace := GetDefaultTapNamespace()
 	tapCmdArgs = append(tapCmdArgs, tapNamespace...)
+	tapCmdArgs = append(tapCmdArgs, "--redact")
 
 	tapCmd := exec.Command(cliPath, tapCmdArgs...)
 	t.Logf("running command: %v", tapCmd.String())
@@ -394,8 +395,6 @@ func TestTapNoRedact(t *testing.T) {
 	tapNamespace := GetDefaultTapNamespace()
 	tapCmdArgs = append(tapCmdArgs, tapNamespace...)
 
-	tapCmdArgs = append(tapCmdArgs, "--no-redact")
-
 	tapCmd := exec.Command(cliPath, tapCmdArgs...)
 	t.Logf("running command: %v", tapCmd.String())
 
@@ -445,6 +444,8 @@ func TestTapRegexMasking(t *testing.T) {
 
 	tapNamespace := GetDefaultTapNamespace()
 	tapCmdArgs = append(tapCmdArgs, tapNamespace...)
+
+	tapCmdArgs = append(tapCmdArgs, "--redact")
 
 	tapCmdArgs = append(tapCmdArgs, "-r", "Mizu")
 
@@ -664,7 +665,8 @@ func TestIpResolving(t *testing.T) {
 		return
 	}
 
-	basicTapTest(t, true)
+	extraArgs := []string{"--redact"}
+	basicTapTest(t, true, extraArgs...)
 }
 
 func TestRestrictedMode(t *testing.T) {
@@ -687,6 +689,6 @@ func TestRestrictedMode(t *testing.T) {
 		return
 	}
 
-	extraArgs := []string{"--set", fmt.Sprintf("mizu-resources-namespace=%s", namespace)}
+	extraArgs := []string{"--set", fmt.Sprintf("mizu-resources-namespace=%s", namespace, "--redact")}
 	t.Run("basic tap", func (testingT *testing.T) {basicTapTest(testingT, false, extraArgs...)})
 }
