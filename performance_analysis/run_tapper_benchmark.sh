@@ -22,7 +22,7 @@ function run_single_bench() {
 	for ((i=0;i<"$MIZU_BENCHMARK_RUN_COUNT";i++)); do
 		log "  $i: Running tapper"
 		rm -f tapper.log
-		tapper_args=("--tap" "--api-server-address" "ws://localhost:8899/wsTapper" "-stats" "10")
+		tapper_args=("--tap" "--api-server-address" "ws://localhost:8899/wsTapper" "-stats" "10" "-ignore-ports" "8899,9099")
 		if [[ $(uname) == "Darwin" ]]
 		then
 			tapper_args+=("-i" "lo0" "-"decoder "Loopback")
