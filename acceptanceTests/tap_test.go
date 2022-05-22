@@ -689,6 +689,6 @@ func TestRestrictedMode(t *testing.T) {
 		return
 	}
 
-	extraArgs := []string{"--set", fmt.Sprintf("mizu-resources-namespace=%s", namespace, "--redact")}
+	extraArgs := []string{"--set", fmt.Sprintf("mizu-resources-namespace=%s", namespace), "--redact"}
 	t.Run("basic tap", func (testingT *testing.T) {basicTapTest(testingT, false, extraArgs...)})
 }
