@@ -57,6 +57,7 @@ log "Writing output to $MIZU_BENCHMARK_OUTPUT_DIR"
 cd $MIZU_HOME || exit 1
 
 export HOST_MODE=0
+export SENSITIVE_DATA_FILTERING_OPTIONS='{"DisableRedaction": true}'
 export MIZU_DEBUG_DISABLE_PCAP=false
 export MIZU_DEBUG_DISABLE_TCP_REASSEMBLY=false
 export MIZU_DEBUG_DISABLE_TCP_STREAM=false
