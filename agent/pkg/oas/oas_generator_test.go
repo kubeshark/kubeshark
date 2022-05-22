@@ -8,7 +8,7 @@ import (
 )
 
 func TestOASGen(t *testing.T) {
-	gen := new(defaultOasGenerator)
+	gen := GetDefaultOasGeneratorInstance()
 
 	e := new(har.Entry)
 	err := json.Unmarshal([]byte(`{"startedDateTime": "20000101","request": {"url": "https://host/path", "method": "GET"}, "response": {"status": 200}}`), e)
@@ -21,8 +21,7 @@ func TestOASGen(t *testing.T) {
 		Entry:       *e,
 	}
 
-	dummyConn := GetFakeDBConn(`{"startedDateTime": "20000101","request": {"url": "https://host/path", "method": "GET"}, "response": {"status": 200}}`)
-	gen.Start(dummyConn)
+	gen.Start()
 	gen.handleHARWithSource(ews)
 	g, ok := gen.serviceSpecs.Load("some")
 	if !ok {
