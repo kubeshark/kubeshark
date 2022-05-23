@@ -31,19 +31,21 @@ type tcpReader struct {
 	emitter         api.Emitter
 	counterPair     *api.CounterPair
 	reqResMatcher   api.RequestResponseMatcher
+	doneReading     bool
 	sync.Mutex
 }
 
 func NewTcpReader(ident string, tcpId *api.TcpID, parent *tcpStream, isClient bool, isOutgoing bool, emitter api.Emitter) *tcpReader {
 	return &tcpReader{
-		msgQueue:   make(chan api.TcpReaderDataMsg),
-		progress:   &api.ReadProgress{},
-		ident:      ident,
-		tcpID:      tcpId,
-		parent:     parent,
-		isClient:   isClient,
-		isOutgoing: isOutgoing,
-		emitter:    emitter,
+		msgQueue:    make(chan api.TcpReaderDataMsg),
+		progress:    &api.ReadProgress{},
+		ident:       ident,
+		tcpID:       tcpId,
+		parent:      parent,
+		isClient:    isClient,
+		isOutgoing:  isOutgoing,
+		emitter:     emitter,
+		doneReading: false,
 	}
 }
 
@@ -66,6 +68,8 @@ func (reader *tcpReader) run(options *api.TrafficFilteringOptions, wg *sync.Wait
 		}
 		reader.rewind()
 	}
+
+	reader.doneReading = true
 }
 
 func (reader *tcpReader) close() {

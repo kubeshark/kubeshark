@@ -7,7 +7,6 @@ import (
 	"time"
 
 	"github.com/up9inc/mizu/logger"
-	"github.com/up9inc/mizu/tap/api"
 	"github.com/up9inc/mizu/tap/diagnose"
 )
 
@@ -16,7 +15,7 @@ type tcpStreamMap struct {
 	streamId int64
 }
 
-func NewTcpStreamMap() api.TcpStreamMap {
+func NewTcpStreamMap() *tcpStreamMap {
 	return &tcpStreamMap{
 		streams: &sync.Map{},
 	}
@@ -66,6 +65,9 @@ func (streamMap *tcpStreamMap) CloseTimedoutTcpStreamChannels() {
 					logger.Log.Debugf("Dropped an unidentified TCP stream because of timeout. Total dropped: %d Total Goroutines: %d Timeout (ms): %d",
 						diagnose.AppStats.DroppedTcpStreams, runtime.NumGoroutine(), tcpStreamChannelTimeoutMs/time.Millisecond)
 				}
+			}
+			if stream.client.doneReading && stream.server.doneReading {
+				stream.close()
 			}
 			return true
 		})
