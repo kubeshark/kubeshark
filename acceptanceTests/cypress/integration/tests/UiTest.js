@@ -272,7 +272,7 @@ function checkRightSideResponseBody() {
             args: RegExp({}),
             url: RegExp('http://.*/get'),
             headers: {
-                "User-Agent": RegExp('[REDACTED]'),
+                "User-Agent": RegExp('client'),
                 "Accept-Encoding": RegExp('gzip'),
                 "X-Forwarded-Uri": RegExp('/api/v1/namespaces/.*/services/.*/proxy/get')
             }
