@@ -19,7 +19,6 @@ import (
 	"time"
 
 	"github.com/shirou/gopsutil/cpu"
-	"github.com/struCoder/pidusage"
 	"github.com/up9inc/mizu/logger"
 	"github.com/up9inc/mizu/tap/api"
 	"github.com/up9inc/mizu/tap/diagnose"
@@ -45,6 +44,7 @@ var quiet = flag.Bool("quiet", false, "Be quiet regarding errors")
 var hexdumppkt = flag.Bool("dumppkt", false, "Dump packet as hex")
 var procfs = flag.String("procfs", "/proc", "The procfs directory, used when mapping host volumes into a container")
 var ignoredPorts = flag.String("ignore-ports", "", "A comma separated list of ports to ignore")
+var cpuLimit = flag.Float64("cpu-usage", 30.0, "Maximum cpu usage used by the tapper (approximately)")
 
 // capture
 var iface = flag.String("i", "en0", "Interface to read packets from")
@@ -61,6 +61,7 @@ var memprofile = flag.String("memprofile", "", "Write memory profile")
 type TapOpts struct {
 	HostMode     bool
 	IgnoredPorts []uint16
+	cpuLimit     float64
 }
 
 var extensions []*api.Extension                     // global
@@ -124,7 +125,7 @@ func printNewTapTargets(success bool) {
 	}
 }
 
-func printPeriodicStats(cleaner *Cleaner) {
+func printPeriodicStats(cleaner *Cleaner, assembler *tcpAssembler) {
 	statsPeriod := time.Second * time.Duration(*statsevery)
 	ticker := time.NewTicker(statsPeriod)
 
@@ -154,21 +155,14 @@ func printPeriodicStats(cleaner *Cleaner) {
 		// At this moment
 		memStats := runtime.MemStats{}
 		runtime.ReadMemStats(&memStats)
-		sysInfo, err := pidusage.GetStat(os.Getpid())
-		if err != nil {
-			sysInfo = &pidusage.SysInfo{
-				CPU:    -1,
-				Memory: -1,
-			}
-		}
 		logger.Log.Infof(
 			"mem: %d, goroutines: %d, cpu: %f, cores: %d/%d, rss: %f",
 			memStats.HeapAlloc,
 			runtime.NumGoroutine(),
-			sysInfo.CPU,
+			assembler.sysInfo.CPU,
 			logicalCoreCount,
 			physicalCoreCount,
-			sysInfo.Memory)
+			assembler.sysInfo.Memory)
 
 		// Since the last print
 		cleanStats := cleaner.dumpStats()
@@ -220,6 +214,10 @@ func initializePassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelI
 
 	opts.IgnoredPorts = append(opts.IgnoredPorts, buildIgnoredPortsList(*ignoredPorts)...)
 
+	if *cpuLimit > 0 {
+		opts.cpuLimit = (*cpuLimit / 2) // user limit / 2 on purpose, the throttler is not strict enough
+	}
+
 	assembler := NewTcpAssembler(outputItems, streamsMap, opts)
 
 	return assembler
@@ -240,7 +238,7 @@ func startPassiveTapper(streamsMap *tcpStreamMap, assembler *tcpAssembler) {
 	}
 	cleaner.start()
 
-	go printPeriodicStats(&cleaner)
+	go printPeriodicStats(&cleaner, assembler)
 
 	assembler.processPackets(*hexdumppkt, mainPacketInputChan)
 

@@ -11,6 +11,7 @@ import (
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 	"github.com/google/gopacket/reassembly"
+	"github.com/struCoder/pidusage"
 	"github.com/up9inc/mizu/logger"
 	"github.com/up9inc/mizu/tap/api"
 	"github.com/up9inc/mizu/tap/dbgctl"
@@ -28,6 +29,9 @@ type tcpAssembler struct {
 	ignoredPorts    []uint16
 	liveStreams     map[string]bool
 	liveStreamsLock sync.RWMutex
+	sysInfo         *pidusage.SysInfo
+	cpuLimit        float64
+	tapperPid       int
 }
 
 // Context
@@ -50,7 +54,10 @@ func NewTcpAssembler(outputItems chan *api.OutputChannelItem, streamsMap *tcpStr
 
 	a := &tcpAssembler{
 		ignoredPorts: opts.IgnoredPorts,
+		cpuLimit:     opts.cpuLimit,
 		liveStreams:  make(map[string]bool),
+		tapperPid:    os.Getpid(),
+		sysInfo:      &pidusage.SysInfo{CPU: -1, Memory: -1},
 	}
 
 	closeHandler := func(stream *tcpStream) {
@@ -80,6 +87,7 @@ func NewTcpAssembler(outputItems chan *api.OutputChannelItem, streamsMap *tcpStr
 	a.streamPool = streamPool
 	a.streamFactory = streamFactory
 	a.Assembler = assembler
+
 	return a
 }
 
@@ -94,8 +102,11 @@ func (a *tcpAssembler) buildConnectionId(saddr string, daddr string, sport strin
 }
 
 func (a *tcpAssembler) shouldThrottleNewStreams(connectionId string) bool {
-	logger.Log.Infof("CURRENTLY %d LIVE STREAMS - %s", len(a.liveStreams), connectionId)
-	return false
+	if a.cpuLimit == 0 {
+		return false
+	}
+
+	return a.sysInfo.CPU > a.cpuLimit
 }
 
 func (a *tcpAssembler) connectionExists(connectionId string) bool {
@@ -144,6 +155,7 @@ func (a *tcpAssembler) handlePacket(packetInfo *source.TcpPacketInfo, dumpPacket
 
 	if !a.connectionExists(connectionId) {
 		if a.shouldThrottleNewStreams(connectionId) {
+			diagnose.AppStats.IncThrottledPackets()
 			return done
 		}
 	}
@@ -164,10 +176,13 @@ func (a *tcpAssembler) handlePacket(packetInfo *source.TcpPacketInfo, dumpPacket
 func (a *tcpAssembler) processPackets(dumpPacket bool, packets <-chan source.TcpPacketInfo) {
 	signalChan := make(chan os.Signal, 1)
 	signal.Notify(signalChan, os.Interrupt)
+	ticker := time.NewTicker(1000 * time.Millisecond)
 
 out:
 	for {
 		select {
+		case <-ticker.C:
+			a.updateUsage()
 		case packetInfo := <-packets:
 			if a.handlePacket(&packetInfo, dumpPacket) {
 				break out
@@ -211,4 +226,19 @@ func (a *tcpAssembler) shouldIgnorePort(port uint16) bool {
 	}
 
 	return false
+}
+
+func (a *tcpAssembler) updateUsage() {
+	sysInfo, err := pidusage.GetStat(a.tapperPid)
+
+	if err != nil {
+		logger.Log.Warningf("Unable to get CPU Usage for %d", a.tapperPid)
+		a.sysInfo = &pidusage.SysInfo{
+			CPU:    -1,
+			Memory: -1,
+		}
+		return
+	}
+
+	a.sysInfo = sysInfo
 }
