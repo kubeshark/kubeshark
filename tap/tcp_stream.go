@@ -8,6 +8,8 @@ import (
 	"github.com/up9inc/mizu/tap/dbgctl"
 )
 
+type streamHandler func(stream *tcpStream)
+
 /* It's a connection (bidirectional)
  * Implements gopacket.reassembly.Stream interface (Accept, ReassembledSG, ReassemblyComplete)
  * ReassembledSG gets called when new reassembled data is ready (i.e. bytes in order, no duplicates, complete)
@@ -25,16 +27,24 @@ type tcpStream struct {
 	reqResMatchers []api.RequestResponseMatcher
 	createdAt      time.Time
 	streamsMap     api.TcpStreamMap
+	connectionId   string
+	closeHandler   streamHandler
 	sync.Mutex
 }
 
-func NewTcpStream(isTapTarget bool, streamsMap api.TcpStreamMap, capture api.Capture) *tcpStream {
-	return &tcpStream{
-		isTapTarget: isTapTarget,
-		streamsMap:  streamsMap,
-		origin:      capture,
-		createdAt:   time.Now(),
+func NewTcpStream(isTapTarget bool, streamsMap api.TcpStreamMap, capture api.Capture, connectionId string,
+	closeHandler streamHandler, createdHandler streamHandler) *tcpStream {
+	stream := &tcpStream{
+		isTapTarget:  isTapTarget,
+		streamsMap:   streamsMap,
+		origin:       capture,
+		createdAt:    time.Now(),
+		connectionId: connectionId,
+		closeHandler: closeHandler,
 	}
+
+	createdHandler(stream)
+	return stream
 }
 
 func (t *tcpStream) getId() int64 {
@@ -54,6 +64,7 @@ func (t *tcpStream) close() {
 	}
 
 	t.isClosed = true
+	t.closeHandler(t)
 
 	t.streamsMap.Delete(t.id)
 

@@ -19,14 +19,16 @@ import (
  * Generates a new tcp stream for each new tcp connection. Closes the stream when the connection closes.
  */
 type tcpStreamFactory struct {
-	wg         sync.WaitGroup
-	emitter    api.Emitter
-	streamsMap api.TcpStreamMap
-	ownIps     []string
-	opts       *TapOpts
+	wg             sync.WaitGroup
+	emitter        api.Emitter
+	streamsMap     api.TcpStreamMap
+	ownIps         []string
+	opts           *TapOpts
+	closeHandler   streamHandler
+	createdHandler streamHandler
 }
 
-func NewTcpStreamFactory(emitter api.Emitter, streamsMap api.TcpStreamMap, opts *TapOpts) *tcpStreamFactory {
+func NewTcpStreamFactory(emitter api.Emitter, streamsMap api.TcpStreamMap, opts *TapOpts, closeHandler streamHandler, createdHandler streamHandler) *tcpStreamFactory {
 	var ownIps []string
 
 	if localhostIPs, err := getLocalhostIPs(); err != nil {
@@ -39,10 +41,12 @@ func NewTcpStreamFactory(emitter api.Emitter, streamsMap api.TcpStreamMap, opts 
 	}
 
 	return &tcpStreamFactory{
-		emitter:    emitter,
-		streamsMap: streamsMap,
-		ownIps:     ownIps,
-		opts:       opts,
+		emitter:        emitter,
+		streamsMap:     streamsMap,
+		ownIps:         ownIps,
+		opts:           opts,
+		closeHandler:   closeHandler,
+		createdHandler: createdHandler,
 	}
 }
 
@@ -57,7 +61,7 @@ func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcpLayer *lay
 
 	props := factory.getStreamProps(srcIp, srcPort, dstIp, dstPort)
 	isTapTarget := props.isTapTarget
-	stream := NewTcpStream(isTapTarget, factory.streamsMap, getPacketOrigin(ac))
+	stream := NewTcpStream(isTapTarget, factory.streamsMap, getPacketOrigin(ac), getConnectionId(ac), factory.closeHandler, factory.createdHandler)
 	reassemblyStream := NewTcpReassemblyStream(fmt.Sprintf("%s:%s", net, transport), tcpLayer, fsmOptions, stream)
 	if stream.GetIsTapTarget() {
 		stream.setId(factory.streamsMap.NextId())
@@ -148,6 +152,17 @@ func getPacketOrigin(ac reassembly.AssemblerContext) api.Capture {
 	}
 
 	return c.Origin
+}
+
+func getConnectionId(ac reassembly.AssemblerContext) string {
+	c, ok := ac.(*context)
+
+	if !ok {
+		// If ac is not our context, fallback to Unknown
+		return "Unkonwn"
+	}
+
+	return c.connectionId
 }
 
 type streamProps struct {

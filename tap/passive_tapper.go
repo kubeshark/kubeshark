@@ -14,9 +14,9 @@ import (
 	"fmt"
 	"os"
 	"runtime"
+	"strconv"
 	"strings"
 	"time"
-	"strconv"
 
 	"github.com/shirou/gopsutil/cpu"
 	"github.com/struCoder/pidusage"
@@ -59,8 +59,8 @@ var tls = flag.Bool("tls", false, "Enable TLS tapper")
 var memprofile = flag.String("memprofile", "", "Write memory profile")
 
 type TapOpts struct {
-	HostMode         bool
-	IgnoredPorts     []uint16
+	HostMode     bool
+	IgnoredPorts []uint16
 }
 
 var extensions []*api.Extension                     // global
@@ -208,7 +208,7 @@ func initializePacketSources() error {
 	return err
 }
 
-func initializePassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem, streamsMap api.TcpStreamMap) *tcpAssembler {
+func initializePassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem, streamsMap *tcpStreamMap) *tcpAssembler {
 	diagnose.InitializeErrorsMap(*debug, *verbose, *quiet)
 	diagnose.InitializeTapperInternalStats()
 
@@ -225,7 +225,7 @@ func initializePassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelI
 	return assembler
 }
 
-func startPassiveTapper(streamsMap api.TcpStreamMap, assembler *tcpAssembler) {
+func startPassiveTapper(streamsMap *tcpStreamMap, assembler *tcpAssembler) {
 	go streamsMap.CloseTimedoutTcpStreamChannels()
 
 	diagnose.AppStats.SetStartTime(time.Now())

@@ -2,6 +2,7 @@ package tap
 
 import (
 	"encoding/hex"
+	"fmt"
 	"os"
 	"os/signal"
 	"sync"
@@ -21,30 +22,51 @@ const PACKETS_SEEN_LOG_THRESHOLD = 1000
 
 type tcpAssembler struct {
 	*reassembly.Assembler
-	streamPool     *reassembly.StreamPool
-	streamFactory  *tcpStreamFactory
-	assemblerMutex sync.Mutex
-	ignoredPorts   []uint16
+	streamPool      *reassembly.StreamPool
+	streamFactory   *tcpStreamFactory
+	assemblerMutex  sync.Mutex
+	ignoredPorts    []uint16
+	liveStreams     map[string]bool
+	liveStreamsLock sync.RWMutex
 }
 
 // Context
 // The assembler context
 type context struct {
-	CaptureInfo gopacket.CaptureInfo
-	Origin      api.Capture
+	CaptureInfo  gopacket.CaptureInfo
+	Origin       api.Capture
+	connectionId string
 }
 
 func (c *context) GetCaptureInfo() gopacket.CaptureInfo {
 	return c.CaptureInfo
 }
 
-func NewTcpAssembler(outputItems chan *api.OutputChannelItem, streamsMap api.TcpStreamMap, opts *TapOpts) *tcpAssembler {
+func NewTcpAssembler(outputItems chan *api.OutputChannelItem, streamsMap *tcpStreamMap, opts *TapOpts) *tcpAssembler {
 	var emitter api.Emitter = &api.Emitting{
 		AppStats:      &diagnose.AppStats,
 		OutputChannel: outputItems,
 	}
 
-	streamFactory := NewTcpStreamFactory(emitter, streamsMap, opts)
+	a := &tcpAssembler{
+		ignoredPorts: opts.IgnoredPorts,
+		liveStreams:  make(map[string]bool),
+	}
+
+	closeHandler := func(stream *tcpStream) {
+		a.liveStreamsLock.Lock()
+		defer a.liveStreamsLock.Unlock()
+		delete(a.liveStreams, stream.connectionId)
+	}
+
+	createdHandler := func(stream *tcpStream) {
+		a.liveStreamsLock.Lock()
+		defer a.liveStreamsLock.Unlock()
+		a.liveStreams[stream.connectionId] = true
+	}
+
+	streamFactory := NewTcpStreamFactory(emitter, streamsMap, opts, closeHandler, createdHandler)
+
 	streamPool := reassembly.NewStreamPool(streamFactory)
 	assembler := reassembly.NewAssembler(streamPool)
 
@@ -55,75 +77,114 @@ func NewTcpAssembler(outputItems chan *api.OutputChannelItem, streamsMap api.Tcp
 	assembler.AssemblerOptions.MaxBufferedPagesTotal = maxBufferedPagesTotal
 	assembler.AssemblerOptions.MaxBufferedPagesPerConnection = maxBufferedPagesPerConnection
 
-	return &tcpAssembler{
-		Assembler:     assembler,
-		streamPool:    streamPool,
-		streamFactory: streamFactory,
-		ignoredPorts:  opts.IgnoredPorts,
+	a.streamPool = streamPool
+	a.streamFactory = streamFactory
+	a.Assembler = assembler
+	return a
+}
+
+func (a *tcpAssembler) buildConnectionId(saddr string, daddr string, sport string, dport string) string {
+	s := fmt.Sprintf("%s:%s", saddr, sport)
+	d := fmt.Sprintf("%s:%s", daddr, dport)
+	if s > d {
+		return fmt.Sprintf("%s#%s", s, d)
+	} else {
+		return fmt.Sprintf("%s#%s", d, s)
 	}
+}
+
+func (a *tcpAssembler) shouldThrottleNewStreams(connectionId string) bool {
+	logger.Log.Infof("CURRENTLY %d LIVE STREAMS - %s", len(a.liveStreams), connectionId)
+	return false
+}
+
+func (a *tcpAssembler) connectionExists(connectionId string) bool {
+	a.liveStreamsLock.RLock()
+	defer a.liveStreamsLock.RUnlock()
+	_, ok := a.liveStreams[connectionId]
+	return ok
+}
+
+func (a *tcpAssembler) handlePacket(packetInfo *source.TcpPacketInfo, dumpPacket bool) bool {
+	packetsCount := diagnose.AppStats.IncPacketsCount()
+
+	if packetsCount%PACKETS_SEEN_LOG_THRESHOLD == 0 {
+		logger.Log.Debugf("Packets seen: #%d", packetsCount)
+	}
+
+	packet := packetInfo.Packet
+	data := packet.Data()
+	diagnose.AppStats.UpdateProcessedBytes(uint64(len(data)))
+	if dumpPacket {
+		logger.Log.Debugf("Packet content (%d/0x%x) - %s", len(data), len(data), hex.Dump(data))
+	}
+
+	done := *maxcount > 0 && int64(diagnose.AppStats.PacketsCount) >= *maxcount
+
+	tcpLayer := packet.Layer(layers.LayerTypeTCP)
+	if tcpLayer == nil {
+		return done
+	}
+
+	diagnose.AppStats.IncTcpPacketsCount()
+
+	tcp := tcpLayer.(*layers.TCP)
+	if a.shouldIgnorePort(uint16(tcp.DstPort)) || a.shouldIgnorePort(uint16(tcp.SrcPort)) {
+		diagnose.AppStats.IncIgnoredPacketsCount()
+		return done
+	}
+	if dbgctl.MizuTapperDisableTcpReassembly {
+		return done
+	}
+
+	connectionId := a.buildConnectionId(packet.NetworkLayer().NetworkFlow().Src().String(),
+		packet.NetworkLayer().NetworkFlow().Dst().String(),
+		packet.TransportLayer().TransportFlow().Src().String(),
+		packet.TransportLayer().TransportFlow().Dst().String())
+
+	if !a.connectionExists(connectionId) {
+		if a.shouldThrottleNewStreams(connectionId) {
+			return done
+		}
+	}
+
+	c := context{
+		CaptureInfo:  packet.Metadata().CaptureInfo,
+		Origin:       packetInfo.Source.Origin,
+		connectionId: connectionId,
+	}
+	diagnose.InternalStats.Totalsz += len(tcp.Payload)
+	a.assemblerMutex.Lock()
+	a.AssembleWithContext(packet.NetworkLayer().NetworkFlow(), tcp, &c)
+	a.assemblerMutex.Unlock()
+
+	return done
 }
 
 func (a *tcpAssembler) processPackets(dumpPacket bool, packets <-chan source.TcpPacketInfo) {
 	signalChan := make(chan os.Signal, 1)
 	signal.Notify(signalChan, os.Interrupt)
 
-	for packetInfo := range packets {
-		packetsCount := diagnose.AppStats.IncPacketsCount()
-
-		if packetsCount%PACKETS_SEEN_LOG_THRESHOLD == 0 {
-			logger.Log.Debugf("Packets seen: #%d", packetsCount)
-		}
-
-		packet := packetInfo.Packet
-		data := packet.Data()
-		diagnose.AppStats.UpdateProcessedBytes(uint64(len(data)))
-		if dumpPacket {
-			logger.Log.Debugf("Packet content (%d/0x%x) - %s", len(data), len(data), hex.Dump(data))
-		}
-
-		tcp := packet.Layer(layers.LayerTypeTCP)
-		if tcp != nil {
-			diagnose.AppStats.IncTcpPacketsCount()
-			tcp := tcp.(*layers.TCP)
-
-			if a.shouldIgnorePort(uint16(tcp.DstPort)) {
-				diagnose.AppStats.IncIgnoredPacketsCount()
-			} else {
-				c := context{
-					CaptureInfo: packet.Metadata().CaptureInfo,
-					Origin:      packetInfo.Source.Origin,
-				}
-				diagnose.InternalStats.Totalsz += len(tcp.Payload)
-				if !dbgctl.MizuTapperDisableTcpReassembly {
-					a.assemblerMutex.Lock()
-					a.AssembleWithContext(packet.NetworkLayer().NetworkFlow(), tcp, &c)
-					a.assemblerMutex.Unlock()
-				}
-			}
-		}
-
-		done := *maxcount > 0 && int64(diagnose.AppStats.PacketsCount) >= *maxcount
-		if done {
-			errorMapLen, _ := diagnose.TapErrors.GetErrorsSummary()
-			logger.Log.Infof("Processed %v packets (%v bytes) in %v (errors: %v, errTypes:%v)",
-				diagnose.AppStats.PacketsCount,
-				diagnose.AppStats.ProcessedBytes,
-				time.Since(diagnose.AppStats.StartTime),
-				diagnose.TapErrors.ErrorsCount,
-				errorMapLen)
-		}
-
+out:
+	for {
 		select {
+		case packetInfo := <-packets:
+			if a.handlePacket(&packetInfo, dumpPacket) {
+				break out
+			}
 		case <-signalChan:
 			logger.Log.Infof("Caught SIGINT: aborting")
-			done = true
-		default:
-			// NOP: continue
-		}
-		if done {
-			break
+			break out
 		}
 	}
+
+	errorMapLen, _ := diagnose.TapErrors.GetErrorsSummary()
+	logger.Log.Infof("Processed %v packets (%v bytes) in %v (errors: %v, errTypes:%v)",
+		diagnose.AppStats.PacketsCount,
+		diagnose.AppStats.ProcessedBytes,
+		time.Since(diagnose.AppStats.StartTime),
+		diagnose.TapErrors.ErrorsCount,
+		errorMapLen)
 
 	a.assemblerMutex.Lock()
 	closed := a.FlushAll()
