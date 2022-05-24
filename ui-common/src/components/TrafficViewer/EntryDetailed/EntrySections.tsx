@@ -1,5 +1,5 @@
 import styles from "./EntrySections.module.sass";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { SyntaxHighlighter } from "../../UI/SyntaxHighlighter/index";
 import CollapsibleContainer from "../../UI/CollapsibleContainer";
 import FancyTextDisplay from "../../UI/FancyTextDisplay";
@@ -125,7 +125,7 @@ export const EntryBodySection: React.FC<EntryBodySectionProps> = ({
     const supportedFormats = jsonLikeFormats.concat(xmlLikeFormats, protobufFormats);
 
     const [isPretty, setIsPretty] = useState(true);
-    const [showLineNumbers, setShowLineNumbers] = useState(true);
+    const [showLineNumbers, setShowLineNumbers] = useState(false);
     const [decodeBase64, setDecodeBase64] = useState(true);
 
     const isBase64Encoding = encoding === 'base64';
@@ -133,12 +133,10 @@ export const EntryBodySection: React.FC<EntryBodySectionProps> = ({
     const [isDecodeGrpc, setIsDecodeGrpc] = useState(true);
     const [isLineNumbersGreaterThenOne, setIsLineNumbersGreaterThenOne] = useState(true);
 
-    const lineNumbersGreaterThenOneSetter = (index) => {
-        if(index < 2) {
-            setIsLineNumbersGreaterThenOne(false);
-            setShowLineNumbers(false);
-        }
-    }    
+    useEffect(() => {
+        (isLineNumbersGreaterThenOne && isPretty) && setShowLineNumbers(true);
+        !isLineNumbersGreaterThenOne && setShowLineNumbers(false);   
+    }, [isLineNumbersGreaterThenOne, isPretty])
 
     const formatTextBody = (body: any): string => {
         if (!decodeBase64) return body;
@@ -190,12 +188,12 @@ export const EntryBodySection: React.FC<EntryBodySectionProps> = ({
                 </div>}
                 {supportsPrettying && <span style={{ marginLeft: '.2rem' }}>Pretty</span>}
 
-                {isLineNumbersGreaterThenOne && <div style={{ paddingTop: 3, paddingLeft: supportsPrettying ? 20 : 0 }}>
-                    <Checkbox checked={showLineNumbers} onToggle={() => { setShowLineNumbers(!showLineNumbers) }} />
+                { <div style={{ paddingTop: 3, paddingLeft: supportsPrettying ? 20 : 0 }}>
+                    <Checkbox checked={showLineNumbers} onToggle={() => { setShowLineNumbers(!showLineNumbers) }} disabled={!isLineNumbersGreaterThenOne || !decodeBase64} />
                 </div>}
-                {isLineNumbersGreaterThenOne && <span style={{ marginLeft: '.2rem' }}>Line numbers</span>}
+                { <span style={{ marginLeft: '.2rem' }}>Line numbers</span>}
 
-                {isBase64Encoding && <div style={{ paddingTop: 3, paddingLeft: (isLineNumbersGreaterThenOne || supportsPrettying) ? 20 : 0}}>
+                {isBase64Encoding && <div style={{ paddingTop: 3, paddingLeft: (isLineNumbersGreaterThenOne || supportsPrettying) ? 20 : 0 }}>
                     <Checkbox checked={decodeBase64} onToggle={() => { setDecodeBase64(!decodeBase64) }} />
                 </div>}
                 {isBase64Encoding && <span style={{ marginLeft: '.2rem' }}>Decode Base64</span>}
@@ -205,7 +203,7 @@ export const EntryBodySection: React.FC<EntryBodySectionProps> = ({
             <SyntaxHighlighter
                 code={formatTextBody(content)}
                 showLineNumbers={showLineNumbers}
-                lineNumbersGreaterThenOneSetter={lineNumbersGreaterThenOneSetter}
+                setIsLineNumbersGreaterThenOne={setIsLineNumbersGreaterThenOne}
             />
 
         </EntrySectionContainer>}
