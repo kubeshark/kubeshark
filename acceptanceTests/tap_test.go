@@ -343,6 +343,7 @@ func TestTapRedact(t *testing.T) {
 
 	tapNamespace := GetDefaultTapNamespace()
 	tapCmdArgs = append(tapCmdArgs, tapNamespace...)
+	tapCmdArgs = append(tapCmdArgs, "--redact")
 
 	tapCmd := exec.Command(cliPath, tapCmdArgs...)
 	t.Logf("running command: %v", tapCmd.String())
@@ -394,8 +395,6 @@ func TestTapNoRedact(t *testing.T) {
 	tapNamespace := GetDefaultTapNamespace()
 	tapCmdArgs = append(tapCmdArgs, tapNamespace...)
 
-	tapCmdArgs = append(tapCmdArgs, "--no-redact")
-
 	tapCmd := exec.Command(cliPath, tapCmdArgs...)
 	t.Logf("running command: %v", tapCmd.String())
 
@@ -445,6 +444,8 @@ func TestTapRegexMasking(t *testing.T) {
 
 	tapNamespace := GetDefaultTapNamespace()
 	tapCmdArgs = append(tapCmdArgs, tapNamespace...)
+
+	tapCmdArgs = append(tapCmdArgs, "--redact")
 
 	tapCmdArgs = append(tapCmdArgs, "-r", "Mizu")
 
