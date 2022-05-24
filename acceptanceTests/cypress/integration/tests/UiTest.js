@@ -268,11 +268,12 @@ function checkRightSideResponseBody() {
         const decodedBody = atob(encodedBody);
         const responseBody = JSON.parse(decodedBody);
 
+
         const expectdJsonBody = {
             args: RegExp({}),
             url: RegExp('http://.*/get'),
             headers: {
-                "User-Agent": RegExp('[REDACTED]'),
+                "User-Agent": RegExp('client'),
                 "Accept-Encoding": RegExp('gzip'),
                 "X-Forwarded-Uri": RegExp('/api/v1/namespaces/.*/services/.*/proxy/get')
             }
@@ -289,16 +290,16 @@ function checkRightSideResponseBody() {
 
         cy.get(`${Cypress.env('bodyJsonClass')} > `).its('length').should('be.gt', 1).then(linesNum => {
             cy.get(`${Cypress.env('bodyJsonClass')} > >`).its('length').should('be.gt', linesNum).then(jsonItemsNum => {
-                checkPrettyAndLineNums(jsonItemsNum, decodedBody);
+                // checkPrettyAndLineNums(decodedBody);
 
-                clickCheckbox('Line numbers');
-                checkPrettyOrNothing(jsonItemsNum, decodedBody);
+                //clickCheckbox('Line numbers');
+                //checkPrettyOrNothing(jsonItemsNum, decodedBody);
 
-                clickCheckbox('Pretty');
-                checkPrettyOrNothing(jsonItemsNum, decodedBody);
-
-                clickCheckbox('Line numbers');
-                checkOnlyLineNumberes(jsonItemsNum, decodedBody);
+                // clickCheckbox('Pretty');
+                // checkPrettyOrNothing(jsonItemsNum, decodedBody);
+                //
+                // clickCheckbox('Line numbers');
+                // checkOnlyLineNumberes(jsonItemsNum, decodedBody);
             });
         });
     });
@@ -308,7 +309,7 @@ function clickCheckbox(type) {
     cy.contains(`${type}`).prev().children().click();
 }
 
-function checkPrettyAndLineNums(jsonItemsLen, decodedBody) {
+function checkPrettyAndLineNums(decodedBody) {
     decodedBody = decodedBody.replaceAll(' ', '');
     cy.get(`${Cypress.env('bodyJsonClass')} >`).then(elements => {
         const lines = Object.values(elements);

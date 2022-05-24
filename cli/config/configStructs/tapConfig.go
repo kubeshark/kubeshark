@@ -21,7 +21,7 @@ const (
 	AnalysisTapName               = "analysis"
 	AllNamespacesTapName          = "all-namespaces"
 	PlainTextFilterRegexesTapName = "regex-masking"
-	DisableRedactionTapName       = "no-redact"
+	EnableRedactionTapName        = "redact"
 	HumanMaxEntriesDBSizeTapName  = "max-entries-db-size"
 	InsertionFilterName           = "insertion-filter"
 	DryRunTapName                 = "dry-run"
@@ -43,7 +43,7 @@ type TapConfig struct {
 	AllNamespaces          bool             `yaml:"all-namespaces" default:"false"`
 	PlainTextFilterRegexes []string         `yaml:"regex-masking"`
 	IgnoredUserAgents      []string         `yaml:"ignored-user-agents"`
-	DisableRedaction       bool             `yaml:"no-redact" default:"false"`
+	EnableRedaction        bool             `yaml:"redact" default:"false"`
 	HumanMaxEntriesDBSize  string           `yaml:"max-entries-db-size" default:"200MB"`
 	InsertionFilter        string           `yaml:"insertion-filter" default:""`
 	DryRun                 bool             `yaml:"dry-run" default:"false"`
