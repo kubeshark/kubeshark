@@ -18,6 +18,7 @@ import (
 	"github.com/up9inc/mizu/agent/pkg/holder"
 	"github.com/up9inc/mizu/agent/pkg/providers"
 
+	"github.com/up9inc/mizu/agent/pkg/oas"
 	"github.com/up9inc/mizu/agent/pkg/servicemap"
 
 	"github.com/up9inc/mizu/agent/pkg/resolver"
@@ -152,6 +153,9 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 
 		serviceMapGenerator := dependency.GetInstance(dependency.ServiceMapGeneratorDependency).(servicemap.ServiceMapSink)
 		serviceMapGenerator.NewTCPEntry(mizuEntry.Source, mizuEntry.Destination, &item.Protocol)
+
+		oasGenerator := dependency.GetInstance(dependency.OasGeneratorDependency).(oas.OasGeneratorSink)
+		oasGenerator.HandleEntry(mizuEntry)
 	}
 }
 
