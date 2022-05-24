@@ -665,8 +665,7 @@ func TestIpResolving(t *testing.T) {
 		return
 	}
 
-	extraArgs := []string{"--redact"}
-	basicTapTest(t, true, extraArgs...)
+	basicTapTest(t, true)
 }
 
 func TestRestrictedMode(t *testing.T) {
