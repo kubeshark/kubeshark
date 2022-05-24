@@ -54,3 +54,5 @@ replace github.com/up9inc/mizu/logger v0.0.0 => ../logger
 replace github.com/up9inc/mizu/shared v0.0.0 => ../shared
 
 replace github.com/up9inc/mizu/tap/api v0.0.0 => ../tap/api
+
+replace github.com/up9inc/mizu/tap/dbgctl v0.0.0 => ../tap/dbgctl

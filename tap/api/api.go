@@ -15,6 +15,8 @@ import (
 	"time"
 
 	"github.com/google/martian/har"
+
+	"github.com/up9inc/mizu/tap/dbgctl"
 )
 
 const mizuTestEnvVar = "MIZU_TEST"
@@ -104,11 +106,6 @@ type OutputChannelItem struct {
 	Namespace      string
 }
 
-type ProtoIdentifier struct {
-	Protocol       *Protocol
-	IsClosedOthers bool
-}
-
 type ReadProgress struct {
 	readBytes   int
 	lastCurrent int
@@ -121,6 +118,11 @@ func (p *ReadProgress) Feed(n int) {
 func (p *ReadProgress) Current() (n int) {
 	p.lastCurrent = p.readBytes - p.lastCurrent
 	return p.lastCurrent
+}
+
+func (p *ReadProgress) Reset() {
+	p.readBytes = 0
+	p.lastCurrent = 0
 }
 
 type Dissector interface {
@@ -149,8 +151,13 @@ type Emitter interface {
 }
 
 func (e *Emitting) Emit(item *OutputChannelItem) {
-	e.OutputChannel <- item
 	e.AppStats.IncMatchedPairs()
+
+	if dbgctl.MizuTapperDisableEmitting {
+		return
+	}
+
+	e.OutputChannel <- item
 }
 
 type Entry struct {
@@ -419,13 +426,11 @@ type TcpReader interface {
 	GetCaptureTime() time.Time
 	GetEmitter() Emitter
 	GetIsClosed() bool
-	GetExtension() *Extension
 }
 
 type TcpStream interface {
 	SetProtocol(protocol *Protocol)
 	GetOrigin() Capture
-	GetProtoIdentifier() *ProtoIdentifier
 	GetReqResMatchers() []RequestResponseMatcher
 	GetIsTapTarget() bool
 	GetIsClosed() bool

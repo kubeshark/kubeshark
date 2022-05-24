@@ -188,8 +188,7 @@ func (p *tlsPoller) startNewTlsReader(chunk *tlsChunk, address *addressPair, key
 	}
 
 	stream := &tlsStream{
-		reader:          reader,
-		protoIdentifier: &api.ProtoIdentifier{},
+		reader: reader,
 	}
 	streamsMap.Store(streamsMap.NextId(), stream)
 

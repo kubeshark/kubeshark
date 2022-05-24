@@ -7,11 +7,11 @@ import {
     resizeToNormalMizu,
     rightOnHoverCheck,
     rightTextCheck,
-    verifyMinimumEntries
+    verifyMinimumEntries,
+    refreshWaitTimeout,
+    waitForFetch,
+    pauseStream
 } from "../testHelpers/TrafficHelper";
-
-const refreshWaitTimeout = 10000;
-
 
 const fullParam = Cypress.env('arrayDict'); // "Name:fooNamespace:barName:foo1Namespace:bar1"
 const podsArray = fullParam.split('Name:').slice(1); // ["fooNamespace:bar", "foo1Namespace:bar1"]
@@ -70,7 +70,8 @@ checkFilter({
     leftSideExpectedText: 'HTTP',
     rightSidePath: '[title=HTTP]',
     rightSideExpectedText: 'Hypertext Transfer Protocol -- HTTP/1.1',
-    applyByCtrlEnter: true
+    applyByCtrlEnter: true,
+    numberOfRecords: 20,
 });
 
 checkFilter({
@@ -79,7 +80,8 @@ checkFilter({
     leftSideExpectedText: '200',
     rightSidePath: '> :nth-child(2) [title="Status Code"]',
     rightSideExpectedText: '200',
-    applyByCtrlEnter: false
+    applyByCtrlEnter: false,
+    numberOfRecords: 20
 });
 
 if (Cypress.env('shouldCheckSrcAndDest')) {
@@ -91,7 +93,8 @@ if (Cypress.env('shouldCheckSrcAndDest')) {
         leftSideExpectedText: '[Unresolved]',
         rightSidePath: '> :nth-child(2) [title="Source Name"]',
         rightSideExpectedText: '[Unresolved]',
-        applyByCtrlEnter: false
+        applyByCtrlEnter: false,
+        numberOfRecords: 20
     });
 
     checkFilter({
@@ -100,7 +103,8 @@ if (Cypress.env('shouldCheckSrcAndDest')) {
         leftSideExpectedText: 'httpbin.mizu-tests',
         rightSidePath: '> :nth-child(2) > :nth-child(2) > :nth-child(2) > :nth-child(3) > :nth-child(2)',
         rightSideExpectedText: 'httpbin.mizu-tests',
-        applyByCtrlEnter: false
+        applyByCtrlEnter: false,
+        numberOfRecords: 20
     });
 }
 
@@ -110,7 +114,8 @@ checkFilter({
     leftSideExpectedText: 'GET',
     rightSidePath: '> :nth-child(2) > :nth-child(2) > :nth-child(1) > :nth-child(1) > :nth-child(2)',
     rightSideExpectedText: 'GET',
-    applyByCtrlEnter: true
+    applyByCtrlEnter: true,
+    numberOfRecords: 20
 });
 
 checkFilter({
@@ -119,7 +124,8 @@ checkFilter({
     leftSideExpectedText: '/get',
     rightSidePath: '> :nth-child(2) > :nth-child(2) > :nth-child(1) > :nth-child(2) > :nth-child(2)',
     rightSideExpectedText: '/get',
-    applyByCtrlEnter: false
+    applyByCtrlEnter: false,
+    numberOfRecords: 20
 });
 
 checkFilter({
@@ -128,7 +134,8 @@ checkFilter({
     leftSideExpectedText: '127.0.0.1',
     rightSidePath: '> :nth-child(2) [title="Source IP"]',
     rightSideExpectedText: '127.0.0.1',
-    applyByCtrlEnter: false
+    applyByCtrlEnter: false,
+    numberOfRecords: 20
 });
 
 checkFilterNoResults('request.method == "POST"');
@@ -187,66 +194,54 @@ function checkFilter(filterDetails) {
         rightSidePath,
         rightSideExpectedText,
         leftSideExpectedText,
-        applyByCtrlEnter
+        applyByCtrlEnter,
+        numberOfRecords
     } = filterDetails;
 
     const entriesForDeeperCheck = 5;
 
     it(`checking the filter: ${filter}`, function () {
-        waitForFetch50AndPause();
+        cy.get('.w-tc-editor-text').clear();
+        // applying the filter with alt+enter or with the button
+        cy.get('.w-tc-editor-text').type(`${filter}${applyByCtrlEnter ? '{ctrl+enter}' : ''}`);
+        cy.get('.w-tc-editor').should('have.attr', 'style').and('include', Cypress.env('greenFilterColor'));
+        if (!applyByCtrlEnter)
+            cy.get('[type="submit"]').click();
 
-        cy.get('#total-entries').should('not.have.text', '0').then(number => {
-            const totalEntries = number.text();
+        waitForFetch(numberOfRecords);
+        pauseStream();
 
-            cy.get(`#list [id^=entry]`).last().then(elem => {
-                const element = elem[0];
-                const entryId = getEntryId(element.id);
-                // checks the hover on the last entry (the only one in DOM at the beginning)
-                leftOnHoverCheck(entryId, leftSidePath, filter);
+        cy.get(`#list [id^=entry]`).last().then(elem => {
+            const element = elem[0];
+            const entryId = getEntryId(element.id);
 
-                cy.get('.w-tc-editor-text').clear();
-                // applying the filter with alt+enter or with the button
-                cy.get('.w-tc-editor-text').type(`${filter}${applyByCtrlEnter ? '{ctrl+enter}' : ''}`);
-                cy.get('.w-tc-editor').should('have.attr', 'style').and('include', Cypress.env('greenFilterColor'));
-                if (!applyByCtrlEnter)
-                    cy.get('[type="submit"]').click();
+            // only one entry in DOM after filtering, checking all checks on it
+            leftTextCheck(entryId, leftSidePath, leftSideExpectedText);
+            leftOnHoverCheck(entryId, leftSidePath, filter);
 
-                waitForFetch50AndPause();
+            rightTextCheck(rightSidePath, rightSideExpectedText);
+            rightOnHoverCheck(rightSidePath, filter);
+            checkRightSideResponseBody();
+        });
 
-                // only one entry in DOM after filtering, checking all checks on it
-                leftTextCheck(entryId, leftSidePath, leftSideExpectedText);
-                leftOnHoverCheck(entryId, leftSidePath, filter);
+        resizeToHugeMizu();
 
-                rightTextCheck(rightSidePath, rightSideExpectedText);
-                rightOnHoverCheck(rightSidePath, filter);
-                checkRightSideResponseBody();
-            });
+        // checking only 'leftTextCheck' on all entries because the rest of the checks require more time
+        cy.get(`#list [id^=entry]`).each(elem => {
+            const element = elem[0];
+            let entryId = getEntryId(element.id);
+            leftTextCheck(entryId, leftSidePath, leftSideExpectedText);
+        });
 
-            resizeToHugeMizu();
+        // making the other 3 checks on the first X entries (longer time for each check)
+        deeperCheck(leftSidePath, rightSidePath, filter, rightSideExpectedText, entriesForDeeperCheck);
 
-            // checking only 'leftTextCheck' on all entries because the rest of the checks require more time
-            cy.get(`#list [id^=entry]`).each(elem => {
-                const element = elem[0];
-                let entryId = getEntryId(element.id);
-                leftTextCheck(entryId, leftSidePath, leftSideExpectedText);
-            });
-
-            // making the other 3 checks on the first X entries (longer time for each check)
-            deeperCheck(leftSidePath, rightSidePath, filter, rightSideExpectedText, entriesForDeeperCheck);
-
-            // reloading then waiting for the entries number to load
-            resizeToNormalMizu();
-            cy.reload();
-            cy.get('#total-entries', {timeout: refreshWaitTimeout}).should('have.text', totalEntries);
-        })
+        // reloading then waiting for the entries number to load
+        resizeToNormalMizu();
+        cy.reload();
+        waitForFetch(numberOfRecords);
+        pauseStream();
     });
-}
-
-function waitForFetch50AndPause() {
-    // wait half a second and pause the stream to preserve the DOM
-    cy.wait(500);
-    cy.get('#pause-icon').click();
-    cy.get('#pause-icon').should('not.be.visible');
 }
 
 function deeperCheck(leftSidePath, rightSidePath, filterName, rightSideExpectedText, entriesNumToCheck) {

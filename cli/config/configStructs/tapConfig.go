@@ -30,6 +30,7 @@ const (
 	ContractFile                  = "contract"
 	ServiceMeshName               = "service-mesh"
 	TlsName                       = "tls"
+	ProfilerName                  = "profiler"
 )
 
 type TapConfig struct {
@@ -54,6 +55,7 @@ type TapConfig struct {
 	TapperResources        shared.Resources `yaml:"tapper-resources"`
 	ServiceMesh            bool             `yaml:"service-mesh" default:"false"`
 	Tls                    bool             `yaml:"tls" default:"false"`
+	Profiler               bool             `yaml:"profiler" default:"false"`
 }
 
 func (config *TapConfig) PodRegex() *regexp.Regexp {

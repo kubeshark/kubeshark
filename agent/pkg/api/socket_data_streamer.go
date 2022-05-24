@@ -34,14 +34,18 @@ func (e *BasenineEntryStreamer) Get(ctx context.Context, socketId int, params *W
 	meta := make(chan []byte)
 
 	query := params.Query
-	err = basenine.Validate(shared.BasenineHost, shared.BaseninePort, query)
-	if err != nil {
-		entryStreamerSocketConnector.SendToastError(socketId, err)
+	if err = basenine.Validate(shared.BasenineHost, shared.BaseninePort, query); err != nil {
+		if err := entryStreamerSocketConnector.SendToastError(socketId, err); err != nil {
+			return err
+		}
+
+		entryStreamerSocketConnector.CleanupSocket(socketId)
+		return err
 	}
 
 	leftOff, err := e.fetch(socketId, params, entryStreamerSocketConnector)
 	if err != nil {
-		logger.Log.Errorf("Fetch error: %v", err.Error())
+		logger.Log.Errorf("Fetch error: %v", err)
 	}
 
 	handleDataChannel := func(c *basenine.Connection, data chan []byte) {
@@ -53,13 +57,15 @@ func (e *BasenineEntryStreamer) Get(ctx context.Context, socketId int, params *W
 			}
 
 			var entry *tapApi.Entry
-			err = json.Unmarshal(bytes, &entry)
-			if err != nil {
-				logger.Log.Debugf("Error unmarshalling entry: %v", err.Error())
+			if err = json.Unmarshal(bytes, &entry); err != nil {
+				logger.Log.Debugf("Error unmarshalling entry: %v", err)
 				continue
 			}
 
-			entryStreamerSocketConnector.SendEntry(socketId, entry, params)
+			if err := entryStreamerSocketConnector.SendEntry(socketId, entry, params); err != nil {
+				logger.Log.Errorf("Error sending entry to socket, err: %v", err)
+				return
+			}
 		}
 	}
 
@@ -72,13 +78,15 @@ func (e *BasenineEntryStreamer) Get(ctx context.Context, socketId int, params *W
 			}
 
 			var metadata *basenine.Metadata
-			err = json.Unmarshal(bytes, &metadata)
-			if err != nil {
-				logger.Log.Debugf("Error unmarshalling metadata: %v", err.Error())
+			if err = json.Unmarshal(bytes, &metadata); err != nil {
+				logger.Log.Debugf("Error unmarshalling metadata: %v", err)
 				continue
 			}
 
-			entryStreamerSocketConnector.SendMetadata(socketId, metadata)
+			if err := entryStreamerSocketConnector.SendMetadata(socketId, metadata); err != nil {
+				logger.Log.Errorf("Error sending metadata to socket, err: %v", err)
+				return
+			}
 		}
 	}
 
@@ -125,28 +133,31 @@ func (e *BasenineEntryStreamer) fetch(socketId int, params *WebSocketParams, con
 	}
 
 	var firstMetadata *basenine.Metadata
-	err = json.Unmarshal(firstMeta, &firstMetadata)
-	if err != nil {
+	if err = json.Unmarshal(firstMeta, &firstMetadata); err != nil {
 		return
 	}
+
 	leftOff = firstMetadata.LeftOff
 
 	var lastMetadata *basenine.Metadata
-	err = json.Unmarshal(lastMeta, &lastMetadata)
-	if err != nil {
+	if err = json.Unmarshal(lastMeta, &lastMetadata); err != nil {
 		return
 	}
-	connector.SendMetadata(socketId, lastMetadata)
+
+	if err = connector.SendMetadata(socketId, lastMetadata); err != nil {
+		return
+	}
 
 	data = e.reverseBytesSlice(data)
 	for _, row := range data {
 		var entry *tapApi.Entry
-		err = json.Unmarshal(row, &entry)
-		if err != nil {
+		if err = json.Unmarshal(row, &entry); err != nil {
 			break
 		}
 
-		connector.SendEntry(socketId, entry, params)
+		if err = connector.SendEntry(socketId, entry, params); err != nil {
+			return
+		}
 	}
 	return
 }

@@ -14,10 +14,10 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/gin-contrib/pprof"
 	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/gin"
 	"github.com/up9inc/mizu/agent/pkg/dependency"
-	"github.com/up9inc/mizu/agent/pkg/elastic"
 	"github.com/up9inc/mizu/agent/pkg/entries"
 	"github.com/up9inc/mizu/agent/pkg/middlewares"
 	"github.com/up9inc/mizu/agent/pkg/models"
@@ -37,6 +37,7 @@ import (
 	"github.com/up9inc/mizu/shared"
 	"github.com/up9inc/mizu/tap"
 	tapApi "github.com/up9inc/mizu/tap/api"
+	"github.com/up9inc/mizu/tap/dbgctl"
 )
 
 var tapperMode = flag.Bool("tap", false, "Run in tapper mode without API")
@@ -46,6 +47,7 @@ var apiServerAddress = flag.String("api-server-address", "", "Address of mizu AP
 var namespace = flag.String("namespace", "", "Resolve IPs if they belong to resources in this namespace (default is all)")
 var harsReaderMode = flag.Bool("hars-read", false, "Run in hars-read mode")
 var harsDir = flag.String("hars-dir", "", "Directory to read hars from")
+var profiler = flag.Bool("profiler", false, "Run pprof server")
 
 const (
 	socketConnectionRetries    = 30
@@ -62,7 +64,7 @@ func main() {
 	app.LoadExtensions()
 
 	if !*tapperMode && !*apiServerMode && !*standaloneMode && !*harsReaderMode {
-		panic("One of the flags --tap, --api or --standalone or --hars-read must be provided")
+		panic("One of the flags --tap, --api-server, --standalone or --hars-read must be provided")
 	}
 
 	if *standaloneMode {
@@ -70,7 +72,14 @@ func main() {
 	} else if *tapperMode {
 		runInTapperMode()
 	} else if *apiServerMode {
-		utils.StartServer(runInApiServerMode(*namespace))
+		app := runInApiServerMode(*namespace)
+
+		if *profiler {
+			pprof.Register(app)
+		}
+
+		utils.StartServer(app)
+
 	} else if *harsReaderMode {
 		runInHarReaderMode()
 	}
@@ -153,7 +162,9 @@ func runInTapperMode() {
 	}
 
 	hostMode := os.Getenv(shared.HostModeEnvVar) == "1"
-	tapOpts := &tap.TapOpts{HostMode: hostMode}
+	tapOpts := &tap.TapOpts{
+		HostMode:     hostMode,
+	}
 
 	filteredOutputItemsChannel := make(chan *tapApi.OutputChannelItem)
 
@@ -199,13 +210,12 @@ func runInHarReaderMode() {
 func enableExpFeatureIfNeeded() {
 	if config.Config.OAS {
 		oasGenerator := dependency.GetInstance(dependency.OasGeneratorDependency).(oas.OasGenerator)
-		oasGenerator.Start(nil)
+		oasGenerator.Start()
 	}
 	if config.Config.ServiceMap {
 		serviceMapGenerator := dependency.GetInstance(dependency.ServiceMapGeneratorDependency).(servicemap.ServiceMap)
 		serviceMapGenerator.Enable()
 	}
-	elastic.GetInstance().Configure(config.Config.Elastic)
 }
 
 func getSyncEntriesConfig() *shared.SyncEntriesConfig {
@@ -280,6 +290,10 @@ func pipeTapChannelToSocket(connection *websocket.Conn, messageDataChannel <-cha
 		marshaledData, err := models.CreateWebsocketTappedEntryMessage(messageData)
 		if err != nil {
 			logger.Log.Errorf("error converting message to json %v, err: %s, (%v,%+v)", messageData, err, err, err)
+			continue
+		}
+
+		if dbgctl.MizuTapperDisableSending {
 			continue
 		}
 
