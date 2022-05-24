@@ -188,10 +188,10 @@ export const EntryBodySection: React.FC<EntryBodySectionProps> = ({
                 </div>}
                 {supportsPrettying && <span style={{ marginLeft: '.2rem' }}>Pretty</span>}
 
-                { <div style={{ paddingTop: 3, paddingLeft: supportsPrettying ? 20 : 0 }}>
+                <div style={{ paddingTop: 3, paddingLeft: supportsPrettying ? 20 : 0 }}>
                     <Checkbox checked={showLineNumbers} onToggle={() => { setShowLineNumbers(!showLineNumbers) }} disabled={!isLineNumbersGreaterThenOne || !decodeBase64} />
-                </div>}
-                { <span style={{ marginLeft: '.2rem' }}>Line numbers</span>}
+                </div>
+                <span style={{ marginLeft: '.2rem' }}>Line numbers</span>
 
                 {isBase64Encoding && <div style={{ paddingTop: 3, paddingLeft: (isLineNumbersGreaterThenOne || supportsPrettying) ? 20 : 0 }}>
                     <Checkbox checked={decodeBase64} onToggle={() => { setDecodeBase64(!decodeBase64) }} />

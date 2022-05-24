@@ -36,7 +36,7 @@ export const SyntaxHighlighter: React.FC<Props> = ({
     language = null,
     setIsLineNumbersGreaterThenOne
 }) => {
-    const [markers, setMarkers] = useState({})
+    const [markers, setMarkers] = useState([])
 
     useEffect(() => {
         const newMarkers = code.split("\n").map((item, i) => {
