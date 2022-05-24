@@ -296,7 +296,7 @@ export const EntryItem: React.FC<EntryProps> = ({entry, style, headingMode, name
                         query={`dst.ip == "${entry.dst.ip}"`}
                         displayIconOnMouseOver={true}
                         flipped={false}
-                        iconStyle={{marginTop: "28px"}}
+                        iconStyle={{marginTop: "30px", marginLeft: "-2px",right: "35px", position: "relative"}}
                 >
                     <span
                         className={`${styles.tcpInfo} ${styles.ip}`}
