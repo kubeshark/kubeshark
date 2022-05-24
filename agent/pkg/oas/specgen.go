@@ -9,6 +9,7 @@ import (
 	"mime/multipart"
 	"net/textproto"
 	"net/url"
+	"os"
 	"sort"
 	"strconv"
 	"strings"
@@ -266,6 +267,8 @@ func handleOpObj(entryWithSource *EntryWithSource, pathObj *openapi.PathObj) (*o
 	}
 
 	setSampleID(&opObj.Extensions, entryWithSource.Id)
+
+	setCodegenPlaceholders(opObj)
 
 	return opObj, nil
 }
@@ -739,4 +742,21 @@ func getOpObj(pathObj *openapi.PathObj, method string, createIfNone bool) (*open
 	}
 
 	return *op, isMissing, nil
+}
+
+func setCodegenPlaceholders(obj *openapi.Operation) {
+	langsStr := os.Getenv("MIZU_CODEGEN_PLACEHOLDERS")
+	if langsStr != "" {
+		placeholders := make([]map[string]string, 0)
+		for _, lang := range strings.Split(langsStr, ",") {
+			item := make(map[string]string)
+			item["lang"] = lang
+			item["source"] = ""
+			placeholders = append(placeholders, item)
+		}
+		err := obj.SetExtension("x-codeSamples", placeholders)
+		if err != nil {
+			logger.Log.Warningf("Failed to set codegen extension: %s", err)
+		}
+	}
 }
