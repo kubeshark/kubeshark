@@ -1,5 +1,5 @@
 import styles from "./EntrySections.module.sass";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { SyntaxHighlighter } from "../../UI/SyntaxHighlighter/index";
 import CollapsibleContainer from "../../UI/CollapsibleContainer";
 import FancyTextDisplay from "../../UI/FancyTextDisplay";
@@ -135,16 +135,11 @@ export const EntryBodySection: React.FC<EntryBodySectionProps> = ({
     const [isLineNumbersGreaterThenOne, setIsLineNumbersGreaterThenOne] = useState(true);
 
     useEffect(() => {
-        const lineNumbers = Utils.lineNumbersInString(formatTextBody(content));
-        setIsLineNumbersGreaterThenOne(lineNumbers > 1 );
-    }, [isPretty, content, showLineNumbers])
-
-    useEffect(() => {
         (isLineNumbersGreaterThenOne && isPretty) && setShowLineNumbers(true);
-        !isLineNumbersGreaterThenOne && setShowLineNumbers(false);   
+        !isLineNumbersGreaterThenOne && setShowLineNumbers(false);
     }, [isLineNumbersGreaterThenOne, isPretty])
 
-    const formatTextBody = (body: any): string => {
+    const formatTextBody = useCallback((body: any): string => {
         if (!decodeBase64) return body;
 
         const chunk = body.slice(0, MAXIMUM_BYTES_TO_FORMAT);
@@ -180,7 +175,14 @@ export const EntryBodySection: React.FC<EntryBodySectionProps> = ({
             }
         }
         return bodyBuf;
-    }
+    }, [isPretty, contentType, isDecodeGrpc, decodeBase64])
+
+    const formattedText = useMemo(() => formatTextBody(content), [formatTextBody, content]);
+
+    useEffect(() => {
+        const lineNumbers = Utils.lineNumbersInString(formattedText);
+        setIsLineNumbersGreaterThenOne(lineNumbers > 1);
+    }, [isPretty, content, showLineNumbers, formattedText]);
 
     return <React.Fragment>
         {content && content?.length > 0 && <EntrySectionContainer
