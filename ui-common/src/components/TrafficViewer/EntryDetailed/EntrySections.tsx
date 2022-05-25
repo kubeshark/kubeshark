@@ -102,6 +102,12 @@ export const EntrySectionContainer: React.FC<EntrySectionContainerProps> = ({ ti
     </CollapsibleContainer>
 }
 
+const MAXIMUM_BYTES_TO_FORMAT = 1000000; // The maximum of chars to highlight in body, in case the response can be megabytes
+const jsonLikeFormats = ['json', 'yaml', 'yml'];
+const xmlLikeFormats = ['xml', 'html'];
+const protobufFormats = ['application/grpc'];
+const supportedFormats = jsonLikeFormats.concat(xmlLikeFormats, protobufFormats);
+
 interface EntryBodySectionProps {
     title: string,
     content: any,
@@ -119,12 +125,6 @@ export const EntryBodySection: React.FC<EntryBodySectionProps> = ({
     contentType,
     selector,
 }) => {
-    const MAXIMUM_BYTES_TO_FORMAT = 1000000; // The maximum of chars to highlight in body, in case the response can be megabytes
-    const jsonLikeFormats = ['json', 'yaml', 'yml'];
-    const xmlLikeFormats = ['xml', 'html'];
-    const protobufFormats = ['application/grpc'];
-    const supportedFormats = jsonLikeFormats.concat(xmlLikeFormats, protobufFormats);
-
     const [isPretty, setIsPretty] = useState(true);
     const [showLineNumbers, setShowLineNumbers] = useState(false);
     const [decodeBase64, setDecodeBase64] = useState(true);
@@ -175,7 +175,7 @@ export const EntryBodySection: React.FC<EntryBodySectionProps> = ({
             }
         }
         return bodyBuf;
-    }, [isPretty, contentType, isDecodeGrpc, decodeBase64])
+    }, [isPretty, contentType, isDecodeGrpc, decodeBase64, isBase64Encoding])
 
     const formattedText = useMemo(() => formatTextBody(content), [formatTextBody, content]);
 
@@ -209,7 +209,7 @@ export const EntryBodySection: React.FC<EntryBodySectionProps> = ({
             </div>
 
             <SyntaxHighlighter
-                code={formatTextBody(content)}
+                code={formattedText}
                 showLineNumbers={showLineNumbers}
             />
 
