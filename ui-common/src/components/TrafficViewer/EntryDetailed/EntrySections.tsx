@@ -1,5 +1,5 @@
 import styles from "./EntrySections.module.sass";
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { SyntaxHighlighter } from "../../UI/SyntaxHighlighter/index";
 import CollapsibleContainer from "../../UI/CollapsibleContainer";
 import FancyTextDisplay from "../../UI/FancyTextDisplay";
@@ -8,6 +8,7 @@ import Checkbox from "../../UI/Checkbox";
 import ProtobufDecoder from "protobuf-decoder";
 import { default as jsonBeautify } from "json-beautify";
 import { default as xmlBeautify } from "xml-formatter";
+import { Utils } from "../../../helpers/Utils"
 
 interface EntryViewLineProps {
     label: string;
@@ -101,6 +102,12 @@ export const EntrySectionContainer: React.FC<EntrySectionContainerProps> = ({ ti
     </CollapsibleContainer>
 }
 
+const MAXIMUM_BYTES_TO_FORMAT = 1000000; // The maximum of chars to highlight in body, in case the response can be megabytes
+const jsonLikeFormats = ['json', 'yaml', 'yml'];
+const xmlLikeFormats = ['xml', 'html'];
+const protobufFormats = ['application/grpc'];
+const supportedFormats = jsonLikeFormats.concat(xmlLikeFormats, protobufFormats);
+
 interface EntryBodySectionProps {
     title: string,
     content: any,
@@ -118,12 +125,6 @@ export const EntryBodySection: React.FC<EntryBodySectionProps> = ({
     contentType,
     selector,
 }) => {
-    const MAXIMUM_BYTES_TO_FORMAT = 1000000; // The maximum of chars to highlight in body, in case the response can be megabytes
-    const jsonLikeFormats = ['json', 'yaml', 'yml'];
-    const xmlLikeFormats = ['xml', 'html'];
-    const protobufFormats = ['application/grpc'];
-    const supportedFormats = jsonLikeFormats.concat(xmlLikeFormats, protobufFormats);
-
     const [isPretty, setIsPretty] = useState(true);
     const [showLineNumbers, setShowLineNumbers] = useState(false);
     const [decodeBase64, setDecodeBase64] = useState(true);
@@ -135,10 +136,10 @@ export const EntryBodySection: React.FC<EntryBodySectionProps> = ({
 
     useEffect(() => {
         (isLineNumbersGreaterThenOne && isPretty) && setShowLineNumbers(true);
-        !isLineNumbersGreaterThenOne && setShowLineNumbers(false);   
+        !isLineNumbersGreaterThenOne && setShowLineNumbers(false);
     }, [isLineNumbersGreaterThenOne, isPretty])
 
-    const formatTextBody = (body: any): string => {
+    const formatTextBody = useCallback((body: any): string => {
         if (!decodeBase64) return body;
 
         const chunk = body.slice(0, MAXIMUM_BYTES_TO_FORMAT);
@@ -174,7 +175,14 @@ export const EntryBodySection: React.FC<EntryBodySectionProps> = ({
             }
         }
         return bodyBuf;
-    }
+    }, [isPretty, contentType, isDecodeGrpc, decodeBase64, isBase64Encoding])
+
+    const formattedText = useMemo(() => formatTextBody(content), [formatTextBody, content]);
+
+    useEffect(() => {
+        const lineNumbers = Utils.lineNumbersInString(formattedText);
+        setIsLineNumbersGreaterThenOne(lineNumbers > 1);
+    }, [isPretty, content, showLineNumbers, formattedText]);
 
     return <React.Fragment>
         {content && content?.length > 0 && <EntrySectionContainer
@@ -201,9 +209,8 @@ export const EntryBodySection: React.FC<EntryBodySectionProps> = ({
             </div>
 
             <SyntaxHighlighter
-                code={formatTextBody(content)}
+                code={formattedText}
                 showLineNumbers={showLineNumbers}
-                setIsLineNumbersGreaterThenOne={setIsLineNumbersGreaterThenOne}
             />
 
         </EntrySectionContainer>}
