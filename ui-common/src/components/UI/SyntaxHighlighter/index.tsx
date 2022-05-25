@@ -27,20 +27,17 @@ interface Props {
     code: string;
     showLineNumbers?: boolean;
     language?: string;
-    setIsLineNumbersGreaterThenOne?: (flag: boolean) => void;
 }
 
 export const SyntaxHighlighter: React.FC<Props> = ({
     code,
     showLineNumbers = false,
     language = null,
-    setIsLineNumbersGreaterThenOne
 }) => {
     const [markers, setMarkers] = useState([])
 
     useEffect(() => {
         const newMarkers = code.split("\n").map((item, i) => {
-            setIsLineNumbersGreaterThenOne(i > 1 ? true : false);
             return {
                 line: i + 1,
                 className: styles.hljsMarkerLine

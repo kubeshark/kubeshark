@@ -8,6 +8,7 @@ import Checkbox from "../../UI/Checkbox";
 import ProtobufDecoder from "protobuf-decoder";
 import { default as jsonBeautify } from "json-beautify";
 import { default as xmlBeautify } from "xml-formatter";
+import { Utils } from "../../../helpers/Utils"
 
 interface EntryViewLineProps {
     label: string;
@@ -134,6 +135,11 @@ export const EntryBodySection: React.FC<EntryBodySectionProps> = ({
     const [isLineNumbersGreaterThenOne, setIsLineNumbersGreaterThenOne] = useState(true);
 
     useEffect(() => {
+        const lineNumbers = Utils.lineNumbersInString(formatTextBody(content));
+        setIsLineNumbersGreaterThenOne(lineNumbers > 1 );
+    }, [isPretty, content, showLineNumbers])
+
+    useEffect(() => {
         (isLineNumbersGreaterThenOne && isPretty) && setShowLineNumbers(true);
         !isLineNumbersGreaterThenOne && setShowLineNumbers(false);   
     }, [isLineNumbersGreaterThenOne, isPretty])
@@ -203,7 +209,6 @@ export const EntryBodySection: React.FC<EntryBodySectionProps> = ({
             <SyntaxHighlighter
                 code={formatTextBody(content)}
                 showLineNumbers={showLineNumbers}
-                setIsLineNumbersGreaterThenOne={setIsLineNumbersGreaterThenOne}
             />
 
         </EntrySectionContainer>}
