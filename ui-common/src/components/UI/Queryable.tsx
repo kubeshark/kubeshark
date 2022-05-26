@@ -54,7 +54,7 @@ const Queryable: React.FC<Props> = ({query, style, iconStyle, className, useTool
                 {flipped && addButton}
                 {children}
                 {!flipped && addButton}
-                {useTooltip && showTooltip && <span data-cy={"QueryableTooltip"} className={QueryableStyle.QueryableTooltip} style={tooltipStyle}>{query}</span>}
+                {useTooltip && showTooltip && (query !== "") && <span data-cy={"QueryableTooltip"} className={QueryableStyle.QueryableTooltip} style={tooltipStyle}>{query}</span>}
         </div>
     );
 };
