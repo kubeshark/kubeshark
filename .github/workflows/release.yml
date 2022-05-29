@@ -291,13 +291,6 @@ jobs:
           prerelease: ${{ github.ref != 'refs/heads/main' }}
           bodyFile: 'cli/bin/README.md'
       
-      - name: Trigger mizu ent helm upgrade on stg env
-        shell: bash
-        run: |
-          gh workflow run deploy-stg.yml -R up9inc/mizu-enterprise --ref develop
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-      
       - name: Slack notification on failure
         uses: ravsamhq/notify-slack-action@v1
         if: always()
