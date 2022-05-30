@@ -53,6 +53,12 @@ struct fd_info {
     __u8 flags;
 };
 
+struct socket {
+    __u32 pid;
+    __u32 fd;
+    __u32 key_dial;
+};
+
 #define BPF_MAP(_name, _type, _key_type, _value_type, _max_entries)     \
     struct bpf_map_def SEC("maps") _name = {                            \
         .type = _type,                                                  \
@@ -82,5 +88,9 @@ BPF_LRU_HASH(ssl_read_context, __u64, struct ssl_info);
 BPF_LRU_HASH(file_descriptor_to_ipv4, __u64, struct fd_info);
 BPF_PERF_OUTPUT(chunks_buffer);
 BPF_PERF_OUTPUT(log_buffer);
+
+BPF_LRU_HASH(golang_socket_dials, __u64, struct socket);
+BPF_LRU_HASH(golang_dial_writes, __u32, struct socket);
+BPF_RINGBUF(golang_read_writes);
 
 #endif /* __MAPS__ */

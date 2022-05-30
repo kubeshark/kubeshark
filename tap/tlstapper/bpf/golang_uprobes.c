@@ -9,16 +9,8 @@ Copyright (C) UP9 Inc.
 #include "include/headers.h"
 #include "include/maps.h"
 
-#define MAX_ENTRIES_LRU_HASH	(1 << 14)  // 16384
-#define MAX_ENTRIES_RINGBUFF	(1 << 24)  // 16777216
 #define BUFFER_SIZE_READ_WRITE  (1 << 19)  // 512 KiB
 
-
-struct socket {
-    __u32 pid;
-    __u32 fd;
-    __u32 key_dial;
-};
 
 struct golang_read_write {
     __u32 pid;
@@ -29,14 +21,6 @@ struct golang_read_write {
     __u32 cap;
     __u8 data[BUFFER_SIZE_READ_WRITE];
 };
-
-BPF_LRU_HASH(golang_socket_dials, __u64, struct socket);
-BPF_LRU_HASH(golang_dial_writes, __u32, struct socket);
-
-struct {
-    __uint(type, BPF_MAP_TYPE_RINGBUF);
-    __uint(max_entries, MAX_ENTRIES_RINGBUFF);
-} golang_read_writes SEC(".maps");
 
 const struct golang_read_write *unused __attribute__((unused));
 
