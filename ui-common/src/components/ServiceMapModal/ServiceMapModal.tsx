@@ -33,6 +33,11 @@ const modalStyle = {
     padding: "1px 1px",
     paddingBottom: "15px"
 };
+
+const protocolDisplayNameMap = {
+    "GQL": "GraphQL"
+}
+
 interface LegentLabelProps {
     color: string,
     name: string
@@ -119,7 +124,11 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
     const getProtocolsForFilter = useMemo(() => {
         return serviceMapApiData.edges.reduce<ProtocolType[]>((returnArr, currentValue, currentIndex, array) => {
             if (!returnArr.find(prot => prot.key === currentValue.protocol.abbr))
-                returnArr.push({ key: currentValue.protocol.abbr, value: currentValue.protocol.abbr, component: <LegentLabel color={currentValue.protocol.backgroundColor} name={currentValue.protocol.abbr} /> })
+                returnArr.push({
+                    key: currentValue.protocol.abbr, value: currentValue.protocol.abbr,
+                    component: <LegentLabel color={currentValue.protocol.backgroundColor}
+                        name={protocolDisplayNameMap[currentValue.protocol.abbr] ? protocolDisplayNameMap[currentValue.protocol.abbr] : currentValue.protocol.abbr} />
+                })
             return returnArr
         }, new Array<ProtocolType>())
     }, [serviceMapApiData])
@@ -221,12 +230,12 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
                                     <div className={styles.card}>
                                         <SelectList items={getProtocolsForFilter} checkBoxWidth="5%" tableName={"PROTOCOLS"} multiSelect={true}
                                             checkedValues={checkedProtocols} setCheckedValues={onProtocolsChange} tableClassName={styles.filters}
-                                            inputSearchClass={styles.servicesFilterSearch} isFilterable={false}/>
+                                            inputSearchClass={styles.servicesFilterSearch} isFilterable={false} />
                                     </div>
                                     <div className={styles.servicesFilterWrapper + ` ${styles.card}`}>
                                         <div className={styles.servicesFilterList}>
                                             <SelectList items={getServicesForFilter} tableName={"SERVICES"} tableClassName={styles.filters} multiSelect={true}
-                                                checkBoxWidth="5%" checkedValues={checkedServices} setCheckedValues={onServiceChanges} inputSearchClass={styles.servicesFilterSearch}/>
+                                                checkBoxWidth="5%" checkedValues={checkedServices} setCheckedValues={onServiceChanges} inputSearchClass={styles.servicesFilterSearch} />
                                         </div>
                                     </div>
                                 </div>
