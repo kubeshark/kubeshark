@@ -32,7 +32,11 @@ struct golang_read_write {
 
 BPF_LRU_HASH(golang_socket_dials, __u64, struct socket);
 BPF_LRU_HASH(golang_dial_writes, __u32, struct socket);
-BPF_RINGBUF(golang_read_writes);
+
+struct {
+    __uint(type, BPF_MAP_TYPE_RINGBUF);
+    __uint(max_entries, MAX_ENTRIES_RINGBUFF);
+} golang_read_writes SEC(".maps");
 
 const struct golang_read_write *unused __attribute__((unused));
 

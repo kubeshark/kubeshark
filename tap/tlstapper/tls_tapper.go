@@ -5,6 +5,7 @@ import (
 
 	"github.com/cilium/ebpf/rlimit"
 	"github.com/go-errors/errors"
+	ps "github.com/mitchellh/go-ps"
 	"github.com/up9inc/mizu/logger"
 	"github.com/up9inc/mizu/tap/api"
 )
@@ -14,12 +15,13 @@ const GLOABL_TAP_PID = 0
 //go:generate go run github.com/cilium/ebpf/cmd/bpf2go@0d0727ef53e2f53b1731c73f4c61e0f58693083a -type golang_read_write tlsTapper bpf/tls_tapper.c -- -O2 -g -D__TARGET_ARCH_x86
 
 type TlsTapper struct {
-	bpfObjects      tlsTapperObjects
-	syscallHooks    syscallHooks
-	sslHooksStructs []sslHooks
-	poller          *tlsPoller
-	bpfLogger       *bpfLogger
-	registeredPids  sync.Map
+	bpfObjects         tlsTapperObjects
+	syscallHooks       syscallHooks
+	sslHooksStructs    []sslHooks
+	golangHooksStructs []golangHooks
+	poller             *tlsPoller
+	bpfLogger          *bpfLogger
+	registeredPids     sync.Map
 }
 
 func (t *TlsTapper) Init(chunksBufferSize int, logBufferSize int, procfs string, extension *api.Extension) error {
@@ -65,10 +67,10 @@ func (t *TlsTapper) PollForLogging() {
 }
 
 func (t *TlsTapper) GlobalTap(sslLibrary string) error {
-	return t.tapPid(GLOABL_TAP_PID, sslLibrary, api.UNKNOWN_NAMESPACE)
+	return t.tapLibsslPid(GLOABL_TAP_PID, sslLibrary, api.UNKNOWN_NAMESPACE)
 }
 
-func (t *TlsTapper) AddPid(procfs string, pid uint32, namespace string) error {
+func (t *TlsTapper) AddSsllibPid(procfs string, pid uint32, namespace string) error {
 	sslLibrary, err := findSsllib(procfs, pid)
 
 	if err != nil {
@@ -76,7 +78,18 @@ func (t *TlsTapper) AddPid(procfs string, pid uint32, namespace string) error {
 		return nil // hide the error on purpose, its OK for a process to not use libssl.so
 	}
 
-	return t.tapPid(pid, sslLibrary, namespace)
+	return t.tapLibsslPid(pid, sslLibrary, namespace)
+}
+
+func (t *TlsTapper) AddGolangPid(procfs string, pid uint32, namespace string) error {
+	p, err := ps.FindProcess(int(pid))
+
+	if err != nil {
+		logger.Log.Infof("PID skipped not found (pid: %d) %v", pid, err)
+		return nil
+	}
+
+	return t.tapGolangPid(pid, p.Executable(), namespace)
 }
 
 func (t *TlsTapper) RemovePid(pid uint32) error {
@@ -141,7 +154,7 @@ func setupRLimit() error {
 	return nil
 }
 
-func (t *TlsTapper) tapPid(pid uint32, sslLibrary string, namespace string) error {
+func (t *TlsTapper) tapLibsslPid(pid uint32, sslLibrary string, namespace string) error {
 	logger.Log.Infof("Tapping TLS (pid: %v) (sslLibrary: %v)", pid, sslLibrary)
 
 	newSsl := sslHooks{}
@@ -151,6 +164,28 @@ func (t *TlsTapper) tapPid(pid uint32, sslLibrary string, namespace string) erro
 	}
 
 	t.sslHooksStructs = append(t.sslHooksStructs, newSsl)
+
+	t.poller.addPid(pid, namespace)
+
+	pids := t.bpfObjects.tlsTapperMaps.PidsMap
+
+	if err := pids.Put(pid, uint32(1)); err != nil {
+		return errors.Wrap(err, 0)
+	}
+
+	t.registeredPids.Store(pid, true)
+
+	return nil
+}
+
+func (t *TlsTapper) tapGolangPid(pid uint32, exePath string, namespace string) error {
+	hooks := golangHooks{}
+
+	if err := hooks.installUprobes(&t.bpfObjects, exePath); err != nil {
+		return err
+	}
+
+	t.golangHooksStructs = append(t.golangHooksStructs, hooks)
 
 	t.poller.addPid(pid, namespace)
 
