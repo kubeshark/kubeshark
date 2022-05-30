@@ -1,6 +1,7 @@
 package tlstapper
 
 import (
+	"strconv"
 	"sync"
 
 	"github.com/cilium/ebpf/rlimit"
@@ -67,8 +68,22 @@ func (t *TlsTapper) PollForLogging() {
 	t.bpfLogger.poll()
 }
 
-func (t *TlsTapper) GlobalTap(sslLibrary string) error {
+func (t *TlsTapper) GlobalSsllibTap(sslLibrary string) error {
 	return t.tapLibsslPid(GLOABL_TAP_PID, sslLibrary, api.UNKNOWN_NAMESPACE)
+}
+
+func (t *TlsTapper) GlobalGolangTap(_pid string) error {
+	pid, err := strconv.Atoi(_pid)
+	if err != nil {
+		return err
+	}
+	p, err := ps.FindProcess(pid)
+
+	if err != nil {
+		return err
+	}
+
+	return t.tapGolangPid(uint32(pid), p.Executable(), api.UNKNOWN_NAMESPACE)
 }
 
 func (t *TlsTapper) AddSsllibPid(procfs string, pid uint32, namespace string) error {
