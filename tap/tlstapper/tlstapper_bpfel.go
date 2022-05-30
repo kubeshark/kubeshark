@@ -77,9 +77,9 @@ type tlsTapperSpecs struct {
 //
 // It can be passed ebpf.CollectionSpec.Assign.
 type tlsTapperProgramSpecs struct {
+	GolangCryptoTlsReadUprobe   *ebpf.ProgramSpec `ebpf:"golang_crypto_tls_read_uprobe"`
 	GolangCryptoTlsWriteUprobe  *ebpf.ProgramSpec `ebpf:"golang_crypto_tls_write_uprobe"`
 	GolangNetHttpDialconnUprobe *ebpf.ProgramSpec `ebpf:"golang_net_http_dialconn_uprobe"`
-	GolangNetHttpReadUprobe     *ebpf.ProgramSpec `ebpf:"golang_net_http_read_uprobe"`
 	GolangNetSocketUprobe       *ebpf.ProgramSpec `ebpf:"golang_net_socket_uprobe"`
 	SslRead                     *ebpf.ProgramSpec `ebpf:"ssl_read"`
 	SslReadEx                   *ebpf.ProgramSpec `ebpf:"ssl_read_ex"`
@@ -169,9 +169,9 @@ func (m *tlsTapperMaps) Close() error {
 //
 // It can be passed to loadTlsTapperObjects or ebpf.CollectionSpec.LoadAndAssign.
 type tlsTapperPrograms struct {
+	GolangCryptoTlsReadUprobe   *ebpf.Program `ebpf:"golang_crypto_tls_read_uprobe"`
 	GolangCryptoTlsWriteUprobe  *ebpf.Program `ebpf:"golang_crypto_tls_write_uprobe"`
 	GolangNetHttpDialconnUprobe *ebpf.Program `ebpf:"golang_net_http_dialconn_uprobe"`
-	GolangNetHttpReadUprobe     *ebpf.Program `ebpf:"golang_net_http_read_uprobe"`
 	GolangNetSocketUprobe       *ebpf.Program `ebpf:"golang_net_socket_uprobe"`
 	SslRead                     *ebpf.Program `ebpf:"ssl_read"`
 	SslReadEx                   *ebpf.Program `ebpf:"ssl_read_ex"`
@@ -191,9 +191,9 @@ type tlsTapperPrograms struct {
 
 func (p *tlsTapperPrograms) Close() error {
 	return _TlsTapperClose(
+		p.GolangCryptoTlsReadUprobe,
 		p.GolangCryptoTlsWriteUprobe,
 		p.GolangNetHttpDialconnUprobe,
-		p.GolangNetHttpReadUprobe,
 		p.GolangNetSocketUprobe,
 		p.SslRead,
 		p.SslReadEx,

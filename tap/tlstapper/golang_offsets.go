@@ -21,7 +21,7 @@ const (
 	minimumSupportedGoVersion = "1.17.0"
 	golangVersionSymbol       = "runtime.buildVersion.str"
 	golangWriteSymbol         = "crypto/tls.(*Conn).Write"
-	golangReadSymbol          = "net/http.(*persistConn).Read"
+	golangReadSymbol          = "crypto/tls.(*Conn).Read"
 	golangSocketSymbol        = "net.socket"
 	golangDialSymbol          = "net/http.(*Transport).dialConn"
 )

@@ -62,9 +62,9 @@ func (s *golangHooks) installHooks(bpfObjects *tlsTapperObjects, ex *link.Execut
 	}
 
 	// Relative offset points to
-	// [`net/http.(*persistConn).Read+92`](https://github.com/golang/go/blob/fe4de36198794c447fbd9d7cc2d7199a506c76a5/src/net/http/transport.go#L1929)
-	s.golangReadProbe, err = ex.Uprobe(golangReadSymbol, bpfObjects.GolangNetHttpReadUprobe, &link.UprobeOptions{
-		Offset: offsets.GolangReadOffset + 0x5c,
+	// [`crypto/tls.(*Conn).Read+559`](https://github.com/golang/go/blob/fe4de36198794c447fbd9d7cc2d7199a506c76a5/src/crypto/tls/conn.go#L1306)
+	s.golangReadProbe, err = ex.Uprobe(golangReadSymbol, bpfObjects.GolangCryptoTlsReadUprobe, &link.UprobeOptions{
+		Offset: offsets.GolangReadOffset + 0x22f,
 	})
 
 	if err != nil {

@@ -51,7 +51,7 @@ static __always_inline int golang_crypto_tls_write_uprobe(struct pt_regs *ctx) {
     __u64 pid_tgid = bpf_get_current_pid_tgid();
     b->pid = pid_tgid >> 32;
     b->fd = s->fd;
-    // ctx->rsi is common between golang_crypto_tls_write_uprobe and golang_net_http_read_uprobe
+    // ctx->rsi is common between golang_crypto_tls_write_uprobe and golang_crypto_tls_read_uprobe
     b->conn_addr = ctx->rsi; // go.itab.*net.TCPConn,net.Conn address
     b->is_request = true;
     b->len = ctx->rcx;
@@ -69,8 +69,8 @@ static __always_inline int golang_crypto_tls_write_uprobe(struct pt_regs *ctx) {
     return 0;
 }
 
-SEC("uprobe/golang_net_http_read")
-static __always_inline int golang_net_http_read_uprobe(struct pt_regs *ctx) {
+SEC("uprobe/golang_crypto_tls_read")
+static __always_inline int golang_crypto_tls_read_uprobe(struct pt_regs *ctx) {
     struct golang_read_write *b = NULL;
     b = bpf_ringbuf_reserve(&golang_read_writes, sizeof(struct golang_read_write), 0);
     if (!b) {
@@ -79,15 +79,16 @@ static __always_inline int golang_net_http_read_uprobe(struct pt_regs *ctx) {
 
     __u64 pid_tgid = bpf_get_current_pid_tgid();
     b->pid = pid_tgid >> 32;
-    // ctx->rsi is common between golang_crypto_tls_write_uprobe and golang_net_http_read_uprobe
+    // ctx->rsi is common between golang_crypto_tls_write_uprobe and golang_crypto_tls_read_uprobe
     b->conn_addr = ctx->rsi; // go.itab.*net.TCPConn,net.Conn address
     b->is_request = false;
     b->len = ctx->rax;
     b->cap = ctx->r10;
 
-    __u32 status = bpf_probe_read_str(&b->data, sizeof(b->data), (void*)ctx->r8);
+    // Address at ctx->rbx - 0x2bf holds the data
+    __u32 status = bpf_probe_read_str(&b->data, sizeof(b->data), (void*)(ctx->rbx - 0x2bf));
     if (status < 0) {
-        bpf_printk("[golang_net_http_read_uprobe] error reading data: %d", status);
+        bpf_printk("[golang_crypto_tls_read_uprobe] error reading data: %d", status);
         bpf_ringbuf_discard(b, BPF_RB_FORCE_WAKEUP);
         return 0;
     }
