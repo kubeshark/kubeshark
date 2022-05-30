@@ -34,7 +34,7 @@ func (s *golangHooks) installHooks(bpfObjects *tlsTapperObjects, ex *link.Execut
 	// Relative offset points to
 	// [`net/http.(*Transport).dialConn+412`](https://github.com/golang/go/blob/fe4de36198794c447fbd9d7cc2d7199a506c76a5/src/net/http/transport.go#L1564)
 	s.golangDialProbe, err = ex.Uprobe(golangDialSymbol, bpfObjects.GolangNetHttpDialconnUprobe, &link.UprobeOptions{
-		Offset: offsets.GolangWriteOffset + 0x19c,
+		Offset: offsets.GolangDialOffset + 0x19c,
 	})
 
 	if err != nil {
@@ -44,7 +44,7 @@ func (s *golangHooks) installHooks(bpfObjects *tlsTapperObjects, ex *link.Execut
 	// Relative offset points to
 	// [`net.socket+127`](https://github.com/golang/go/blob/fe4de36198794c447fbd9d7cc2d7199a506c76a5/src/net/sock_posix.go#L23)
 	s.golangSocketProbe, err = ex.Uprobe(golangSocketSymbol, bpfObjects.GolangNetSocketUprobe, &link.UprobeOptions{
-		Offset: offsets.GolangWriteOffset + 0x7f,
+		Offset: offsets.GolangSocketOffset + 0x7f,
 	})
 
 	if err != nil {
@@ -63,7 +63,7 @@ func (s *golangHooks) installHooks(bpfObjects *tlsTapperObjects, ex *link.Execut
 
 	// Relative offset points to
 	// [`net/http.(*persistConn).Read+92`](https://github.com/golang/go/blob/fe4de36198794c447fbd9d7cc2d7199a506c76a5/src/net/http/transport.go#L1929)
-	s.golangReadProbe, err = ex.Uprobe(golangWriteSymbol, bpfObjects.GolangNetHttpReadUprobe, &link.UprobeOptions{
+	s.golangReadProbe, err = ex.Uprobe(golangReadSymbol, bpfObjects.GolangNetHttpReadUprobe, &link.UprobeOptions{
 		Offset: offsets.GolangReadOffset + 0x5c,
 	})
 

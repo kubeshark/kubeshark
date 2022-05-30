@@ -67,10 +67,10 @@ func findGolangOffsets(filePath string) (golangOffsets, error) {
 	}
 
 	return golangOffsets{
+		GolangDialOffset:   dialOffset,
+		GolangSocketOffset: socketOffset,
 		GolangWriteOffset:  writeOffset,
 		GolangReadOffset:   readOffset,
-		GolangSocketOffset: socketOffset,
-		GolangDialOffset:   dialOffset,
 	}, nil
 }
 

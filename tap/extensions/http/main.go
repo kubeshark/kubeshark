@@ -186,6 +186,8 @@ func (d dissecting) Dissect(b *bufio.Reader, reader api.TcpReader, options *api.
 			}
 		} else {
 			switchingProtocolsHTTP2, err = handleHTTP1ServerStream(b, reader.GetReadProgress(), reader.GetParent().GetOrigin(), reader.GetTcpID(), reader.GetCounterPair(), reader.GetCaptureTime(), reader.GetEmitter(), options, reqResMatcher)
+			// TODO: Golang TLS malformed HTTP response
+			fmt.Printf("err: %v\n", err)
 			if err == io.EOF || err == io.ErrUnexpectedEOF {
 				break
 			} else if err != nil {

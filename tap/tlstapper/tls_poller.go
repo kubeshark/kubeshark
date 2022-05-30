@@ -172,6 +172,16 @@ func (p *tlsPoller) pollGolangReadWrite(rd *ringbuf.Reader, emitter api.Emitter,
 		}
 
 		if connection.GotRequest && connection.GotResponse {
+			// TODO: Remove these comments
+			// fmt.Printf("\n\nconnection.Pid: %v\n", connection.Pid)
+			// fmt.Printf("connection.ConnAddr: 0x%x\n", connection.ConnAddr)
+			// fmt.Printf("connection.AddressPair.srcIp: %v\n", connection.AddressPair.srcIp)
+			// fmt.Printf("connection.AddressPair.srcPort: %v\n", connection.AddressPair.srcPort)
+			// fmt.Printf("connection.AddressPair.dstIp: %v\n", connection.AddressPair.dstIp)
+			// fmt.Printf("connection.AddressPair.dstPort: %v\n", connection.AddressPair.dstPort)
+			// fmt.Printf("connection.Request:\n%v\n", unix.ByteSliceToString(connection.Request))
+			// fmt.Printf("connection.Response:\n%v\n", unix.ByteSliceToString(connection.Response))
+
 			tcpid := p.buildTcpId(&connection.AddressPair)
 
 			tlsEmitter := &tlsEmitter{
@@ -188,7 +198,7 @@ func (p *tlsPoller) pollGolangReadWrite(rd *ringbuf.Reader, emitter api.Emitter,
 				extension:     p.extension,
 				emitter:       tlsEmitter,
 				counterPair:   &api.CounterPair{},
-				reqResMatcher: p.reqResMatcher,
+				reqResMatcher: p.extension.Dissector.NewResponseRequestMatcher(),
 			}
 
 			stream := &tlsStream{
@@ -211,6 +221,7 @@ func (p *tlsPoller) pollGolangReadWrite(rd *ringbuf.Reader, emitter api.Emitter,
 				SrcPort: reader.tcpID.DstPort,
 				DstPort: reader.tcpID.SrcPort,
 			}
+			reader.progress = &api.ReadProgress{}
 
 			err = p.extension.Dissector.Dissect(bufio.NewReader(bytes.NewReader(connection.Response)), reader, options)
 

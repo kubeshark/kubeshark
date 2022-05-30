@@ -137,7 +137,7 @@ static __always_inline int golang_net_http_dialconn_uprobe(struct pt_regs *ctx) 
     __u64 key_socket = (pid << 32) + ctx->r14;
     status = bpf_map_update_elem(&golang_socket_dials, &key_socket, &b, BPF_ANY);
     if (status != 0) {
-        bpf_printk("[golang_net_socket_uprobe] error setting socket: %d", status);
+        bpf_printk("[golang_net_http_dialconn_uprobe] error setting socket: %d", status);
     }
 
     return 0;
