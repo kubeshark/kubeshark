@@ -16,7 +16,7 @@ Copyright (C) UP9 Inc.
 // One minute in nano seconds. Chosen by gut feeling.
 #define SSL_INFO_MAX_TTL_NANO (1000000000l * 60l)
 
-#define MAX_ENTRIES_HASH	    (1 << 12)  // 4096
+#define MAX_ENTRIES_HASH        (1 << 12)  // 4096
 #define MAX_ENTRIES_PERF_OUTPUT	(1 << 10)  // 1024
 #define MAX_ENTRIES_LRU_HASH	(1 << 14)  // 16384
 #define MAX_ENTRIES_RINGBUFF	(1 << 24)  // 16777216
