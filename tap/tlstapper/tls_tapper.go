@@ -82,7 +82,7 @@ func (t *TlsTapper) AddSsllibPid(procfs string, pid uint32, namespace string) er
 	return t.tapLibsslPid(pid, sslLibrary, namespace)
 }
 
-func (t *TlsTapper) AddGolangPid(procfs string, pid uint32, namespace string) error {
+func (t *TlsTapper) AddGolangPid(pid uint32, namespace string) error {
 	p, err := ps.FindProcess(int(pid))
 
 	if err != nil {
