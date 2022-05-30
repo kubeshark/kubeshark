@@ -134,6 +134,10 @@ func (t *TlsTapper) Close() []error {
 		errors = append(errors, sslHooks.close()...)
 	}
 
+	for _, golangHooks := range t.golangHooksStructs {
+		errors = append(errors, golangHooks.close()...)
+	}
+
 	if err := t.bpfLogger.close(); err != nil {
 		errors = append(errors, err)
 	}
