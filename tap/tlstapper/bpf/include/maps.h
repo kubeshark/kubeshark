@@ -16,6 +16,11 @@ Copyright (C) UP9 Inc.
 // One minute in nano seconds. Chosen by gut feeling.
 #define SSL_INFO_MAX_TTL_NANO (1000000000l * 60l)
 
+#define MAX_ENTRIES_HASH	    (1 << 12)  // 4096
+#define MAX_ENTRIES_PERF_OUTPUT	(1 << 10)  // 1024
+#define MAX_ENTRIES_LRU_HASH	(1 << 14)  // 16384
+#define MAX_ENTRIES_RINGBUFF	(1 << 24)  // 16777216
+
 // The same struct can be found in chunk.go
 //  
 //  Be careful when editing, alignment and padding should be exactly the same in go/c.
@@ -57,13 +62,19 @@ struct fd_info {
     };
 
 #define BPF_HASH(_name, _key_type, _value_type) \
-    BPF_MAP(_name, BPF_MAP_TYPE_HASH, _key_type, _value_type, 4096)
+    BPF_MAP(_name, BPF_MAP_TYPE_HASH, _key_type, _value_type, MAX_ENTRIES_HASH)
 
 #define BPF_PERF_OUTPUT(_name) \
-    BPF_MAP(_name, BPF_MAP_TYPE_PERF_EVENT_ARRAY, int, __u32, 1024)
-    
+    BPF_MAP(_name, BPF_MAP_TYPE_PERF_EVENT_ARRAY, int, __u32, MAX_ENTRIES_PERF_OUTPUT)
+
 #define BPF_LRU_HASH(_name, _key_type, _value_type) \
-    BPF_MAP(_name, BPF_MAP_TYPE_LRU_HASH, _key_type, _value_type, 16384)
+    BPF_MAP(_name, BPF_MAP_TYPE_LRU_HASH, _key_type, _value_type, MAX_ENTRIES_LRU_HASH)
+
+#define BPF_RINGBUF(_name)                              \
+    struct {                                            \
+        __uint(type, BPF_MAP_TYPE_RINGBUF);             \
+        __uint(max_entries, MAX_ENTRIES_RINGBUFF);      \
+    } _name SEC(".maps");                               \
 
 BPF_HASH(pids_map, __u32, __u32);
 BPF_LRU_HASH(ssl_write_context, __u64, struct ssl_info);
