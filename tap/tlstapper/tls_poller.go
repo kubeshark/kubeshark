@@ -88,7 +88,7 @@ func (p *tlsPoller) close() error {
 	return p.chunksReader.Close()
 }
 
-func (p *tlsPoller) pollLibssl(emitter api.Emitter, options *api.TrafficFilteringOptions, streamsMap api.TcpStreamMap) {
+func (p *tlsPoller) pollSsllib(emitter api.Emitter, options *api.TrafficFilteringOptions, streamsMap api.TcpStreamMap) {
 	chunks := make(chan *tlsChunk)
 
 	go p.pollChunksPerfBuffer(chunks)

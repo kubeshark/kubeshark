@@ -60,7 +60,7 @@ func (t *TlsTapper) Init(chunksBufferSize int, logBufferSize int, procfs string,
 }
 
 func (t *TlsTapper) Poll(emitter api.Emitter, options *api.TrafficFilteringOptions, streamsMap api.TcpStreamMap) {
-	t.poller.pollLibssl(emitter, options, streamsMap)
+	t.poller.pollSsllib(emitter, options, streamsMap)
 	t.poller.pollGolang(emitter, options, streamsMap)
 }
 
@@ -69,7 +69,7 @@ func (t *TlsTapper) PollForLogging() {
 }
 
 func (t *TlsTapper) GlobalSsllibTap(sslLibrary string) error {
-	return t.tapLibsslPid(GLOABL_TAP_PID, sslLibrary, api.UNKNOWN_NAMESPACE)
+	return t.tapSsllibPid(GLOABL_TAP_PID, sslLibrary, api.UNKNOWN_NAMESPACE)
 }
 
 func (t *TlsTapper) GlobalGolangTap(_pid string) error {
@@ -94,7 +94,7 @@ func (t *TlsTapper) AddSsllibPid(procfs string, pid uint32, namespace string) er
 		return nil // hide the error on purpose, its OK for a process to not use libssl.so
 	}
 
-	return t.tapLibsslPid(pid, sslLibrary, namespace)
+	return t.tapSsllibPid(pid, sslLibrary, namespace)
 }
 
 func (t *TlsTapper) AddGolangPid(pid uint32, namespace string) error {
@@ -174,7 +174,7 @@ func setupRLimit() error {
 	return nil
 }
 
-func (t *TlsTapper) tapLibsslPid(pid uint32, sslLibrary string, namespace string) error {
+func (t *TlsTapper) tapSsllibPid(pid uint32, sslLibrary string, namespace string) error {
 	logger.Log.Infof("Tapping TLS (pid: %v) (sslLibrary: %v)", pid, sslLibrary)
 
 	newSsl := sslHooks{}
