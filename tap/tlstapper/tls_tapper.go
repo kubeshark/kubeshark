@@ -1,12 +1,13 @@
 package tlstapper
 
 import (
+	"fmt"
+	"os"
 	"strconv"
 	"sync"
 
 	"github.com/cilium/ebpf/rlimit"
 	"github.com/go-errors/errors"
-	ps "github.com/mitchellh/go-ps"
 	"github.com/up9inc/mizu/logger"
 	"github.com/up9inc/mizu/tap/api"
 )
@@ -72,18 +73,17 @@ func (t *TlsTapper) GlobalSsllibTap(sslLibrary string) error {
 	return t.tapSsllibPid(GLOABL_TAP_PID, sslLibrary, api.UNKNOWN_NAMESPACE)
 }
 
-func (t *TlsTapper) GlobalGolangTap(_pid string) error {
-	pid, err := strconv.Atoi(_pid)
-	if err != nil {
-		return err
-	}
-	p, err := ps.FindProcess(pid)
-
+func (t *TlsTapper) GlobalGolangTap(procfs string, pid string) error {
+	_pid, err := strconv.Atoi(pid)
 	if err != nil {
 		return err
 	}
 
-	return t.tapGolangPid(uint32(pid), p.Executable(), api.UNKNOWN_NAMESPACE)
+	if err != nil {
+		return err
+	}
+
+	return t.tapGolangPid(procfs, uint32(_pid), api.UNKNOWN_NAMESPACE)
 }
 
 func (t *TlsTapper) AddSsllibPid(procfs string, pid uint32, namespace string) error {
@@ -97,15 +97,8 @@ func (t *TlsTapper) AddSsllibPid(procfs string, pid uint32, namespace string) er
 	return t.tapSsllibPid(pid, sslLibrary, namespace)
 }
 
-func (t *TlsTapper) AddGolangPid(pid uint32, namespace string) error {
-	p, err := ps.FindProcess(int(pid))
-
-	if err != nil {
-		logger.Log.Infof("PID skipped not found (pid: %d) %v", pid, err)
-		return nil
-	}
-
-	return t.tapGolangPid(pid, p.Executable(), namespace)
+func (t *TlsTapper) AddGolangPid(procfs string, pid uint32, namespace string) error {
+	return t.tapGolangPid(procfs, pid, namespace)
 }
 
 func (t *TlsTapper) RemovePid(pid uint32) error {
@@ -198,7 +191,12 @@ func (t *TlsTapper) tapSsllibPid(pid uint32, sslLibrary string, namespace string
 	return nil
 }
 
-func (t *TlsTapper) tapGolangPid(pid uint32, exePath string, namespace string) error {
+func (t *TlsTapper) tapGolangPid(procfs string, pid uint32, namespace string) error {
+	exePath, err := os.Readlink(fmt.Sprintf("%s/%d/exe", procfs, pid))
+	if err != nil {
+		return err
+	}
+
 	hooks := golangHooks{}
 
 	if err := hooks.installUprobes(&t.bpfObjects, exePath); err != nil {

@@ -81,6 +81,8 @@ func (p *tlsPoller) init(bpfObjects *tlsTapperObjects, bufferSize int) error {
 		return errors.Wrap(err, 0)
 	}
 
+	p.golangReadWriteMap = orderedmap.New()
+
 	return nil
 }
 
