@@ -17,8 +17,6 @@ struct golang_read_write {
     __u32 fd;
     __u32 conn_addr;
     bool is_request;
-    __u32 len;
-    __u32 cap;
     __u8 data[BUFFER_SIZE_READ_WRITE];
 };
 
@@ -54,8 +52,6 @@ static __always_inline int golang_crypto_tls_write_uprobe(struct pt_regs *ctx) {
     // ctx->rsi is common between golang_crypto_tls_write_uprobe and golang_crypto_tls_read_uprobe
     b->conn_addr = ctx->rsi; // go.itab.*net.TCPConn,net.Conn address
     b->is_request = true;
-    b->len = ctx->rcx;
-    b->cap = ctx->rdi;
 
     status = bpf_probe_read_str(&b->data, sizeof(b->data), (void*)ctx->rbx);
     if (status < 0) {
@@ -82,8 +78,6 @@ static __always_inline int golang_crypto_tls_read_uprobe(struct pt_regs *ctx) {
     // ctx->rsi is common between golang_crypto_tls_write_uprobe and golang_crypto_tls_read_uprobe
     b->conn_addr = ctx->rsi; // go.itab.*net.TCPConn,net.Conn address
     b->is_request = false;
-    b->len = ctx->rax;
-    b->cap = ctx->r10;
 
     // Address at ctx->rbx - 0x2bf holds the data
     __u32 status = bpf_probe_read_str(&b->data, sizeof(b->data), (void*)(ctx->rbx - 0x2bf));
