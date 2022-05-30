@@ -15,6 +15,7 @@ require (
 	github.com/up9inc/mizu/tap/api v0.0.0
 	github.com/up9inc/mizu/tap/dbgctl v0.0.0
 	github.com/vishvananda/netns v0.0.0-20211101163701-50045581ed74
+	github.com/wk8/go-ordered-map v1.0.0
 	k8s.io/api v0.23.3
 )
 

@@ -59,7 +59,8 @@ func (t *TlsTapper) Init(chunksBufferSize int, logBufferSize int, procfs string,
 }
 
 func (t *TlsTapper) Poll(emitter api.Emitter, options *api.TrafficFilteringOptions, streamsMap api.TcpStreamMap) {
-	t.poller.poll(emitter, options, streamsMap)
+	t.poller.pollLibssl(emitter, options, streamsMap)
+	t.poller.pollGolang(emitter, options, streamsMap)
 }
 
 func (t *TlsTapper) PollForLogging() {
