@@ -23,7 +23,6 @@ const (
 	HumanMaxEntriesDBSizeTapName  = "max-entries-db-size"
 	InsertionFilterName           = "insertion-filter"
 	DryRunTapName                 = "dry-run"
-	WorkspaceTapName              = "workspace"
 	EnforcePolicyFile             = "traffic-validation-file"
 	ContractFile                  = "contract"
 	ServiceMeshName               = "service-mesh"

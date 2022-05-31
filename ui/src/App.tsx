@@ -1,4 +1,3 @@
-import { useState } from 'react';
 import './App.sass';
 import { Header } from "./components/Header/Header";
 import { TrafficPage } from "./components/Pages/TrafficPage/TrafficPage";
