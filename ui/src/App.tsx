@@ -13,14 +13,13 @@ const api = Api.getInstance()
 
 const App = () => {
 
-    const [analyzeStatus, setAnalyzeStatus] = useState(null);
     const [serviceMapModalOpen, setServiceMapModalOpen] = useRecoilState(serviceMapModalOpenAtom);
     const [oasModalOpen, setOasModalOpen] = useRecoilState(oasModalOpenAtom)
 
     return (
         <div className="mizuApp">
-            <Header analyzeStatus={analyzeStatus} />
-            <TrafficPage setAnalyzeStatus={setAnalyzeStatus} />
+            <Header />
+            <TrafficPage />
             {window["isServiceMapEnabled"] && <ServiceMapModal
                 isOpen={serviceMapModalOpen}
                 onOpen={() => setServiceMapModalOpen(true)}

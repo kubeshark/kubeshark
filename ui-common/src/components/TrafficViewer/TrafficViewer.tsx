@@ -43,7 +43,6 @@ const useLayoutStyles = makeStyles(() => ({
 }));
 
 interface TrafficViewerProps {
-  setAnalyzeStatus?: (status: any) => void;
   api?: any
   trafficViewerApiProp: TrafficViewerApi,
   actionButtons?: JSX.Element,
@@ -55,7 +54,7 @@ interface TrafficViewerProps {
 }
 
 export const TrafficViewer: React.FC<TrafficViewerProps> = ({
-                                                              setAnalyzeStatus, trafficViewerApiProp,
+                                                              trafficViewerApiProp,
                                                               actionButtons, isShowStatusBar, webSocketUrl,
                                                               shouldCloseWebSocket, setShouldCloseWebSocket, isDemoBannerView
                                                             }) => {
@@ -176,10 +175,6 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({
       try {
         const tapStatusResponse = await trafficViewerApiProp.tapStatus();
         setTappingStatus(tapStatusResponse);
-        if (setAnalyzeStatus) {
-          const analyzeStatusResponse = await trafficViewerApiProp.analyzeStatus();
-          setAnalyzeStatus(analyzeStatusResponse);
-        }
       } catch (error) {
         console.error(error);
       }
@@ -292,16 +287,16 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({
   );
 };
 
-const MemoiedTrafficViewer = React.memo(TrafficViewer)
+const MemorizedTrafficViewer = React.memo(TrafficViewer)
 const TrafficViewerContainer: React.FC<TrafficViewerProps> = ({
-                                                                setAnalyzeStatus, trafficViewerApiProp,
+                                                                trafficViewerApiProp,
                                                                 actionButtons, isShowStatusBar = true,
                                                                 webSocketUrl, shouldCloseWebSocket, setShouldCloseWebSocket, isDemoBannerView
                                                               }) => {
   return <RecoilRoot>
-    <MemoiedTrafficViewer actionButtons={actionButtons} isShowStatusBar={isShowStatusBar} webSocketUrl={webSocketUrl}
+    <MemorizedTrafficViewer actionButtons={actionButtons} isShowStatusBar={isShowStatusBar} webSocketUrl={webSocketUrl}
                           shouldCloseWebSocket={shouldCloseWebSocket} setShouldCloseWebSocket={setShouldCloseWebSocket} trafficViewerApiProp={trafficViewerApiProp}
-                          setAnalyzeStatus={setAnalyzeStatus} isDemoBannerView={isDemoBannerView}/>
+                          isDemoBannerView={isDemoBannerView}/>
     <ToastContainer enableMultiContainer containerId={TOAST_CONTAINER_ID}
                     position="bottom-right"
                     autoClose={5000}
