@@ -11,7 +11,6 @@ import (
 	"github.com/up9inc/mizu/agent/pkg/providers"
 	"github.com/up9inc/mizu/agent/pkg/providers/tappedPods"
 	"github.com/up9inc/mizu/agent/pkg/providers/tappers"
-	"github.com/up9inc/mizu/agent/pkg/up9"
 	"github.com/up9inc/mizu/agent/pkg/validation"
 	"github.com/up9inc/mizu/logger"
 	"github.com/up9inc/mizu/shared"
@@ -84,10 +83,6 @@ func GetAuthStatus(c *gin.Context) {
 func GetTappingStatus(c *gin.Context) {
 	tappedPodsStatus := tappedPods.GetTappedPodsStatus()
 	c.JSON(http.StatusOK, tappedPodsStatus)
-}
-
-func AnalyzeInformation(c *gin.Context) {
-	c.JSON(http.StatusOK, up9.GetAnalyzeInfo())
 }
 
 func GetGeneralStats(c *gin.Context) {

@@ -24,7 +24,6 @@ import (
 	"github.com/up9inc/mizu/agent/pkg/oas"
 	"github.com/up9inc/mizu/agent/pkg/routes"
 	"github.com/up9inc/mizu/agent/pkg/servicemap"
-	"github.com/up9inc/mizu/agent/pkg/up9"
 	"github.com/up9inc/mizu/agent/pkg/utils"
 
 	"github.com/up9inc/mizu/agent/pkg/api"
@@ -145,13 +144,6 @@ func runInApiServerMode(namespace string) *gin.Engine {
 
 	enableExpFeatureIfNeeded()
 
-	syncEntriesConfig := getSyncEntriesConfig()
-	if syncEntriesConfig != nil {
-		if err := up9.SyncEntries(syncEntriesConfig); err != nil {
-			logger.Log.Error("Error syncing entries, err: %v", err)
-		}
-	}
-
 	return hostApi(app.GetEntryInputChannel())
 }
 
@@ -216,21 +208,6 @@ func enableExpFeatureIfNeeded() {
 		serviceMapGenerator := dependency.GetInstance(dependency.ServiceMapGeneratorDependency).(servicemap.ServiceMap)
 		serviceMapGenerator.Enable()
 	}
-}
-
-func getSyncEntriesConfig() *shared.SyncEntriesConfig {
-	syncEntriesConfigJson := os.Getenv(shared.SyncEntriesConfigEnvVar)
-	if syncEntriesConfigJson == "" {
-		return nil
-	}
-
-	var syncEntriesConfig = &shared.SyncEntriesConfig{}
-	err := json.Unmarshal([]byte(syncEntriesConfigJson), syncEntriesConfig)
-	if err != nil {
-		panic(fmt.Sprintf("env var %s's value of %s is invalid! json must match the shared.SyncEntriesConfig struct, err: %v", shared.SyncEntriesConfigEnvVar, syncEntriesConfigJson, err))
-	}
-
-	return syncEntriesConfig
 }
 
 func disableRootStaticCache() gin.HandlerFunc {

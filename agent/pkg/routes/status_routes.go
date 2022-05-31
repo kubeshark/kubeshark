@@ -17,8 +17,6 @@ func StatusRoutes(ginApp *gin.Engine) {
 
 	routeGroup.GET("/auth", controllers.GetAuthStatus)
 
-	routeGroup.GET("/analyze", controllers.AnalyzeInformation)
-
 	routeGroup.GET("/general", controllers.GetGeneralStats) // get general stats about entries in DB
 
 	routeGroup.GET("/resolving", controllers.GetCurrentResolvingInformation)
