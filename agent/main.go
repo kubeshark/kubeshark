@@ -71,13 +71,13 @@ func main() {
 	} else if *tapperMode {
 		runInTapperMode()
 	} else if *apiServerMode {
-		app := runInApiServerMode(*namespace)
+		ginApp := runInApiServerMode(*namespace)
 
 		if *profiler {
-			pprof.Register(app)
+			pprof.Register(ginApp)
 		}
 
-		utils.StartServer(app)
+		utils.StartServer(ginApp)
 
 	} else if *harsReaderMode {
 		runInHarReaderMode()
@@ -91,9 +91,9 @@ func main() {
 }
 
 func hostApi(socketHarOutputChannel chan<- *tapApi.OutputChannelItem) *gin.Engine {
-	app := gin.Default()
+	ginApp := gin.Default()
 
-	app.GET("/echo", func(c *gin.Context) {
+	ginApp.GET("/echo", func(c *gin.Context) {
 		c.JSON(http.StatusOK, "Here is Mizu agent")
 	})
 
@@ -101,7 +101,7 @@ func hostApi(socketHarOutputChannel chan<- *tapApi.OutputChannelItem) *gin.Engin
 		SocketOutChannel: socketHarOutputChannel,
 	}
 
-	app.Use(disableRootStaticCache())
+	ginApp.Use(disableRootStaticCache())
 
 	staticFolder := "./site"
 	indexStaticFile := staticFolder + "/index.html"
@@ -109,30 +109,30 @@ func hostApi(socketHarOutputChannel chan<- *tapApi.OutputChannelItem) *gin.Engin
 		logger.Log.Errorf("Error setting ui flags, err: %v", err)
 	}
 
-	app.Use(static.ServeRoot("/", staticFolder))
-	app.NoRoute(func(c *gin.Context) {
+	ginApp.Use(static.ServeRoot("/", staticFolder))
+	ginApp.NoRoute(func(c *gin.Context) {
 		c.File(indexStaticFile)
 	})
 
-	app.Use(middlewares.CORSMiddleware()) // This has to be called after the static middleware, does not work if its called before
+	ginApp.Use(middlewares.CORSMiddleware()) // This has to be called after the static middleware, does not work if it's called before
 
-	api.WebSocketRoutes(app, &eventHandlers)
+	api.WebSocketRoutes(ginApp, &eventHandlers)
 
 	if config.Config.OAS {
-		routes.OASRoutes(app)
+		routes.OASRoutes(ginApp)
 	}
 
 	if config.Config.ServiceMap {
-		routes.ServiceMapRoutes(app)
+		routes.ServiceMapRoutes(ginApp)
 	}
 
-	routes.QueryRoutes(app)
-	routes.EntriesRoutes(app)
-	routes.MetadataRoutes(app)
-	routes.StatusRoutes(app)
-	routes.DbRoutes(app)
+	routes.QueryRoutes(ginApp)
+	routes.EntriesRoutes(ginApp)
+	routes.MetadataRoutes(ginApp)
+	routes.StatusRoutes(ginApp)
+	routes.DbRoutes(ginApp)
 
-	return app
+	return ginApp
 }
 
 func runInApiServerMode(namespace string) *gin.Engine {
