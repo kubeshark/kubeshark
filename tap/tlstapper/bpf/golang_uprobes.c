@@ -79,8 +79,8 @@ static __always_inline int golang_crypto_tls_read_uprobe(struct pt_regs *ctx) {
     b->conn_addr = ctx->rsi; // go.itab.*net.TCPConn,net.Conn address
     b->is_request = false;
 
-    // Address at ctx->rbx - 0x2bf holds the data
-    __u32 status = bpf_probe_read_str(&b->data, sizeof(b->data), (void*)(ctx->rbx - 0x2bf));
+    // Address at ctx->rbx & 0xfffffff000 holds the data
+    __u32 status = bpf_probe_read_str(&b->data, sizeof(b->data), (void*)(ctx->rbx & 0xfffffff000));
     if (status < 0) {
         bpf_printk("[golang_crypto_tls_read_uprobe] error reading data: %d", status);
         bpf_ringbuf_discard(b, BPF_RB_FORCE_WAKEUP);
