@@ -56,7 +56,7 @@ struct fd_info {
 struct socket {
     __u32 pid;
     __u32 fd;
-    __u32 key_dial;
+    __u64 key_dial;
 };
 
 #define BPF_MAP(_name, _type, _key_type, _value_type, _max_entries)     \
@@ -90,7 +90,7 @@ BPF_PERF_OUTPUT(chunks_buffer);
 BPF_PERF_OUTPUT(log_buffer);
 
 BPF_LRU_HASH(golang_socket_dials, __u64, struct socket);
-BPF_LRU_HASH(golang_dial_writes, __u32, struct socket);
+BPF_LRU_HASH(golang_dial_writes, __u64, struct socket);
 BPF_RINGBUF(golang_read_writes);
 
 #endif /* __MAPS__ */
