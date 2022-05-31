@@ -31,7 +31,6 @@ import (
 	applyconfmeta "k8s.io/client-go/applyconfigurations/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
-	"k8s.io/client-go/rest"
 	restclient "k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/clientcmd"
@@ -85,25 +84,6 @@ func NewProvider(kubeConfigPath string, contextName string) (*Provider, error) {
 		clientConfig:     *restClientConfig,
 		managedBy:        LabelValueMizu,
 		createdBy:        LabelValueMizuCLI,
-	}, nil
-}
-
-func NewProviderInCluster() (*Provider, error) {
-	restClientConfig, err := rest.InClusterConfig()
-	if err != nil {
-		return nil, err
-	}
-	clientSet, err := getClientSet(restClientConfig)
-	if err != nil {
-		return nil, err
-	}
-
-	return &Provider{
-		clientSet:        clientSet,
-		kubernetesConfig: nil, // not relevant in cluster
-		clientConfig:     *restClientConfig,
-		managedBy:        LabelValueMizu,
-		createdBy:        LabelValueMizuAgent,
 	}, nil
 }
 
@@ -176,7 +156,6 @@ type ApiServerOptions struct {
 	KetoImage             string
 	ServiceAccountName    string
 	IsNamespaceRestricted bool
-	SyncEntriesConfig     *shared.SyncEntriesConfig
 	MaxEntriesDBSizeBytes int64
 	Resources             shared.Resources
 	ImagePullPolicy       core.PullPolicy
@@ -186,12 +165,6 @@ type ApiServerOptions struct {
 
 func (provider *Provider) GetMizuApiServerPodObject(opts *ApiServerOptions, mountVolumeClaim bool, volumeClaimName string, createAuthContainer bool) (*core.Pod, error) {
 	var marshaledSyncEntriesConfig []byte
-	if opts.SyncEntriesConfig != nil {
-		var err error
-		if marshaledSyncEntriesConfig, err = json.Marshal(opts.SyncEntriesConfig); err != nil {
-			return nil, err
-		}
-	}
 
 	configMapVolume := &core.ConfigMapVolumeSource{}
 	configMapVolume.Name = ConfigMapName
