@@ -15,6 +15,7 @@ type golangOffsets struct {
 	GolangSocketOffset uint64
 	GolangWriteOffset  uint64
 	GolangReadOffset   uint64
+	GolangGzipOffset   uint64
 }
 
 const (
@@ -22,6 +23,7 @@ const (
 	golangVersionSymbol       = "runtime.buildVersion.str"
 	golangWriteSymbol         = "crypto/tls.(*Conn).Write"
 	golangReadSymbol          = "crypto/tls.(*Conn).Read"
+	golangGzipSymbol          = "net/http.(*gzipReader).Read"
 	golangSocketSymbol        = "net.socket"
 	golangDialSymbol          = "net/http.(*Transport).dialConn"
 )
@@ -66,11 +68,17 @@ func findGolangOffsets(filePath string) (golangOffsets, error) {
 		return golangOffsets{}, fmt.Errorf("reading offset [%s]: %s", golangReadSymbol, err)
 	}
 
+	gzipOffset, err := getOffset(offsets, golangGzipSymbol)
+	if err != nil {
+		return golangOffsets{}, fmt.Errorf("reading offset [%s]: %s", golangGzipSymbol, err)
+	}
+
 	return golangOffsets{
 		GolangDialOffset:   dialOffset,
 		GolangSocketOffset: socketOffset,
 		GolangWriteOffset:  writeOffset,
 		GolangReadOffset:   readOffset,
+		GolangGzipOffset:   gzipOffset,
 	}, nil
 }
 

@@ -22,6 +22,7 @@ import (
 	"github.com/up9inc/mizu/logger"
 	"github.com/up9inc/mizu/tap/api"
 	orderedmap "github.com/wk8/go-ordered-map"
+	"golang.org/x/sys/unix"
 )
 
 const (
@@ -134,6 +135,12 @@ func (p *tlsPoller) pollGolangReadWrite(rd *ringbuf.Reader, emitter api.Emitter,
 		// Parse the ringbuf event entry into a tlsTapperGolangReadWrite structure.
 		if err := binary.Read(bytes.NewBuffer(record.RawSample), nativeEndian, &b); err != nil {
 			log.Printf("parsing ringbuf event: %s", err)
+			continue
+		}
+
+		if b.IsGzipChunk {
+			chunk := unix.ByteSliceToString(b.Data[:])
+			fmt.Printf("chunk: %v\n", chunk)
 			continue
 		}
 

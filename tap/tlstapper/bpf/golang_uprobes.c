@@ -17,6 +17,7 @@ struct golang_read_write {
     __u32 fd;
     __u32 conn_addr;
     bool is_request;
+    bool is_gzip_chunk;
     __u8 data[BUFFER_SIZE_READ_WRITE];
 };
 
@@ -54,6 +55,7 @@ static __always_inline int golang_crypto_tls_write_uprobe(struct pt_regs *ctx) {
     // ctx->rsi is common between golang_crypto_tls_write_uprobe and golang_crypto_tls_read_uprobe
     b->conn_addr = ctx->rsi; // go.itab.*net.TCPConn,net.Conn address
     b->is_request = true;
+    b->is_gzip_chunk = false;
 
     status = bpf_probe_read_str(&b->data, sizeof(b->data), (void*)ctx->rbx);
     if (status < 0) {
@@ -80,6 +82,7 @@ static __always_inline int golang_crypto_tls_read_uprobe(struct pt_regs *ctx) {
     // ctx->rsi is common between golang_crypto_tls_write_uprobe and golang_crypto_tls_read_uprobe
     b->conn_addr = ctx->rsi; // go.itab.*net.TCPConn,net.Conn address
     b->is_request = false;
+    b->is_gzip_chunk = false;
 
     void* stack_addr = (void*)ctx->rsp;
     __u64 data_p;
@@ -94,6 +97,43 @@ static __always_inline int golang_crypto_tls_read_uprobe(struct pt_regs *ctx) {
     status = bpf_probe_read_str(&b->data, sizeof(b->data), (void*)(data_p));
     if (status < 0) {
         bpf_printk("[golang_crypto_tls_read_uprobe] error reading data: %d", status);
+        bpf_ringbuf_discard(b, BPF_RB_FORCE_WAKEUP);
+        return 0;
+    }
+
+    bpf_ringbuf_submit(b, 0);
+
+    return 0;
+}
+
+SEC("uprobe/golang_net_http_gzipreader_read")
+static __always_inline int golang_net_http_gzipreader_read_uprobe(struct pt_regs *ctx) {
+    struct golang_read_write *b = NULL;
+    b = bpf_ringbuf_reserve(&golang_read_writes, sizeof(struct golang_read_write), 0);
+    if (!b) {
+        return 0;
+    }
+
+    // __u64 pid_tgid = bpf_get_current_pid_tgid();
+    // b->pid = pid_tgid >> 32;
+    // // ctx->rsi is common between golang_crypto_tls_write_uprobe and golang_crypto_tls_read_uprobe
+    // b->conn_addr = ctx->rsi; // go.itab.*net.TCPConn,net.Conn address
+    b->is_request = false;
+    b->is_gzip_chunk = true;
+
+    void* stack_addr = (void*)ctx->rsp;
+    __u64 data_p;
+    // Address at ctx->rsp + 0x8 holds the data
+    __u32 status = bpf_probe_read(&data_p, sizeof(data_p), stack_addr + 0x8);
+    if (status < 0) {
+        bpf_printk("[golang_net_http_gzipreader_read_uprobe] error reading data pointer: %d", status);
+        bpf_ringbuf_discard(b, BPF_RB_FORCE_WAKEUP);
+        return 0;
+    }
+
+    status = bpf_probe_read_str(&b->data, sizeof(b->data), (void*)(data_p));
+    if (status < 0) {
+        bpf_printk("[golang_net_http_gzipreader_read_uprobe] error reading data: %d", status);
         bpf_ringbuf_discard(b, BPF_RB_FORCE_WAKEUP);
         return 0;
     }

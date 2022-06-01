@@ -14,12 +14,13 @@ import (
 )
 
 type tlsTapperGolangReadWrite struct {
-	Pid       uint32
-	Fd        uint32
-	ConnAddr  uint32
-	IsRequest bool
-	Data      [524288]uint8
-	_         [3]byte
+	Pid         uint32
+	Fd          uint32
+	ConnAddr    uint32
+	IsRequest   bool
+	IsGzipChunk bool
+	Data        [524288]uint8
+	_           [2]byte
 }
 
 type tlsTapperTlsChunk struct {
@@ -75,24 +76,25 @@ type tlsTapperSpecs struct {
 //
 // It can be passed ebpf.CollectionSpec.Assign.
 type tlsTapperProgramSpecs struct {
-	GolangCryptoTlsReadUprobe   *ebpf.ProgramSpec `ebpf:"golang_crypto_tls_read_uprobe"`
-	GolangCryptoTlsWriteUprobe  *ebpf.ProgramSpec `ebpf:"golang_crypto_tls_write_uprobe"`
-	GolangNetHttpDialconnUprobe *ebpf.ProgramSpec `ebpf:"golang_net_http_dialconn_uprobe"`
-	GolangNetSocketUprobe       *ebpf.ProgramSpec `ebpf:"golang_net_socket_uprobe"`
-	SslRead                     *ebpf.ProgramSpec `ebpf:"ssl_read"`
-	SslReadEx                   *ebpf.ProgramSpec `ebpf:"ssl_read_ex"`
-	SslRetRead                  *ebpf.ProgramSpec `ebpf:"ssl_ret_read"`
-	SslRetReadEx                *ebpf.ProgramSpec `ebpf:"ssl_ret_read_ex"`
-	SslRetWrite                 *ebpf.ProgramSpec `ebpf:"ssl_ret_write"`
-	SslRetWriteEx               *ebpf.ProgramSpec `ebpf:"ssl_ret_write_ex"`
-	SslWrite                    *ebpf.ProgramSpec `ebpf:"ssl_write"`
-	SslWriteEx                  *ebpf.ProgramSpec `ebpf:"ssl_write_ex"`
-	SysEnterAccept4             *ebpf.ProgramSpec `ebpf:"sys_enter_accept4"`
-	SysEnterConnect             *ebpf.ProgramSpec `ebpf:"sys_enter_connect"`
-	SysEnterRead                *ebpf.ProgramSpec `ebpf:"sys_enter_read"`
-	SysEnterWrite               *ebpf.ProgramSpec `ebpf:"sys_enter_write"`
-	SysExitAccept4              *ebpf.ProgramSpec `ebpf:"sys_exit_accept4"`
-	SysExitConnect              *ebpf.ProgramSpec `ebpf:"sys_exit_connect"`
+	GolangCryptoTlsReadUprobe         *ebpf.ProgramSpec `ebpf:"golang_crypto_tls_read_uprobe"`
+	GolangCryptoTlsWriteUprobe        *ebpf.ProgramSpec `ebpf:"golang_crypto_tls_write_uprobe"`
+	GolangNetHttpDialconnUprobe       *ebpf.ProgramSpec `ebpf:"golang_net_http_dialconn_uprobe"`
+	GolangNetHttpGzipreaderReadUprobe *ebpf.ProgramSpec `ebpf:"golang_net_http_gzipreader_read_uprobe"`
+	GolangNetSocketUprobe             *ebpf.ProgramSpec `ebpf:"golang_net_socket_uprobe"`
+	SslRead                           *ebpf.ProgramSpec `ebpf:"ssl_read"`
+	SslReadEx                         *ebpf.ProgramSpec `ebpf:"ssl_read_ex"`
+	SslRetRead                        *ebpf.ProgramSpec `ebpf:"ssl_ret_read"`
+	SslRetReadEx                      *ebpf.ProgramSpec `ebpf:"ssl_ret_read_ex"`
+	SslRetWrite                       *ebpf.ProgramSpec `ebpf:"ssl_ret_write"`
+	SslRetWriteEx                     *ebpf.ProgramSpec `ebpf:"ssl_ret_write_ex"`
+	SslWrite                          *ebpf.ProgramSpec `ebpf:"ssl_write"`
+	SslWriteEx                        *ebpf.ProgramSpec `ebpf:"ssl_write_ex"`
+	SysEnterAccept4                   *ebpf.ProgramSpec `ebpf:"sys_enter_accept4"`
+	SysEnterConnect                   *ebpf.ProgramSpec `ebpf:"sys_enter_connect"`
+	SysEnterRead                      *ebpf.ProgramSpec `ebpf:"sys_enter_read"`
+	SysEnterWrite                     *ebpf.ProgramSpec `ebpf:"sys_enter_write"`
+	SysExitAccept4                    *ebpf.ProgramSpec `ebpf:"sys_exit_accept4"`
+	SysExitConnect                    *ebpf.ProgramSpec `ebpf:"sys_exit_connect"`
 }
 
 // tlsTapperMapSpecs contains maps before they are loaded into the kernel.
@@ -167,24 +169,25 @@ func (m *tlsTapperMaps) Close() error {
 //
 // It can be passed to loadTlsTapperObjects or ebpf.CollectionSpec.LoadAndAssign.
 type tlsTapperPrograms struct {
-	GolangCryptoTlsReadUprobe   *ebpf.Program `ebpf:"golang_crypto_tls_read_uprobe"`
-	GolangCryptoTlsWriteUprobe  *ebpf.Program `ebpf:"golang_crypto_tls_write_uprobe"`
-	GolangNetHttpDialconnUprobe *ebpf.Program `ebpf:"golang_net_http_dialconn_uprobe"`
-	GolangNetSocketUprobe       *ebpf.Program `ebpf:"golang_net_socket_uprobe"`
-	SslRead                     *ebpf.Program `ebpf:"ssl_read"`
-	SslReadEx                   *ebpf.Program `ebpf:"ssl_read_ex"`
-	SslRetRead                  *ebpf.Program `ebpf:"ssl_ret_read"`
-	SslRetReadEx                *ebpf.Program `ebpf:"ssl_ret_read_ex"`
-	SslRetWrite                 *ebpf.Program `ebpf:"ssl_ret_write"`
-	SslRetWriteEx               *ebpf.Program `ebpf:"ssl_ret_write_ex"`
-	SslWrite                    *ebpf.Program `ebpf:"ssl_write"`
-	SslWriteEx                  *ebpf.Program `ebpf:"ssl_write_ex"`
-	SysEnterAccept4             *ebpf.Program `ebpf:"sys_enter_accept4"`
-	SysEnterConnect             *ebpf.Program `ebpf:"sys_enter_connect"`
-	SysEnterRead                *ebpf.Program `ebpf:"sys_enter_read"`
-	SysEnterWrite               *ebpf.Program `ebpf:"sys_enter_write"`
-	SysExitAccept4              *ebpf.Program `ebpf:"sys_exit_accept4"`
-	SysExitConnect              *ebpf.Program `ebpf:"sys_exit_connect"`
+	GolangCryptoTlsReadUprobe         *ebpf.Program `ebpf:"golang_crypto_tls_read_uprobe"`
+	GolangCryptoTlsWriteUprobe        *ebpf.Program `ebpf:"golang_crypto_tls_write_uprobe"`
+	GolangNetHttpDialconnUprobe       *ebpf.Program `ebpf:"golang_net_http_dialconn_uprobe"`
+	GolangNetHttpGzipreaderReadUprobe *ebpf.Program `ebpf:"golang_net_http_gzipreader_read_uprobe"`
+	GolangNetSocketUprobe             *ebpf.Program `ebpf:"golang_net_socket_uprobe"`
+	SslRead                           *ebpf.Program `ebpf:"ssl_read"`
+	SslReadEx                         *ebpf.Program `ebpf:"ssl_read_ex"`
+	SslRetRead                        *ebpf.Program `ebpf:"ssl_ret_read"`
+	SslRetReadEx                      *ebpf.Program `ebpf:"ssl_ret_read_ex"`
+	SslRetWrite                       *ebpf.Program `ebpf:"ssl_ret_write"`
+	SslRetWriteEx                     *ebpf.Program `ebpf:"ssl_ret_write_ex"`
+	SslWrite                          *ebpf.Program `ebpf:"ssl_write"`
+	SslWriteEx                        *ebpf.Program `ebpf:"ssl_write_ex"`
+	SysEnterAccept4                   *ebpf.Program `ebpf:"sys_enter_accept4"`
+	SysEnterConnect                   *ebpf.Program `ebpf:"sys_enter_connect"`
+	SysEnterRead                      *ebpf.Program `ebpf:"sys_enter_read"`
+	SysEnterWrite                     *ebpf.Program `ebpf:"sys_enter_write"`
+	SysExitAccept4                    *ebpf.Program `ebpf:"sys_exit_accept4"`
+	SysExitConnect                    *ebpf.Program `ebpf:"sys_exit_connect"`
 }
 
 func (p *tlsTapperPrograms) Close() error {
@@ -192,6 +195,7 @@ func (p *tlsTapperPrograms) Close() error {
 		p.GolangCryptoTlsReadUprobe,
 		p.GolangCryptoTlsWriteUprobe,
 		p.GolangNetHttpDialconnUprobe,
+		p.GolangNetHttpGzipreaderReadUprobe,
 		p.GolangNetSocketUprobe,
 		p.SslRead,
 		p.SslReadEx,
