@@ -31,7 +31,7 @@ import (
 	applyconfmeta "k8s.io/client-go/applyconfigurations/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
-	restclient "k8s.io/client-go/rest"
+	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/clientcmd"
 	watchtools "k8s.io/client-go/tools/watch"
@@ -40,7 +40,7 @@ import (
 type Provider struct {
 	clientSet        *kubernetes.Clientset
 	kubernetesConfig clientcmd.ClientConfig
-	clientConfig     restclient.Config
+	clientConfig     rest.Config
 	managedBy        string
 	createdBy        string
 }
@@ -84,6 +84,26 @@ func NewProvider(kubeConfigPath string, contextName string) (*Provider, error) {
 		clientConfig:     *restClientConfig,
 		managedBy:        LabelValueMizu,
 		createdBy:        LabelValueMizuCLI,
+	}, nil
+}
+
+//NewProviderInCluster Used in another repo that calls this function
+func NewProviderInCluster() (*Provider, error) {
+	restClientConfig, err := rest.InClusterConfig()
+	if err != nil {
+		return nil, err
+	}
+	clientSet, err := getClientSet(restClientConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	return &Provider{
+		clientSet:        clientSet,
+		kubernetesConfig: nil, // not relevant in cluster
+		clientConfig:     *restClientConfig,
+		managedBy:        LabelValueMizu,
+		createdBy:        LabelValueMizuAgent,
 	}, nil
 }
 
