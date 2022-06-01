@@ -4,10 +4,9 @@ type golangConnection struct {
 	Pid         uint32
 	ConnAddr    uint32
 	AddressPair addressPair
-	Request     []byte
-	Response    []byte
-	GotRequest  bool
-	GotResponse bool
+	Requests    [][]byte
+	Responses   [][]byte
+	Gzipped     bool
 }
 
 func NewGolangConnection(pid uint32, connAddr uint32) *golangConnection {

@@ -108,6 +108,7 @@ type tlsTapperMapSpecs struct {
 	GolangDialToSocket   *ebpf.MapSpec `ebpf:"golang_dial_to_socket"`
 	GolangReadWrites     *ebpf.MapSpec `ebpf:"golang_read_writes"`
 	GolangSocketToWrite  *ebpf.MapSpec `ebpf:"golang_socket_to_write"`
+	GolangWriteToGzip    *ebpf.MapSpec `ebpf:"golang_write_to_gzip"`
 	Heap                 *ebpf.MapSpec `ebpf:"heap"`
 	LogBuffer            *ebpf.MapSpec `ebpf:"log_buffer"`
 	PidsMap              *ebpf.MapSpec `ebpf:"pids_map"`
@@ -141,6 +142,7 @@ type tlsTapperMaps struct {
 	GolangDialToSocket   *ebpf.Map `ebpf:"golang_dial_to_socket"`
 	GolangReadWrites     *ebpf.Map `ebpf:"golang_read_writes"`
 	GolangSocketToWrite  *ebpf.Map `ebpf:"golang_socket_to_write"`
+	GolangWriteToGzip    *ebpf.Map `ebpf:"golang_write_to_gzip"`
 	Heap                 *ebpf.Map `ebpf:"heap"`
 	LogBuffer            *ebpf.Map `ebpf:"log_buffer"`
 	PidsMap              *ebpf.Map `ebpf:"pids_map"`
@@ -157,6 +159,7 @@ func (m *tlsTapperMaps) Close() error {
 		m.GolangDialToSocket,
 		m.GolangReadWrites,
 		m.GolangSocketToWrite,
+		m.GolangWriteToGzip,
 		m.Heap,
 		m.LogBuffer,
 		m.PidsMap,

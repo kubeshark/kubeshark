@@ -57,6 +57,8 @@ struct socket {
     __u32 pid;
     __u32 fd;
     __u64 key_dial;
+    __u64 key_gzip;
+    __u64 conn_addr;
 };
 
 #define BPF_MAP(_name, _type, _key_type, _value_type, _max_entries)     \
@@ -91,6 +93,7 @@ BPF_PERF_OUTPUT(log_buffer);
 
 BPF_LRU_HASH(golang_dial_to_socket, __u64, struct socket);
 BPF_LRU_HASH(golang_socket_to_write, __u64, struct socket);
+BPF_LRU_HASH(golang_write_to_gzip, __u64, struct socket);
 BPF_RINGBUF(golang_read_writes);
 
 #endif /* __MAPS__ */

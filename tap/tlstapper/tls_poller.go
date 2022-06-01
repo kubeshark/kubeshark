@@ -22,7 +22,6 @@ import (
 	"github.com/up9inc/mizu/logger"
 	"github.com/up9inc/mizu/tap/api"
 	orderedmap "github.com/wk8/go-ordered-map"
-	"golang.org/x/sys/unix"
 )
 
 const (
@@ -138,12 +137,6 @@ func (p *tlsPoller) pollGolangReadWrite(rd *ringbuf.Reader, emitter api.Emitter,
 			continue
 		}
 
-		if b.IsGzipChunk {
-			chunk := unix.ByteSliceToString(b.Data[:])
-			fmt.Printf("chunk: %v\n", chunk)
-			continue
-		}
-
 		if p.golangReadWriteMap.Len()+1 > golangMapLimit {
 			pair := p.golangReadWriteMap.Oldest()
 			p.golangReadWriteMap.Delete(pair.Key)
@@ -162,6 +155,10 @@ func (p *tlsPoller) pollGolangReadWrite(rd *ringbuf.Reader, emitter api.Emitter,
 			connection = _connection.(*golangConnection)
 		}
 
+		if b.IsGzipChunk {
+			connection.Gzipped = true
+		}
+
 		if b.IsRequest {
 			err := connection.setAddressBySockfd(p.procfs, b.Pid, b.Fd)
 			if err != nil {
@@ -169,71 +166,77 @@ func (p *tlsPoller) pollGolangReadWrite(rd *ringbuf.Reader, emitter api.Emitter,
 				continue
 			}
 
-			connection.Request = make([]byte, len(b.Data[:]))
-			copy(connection.Request, b.Data[:])
-			connection.GotRequest = true
+			request := make([]byte, len(b.Data[:]))
+			copy(request, b.Data[:])
+			connection.Requests = append(connection.Requests, request)
 		} else {
-			connection.Response = make([]byte, len(b.Data[:]))
-			copy(connection.Response, b.Data[:])
-			connection.GotResponse = true
-		}
+			response := make([]byte, len(b.Data[:]))
+			copy(response, b.Data[:])
+			connection.Responses = append(connection.Responses, response)
 
-		if connection.GotRequest && connection.GotResponse {
-			// TODO: Remove these comments
-			// fmt.Printf("\n\nconnection.Pid: %v\n", connection.Pid)
-			// fmt.Printf("connection.ConnAddr: 0x%x\n", connection.ConnAddr)
-			// fmt.Printf("connection.AddressPair.srcIp: %v\n", connection.AddressPair.srcIp)
-			// fmt.Printf("connection.AddressPair.srcPort: %v\n", connection.AddressPair.srcPort)
-			// fmt.Printf("connection.AddressPair.dstIp: %v\n", connection.AddressPair.dstIp)
-			// fmt.Printf("connection.AddressPair.dstPort: %v\n", connection.AddressPair.dstPort)
-			// fmt.Printf("connection.Request:\n%v\n", unix.ByteSliceToString(connection.Request))
-			// fmt.Printf("connection.Response:\n%v\n", unix.ByteSliceToString(connection.Response))
+			if !b.IsGzipChunk {
+				// TODO: Remove these comments
+				// fmt.Printf("\n\nidentifier: %v\n", identifier)
+				// fmt.Printf("connection.Pid: %v\n", connection.Pid)
+				// fmt.Printf("connection.ConnAddr: 0x%x\n", connection.ConnAddr)
+				// fmt.Printf("connection.AddressPair.srcIp: %v\n", connection.AddressPair.srcIp)
+				// fmt.Printf("connection.AddressPair.srcPort: %v\n", connection.AddressPair.srcPort)
+				// fmt.Printf("connection.AddressPair.dstIp: %v\n", connection.AddressPair.dstIp)
+				// fmt.Printf("connection.AddressPair.dstPort: %v\n", connection.AddressPair.dstPort)
+				// fmt.Printf("connection.Gzipped: %v\n", connection.Gzipped)
+				// for i, x := range connection.Requests {
+				// 	fmt.Printf("connection.Request[%d]:\n%v\n", i, unix.ByteSliceToString(x))
+				// }
+				// for i, y := range connection.Responses {
+				// 	fmt.Printf("connection.Response[%d]:\n%v\n", i, unix.ByteSliceToString(y))
+				// }
 
-			tcpid := p.buildTcpId(&connection.AddressPair)
+				// tcpid := p.buildTcpId(&connection.AddressPair)
 
-			tlsEmitter := &tlsEmitter{
-				delegate:  emitter,
-				namespace: p.getNamespace(b.Pid),
-			}
+				// tlsEmitter := &tlsEmitter{
+				// 	delegate:  emitter,
+				// 	namespace: p.getNamespace(b.Pid),
+				// }
 
-			reader := &tlsReader{
-				chunks:        make(chan *tlsChunk, 1),
-				progress:      &api.ReadProgress{},
-				tcpID:         &tcpid,
-				isClient:      true,
-				captureTime:   time.Now(),
-				extension:     p.extension,
-				emitter:       tlsEmitter,
-				counterPair:   &api.CounterPair{},
-				reqResMatcher: p.extension.Dissector.NewResponseRequestMatcher(),
-			}
+				// reader := &tlsReader{
+				// 	chunks:        make(chan *tlsChunk, 1),
+				// 	progress:      &api.ReadProgress{},
+				// 	tcpID:         &tcpid,
+				// 	isClient:      true,
+				// 	captureTime:   time.Now(),
+				// 	extension:     p.extension,
+				// 	emitter:       tlsEmitter,
+				// 	counterPair:   &api.CounterPair{},
+				// 	reqResMatcher: p.extension.Dissector.NewResponseRequestMatcher(),
+				// }
 
-			stream := &tlsStream{
-				reader: reader,
-			}
-			streamsMap.Store(streamsMap.NextId(), stream)
+				// stream := &tlsStream{
+				// 	reader: reader,
+				// }
+				// streamsMap.Store(streamsMap.NextId(), stream)
 
-			reader.parent = stream
+				// reader.parent = stream
 
-			err := p.extension.Dissector.Dissect(bufio.NewReader(bytes.NewReader(connection.Request)), reader, options)
+				// err := p.extension.Dissector.Dissect(bufio.NewReader(bytes.NewReader(connection.Requests[0])), reader, options)
 
-			if err != nil {
-				logger.Log.Warningf("Error dissecting TLS %v - %v", reader.GetTcpID(), err)
-			}
+				// if err != nil {
+				// 	logger.Log.Warningf("Error dissecting TLS %v - %v", reader.GetTcpID(), err)
+				// }
 
-			reader.isClient = false
-			reader.tcpID = &api.TcpID{
-				SrcIP:   reader.tcpID.DstIP,
-				DstIP:   reader.tcpID.SrcIP,
-				SrcPort: reader.tcpID.DstPort,
-				DstPort: reader.tcpID.SrcPort,
-			}
-			reader.progress = &api.ReadProgress{}
+				// reader.isClient = false
+				// reader.tcpID = &api.TcpID{
+				// 	SrcIP:   reader.tcpID.DstIP,
+				// 	DstIP:   reader.tcpID.SrcIP,
+				// 	SrcPort: reader.tcpID.DstPort,
+				// 	DstPort: reader.tcpID.SrcPort,
+				// }
+				// reader.progress = &api.ReadProgress{}
 
-			err = p.extension.Dissector.Dissect(bufio.NewReader(bytes.NewReader(connection.Response)), reader, options)
+				// err = p.extension.Dissector.Dissect(bufio.NewReader(bytes.NewReader(connection.Responses[0])), reader, options)
 
-			if err != nil {
-				logger.Log.Warningf("Error dissecting TLS %v - %v", reader.GetTcpID(), err)
+				// if err != nil {
+				// 	logger.Log.Warningf("Error dissecting TLS %v - %v", reader.GetTcpID(), err)
+				// }
 			}
 		}
 	}
