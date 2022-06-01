@@ -163,7 +163,6 @@ func (p *tlsPoller) pollGolangReadWrite(rd *ringbuf.Reader, emitter api.Emitter,
 
 		if b.IsGzipChunk {
 			connection.Gzipped = true
-			continue // TODO: accepting gzip makes everything malformed (temp)
 		}
 
 		if b.IsRequest {
