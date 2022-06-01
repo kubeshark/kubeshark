@@ -1100,7 +1100,7 @@ func (provider *Provider) GetKubernetesVersion() (*semver.SemVersion, error) {
 	return &serverVersionSemVer, nil
 }
 
-func getClientSet(config *restclient.Config) (*kubernetes.Clientset, error) {
+func getClientSet(config *rest.Config) (*kubernetes.Clientset, error) {
 	clientSet, err := kubernetes.NewForConfig(config)
 	if err != nil {
 		return nil, err
