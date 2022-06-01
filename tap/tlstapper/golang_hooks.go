@@ -33,7 +33,7 @@ func (s *golangHooks) installHooks(bpfObjects *tlsTapperObjects, ex *link.Execut
 	var err error
 
 	// Relative offset points to
-	// [`net/http.(*Transport).dialConn+412`](https://github.com/golang/go/blob/fe4de36198794c447fbd9d7cc2d7199a506c76a5/src/net/http/transport.go#L1564)
+	// [`net/http.(*Transport).dialConn+412`](https://github.com/golang/go/blob/go1.17.6/src/net/http/transport.go#L1561)
 	s.golangDialProbe, err = ex.Uprobe(golangDialSymbol, bpfObjects.GolangNetHttpDialconnUprobe, &link.UprobeOptions{
 		Offset: offsets.GolangDialOffset + 0x19c,
 	})
@@ -43,7 +43,7 @@ func (s *golangHooks) installHooks(bpfObjects *tlsTapperObjects, ex *link.Execut
 	}
 
 	// Relative offset points to
-	// [`net.socket+127`](https://github.com/golang/go/blob/fe4de36198794c447fbd9d7cc2d7199a506c76a5/src/net/sock_posix.go#L23)
+	// [`net.socket+127`](https://github.com/golang/go/blob/go1.17.6/src/net/sock_posix.go#L24)
 	s.golangSocketProbe, err = ex.Uprobe(golangSocketSymbol, bpfObjects.GolangNetSocketUprobe, &link.UprobeOptions{
 		Offset: offsets.GolangSocketOffset + 0x7f,
 	})
@@ -53,7 +53,7 @@ func (s *golangHooks) installHooks(bpfObjects *tlsTapperObjects, ex *link.Execut
 	}
 
 	// Symbol points to
-	// [`crypto/tls.(*Conn).Write`](https://github.com/golang/go/blob/fe4de36198794c447fbd9d7cc2d7199a506c76a5/src/crypto/tls/conn.go#L1109)
+	// [`crypto/tls.(*Conn).Write`](https://github.com/golang/go/blob/go1.17.6/src/crypto/tls/conn.go#L1099)
 	s.golangWriteProbe, err = ex.Uprobe(golangWriteSymbol, bpfObjects.GolangCryptoTlsWriteUprobe, &link.UprobeOptions{
 		Offset: offsets.GolangWriteOffset,
 	})
@@ -63,7 +63,7 @@ func (s *golangHooks) installHooks(bpfObjects *tlsTapperObjects, ex *link.Execut
 	}
 
 	// Relative offset points to
-	// [`crypto/tls.(*Conn).Read+559`](https://github.com/golang/go/blob/fe4de36198794c447fbd9d7cc2d7199a506c76a5/src/crypto/tls/conn.go#L1306)
+	// [`crypto/tls.(*Conn).Read+559`](https://github.com/golang/go/blob/go1.17.6/src/crypto/tls/conn.go#L1296)
 	s.golangReadProbe, err = ex.Uprobe(golangReadSymbol, bpfObjects.GolangCryptoTlsReadUprobe, &link.UprobeOptions{
 		Offset: offsets.GolangReadOffset + 0x22f,
 	})
@@ -73,7 +73,7 @@ func (s *golangHooks) installHooks(bpfObjects *tlsTapperObjects, ex *link.Execut
 	}
 
 	// Relative offset points to
-	// [`net/http.(*gzipReader).Read+363`](https://github.com/golang/go/blob/fe4de36198794c447fbd9d7cc2d7199a506c76a5/src/net/http/transport.go#L2837)
+	// [`net/http.(*gzipReader).Read+363`](https://github.com/golang/go/blob/go1.17.6/src/net/http/transport.go#L2832)
 	s.golangGzipProbe, err = ex.Uprobe(golangReadSymbol, bpfObjects.GolangNetHttpGzipreaderReadUprobe, &link.UprobeOptions{
 		Offset: offsets.GolangGzipOffset + 0x16b,
 	})
