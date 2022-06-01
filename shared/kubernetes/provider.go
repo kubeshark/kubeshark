@@ -164,8 +164,6 @@ type ApiServerOptions struct {
 }
 
 func (provider *Provider) GetMizuApiServerPodObject(opts *ApiServerOptions, mountVolumeClaim bool, volumeClaimName string, createAuthContainer bool) (*core.Pod, error) {
-	var marshaledSyncEntriesConfig []byte
-
 	configMapVolume := &core.ConfigMapVolumeSource{}
 	configMapVolume.Name = ConfigMapName
 
@@ -237,10 +235,6 @@ func (provider *Provider) GetMizuApiServerPodObject(opts *ApiServerOptions, moun
 			VolumeMounts:    volumeMounts,
 			Command:         command,
 			Env: []core.EnvVar{
-				{
-					Name:  shared.SyncEntriesConfigEnvVar,
-					Value: string(marshaledSyncEntriesConfig),
-				},
 				{
 					Name:  shared.LogLevelEnvVar,
 					Value: opts.LogLevel.String(),

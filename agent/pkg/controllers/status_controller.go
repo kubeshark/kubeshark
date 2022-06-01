@@ -70,16 +70,6 @@ func GetConnectedTappersCount(c *gin.Context) {
 	c.JSON(http.StatusOK, tappers.GetConnectedCount())
 }
 
-func GetAuthStatus(c *gin.Context) {
-	authStatus, err := providers.GetAuthStatus()
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, err)
-		return
-	}
-
-	c.JSON(http.StatusOK, authStatus)
-}
-
 func GetTappingStatus(c *gin.Context) {
 	tappedPodsStatus := tappedPods.GetTappedPodsStatus()
 	c.JSON(http.StatusOK, tappedPodsStatus)
