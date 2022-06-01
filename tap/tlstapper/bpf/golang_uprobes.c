@@ -138,8 +138,8 @@ static __always_inline int golang_net_http_gzipreader_read_uprobe(struct pt_regs
     __u64 pid_tgid = bpf_get_current_pid_tgid();
     __u64 pid = pid_tgid >> 32;
     __u32 key_gzip;
-    // Address at ctx->rsp + 0x150 is common between golang_net_http_gzipreader_read_uprobe and golang_net_http_dialconn_uprobe
-    __u32 status = bpf_probe_read(&key_gzip, sizeof(key_gzip), stack_addr + 0x150);
+    // Address at ctx->rsp + 0x1b0 is common between golang_net_http_gzipreader_read_uprobe and golang_net_http_dialconn_uprobe
+    __u32 status = bpf_probe_read(&key_gzip, sizeof(key_gzip), stack_addr + 0x1b0);
     if (status < 0) {
         bpf_printk("[golang_net_http_gzipreader_read_uprobe] error reading key_gzip: %d", status);
         return 0;
@@ -226,8 +226,8 @@ static __always_inline int golang_net_http_dialconn_uprobe(struct pt_regs *ctx) 
     }
 
     __u32 key_gzip;
-    // Address at ctx->rsp + 0x1d0 is common between golang_net_http_gzipreader_read_uprobe and golang_net_http_dialconn_uprobe
-    status = bpf_probe_read(&key_gzip, sizeof(key_gzip), stack_addr + 0x1d0);
+    // Address at ctx->rsp + 0x58 is common between golang_net_http_gzipreader_read_uprobe and golang_net_http_dialconn_uprobe
+    status = bpf_probe_read(&key_gzip, sizeof(key_gzip), stack_addr + 0x58);
     if (status < 0) {
         bpf_printk("[golang_net_http_dialconn_uprobe] error reading key_gzip: %d", status);
         return 0;
