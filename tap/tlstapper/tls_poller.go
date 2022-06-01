@@ -22,6 +22,7 @@ import (
 	"github.com/up9inc/mizu/logger"
 	"github.com/up9inc/mizu/tap/api"
 	orderedmap "github.com/wk8/go-ordered-map"
+	"golang.org/x/sys/unix"
 )
 
 const (
@@ -186,10 +187,12 @@ func (p *tlsPoller) pollGolangReadWrite(rd *ringbuf.Reader, emitter api.Emitter,
 
 			request := make([]byte, len(b.Data[:]))
 			copy(request, b.Data[:])
+			request = []byte(unix.ByteSliceToString(request))
 			connection.ClientReader.send(request)
 		} else {
 			response := make([]byte, len(b.Data[:]))
 			copy(response, b.Data[:])
+			response = []byte(unix.ByteSliceToString(response))
 			connection.ServerReader.send(response)
 		}
 	}
