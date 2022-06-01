@@ -149,8 +149,14 @@ func (p *tlsPoller) pollGolangReadWrite(rd *ringbuf.Reader, emitter api.Emitter,
 		var _connection interface{}
 		var ok bool
 		if _connection, ok = p.golangReadWriteMap.Get(identifier); !ok {
-			connection = NewGolangConnection(b.Pid, b.ConnAddr)
+			tlsEmitter := &tlsEmitter{
+				delegate:  emitter,
+				namespace: p.getNamespace(b.Pid),
+			}
+
+			connection = NewGolangConnection(b.Pid, b.ConnAddr, p.extension, tlsEmitter)
 			p.golangReadWriteMap.Set(identifier, connection)
+			streamsMap.Store(streamsMap.NextId(), connection.Stream)
 		} else {
 			connection = _connection.(*golangConnection)
 		}
@@ -166,78 +172,25 @@ func (p *tlsPoller) pollGolangReadWrite(rd *ringbuf.Reader, emitter api.Emitter,
 				continue
 			}
 
+			tcpid := p.buildTcpId(&connection.AddressPair)
+			connection.ClientReader.tcpID = &tcpid
+			connection.ServerReader.tcpID = &api.TcpID{
+				SrcIP:   connection.ClientReader.tcpID.DstIP,
+				DstIP:   connection.ClientReader.tcpID.SrcIP,
+				SrcPort: connection.ClientReader.tcpID.DstPort,
+				DstPort: connection.ClientReader.tcpID.SrcPort,
+			}
+
+			go dissect(p.extension, connection.ClientReader, options)
+			go dissect(p.extension, connection.ServerReader, options)
+
 			request := make([]byte, len(b.Data[:]))
 			copy(request, b.Data[:])
-			connection.Requests = append(connection.Requests, request)
+			connection.ClientReader.send(request)
 		} else {
 			response := make([]byte, len(b.Data[:]))
 			copy(response, b.Data[:])
-			connection.Responses = append(connection.Responses, response)
-
-			if !b.IsGzipChunk {
-				// TODO: Remove these comments
-				// fmt.Printf("\n\nidentifier: %v\n", identifier)
-				// fmt.Printf("connection.Pid: %v\n", connection.Pid)
-				// fmt.Printf("connection.ConnAddr: 0x%x\n", connection.ConnAddr)
-				// fmt.Printf("connection.AddressPair.srcIp: %v\n", connection.AddressPair.srcIp)
-				// fmt.Printf("connection.AddressPair.srcPort: %v\n", connection.AddressPair.srcPort)
-				// fmt.Printf("connection.AddressPair.dstIp: %v\n", connection.AddressPair.dstIp)
-				// fmt.Printf("connection.AddressPair.dstPort: %v\n", connection.AddressPair.dstPort)
-				// fmt.Printf("connection.Gzipped: %v\n", connection.Gzipped)
-				// for i, x := range connection.Requests {
-				// 	fmt.Printf("connection.Request[%d]:\n%v\n", i, unix.ByteSliceToString(x))
-				// }
-				// for i, y := range connection.Responses {
-				// 	fmt.Printf("connection.Response[%d]:\n%v\n", i, unix.ByteSliceToString(y))
-				// }
-
-				// tcpid := p.buildTcpId(&connection.AddressPair)
-
-				// tlsEmitter := &tlsEmitter{
-				// 	delegate:  emitter,
-				// 	namespace: p.getNamespace(b.Pid),
-				// }
-
-				// reader := &tlsReader{
-				// 	chunks:        make(chan *tlsChunk, 1),
-				// 	progress:      &api.ReadProgress{},
-				// 	tcpID:         &tcpid,
-				// 	isClient:      true,
-				// 	captureTime:   time.Now(),
-				// 	extension:     p.extension,
-				// 	emitter:       tlsEmitter,
-				// 	counterPair:   &api.CounterPair{},
-				// 	reqResMatcher: p.extension.Dissector.NewResponseRequestMatcher(),
-				// }
-
-				// stream := &tlsStream{
-				// 	reader: reader,
-				// }
-				// streamsMap.Store(streamsMap.NextId(), stream)
-
-				// reader.parent = stream
-
-				// err := p.extension.Dissector.Dissect(bufio.NewReader(bytes.NewReader(connection.Requests[0])), reader, options)
-
-				// if err != nil {
-				// 	logger.Log.Warningf("Error dissecting TLS %v - %v", reader.GetTcpID(), err)
-				// }
-
-				// reader.isClient = false
-				// reader.tcpID = &api.TcpID{
-				// 	SrcIP:   reader.tcpID.DstIP,
-				// 	DstIP:   reader.tcpID.SrcIP,
-				// 	SrcPort: reader.tcpID.DstPort,
-				// 	DstPort: reader.tcpID.SrcPort,
-				// }
-				// reader.progress = &api.ReadProgress{}
-
-				// err = p.extension.Dissector.Dissect(bufio.NewReader(bytes.NewReader(connection.Responses[0])), reader, options)
-
-				// if err != nil {
-				// 	logger.Log.Warningf("Error dissecting TLS %v - %v", reader.GetTcpID(), err)
-				// }
-			}
+			connection.ServerReader.send(response)
 		}
 	}
 }
@@ -346,7 +299,7 @@ func (p *tlsPoller) startNewTlsReader(chunk *tlsChunk, address *addressPair, key
 	return reader
 }
 
-func dissect(extension *api.Extension, reader *tlsReader, options *api.TrafficFilteringOptions) {
+func dissect(extension *api.Extension, reader api.TcpReader, options *api.TrafficFilteringOptions) {
 	b := bufio.NewReader(reader)
 
 	err := extension.Dissector.Dissect(b, reader, options)
