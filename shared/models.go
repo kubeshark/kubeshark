@@ -19,7 +19,6 @@ const (
 	WebSocketMessageTypeTappedEntry      WebSocketMessageType = "tappedEntry"
 	WebSocketMessageTypeUpdateStatus     WebSocketMessageType = "status"
 	WebSocketMessageTypeUpdateTappedPods WebSocketMessageType = "tappedPods"
-	WebSocketMessageTypeAnalyzeStatus    WebSocketMessageType = "analyzeStatus"
 	WebSocketMessageTypeToast            WebSocketMessageType = "toast"
 	WebSocketMessageTypeQueryMetadata    WebSocketMessageType = "queryMetadata"
 	WebSocketMessageTypeStartTime        WebSocketMessageType = "startTime"
@@ -51,17 +50,6 @@ type WebSocketMessageMetadata struct {
 	MessageType WebSocketMessageType `json:"messageType,omitempty"`
 }
 
-type WebSocketAnalyzeStatusMessage struct {
-	*WebSocketMessageMetadata
-	AnalyzeStatus AnalyzeStatus `json:"analyzeStatus"`
-}
-
-type AnalyzeStatus struct {
-	IsAnalyzing   bool   `json:"isAnalyzing"`
-	RemoteUrl     string `json:"remoteUrl"`
-	IsRemoteReady bool   `json:"isRemoteReady"`
-	SentCount     int    `json:"sentCount"`
-}
 
 type WebSocketStatusMessage struct {
 	*WebSocketMessageMetadata
@@ -116,13 +104,6 @@ type TLSLinkInfo struct {
 	ResolvedSourceName      string `json:"resolvedSourceName"`
 }
 
-type SyncEntriesConfig struct {
-	Token             string `json:"token"`
-	Env               string `json:"env"`
-	Workspace         string `json:"workspace"`
-	UploadIntervalSec int    `json:"interval"`
-}
-
 func CreateWebSocketStatusMessage(tappedPodsStatus []TappedPodStatus) WebSocketStatusMessage {
 	return WebSocketStatusMessage{
 		WebSocketMessageMetadata: &WebSocketMessageMetadata{
@@ -138,15 +119,6 @@ func CreateWebSocketTappedPodsMessage(nodeToTappedPodMap NodeToPodsMap) WebSocke
 			MessageType: WebSocketMessageTypeUpdateTappedPods,
 		},
 		NodeToTappedPodMap: nodeToTappedPodMap,
-	}
-}
-
-func CreateWebSocketMessageTypeAnalyzeStatus(analyzeStatus AnalyzeStatus) WebSocketAnalyzeStatusMessage {
-	return WebSocketAnalyzeStatusMessage{
-		WebSocketMessageMetadata: &WebSocketMessageMetadata{
-			MessageType: WebSocketMessageTypeAnalyzeStatus,
-		},
-		AnalyzeStatus: analyzeStatus,
 	}
 }
 

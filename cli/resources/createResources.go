@@ -14,7 +14,7 @@ import (
 	core "k8s.io/api/core/v1"
 )
 
-func CreateTapMizuResources(ctx context.Context, kubernetesProvider *kubernetes.Provider, serializedValidationRules string, serializedContract string, serializedMizuConfig string, isNsRestrictedMode bool, mizuResourcesNamespace string, agentImage string, syncEntriesConfig *shared.SyncEntriesConfig, maxEntriesDBSizeBytes int64, apiServerResources shared.Resources, imagePullPolicy core.PullPolicy, logLevel logging.Level, profiler bool) (bool, error) {
+func CreateTapMizuResources(ctx context.Context, kubernetesProvider *kubernetes.Provider, serializedValidationRules string, serializedContract string, serializedMizuConfig string, isNsRestrictedMode bool, mizuResourcesNamespace string, agentImage string, maxEntriesDBSizeBytes int64, apiServerResources shared.Resources, imagePullPolicy core.PullPolicy, logLevel logging.Level, profiler bool) (bool, error) {
 	if !isNsRestrictedMode {
 		if err := createMizuNamespace(ctx, kubernetesProvider, mizuResourcesNamespace); err != nil {
 			return false, err
@@ -45,7 +45,6 @@ func CreateTapMizuResources(ctx context.Context, kubernetesProvider *kubernetes.
 		KetoImage:             "",
 		ServiceAccountName:    serviceAccountName,
 		IsNamespaceRestricted: isNsRestrictedMode,
-		SyncEntriesConfig:     syncEntriesConfig,
 		MaxEntriesDBSizeBytes: maxEntriesDBSizeBytes,
 		Resources:             apiServerResources,
 		ImagePullPolicy:       imagePullPolicy,
