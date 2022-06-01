@@ -2,7 +2,6 @@ package shared
 
 const (
 	MizuFilteringOptionsEnvVar = "SENSITIVE_DATA_FILTERING_OPTIONS"
-	SyncEntriesConfigEnvVar    = "SYNC_ENTRIES_CONFIG"
 	HostModeEnvVar             = "HOST_MODE"
 	NodeNameEnvVar             = "NODE_NAME"
 	ConfigDirPath              = "/app/config/"

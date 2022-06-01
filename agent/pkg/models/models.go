@@ -43,11 +43,6 @@ type WebSocketTappedEntryMessage struct {
 	Data *tapApi.OutputChannelItem
 }
 
-type AuthStatus struct {
-	Email string `json:"email"`
-	Model string `json:"model"`
-}
-
 type ToastMessage struct {
 	Type      string `json:"type"`
 	AutoClose uint   `json:"autoClose"`

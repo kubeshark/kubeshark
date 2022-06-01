@@ -44,11 +44,6 @@ export default class Api {
         return response.data;
     }
 
-    analyzeStatus = async () => {
-        const response = await client.get("/status/analyze");
-        return response.data;
-    }
-
     getEntry = async (id, query) => {
         const response = await client.get(`/entries/${id}?query=${encodeURIComponent(query)}`);
         return response.data;
