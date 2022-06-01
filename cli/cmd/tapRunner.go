@@ -124,7 +124,7 @@ func RunMizuTap() {
 	}
 
 	logger.Log.Infof("Waiting for Mizu Agent to start...")
-	if state.mizuServiceAccountExists, err = resources.CreateTapMizuResources(ctx, kubernetesProvider, serializedValidationRules, serializedContract, serializedMizuConfig, config.Config.IsNsRestrictedMode(), config.Config.MizuResourcesNamespace, config.Config.AgentImage, getSyncEntriesConfig(), config.Config.Tap.MaxEntriesDBSizeBytes(), config.Config.Tap.ApiServerResources, config.Config.ImagePullPolicy(), config.Config.LogLevel(), config.Config.Tap.Profiler); err != nil {
+	if state.mizuServiceAccountExists, err = resources.CreateTapMizuResources(ctx, kubernetesProvider, serializedValidationRules, serializedContract, serializedMizuConfig, config.Config.IsNsRestrictedMode(), config.Config.MizuResourcesNamespace, config.Config.AgentImage, config.Config.Tap.MaxEntriesDBSizeBytes(), config.Config.Tap.ApiServerResources, config.Config.ImagePullPolicy(), config.Config.LogLevel(), config.Config.Tap.Profiler); err != nil {
 		var statusError *k8serrors.StatusError
 		if errors.As(err, &statusError) && (statusError.ErrStatus.Reason == metav1.StatusReasonAlreadyExists) {
 			logger.Log.Info("Mizu is already running in this namespace, change the `mizu-resources-namespace` configuration or run `mizu clean` to remove the currently running Mizu instance")
@@ -293,19 +293,6 @@ func getMizuApiFilteringOptions() (*api.TrafficFilteringOptions, error) {
 		IgnoredUserAgents:       config.Config.Tap.IgnoredUserAgents,
 		EnableRedaction:        config.Config.Tap.EnableRedaction,
 	}, nil
-}
-
-func getSyncEntriesConfig() *shared.SyncEntriesConfig {
-	if !config.Config.Tap.Analysis && config.Config.Tap.Workspace == "" {
-		return nil
-	}
-
-	return &shared.SyncEntriesConfig{
-		Token:             config.Config.Auth.Token,
-		Env:               config.Config.Auth.EnvName,
-		Workspace:         config.Config.Tap.Workspace,
-		UploadIntervalSec: config.Config.Tap.UploadIntervalSec,
-	}
 }
 
 func watchApiServerPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc) {

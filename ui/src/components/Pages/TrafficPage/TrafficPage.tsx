@@ -11,13 +11,9 @@ import oasModalOpenAtom from "../../../recoil/oasModalOpen/atom";
 import serviceMap from "../../assets/serviceMap.svg";
 import services from "../../assets/services.svg";
 
-interface TrafficPageProps {
-  setAnalyzeStatus?: (status: any) => void;
-}
-
 const api = Api.getInstance();
 
-export const TrafficPage: React.FC<TrafficPageProps> = ({ setAnalyzeStatus }) => {
+export const TrafficPage: React.FC = () => {
   const commonClasses = useCommonStyles();
   const [serviceMapModalOpen, setServiceMapModalOpen] = useRecoilState(serviceMapModalOpenAtom);
   const [openOasModal, setOpenOasModal] = useRecoilState(oasModalOpenAtom);
@@ -38,7 +34,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({ setAnalyzeStatus }) =>
   const actionButtons = (window["isOasEnabled"] || window["isServiceMapEnabled"]) &&
     <div style={{ display: 'flex', height: "100%" }}>
       {window["isOasEnabled"] && <Button
-        startIcon={<img className="custom" src={services} alt="services"></img>}
+        startIcon={<img className="custom" src={services} alt="services" />}
         size="large"
         variant="contained"
         className={commonClasses.outlinedButton + " " + commonClasses.imagedButton}
@@ -47,7 +43,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({ setAnalyzeStatus }) =>
         Service Catalog
       </Button>}
       {window["isServiceMapEnabled"] && <Button
-        startIcon={<img src={serviceMap} className="custom" alt="service-map" style={{ marginRight: "8%" }}></img>}
+        startIcon={<img src={serviceMap} className="custom" alt="service-map" style={{ marginRight: "8%" }} />}
         size="large"
         variant="contained"
         className={commonClasses.outlinedButton + " " + commonClasses.imagedButton}
@@ -59,7 +55,7 @@ export const TrafficPage: React.FC<TrafficPageProps> = ({ setAnalyzeStatus }) =>
 
   return (
     <>
-      <TrafficViewer setAnalyzeStatus={setAnalyzeStatus} webSocketUrl={MizuWebsocketURL} shouldCloseWebSocket={shouldCloseWebSocket} setShouldCloseWebSocket={setShouldCloseWebSocket}
+      <TrafficViewer webSocketUrl={MizuWebsocketURL} shouldCloseWebSocket={shouldCloseWebSocket} setShouldCloseWebSocket={setShouldCloseWebSocket}
         trafficViewerApiProp={trafficViewerApi} actionButtons={actionButtons} isShowStatusBar={!(openOasModal || serviceMapModalOpen)} isDemoBannerView={false} />
     </>
   );

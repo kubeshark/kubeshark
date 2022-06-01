@@ -10,7 +10,6 @@ import (
 	"github.com/up9inc/mizu/agent/pkg/models"
 	"github.com/up9inc/mizu/agent/pkg/providers/tappedPods"
 	"github.com/up9inc/mizu/agent/pkg/providers/tappers"
-	"github.com/up9inc/mizu/agent/pkg/up9"
 
 	tapApi "github.com/up9inc/mizu/tap/api"
 
@@ -29,10 +28,6 @@ var socketListLock = sync.Mutex{}
 type RoutesEventHandlers struct {
 	EventHandlers
 	SocketOutChannel chan<- *tapApi.OutputChannelItem
-}
-
-func init() {
-	go up9.UpdateAnalyzeStatus(BroadcastToBrowserClients)
 }
 
 func (h *RoutesEventHandlers) WebSocketConnect(_ *gin.Context, socketId int, isTapper bool) {
