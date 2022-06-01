@@ -8,10 +8,10 @@
     "@material-ui/icons": "^4.11.3",
     "@material-ui/lab": "^4.0.0-alpha.60",
     "@types/jest": "^26.0.24",
-    "@types/node": "^12.20.52",
+    "@types/node": "^12.20.54",
     "@uiw/react-textarea-code-editor": "^1.6.0",
     "@up9/mizu-common": "file:up9-mizu-common-0.0.0.tgz",
-    "axios": "^0.25.0",
+    "axios": "^0.27.2",
     "core-js": "^3.22.7",
     "craco-babel-loader": "^1.0.3",
     "highlight.js": "^11.5.1",
@@ -33,10 +33,10 @@
     "react-scrollable-feed-virtualized": "^1.4.9",
     "react-syntax-highlighter": "^15.5.0",
     "react-toastify": "^8.2.0",
-    "redoc": "^2.0.0-rc.59",
+    "redoc": "^2.0.0-rc.71",
     "styled-components": "^5.3.5",
     "typescript": "^4.7.2",
-    "web-vitals": "^1.1.2",
+    "web-vitals": "^2.1.4",
     "xml-formatter": "^2.6.1"
   },
   "devDependencies": {
@@ -45,7 +45,7 @@
     "react-app-rewire-alias": "^1.1.7",
     "react-dev-utils": "^12.0.1",
     "react-error-overlay": "6.0.9",
-    "recoil": "^0.5.2"
+    "recoil": "^0.7.2"
   },
   "scripts": {
     "prestart": "../devops/ui-common-pack.sh $PWD",
