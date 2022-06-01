@@ -86,6 +86,10 @@ func (t *TlsTapper) GlobalGolangTap(procfs string, pid string) error {
 	return t.tapGolangPid(procfs, uint32(_pid), api.UNKNOWN_NAMESPACE)
 }
 
+func (t *TlsTapper) GlobalGolangTapPath(exePath string) error {
+	return t.tapGolangPath(exePath)
+}
+
 func (t *TlsTapper) AddSsllibPid(procfs string, pid uint32, namespace string) error {
 	sslLibrary, err := findSsllib(procfs, pid)
 
@@ -215,6 +219,18 @@ func (t *TlsTapper) tapGolangPid(procfs string, pid uint32, namespace string) er
 	}
 
 	t.registeredPids.Store(pid, true)
+
+	return nil
+}
+
+func (t *TlsTapper) tapGolangPath(exePath string) error {
+	hooks := golangHooks{}
+
+	if err := hooks.installUprobes(&t.bpfObjects, exePath); err != nil {
+		return err
+	}
+
+	t.golangHooksStructs = append(t.golangHooksStructs, hooks)
 
 	return nil
 }
