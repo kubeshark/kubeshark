@@ -19,8 +19,10 @@ type tlsTapperGolangReadWrite struct {
 	ConnAddr    uint32
 	IsRequest   bool
 	IsGzipChunk bool
-	Data        [524288]uint8
 	_           [2]byte
+	Len         uint32
+	Cap         uint32
+	Data        [524288]uint8
 }
 
 type tlsTapperTlsChunk struct {

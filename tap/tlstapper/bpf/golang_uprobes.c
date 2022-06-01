@@ -18,6 +18,8 @@ struct golang_read_write {
     __u32 conn_addr;
     bool is_request;
     bool is_gzip_chunk;
+    __u32 len;
+    __u32 cap;
     __u8 data[BUFFER_SIZE_READ_WRITE];
 };
 
@@ -56,6 +58,8 @@ static __always_inline int golang_crypto_tls_write_uprobe(struct pt_regs *ctx) {
     b->conn_addr = ctx->rsi; // go.itab.*net.TCPConn,net.Conn address
     b->is_request = true;
     b->is_gzip_chunk = false;
+    b->len = ctx->rcx;
+    b->cap = ctx->rdi;
 
     struct socket x = {
         .pid = s->pid,
@@ -103,6 +107,8 @@ static __always_inline int golang_crypto_tls_read_uprobe(struct pt_regs *ctx) {
     b->conn_addr = ctx->rsi; // go.itab.*net.TCPConn,net.Conn address
     b->is_request = false;
     b->is_gzip_chunk = false;
+    b->len = ctx->rcx;
+    b->cap = ctx->rcx; // no cap info
 
     void* stack_addr = (void*)ctx->rsp;
     __u64 data_p;

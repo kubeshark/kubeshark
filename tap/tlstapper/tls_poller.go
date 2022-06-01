@@ -185,12 +185,12 @@ func (p *tlsPoller) pollGolangReadWrite(rd *ringbuf.Reader, emitter api.Emitter,
 			go dissect(p.extension, connection.ClientReader, options)
 			go dissect(p.extension, connection.ServerReader, options)
 
-			request := make([]byte, len(b.Data[:]))
-			copy(request, b.Data[:])
+			request := make([]byte, len(b.Data[:b.Len]))
+			copy(request, b.Data[:b.Len])
 			connection.ClientReader.send(request)
 		} else {
-			response := make([]byte, len(b.Data[:]))
-			copy(response, b.Data[:])
+			response := make([]byte, len(b.Data[:b.Len]))
+			copy(response, b.Data[:b.Len])
 			connection.ServerReader.send(response)
 		}
 	}
