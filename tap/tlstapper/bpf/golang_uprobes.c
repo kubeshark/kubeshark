@@ -162,6 +162,8 @@ static __always_inline int golang_net_http_gzipreader_read_uprobe(struct pt_regs
     b->conn_addr = s->conn_addr;
     b->is_request = false;
     b->is_gzip_chunk = true;
+    b->len = ctx->rax;
+    b->cap = ctx->rax; // no cap info
 
     __u64 data_p;
     // Address at ctx->rsp + 0x8 holds the data
