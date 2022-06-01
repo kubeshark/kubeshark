@@ -105,9 +105,9 @@ type tlsTapperMapSpecs struct {
 	ChunksBuffer         *ebpf.MapSpec `ebpf:"chunks_buffer"`
 	ConnectSyscallInfo   *ebpf.MapSpec `ebpf:"connect_syscall_info"`
 	FileDescriptorToIpv4 *ebpf.MapSpec `ebpf:"file_descriptor_to_ipv4"`
-	GolangDialWrites     *ebpf.MapSpec `ebpf:"golang_dial_writes"`
+	GolangDialToSocket   *ebpf.MapSpec `ebpf:"golang_dial_to_socket"`
 	GolangReadWrites     *ebpf.MapSpec `ebpf:"golang_read_writes"`
-	GolangSocketDials    *ebpf.MapSpec `ebpf:"golang_socket_dials"`
+	GolangSocketToWrite  *ebpf.MapSpec `ebpf:"golang_socket_to_write"`
 	Heap                 *ebpf.MapSpec `ebpf:"heap"`
 	LogBuffer            *ebpf.MapSpec `ebpf:"log_buffer"`
 	PidsMap              *ebpf.MapSpec `ebpf:"pids_map"`
@@ -138,9 +138,9 @@ type tlsTapperMaps struct {
 	ChunksBuffer         *ebpf.Map `ebpf:"chunks_buffer"`
 	ConnectSyscallInfo   *ebpf.Map `ebpf:"connect_syscall_info"`
 	FileDescriptorToIpv4 *ebpf.Map `ebpf:"file_descriptor_to_ipv4"`
-	GolangDialWrites     *ebpf.Map `ebpf:"golang_dial_writes"`
+	GolangDialToSocket   *ebpf.Map `ebpf:"golang_dial_to_socket"`
 	GolangReadWrites     *ebpf.Map `ebpf:"golang_read_writes"`
-	GolangSocketDials    *ebpf.Map `ebpf:"golang_socket_dials"`
+	GolangSocketToWrite  *ebpf.Map `ebpf:"golang_socket_to_write"`
 	Heap                 *ebpf.Map `ebpf:"heap"`
 	LogBuffer            *ebpf.Map `ebpf:"log_buffer"`
 	PidsMap              *ebpf.Map `ebpf:"pids_map"`
@@ -154,9 +154,9 @@ func (m *tlsTapperMaps) Close() error {
 		m.ChunksBuffer,
 		m.ConnectSyscallInfo,
 		m.FileDescriptorToIpv4,
-		m.GolangDialWrites,
+		m.GolangDialToSocket,
 		m.GolangReadWrites,
-		m.GolangSocketDials,
+		m.GolangSocketToWrite,
 		m.Heap,
 		m.LogBuffer,
 		m.PidsMap,

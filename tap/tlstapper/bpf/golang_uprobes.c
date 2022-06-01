@@ -38,7 +38,7 @@ static __always_inline int golang_crypto_tls_write_uprobe(struct pt_regs *ctx) {
     }
 
     __u64 key_dial_full = (pid << 32) + key_dial;
-    struct socket *s = bpf_map_lookup_elem(&golang_dial_writes, &key_dial_full);
+    struct socket *s = bpf_map_lookup_elem(&golang_socket_to_write, &key_dial_full);
     if (s == NULL) {
         bpf_printk("[golang_crypto_tls_write_uprobe] error getting socket");
         return 0;
@@ -155,7 +155,7 @@ static __always_inline int golang_net_socket_uprobe(struct pt_regs *ctx) {
     __u64 pid = pid_tgid >> 32;
     // ctx->r14 is common between golang_net_socket_uprobe and golang_net_http_dialconn_uprobe
     __u64 key_socket = (pid << 32) + ctx->r14;
-    struct socket *s = bpf_map_lookup_elem(&golang_socket_dials, &key_socket);
+    struct socket *s = bpf_map_lookup_elem(&golang_dial_to_socket, &key_socket);
     if (s == NULL) {
         return 0;
     }
@@ -163,7 +163,7 @@ static __always_inline int golang_net_socket_uprobe(struct pt_regs *ctx) {
     struct socket b = { .pid = s->pid, .fd = ctx->rax, .key_dial = s->key_dial };
 
     __u64 key_dial_full = (pid << 32) + s->key_dial;
-    __u32 status = bpf_map_update_elem(&golang_dial_writes, &key_dial_full, &b, BPF_ANY);
+    __u32 status = bpf_map_update_elem(&golang_socket_to_write, &key_dial_full, &b, BPF_ANY);
     if (status != 0) {
         bpf_printk("[golang_net_socket_uprobe] error updating socket file descriptor: %d", status);
     }
@@ -188,7 +188,7 @@ static __always_inline int golang_net_http_dialconn_uprobe(struct pt_regs *ctx) 
     __u64 pid = b.pid;
     // ctx->r14 is common between golang_net_socket_uprobe and golang_net_http_dialconn_uprobe
     __u64 key_socket = (pid << 32) + ctx->r14;
-    status = bpf_map_update_elem(&golang_socket_dials, &key_socket, &b, BPF_ANY);
+    status = bpf_map_update_elem(&golang_dial_to_socket, &key_socket, &b, BPF_ANY);
     if (status != 0) {
         bpf_printk("[golang_net_http_dialconn_uprobe] error setting socket: %d", status);
     }
