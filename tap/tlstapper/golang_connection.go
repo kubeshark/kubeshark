@@ -16,12 +16,14 @@ type golangConnection struct {
 
 func NewGolangConnection(pid uint32, connAddr uint32, extension *api.Extension, emitter api.Emitter) *golangConnection {
 	stream := &tlsStream{}
+	counterPair := &api.CounterPair{}
+	reqResMatcher := extension.Dissector.NewResponseRequestMatcher()
 	return &golangConnection{
 		Pid:          pid,
 		ConnAddr:     connAddr,
 		Stream:       stream,
-		ClientReader: NewGolangReader(extension, emitter, stream, true),
-		ServerReader: NewGolangReader(extension, emitter, stream, false),
+		ClientReader: NewGolangReader(extension, true, emitter, counterPair, stream, reqResMatcher),
+		ServerReader: NewGolangReader(extension, false, emitter, counterPair, stream, reqResMatcher),
 	}
 }
 

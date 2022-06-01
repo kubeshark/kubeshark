@@ -22,7 +22,7 @@ type golangReader struct {
 	reqResMatcher api.RequestResponseMatcher
 }
 
-func NewGolangReader(extension *api.Extension, emitter api.Emitter, stream *tlsStream, isClient bool) *golangReader {
+func NewGolangReader(extension *api.Extension, isClient bool, emitter api.Emitter, counterPair *api.CounterPair, stream *tlsStream, reqResMatcher api.RequestResponseMatcher) *golangReader {
 	return &golangReader{
 		msgQueue:      make(chan []byte, 1),
 		progress:      &api.ReadProgress{},
@@ -31,9 +31,9 @@ func NewGolangReader(extension *api.Extension, emitter api.Emitter, stream *tlsS
 		captureTime:   time.Now(),
 		extension:     extension,
 		emitter:       emitter,
-		counterPair:   &api.CounterPair{},
+		counterPair:   counterPair,
 		parent:        stream,
-		reqResMatcher: extension.Dissector.NewResponseRequestMatcher(),
+		reqResMatcher: reqResMatcher,
 	}
 }
 
