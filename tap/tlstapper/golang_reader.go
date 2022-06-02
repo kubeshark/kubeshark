@@ -2,6 +2,7 @@ package tlstapper
 
 import (
 	"io"
+	"sync"
 	"time"
 
 	"github.com/up9inc/mizu/tap/api"
@@ -20,6 +21,7 @@ type golangReader struct {
 	counterPair   *api.CounterPair
 	parent        *tlsStream
 	reqResMatcher api.RequestResponseMatcher
+	sync.Mutex
 }
 
 func NewGolangReader(extension *api.Extension, isClient bool, emitter api.Emitter, counterPair *api.CounterPair, stream *tlsStream, reqResMatcher api.RequestResponseMatcher) *golangReader {
@@ -38,15 +40,21 @@ func NewGolangReader(extension *api.Extension, isClient bool, emitter api.Emitte
 }
 
 func (r *golangReader) send(b []byte) {
-	r.captureTime = time.Now()
-	r.msgQueue <- b
+	r.Lock()
+	if !r.isClosed {
+		r.captureTime = time.Now()
+		r.msgQueue <- b
+	}
+	r.Unlock()
 }
 
 func (r *golangReader) close() {
+	r.Lock()
 	if !r.isClosed {
 		r.isClosed = true
 		close(r.msgQueue)
 	}
+	r.Unlock()
 }
 
 func (r *golangReader) Read(p []byte) (int, error) {
