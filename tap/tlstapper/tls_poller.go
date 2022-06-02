@@ -161,10 +161,6 @@ func (p *tlsPoller) pollGolangReadWrite(rd *ringbuf.Reader, emitter api.Emitter,
 			connection = _connection.(*golangConnection)
 		}
 
-		if b.IsGzipChunk {
-			connection.Gzipped = true
-		}
-
 		if b.IsRequest {
 			err := connection.setAddressBySockfd(p.procfs, b.Pid, b.Fd)
 			if err != nil {

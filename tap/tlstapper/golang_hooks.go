@@ -10,7 +10,6 @@ type golangHooks struct {
 	golangSocketProbe link.Link
 	golangWriteProbe  link.Link
 	golangReadProbe   link.Link
-	golangGzipProbe   link.Link
 }
 
 func (s *golangHooks) installUprobes(bpfObjects *tlsTapperObjects, filePath string) error {
@@ -72,16 +71,6 @@ func (s *golangHooks) installHooks(bpfObjects *tlsTapperObjects, ex *link.Execut
 		return errors.Wrap(err, 0)
 	}
 
-	// Relative offset points to
-	// [`net/http.(*gzipReader).Read+363`](https://github.com/golang/go/blob/go1.17.6/src/net/http/transport.go#L2832)
-	s.golangGzipProbe, err = ex.Uprobe(golangReadSymbol, bpfObjects.GolangNetHttpGzipreaderReadUprobe, &link.UprobeOptions{
-		Offset: offsets.GolangGzipOffset + 0x16b,
-	})
-
-	if err != nil {
-		return errors.Wrap(err, 0)
-	}
-
 	return nil
 }
 
@@ -101,10 +90,6 @@ func (s *golangHooks) close() []error {
 	}
 
 	if err := s.golangReadProbe.Close(); err != nil {
-		errors = append(errors, err)
-	}
-
-	if err := s.golangGzipProbe.Close(); err != nil {
 		errors = append(errors, err)
 	}
 

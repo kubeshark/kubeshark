@@ -8,7 +8,6 @@ type golangConnection struct {
 	AddressPair  addressPair
 	Requests     [][]byte
 	Responses    [][]byte
-	Gzipped      bool
 	Stream       *tlsStream
 	ClientReader *golangReader
 	ServerReader *golangReader
