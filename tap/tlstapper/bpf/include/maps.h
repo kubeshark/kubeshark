@@ -95,16 +95,20 @@ const struct sys_close *unused2 __attribute__((unused));
 #define BPF_LRU_HASH(_name, _key_type, _value_type) \
     BPF_MAP(_name, BPF_MAP_TYPE_LRU_HASH, _key_type, _value_type, MAX_ENTRIES_LRU_HASH)
 
+// Generic
 BPF_HASH(pids_map, __u32, __u32);
+BPF_PERF_OUTPUT(log_buffer);
+BPF_PERF_OUTPUT(sys_closes);
+
+// OpenSSL specific
 BPF_LRU_HASH(ssl_write_context, __u64, struct ssl_info);
 BPF_LRU_HASH(ssl_read_context, __u64, struct ssl_info);
 BPF_LRU_HASH(file_descriptor_to_ipv4, __u64, struct fd_info);
 BPF_PERF_OUTPUT(chunks_buffer);
-BPF_PERF_OUTPUT(log_buffer);
 
+// Golang specific
 BPF_LRU_HASH(golang_dial_to_socket, __u64, struct golang_socket);
 BPF_LRU_HASH(golang_socket_to_write, __u64, struct golang_socket);
 BPF_PERF_OUTPUT(golang_events);
-BPF_PERF_OUTPUT(sys_closes);
 
 #endif /* __MAPS__ */
