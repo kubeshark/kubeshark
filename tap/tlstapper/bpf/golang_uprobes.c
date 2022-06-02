@@ -6,12 +6,17 @@ Copyright (C) UP9 Inc.
 
 #include "include/headers.h"
 #include "include/maps.h"
+#include "include/pids.h"
 
 
 SEC("uprobe/golang_crypto_tls_write")
 static __always_inline int golang_crypto_tls_write_uprobe(struct pt_regs *ctx) {
-    void* stack_addr = (void*)ctx->rsp;
     __u64 pid_tgid = bpf_get_current_pid_tgid();
+    if (!should_tap(pid_tgid >> 32)) {
+		return 0;
+	}
+
+    void* stack_addr = (void*)ctx->rsp;
     __u64 pid = pid_tgid >> 32;
     __u32 key_dial;
     // Address at ctx->rsp + 0x20 is common between golang_crypto_tls_write_uprobe and golang_net_http_dialconn_uprobe
@@ -56,6 +61,11 @@ static __always_inline int golang_crypto_tls_write_uprobe(struct pt_regs *ctx) {
 
 SEC("uprobe/golang_crypto_tls_read")
 static __always_inline int golang_crypto_tls_read_uprobe(struct pt_regs *ctx) {
+    __u64 pid_tgid = bpf_get_current_pid_tgid();
+    if (!should_tap(pid_tgid >> 32)) {
+		return 0;
+	}
+
     void* stack_addr = (void*)ctx->rsp;
     __u64 data_p;
     // Address at ctx->rsp + 0xd8 holds the data
@@ -71,7 +81,6 @@ static __always_inline int golang_crypto_tls_read_uprobe(struct pt_regs *ctx) {
         return 0;
     }
 
-    __u64 pid_tgid = bpf_get_current_pid_tgid();
     b->pid = pid_tgid >> 32;
     // ctx->rsi is common between golang_crypto_tls_write_uprobe and golang_crypto_tls_read_uprobe
     b->conn_addr = ctx->rsi; // go.itab.*net.TCPConn,net.Conn address
@@ -87,13 +96,16 @@ static __always_inline int golang_crypto_tls_read_uprobe(struct pt_regs *ctx) {
     }
 
     bpf_ringbuf_submit(b, 0);
-
     return 0;
 }
 
 SEC("uprobe/golang_net_socket")
 static __always_inline int golang_net_socket_uprobe(struct pt_regs *ctx) {
     __u64 pid_tgid = bpf_get_current_pid_tgid();
+    if (!should_tap(pid_tgid >> 32)) {
+		return 0;
+	}
+
     __u64 pid = pid_tgid >> 32;
     // ctx->r14 is common between golang_net_socket_uprobe and golang_net_http_dialconn_uprobe
     __u64 key_socket = (pid << 32) + ctx->r14;
@@ -120,6 +132,11 @@ static __always_inline int golang_net_socket_uprobe(struct pt_regs *ctx) {
 
 SEC("uprobe/golang_net_http_dialconn")
 static __always_inline int golang_net_http_dialconn_uprobe(struct pt_regs *ctx) {
+    __u64 pid_tgid = bpf_get_current_pid_tgid();
+    if (!should_tap(pid_tgid >> 32)) {
+		return 0;
+	}
+
     void* stack_addr = (void*)ctx->rsp;
     __u32 key_dial;
     // Address at ctx->rsp + 0x250 is common between golang_crypto_tls_write_uprobe and golang_net_http_dialconn_uprobe
@@ -129,7 +146,6 @@ static __always_inline int golang_net_http_dialconn_uprobe(struct pt_regs *ctx) 
         return 0;
     }
 
-    __u64 pid_tgid = bpf_get_current_pid_tgid();
     struct golang_socket b = {
         .pid = pid_tgid >> 32,
         .fd = 0,
