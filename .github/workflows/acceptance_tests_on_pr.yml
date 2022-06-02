@@ -51,4 +51,4 @@ jobs:
           kubectl config use-context ${USERNAME_UNRESTRICTED}
 
       - name: Test
-        run: npm install -g cypress@10.0.1 && make acceptance-test
+        run: make acceptance-test
