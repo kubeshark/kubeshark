@@ -3,6 +3,7 @@ package tlstapper
 import (
 	"bufio"
 	"bytes"
+	"compress/gzip"
 	"fmt"
 	"log"
 	"sync"
@@ -161,8 +162,22 @@ func (p *tlsPoller) pollGolangReadWrite(rd *ringbuf.Reader, emitter api.Emitter,
 			connection = _connection.(*golangConnection)
 		}
 
+		data := []byte(b.Data[:])
+
 		if b.IsGzipChunk {
+			// Compress if it's gzip chunk (probably wrong!)
 			connection.Gzipped = true
+			var buf bytes.Buffer
+			gz := gzip.NewWriter(&buf)
+			if _, err := gz.Write(data); err != nil {
+				log.Printf("gzip write: %s", err)
+				continue
+			}
+			if err := gz.Close(); err != nil {
+				log.Printf("gzip close: %s", err)
+				continue
+			}
+			data = buf.Bytes()
 		}
 
 		if b.IsRequest {
@@ -184,12 +199,12 @@ func (p *tlsPoller) pollGolangReadWrite(rd *ringbuf.Reader, emitter api.Emitter,
 			go dissect(p.extension, connection.ClientReader, options)
 			go dissect(p.extension, connection.ServerReader, options)
 
-			request := make([]byte, len(b.Data[:b.Len]))
-			copy(request, b.Data[:b.Len])
+			request := make([]byte, len(data[:b.Len]))
+			copy(request, data[:b.Len])
 			connection.ClientReader.send(request)
 		} else {
-			response := make([]byte, len(b.Data[:b.Len]))
-			copy(response, b.Data[:b.Len])
+			response := make([]byte, len(data[:b.Len]))
+			copy(response, data[:b.Len])
 			connection.ServerReader.send(response)
 		}
 	}
