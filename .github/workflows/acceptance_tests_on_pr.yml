@@ -37,12 +37,6 @@ jobs:
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
-      - name: Install cypress
-        uses: cypress-io/github-action@v4
-        with:
-          # just perform install
-          runTests: false
-
       - name: Setup acceptance test
         run: ./acceptanceTests/setup.sh
 
