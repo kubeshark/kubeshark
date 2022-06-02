@@ -119,6 +119,7 @@ func (p *tlsPoller) pollSsllib(emitter api.Emitter, options *api.TrafficFilterin
 
 func (p *tlsPoller) pollGolang(emitter api.Emitter, options *api.TrafficFilteringOptions, streamsMap api.TcpStreamMap) {
 	go p.pollGolangReadWrite(p.golangReader, emitter, options, streamsMap)
+	go p.pollSysClose(p.sysCloses)
 }
 
 func (p *tlsPoller) pollGolangReadWrite(rd *perf.Reader, emitter api.Emitter, options *api.TrafficFilteringOptions,
