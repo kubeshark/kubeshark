@@ -307,7 +307,7 @@ func startTlsTapper(extension *api.Extension, outputItems chan *api.OutputChanne
 		OutputChannel: outputItems,
 	}
 
-	// go tls.PollForLogging()
+	go tls.PollForLogging()
 	go tls.Poll(emitter, options, streamsMap)
 
 	return &tls
