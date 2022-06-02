@@ -6,7 +6,7 @@ FROM node:16 AS front-end-common
 
 WORKDIR /app/ui-build
 COPY ui-common/package.json .
-COPY ui-common/package-lock.json . 
+COPY ui-common/package-lock.json .
 RUN npm i
 COPY ui-common .
 RUN npm pack
