@@ -17,12 +17,15 @@ func NewGolangConnection(pid uint32, connAddr uint32, extension *api.Extension, 
 	stream := &tlsStream{}
 	counterPair := &api.CounterPair{}
 	reqResMatcher := extension.Dissector.NewResponseRequestMatcher()
+	clientReader := NewGolangReader(extension, true, emitter, counterPair, stream, reqResMatcher)
+	serverReader := NewGolangReader(extension, false, emitter, counterPair, stream, reqResMatcher)
+	stream.reader = clientReader
 	return &golangConnection{
 		Pid:          pid,
 		ConnAddr:     connAddr,
 		Stream:       stream,
-		ClientReader: NewGolangReader(extension, true, emitter, counterPair, stream, reqResMatcher),
-		ServerReader: NewGolangReader(extension, false, emitter, counterPair, stream, reqResMatcher),
+		ClientReader: clientReader,
+		ServerReader: serverReader,
 	}
 }
 

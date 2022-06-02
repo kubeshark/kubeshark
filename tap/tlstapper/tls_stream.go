@@ -3,7 +3,7 @@ package tlstapper
 import "github.com/up9inc/mizu/tap/api"
 
 type tlsStream struct {
-	reader   *tlsReader
+	reader   api.TcpReader
 	protocol *api.Protocol
 }
 
@@ -16,7 +16,7 @@ func (t *tlsStream) SetProtocol(protocol *api.Protocol) {
 }
 
 func (t *tlsStream) GetReqResMatchers() []api.RequestResponseMatcher {
-	return []api.RequestResponseMatcher{t.reader.reqResMatcher}
+	return []api.RequestResponseMatcher{t.reader.GetReqResMatcher()}
 }
 
 func (t *tlsStream) GetIsTapTarget() bool {
