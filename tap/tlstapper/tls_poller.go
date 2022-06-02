@@ -139,6 +139,15 @@ func (p *tlsPoller) pollGolangReadWrite(rd *ringbuf.Reader, emitter api.Emitter,
 
 		if p.golangReadWriteMap.Len()+1 > golangMapLimit {
 			pair := p.golangReadWriteMap.Oldest()
+			c := pair.Value.(*golangConnection)
+			clientReader := c.clientReader
+			if clientReader != nil {
+				clientReader.close()
+			}
+			serverReader := c.serverReader
+			if serverReader != nil {
+				serverReader.close()
+			}
 			p.golangReadWriteMap.Delete(pair.Key)
 		}
 

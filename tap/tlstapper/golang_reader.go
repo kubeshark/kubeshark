@@ -13,6 +13,7 @@ type golangReader struct {
 	data          []byte
 	progress      *api.ReadProgress
 	tcpID         *api.TcpID
+	isClosed      bool
 	isClient      bool
 	captureTime   time.Time
 	extension     *api.Extension
@@ -40,6 +41,13 @@ func NewGolangReader(extension *api.Extension, isClient bool, emitter api.Emitte
 func (r *golangReader) send(b []byte) {
 	r.captureTime = time.Now()
 	r.msgQueue <- b
+}
+
+func (r *golangReader) close() {
+	if !r.isClosed {
+		r.isClosed = true
+		close(r.msgQueue)
+	}
 }
 
 func (r *golangReader) Read(p []byte) (int, error) {
