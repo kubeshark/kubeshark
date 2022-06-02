@@ -22,7 +22,7 @@ static __always_inline int golang_crypto_tls_write_uprobe(struct pt_regs *ctx) {
     }
 
     __u64 key_dial_full = (pid << 32) + key_dial;
-    struct socket *s = bpf_map_lookup_elem(&golang_socket_to_write, &key_dial_full);
+    struct golang_socket *s = bpf_map_lookup_elem(&golang_socket_to_write, &key_dial_full);
     if (s == NULL) {
         bpf_printk("[golang_crypto_tls_write_uprobe] error getting socket");
         return 0;
@@ -97,12 +97,12 @@ static __always_inline int golang_net_socket_uprobe(struct pt_regs *ctx) {
     __u64 pid = pid_tgid >> 32;
     // ctx->r14 is common between golang_net_socket_uprobe and golang_net_http_dialconn_uprobe
     __u64 key_socket = (pid << 32) + ctx->r14;
-    struct socket *s = bpf_map_lookup_elem(&golang_dial_to_socket, &key_socket);
+    struct golang_socket *s = bpf_map_lookup_elem(&golang_dial_to_socket, &key_socket);
     if (s == NULL) {
         return 0;
     }
 
-    struct socket b = {
+    struct golang_socket b = {
         .pid = s->pid,
         .fd = ctx->rax,
         .key_dial = s->key_dial,
@@ -130,7 +130,7 @@ static __always_inline int golang_net_http_dialconn_uprobe(struct pt_regs *ctx) 
     }
 
     __u64 pid_tgid = bpf_get_current_pid_tgid();
-    struct socket b = {
+    struct golang_socket b = {
         .pid = pid_tgid >> 32,
         .fd = 0,
         .key_dial = key_dial,

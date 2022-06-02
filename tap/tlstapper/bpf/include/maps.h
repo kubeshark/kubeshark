@@ -57,7 +57,7 @@ struct sys_close {
     __u32 fd;
 };
 
-struct socket {
+struct golang_socket {
     __u32 pid;
     __u32 fd;
     __u64 key_dial;
@@ -108,8 +108,8 @@ BPF_LRU_HASH(file_descriptor_to_ipv4, __u64, struct fd_info);
 BPF_PERF_OUTPUT(chunks_buffer);
 BPF_PERF_OUTPUT(log_buffer);
 
-BPF_LRU_HASH(golang_dial_to_socket, __u64, struct socket);
-BPF_LRU_HASH(golang_socket_to_write, __u64, struct socket);
+BPF_LRU_HASH(golang_dial_to_socket, __u64, struct golang_socket);
+BPF_LRU_HASH(golang_socket_to_write, __u64, struct golang_socket);
 BPF_RINGBUF(golang_read_writes);
 BPF_PERF_OUTPUT(sys_closes);
 
