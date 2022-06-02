@@ -156,7 +156,7 @@ func (p *tlsPoller) pollGolangReadWrite(rd *ringbuf.Reader, emitter api.Emitter,
 
 			connection = NewGolangConnection(b.Pid, b.ConnAddr, p.extension, tlsEmitter)
 			p.golangReadWriteMap.Set(identifier, connection)
-			streamsMap.Store(streamsMap.NextId(), connection.Stream)
+			streamsMap.Store(streamsMap.NextId(), connection.stream)
 		} else {
 			connection = _connection.(*golangConnection)
 		}
@@ -168,25 +168,25 @@ func (p *tlsPoller) pollGolangReadWrite(rd *ringbuf.Reader, emitter api.Emitter,
 				continue
 			}
 
-			tcpid := p.buildTcpId(&connection.AddressPair)
-			connection.ClientReader.tcpID = &tcpid
-			connection.ServerReader.tcpID = &api.TcpID{
-				SrcIP:   connection.ClientReader.tcpID.DstIP,
-				DstIP:   connection.ClientReader.tcpID.SrcIP,
-				SrcPort: connection.ClientReader.tcpID.DstPort,
-				DstPort: connection.ClientReader.tcpID.SrcPort,
+			tcpid := p.buildTcpId(&connection.addressPair)
+			connection.clientReader.tcpID = &tcpid
+			connection.serverReader.tcpID = &api.TcpID{
+				SrcIP:   tcpid.DstIP,
+				DstIP:   tcpid.SrcIP,
+				SrcPort: tcpid.DstPort,
+				DstPort: tcpid.SrcPort,
 			}
 
-			go dissect(p.extension, connection.ClientReader, options)
-			go dissect(p.extension, connection.ServerReader, options)
+			go dissect(p.extension, connection.clientReader, options)
+			go dissect(p.extension, connection.serverReader, options)
 
 			request := make([]byte, len(b.Data[:b.Len]))
 			copy(request, b.Data[:b.Len])
-			connection.ClientReader.send(request)
+			connection.clientReader.send(request)
 		} else {
 			response := make([]byte, len(b.Data[:b.Len]))
 			copy(response, b.Data[:b.Len])
-			connection.ServerReader.send(response)
+			connection.serverReader.send(response)
 		}
 	}
 }

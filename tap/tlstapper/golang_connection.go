@@ -3,14 +3,12 @@ package tlstapper
 import "github.com/up9inc/mizu/tap/api"
 
 type golangConnection struct {
-	Pid          uint32
-	ConnAddr     uint32
-	AddressPair  addressPair
-	Requests     [][]byte
-	Responses    [][]byte
-	Stream       *tlsStream
-	ClientReader *golangReader
-	ServerReader *golangReader
+	pid          uint32
+	connAddr     uint32
+	addressPair  addressPair
+	stream       *tlsStream
+	clientReader *golangReader
+	serverReader *golangReader
 }
 
 func NewGolangConnection(pid uint32, connAddr uint32, extension *api.Extension, emitter api.Emitter) *golangConnection {
@@ -21,11 +19,11 @@ func NewGolangConnection(pid uint32, connAddr uint32, extension *api.Extension, 
 	serverReader := NewGolangReader(extension, false, emitter, counterPair, stream, reqResMatcher)
 	stream.reader = clientReader
 	return &golangConnection{
-		Pid:          pid,
-		ConnAddr:     connAddr,
-		Stream:       stream,
-		ClientReader: clientReader,
-		ServerReader: serverReader,
+		pid:          pid,
+		connAddr:     connAddr,
+		stream:       stream,
+		clientReader: clientReader,
+		serverReader: serverReader,
 	}
 }
 
@@ -34,6 +32,6 @@ func (c *golangConnection) setAddressBySockfd(procfs string, pid uint32, fd uint
 	if err != nil {
 		return err
 	}
-	c.AddressPair = addrPair
+	c.addressPair = addrPair
 	return nil
 }
