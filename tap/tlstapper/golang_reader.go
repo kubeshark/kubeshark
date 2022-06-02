@@ -8,7 +8,6 @@ import (
 )
 
 type golangReader struct {
-	key           string
 	msgQueue      chan []byte
 	data          []byte
 	progress      *api.ReadProgress
@@ -55,14 +54,12 @@ func (r *golangReader) Read(p []byte) (int, error) {
 
 	for len(r.data) == 0 {
 		var ok bool
-		select {
-		case b, ok = <-r.msgQueue:
-			if !ok {
-				return 0, io.EOF
-			}
-
-			r.data = b
+		b, ok = <-r.msgQueue
+		if !ok {
+			return 0, io.EOF
 		}
+
+		r.data = b
 
 		if len(r.data) > 0 {
 			break
