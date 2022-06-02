@@ -60,7 +60,7 @@ static __always_inline int golang_crypto_tls_write_uprobe(struct pt_regs *ctx) {
     b->len = ctx->rcx;
     b->cap = ctx->rdi;
 
-    status = bpf_probe_read_str(&b->data, sizeof(b->data), (void*)ctx->rbx);
+    status = bpf_probe_read(&b->data, CRYPTO_TLS_READ_LEN, (void*)ctx->rbx);
     if (status < 0) {
         bpf_printk("[golang_crypto_tls_write_uprobe] error reading data: %d", status);
         bpf_ringbuf_discard(b, BPF_RB_FORCE_WAKEUP);
@@ -98,7 +98,7 @@ static __always_inline int golang_crypto_tls_read_uprobe(struct pt_regs *ctx) {
         return 0;
     }
 
-    status = bpf_probe_read_str(&b->data, sizeof(b->data), (void*)(data_p));
+    status = bpf_probe_read(&b->data, CRYPTO_TLS_READ_LEN, (void*)(data_p));
     if (status < 0) {
         bpf_printk("[golang_crypto_tls_read_uprobe] error reading data: %d", status);
         bpf_ringbuf_discard(b, BPF_RB_FORCE_WAKEUP);
