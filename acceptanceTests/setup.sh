@@ -84,3 +84,7 @@ rm -f ${TUNNEL_LOG}
 minikube tunnel > ${TUNNEL_LOG} &
 PID2=$!
 echo "Minikube tunnel process id is ${PID2} and log of tunnel in ${TUNNEL_LOG}"
+
+
+echo "installing cypress version 10.0.1"
+npm install -g cypress@10.0.1

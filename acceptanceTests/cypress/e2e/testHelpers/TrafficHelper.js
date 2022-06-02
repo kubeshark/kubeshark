@@ -4,8 +4,6 @@ export const valueTabs = {
     none: null
 }
 
-const maxEntriesInDom = 13;
-
 export function isValueExistsInElement(shouldInclude, content, domPathToContainer){
     it(`should ${shouldInclude ? '' : 'not'} include '${content}'`, function () {
         cy.get(domPathToContainer).then(htmlText => {
