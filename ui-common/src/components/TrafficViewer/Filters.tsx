@@ -1,36 +1,40 @@
-import React, {useRef, useState} from "react";
+import React, { FC, useEffect, useMemo, useRef, useState } from "react";
 import styles from '../style/Filters.module.sass';
-import {Button, Grid, Modal, Box, Typography, Backdrop, Fade, Divider} from "@material-ui/core";
+import { Button, Grid, Modal, Box, Typography, Backdrop, Fade, Divider, debounce } from "@material-ui/core";
 import CodeEditor from '@uiw/react-textarea-code-editor';
 import MenuBookIcon from '@material-ui/icons/MenuBook';
-import {SyntaxHighlighter} from "../UI/SyntaxHighlighter/index";
+import { SyntaxHighlighter } from "../UI/SyntaxHighlighter/index";
 import filterUIExample1 from "assets/filter-ui-example-1.png"
 import filterUIExample2 from "assets/filter-ui-example-2.png"
 import variables from '../../variables.module.scss';
-import {useRecoilState, useRecoilValue} from "recoil";
+import { useRecoilState, useRecoilValue } from "recoil";
 import queryAtom from "../../recoil/query";
 import useKeyPress from "../../hooks/useKeyPress"
 import shortcutsKeyboard from "../../configs/shortcutsKeyboard"
-import trafficViewerApiAtom from "../../recoil/TrafficViewerApi"
+import TrafficViewerApiAtom from "../../recoil/TrafficViewerApi/atom";
 
 
 interface FiltersProps {
-    backgroundColor: string
     reopenConnection: any;
 }
 
-export const Filters: React.FC<FiltersProps> = ({backgroundColor, reopenConnection}) => {
+export const Filters: React.FC<FiltersProps> = ({ reopenConnection }) => {
+    const [query, setQuery] = useRecoilState(queryAtom);
+    const api: any = useRecoilValue(TrafficViewerApiAtom)
+
     return <div className={styles.container}>
         <QueryForm
-            backgroundColor={backgroundColor}
+            query={query}
             reopenConnection={reopenConnection}
-        />
+            onQueryChange={(query) => { setQuery(query); }} validateQuery={api?.validateQuery} />
     </div>;
 };
 
 interface QueryFormProps {
-    backgroundColor: string
-    reopenConnection: any;
+    reopenConnection?: any;
+    query: string
+    onQueryChange?: (query: string) => void
+    validateQuery: (query: string) => Promise<{ valid: boolean, message: string }>;
 }
 
 export const modalStyle = {
@@ -47,18 +51,57 @@ export const modalStyle = {
     color: '#000',
 };
 
-export const QueryForm: React.FC<QueryFormProps> = ({backgroundColor, reopenConnection}) => {
+export const CodeEditorWrap: FC<QueryFormProps> = ({ query, onQueryChange, validateQuery }) => {
+    const [queryBackgroundColor, setQueryBackgroundColor] = useState("#f5f5f5");
+    const handleQueryChange = useMemo(
+        () =>
+            debounce(async (query: string) => {
+                if (!query) {
+                    setQueryBackgroundColor("#f5f5f5");
+                } else {
+                    const data = await validateQuery(query);
+                    if (!data) {
+                        return;
+                    }
+                    if (data.valid) {
+                        setQueryBackgroundColor("#d2fad2");
+                    } else {
+                        setQueryBackgroundColor("#fad6dc");
+                    }
+                }
+            }, 500),
+        [validateQuery]
+    ) as (query: string) => void;
+
+    useEffect(() => {
+        handleQueryChange(query);
+    }, [query, handleQueryChange]);
+
+    return <CodeEditor
+        value={query}
+        language="py"
+        placeholder="Mizu Filter Syntax"
+        onChange={(event) => onQueryChange(event.target.value)}
+        padding={8}
+        style={{
+            fontSize: 14,
+            backgroundColor: `${queryBackgroundColor}`,
+            fontFamily: 'ui-monospace,SFMono-Regular,SF Mono,Consolas,Liberation Mono,Menlo,monospace',
+        }}
+    />
+}
+
+export const QueryForm: React.FC<QueryFormProps> = ({ validateQuery, reopenConnection, query, onQueryChange }) => {
 
     const formRef = useRef<HTMLFormElement>(null);
-    const [query, setQuery] = useRecoilState(queryAtom);
 
     const [openModal, setOpenModal] = useState(false);
 
     const handleOpenModal = () => setOpenModal(true);
     const handleCloseModal = () => setOpenModal(false);
 
-    const handleChange = async (e) => {
-        setQuery(e.target.value.trim());
+    const handleChange = async (val) => {
+        onQueryChange(val.trim());
     }
 
     const handleSubmit = (e) => {
@@ -86,18 +129,7 @@ export const QueryForm: React.FC<QueryFormProps> = ({backgroundColor, reopenConn
                     }}
                 >
                     <label>
-                        <CodeEditor
-                            value={query}
-                            language="py"
-                            placeholder="Mizu Filter Syntax"
-                            onChange={handleChange}
-                            padding={8}
-                            style={{
-                                fontSize: 14,
-                                backgroundColor: `${backgroundColor}`,
-                                fontFamily: 'ui-monospace,SFMono-Regular,SF Mono,Consolas,Liberation Mono,Menlo,monospace',
-                            }}
-                        />
+                        <CodeEditorWrap validateQuery={validateQuery} query={query} onQueryChange={handleChange} />
                     </label>
                 </Grid>
                 <Grid item xs={4}>

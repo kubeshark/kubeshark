@@ -9,6 +9,5 @@ import { InformationIcon, Link } from "./InformationIcon";
 import SelectList from "./SelectList";
 import NoDataMessage from "./NoDataMessage";
 
-
-export { LoadingOverlay, Select, Tabs, Tooltip, Checkbox, CustomModal, InformationIcon, SelectList, NoDataMessage, Link }
+export { LoadingOverlay, Select, Tabs, Tooltip, Checkbox, CustomModal, InformationIcon, SelectList, NoDataMessage, Link };
 export { StatusBar }
