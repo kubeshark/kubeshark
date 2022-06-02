@@ -239,7 +239,6 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({
       {<div className={TrafficViewerStyles.TrafficPageContainer}>
         <div className={TrafficViewerStyles.TrafficPageListContainer}>
           <Filters
-            backgroundColor={queryBackgroundColor}
             reopenConnection={reopenConnection}
           />
           <div className={styles.container}>
