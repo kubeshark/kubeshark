@@ -53,12 +53,30 @@ struct fd_info {
     __u8 flags;
 };
 
+struct sys_close {
+    __u32 fd;
+};
+
 struct socket {
     __u32 pid;
     __u32 fd;
     __u64 key_dial;
     __u64 conn_addr;
 };
+
+struct golang_read_write {
+    __u32 pid;
+    __u32 fd;
+    __u32 conn_addr;
+    bool is_request;
+    __u32 len;
+    __u32 cap;
+    __u8 data[CHUNK_SIZE];
+};
+
+const struct golang_read_write *unused1 __attribute__((unused));
+const struct sys_close *unused2 __attribute__((unused));
+
 
 #define BPF_MAP(_name, _type, _key_type, _value_type, _max_entries)     \
     struct bpf_map_def SEC("maps") _name = {                            \
@@ -93,5 +111,6 @@ BPF_PERF_OUTPUT(log_buffer);
 BPF_LRU_HASH(golang_dial_to_socket, __u64, struct socket);
 BPF_LRU_HASH(golang_socket_to_write, __u64, struct socket);
 BPF_RINGBUF(golang_read_writes);
+BPF_PERF_OUTPUT(sys_closes);
 
 #endif /* __MAPS__ */

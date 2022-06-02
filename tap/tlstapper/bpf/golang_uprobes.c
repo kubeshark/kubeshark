@@ -4,23 +4,8 @@ SPDX-License-Identifier: GPL-2.0
 Copyright (C) UP9 Inc.
 */
 
-#include <stdbool.h>
-
 #include "include/headers.h"
 #include "include/maps.h"
-
-
-struct golang_read_write {
-    __u32 pid;
-    __u32 fd;
-    __u32 conn_addr;
-    bool is_request;
-    __u32 len;
-    __u32 cap;
-    __u8 data[CHUNK_SIZE];
-};
-
-const struct golang_read_write *unused __attribute__((unused));
 
 
 SEC("uprobe/golang_crypto_tls_write")

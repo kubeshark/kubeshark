@@ -24,6 +24,8 @@ type tlsTapperGolangReadWrite struct {
 	Data      [4096]uint8
 }
 
+type tlsTapperSysClose struct{ Fd uint32 }
+
 type tlsTapperTlsChunk struct {
 	Pid      uint32
 	Tgid     uint32
@@ -90,6 +92,7 @@ type tlsTapperProgramSpecs struct {
 	SslWrite                    *ebpf.ProgramSpec `ebpf:"ssl_write"`
 	SslWriteEx                  *ebpf.ProgramSpec `ebpf:"ssl_write_ex"`
 	SysEnterAccept4             *ebpf.ProgramSpec `ebpf:"sys_enter_accept4"`
+	SysEnterClose               *ebpf.ProgramSpec `ebpf:"sys_enter_close"`
 	SysEnterConnect             *ebpf.ProgramSpec `ebpf:"sys_enter_connect"`
 	SysEnterRead                *ebpf.ProgramSpec `ebpf:"sys_enter_read"`
 	SysEnterWrite               *ebpf.ProgramSpec `ebpf:"sys_enter_write"`
@@ -113,6 +116,7 @@ type tlsTapperMapSpecs struct {
 	PidsMap              *ebpf.MapSpec `ebpf:"pids_map"`
 	SslReadContext       *ebpf.MapSpec `ebpf:"ssl_read_context"`
 	SslWriteContext      *ebpf.MapSpec `ebpf:"ssl_write_context"`
+	SysCloses            *ebpf.MapSpec `ebpf:"sys_closes"`
 }
 
 // tlsTapperObjects contains all objects after they have been loaded into the kernel.
@@ -146,6 +150,7 @@ type tlsTapperMaps struct {
 	PidsMap              *ebpf.Map `ebpf:"pids_map"`
 	SslReadContext       *ebpf.Map `ebpf:"ssl_read_context"`
 	SslWriteContext      *ebpf.Map `ebpf:"ssl_write_context"`
+	SysCloses            *ebpf.Map `ebpf:"sys_closes"`
 }
 
 func (m *tlsTapperMaps) Close() error {
@@ -162,6 +167,7 @@ func (m *tlsTapperMaps) Close() error {
 		m.PidsMap,
 		m.SslReadContext,
 		m.SslWriteContext,
+		m.SysCloses,
 	)
 }
 
@@ -182,6 +188,7 @@ type tlsTapperPrograms struct {
 	SslWrite                    *ebpf.Program `ebpf:"ssl_write"`
 	SslWriteEx                  *ebpf.Program `ebpf:"ssl_write_ex"`
 	SysEnterAccept4             *ebpf.Program `ebpf:"sys_enter_accept4"`
+	SysEnterClose               *ebpf.Program `ebpf:"sys_enter_close"`
 	SysEnterConnect             *ebpf.Program `ebpf:"sys_enter_connect"`
 	SysEnterRead                *ebpf.Program `ebpf:"sys_enter_read"`
 	SysEnterWrite               *ebpf.Program `ebpf:"sys_enter_write"`
@@ -204,6 +211,7 @@ func (p *tlsTapperPrograms) Close() error {
 		p.SslWrite,
 		p.SslWriteEx,
 		p.SysEnterAccept4,
+		p.SysEnterClose,
 		p.SysEnterConnect,
 		p.SysEnterRead,
 		p.SysEnterWrite,
