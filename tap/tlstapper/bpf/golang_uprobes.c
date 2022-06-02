@@ -48,7 +48,7 @@ static __always_inline int golang_crypto_tls_write_uprobe(struct pt_regs *ctx) {
     event = bpf_map_lookup_elem(&golang_heap, &zero);
 
     if (!event) {
-		log_error(ctx, LOG_ERROR_ALLOCATING_CHUNK, pid, 0l, 0l);
+		log_error(ctx, LOG_ERROR_GOLANG_ALLOCATING_EVENT, pid, 0l, 0l);
 		return 0;
 	}
 
@@ -94,7 +94,7 @@ static __always_inline int golang_crypto_tls_read_uprobe(struct pt_regs *ctx) {
     event = bpf_map_lookup_elem(&golang_heap, &zero);
 
     if (!event) {
-		log_error(ctx, LOG_ERROR_ALLOCATING_CHUNK, pid, 0l, 0l);
+		log_error(ctx, LOG_ERROR_GOLANG_ALLOCATING_EVENT, pid, 0l, 0l);
 		return 0;
 	}
 

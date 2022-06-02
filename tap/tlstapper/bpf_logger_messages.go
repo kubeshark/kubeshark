@@ -29,4 +29,5 @@ var bpfLogMessages = []string{
 	/*0023*/ "[%d] Golang socket unable to put file descriptor [err: %d]",
 	/*0024*/ "[%d] Golang dial unable to read key_dial [err: %d]",
 	/*0025*/ "[%d] Golang dial unable to put socket [err: %d]",
+	/*0026*/ "[%d] Unable to allocate Golang event in bpf heap",
 }

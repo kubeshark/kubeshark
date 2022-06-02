@@ -35,6 +35,7 @@ Copyright (C) UP9 Inc.
 #define LOG_ERROR_GOLANG_SOCKET_PUTTING_FILE_DESCRIPTOR (23)
 #define LOG_ERROR_GOLANG_DIAL_READING_KEY_DIAL (24)
 #define LOG_ERROR_GOLANG_DIAL_PUTTING_SOCKET (25)
+#define LOG_ERROR_GOLANG_ALLOCATING_EVENT (26)
 
 // Sometimes we have the same error, happening from different locations.
 // 	in order to be able to distinct between them in the log, we add an 
