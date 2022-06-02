@@ -9,7 +9,8 @@ Copyright (C) UP9 Inc.
 #include "include/headers.h"
 #include "include/maps.h"
 
-#define BUFFER_SIZE_READ_WRITE  (1 << 19)  // 512 KiB
+#define BUFFER_SIZE_READ_WRITE  (1 << 19)   // 512 KiB
+#define CRYPTO_TLS_READ_LEN (1 << 12)       // constant 4KiB is observed
 
 
 struct golang_read_write {
@@ -84,8 +85,8 @@ static __always_inline int golang_crypto_tls_read_uprobe(struct pt_regs *ctx) {
     // ctx->rsi is common between golang_crypto_tls_write_uprobe and golang_crypto_tls_read_uprobe
     b->conn_addr = ctx->rsi; // go.itab.*net.TCPConn,net.Conn address
     b->is_request = false;
-    b->len = ctx->rcx;
-    b->cap = ctx->rcx; // no cap info
+    b->len = CRYPTO_TLS_READ_LEN;
+    b->cap = CRYPTO_TLS_READ_LEN; // no cap info
 
     void* stack_addr = (void*)ctx->rsp;
     __u64 data_p;
