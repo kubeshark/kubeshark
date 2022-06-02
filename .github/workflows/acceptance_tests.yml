@@ -51,7 +51,7 @@ jobs:
           kubectl config use-context ${USERNAME_UNRESTRICTED}
 
       - name: Test
-        run: make acceptance-test
+        run: npm install -g cypress@10.0.1 && make acceptance-test
 
       - name: Slack notification on failure
         uses: ravsamhq/notify-slack-action@v1
