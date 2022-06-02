@@ -9,9 +9,6 @@ Copyright (C) UP9 Inc.
 #include "include/headers.h"
 #include "include/maps.h"
 
-#define BUFFER_SIZE_READ_WRITE  (1 << 19)   // 512 KiB
-#define CRYPTO_TLS_READ_LEN (1 << 12)       // constant 4KiB is observed
-
 
 struct golang_read_write {
     __u32 pid;
@@ -20,7 +17,7 @@ struct golang_read_write {
     bool is_request;
     __u32 len;
     __u32 cap;
-    __u8 data[BUFFER_SIZE_READ_WRITE];
+    __u8 data[CHUNK_SIZE];
 };
 
 const struct golang_read_write *unused __attribute__((unused));
@@ -60,7 +57,7 @@ static __always_inline int golang_crypto_tls_write_uprobe(struct pt_regs *ctx) {
     b->len = ctx->rcx;
     b->cap = ctx->rdi;
 
-    status = bpf_probe_read(&b->data, CRYPTO_TLS_READ_LEN, (void*)ctx->rbx);
+    status = bpf_probe_read(&b->data, CHUNK_SIZE, (void*)ctx->rbx);
     if (status < 0) {
         bpf_printk("[golang_crypto_tls_write_uprobe] error reading data: %d", status);
         bpf_ringbuf_discard(b, BPF_RB_FORCE_WAKEUP);
@@ -98,7 +95,7 @@ static __always_inline int golang_crypto_tls_read_uprobe(struct pt_regs *ctx) {
         return 0;
     }
 
-    status = bpf_probe_read(&b->data, CRYPTO_TLS_READ_LEN, (void*)(data_p));
+    status = bpf_probe_read(&b->data, CHUNK_SIZE, (void*)(data_p));
     if (status < 0) {
         bpf_printk("[golang_crypto_tls_read_uprobe] error reading data: %d", status);
         bpf_ringbuf_discard(b, BPF_RB_FORCE_WAKEUP);

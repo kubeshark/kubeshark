@@ -21,7 +21,7 @@ type tlsTapperGolangReadWrite struct {
 	_         [3]byte
 	Len       uint32
 	Cap       uint32
-	Data      [524288]uint8
+	Data      [4096]uint8
 }
 
 type tlsTapperTlsChunk struct {
