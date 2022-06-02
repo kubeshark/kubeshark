@@ -13,7 +13,7 @@ import (
 	"github.com/cilium/ebpf"
 )
 
-type tlsTapperGolangReadWrite struct {
+type tlsTapperGolangEvent struct {
 	Pid       uint32
 	Fd        uint32
 	ConnAddr  uint32
@@ -109,8 +109,8 @@ type tlsTapperMapSpecs struct {
 	ConnectSyscallInfo   *ebpf.MapSpec `ebpf:"connect_syscall_info"`
 	FileDescriptorToIpv4 *ebpf.MapSpec `ebpf:"file_descriptor_to_ipv4"`
 	GolangDialToSocket   *ebpf.MapSpec `ebpf:"golang_dial_to_socket"`
+	GolangEvents         *ebpf.MapSpec `ebpf:"golang_events"`
 	GolangHeap           *ebpf.MapSpec `ebpf:"golang_heap"`
-	GolangReadWrites     *ebpf.MapSpec `ebpf:"golang_read_writes"`
 	GolangSocketToWrite  *ebpf.MapSpec `ebpf:"golang_socket_to_write"`
 	Heap                 *ebpf.MapSpec `ebpf:"heap"`
 	LogBuffer            *ebpf.MapSpec `ebpf:"log_buffer"`
@@ -144,8 +144,8 @@ type tlsTapperMaps struct {
 	ConnectSyscallInfo   *ebpf.Map `ebpf:"connect_syscall_info"`
 	FileDescriptorToIpv4 *ebpf.Map `ebpf:"file_descriptor_to_ipv4"`
 	GolangDialToSocket   *ebpf.Map `ebpf:"golang_dial_to_socket"`
+	GolangEvents         *ebpf.Map `ebpf:"golang_events"`
 	GolangHeap           *ebpf.Map `ebpf:"golang_heap"`
-	GolangReadWrites     *ebpf.Map `ebpf:"golang_read_writes"`
 	GolangSocketToWrite  *ebpf.Map `ebpf:"golang_socket_to_write"`
 	Heap                 *ebpf.Map `ebpf:"heap"`
 	LogBuffer            *ebpf.Map `ebpf:"log_buffer"`
@@ -162,8 +162,8 @@ func (m *tlsTapperMaps) Close() error {
 		m.ConnectSyscallInfo,
 		m.FileDescriptorToIpv4,
 		m.GolangDialToSocket,
+		m.GolangEvents,
 		m.GolangHeap,
-		m.GolangReadWrites,
 		m.GolangSocketToWrite,
 		m.Heap,
 		m.LogBuffer,

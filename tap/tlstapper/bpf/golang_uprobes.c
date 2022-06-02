@@ -15,7 +15,7 @@ struct {
 	__uint(type, BPF_MAP_TYPE_PERCPU_ARRAY);
 	__uint(max_entries, 1);
 	__type(key, int);
-	__type(value, struct golang_read_write);
+	__type(value, struct golang_event);
 } golang_heap SEC(".maps");
 
 SEC("uprobe/golang_crypto_tls_write")
@@ -42,31 +42,31 @@ static __always_inline int golang_crypto_tls_write_uprobe(struct pt_regs *ctx) {
         return 0;
     }
 
-    struct golang_read_write *b = NULL;
+    struct golang_event *event = NULL;
     int zero = 0;
 
-    b = bpf_map_lookup_elem(&golang_heap, &zero);
+    event = bpf_map_lookup_elem(&golang_heap, &zero);
 
-    if (!b) {
+    if (!event) {
 		log_error(ctx, LOG_ERROR_ALLOCATING_CHUNK, pid, 0l, 0l);
 		return 0;
 	}
 
-    b->pid = pid;
-    b->fd = s->fd;
+    event->pid = pid;
+    event->fd = s->fd;
     // ctx->rsi is common between golang_crypto_tls_write_uprobe and golang_crypto_tls_read_uprobe
-    b->conn_addr = ctx->rsi; // go.itab.*net.TCPConn,net.Conn address
-    b->is_request = true;
-    b->len = ctx->rcx;
-    b->cap = ctx->rdi;
+    event->conn_addr = ctx->rsi; // go.itab.*net.TCPConn,net.Conn address
+    event->is_request = true;
+    event->len = ctx->rcx;
+    event->cap = ctx->rdi;
 
-    status = bpf_probe_read(&b->data, CHUNK_SIZE, (void*)ctx->rbx);
+    status = bpf_probe_read(&event->data, CHUNK_SIZE, (void*)ctx->rbx);
     if (status < 0) {
         log_error(ctx, LOG_ERROR_GOLANG_WRITE_READING_DATA, pid_tgid, status, 0l);
         return 0;
     }
 
-    bpf_perf_event_output(ctx, &golang_read_writes, BPF_F_CURRENT_CPU, b, sizeof(struct golang_read_write));
+    bpf_perf_event_output(ctx, &golang_events, BPF_F_CURRENT_CPU, event, sizeof(struct golang_event));
 
     return 0;
 }
@@ -88,30 +88,30 @@ static __always_inline int golang_crypto_tls_read_uprobe(struct pt_regs *ctx) {
         return 0;
     }
 
-    struct golang_read_write *b = NULL;
+    struct golang_event *event = NULL;
     int zero = 0;
 
-    b = bpf_map_lookup_elem(&golang_heap, &zero);
+    event = bpf_map_lookup_elem(&golang_heap, &zero);
 
-    if (!b) {
+    if (!event) {
 		log_error(ctx, LOG_ERROR_ALLOCATING_CHUNK, pid, 0l, 0l);
 		return 0;
 	}
 
-    b->pid = pid;
+    event->pid = pid;
     // ctx->rsi is common between golang_crypto_tls_write_uprobe and golang_crypto_tls_read_uprobe
-    b->conn_addr = ctx->rsi; // go.itab.*net.TCPConn,net.Conn address
-    b->is_request = false;
-    b->len = ctx->rcx;
-    b->cap = ctx->rcx; // no cap info
+    event->conn_addr = ctx->rsi; // go.itab.*net.TCPConn,net.Conn address
+    event->is_request = false;
+    event->len = ctx->rcx;
+    event->cap = ctx->rcx; // no cap info
 
-    status = bpf_probe_read(&b->data, CHUNK_SIZE, (void*)(data_p));
+    status = bpf_probe_read(&event->data, CHUNK_SIZE, (void*)(data_p));
     if (status < 0) {
         log_error(ctx, LOG_ERROR_GOLANG_READ_READING_DATA, pid_tgid, status, 0l);
         return 0;
     }
 
-    bpf_perf_event_output(ctx, &golang_read_writes, BPF_F_CURRENT_CPU, b, sizeof(struct golang_read_write));
+    bpf_perf_event_output(ctx, &golang_events, BPF_F_CURRENT_CPU, event, sizeof(struct golang_event));
     return 0;
 }
 
