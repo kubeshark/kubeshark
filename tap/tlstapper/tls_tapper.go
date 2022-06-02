@@ -1,8 +1,6 @@
 package tlstapper
 
 import (
-	"fmt"
-	"os"
 	"strconv"
 	"sync"
 
@@ -196,7 +194,7 @@ func (t *TlsTapper) tapSsllibPid(pid uint32, sslLibrary string, namespace string
 }
 
 func (t *TlsTapper) tapGolangPid(procfs string, pid uint32, namespace string) error {
-	exePath, err := os.Readlink(fmt.Sprintf("%s/%d/exe", procfs, pid))
+	exePath, err := findLibraryByPid(procfs, pid, "")
 	if err != nil {
 		return err
 	}
