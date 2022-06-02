@@ -89,8 +89,8 @@ func StartPassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem, 
 		diagnose.StartMemoryProfiler(os.Getenv(MemoryProfilingDumpPath), os.Getenv(MemoryProfilingTimeIntervalSeconds))
 	}
 
-	initializePassiveTapper(opts, outputItems, streamsMap)
-	// go startPassiveTapper(streamsMap, assembler)
+	assembler := initializePassiveTapper(opts, outputItems, streamsMap)
+	go startPassiveTapper(streamsMap, assembler)
 }
 
 func UpdateTapTargets(newTapTargets []v1.Pod) {
