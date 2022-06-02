@@ -26,15 +26,18 @@ export const Filters: React.FC<FiltersProps> = ({ reopenConnection }) => {
         <QueryForm
             query={query}
             reopenConnection={reopenConnection}
-            onQueryChange={(query) => { setQuery(query); }} validateQuery={api?.validateQuery} />
+            onQueryChange={(query) => { setQuery(query?.trim()); }} validateQuery={api?.validateQuery} />
     </div>;
 };
+
+type OnQueryChnage = { valid: boolean, message: string, query: string }
 
 interface QueryFormProps {
     reopenConnection?: any;
     query: string
     onQueryChange?: (query: string) => void
     validateQuery: (query: string) => Promise<{ valid: boolean, message: string }>;
+    onValidationChanged?: (event: OnQueryChnage) => void
 }
 
 export const modalStyle = {
@@ -51,13 +54,14 @@ export const modalStyle = {
     color: '#000',
 };
 
-export const CodeEditorWrap: FC<QueryFormProps> = ({ query, onQueryChange, validateQuery }) => {
+export const CodeEditorWrap: FC<QueryFormProps> = ({ query, onQueryChange, validateQuery, onValidationChanged }) => {
     const [queryBackgroundColor, setQueryBackgroundColor] = useState("#f5f5f5");
     const handleQueryChange = useMemo(
         () =>
             debounce(async (query: string) => {
                 if (!query) {
                     setQueryBackgroundColor("#f5f5f5");
+                    onValidationChanged && onValidationChanged({ query: query, message: "", valid: true })
                 } else {
                     const data = await validateQuery(query);
                     if (!data) {
@@ -68,9 +72,10 @@ export const CodeEditorWrap: FC<QueryFormProps> = ({ query, onQueryChange, valid
                     } else {
                         setQueryBackgroundColor("#fad6dc");
                     }
+                    onValidationChanged && onValidationChanged({ query: query, message: data.message, valid: data.valid })
                 }
             }, 500),
-        [validateQuery]
+        [onValidationChanged, validateQuery]
     ) as (query: string) => void;
 
     useEffect(() => {
@@ -91,7 +96,7 @@ export const CodeEditorWrap: FC<QueryFormProps> = ({ query, onQueryChange, valid
     />
 }
 
-export const QueryForm: React.FC<QueryFormProps> = ({ validateQuery, reopenConnection, query, onQueryChange }) => {
+export const QueryForm: React.FC<QueryFormProps> = ({ validateQuery, reopenConnection, query, onQueryChange, onValidationChanged }) => {
 
     const formRef = useRef<HTMLFormElement>(null);
 
@@ -100,8 +105,8 @@ export const QueryForm: React.FC<QueryFormProps> = ({ validateQuery, reopenConne
     const handleOpenModal = () => setOpenModal(true);
     const handleCloseModal = () => setOpenModal(false);
 
-    const handleChange = async (val) => {
-        onQueryChange(val.trim());
+    const handleChange = async (queryObj) => {
+        onQueryChange(queryObj);
     }
 
     const handleSubmit = (e) => {
@@ -129,7 +134,7 @@ export const QueryForm: React.FC<QueryFormProps> = ({ validateQuery, reopenConne
                     }}
                 >
                     <label>
-                        <CodeEditorWrap validateQuery={validateQuery} query={query} onQueryChange={handleChange} />
+                        <CodeEditorWrap validateQuery={validateQuery} query={query} onQueryChange={handleChange} onValidationChanged={onValidationChanged} />
                     </label>
                 </Grid>
                 <Grid item xs={4}>
