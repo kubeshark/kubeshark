@@ -150,7 +150,8 @@ static __always_inline int golang_net_socket_uprobe(struct pt_regs *ctx) {
 SEC("uprobe/golang_net_http_dialconn")
 static __always_inline int golang_net_http_dialconn_uprobe(struct pt_regs *ctx) {
     __u64 pid_tgid = bpf_get_current_pid_tgid();
-    if (!should_tap(pid_tgid >> 32)) {
+    __u64 pid = pid_tgid >> 32;
+    if (!should_tap(pid)) {
 		return 0;
 	}
 
@@ -164,13 +165,12 @@ static __always_inline int golang_net_http_dialconn_uprobe(struct pt_regs *ctx) 
     }
 
     struct golang_socket b = {
-        .pid = pid_tgid >> 32,
+        .pid = pid,
         .fd = 0,
         .key_dial = key_dial,
         .conn_addr = 0,
     };
 
-    __u64 pid = b.pid;
     // ctx->r14 is common between golang_net_socket_uprobe and golang_net_http_dialconn_uprobe
     __u64 key_socket = (pid << 32) + ctx->r14;
     status = bpf_map_update_elem(&golang_dial_to_socket, &key_socket, &b, BPF_ANY);
