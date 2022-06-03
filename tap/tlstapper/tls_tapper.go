@@ -205,6 +205,8 @@ func (t *TlsTapper) tapGolangPid(procfs string, pid uint32, namespace string) er
 		return err
 	}
 
+	logger.Log.Infof("Tapping TLS (pid: %v) (Golang: %v)", pid, exePath)
+
 	t.golangHooksStructs = append(t.golangHooksStructs, hooks)
 
 	t.poller.addPid(pid, namespace)
