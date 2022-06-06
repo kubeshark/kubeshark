@@ -77,10 +77,6 @@ func (t *TlsTapper) GlobalGolangTap(procfs string, pid string) error {
 		return err
 	}
 
-	if err != nil {
-		return err
-	}
-
 	return t.tapGolangPid(procfs, uint32(_pid), api.UNKNOWN_NAMESPACE)
 }
 
