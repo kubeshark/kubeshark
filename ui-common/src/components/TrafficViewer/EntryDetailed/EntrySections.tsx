@@ -1,5 +1,5 @@
 import styles from "./EntrySections.module.sass";
-import React, { useState } from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { SyntaxHighlighter } from "../../UI/SyntaxHighlighter/index";
 import CollapsibleContainer from "../../UI/CollapsibleContainer";
 import FancyTextDisplay from "../../UI/FancyTextDisplay";
@@ -8,6 +8,7 @@ import Checkbox from "../../UI/Checkbox";
 import ProtobufDecoder from "protobuf-decoder";
 import { default as jsonBeautify } from "json-beautify";
 import { default as xmlBeautify } from "xml-formatter";
+import { Utils } from "../../../helpers/Utils"
 
 interface EntryViewLineProps {
     label: string;
@@ -101,6 +102,12 @@ export const EntrySectionContainer: React.FC<EntrySectionContainerProps> = ({ ti
     </CollapsibleContainer>
 }
 
+const MAXIMUM_BYTES_TO_FORMAT = 1000000; // The maximum of chars to highlight in body, in case the response can be megabytes
+const jsonLikeFormats = ['json', 'yaml', 'yml'];
+const xmlLikeFormats = ['xml', 'html'];
+const protobufFormats = ['application/grpc'];
+const supportedFormats = jsonLikeFormats.concat(xmlLikeFormats, protobufFormats);
+
 interface EntryBodySectionProps {
     title: string,
     content: any,
@@ -118,21 +125,21 @@ export const EntryBodySection: React.FC<EntryBodySectionProps> = ({
     contentType,
     selector,
 }) => {
-    const MAXIMUM_BYTES_TO_FORMAT = 1000000; // The maximum of chars to highlight in body, in case the response can be megabytes
-    const jsonLikeFormats = ['json', 'yaml', 'yml'];
-    const xmlLikeFormats = ['xml', 'html'];
-    const protobufFormats = ['application/grpc'];
-    const supportedFormats = jsonLikeFormats.concat(xmlLikeFormats, protobufFormats);
-
     const [isPretty, setIsPretty] = useState(true);
-    const [showLineNumbers, setShowLineNumbers] = useState(true);
+    const [showLineNumbers, setShowLineNumbers] = useState(false);
     const [decodeBase64, setDecodeBase64] = useState(true);
 
     const isBase64Encoding = encoding === 'base64';
     const supportsPrettying = supportedFormats.some(format => contentType?.indexOf(format) > -1);
     const [isDecodeGrpc, setIsDecodeGrpc] = useState(true);
+    const [isLineNumbersGreaterThenOne, setIsLineNumbersGreaterThenOne] = useState(true);
 
-    const formatTextBody = (body: any): string => {
+    useEffect(() => {
+        (isLineNumbersGreaterThenOne && isPretty) && setShowLineNumbers(true);
+        !isLineNumbersGreaterThenOne && setShowLineNumbers(false);
+    }, [isLineNumbersGreaterThenOne, isPretty])
+
+    const formatTextBody = useCallback((body: any): string => {
         if (!decodeBase64) return body;
 
         const chunk = body.slice(0, MAXIMUM_BYTES_TO_FORMAT);
@@ -158,15 +165,24 @@ export const EntryBodySection: React.FC<EntryBodySectionProps> = ({
                 return jsonBeautify(protobufDecoded, null, 2, 80);
             }
         } catch (error) {
-            if (String(error).includes("More than one message in")){
-                if(isDecodeGrpc)
-                setIsDecodeGrpc(false);
+            if (String(error).includes("More than one message in")) {
+                if (isDecodeGrpc)
+                    setIsDecodeGrpc(false);
+            } else if (String(error).includes("Failed to parse")) {
+                console.warn(error);
             } else {
                 console.error(error);
             }
         }
         return bodyBuf;
-    }
+    }, [isPretty, contentType, isDecodeGrpc, decodeBase64, isBase64Encoding])
+
+    const formattedText = useMemo(() => formatTextBody(content), [formatTextBody, content]);
+
+    useEffect(() => {
+        const lineNumbers = Utils.lineNumbersInString(formattedText);
+        setIsLineNumbersGreaterThenOne(lineNumbers > 1);
+    }, [isPretty, content, showLineNumbers, formattedText]);
 
     return <React.Fragment>
         {content && content?.length > 0 && <EntrySectionContainer
@@ -181,18 +197,19 @@ export const EntryBodySection: React.FC<EntryBodySectionProps> = ({
                 {supportsPrettying && <span style={{ marginLeft: '.2rem' }}>Pretty</span>}
 
                 <div style={{ paddingTop: 3, paddingLeft: supportsPrettying ? 20 : 0 }}>
-                    <Checkbox checked={showLineNumbers} onToggle={() => { setShowLineNumbers(!showLineNumbers) }} />
+                    <Checkbox checked={showLineNumbers} onToggle={() => { setShowLineNumbers(!showLineNumbers) }} disabled={!isLineNumbersGreaterThenOne || !decodeBase64} />
                 </div>
-                <span style={{ marginLeft: '.2rem' }}>Line numbers</span>      
-                {isBase64Encoding && <div style={{ paddingTop: 3, paddingLeft: 20 }}>
+                <span style={{ marginLeft: '.2rem' }}>Line numbers</span>
+
+                {isBase64Encoding && <div style={{ paddingTop: 3, paddingLeft: (isLineNumbersGreaterThenOne || supportsPrettying) ? 20 : 0 }}>
                     <Checkbox checked={decodeBase64} onToggle={() => { setDecodeBase64(!decodeBase64) }} />
                 </div>}
                 {isBase64Encoding && <span style={{ marginLeft: '.2rem' }}>Decode Base64</span>}
                 {!isDecodeGrpc && <span style={{ fontSize: '12px', color: '#DB2156', marginLeft: '.8rem' }}>More than one message in protobuf payload is not supported</span>}
-            </div>  
+            </div>
 
-            <SyntaxHighlighter  
-                code={formatTextBody(content)}
+            <SyntaxHighlighter
+                code={formattedText}
                 showLineNumbers={showLineNumbers}
             />
 

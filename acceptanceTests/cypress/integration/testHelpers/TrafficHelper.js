@@ -57,15 +57,8 @@ export function rightOnHoverCheck(path, expectedText) {
     cy.get(`#rightSideContainer [data-cy='QueryableTooltip']`).invoke('text').should('match', new RegExp(expectedText));
 }
 
-export function checkThatAllEntriesShown() {
-    cy.get('#entries-length').then(number => {
-        if (number.text() === '1')
-            cy.get('[title="Fetch old records"]').click();
-    });
-}
-
 export function checkFilterByMethod(funcDict) {
-    const {protocol, method, methodQuery, summary, summaryQuery} = funcDict;
+    const {protocol, method, methodQuery, summary, summaryQuery, numberOfRecords} = funcDict;
     const summaryDict = getSummaryDict(summary, summaryQuery);
     const methodDict = getMethodDict(method, methodQuery);
     const protocolDict = getProtocolDict(protocol.name, protocol.text);
@@ -76,51 +69,51 @@ export function checkFilterByMethod(funcDict) {
         cy.get('[type="submit"]').click();
         cy.get('.w-tc-editor').should('have.attr', 'style').and('include', Cypress.env('greenFilterColor'));
 
-        cy.get('#entries-length').then(number => {
-            // if the entries list isn't expanded it expands here
-            if (number.text() === '0' || number.text() === '1') // todo change when TRA-4262 is fixed
-                cy.get('[title="Fetch old records"]').click();
+        waitForFetch(numberOfRecords);
+        pauseStream();
 
-            cy.get('#entries-length').should('not.have.text', '0').and('not.have.text', '1').then(() => {
-                cy.get(`#list [id]`).then(elements => {
-                    const listElmWithIdAttr = Object.values(elements);
-                    let doneCheckOnFirst = false;
+        cy.get(`#list [id^=entry]`).then(elements => {
+            const listElmWithIdAttr = Object.values(elements);
+            let doneCheckOnFirst = false;
 
-                    cy.get('#entries-length').invoke('text').then(len => {
-                        resizeIfNeeded(len);
-                        listElmWithIdAttr.forEach(entry => {
-                            if (entry?.id && entry.id.match(RegExp(/entry-(\d{24})$/gm))) {
-                                const entryId = getEntryId(entry.id);
+            cy.get('#entries-length').invoke('text').then(len => {
+                listElmWithIdAttr.forEach(entry => {
+                    if (entry?.id && entry.id.match(RegExp(/entry-(\d{24})$/gm))) {
+                        const entryId = getEntryId(entry.id);
 
-                                leftTextCheck(entryId, methodDict.pathLeft, methodDict.expectedText);
-                                leftTextCheck(entryId, protocolDict.pathLeft, protocolDict.expectedTextLeft);
-                                if (summaryDict)
-                                    leftTextCheck(entryId, summaryDict.pathLeft, summaryDict.expectedText);
+                        leftTextCheck(entryId, methodDict.pathLeft, methodDict.expectedText);
+                        leftTextCheck(entryId, protocolDict.pathLeft, protocolDict.expectedTextLeft);
+                        if (summaryDict)
+                            leftTextCheck(entryId, summaryDict.pathLeft, summaryDict.expectedText);
 
-                                if (!doneCheckOnFirst) {
-                                    deepCheck(funcDict, protocolDict, methodDict, entry);
-                                    doneCheckOnFirst = true;
-                                }
-                            }
-                        });
-                        resizeIfNeeded(len);
-                    });
+                        if (!doneCheckOnFirst) {
+                            deepCheck(funcDict, protocolDict, methodDict, entry);
+                            doneCheckOnFirst = true;
+                        }
+                    }
                 });
             });
         });
     });
 }
 
+export const refreshWaitTimeout = 10000;
+
+export function waitForFetch(gt) {
+    cy.get('#entries-length', {timeout: refreshWaitTimeout}).should((el) => {
+        expect(parseInt(el.text().trim(), 10)).to.be.greaterThan(gt);
+    });
+}
+
+export function pauseStream() {
+    cy.get('#pause-icon').click();
+    cy.get('#pause-icon').should('not.be.visible');
+}
+
+
 export function getEntryId(id) {
     // take the second part from the string (entry-<ID>)
     return id.split('-')[1];
-}
-
-function resizeIfNeeded(entriesLen) {
-    if (entriesLen > maxEntriesInDom){
-        Cypress.config().viewportHeight === Cypress.env('normalMizuHeight') ?
-            resizeToHugeMizu() : resizeToNormalMizu()
-    }
 }
 
 function deepCheck(generalDict, protocolDict, methodDict, entry) {

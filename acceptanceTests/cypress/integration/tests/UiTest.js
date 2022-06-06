@@ -7,11 +7,11 @@ import {
     resizeToNormalMizu,
     rightOnHoverCheck,
     rightTextCheck,
-    verifyMinimumEntries
+    verifyMinimumEntries,
+    refreshWaitTimeout,
+    waitForFetch,
+    pauseStream
 } from "../testHelpers/TrafficHelper";
-
-const refreshWaitTimeout = 10000;
-
 
 const fullParam = Cypress.env('arrayDict'); // "Name:fooNamespace:barName:foo1Namespace:bar1"
 const podsArray = fullParam.split('Name:').slice(1); // ["fooNamespace:bar", "foo1Namespace:bar1"]
@@ -65,70 +65,77 @@ it('right side sanity test', function () {
 checkIllegalFilter('invalid filter');
 
 checkFilter({
-    name: 'http',
+    filter: 'http',
     leftSidePath: '> :nth-child(1) > :nth-child(1)',
     leftSideExpectedText: 'HTTP',
     rightSidePath: '[title=HTTP]',
     rightSideExpectedText: 'Hypertext Transfer Protocol -- HTTP/1.1',
-    applyByEnter: true
+    applyByCtrlEnter: true,
+    numberOfRecords: 20,
 });
 
 checkFilter({
-    name: 'response.status == 200',
+    filter: 'response.status == 200',
     leftSidePath: '[title="Status Code"]',
     leftSideExpectedText: '200',
     rightSidePath: '> :nth-child(2) [title="Status Code"]',
     rightSideExpectedText: '200',
-    applyByEnter: false
+    applyByCtrlEnter: false,
+    numberOfRecords: 20
 });
 
 if (Cypress.env('shouldCheckSrcAndDest')) {
     serviceMapCheck();
 
     checkFilter({
-        name: 'src.name == ""',
+        filter: 'src.name == ""',
         leftSidePath: '[title="Source Name"]',
         leftSideExpectedText: '[Unresolved]',
         rightSidePath: '> :nth-child(2) [title="Source Name"]',
         rightSideExpectedText: '[Unresolved]',
-        applyByEnter: false
+        applyByCtrlEnter: false,
+        numberOfRecords: 20
     });
 
     checkFilter({
-        name: `dst.name == "httpbin.mizu-tests"`,
+        filter: `dst.name == "httpbin.mizu-tests"`,
         leftSidePath: '> :nth-child(3) > :nth-child(2) > :nth-child(3) > :nth-child(2)',
         leftSideExpectedText: 'httpbin.mizu-tests',
         rightSidePath: '> :nth-child(2) > :nth-child(2) > :nth-child(2) > :nth-child(3) > :nth-child(2)',
         rightSideExpectedText: 'httpbin.mizu-tests',
-        applyByEnter: false
+        applyByCtrlEnter: false,
+        numberOfRecords: 20
     });
 }
 
 checkFilter({
-    name: 'request.method == "GET"',
+    filter: 'request.method == "GET"',
     leftSidePath: '> :nth-child(3) > :nth-child(1) > :nth-child(1) > :nth-child(2)',
     leftSideExpectedText: 'GET',
     rightSidePath: '> :nth-child(2) > :nth-child(2) > :nth-child(1) > :nth-child(1) > :nth-child(2)',
     rightSideExpectedText: 'GET',
-    applyByEnter: true
+    applyByCtrlEnter: true,
+    numberOfRecords: 20
 });
 
 checkFilter({
-    name: 'request.path == "/get"',
+    filter: 'request.path == "/get"',
     leftSidePath: '> :nth-child(3) > :nth-child(1) > :nth-child(2) > :nth-child(2)',
     leftSideExpectedText: '/get',
     rightSidePath: '> :nth-child(2) > :nth-child(2) > :nth-child(1) > :nth-child(2) > :nth-child(2)',
     rightSideExpectedText: '/get',
-    applyByEnter: false
+    applyByCtrlEnter: false,
+    numberOfRecords: 20
 });
 
 checkFilter({
-    name: 'src.ip == "127.0.0.1"',
+    filter: 'src.ip == "127.0.0.1"',
     leftSidePath: '[title="Source IP"]',
     leftSideExpectedText: '127.0.0.1',
     rightSidePath: '> :nth-child(2) [title="Source IP"]',
     rightSideExpectedText: '127.0.0.1',
-    applyByEnter: false
+    applyByCtrlEnter: false,
+    numberOfRecords: 20
 });
 
 checkFilterNoResults('request.method == "POST"');
@@ -182,67 +189,62 @@ function checkIllegalFilter(illegalFilterName) {
 
 function checkFilter(filterDetails) {
     const {
-        name,
+        filter,
         leftSidePath,
         rightSidePath,
         rightSideExpectedText,
         leftSideExpectedText,
-        applyByEnter
+        applyByCtrlEnter,
+        numberOfRecords
     } = filterDetails;
 
     const entriesForDeeperCheck = 5;
 
-    it(`checking the filter: ${name}`, function () {
-        cy.get('#total-entries').should('not.have.text', '0').then(number => {
-            const totalEntries = number.text();
+    it(`checking the filter: ${filter}`, function () {
+        cy.get('.w-tc-editor-text').clear();
+        // applying the filter with alt+enter or with the button
+        cy.get('.w-tc-editor-text').type(`${filter}${applyByCtrlEnter ? '{ctrl+enter}' : ''}`);
+        cy.get('.w-tc-editor').should('have.attr', 'style').and('include', Cypress.env('greenFilterColor'));
+        if (!applyByCtrlEnter)
+            cy.get('[type="submit"]').click();
 
-            cy.get(`#list [id^=entry]`).last().then(elem => {
-                const element = elem[0];
-                const entryId = getEntryId(element.id);
-                // checks the hover on the last entry (the only one in DOM at the beginning)
-                leftOnHoverCheck(entryId, leftSidePath, name);
+        waitForFetch(numberOfRecords);
+        pauseStream();
 
-                cy.get('.w-tc-editor-text').clear();
-                // applying the filter with alt+enter or with the button
-                cy.get('.w-tc-editor-text').type(`${name}${applyByEnter ? '{alt+enter}' : ''}`);
-                cy.get('.w-tc-editor').should('have.attr', 'style').and('include', Cypress.env('greenFilterColor'));
-                if (!applyByEnter)
-                    cy.get('[type="submit"]').click();
+        cy.get(`#list [id^=entry]`).last().then(elem => {
+            const element = elem[0];
+            const entryId = getEntryId(element.id);
 
-                // only one entry in DOM after filtering, checking all checks on it
-                leftTextCheck(entryId, leftSidePath, leftSideExpectedText);
-                leftOnHoverCheck(entryId, leftSidePath, name);
+            // only one entry in DOM after filtering, checking all checks on it
+            leftTextCheck(entryId, leftSidePath, leftSideExpectedText);
+            leftOnHoverCheck(entryId, leftSidePath, filter);
 
-                rightTextCheck(rightSidePath, rightSideExpectedText);
-                rightOnHoverCheck(rightSidePath, name);
-                checkRightSideResponseBody();
-            });
+            rightTextCheck(rightSidePath, rightSideExpectedText);
+            rightOnHoverCheck(rightSidePath, filter);
+            checkRightSideResponseBody();
+        });
 
-            cy.get('[title="Fetch old records"]').click();
-            resizeToHugeMizu();
+        resizeToHugeMizu();
 
-            // waiting for the entries number to load
-            cy.get('#entries-length', {timeout: refreshWaitTimeout}).should('have.text', totalEntries);
+        // checking only 'leftTextCheck' on all entries because the rest of the checks require more time
+        cy.get(`#list [id^=entry]`).each(elem => {
+            const element = elem[0];
+            let entryId = getEntryId(element.id);
+            leftTextCheck(entryId, leftSidePath, leftSideExpectedText);
+        });
 
-            // checking only 'leftTextCheck' on all entries because the rest of the checks require more time
-            cy.get(`#list [id^=entry]`).each(elem => {
-                const element = elem[0];
-                let entryId = getEntryId(element.id);
-                leftTextCheck(entryId, leftSidePath, leftSideExpectedText);
-            });
+        // making the other 3 checks on the first X entries (longer time for each check)
+        deeperCheck(leftSidePath, rightSidePath, filter, rightSideExpectedText, entriesForDeeperCheck);
 
-            // making the other 3 checks on the first X entries (longer time for each check)
-            deeperCheck(leftSidePath, rightSidePath, name, leftSideExpectedText, rightSideExpectedText, entriesForDeeperCheck);
-
-            // reloading then waiting for the entries number to load
-            resizeToNormalMizu();
-            cy.reload();
-            cy.get('#total-entries', {timeout: refreshWaitTimeout}).should('have.text', totalEntries);
-        })
+        // reloading then waiting for the entries number to load
+        resizeToNormalMizu();
+        cy.reload();
+        waitForFetch(numberOfRecords);
+        pauseStream();
     });
 }
 
-function deeperCheck(leftSidePath, rightSidePath, filterName, leftSideExpectedText, rightSideExpectedText, entriesNumToCheck) {
+function deeperCheck(leftSidePath, rightSidePath, filterName, rightSideExpectedText, entriesNumToCheck) {
     cy.get(`#list [id^=entry]`).each((element, index) => {
         if (index < entriesNumToCheck) {
             const entryId = getEntryId(element[0].id);
@@ -266,11 +268,12 @@ function checkRightSideResponseBody() {
         const decodedBody = atob(encodedBody);
         const responseBody = JSON.parse(decodedBody);
 
+
         const expectdJsonBody = {
             args: RegExp({}),
             url: RegExp('http://.*/get'),
             headers: {
-                "User-Agent": RegExp('[REDACTED]'),
+                "User-Agent": RegExp('client'),
                 "Accept-Encoding": RegExp('gzip'),
                 "X-Forwarded-Uri": RegExp('/api/v1/namespaces/.*/services/.*/proxy/get')
             }
@@ -287,16 +290,16 @@ function checkRightSideResponseBody() {
 
         cy.get(`${Cypress.env('bodyJsonClass')} > `).its('length').should('be.gt', 1).then(linesNum => {
             cy.get(`${Cypress.env('bodyJsonClass')} > >`).its('length').should('be.gt', linesNum).then(jsonItemsNum => {
-                checkPrettyAndLineNums(jsonItemsNum, decodedBody);
+                // checkPrettyAndLineNums(decodedBody);
 
-                clickCheckbox('Line numbers');
-                checkPrettyOrNothing(jsonItemsNum, decodedBody);
+                //clickCheckbox('Line numbers');
+                //checkPrettyOrNothing(jsonItemsNum, decodedBody);
 
-                clickCheckbox('Pretty');
-                checkPrettyOrNothing(jsonItemsNum, decodedBody);
-
-                clickCheckbox('Line numbers');
-                checkOnlyLineNumberes(jsonItemsNum, decodedBody);
+                // clickCheckbox('Pretty');
+                // checkPrettyOrNothing(jsonItemsNum, decodedBody);
+                //
+                // clickCheckbox('Line numbers');
+                // checkOnlyLineNumberes(jsonItemsNum, decodedBody);
             });
         });
     });
@@ -306,7 +309,7 @@ function clickCheckbox(type) {
     cy.contains(`${type}`).prev().children().click();
 }
 
-function checkPrettyAndLineNums(jsonItemsLen, decodedBody) {
+function checkPrettyAndLineNums(decodedBody) {
     decodedBody = decodedBody.replaceAll(' ', '');
     cy.get(`${Cypress.env('bodyJsonClass')} >`).then(elements => {
         const lines = Object.values(elements);

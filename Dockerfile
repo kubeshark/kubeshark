@@ -68,6 +68,7 @@ COPY shared/go.mod shared/go.mod ../shared/
 COPY logger/go.mod logger/go.mod ../logger/
 COPY tap/go.mod tap/go.mod ../tap/
 COPY tap/api/go.mod ../tap/api/
+COPY tap/dbgctl/go.mod ../tap/dbgctl/
 COPY tap/extensions/amqp/go.mod ../tap/extensions/amqp/
 COPY tap/extensions/http/go.mod ../tap/extensions/http/
 COPY tap/extensions/kafka/go.mod ../tap/extensions/kafka/
@@ -94,8 +95,8 @@ RUN go build -ldflags="-extldflags=-static -s -w \
     -X 'github.com/up9inc/mizu/agent/pkg/version.Ver=${VER}'" -o mizuagent .
 
 # Download Basenine executable, verify the sha1sum
-ADD https://github.com/up9inc/basenine/releases/download/v0.7.3/basenine_linux_${GOARCH} ./basenine_linux_${GOARCH}
-ADD https://github.com/up9inc/basenine/releases/download/v0.7.3/basenine_linux_${GOARCH}.sha256 ./basenine_linux_${GOARCH}.sha256
+ADD https://github.com/up9inc/basenine/releases/download/v0.8.2/basenine_linux_${GOARCH} ./basenine_linux_${GOARCH}
+ADD https://github.com/up9inc/basenine/releases/download/v0.8.2/basenine_linux_${GOARCH}.sha256 ./basenine_linux_${GOARCH}.sha256
 
 RUN shasum -a 256 -c basenine_linux_"${GOARCH}".sha256 && \
     chmod +x ./basenine_linux_"${GOARCH}" && \

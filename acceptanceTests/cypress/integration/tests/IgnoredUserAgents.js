@@ -1,5 +1,4 @@
 import {
-    checkThatAllEntriesShown,
     isValueExistsInElement,
     resizeToHugeMizu,
 } from "../testHelpers/TrafficHelper";
@@ -12,13 +11,14 @@ checkEntries();
 
 function checkEntries() {
     it('checking all entries', function () {
-        checkThatAllEntriesShown();
-        resizeToHugeMizu();
+        cy.get('#entries-length').should('not.have.text', '0').then(() => {
+            resizeToHugeMizu();
 
-        cy.get('#list [id^=entry]').each(entryElement => {
-            entryElement.click();
-            cy.get('#tbody-Headers').should('be.visible');
-            isValueExistsInElement(false, 'Ignored-User-Agent', '#tbody-Headers');
+            cy.get('#list [id^=entry]').each(entryElement => {
+                entryElement.click();
+                cy.get('#tbody-Headers').should('be.visible');
+                isValueExistsInElement(false, 'Ignored-User-Agent', '#tbody-Headers');
+            });
         });
     });
 }

@@ -78,7 +78,3 @@ func (reader *tcpReader) GetEmitter() api.Emitter {
 func (reader *tcpReader) GetIsClosed() bool {
 	return reader.isClosed
 }
-
-func (reader *tcpReader) GetExtension() *api.Extension {
-	return reader.extension
-}
