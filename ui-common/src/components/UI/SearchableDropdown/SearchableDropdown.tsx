@@ -1,9 +1,9 @@
 import React from "react";
-import { makeStyles } from "@material-ui/core/styles";
-import { Autocomplete } from "@material-ui/lab";
-import { Checkbox, TextField } from "@material-ui/core";
-import CheckBoxOutlineBlankIcon from "@material-ui/icons/CheckBoxOutlineBlank";
-import CheckBoxIcon from "@material-ui/icons/CheckBox";
+import makeStyles from '@mui/styles/makeStyles';
+import { Autocomplete } from "@mui/material";
+import { Checkbox, TextField } from "@mui/material";
+import CheckBoxOutlineBlankIcon from '@mui/icons-material/CheckBoxOutlineBlank';
+import CheckBoxIcon from '@mui/icons-material/CheckBox';
 import DefaultIconDown from "DefaultIconDown.svg";
 import styles from "./SearchableDropdown.module.sass";
 

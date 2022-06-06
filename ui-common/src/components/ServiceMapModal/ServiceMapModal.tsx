@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
-import { Box, Fade, Modal, Backdrop, Button } from "@material-ui/core";
+import { Box, Fade, Modal, Backdrop, Button } from "@mui/material";
 import { toast } from "react-toastify";
 import spinnerStyle from '../UI/style/Spinner.module.sass';
 import spinnerImg from 'assets/spinner.svg';

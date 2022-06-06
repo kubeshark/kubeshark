@@ -1,6 +1,8 @@
 import Tooltip from "./Tooltip";
 import React from "react";
-import { makeStyles, Theme,createStyles } from '@material-ui/core/styles';
+import { createStyles } from '@mui/styles';
+import { Theme } from '@mui/material/styles'
+import makeStyles from '@mui/styles/makeStyles';
 import variables from '../../variables.module.scss';
 
 interface Tab {

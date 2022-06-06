@@ -1,5 +1,6 @@
 import React from 'react';
-import { makeStyles, Modal, Backdrop, Fade, Box } from '@material-ui/core';
+import { Modal, Backdrop, Fade, Box } from '@mui/material';
+import makeStyles from '@mui/styles/makeStyles';
 import {useCommonStyles} from "../../helpers/commonStyle";
 
 const useStyles = makeStyles({

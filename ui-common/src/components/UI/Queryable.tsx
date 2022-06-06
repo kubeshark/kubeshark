@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { CopyToClipboard } from 'react-copy-to-clipboard';
-import AddCircleIcon from '@material-ui/icons/AddCircle';
+import AddCircleIcon from '@mui/icons-material/AddCircle';
 import QueryableStyle from './style/Queryable.module.sass';
 import {useRecoilState} from "recoil";
 import queryAtom from "../../recoil/query";

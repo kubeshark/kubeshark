@@ -1,4 +1,5 @@
-import {Tooltip as MUITooltip, Fade, TooltipProps as MUITooltipProps, makeStyles} from "@material-ui/core";
+import {Tooltip as MUITooltip, Fade, TooltipProps as MUITooltipProps } from "@mui/material";
+import makeStyles from '@mui/styles/makeStyles';
 import React from "react";
 
 export interface TooltipProps extends MUITooltipProps {
@@ -36,7 +37,6 @@ const Tooltip: React.FC<TooltipProps> = (props) => {
     return (
         <MUITooltip
             classes={{tooltip: `${backgroundClass} ` + classes[variant]}}
-            interactive={true}
             enterDelay={200}
             TransitionComponent={Fade}
             {..._props}

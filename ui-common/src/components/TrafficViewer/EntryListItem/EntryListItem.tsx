@@ -1,6 +1,6 @@
 import React from "react";
 import Moment from 'moment';
-import SwapHorizIcon from '@material-ui/icons/SwapHoriz';
+import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
 import styles from './EntryListItem.module.sass';
 import StatusCode, {getClassification, StatusCodeClassification} from "../../UI/StatusCode";
 import Protocol, {ProtocolInterface} from "../../UI/Protocol"
