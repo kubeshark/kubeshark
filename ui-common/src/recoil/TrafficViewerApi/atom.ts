@@ -3,7 +3,7 @@ import TrafficViewerApi from "../../components/TrafficViewer/TrafficViewerApi";
 
 const TrafficViewerApiAtom = atom({
     key: "TrafficViewerApiAtom",
-    default: {} as TrafficViewerApi
+    default: {}
 });
 
 export default TrafficViewerApiAtom;

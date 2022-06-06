@@ -1,24 +1,23 @@
-import React, {useEffect, useMemo, useRef, useState} from "react";
-import {Filters} from "./Filters";
-import {EntriesList} from "./EntriesList";
-import {makeStyles} from "@material-ui/core";
+import React, { useEffect, useRef, useState } from "react";
+import { Filters } from "./Filters";
+import { EntriesList } from "./EntriesList";
+import { makeStyles } from "@material-ui/core";
 import TrafficViewerStyles from "./TrafficViewer.module.sass";
 import styles from '../style/EntriesList.module.sass';
-import {EntryDetailed} from "./EntryDetailed";
+import { EntryDetailed } from "./EntryDetailed";
 import playIcon from 'assets/run.svg';
 import pauseIcon from 'assets/pause.svg';
 import variables from '../../variables.module.scss';
-import {ToastContainer} from 'react-toastify';
-import debounce from 'lodash/debounce';
-import {RecoilRoot, RecoilState, useRecoilState, useRecoilValue, useSetRecoilState} from "recoil";
+import { ToastContainer } from 'react-toastify';
+import { RecoilRoot, RecoilState, useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
 import entriesAtom from "../../recoil/entries";
 import focusedEntryIdAtom from "../../recoil/focusedEntryId";
 import queryAtom from "../../recoil/query";
 import trafficViewerApiAtom from "../../recoil/TrafficViewerApi"
 import TrafficViewerApi from "./TrafficViewerApi";
-import {StatusBar} from "../UI/StatusBar";
+import { StatusBar } from "../UI/StatusBar";
 import tappingStatusAtom from "../../recoil/tappingStatus/atom";
-import {TOAST_CONTAINER_ID} from "../../configs/Consts";
+import { TOAST_CONTAINER_ID } from "../../configs/Consts";
 import leftOffTopAtom from "../../recoil/leftOffTop";
 import { DEFAULT_LEFTOFF, DEFAULT_FETCH, DEFAULT_FETCH_TIMEOUT_MS } from '../../hooks/useWS';
 
@@ -70,34 +69,12 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({
   const [isSnappedToBottom, setIsSnappedToBottom] = useState(true);
   const [wsReadyState, setWsReadyState] = useState(0);
 
-  const [queryBackgroundColor, setQueryBackgroundColor] = useState("#f5f5f5");
-
   const setLeftOffTop = useSetRecoilState(leftOffTopAtom);
   const scrollableRef = useRef(null);
 
-  const handleQueryChange = useMemo(
-    () =>
-      debounce(async (query: string) => {
-        if (!query) {
-          setQueryBackgroundColor("#f5f5f5");
-        } else {
-          const data = await trafficViewerApiProp.validateQuery(query);
-          if (!data) {
-            return;
-          }
-          if (data.valid) {
-            setQueryBackgroundColor("#d2fad2");
-          } else {
-            setQueryBackgroundColor("#fad6dc");
-          }
-        }
-      }, 500),
-    []
-  ) as (query: string) => void;
 
-  useEffect(() => {
-    handleQueryChange(query);
-  }, [query, handleQueryChange]);
+
+
 
   useEffect(() => {
     if(shouldCloseWebSocket){
@@ -262,7 +239,6 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({
       {<div className={TrafficViewerStyles.TrafficPageContainer}>
         <div className={TrafficViewerStyles.TrafficPageListContainer}>
           <Filters
-            backgroundColor={queryBackgroundColor}
             reopenConnection={reopenConnection}
           />
           <div className={styles.container}>

@@ -5,6 +5,7 @@ import useWS, { DEFAULT_LEFTOFF } from './hooks/useWS';
 import OasModal from './components/OasModal/OasModal';
 import { ServiceMapModal } from './components/ServiceMapModal/ServiceMapModal';
 
+export { CodeEditorWrap as QueryForm } from './components/TrafficViewer/Filters';
 export { UI, StatusBar, OasModal, ServiceMapModal }
 export { useWS, DEFAULT_LEFTOFF }
 export default TrafficViewer;
