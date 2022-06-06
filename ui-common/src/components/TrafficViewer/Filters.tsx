@@ -30,14 +30,14 @@ export const Filters: React.FC<FiltersProps> = ({ reopenConnection }) => {
     </div>;
 };
 
-type OnQueryChnage = { valid: boolean, message: string, query: string }
+type OnQueryChange = { valid: boolean, message: string, query: string }
 
 interface QueryFormProps {
     reopenConnection?: any;
     query: string
     onQueryChange?: (query: string) => void
     validateQuery: (query: string) => Promise<{ valid: boolean, message: string }>;
-    onValidationChanged?: (event: OnQueryChnage) => void
+    onValidationChanged?: (event: OnQueryChange) => void
 }
 
 export const modalStyle = {
@@ -105,10 +105,6 @@ export const QueryForm: React.FC<QueryFormProps> = ({ validateQuery, reopenConne
     const handleOpenModal = () => setOpenModal(true);
     const handleCloseModal = () => setOpenModal(false);
 
-    const handleChange = async (queryObj) => {
-        onQueryChange(queryObj);
-    }
-
     const handleSubmit = (e) => {
         reopenConnection();
         e.preventDefault();
@@ -134,7 +130,7 @@ export const QueryForm: React.FC<QueryFormProps> = ({ validateQuery, reopenConne
                     }}
                 >
                     <label>
-                        <CodeEditorWrap validateQuery={validateQuery} query={query} onQueryChange={handleChange} onValidationChanged={onValidationChanged} />
+                        <CodeEditorWrap validateQuery={validateQuery} query={query} onQueryChange={onQueryChange} onValidationChanged={onValidationChanged} />
                     </label>
                 </Grid>
                 <Grid item xs={4}>
