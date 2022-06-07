@@ -21,25 +21,7 @@ static __always_inline void ssl_uprobe(struct pt_regs *ctx, void* ssl, void* buf
 	}
 	
 	struct ssl_info *infoPtr = bpf_map_lookup_elem(map_fd, &id);
-	struct ssl_info info = {};
-	
-	if (infoPtr == NULL) {
-		info.fd = -1;
-		info.created_at_nano = bpf_ktime_get_ns();
-	} else {
-		long err = bpf_probe_read(&info, sizeof(struct ssl_info), infoPtr);
-		
-		if (err != 0) {
-			log_error(ctx, LOG_ERROR_READING_SSL_CONTEXT, id, err, ORIGIN_SSL_UPROBE_CODE);
-		}
-		
-		if ((bpf_ktime_get_ns() - info.created_at_nano) > SSL_INFO_MAX_TTL_NANO) {
-			// If the ssl info is too old, we don't want to use its info because it may be incorrect.
-			//
-			info.fd = -1;
-			info.created_at_nano = bpf_ktime_get_ns();
-		}
-	}
+	struct ssl_info info = lookup_ssl_info(ctx, &ssl_write_context, id);
 	
 	info.count_ptr = count_ptr;
 	info.buffer = buffer;

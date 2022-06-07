@@ -21,26 +21,7 @@ static __always_inline int golang_crypto_tls_write_uprobe(struct pt_regs *ctx) {
 		return 0;
 	}
 
-    struct ssl_info *infoPtr = bpf_map_lookup_elem(&ssl_write_context, &pid_tgid);
-	struct ssl_info info = {};
-
-	if (infoPtr == NULL) {
-		info.fd = -1;
-		info.created_at_nano = bpf_ktime_get_ns();
-	} else {
-		long err = bpf_probe_read(&info, sizeof(struct ssl_info), infoPtr);
-
-		if (err != 0) {
-			log_error(ctx, LOG_ERROR_READING_SSL_CONTEXT, pid_tgid, err, ORIGIN_SSL_UPROBE_CODE);
-		}
-
-		if ((bpf_ktime_get_ns() - info.created_at_nano) > SSL_INFO_MAX_TTL_NANO) {
-			// If the ssl info is too old, we don't want to use its info because it may be incorrect.
-			//
-			info.fd = -1;
-			info.created_at_nano = bpf_ktime_get_ns();
-		}
-	}
+	struct ssl_info info = lookup_ssl_info(ctx, &ssl_write_context, pid_tgid);
 
 	info.buffer_len = ctx->rcx;
 	info.buffer = (void*)ctx->rbx;
@@ -73,26 +54,7 @@ static __always_inline int golang_crypto_tls_read_uprobe(struct pt_regs *ctx) {
         return 0;
     }
 
-    struct ssl_info *infoPtr = bpf_map_lookup_elem(&ssl_read_context, &pid_tgid);
-	struct ssl_info info = {};
-
-	if (infoPtr == NULL) {
-		info.fd = -1;
-		info.created_at_nano = bpf_ktime_get_ns();
-	} else {
-		long err = bpf_probe_read(&info, sizeof(struct ssl_info), infoPtr);
-
-		if (err != 0) {
-			log_error(ctx, LOG_ERROR_READING_SSL_CONTEXT, pid_tgid, err, ORIGIN_SSL_UPROBE_CODE);
-		}
-
-		if ((bpf_ktime_get_ns() - info.created_at_nano) > SSL_INFO_MAX_TTL_NANO) {
-			// If the ssl info is too old, we don't want to use its info because it may be incorrect.
-			//
-			info.fd = -1;
-			info.created_at_nano = bpf_ktime_get_ns();
-		}
-	}
+	struct ssl_info info = lookup_ssl_info(ctx, &ssl_read_context, pid_tgid);
 
 	info.buffer_len = ctx->rcx;
 	info.buffer = (void*)data_p;
