@@ -10,142 +10,17 @@ Copyright (C) UP9 Inc.
 #include "include/log.h"
 #include "include/logger_messages.h"
 #include "include/pids.h"
+#include "include/common.h"
 
-static __always_inline int golang_get_count_bytes(struct pt_regs *ctx, struct ssl_info* info, __u64 id) {
-	size_t countBytes;
-	long err = bpf_probe_read(&countBytes, sizeof(size_t), (void*) info->count_ptr);
-	
-	if (err != 0) {
-		log_error(ctx, LOG_ERROR_READING_BYTES_COUNT, id, err, 0l);
-		return 0;
-	}
-	
-	return countBytes;
-}
-
-static __always_inline int golang_add_address_to_chunk(struct pt_regs *ctx, struct tls_chunk* chunk, __u64 id, __u32 fd) {
-	__u32 pid = id >> 32;
-	__u64 key = (__u64) pid << 32 | fd;
-	
-    // bpf_printk("[golang_add_address_to_chunk] file_descriptor_to_ipv4 key: %d", key);
-	struct fd_info *fdinfo = bpf_map_lookup_elem(&file_descriptor_to_ipv4, &key);
-	
-	if (fdinfo == NULL) {
-		return 0;
-	}
-	
-	int err = bpf_probe_read(chunk->address, sizeof(chunk->address), fdinfo->ipv4_addr);
-	chunk->flags |= (fdinfo->flags & FLAGS_IS_CLIENT_BIT);
-	
-	if (err != 0) {
-		log_error(ctx, LOG_ERROR_READING_FD_ADDRESS, id, err, 0l);
-		return 0;
-	}
-	
-	return 1;
-}
-
-static __always_inline void golang_send_chunk_part(struct pt_regs *ctx, __u8* buffer, __u64 id, 
-	struct tls_chunk* chunk, int start, int end) {
-	size_t recorded = MIN(end - start, sizeof(chunk->data));
-	
-	if (recorded <= 0) {
-		return;
-	}
-	
-	chunk->recorded = recorded;
-	chunk->start = start;
-	
-	// This ugly trick is for the ebpf verifier happiness
-	//
-	long err = 0;
-	if (chunk->recorded == sizeof(chunk->data)) {
-		err = bpf_probe_read(chunk->data, sizeof(chunk->data), buffer + start);
-	} else {
-		recorded &= (sizeof(chunk->data) - 1); // Buffer must be N^2
-		err = bpf_probe_read(chunk->data, recorded, buffer + start);
-	}
-	
-	if (err != 0) {
-		log_error(ctx, LOG_ERROR_READING_FROM_SSL_BUFFER, id, err, 0l);
-		return;
-	}
-
-    // bpf_printk("[golang_send_chunk_part] perf_event");
-	
-	bpf_perf_event_output(ctx, &chunks_buffer, BPF_F_CURRENT_CPU, chunk, sizeof(struct tls_chunk));
-}
-
-static __always_inline void golang_send_chunk(struct pt_regs *ctx, __u8* buffer, __u64 id, struct tls_chunk* chunk) {
-	// ebpf loops must be bounded at compile time, we can't use (i < chunk->len / CHUNK_SIZE)
-	//
-	// 	https://lwn.net/Articles/794934/
-	// 
-	// However we want to run in kernel older than 5.3, hence we use "#pragma unroll" anyway
-	// 
-	#pragma unroll
-	for (int i = 0; i < MAX_CHUNKS_PER_OPERATION; i++) {
-		if (chunk->len <= (CHUNK_SIZE * i)) {
-			break;
-		}
-		
-		golang_send_chunk_part(ctx, buffer, id, chunk, CHUNK_SIZE * i, chunk->len);
-	}
-}
-
-static __always_inline void golang_output_ssl_chunk(struct pt_regs *ctx, struct ssl_info* info, __u64 id, __u32 flags) {
-	int countBytes = info->buffer_len;
-    // bpf_printk("countBytes: %d", countBytes);
-	
-	if (countBytes <= 0) {
-		return;
-	}
-	
-	if (countBytes > (CHUNK_SIZE * MAX_CHUNKS_PER_OPERATION)) {
-		log_error(ctx, LOG_ERROR_BUFFER_TOO_BIG, id, countBytes, 0l);
-		return;
-	}
-	
-	struct tls_chunk* chunk;
-	int zero = 0;
-	
-	// If other thread, running on the same CPU get to this point at the same time like us (context switch)
-	//	the data will be corrupted - protection may be added in the future
-	//
-	chunk = bpf_map_lookup_elem(&heap, &zero);
-	
-	if (!chunk) {
-		log_error(ctx, LOG_ERROR_ALLOCATING_CHUNK, id, 0l, 0l);
-		return;
-	}
-	
-	chunk->flags = flags;
-	chunk->pid = id >> 32;
-	chunk->tgid = id;
-	chunk->len = countBytes;
-	chunk->fd = info->fd;
-	
-	if (!golang_add_address_to_chunk(ctx, chunk, id, chunk->fd)) {
-        // bpf_printk("OOPS! Can't determine address.");
-		// Without an address, we drop the chunk because there is not much to do with it in Go
-		//
-		return;
-	}
-	
-	golang_send_chunk(ctx, info->buffer, id, chunk);
-}
 
 SEC("uprobe/golang_crypto_tls_write")
 static __always_inline int golang_crypto_tls_write_uprobe(struct pt_regs *ctx) {
-    // bpf_printk("called [golang_crypto_tls_write_uprobe]");
     __u64 pid_tgid = bpf_get_current_pid_tgid();
     __u64 pid = pid_tgid >> 32;
     if (!should_tap(pid)) {
-        // bpf_printk("[golang_crypto_tls_write_uprobe] SHOULD NOT TAP");
 		return 0;
 	}
 
-    bpf_printk("[golang_crypto_tls_write_uprobe] ssl_write_context lookup key: %d", pid_tgid);
     struct ssl_info *infoPtr = bpf_map_lookup_elem(&ssl_write_context, &pid_tgid);
 	struct ssl_info info = {};
 
@@ -176,20 +51,16 @@ static __always_inline int golang_crypto_tls_write_uprobe(struct pt_regs *ctx) {
 		log_error(ctx, LOG_ERROR_PUTTING_SSL_CONTEXT, pid_tgid, err, 0l);
 	}
 
-    bpf_printk("[golang_crypto_tls_write_uprobe] reached output info.fd: %d", info.fd);
-
-    golang_output_ssl_chunk(ctx, &info, pid_tgid, 0);
+    output_ssl_chunk(ctx, &info, info.buffer_len, pid_tgid, 0);
 
     return 0;
 }
 
 SEC("uprobe/golang_crypto_tls_read")
 static __always_inline int golang_crypto_tls_read_uprobe(struct pt_regs *ctx) {
-    // bpf_printk("called [golang_crypto_tls_read_uprobe]");
     __u64 pid_tgid = bpf_get_current_pid_tgid();
     __u64 pid = pid_tgid >> 32;
     if (!should_tap(pid)) {
-        // bpf_printk("[golang_crypto_tls_read_uprobe] SHOULD NOT TAP");
 		return 0;
 	}
 
@@ -202,7 +73,6 @@ static __always_inline int golang_crypto_tls_read_uprobe(struct pt_regs *ctx) {
         return 0;
     }
 
-    bpf_printk("[golang_crypto_tls_read_uprobe] ssl_read_context lookup key: %d", pid_tgid);
     struct ssl_info *infoPtr = bpf_map_lookup_elem(&ssl_read_context, &pid_tgid);
 	struct ssl_info info = {};
 
@@ -233,9 +103,7 @@ static __always_inline int golang_crypto_tls_read_uprobe(struct pt_regs *ctx) {
 		log_error(ctx, LOG_ERROR_PUTTING_SSL_CONTEXT, pid_tgid, err, 0l);
 	}
 
-    bpf_printk("[golang_crypto_tls_read_uprobe] reached output info.fd: %d", info.fd);
-
-    golang_output_ssl_chunk(ctx, &info, pid_tgid, FLAGS_IS_READ_BIT);
+    output_ssl_chunk(ctx, &info, info.buffer_len, pid_tgid, FLAGS_IS_READ_BIT);
 
     return 0;
 }

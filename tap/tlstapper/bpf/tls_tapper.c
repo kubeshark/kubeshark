@@ -13,6 +13,7 @@ Copyright (C) UP9 Inc.
 
 // To avoid multiple .o files
 //
+#include "common.c"
 #include "openssl_uprobes.c"
 #include "golang_uprobes.c"
 #include "fd_tracepoints.c"
