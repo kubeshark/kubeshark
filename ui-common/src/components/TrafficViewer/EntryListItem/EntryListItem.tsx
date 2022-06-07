@@ -2,11 +2,11 @@ import React from "react";
 import Moment from 'moment';
 import SwapHorizIcon from '@material-ui/icons/SwapHoriz';
 import styles from './EntryListItem.module.sass';
-import StatusCode, {getClassification, StatusCodeClassification} from "../../UI/StatusCode";
-import Protocol, {ProtocolInterface} from "../../UI/Protocol"
+import StatusCode, {getClassification, StatusCodeClassification} from "../../UI/StatusCode/StatusCode";
+import Protocol, {ProtocolInterface} from "../../UI/Protocol/Protocol"
 import eBPFLogo from 'assets/lock.svg';
-import {Summary} from "../../UI/Summary";
-import Queryable from "../../UI/Queryable";
+import {Summary} from "../../UI/Summary/Summary";
+import Queryable from "../../UI/Queryable/Queryable";
 import ingoingIconSuccess from "assets/ingoing-traffic-success.svg"
 import ingoingIconFailure from "assets/ingoing-traffic-failure.svg"
 import ingoingIconNeutral from "assets/ingoing-traffic-neutral.svg"
