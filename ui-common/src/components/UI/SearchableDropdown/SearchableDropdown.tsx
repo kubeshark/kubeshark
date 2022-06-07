@@ -57,14 +57,14 @@ const SearchableDropdown: React.FC<SearchableDropdownProps> = ({ options, select
         size={"small"}
         popupIcon={<img style={{ padding: 7 }} alt="iconDown" src={DefaultIconDown} />}
         renderOption={(option, { selected }) => (
-            <div id={`option-${option}`} className={styles.optionItem}>
+            <div id={`option-${option}`} className={styles.optionItem} key={`option-${option}`}>
                 {multiple && <Checkbox
                     icon={<CheckBoxOutlineBlankIcon fontSize="small" />}
                     checkedIcon={<CheckBoxIcon fontSize="small" />}
                     style={{ marginRight: 8 }}
                     checked={selected}
                 />}
-                <div title={option} className={styles.title}>{option}</div>
+                <div title={option.toString()} className={styles.title}>{option}</div>
             </div>
         )}
         renderTags={() => <div className={styles.optionListItem}>
