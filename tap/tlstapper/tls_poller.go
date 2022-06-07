@@ -74,7 +74,7 @@ func (p *tlsPoller) init(bpfObjects *tlsTapperObjects, bufferSize int) error {
 		return errors.Wrap(err, 0)
 	}
 
-	p.sysCloses, err = perf.NewReader(bpfObjects.SysCloses, bufferSize)
+	p.sysCloses, err = perf.NewReader(bpfObjects.SysCloses, os.Getpagesize())
 
 	if err != nil {
 		return errors.Wrap(err, 0)
