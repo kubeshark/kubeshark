@@ -23,7 +23,6 @@ import (
 const (
 	fdCachedItemAvgSize = 40
 	fdCacheMaxItems     = 500000 / fdCachedItemAvgSize
-	golangMapLimit      = 1 << 10 // 1024
 )
 
 type tlsPoller struct {
