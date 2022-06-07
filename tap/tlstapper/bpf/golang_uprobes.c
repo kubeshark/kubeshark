@@ -5,70 +5,192 @@ Copyright (C) UP9 Inc.
 */
 
 #include "include/headers.h"
+#include "include/util.h"
 #include "include/maps.h"
-#include "include/pids.h"
 #include "include/log.h"
 #include "include/logger_messages.h"
+#include "include/pids.h"
 
+static __always_inline int golang_get_count_bytes(struct pt_regs *ctx, struct ssl_info* info, __u64 id) {
+	size_t countBytes;
+	long err = bpf_probe_read(&countBytes, sizeof(size_t), (void*) info->count_ptr);
+	
+	if (err != 0) {
+		log_error(ctx, LOG_ERROR_READING_BYTES_COUNT, id, err, 0l);
+		return 0;
+	}
+	
+	return countBytes;
+}
+
+static __always_inline int golang_add_address_to_chunk(struct pt_regs *ctx, struct tls_chunk* chunk, __u64 id, __u32 fd) {
+	__u32 pid = id >> 32;
+	__u64 key = (__u64) pid << 32 | fd;
+	
+    // bpf_printk("[golang_add_address_to_chunk] file_descriptor_to_ipv4 key: %d", key);
+	struct fd_info *fdinfo = bpf_map_lookup_elem(&file_descriptor_to_ipv4, &key);
+	
+	if (fdinfo == NULL) {
+		return 0;
+	}
+	
+	int err = bpf_probe_read(chunk->address, sizeof(chunk->address), fdinfo->ipv4_addr);
+	chunk->flags |= (fdinfo->flags & FLAGS_IS_CLIENT_BIT);
+	
+	if (err != 0) {
+		log_error(ctx, LOG_ERROR_READING_FD_ADDRESS, id, err, 0l);
+		return 0;
+	}
+	
+	return 1;
+}
+
+static __always_inline void golang_send_chunk_part(struct pt_regs *ctx, __u8* buffer, __u64 id, 
+	struct tls_chunk* chunk, int start, int end) {
+	size_t recorded = MIN(end - start, sizeof(chunk->data));
+	
+	if (recorded <= 0) {
+		return;
+	}
+	
+	chunk->recorded = recorded;
+	chunk->start = start;
+	
+	// This ugly trick is for the ebpf verifier happiness
+	//
+	long err = 0;
+	if (chunk->recorded == sizeof(chunk->data)) {
+		err = bpf_probe_read(chunk->data, sizeof(chunk->data), buffer + start);
+	} else {
+		recorded &= (sizeof(chunk->data) - 1); // Buffer must be N^2
+		err = bpf_probe_read(chunk->data, recorded, buffer + start);
+	}
+	
+	if (err != 0) {
+		log_error(ctx, LOG_ERROR_READING_FROM_SSL_BUFFER, id, err, 0l);
+		return;
+	}
+
+    // bpf_printk("[golang_send_chunk_part] perf_event");
+	
+	bpf_perf_event_output(ctx, &chunks_buffer, BPF_F_CURRENT_CPU, chunk, sizeof(struct tls_chunk));
+}
+
+static __always_inline void golang_send_chunk(struct pt_regs *ctx, __u8* buffer, __u64 id, struct tls_chunk* chunk) {
+	// ebpf loops must be bounded at compile time, we can't use (i < chunk->len / CHUNK_SIZE)
+	//
+	// 	https://lwn.net/Articles/794934/
+	// 
+	// However we want to run in kernel older than 5.3, hence we use "#pragma unroll" anyway
+	// 
+	#pragma unroll
+	for (int i = 0; i < MAX_CHUNKS_PER_OPERATION; i++) {
+		if (chunk->len <= (CHUNK_SIZE * i)) {
+			break;
+		}
+		
+		golang_send_chunk_part(ctx, buffer, id, chunk, CHUNK_SIZE * i, chunk->len);
+	}
+}
+
+static __always_inline void golang_output_ssl_chunk(struct pt_regs *ctx, struct ssl_info* info, __u64 id, __u32 flags) {
+	int countBytes = info->buffer_len;
+    // bpf_printk("countBytes: %d", countBytes);
+	
+	if (countBytes <= 0) {
+		return;
+	}
+	
+	if (countBytes > (CHUNK_SIZE * MAX_CHUNKS_PER_OPERATION)) {
+		log_error(ctx, LOG_ERROR_BUFFER_TOO_BIG, id, countBytes, 0l);
+		return;
+	}
+	
+	struct tls_chunk* chunk;
+	int zero = 0;
+	
+	// If other thread, running on the same CPU get to this point at the same time like us (context switch)
+	//	the data will be corrupted - protection may be added in the future
+	//
+	chunk = bpf_map_lookup_elem(&heap, &zero);
+	
+	if (!chunk) {
+		log_error(ctx, LOG_ERROR_ALLOCATING_CHUNK, id, 0l, 0l);
+		return;
+	}
+	
+    chunk->type = openssl_type;
+	chunk->flags = flags;
+	chunk->pid = id >> 32;
+	chunk->tgid = id;
+	chunk->len = countBytes;
+	chunk->fd = info->fd;
+	
+	if (!golang_add_address_to_chunk(ctx, chunk, id, chunk->fd)) {
+        // bpf_printk("OOPS! Can't determine address.");
+		// Without an address, we drop the chunk because there is not much to do with it in Go
+		//
+		return;
+	}
+	
+	golang_send_chunk(ctx, info->buffer, id, chunk);
+}
 
 SEC("uprobe/golang_crypto_tls_write")
 static __always_inline int golang_crypto_tls_write_uprobe(struct pt_regs *ctx) {
+    // bpf_printk("called [golang_crypto_tls_write_uprobe]");
     __u64 pid_tgid = bpf_get_current_pid_tgid();
     __u64 pid = pid_tgid >> 32;
     if (!should_tap(pid)) {
+        // bpf_printk("[golang_crypto_tls_write_uprobe] SHOULD NOT TAP");
 		return 0;
 	}
 
-    void* stack_addr = (void*)ctx->rsp;
-    __u32 key_dial;
-    // Address at ctx->rsp + 0x20 is common between golang_crypto_tls_write_uprobe and golang_net_http_dialconn_uprobe
-    __u32 status = bpf_probe_read(&key_dial, sizeof(key_dial), stack_addr + 0x20);
-    if (status < 0) {
-        log_error(ctx, LOG_ERROR_GOLANG_WRITE_READING_KEY_DIAL, pid_tgid, status, 0l);
-        return 0;
-    }
+    bpf_printk("[golang_crypto_tls_write_uprobe] ssl_write_context lookup key: %d", pid_tgid);
+    struct ssl_info *infoPtr = bpf_map_lookup_elem(&ssl_write_context, &pid_tgid);
+	struct ssl_info info = {};
 
-    __u64 key_dial_full = (pid << 32) + key_dial;
-    struct golang_socket *s = bpf_map_lookup_elem(&golang_socket_to_write, &key_dial_full);
-    if (s == NULL) {
-        log_error(ctx, LOG_ERROR_GOLANG_WRITE_GETTING_SOCKET, pid_tgid, status, 0l);
-        return 0;
-    }
+	if (infoPtr == NULL) {
+		info.fd = -1;
+		info.created_at_nano = bpf_ktime_get_ns();
+	} else {
+		long err = bpf_probe_read(&info, sizeof(struct ssl_info), infoPtr);
 
-    struct tls_chunk *chunk = NULL;
-    int zero = 0;
+		if (err != 0) {
+			log_error(ctx, LOG_ERROR_READING_SSL_CONTEXT, pid_tgid, err, ORIGIN_SSL_UPROBE_CODE);
+		}
 
-    chunk = bpf_map_lookup_elem(&heap, &zero);
-
-    if (!chunk) {
-		log_error(ctx, LOG_ERROR_GOLANG_ALLOCATING_EVENT, pid, 0l, 0l);
-		return 0;
+		if ((bpf_ktime_get_ns() - info.created_at_nano) > SSL_INFO_MAX_TTL_NANO) {
+			// If the ssl info is too old, we don't want to use its info because it may be incorrect.
+			//
+			info.fd = -1;
+			info.created_at_nano = bpf_ktime_get_ns();
+		}
 	}
 
-    chunk->type = golang_type;
-    chunk->pid = pid;
-    chunk->fd = s->fd;
-    // ctx->rsi is common between golang_crypto_tls_write_uprobe and golang_crypto_tls_read_uprobe
-    chunk->flags = ctx->rsi; // go.itab.*net.TCPConn,net.Conn address
-    chunk->is_request = true;
-    chunk->len = ctx->rcx;
+	info.buffer_len = ctx->rcx;
+	info.buffer = (void*)ctx->rbx;
 
-    status = bpf_probe_read(&chunk->data, CHUNK_SIZE, (void*)ctx->rbx);
-    if (status < 0) {
-        log_error(ctx, LOG_ERROR_GOLANG_WRITE_READING_DATA, pid_tgid, status, 0l);
-        return 0;
-    }
+    long err = bpf_map_update_elem(&ssl_write_context, &pid_tgid, &info, BPF_ANY);
 
-    bpf_perf_event_output(ctx, &chunks_buffer, BPF_F_CURRENT_CPU, chunk, sizeof(struct tls_chunk));
+	if (err != 0) {
+		log_error(ctx, LOG_ERROR_PUTTING_SSL_CONTEXT, pid_tgid, err, 0l);
+	}
+
+    bpf_printk("[golang_crypto_tls_write_uprobe] reached output info.fd: %d", info.fd);
+
+    golang_output_ssl_chunk(ctx, &info, pid_tgid, 0);
 
     return 0;
 }
 
 SEC("uprobe/golang_crypto_tls_read")
 static __always_inline int golang_crypto_tls_read_uprobe(struct pt_regs *ctx) {
+    // bpf_printk("called [golang_crypto_tls_read_uprobe]");
     __u64 pid_tgid = bpf_get_current_pid_tgid();
     __u64 pid = pid_tgid >> 32;
     if (!should_tap(pid)) {
+        // bpf_printk("[golang_crypto_tls_read_uprobe] SHOULD NOT TAP");
 		return 0;
 	}
 
@@ -81,95 +203,40 @@ static __always_inline int golang_crypto_tls_read_uprobe(struct pt_regs *ctx) {
         return 0;
     }
 
-    struct tls_chunk *chunk = NULL;
-    int zero = 0;
+    bpf_printk("[golang_crypto_tls_read_uprobe] ssl_read_context lookup key: %d", pid_tgid);
+    struct ssl_info *infoPtr = bpf_map_lookup_elem(&ssl_read_context, &pid_tgid);
+	struct ssl_info info = {};
 
-    chunk = bpf_map_lookup_elem(&heap, &zero);
+	if (infoPtr == NULL) {
+		info.fd = -1;
+		info.created_at_nano = bpf_ktime_get_ns();
+	} else {
+		long err = bpf_probe_read(&info, sizeof(struct ssl_info), infoPtr);
 
-    if (!chunk) {
-		log_error(ctx, LOG_ERROR_GOLANG_ALLOCATING_EVENT, pid, 0l, 0l);
-		return 0;
+		if (err != 0) {
+			log_error(ctx, LOG_ERROR_READING_SSL_CONTEXT, pid_tgid, err, ORIGIN_SSL_UPROBE_CODE);
+		}
+
+		if ((bpf_ktime_get_ns() - info.created_at_nano) > SSL_INFO_MAX_TTL_NANO) {
+			// If the ssl info is too old, we don't want to use its info because it may be incorrect.
+			//
+			info.fd = -1;
+			info.created_at_nano = bpf_ktime_get_ns();
+		}
 	}
 
-    chunk->type = golang_type;
-    chunk->pid = pid;
-    // ctx->rsi is common between golang_crypto_tls_write_uprobe and golang_crypto_tls_read_uprobe
-    chunk->flags = ctx->rsi; // go.itab.*net.TCPConn,net.Conn address
-    chunk->is_request = false;
-    chunk->len = ctx->rcx;
+	info.buffer_len = ctx->rcx;
+	info.buffer = (void*)data_p;
 
-    status = bpf_probe_read(&chunk->data, CHUNK_SIZE, (void*)(data_p));
-    if (status < 0) {
-        log_error(ctx, LOG_ERROR_GOLANG_READ_READING_DATA, pid_tgid, status, 0l);
-        return 0;
-    }
+    long err = bpf_map_update_elem(&ssl_read_context, &pid_tgid, &info, BPF_ANY);
 
-    bpf_perf_event_output(ctx, &chunks_buffer, BPF_F_CURRENT_CPU, chunk, sizeof(struct tls_chunk));
-    return 0;
-}
-
-SEC("uprobe/golang_net_socket")
-static __always_inline int golang_net_socket_uprobe(struct pt_regs *ctx) {
-    __u64 pid_tgid = bpf_get_current_pid_tgid();
-    __u64 pid = pid_tgid >> 32;
-    if (!should_tap(pid)) {
-		return 0;
+	if (err != 0) {
+		log_error(ctx, LOG_ERROR_PUTTING_SSL_CONTEXT, pid_tgid, err, 0l);
 	}
 
-    // ctx->r14 is common between golang_net_socket_uprobe and golang_net_http_dialconn_uprobe
-    __u64 key_socket = (pid << 32) + ctx->r14;
-    struct golang_socket *s = bpf_map_lookup_elem(&golang_dial_to_socket, &key_socket);
-    if (s == NULL) {
-        log_error(ctx, LOG_ERROR_GOLANG_SOCKET_GETTING_SOCKET, pid_tgid, 0l, 0l);
-        return 0;
-    }
+    bpf_printk("[golang_crypto_tls_read_uprobe] reached output info.fd: %d", info.fd);
 
-    struct golang_socket b = {
-        .pid = s->pid,
-        .fd = ctx->rax,
-        .key_dial = s->key_dial,
-        .conn_addr = 0,
-    };
-
-    __u64 key_dial_full = (pid << 32) + s->key_dial;
-    __u32 status = bpf_map_update_elem(&golang_socket_to_write, &key_dial_full, &b, BPF_ANY);
-    if (status != 0) {
-        log_error(ctx, LOG_ERROR_GOLANG_SOCKET_PUTTING_FILE_DESCRIPTOR, pid_tgid, status, 0l);
-    }
-
-    return 0;
-}
-
-SEC("uprobe/golang_net_http_dialconn")
-static __always_inline int golang_net_http_dialconn_uprobe(struct pt_regs *ctx) {
-    __u64 pid_tgid = bpf_get_current_pid_tgid();
-    __u64 pid = pid_tgid >> 32;
-    if (!should_tap(pid)) {
-		return 0;
-	}
-
-    void* stack_addr = (void*)ctx->rsp;
-    __u32 key_dial;
-    // Address at ctx->rsp + 0x250 is common between golang_crypto_tls_write_uprobe and golang_net_http_dialconn_uprobe
-    __u32 status = bpf_probe_read(&key_dial, sizeof(key_dial), stack_addr + 0x250);
-    if (status < 0) {
-        log_error(ctx, LOG_ERROR_GOLANG_DIAL_READING_KEY_DIAL, pid_tgid, status, 0l);
-        return 0;
-    }
-
-    struct golang_socket b = {
-        .pid = pid,
-        .fd = 0,
-        .key_dial = key_dial,
-        .conn_addr = 0,
-    };
-
-    // ctx->r14 is common between golang_net_socket_uprobe and golang_net_http_dialconn_uprobe
-    __u64 key_socket = (pid << 32) + ctx->r14;
-    status = bpf_map_update_elem(&golang_dial_to_socket, &key_socket, &b, BPF_ANY);
-    if (status != 0) {
-        log_error(ctx, LOG_ERROR_GOLANG_DIAL_PUTTING_SOCKET, pid_tgid, status, 0l);
-    }
+    golang_output_ssl_chunk(ctx, &info, pid_tgid, FLAGS_IS_READ_BIT);
 
     return 0;
 }

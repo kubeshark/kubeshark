@@ -6,10 +6,8 @@ import (
 )
 
 type golangHooks struct {
-	golangDialProbe   link.Link
-	golangSocketProbe link.Link
-	golangWriteProbe  link.Link
-	golangReadProbe   link.Link
+	golangWriteProbe link.Link
+	golangReadProbe  link.Link
 }
 
 func (s *golangHooks) installUprobes(bpfObjects *tlsTapperObjects, filePath string) error {
@@ -30,26 +28,6 @@ func (s *golangHooks) installUprobes(bpfObjects *tlsTapperObjects, filePath stri
 
 func (s *golangHooks) installHooks(bpfObjects *tlsTapperObjects, ex *link.Executable, offsets golangOffsets) error {
 	var err error
-
-	// Relative offset points to
-	// [`net/http.(*Transport).dialConn+412`](https://github.com/golang/go/blob/go1.17.6/src/net/http/transport.go#L1561)
-	s.golangDialProbe, err = ex.Uprobe(golangDialSymbol, bpfObjects.GolangNetHttpDialconnUprobe, &link.UprobeOptions{
-		Offset: offsets.GolangDialOffset + 0x19c,
-	})
-
-	if err != nil {
-		return errors.Wrap(err, 0)
-	}
-
-	// Relative offset points to
-	// [`net.socket+127`](https://github.com/golang/go/blob/go1.17.6/src/net/sock_posix.go#L24)
-	s.golangSocketProbe, err = ex.Uprobe(golangSocketSymbol, bpfObjects.GolangNetSocketUprobe, &link.UprobeOptions{
-		Offset: offsets.GolangSocketOffset + 0x7f,
-	})
-
-	if err != nil {
-		return errors.Wrap(err, 0)
-	}
 
 	// Symbol points to
 	// [`crypto/tls.(*Conn).Write`](https://github.com/golang/go/blob/go1.17.6/src/crypto/tls/conn.go#L1099)
@@ -76,14 +54,6 @@ func (s *golangHooks) installHooks(bpfObjects *tlsTapperObjects, ex *link.Execut
 
 func (s *golangHooks) close() []error {
 	errors := make([]error, 0)
-
-	if err := s.golangDialProbe.Close(); err != nil {
-		errors = append(errors, err)
-	}
-
-	if err := s.golangSocketProbe.Close(); err != nil {
-		errors = append(errors, err)
-	}
 
 	if err := s.golangWriteProbe.Close(); err != nil {
 		errors = append(errors, err)

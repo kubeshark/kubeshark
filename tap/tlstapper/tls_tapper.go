@@ -224,6 +224,8 @@ func (t *TlsTapper) tapGolangPath(exePath string) error {
 		return err
 	}
 
+	logger.Log.Infof("Tapping TLS (Golang: %v)", exePath)
+
 	t.golangHooksStructs = append(t.golangHooksStructs, hooks)
 
 	return nil

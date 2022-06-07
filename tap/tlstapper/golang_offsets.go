@@ -11,10 +11,8 @@ import (
 )
 
 type golangOffsets struct {
-	GolangDialOffset   uint64
-	GolangSocketOffset uint64
-	GolangWriteOffset  uint64
-	GolangReadOffset   uint64
+	GolangWriteOffset uint64
+	GolangReadOffset  uint64
 }
 
 const (
@@ -22,8 +20,6 @@ const (
 	golangVersionSymbol       = "runtime.buildVersion.str"
 	golangWriteSymbol         = "crypto/tls.(*Conn).Write"
 	golangReadSymbol          = "crypto/tls.(*Conn).Read"
-	golangSocketSymbol        = "net.socket"
-	golangDialSymbol          = "net/http.(*Transport).dialConn"
 )
 
 func findGolangOffsets(filePath string) (golangOffsets, error) {
@@ -46,16 +42,6 @@ func findGolangOffsets(filePath string) (golangOffsets, error) {
 		return golangOffsets{}, fmt.Errorf("Unsupported Go version: %s", goVersion)
 	}
 
-	dialOffset, err := getOffset(offsets, golangDialSymbol)
-	if err != nil {
-		return golangOffsets{}, fmt.Errorf("reading offset [%s]: %s", golangDialSymbol, err)
-	}
-
-	socketOffset, err := getOffset(offsets, golangSocketSymbol)
-	if err != nil {
-		return golangOffsets{}, fmt.Errorf("reading offset [%s]: %s", golangSocketSymbol, err)
-	}
-
 	writeOffset, err := getOffset(offsets, golangWriteSymbol)
 	if err != nil {
 		return golangOffsets{}, fmt.Errorf("reading offset [%s]: %s", golangWriteSymbol, err)
@@ -67,10 +53,8 @@ func findGolangOffsets(filePath string) (golangOffsets, error) {
 	}
 
 	return golangOffsets{
-		GolangDialOffset:   dialOffset,
-		GolangSocketOffset: socketOffset,
-		GolangWriteOffset:  writeOffset,
-		GolangReadOffset:   readOffset,
+		GolangWriteOffset: writeOffset,
+		GolangReadOffset:  readOffset,
 	}, nil
 }
 

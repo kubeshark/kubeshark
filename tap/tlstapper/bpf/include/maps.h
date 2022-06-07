@@ -46,6 +46,7 @@ struct tls_chunk {
 
 struct ssl_info {
     void* buffer;
+    __u32 buffer_len;
     __u32 fd;
     __u64 created_at_nano;
     
