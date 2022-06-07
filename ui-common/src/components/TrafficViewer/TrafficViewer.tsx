@@ -1,10 +1,10 @@
 import React, { useEffect, useRef, useState } from "react";
-import { Filters } from "./Filters/Filters";
-import { EntriesList } from "./EntriesList/EntriesList";
+import { Filters } from "../Filters/Filters";
+import { EntriesList } from "../EntriesList/EntriesList";
 import { makeStyles } from "@material-ui/core";
 import TrafficViewerStyles from "./TrafficViewer.module.sass";
-import styles from './EntriesList/EntriesList.module.sass';
-import { EntryDetailed } from "./EntryDetailed/EntryDetailed";
+import styles from '../EntriesList/EntriesList.module.sass';
+import { EntryDetailed } from "../EntryDetailed/EntryDetailed";
 import playIcon from 'assets/run.svg';
 import pauseIcon from 'assets/pause.svg';
 import variables from '../../variables.module.scss';

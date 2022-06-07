@@ -3,15 +3,15 @@ import styles from './Filters.module.sass';
 import { Button, Grid, Modal, Box, Typography, Backdrop, Fade, Divider, debounce } from "@material-ui/core";
 import CodeEditor from '@uiw/react-textarea-code-editor';
 import MenuBookIcon from '@material-ui/icons/MenuBook';
-import { SyntaxHighlighter } from "../../UI/SyntaxHighlighter";
+import { SyntaxHighlighter } from "../UI/SyntaxHighlighter";
 import filterUIExample1 from "src/components/TrafficViewer/assets/filter-ui-example-1.png"
 import filterUIExample2 from "src/components/TrafficViewer/assets/filter-ui-example-2.png"
-import variables from '../../../variables.module.scss';
+import variables from '../../variables.module.scss';
 import { useRecoilState, useRecoilValue } from "recoil";
-import queryAtom from "../../../recoil/query";
-import useKeyPress from "../../../hooks/useKeyPress"
-import shortcutsKeyboard from "../../../configs/shortcutsKeyboard"
-import TrafficViewerApiAtom from "../../../recoil/TrafficViewerApi/atom";
+import queryAtom from "../../recoil/query";
+import useKeyPress from "../../hooks/useKeyPress"
+import shortcutsKeyboard from "../../configs/shortcutsKeyboard"
+import TrafficViewerApiAtom from "../../recoil/TrafficViewerApi/atom";
 
 
 interface FiltersProps {

@@ -1,14 +1,14 @@
 import styles from "./EntrySections.module.sass";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { SyntaxHighlighter } from "../../../UI/SyntaxHighlighter";
-import CollapsibleContainer from "../../../UI/CollapsibleContainer/CollapsibleContainer";
-import FancyTextDisplay from "../../../UI/FancyTextDisplay/FancyTextDisplay";
-import Queryable from "../../../UI/Queryable/Queryable";
-import Checkbox from "../../../UI/Checkbox/Checkbox";
+import { SyntaxHighlighter } from "../../UI/SyntaxHighlighter";
+import CollapsibleContainer from "../../UI/CollapsibleContainer/CollapsibleContainer";
+import FancyTextDisplay from "../../UI/FancyTextDisplay/FancyTextDisplay";
+import Queryable from "../../UI/Queryable/Queryable";
+import Checkbox from "../../UI/Checkbox/Checkbox";
 import ProtobufDecoder from "protobuf-decoder";
 import { default as jsonBeautify } from "json-beautify";
 import { default as xmlBeautify } from "xml-formatter";
-import { Utils } from "../../../../helpers/Utils"
+import { Utils } from "../../../helpers/Utils"
 
 interface EntryViewLineProps {
     label: string;

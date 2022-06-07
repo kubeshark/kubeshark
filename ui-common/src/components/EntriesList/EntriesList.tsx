@@ -6,15 +6,15 @@ import {EntryItem} from "../EntryListItem/EntryListItem";
 import down from "src/components/TrafficViewer/assets/downImg.svg";
 import spinner from 'src/components/TrafficViewer/assets/spinner.svg';
 import {RecoilState, useRecoilState, useRecoilValue, useSetRecoilState} from "recoil";
-import entriesAtom from "../../../recoil/entries";
-import queryAtom from "../../../recoil/query";
-import TrafficViewerApiAtom from "../../../recoil/TrafficViewerApi";
-import TrafficViewerApi from "../TrafficViewerApi";
-import focusedEntryIdAtom from "../../../recoil/focusedEntryId";
+import entriesAtom from "../../recoil/entries";
+import queryAtom from "../../recoil/query";
+import TrafficViewerApiAtom from "../../recoil/TrafficViewerApi";
+import TrafficViewerApi from "../TrafficViewer/TrafficViewerApi";
+import focusedEntryIdAtom from "../../recoil/focusedEntryId";
 import {toast} from "react-toastify";
-import {MAX_ENTRIES, TOAST_CONTAINER_ID} from "../../../configs/Consts";
-import tappingStatusAtom from "../../../recoil/tappingStatus";
-import leftOffTopAtom from "../../../recoil/leftOffTop";
+import {MAX_ENTRIES, TOAST_CONTAINER_ID} from "../../configs/Consts";
+import tappingStatusAtom from "../../recoil/tappingStatus";
+import leftOffTopAtom from "../../recoil/leftOffTop";
 
 interface EntriesListProps {
   listEntryREF: any;

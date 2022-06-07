@@ -1,6 +1,6 @@
 import React, {useState} from 'react';
 import styles from './EntryViewer.module.sass';
-import Tabs from "../../../UI/Tabs/Tabs";
+import Tabs from "../../UI/Tabs/Tabs";
 import {EntryTableSection, EntryBodySection, EntryTablePolicySection, EntryContractSection} from "../EntrySections/EntrySections";
 
 enum SectionTypes {

@@ -2,20 +2,20 @@ import React from "react";
 import Moment from 'moment';
 import SwapHorizIcon from '@material-ui/icons/SwapHoriz';
 import styles from './EntryListItem.module.sass';
-import StatusCode, {getClassification, StatusCodeClassification} from "../../UI/StatusCode/StatusCode";
-import Protocol, {ProtocolInterface} from "../../UI/Protocol/Protocol"
-import eBPFLogo from 'assets/lock.svg';
-import {Summary} from "../../UI/Summary/Summary";
-import Queryable from "../../UI/Queryable/Queryable";
-import ingoingIconSuccess from "assets/ingoing-traffic-success.svg"
-import ingoingIconFailure from "assets/ingoing-traffic-failure.svg"
-import ingoingIconNeutral from "assets/ingoing-traffic-neutral.svg"
-import outgoingIconSuccess from "assets/outgoing-traffic-success.svg"
-import outgoingIconFailure from "assets/outgoing-traffic-failure.svg"
-import outgoingIconNeutral from "assets/outgoing-traffic-neutral.svg"
+import StatusCode, {getClassification, StatusCodeClassification} from "../UI/StatusCode/StatusCode";
+import Protocol, {ProtocolInterface} from "../UI/Protocol/Protocol"
+import eBPFLogo from 'src/components/EntryListItem/assets/lock.svg';
+import {Summary} from "../UI/Summary/Summary";
+import Queryable from "../UI/Queryable/Queryable";
+import ingoingIconSuccess from "src/components/EntryListItem/assets/ingoing-traffic-success.svg"
+import ingoingIconFailure from "src/components/EntryListItem/assets/ingoing-traffic-failure.svg"
+import ingoingIconNeutral from "src/components/EntryListItem/assets/ingoing-traffic-neutral.svg"
+import outgoingIconSuccess from "src/components/EntryListItem/assets/outgoing-traffic-success.svg"
+import outgoingIconFailure from "src/components/EntryListItem/assets/outgoing-traffic-failure.svg"
+import outgoingIconNeutral from "src/components/EntryListItem/assets/outgoing-traffic-neutral.svg"
 import {useRecoilState} from "recoil";
-import focusedEntryIdAtom from "../../../recoil/focusedEntryId";
-import queryAtom from "../../../recoil/query";
+import focusedEntryIdAtom from "../../recoil/focusedEntryId";
+import queryAtom from "../../recoil/query";
 
 interface TCPInterface {
     ip: string

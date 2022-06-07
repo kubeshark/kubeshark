@@ -2,16 +2,16 @@ import React, { useEffect, useState } from "react";
 import EntryViewer from "./EntryViewer/EntryViewer";
 import { EntryItem } from "../EntryListItem/EntryListItem";
 import { makeStyles } from "@material-ui/core";
-import Protocol from "../../UI/Protocol/Protocol"
-import Queryable from "../../UI/Queryable/Queryable";
+import Protocol from "../UI/Protocol/Protocol"
+import Queryable from "../UI/Queryable/Queryable";
 import { toast } from "react-toastify";
 import { RecoilState, useRecoilValue } from "recoil";
-import focusedEntryIdAtom from "../../../recoil/focusedEntryId";
-import TrafficViewerApi from "../TrafficViewerApi";
-import TrafficViewerApiAtom from "../../../recoil/TrafficViewerApi/atom";
-import queryAtom from "../../../recoil/query/atom";
-import useWindowDimensions, { useRequestTextByWidth } from "../../../hooks/WindowDimensionsHook";
-import { TOAST_CONTAINER_ID } from "../../../configs/Consts";
+import focusedEntryIdAtom from "../../recoil/focusedEntryId";
+import TrafficViewerApi from "../TrafficViewer/TrafficViewerApi";
+import TrafficViewerApiAtom from "../../recoil/TrafficViewerApi/atom";
+import queryAtom from "../../recoil/query/atom";
+import useWindowDimensions, { useRequestTextByWidth } from "../../hooks/WindowDimensionsHook";
+import { TOAST_CONTAINER_ID } from "../../configs/Consts";
 import spinner from "src/components/TrafficViewer/assets/spinner.svg";
 
 const useStyles = makeStyles(() => ({
