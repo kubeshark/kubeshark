@@ -12,7 +12,7 @@ import (
 
 const GLOABL_TAP_PID = 0
 
-//go:generate go run github.com/cilium/ebpf/cmd/bpf2go@0d0727ef53e2f53b1731c73f4c61e0f58693083a -type golang_event -type sys_close tlsTapper bpf/tls_tapper.c -- -O2 -g -D__TARGET_ARCH_x86
+//go:generate go run github.com/cilium/ebpf/cmd/bpf2go@0d0727ef53e2f53b1731c73f4c61e0f58693083a -type tls_chunk -type sys_close tlsTapper bpf/tls_tapper.c -- -O2 -g -D__TARGET_ARCH_x86
 
 type TlsTapper struct {
 	bpfObjects         tlsTapperObjects
@@ -59,7 +59,6 @@ func (t *TlsTapper) Init(chunksBufferSize int, logBufferSize int, procfs string,
 }
 
 func (t *TlsTapper) Poll(emitter api.Emitter, options *api.TrafficFilteringOptions, streamsMap api.TcpStreamMap) {
-	t.poller.pollGolang(emitter, options, streamsMap)
 	t.poller.pollSsllib(emitter, options, streamsMap)
 }
 

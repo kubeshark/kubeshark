@@ -11,14 +11,6 @@ Copyright (C) UP9 Inc.
 #include "include/logger_messages.h"
 #include "include/pids.h"
 
-// Heap-like area for eBPF programs - stack size limited to 512 bytes, we must use maps for bigger (chunk) objects.
-//
-struct {
-	__uint(type, BPF_MAP_TYPE_PERCPU_ARRAY);
-	__uint(max_entries, 1);
-	__type(key, int);
-	__type(value, struct tlsChunk);
-} heap SEC(".maps");
 
 static __always_inline int get_count_bytes(struct pt_regs *ctx, struct ssl_info* info, __u64 id) {
 	int returnValue = PT_REGS_RC(ctx);
@@ -48,7 +40,7 @@ static __always_inline int get_count_bytes(struct pt_regs *ctx, struct ssl_info*
 	return countBytes;
 }
 
-static __always_inline int add_address_to_chunk(struct pt_regs *ctx, struct tlsChunk* chunk, __u64 id, __u32 fd) {
+static __always_inline int add_address_to_chunk(struct pt_regs *ctx, struct tls_chunk* chunk, __u64 id, __u32 fd) {
 	__u32 pid = id >> 32;
 	__u64 key = (__u64) pid << 32 | fd;
 	
@@ -70,7 +62,7 @@ static __always_inline int add_address_to_chunk(struct pt_regs *ctx, struct tlsC
 }
 
 static __always_inline void send_chunk_part(struct pt_regs *ctx, __u8* buffer, __u64 id, 
-	struct tlsChunk* chunk, int start, int end) {
+	struct tls_chunk* chunk, int start, int end) {
 	size_t recorded = MIN(end - start, sizeof(chunk->data));
 	
 	if (recorded <= 0) {
@@ -95,10 +87,10 @@ static __always_inline void send_chunk_part(struct pt_regs *ctx, __u8* buffer, _
 		return;
 	}
 	
-	bpf_perf_event_output(ctx, &chunks_buffer, BPF_F_CURRENT_CPU, chunk, sizeof(struct tlsChunk));
+	bpf_perf_event_output(ctx, &chunks_buffer, BPF_F_CURRENT_CPU, chunk, sizeof(struct tls_chunk));
 }
 
-static __always_inline void send_chunk(struct pt_regs *ctx, __u8* buffer, __u64 id, struct tlsChunk* chunk) {
+static __always_inline void send_chunk(struct pt_regs *ctx, __u8* buffer, __u64 id, struct tls_chunk* chunk) {
 	// ebpf loops must be bounded at compile time, we can't use (i < chunk->len / CHUNK_SIZE)
 	//
 	// 	https://lwn.net/Articles/794934/
@@ -127,7 +119,7 @@ static __always_inline void output_ssl_chunk(struct pt_regs *ctx, struct ssl_inf
 		return;
 	}
 	
-	struct tlsChunk* chunk;
+	struct tls_chunk* chunk;
 	int zero = 0;
 	
 	// If other thread, running on the same CPU get to this point at the same time like us (context switch)
@@ -140,6 +132,7 @@ static __always_inline void output_ssl_chunk(struct pt_regs *ctx, struct ssl_inf
 		return;
 	}
 	
+    chunk->type = OpenSSL_type;
 	chunk->flags = flags;
 	chunk->pid = id >> 32;
 	chunk->tgid = id;

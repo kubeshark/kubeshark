@@ -21,11 +21,16 @@ Copyright (C) UP9 Inc.
 #define MAX_ENTRIES_LRU_HASH	(1 << 14)  // 16384
 #define MAX_ENTRIES_RINGBUFF	(1 << 24)  // 16777216
 
+enum ChunkType {
+    OpenSSL_type=1,
+    Golang_type=2,
+};
+
 // The same struct can be found in chunk.go
 //  
 //  Be careful when editing, alignment and padding should be exactly the same in go/c.
 //
-struct tlsChunk {
+struct tls_chunk {
     __u32 pid;
     __u32 tgid;
     __u32 len;
@@ -33,6 +38,8 @@ struct tlsChunk {
     __u32 recorded;
     __u32 fd;
     __u32 flags;
+    enum ChunkType type;
+    bool is_request;
     __u8 address[16];
     __u8 data[CHUNK_SIZE]; // Must be N^2
 };
@@ -64,18 +71,18 @@ struct golang_socket {
     __u64 conn_addr;
 };
 
-struct golang_event {
-    __u32 pid;
-    __u32 fd;
-    __u32 conn_addr;
-    bool is_request;
-    __u32 len;
-    __u32 cap;
-    __u8 data[CHUNK_SIZE];
-};
-
 const struct golang_event *unused1 __attribute__((unused));
 const struct sys_close *unused2 __attribute__((unused));
+
+
+// Heap-like area for eBPF programs - stack size limited to 512 bytes, we must use maps for bigger (chunk) objects.
+//
+struct {
+	__uint(type, BPF_MAP_TYPE_PERCPU_ARRAY);
+	__uint(max_entries, 1);
+	__type(key, int);
+	__type(value, struct tls_chunk);
+} heap SEC(".maps");
 
 
 #define BPF_MAP(_name, _type, _key_type, _value_type, _max_entries)     \
@@ -99,16 +106,15 @@ const struct sys_close *unused2 __attribute__((unused));
 BPF_HASH(pids_map, __u32, __u32);
 BPF_PERF_OUTPUT(log_buffer);
 BPF_PERF_OUTPUT(sys_closes);
+BPF_PERF_OUTPUT(chunks_buffer);
 
 // OpenSSL specific
 BPF_LRU_HASH(ssl_write_context, __u64, struct ssl_info);
 BPF_LRU_HASH(ssl_read_context, __u64, struct ssl_info);
 BPF_LRU_HASH(file_descriptor_to_ipv4, __u64, struct fd_info);
-BPF_PERF_OUTPUT(chunks_buffer);
 
 // Golang specific
 BPF_LRU_HASH(golang_dial_to_socket, __u64, struct golang_socket);
 BPF_LRU_HASH(golang_socket_to_write, __u64, struct golang_socket);
-BPF_PERF_OUTPUT(golang_events);
 
 #endif /* __MAPS__ */

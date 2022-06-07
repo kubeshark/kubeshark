@@ -13,29 +13,21 @@ import (
 	"github.com/cilium/ebpf"
 )
 
-type tlsTapperGolangEvent struct {
-	Pid       uint32
-	Fd        uint32
-	ConnAddr  uint32
-	IsRequest bool
-	_         [3]byte
-	Len       uint32
-	Cap       uint32
-	Data      [4096]uint8
-}
-
 type tlsTapperSysClose struct{ Fd uint32 }
 
 type tlsTapperTlsChunk struct {
-	Pid      uint32
-	Tgid     uint32
-	Len      uint32
-	Start    uint32
-	Recorded uint32
-	Fd       uint32
-	Flags    uint32
-	Address  [16]uint8
-	Data     [4096]uint8
+	Pid       uint32
+	Tgid      uint32
+	Len       uint32
+	Start     uint32
+	Recorded  uint32
+	Fd        uint32
+	Flags     uint32
+	Type      int32
+	IsRequest bool
+	Address   [16]uint8
+	Data      [4096]uint8
+	_         [3]byte
 }
 
 // loadTlsTapper returns the embedded CollectionSpec for tlsTapper.
@@ -109,8 +101,6 @@ type tlsTapperMapSpecs struct {
 	ConnectSyscallInfo   *ebpf.MapSpec `ebpf:"connect_syscall_info"`
 	FileDescriptorToIpv4 *ebpf.MapSpec `ebpf:"file_descriptor_to_ipv4"`
 	GolangDialToSocket   *ebpf.MapSpec `ebpf:"golang_dial_to_socket"`
-	GolangEvents         *ebpf.MapSpec `ebpf:"golang_events"`
-	GolangHeap           *ebpf.MapSpec `ebpf:"golang_heap"`
 	GolangSocketToWrite  *ebpf.MapSpec `ebpf:"golang_socket_to_write"`
 	Heap                 *ebpf.MapSpec `ebpf:"heap"`
 	LogBuffer            *ebpf.MapSpec `ebpf:"log_buffer"`
@@ -144,8 +134,6 @@ type tlsTapperMaps struct {
 	ConnectSyscallInfo   *ebpf.Map `ebpf:"connect_syscall_info"`
 	FileDescriptorToIpv4 *ebpf.Map `ebpf:"file_descriptor_to_ipv4"`
 	GolangDialToSocket   *ebpf.Map `ebpf:"golang_dial_to_socket"`
-	GolangEvents         *ebpf.Map `ebpf:"golang_events"`
-	GolangHeap           *ebpf.Map `ebpf:"golang_heap"`
 	GolangSocketToWrite  *ebpf.Map `ebpf:"golang_socket_to_write"`
 	Heap                 *ebpf.Map `ebpf:"heap"`
 	LogBuffer            *ebpf.Map `ebpf:"log_buffer"`
@@ -162,8 +150,6 @@ func (m *tlsTapperMaps) Close() error {
 		m.ConnectSyscallInfo,
 		m.FileDescriptorToIpv4,
 		m.GolangDialToSocket,
-		m.GolangEvents,
-		m.GolangHeap,
 		m.GolangSocketToWrite,
 		m.Heap,
 		m.LogBuffer,
