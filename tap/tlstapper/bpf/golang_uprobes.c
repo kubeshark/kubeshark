@@ -45,7 +45,7 @@ static __always_inline int golang_crypto_tls_write_uprobe(struct pt_regs *ctx) {
 		return 0;
 	}
 
-    chunk->type = Golang_type;
+    chunk->type = golang_type;
     chunk->pid = pid;
     chunk->fd = s->fd;
     // ctx->rsi is common between golang_crypto_tls_write_uprobe and golang_crypto_tls_read_uprobe
@@ -91,7 +91,7 @@ static __always_inline int golang_crypto_tls_read_uprobe(struct pt_regs *ctx) {
 		return 0;
 	}
 
-    chunk->type = Golang_type;
+    chunk->type = golang_type;
     chunk->pid = pid;
     // ctx->rsi is common between golang_crypto_tls_write_uprobe and golang_crypto_tls_read_uprobe
     chunk->flags = ctx->rsi; // go.itab.*net.TCPConn,net.Conn address

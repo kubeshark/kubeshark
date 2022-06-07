@@ -21,9 +21,9 @@ Copyright (C) UP9 Inc.
 #define MAX_ENTRIES_LRU_HASH	(1 << 14)  // 16384
 #define MAX_ENTRIES_RINGBUFF	(1 << 24)  // 16777216
 
-enum ChunkType {
-    OpenSSL_type=1,
-    Golang_type=2,
+enum chunk_type {
+    openssl_type=1,
+    golang_type=2,
 };
 
 // The same struct can be found in chunk.go
@@ -38,7 +38,7 @@ struct tls_chunk {
     __u32 recorded;
     __u32 fd;
     __u32 flags;
-    enum ChunkType type;
+    enum chunk_type type;
     bool is_request;
     __u8 address[16];
     __u8 data[CHUNK_SIZE]; // Must be N^2

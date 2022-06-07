@@ -132,7 +132,7 @@ static __always_inline void output_ssl_chunk(struct pt_regs *ctx, struct ssl_inf
 		return;
 	}
 	
-    chunk->type = OpenSSL_type;
+    chunk->type = openssl_type;
 	chunk->flags = flags;
 	chunk->pid = id >> 32;
 	chunk->tgid = id;

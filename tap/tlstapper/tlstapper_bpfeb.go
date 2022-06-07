@@ -13,6 +13,13 @@ import (
 	"github.com/cilium/ebpf"
 )
 
+type tlsTapperChunkType int32
+
+const (
+	tlsTapperChunkTypeOpensslType tlsTapperChunkType = 1
+	tlsTapperChunkTypeGolangType  tlsTapperChunkType = 2
+)
+
 type tlsTapperSysClose struct{ Fd uint32 }
 
 type tlsTapperTlsChunk struct {
@@ -23,7 +30,7 @@ type tlsTapperTlsChunk struct {
 	Recorded  uint32
 	Fd        uint32
 	Flags     uint32
-	Type      int32
+	Type      tlsTapperChunkType
 	IsRequest bool
 	Address   [16]uint8
 	Data      [4096]uint8
