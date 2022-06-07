@@ -100,7 +100,7 @@ func UpdateTapTargets(newTapTargets []v1.Pod) {
 
 	packetSourceManager.UpdatePods(tapTargets, !*nodefrag, mainPacketInputChan)
 
-	if tlsTapperInstance != nil {
+	if tlsTapperInstance != nil && os.Getenv("MIZU_GLOBAL_GOLANG_PID") == "" {
 		if err := tlstapper.UpdateTapTargets(tlsTapperInstance, &tapTargets, *procfs); err != nil {
 			tlstapper.LogError(err)
 			success = false
