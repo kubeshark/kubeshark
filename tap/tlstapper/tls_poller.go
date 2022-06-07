@@ -34,7 +34,6 @@ type tlsPoller struct {
 	closedReaders       chan string
 	reqResMatcher       api.RequestResponseMatcher
 	chunksReader        *perf.Reader
-	golangReader        *perf.Reader
 	golangConnectionMap *orderedmap.OrderedMap
 	sysCloses           *perf.Reader
 	extension           *api.Extension
