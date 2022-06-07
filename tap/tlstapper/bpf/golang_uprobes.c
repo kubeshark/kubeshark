@@ -119,7 +119,6 @@ static __always_inline void golang_output_ssl_chunk(struct pt_regs *ctx, struct 
 		return;
 	}
 	
-    chunk->type = openssl_type;
 	chunk->flags = flags;
 	chunk->pid = id >> 32;
 	chunk->tgid = id;

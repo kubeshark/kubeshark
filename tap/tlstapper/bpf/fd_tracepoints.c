@@ -90,23 +90,3 @@ void sys_enter_write(struct sys_enter_write_ctx *ctx) {
 		log_error(ctx, LOG_ERROR_PUTTING_FILE_DESCRIPTOR, id, err, ORIGIN_SYS_ENTER_WRITE_CODE);
 	}
 }
-
-struct sys_enter_close_ctx {
-	__u64 __unused_syscall_header;
-	__u32 __unused_syscall_nr;
-
-	__u64 fd;
-};
-
-SEC("tracepoint/syscalls/sys_enter_close")
-void sys_enter_close(struct sys_enter_close_ctx *ctx) {
-	__u64 id = bpf_get_current_pid_tgid();
-
-	if (!should_tap(id >> 32)) {
-		return;
-	}
-
-	struct sys_close event;
-    event.fd = ctx->fd;
-    bpf_perf_event_output(ctx, &sys_closes, BPF_F_CURRENT_CPU, &event, sizeof(event));
-}

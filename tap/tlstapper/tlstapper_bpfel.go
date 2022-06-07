@@ -13,28 +13,16 @@ import (
 	"github.com/cilium/ebpf"
 )
 
-type tlsTapperChunkType int32
-
-const (
-	tlsTapperChunkTypeOpensslType tlsTapperChunkType = 1
-	tlsTapperChunkTypeGolangType  tlsTapperChunkType = 2
-)
-
-type tlsTapperSysClose struct{ Fd uint32 }
-
 type tlsTapperTlsChunk struct {
-	Pid       uint32
-	Tgid      uint32
-	Len       uint32
-	Start     uint32
-	Recorded  uint32
-	Fd        uint32
-	Flags     uint32
-	Type      tlsTapperChunkType
-	IsRequest bool
-	Address   [16]uint8
-	Data      [4096]uint8
-	_         [3]byte
+	Pid      uint32
+	Tgid     uint32
+	Len      uint32
+	Start    uint32
+	Recorded uint32
+	Fd       uint32
+	Flags    uint32
+	Address  [16]uint8
+	Data     [4096]uint8
 }
 
 // loadTlsTapper returns the embedded CollectionSpec for tlsTapper.
@@ -89,7 +77,6 @@ type tlsTapperProgramSpecs struct {
 	SslWrite                   *ebpf.ProgramSpec `ebpf:"ssl_write"`
 	SslWriteEx                 *ebpf.ProgramSpec `ebpf:"ssl_write_ex"`
 	SysEnterAccept4            *ebpf.ProgramSpec `ebpf:"sys_enter_accept4"`
-	SysEnterClose              *ebpf.ProgramSpec `ebpf:"sys_enter_close"`
 	SysEnterConnect            *ebpf.ProgramSpec `ebpf:"sys_enter_connect"`
 	SysEnterRead               *ebpf.ProgramSpec `ebpf:"sys_enter_read"`
 	SysEnterWrite              *ebpf.ProgramSpec `ebpf:"sys_enter_write"`
@@ -105,14 +92,11 @@ type tlsTapperMapSpecs struct {
 	ChunksBuffer         *ebpf.MapSpec `ebpf:"chunks_buffer"`
 	ConnectSyscallInfo   *ebpf.MapSpec `ebpf:"connect_syscall_info"`
 	FileDescriptorToIpv4 *ebpf.MapSpec `ebpf:"file_descriptor_to_ipv4"`
-	GolangDialToSocket   *ebpf.MapSpec `ebpf:"golang_dial_to_socket"`
-	GolangSocketToWrite  *ebpf.MapSpec `ebpf:"golang_socket_to_write"`
 	Heap                 *ebpf.MapSpec `ebpf:"heap"`
 	LogBuffer            *ebpf.MapSpec `ebpf:"log_buffer"`
 	PidsMap              *ebpf.MapSpec `ebpf:"pids_map"`
 	SslReadContext       *ebpf.MapSpec `ebpf:"ssl_read_context"`
 	SslWriteContext      *ebpf.MapSpec `ebpf:"ssl_write_context"`
-	SysCloses            *ebpf.MapSpec `ebpf:"sys_closes"`
 }
 
 // tlsTapperObjects contains all objects after they have been loaded into the kernel.
@@ -138,14 +122,11 @@ type tlsTapperMaps struct {
 	ChunksBuffer         *ebpf.Map `ebpf:"chunks_buffer"`
 	ConnectSyscallInfo   *ebpf.Map `ebpf:"connect_syscall_info"`
 	FileDescriptorToIpv4 *ebpf.Map `ebpf:"file_descriptor_to_ipv4"`
-	GolangDialToSocket   *ebpf.Map `ebpf:"golang_dial_to_socket"`
-	GolangSocketToWrite  *ebpf.Map `ebpf:"golang_socket_to_write"`
 	Heap                 *ebpf.Map `ebpf:"heap"`
 	LogBuffer            *ebpf.Map `ebpf:"log_buffer"`
 	PidsMap              *ebpf.Map `ebpf:"pids_map"`
 	SslReadContext       *ebpf.Map `ebpf:"ssl_read_context"`
 	SslWriteContext      *ebpf.Map `ebpf:"ssl_write_context"`
-	SysCloses            *ebpf.Map `ebpf:"sys_closes"`
 }
 
 func (m *tlsTapperMaps) Close() error {
@@ -154,14 +135,11 @@ func (m *tlsTapperMaps) Close() error {
 		m.ChunksBuffer,
 		m.ConnectSyscallInfo,
 		m.FileDescriptorToIpv4,
-		m.GolangDialToSocket,
-		m.GolangSocketToWrite,
 		m.Heap,
 		m.LogBuffer,
 		m.PidsMap,
 		m.SslReadContext,
 		m.SslWriteContext,
-		m.SysCloses,
 	)
 }
 
@@ -180,7 +158,6 @@ type tlsTapperPrograms struct {
 	SslWrite                   *ebpf.Program `ebpf:"ssl_write"`
 	SslWriteEx                 *ebpf.Program `ebpf:"ssl_write_ex"`
 	SysEnterAccept4            *ebpf.Program `ebpf:"sys_enter_accept4"`
-	SysEnterClose              *ebpf.Program `ebpf:"sys_enter_close"`
 	SysEnterConnect            *ebpf.Program `ebpf:"sys_enter_connect"`
 	SysEnterRead               *ebpf.Program `ebpf:"sys_enter_read"`
 	SysEnterWrite              *ebpf.Program `ebpf:"sys_enter_write"`
@@ -201,7 +178,6 @@ func (p *tlsTapperPrograms) Close() error {
 		p.SslWrite,
 		p.SslWriteEx,
 		p.SysEnterAccept4,
-		p.SysEnterClose,
 		p.SysEnterConnect,
 		p.SysEnterRead,
 		p.SysEnterWrite,
