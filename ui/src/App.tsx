@@ -7,18 +7,7 @@ import serviceMapModalOpenAtom from "./recoil/serviceMapModalOpen";
 import oasModalOpenAtom from './recoil/oasModalOpen/atom';
 import { OasModal } from '@up9/mizu-common';
 import Api from './helpers/api';
-import { ThemeProvider, Theme, StyledEngineProvider, createTheme } from '@mui/material';
-
-declare module '@mui/styles/defaultTheme' {
-    // eslint-disable-next-line @typescript-eslint/no-empty-interface
-    interface DefaultTheme extends Theme {}
-  }
-  
-  
-  const theme = createTheme(({
-     
-    }))
-  
+import { ThemeProvider, StyledEngineProvider, createTheme } from '@mui/material';
 
 const api = Api.getInstance()
 
@@ -29,23 +18,23 @@ const App = () => {
 
     return (
         <StyledEngineProvider injectFirst>
-        <ThemeProvider theme={theme}>
-        <div className="mizuApp">
-            <Header />
-            <TrafficPage />
-            {true && <ServiceMapModal
-                isOpen={serviceMapModalOpen}
-                onOpen={() => setServiceMapModalOpen(true)}
-                onClose={() => setServiceMapModalOpen(false)}
-                getServiceMapDataApi={api.serviceMapData} />}
-            {true && <OasModal
-                getOasServices={api.getOasServices}
-                getOasByService={api.getOasByService}
-                openModal={oasModalOpen}
-                handleCloseModal={() => setOasModalOpen(false)}
-            />}
-        </div>
-        </ThemeProvider>
+            <ThemeProvider theme={createTheme(({}))}>
+                <div className="mizuApp">
+                    <Header />
+                    <TrafficPage />
+                    {window["isServiceMapEnabled"] && <ServiceMapModal
+                        isOpen={serviceMapModalOpen}
+                        onOpen={() => setServiceMapModalOpen(true)}
+                        onClose={() => setServiceMapModalOpen(false)}
+                        getServiceMapDataApi={api.serviceMapData} />}
+                    {window["isOasEnabled"] && <OasModal
+                        getOasServices={api.getOasServices}
+                        getOasByService={api.getOasByService}
+                        openModal={oasModalOpen}
+                        handleCloseModal={() => setOasModalOpen(false)}
+                    />}
+                </div>
+            </ThemeProvider>
         </StyledEngineProvider>
     );
 }
