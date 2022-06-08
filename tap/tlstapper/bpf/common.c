@@ -145,7 +145,7 @@ static __always_inline void output_ssl_chunk(struct pt_regs *ctx, struct ssl_inf
 }
 
 static __always_inline struct ssl_info lookup_ssl_info(struct pt_regs *ctx, struct bpf_map_def* map_fd, __u64 pid_tgid) {
-    struct ssl_info *infoPtr = bpf_map_lookup_elem(&ssl_write_context, &pid_tgid);
+    struct ssl_info *infoPtr = bpf_map_lookup_elem(map_fd, &pid_tgid);
 	struct ssl_info info = {};
 
 	if (infoPtr == NULL) {
