@@ -1,10 +1,10 @@
 import { Box, Fade, FormControl, Modal, Backdrop } from "@material-ui/core";
 import { useCallback, useEffect, useState } from "react";
 import { RedocStandalone } from "redoc";
-import closeIcon from "src/components/modals/OasModal/assets/closeIcon.svg";
+import closeIcon from "./assets/closeIcon.svg";
 import { toast } from 'react-toastify';
 import style from './OasModal.module.sass';
-import openApiLogo from 'src/components/modals/OasModal/assets/openApiLogo.png'
+import openApiLogo from './assets/openApiLogo.png'
 import { redocThemeOptions } from "./redocThemeOptions";
 import React from "react";
 import { TOAST_CONTAINER_ID } from "../../../configs/Consts";

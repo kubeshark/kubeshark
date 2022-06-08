@@ -1,5 +1,5 @@
 import React from "react";
-import circleImg from 'src/components/UI/assets/dotted-circle.svg';
+import circleImg from '../assets/dotted-circle.svg';
 import styles from './NoDataMessage.module.sass'
 
 export interface Props {
@@ -10,7 +10,7 @@ const NoDataMessage: React.FC<Props> = ({ messageText = "No data found" }) => {
     return (
         <div data-cy="noDataMessage" className={styles.messageContainer__noData}>
             <div className={styles.container}>
-                <img src={circleImg} alt="No data Found"></img>
+                <img src={circleImg} alt="No data Found"/>
                 <div className={styles.messageContainer__noDataMessage}>{messageText}</div>
             </div>
         </div>

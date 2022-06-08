@@ -2,15 +2,15 @@ import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { Box, Fade, Modal, Backdrop, Button } from "@material-ui/core";
 import { toast } from "react-toastify";
 import spinnerStyle from './Spinner.module.sass';
-import spinnerImg from 'src/components/modals/ServiceMapModal/assets/spinner.svg';
+import spinnerImg from '../../assets/spinner.svg';
 import Graph from "react-graph-vis";
 import debounce from 'lodash/debounce';
 import ServiceMapOptions from './ServiceMapOptions'
 import { useCommonStyles } from "../../../helpers/commonStyle";
-import refreshIcon from "src/components/modals/ServiceMapModal/assets/refresh.svg";
-import filterIcon from "src/components/modals/ServiceMapModal/assets/filter-icon.svg";
-import filterIconClicked from "src/components/modals/ServiceMapModal/assets/filter-icon-clicked.svg";
-import closeIcon from "src/components/modals/ServiceMapModal/assets/close.svg"
+import refreshIcon from "./assets/refresh.svg";
+import filterIcon from "./assets/filter-icon.svg";
+import filterIconClicked from "./assets/filter-icon-clicked.svg";
+import closeIcon from "./assets/close.svg"
 import styles from './ServiceMapModal.module.sass'
 import SelectList from "../../UI/SelectList/SelectList";
 import { GraphData, ServiceMapGraph } from "./ServiceMapModalTypes"
