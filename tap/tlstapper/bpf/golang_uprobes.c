@@ -2,6 +2,34 @@
 Note: This file is licenced differently from the rest of the project
 SPDX-License-Identifier: GPL-2.0
 Copyright (C) UP9 Inc.
+
+
+
+README
+
+Golang does not follow any platform ABI like x86-64 ABI.
+Before 1.17, Go followed stack-based Plan9 (Bell Labs) calling convention.
+After 1.17, Go switched to an internal register-based calling convention. (Go internal ABI)
+The probes in this file supports Go 1.17+
+
+`uretprobe` in Linux kernel uses trampoline pattern to jump to original return
+address of the probed function. A Goroutine's stack size is 2Kb while a C thread is 2MB on Linux.
+If stack size exceeds 2Kb, Go runtime reallocates the stack. That causes the
+return address to become wrong in case of `uretprobe` and probed Go program crashes.
+Therefore `uretprobe` CAN'T BE USED for a Go program.
+
+---
+
+SOURCES:
+
+Tracing Go Functions with eBPF (before 1.17): https://www.grant.pizza/blog/tracing-go-functions-with-ebpf-part-2/
+Challenges of BPF Tracing Go: https://blog.0x74696d.com/posts/challenges-of-bpf-tracing-go/
+x86 calling conventions: https://en.wikipedia.org/wiki/X86_calling_conventions
+Plan 9 from Bell Labs: https://en.wikipedia.org/wiki/Plan_9_from_Bell_Labs
+The issue for calling convention change in Go: https://github.com/golang/go/issues/40724
+Proposal of Register-based Go calling convention: https://go.googlesource.com/proposal/+/master/design/40724-register-calling.md
+Go internal ABI (1.17+) specification: https://go.googlesource.com/go/+/refs/heads/dev.regabi/src/cmd/compile/internal-abi.md
+A Quick Guide to Go's Assembler: https://go.googlesource.com/go/+/refs/heads/dev.regabi/doc/asm.html
 */
 
 #include "include/headers.h"
@@ -14,7 +42,7 @@ Copyright (C) UP9 Inc.
 
 
 SEC("uprobe/golang_crypto_tls_write")
-static __always_inline int golang_crypto_tls_write_uprobe(struct pt_regs *ctx) {
+static int golang_crypto_tls_write_uprobe(struct pt_regs *ctx) {
     __u64 pid_tgid = bpf_get_current_pid_tgid();
     __u64 pid = pid_tgid >> 32;
     if (!should_tap(pid)) {
@@ -23,6 +51,7 @@ static __always_inline int golang_crypto_tls_write_uprobe(struct pt_regs *ctx) {
 
 	struct ssl_info info = lookup_ssl_info(ctx, &ssl_write_context, pid_tgid);
 
+    // TODO: Try to make these architecture independent using macros
 	info.buffer_len = ctx->rcx;
 	info.buffer = (void*)ctx->rbx;
 
@@ -38,7 +67,7 @@ static __always_inline int golang_crypto_tls_write_uprobe(struct pt_regs *ctx) {
 }
 
 SEC("uprobe/golang_crypto_tls_read")
-static __always_inline int golang_crypto_tls_read_uprobe(struct pt_regs *ctx) {
+static int golang_crypto_tls_read_uprobe(struct pt_regs *ctx) {
     __u64 pid_tgid = bpf_get_current_pid_tgid();
     __u64 pid = pid_tgid >> 32;
     if (!should_tap(pid)) {
@@ -56,6 +85,7 @@ static __always_inline int golang_crypto_tls_read_uprobe(struct pt_regs *ctx) {
 
 	struct ssl_info info = lookup_ssl_info(ctx, &ssl_read_context, pid_tgid);
 
+    // TODO: Try to make these architecture independent using macros
 	info.buffer_len = ctx->rcx;
 	info.buffer = (void*)data_p;
 
