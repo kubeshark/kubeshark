@@ -293,15 +293,6 @@ func startTlsTapper(extension *api.Extension, outputItems chan *api.OutputChanne
 		}
 	}
 
-	// A quick way to instrument Go `crypto/tls` using executable path - used for debuging and troubleshooting
-	//
-	if os.Getenv("MIZU_GLOBAL_GOLANG_PATH") != "" {
-		if err := tls.GlobalGolangTapPath(os.Getenv("MIZU_GLOBAL_GOLANG_PATH")); err != nil {
-			tlstapper.LogError(err)
-			return nil
-		}
-	}
-
 	var emitter api.Emitter = &api.Emitting{
 		AppStats:      &diagnose.AppStats,
 		OutputChannel: outputItems,
