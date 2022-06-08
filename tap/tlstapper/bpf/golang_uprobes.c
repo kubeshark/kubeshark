@@ -19,11 +19,12 @@ If stack size exceeds 2Kb, Go runtime reallocates the stack. That causes the
 return address to become wrong in case of `uretprobe` and probed Go program crashes.
 Therefore `uretprobe` CAN'T BE USED for a Go program.
 
-`golang_crypto_tls_read_uprobe` suppose to be `uretprobe` is actually a `uprobe` because of the ABI problems
-and we probe an arbitrary point in a function body (offset +559):
+`_ex_uprobe` suffixed probes suppose to be `uretprobe`(s) are actually `uprobe`(s)
+because of the non-standard ABI of Go. Therefore we probe `ret` mnemonics under the symbol
+by automatically finding them through reading the ELF binary and disassembling the symbols.
+Disassembly related code located in `golang_offsets.go` file.
+Example: We probe an arbitrary point in a function body (offset +559):
 https://github.com/golang/go/blob/go1.17.6/src/crypto/tls/conn.go#L1296
-Therefore `golang_crypto_tls_read_uprobe` is fragile any changes in `crypto/tls` library
-and it's only tested on x86-64.
 
 ---
 
@@ -69,6 +70,31 @@ static int golang_crypto_tls_write_uprobe(struct pt_regs *ctx) {
         log_error(ctx, LOG_ERROR_PUTTING_SSL_CONTEXT, pid_tgid, err, 0l);
     }
 
+    return 0;
+}
+
+SEC("uprobe/golang_crypto_tls_write_ex")
+static int golang_crypto_tls_write_ex_uprobe(struct pt_regs *ctx) {
+    __u64 pid_tgid = bpf_get_current_pid_tgid();
+    __u64 pid = pid_tgid >> 32;
+    if (!should_tap(pid)) {
+        return 0;
+    }
+
+    struct ssl_info *info_ptr = bpf_map_lookup_elem(&ssl_write_context, &pid_tgid);
+
+    if (info_ptr == NULL) {
+        return 0;
+    }
+
+    struct ssl_info info;
+    long err = bpf_probe_read(&info, sizeof(struct ssl_info), info_ptr);
+
+    if (err != 0) {
+        log_error(ctx, LOG_ERROR_READING_SSL_CONTEXT, pid_tgid, err, ORIGIN_SSL_URETPROBE_CODE);
+        return 0;
+    }
+
     output_ssl_chunk(ctx, &info, info.buffer_len, pid_tgid, 0);
 
     return 0;
@@ -82,24 +108,40 @@ static int golang_crypto_tls_read_uprobe(struct pt_regs *ctx) {
         return 0;
     }
 
-    void* stack_addr = (void*)GO_ABI_INTERNAL_PT_REGS_SP(ctx);
-    __u64 data_p;
-    // Address at stack pointer + 0xd8 holds the data (*fragile* and probably specific to x86-64)
-    __u32 status = bpf_probe_read(&data_p, sizeof(data_p), stack_addr + 0xd8);
-    if (status < 0) {
-        log_error(ctx, LOG_ERROR_GOLANG_READ_READING_DATA_POINTER, pid_tgid, status, 0l);
-        return 0;
-    }
-
     struct ssl_info info = lookup_ssl_info(ctx, &ssl_read_context, pid_tgid);
 
     info.buffer_len = GO_ABI_INTERNAL_PT_REGS_R2(ctx);
-    info.buffer = (void*)data_p;
+    info.buffer = (void*)GO_ABI_INTERNAL_PT_REGS_R4(ctx);
 
     long err = bpf_map_update_elem(&ssl_read_context, &pid_tgid, &info, BPF_ANY);
 
     if (err != 0) {
         log_error(ctx, LOG_ERROR_PUTTING_SSL_CONTEXT, pid_tgid, err, 0l);
+    }
+
+    return 0;
+}
+
+SEC("uprobe/golang_crypto_tls_read_ex")
+static int golang_crypto_tls_read_ex_uprobe(struct pt_regs *ctx) {
+    __u64 pid_tgid = bpf_get_current_pid_tgid();
+    __u64 pid = pid_tgid >> 32;
+    if (!should_tap(pid)) {
+        return 0;
+    }
+
+    struct ssl_info *info_ptr = bpf_map_lookup_elem(&ssl_read_context, &pid_tgid);
+
+    if (info_ptr == NULL) {
+        return 0;
+    }
+
+    struct ssl_info info;
+    long err = bpf_probe_read(&info, sizeof(struct ssl_info), info_ptr);
+
+    if (err != 0) {
+        log_error(ctx, LOG_ERROR_READING_SSL_CONTEXT, pid_tgid, err, ORIGIN_SSL_URETPROBE_CODE);
+        return 0;
     }
 
     output_ssl_chunk(ctx, &info, info.buffer_len, pid_tgid, FLAGS_IS_READ_BIT);
