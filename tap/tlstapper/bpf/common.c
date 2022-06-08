@@ -9,6 +9,7 @@ Copyright (C) UP9 Inc.
 #include "include/maps.h"
 #include "include/log.h"
 #include "include/logger_messages.h"
+#include "include/common.h"
 
 
 static __always_inline int get_count_bytes(struct pt_regs *ctx, struct ssl_info* info, __u64 id) {
@@ -149,7 +150,7 @@ static __always_inline struct ssl_info lookup_ssl_info(struct pt_regs *ctx, stru
     struct ssl_info info = {};
 
     if (infoPtr == NULL) {
-        info.fd = -1;
+        info.fd = invalid_fd;
         info.created_at_nano = bpf_ktime_get_ns();
     } else {
         long err = bpf_probe_read(&info, sizeof(struct ssl_info), infoPtr);
@@ -161,7 +162,7 @@ static __always_inline struct ssl_info lookup_ssl_info(struct pt_regs *ctx, stru
         if ((bpf_ktime_get_ns() - info.created_at_nano) > SSL_INFO_MAX_TTL_NANO) {
             // If the ssl info is too old, we don't want to use its info because it may be incorrect.
             //
-            info.fd = -1;
+            info.fd = invalid_fd;
             info.created_at_nano = bpf_ktime_get_ns();
         }
     }

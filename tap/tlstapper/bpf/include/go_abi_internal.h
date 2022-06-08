@@ -1,4 +1,9 @@
-/* SPDX-License-Identifier: (LGPL-2.1 OR BSD-2-Clause) */
+/*
+Note: This file is licenced differently from the rest of the project
+SPDX-License-Identifier: GPL-2.0
+Copyright (C) UP9 Inc.
+*/
+
 #ifndef __GOLANG_ABI_INTERNAL__
 #define __GOLANG_ABI_INTERNAL__
 

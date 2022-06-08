@@ -67,7 +67,7 @@ static __always_inline void ssl_uretprobe(struct pt_regs *ctx, struct bpf_map_de
 		return;
 	}
 	
-	if (info.fd == -1) {
+	if (info.fd == invalid_fd) {
 		log_error(ctx, LOG_ERROR_MISSING_FILE_DESCRIPTOR, id, 0l, 0l);
 		return;
 	}

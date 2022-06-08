@@ -49,7 +49,29 @@ A Quick Guide to Go's Assembler: https://go.googlesource.com/go/+/refs/heads/dev
 #include "include/pids.h"
 #include "include/common.h"
 #include "include/go_abi_internal.h"
+#include "include/go_types.h"
 
+static __always_inline __u32 get_fd_from_tcp_conn(struct pt_regs *ctx) {
+    struct go_interface conn;
+    long err = bpf_probe_read(&conn, sizeof(conn), (void*)GO_ABI_INTERNAL_PT_REGS_R1(ctx));
+    if (err != 0) {
+        return invalid_fd;
+    }
+
+    void* net_fd_ptr;
+    err = bpf_probe_read(&net_fd_ptr, sizeof(net_fd_ptr), conn.ptr);
+    if (err != 0) {
+        return invalid_fd;
+    }
+
+    __u32 fd;
+    err = bpf_probe_read(&fd, sizeof(fd), net_fd_ptr + 0x10);
+    if (err != 0) {
+        return invalid_fd;
+    }
+
+    return fd;
+}
 
 SEC("uprobe/golang_crypto_tls_write")
 static int golang_crypto_tls_write_uprobe(struct pt_regs *ctx) {
@@ -63,6 +85,7 @@ static int golang_crypto_tls_write_uprobe(struct pt_regs *ctx) {
 
     info.buffer_len = GO_ABI_INTERNAL_PT_REGS_R2(ctx);
     info.buffer = (void*)GO_ABI_INTERNAL_PT_REGS_R4(ctx);
+    info.fd = get_fd_from_tcp_conn(ctx);
 
     long err = bpf_map_update_elem(&ssl_write_context, &pid_tgid, &info, BPF_ANY);
 
@@ -112,6 +135,7 @@ static int golang_crypto_tls_read_uprobe(struct pt_regs *ctx) {
 
     info.buffer_len = GO_ABI_INTERNAL_PT_REGS_R2(ctx);
     info.buffer = (void*)GO_ABI_INTERNAL_PT_REGS_R4(ctx);
+    info.fd = get_fd_from_tcp_conn(ctx);
 
     long err = bpf_map_update_elem(&ssl_read_context, &pid_tgid, &info, BPF_ANY);
 
