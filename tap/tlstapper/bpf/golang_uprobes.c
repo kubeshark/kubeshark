@@ -46,20 +46,20 @@ static int golang_crypto_tls_write_uprobe(struct pt_regs *ctx) {
     __u64 pid_tgid = bpf_get_current_pid_tgid();
     __u64 pid = pid_tgid >> 32;
     if (!should_tap(pid)) {
-		return 0;
-	}
+        return 0;
+    }
 
-	struct ssl_info info = lookup_ssl_info(ctx, &ssl_write_context, pid_tgid);
+    struct ssl_info info = lookup_ssl_info(ctx, &ssl_write_context, pid_tgid);
 
     // TODO: Try to make these architecture independent using macros
-	info.buffer_len = ctx->rcx;
-	info.buffer = (void*)ctx->rbx;
+    info.buffer_len = ctx->rcx;
+    info.buffer = (void*)ctx->rbx;
 
     long err = bpf_map_update_elem(&ssl_write_context, &pid_tgid, &info, BPF_ANY);
 
-	if (err != 0) {
-		log_error(ctx, LOG_ERROR_PUTTING_SSL_CONTEXT, pid_tgid, err, 0l);
-	}
+    if (err != 0) {
+        log_error(ctx, LOG_ERROR_PUTTING_SSL_CONTEXT, pid_tgid, err, 0l);
+    }
 
     output_ssl_chunk(ctx, &info, info.buffer_len, pid_tgid, 0);
 
@@ -71,8 +71,8 @@ static int golang_crypto_tls_read_uprobe(struct pt_regs *ctx) {
     __u64 pid_tgid = bpf_get_current_pid_tgid();
     __u64 pid = pid_tgid >> 32;
     if (!should_tap(pid)) {
-		return 0;
-	}
+        return 0;
+    }
 
     void* stack_addr = (void*)ctx->rsp;
     __u64 data_p;
@@ -83,17 +83,17 @@ static int golang_crypto_tls_read_uprobe(struct pt_regs *ctx) {
         return 0;
     }
 
-	struct ssl_info info = lookup_ssl_info(ctx, &ssl_read_context, pid_tgid);
+    struct ssl_info info = lookup_ssl_info(ctx, &ssl_read_context, pid_tgid);
 
     // TODO: Try to make these architecture independent using macros
-	info.buffer_len = ctx->rcx;
-	info.buffer = (void*)data_p;
+    info.buffer_len = ctx->rcx;
+    info.buffer = (void*)data_p;
 
     long err = bpf_map_update_elem(&ssl_read_context, &pid_tgid, &info, BPF_ANY);
 
-	if (err != 0) {
-		log_error(ctx, LOG_ERROR_PUTTING_SSL_CONTEXT, pid_tgid, err, 0l);
-	}
+    if (err != 0) {
+        log_error(ctx, LOG_ERROR_PUTTING_SSL_CONTEXT, pid_tgid, err, 0l);
+    }
 
     output_ssl_chunk(ctx, &info, info.buffer_len, pid_tgid, FLAGS_IS_READ_BIT);
 
