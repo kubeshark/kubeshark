@@ -1,4 +1,4 @@
-import { Box, Fade, FormControl, Modal, Backdrop } from "@material-ui/core";
+import { Box, Fade, FormControl, Modal, Backdrop } from "@mui/material";
 import { useCallback, useEffect, useState } from "react";
 import { RedocStandalone } from "redoc";
 import closeIcon from "assets/closeIcon.svg";

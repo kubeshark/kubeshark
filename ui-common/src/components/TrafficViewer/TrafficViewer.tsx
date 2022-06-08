@@ -1,7 +1,7 @@
-import React, { useEffect, useRef, useState } from "react";
-import { Filters } from "./Filters";
-import { EntriesList } from "./EntriesList";
-import { makeStyles } from "@material-ui/core";
+import React, {useEffect, useRef, useState} from "react";
+import {Filters} from "./Filters";
+import {EntriesList} from "./EntriesList";
+import makeStyles from '@mui/styles/makeStyles';
 import TrafficViewerStyles from "./TrafficViewer.module.sass";
 import styles from '../style/EntriesList.module.sass';
 import { EntryDetailed } from "./EntryDetailed";
