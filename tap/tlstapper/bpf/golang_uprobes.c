@@ -4,6 +4,7 @@ SPDX-License-Identifier: GPL-2.0
 Copyright (C) UP9 Inc.
 
 
+---
 
 README
 
@@ -18,6 +19,12 @@ If stack size exceeds 2Kb, Go runtime reallocates the stack. That causes the
 return address to become wrong in case of `uretprobe` and probed Go program crashes.
 Therefore `uretprobe` CAN'T BE USED for a Go program.
 
+`golang_crypto_tls_read_uprobe` suppose to be `uretprobe` is actually a `uprobe` because of the ABI problems
+and we probe an arbitrary point in a function body (offset +559):
+https://github.com/golang/go/blob/go1.17.6/src/crypto/tls/conn.go#L1296
+Therefore `golang_crypto_tls_read_uprobe` is fragile any changes in `crypto/tls` library
+and it's only tested on x86-64.
+
 ---
 
 SOURCES:
@@ -28,7 +35,8 @@ x86 calling conventions: https://en.wikipedia.org/wiki/X86_calling_conventions
 Plan 9 from Bell Labs: https://en.wikipedia.org/wiki/Plan_9_from_Bell_Labs
 The issue for calling convention change in Go: https://github.com/golang/go/issues/40724
 Proposal of Register-based Go calling convention: https://go.googlesource.com/proposal/+/master/design/40724-register-calling.md
-Go internal ABI (1.17+) specification: https://go.googlesource.com/go/+/refs/heads/dev.regabi/src/cmd/compile/internal-abi.md
+Go internal ABI (1.17) specification: https://go.googlesource.com/go/+/refs/heads/dev.regabi/src/cmd/compile/internal-abi.md
+Go internal ABI (current) specification: https://go.googlesource.com/go/+/refs/heads/master/src/cmd/compile/abi-internal.md
 A Quick Guide to Go's Assembler: https://go.googlesource.com/go/+/refs/heads/dev.regabi/doc/asm.html
 */
 
