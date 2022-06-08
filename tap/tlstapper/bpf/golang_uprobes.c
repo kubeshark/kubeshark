@@ -81,13 +81,14 @@ static int golang_crypto_tls_write_uprobe(struct pt_regs *ctx) {
         return 0;
     }
 
-    struct ssl_info info = lookup_ssl_info(ctx, &ssl_write_context, pid_tgid);
+    struct ssl_info info = new_ssl_info();
 
     info.buffer_len = GO_ABI_INTERNAL_PT_REGS_R2(ctx);
     info.buffer = (void*)GO_ABI_INTERNAL_PT_REGS_R4(ctx);
     info.fd = get_fd_from_tcp_conn(ctx);
 
-    long err = bpf_map_update_elem(&ssl_write_context, &pid_tgid, &info, BPF_ANY);
+    __u64 pid_fp = pid << 32 | GO_ABI_INTERNAL_PT_REGS_GP(ctx);
+    long err = bpf_map_update_elem(&go_write_context, &pid_fp, &info, BPF_ANY);
 
     if (err != 0) {
         log_error(ctx, LOG_ERROR_PUTTING_SSL_CONTEXT, pid_tgid, err, 0l);
@@ -104,7 +105,8 @@ static int golang_crypto_tls_write_ex_uprobe(struct pt_regs *ctx) {
         return 0;
     }
 
-    struct ssl_info *info_ptr = bpf_map_lookup_elem(&ssl_write_context, &pid_tgid);
+    __u64 pid_fp = pid << 32 | GO_ABI_INTERNAL_PT_REGS_GP(ctx);
+    struct ssl_info *info_ptr = bpf_map_lookup_elem(&go_write_context, &pid_fp);
 
     if (info_ptr == NULL) {
         return 0;
@@ -131,13 +133,14 @@ static int golang_crypto_tls_read_uprobe(struct pt_regs *ctx) {
         return 0;
     }
 
-    struct ssl_info info = lookup_ssl_info(ctx, &ssl_read_context, pid_tgid);
+    struct ssl_info info = new_ssl_info();
 
     info.buffer_len = GO_ABI_INTERNAL_PT_REGS_R2(ctx);
     info.buffer = (void*)GO_ABI_INTERNAL_PT_REGS_R4(ctx);
     info.fd = get_fd_from_tcp_conn(ctx);
 
-    long err = bpf_map_update_elem(&ssl_read_context, &pid_tgid, &info, BPF_ANY);
+    __u64 pid_fp = pid << 32 | GO_ABI_INTERNAL_PT_REGS_GP(ctx);
+    long err = bpf_map_update_elem(&go_read_context, &pid_fp, &info, BPF_ANY);
 
     if (err != 0) {
         log_error(ctx, LOG_ERROR_PUTTING_SSL_CONTEXT, pid_tgid, err, 0l);
@@ -154,7 +157,8 @@ static int golang_crypto_tls_read_ex_uprobe(struct pt_regs *ctx) {
         return 0;
     }
 
-    struct ssl_info *info_ptr = bpf_map_lookup_elem(&ssl_read_context, &pid_tgid);
+    __u64 pid_fp = pid << 32 | GO_ABI_INTERNAL_PT_REGS_GP(ctx);
+    struct ssl_info *info_ptr = bpf_map_lookup_elem(&go_read_context, &pid_fp);
 
     if (info_ptr == NULL) {
         return 0;

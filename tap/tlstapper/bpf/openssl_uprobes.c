@@ -21,7 +21,7 @@ static __always_inline void ssl_uprobe(struct pt_regs *ctx, void* ssl, void* buf
 	}
 	
 	struct ssl_info *infoPtr = bpf_map_lookup_elem(map_fd, &id);
-	struct ssl_info info = lookup_ssl_info(ctx, &ssl_write_context, id);
+	struct ssl_info info = lookup_ssl_info(ctx, &openssl_write_context, id);
 	
 	info.count_ptr = count_ptr;
 	info.buffer = buffer;
@@ -79,40 +79,40 @@ static __always_inline void ssl_uretprobe(struct pt_regs *ctx, struct bpf_map_de
 
 SEC("uprobe/ssl_write")
 void BPF_KPROBE(ssl_write, void* ssl, void* buffer, int num) {
-	ssl_uprobe(ctx, ssl, buffer, num, &ssl_write_context, 0);
+	ssl_uprobe(ctx, ssl, buffer, num, &openssl_write_context, 0);
 }
 
 SEC("uretprobe/ssl_write")
 void BPF_KPROBE(ssl_ret_write) {
-	ssl_uretprobe(ctx, &ssl_write_context, 0);
+	ssl_uretprobe(ctx, &openssl_write_context, 0);
 }
 
 SEC("uprobe/ssl_read")
 void BPF_KPROBE(ssl_read, void* ssl, void* buffer, int num) {
-	ssl_uprobe(ctx, ssl, buffer, num, &ssl_read_context, 0);
+	ssl_uprobe(ctx, ssl, buffer, num, &openssl_read_context, 0);
 }
 
 SEC("uretprobe/ssl_read")
 void BPF_KPROBE(ssl_ret_read) {
-	ssl_uretprobe(ctx, &ssl_read_context, FLAGS_IS_READ_BIT);
+	ssl_uretprobe(ctx, &openssl_read_context, FLAGS_IS_READ_BIT);
 }
 
 SEC("uprobe/ssl_write_ex")
 void BPF_KPROBE(ssl_write_ex, void* ssl, void* buffer, size_t num, size_t *written) {
-	ssl_uprobe(ctx, ssl, buffer, num, &ssl_write_context, written);
+	ssl_uprobe(ctx, ssl, buffer, num, &openssl_write_context, written);
 }
 
 SEC("uretprobe/ssl_write_ex")
 void BPF_KPROBE(ssl_ret_write_ex) {
-	ssl_uretprobe(ctx, &ssl_write_context, 0);
+	ssl_uretprobe(ctx, &openssl_write_context, 0);
 }
 
 SEC("uprobe/ssl_read_ex")
 void BPF_KPROBE(ssl_read_ex, void* ssl, void* buffer, size_t num, size_t *readbytes) {
-	ssl_uprobe(ctx, ssl, buffer, num, &ssl_read_context, readbytes);
+	ssl_uprobe(ctx, ssl, buffer, num, &openssl_read_context, readbytes);
 }
 
 SEC("uretprobe/ssl_read_ex")
 void BPF_KPROBE(ssl_ret_read_ex) {
-	ssl_uretprobe(ctx, &ssl_read_context, FLAGS_IS_READ_BIT);
+	ssl_uretprobe(ctx, &openssl_read_context, FLAGS_IS_READ_BIT);
 }

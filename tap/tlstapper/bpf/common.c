@@ -145,14 +145,16 @@ static __always_inline void output_ssl_chunk(struct pt_regs *ctx, struct ssl_inf
     send_chunk(ctx, info->buffer, id, chunk);
 }
 
+static __always_inline struct ssl_info new_ssl_info() {
+    struct ssl_info info = { .fd = invalid_fd, .created_at_nano = bpf_ktime_get_ns() };
+    return info;
+}
+
 static __always_inline struct ssl_info lookup_ssl_info(struct pt_regs *ctx, struct bpf_map_def* map_fd, __u64 pid_tgid) {
     struct ssl_info *infoPtr = bpf_map_lookup_elem(map_fd, &pid_tgid);
-    struct ssl_info info = {};
+    struct ssl_info info = new_ssl_info();
 
-    if (infoPtr == NULL) {
-        info.fd = invalid_fd;
-        info.created_at_nano = bpf_ktime_get_ns();
-    } else {
+    if (infoPtr != NULL) {
         long err = bpf_probe_read(&info, sizeof(struct ssl_info), infoPtr);
 
         if (err != 0) {

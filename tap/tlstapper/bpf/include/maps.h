@@ -80,11 +80,18 @@ struct {
 #define BPF_LRU_HASH(_name, _key_type, _value_type) \
     BPF_MAP(_name, BPF_MAP_TYPE_LRU_HASH, _key_type, _value_type, MAX_ENTRIES_LRU_HASH)
 
+// Generic
 BPF_HASH(pids_map, __u32, __u32);
-BPF_LRU_HASH(ssl_write_context, __u64, struct ssl_info);
-BPF_LRU_HASH(ssl_read_context, __u64, struct ssl_info);
 BPF_LRU_HASH(file_descriptor_to_ipv4, __u64, struct fd_info);
 BPF_PERF_OUTPUT(chunks_buffer);
 BPF_PERF_OUTPUT(log_buffer);
+
+// OpenSSL specific
+BPF_LRU_HASH(openssl_write_context, __u64, struct ssl_info);
+BPF_LRU_HASH(openssl_read_context, __u64, struct ssl_info);
+
+// Go specific
+BPF_LRU_HASH(go_write_context, __u64, struct ssl_info);
+BPF_LRU_HASH(go_read_context, __u64, struct ssl_info);
 
 #endif /* __MAPS__ */

@@ -55,7 +55,9 @@ func (s *golangHooks) installHooks(bpfObjects *tlsTapperObjects, ex *link.Execut
 
 	// Symbol points to
 	// [`crypto/tls.(*Conn).Read`](https://github.com/golang/go/blob/go1.17.6/src/crypto/tls/conn.go#L1263)
-	s.golangReadProbe, err = ex.Uprobe(golangReadSymbol, bpfObjects.GolangCryptoTlsReadUprobe, nil)
+	s.golangReadProbe, err = ex.Uprobe(golangReadSymbol, bpfObjects.GolangCryptoTlsReadUprobe, &link.UprobeOptions{
+		Offset: offsets.GolangReadOffset.enter,
+	})
 
 	if err != nil {
 		return errors.Wrap(err, 0)
