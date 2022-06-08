@@ -1,8 +1,8 @@
 import React, { FC, useEffect, useMemo, useRef, useState } from "react";
 import styles from './Filters.module.sass';
-import { Button, Grid, Modal, Box, Typography, Backdrop, Fade, Divider, debounce } from "@material-ui/core";
+import {Button, Grid, Modal, Box, Typography, Backdrop, Fade, Divider, debounce} from "@mui/material";
 import CodeEditor from '@uiw/react-textarea-code-editor';
-import MenuBookIcon from '@material-ui/icons/MenuBook';
+import MenuBookIcon from '@mui/icons-material/MenuBook';
 import { SyntaxHighlighter } from "../UI/SyntaxHighlighter";
 import filterUIExample1 from "../TrafficViewer/assets/filter-ui-example-1.png"
 import filterUIExample2 from "../TrafficViewer/assets/filter-ui-example-2.png"

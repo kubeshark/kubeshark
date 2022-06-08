@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import EntryViewer from "./EntryViewer/EntryViewer";
 import { EntryItem } from "../EntryListItem/EntryListItem";
-import { makeStyles } from "@material-ui/core";
+import makeStyles from '@mui/styles/makeStyles';
 import Protocol from "../UI/Protocol/Protocol"
 import Queryable from "../UI/Queryable/Queryable";
 import { toast } from "react-toastify";

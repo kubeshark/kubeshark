@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Button } from "@material-ui/core";
+import { Button } from "@mui/material";
 import Api, { MizuWebsocketURL } from "../../../helpers/api";
 import debounce from 'lodash/debounce';
 import { useRecoilState } from "recoil";
