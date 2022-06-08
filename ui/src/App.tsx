@@ -16,7 +16,7 @@ declare module '@mui/styles/defaultTheme' {
   
   
   const theme = createTheme(({
-      //here you set palette, typography ect...
+     
     }))
   
 
