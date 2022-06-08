@@ -123,4 +123,4 @@ https://github.com/golang/go/blob/go1.17.6/src/cmd/compile/internal/ssa/gen/PPC6
 
 #endif
 
-#endif
+#endif /* __GOLANG_ABI_INTERNAL__ */
