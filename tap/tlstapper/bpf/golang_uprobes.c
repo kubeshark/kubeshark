@@ -39,6 +39,7 @@ A Quick Guide to Go's Assembler: https://go.googlesource.com/go/+/refs/heads/dev
 #include "include/logger_messages.h"
 #include "include/pids.h"
 #include "include/common.h"
+#include "include/go_abi_internal.h"
 
 
 SEC("uprobe/golang_crypto_tls_write")
@@ -51,9 +52,8 @@ static int golang_crypto_tls_write_uprobe(struct pt_regs *ctx) {
 
     struct ssl_info info = lookup_ssl_info(ctx, &ssl_write_context, pid_tgid);
 
-    // TODO: Try to make these architecture independent using macros
-    info.buffer_len = ctx->rcx;
-    info.buffer = (void*)ctx->rbx;
+    info.buffer_len = GO_ABI_INTERNAL_PT_REGS_R2(ctx);
+    info.buffer = (void*)GO_ABI_INTERNAL_PT_REGS_R4(ctx);
 
     long err = bpf_map_update_elem(&ssl_write_context, &pid_tgid, &info, BPF_ANY);
 
@@ -74,9 +74,9 @@ static int golang_crypto_tls_read_uprobe(struct pt_regs *ctx) {
         return 0;
     }
 
-    void* stack_addr = (void*)ctx->rsp;
+    void* stack_addr = (void*)GO_ABI_INTERNAL_PT_REGS_SP(ctx);
     __u64 data_p;
-    // Address at ctx->rsp + 0xd8 holds the data
+    // Address at stack pointer + 0xd8 holds the data (*fragile* and probably specific to x86-64)
     __u32 status = bpf_probe_read(&data_p, sizeof(data_p), stack_addr + 0xd8);
     if (status < 0) {
         log_error(ctx, LOG_ERROR_GOLANG_READ_READING_DATA_POINTER, pid_tgid, status, 0l);
@@ -85,8 +85,7 @@ static int golang_crypto_tls_read_uprobe(struct pt_regs *ctx) {
 
     struct ssl_info info = lookup_ssl_info(ctx, &ssl_read_context, pid_tgid);
 
-    // TODO: Try to make these architecture independent using macros
-    info.buffer_len = ctx->rcx;
+    info.buffer_len = GO_ABI_INTERNAL_PT_REGS_R2(ctx);
     info.buffer = (void*)data_p;
 
     long err = bpf_map_update_elem(&ssl_read_context, &pid_tgid, &info, BPF_ANY);
