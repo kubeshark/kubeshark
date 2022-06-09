@@ -33,7 +33,7 @@ func (s *goHooks) installHooks(bpfObjects *tlsTapperObjects, ex *link.Executable
 
 	// Symbol points to
 	// [`crypto/tls.(*Conn).Write`](https://github.com/golang/go/blob/go1.17.6/src/crypto/tls/conn.go#L1099)
-	s.goWriteProbe, err = ex.Uprobe(goWriteSymbol, bpfObjects.GoCryptoTlsWriteUprobe, &link.UprobeOptions{
+	s.goWriteProbe, err = ex.Uprobe(goWriteSymbol, bpfObjects.GoCryptoTlsWrite, &link.UprobeOptions{
 		Offset: offsets.GoWriteOffset.enter,
 	})
 
@@ -42,7 +42,7 @@ func (s *goHooks) installHooks(bpfObjects *tlsTapperObjects, ex *link.Executable
 	}
 
 	for _, offset := range offsets.GoWriteOffset.exits {
-		probe, err := ex.Uprobe(goWriteSymbol, bpfObjects.GoCryptoTlsWriteExUprobe, &link.UprobeOptions{
+		probe, err := ex.Uprobe(goWriteSymbol, bpfObjects.GoCryptoTlsWriteEx, &link.UprobeOptions{
 			Offset: offset,
 		})
 
@@ -55,7 +55,7 @@ func (s *goHooks) installHooks(bpfObjects *tlsTapperObjects, ex *link.Executable
 
 	// Symbol points to
 	// [`crypto/tls.(*Conn).Read`](https://github.com/golang/go/blob/go1.17.6/src/crypto/tls/conn.go#L1263)
-	s.goReadProbe, err = ex.Uprobe(goReadSymbol, bpfObjects.GoCryptoTlsReadUprobe, &link.UprobeOptions{
+	s.goReadProbe, err = ex.Uprobe(goReadSymbol, bpfObjects.GoCryptoTlsRead, &link.UprobeOptions{
 		Offset: offsets.GoReadOffset.enter,
 	})
 
@@ -64,7 +64,7 @@ func (s *goHooks) installHooks(bpfObjects *tlsTapperObjects, ex *link.Executable
 	}
 
 	for _, offset := range offsets.GoReadOffset.exits {
-		probe, err := ex.Uprobe(goReadSymbol, bpfObjects.GoCryptoTlsReadExUprobe, &link.UprobeOptions{
+		probe, err := ex.Uprobe(goReadSymbol, bpfObjects.GoCryptoTlsReadEx, &link.UprobeOptions{
 			Offset: offset,
 		})
 

@@ -73,12 +73,11 @@ static __always_inline __u32 get_fd_from_tcp_conn(struct pt_regs *ctx) {
     return fd;
 }
 
-SEC("uprobe/go_crypto_tls_write")
-static int go_crypto_tls_write_uprobe(struct pt_regs *ctx) {
+static __always_inline void go_crypto_tls_uprobe(struct pt_regs *ctx, struct bpf_map_def* go_context) {
     __u64 pid_tgid = bpf_get_current_pid_tgid();
     __u64 pid = pid_tgid >> 32;
     if (!should_tap(pid)) {
-        return 0;
+        return;
     }
 
     struct ssl_info info = new_ssl_info();
@@ -88,91 +87,58 @@ static int go_crypto_tls_write_uprobe(struct pt_regs *ctx) {
     info.fd = get_fd_from_tcp_conn(ctx);
 
     __u64 pid_fp = pid << 32 | GO_ABI_INTERNAL_PT_REGS_GP(ctx);
-    long err = bpf_map_update_elem(&go_write_context, &pid_fp, &info, BPF_ANY);
+    long err = bpf_map_update_elem(go_context, &pid_fp, &info, BPF_ANY);
 
     if (err != 0) {
         log_error(ctx, LOG_ERROR_PUTTING_SSL_CONTEXT, pid_tgid, err, 0l);
     }
 
-    return 0;
+    return;
+}
+
+static __always_inline void go_crypto_tls_ex_uprobe(struct pt_regs *ctx, struct bpf_map_def* go_context, __u32 flags) {
+    __u64 pid_tgid = bpf_get_current_pid_tgid();
+    __u64 pid = pid_tgid >> 32;
+    if (!should_tap(pid)) {
+        return;
+    }
+
+    __u64 pid_fp = pid << 32 | GO_ABI_INTERNAL_PT_REGS_GP(ctx);
+    struct ssl_info *info_ptr = bpf_map_lookup_elem(go_context, &pid_fp);
+
+    if (info_ptr == NULL) {
+        return;
+    }
+
+    struct ssl_info info;
+    long err = bpf_probe_read(&info, sizeof(struct ssl_info), info_ptr);
+
+    if (err != 0) {
+        log_error(ctx, LOG_ERROR_READING_SSL_CONTEXT, pid_tgid, err, ORIGIN_SSL_URETPROBE_CODE);
+        return;
+    }
+
+    output_ssl_chunk(ctx, &info, info.buffer_len, pid_tgid, flags);
+
+    return;
+}
+
+SEC("uprobe/go_crypto_tls_write")
+void BPF_KPROBE(go_crypto_tls_write) {
+    go_crypto_tls_uprobe(ctx, &go_write_context);
 }
 
 SEC("uprobe/go_crypto_tls_write_ex")
-static int go_crypto_tls_write_ex_uprobe(struct pt_regs *ctx) {
-    __u64 pid_tgid = bpf_get_current_pid_tgid();
-    __u64 pid = pid_tgid >> 32;
-    if (!should_tap(pid)) {
-        return 0;
-    }
-
-    __u64 pid_fp = pid << 32 | GO_ABI_INTERNAL_PT_REGS_GP(ctx);
-    struct ssl_info *info_ptr = bpf_map_lookup_elem(&go_write_context, &pid_fp);
-
-    if (info_ptr == NULL) {
-        return 0;
-    }
-
-    struct ssl_info info;
-    long err = bpf_probe_read(&info, sizeof(struct ssl_info), info_ptr);
-
-    if (err != 0) {
-        log_error(ctx, LOG_ERROR_READING_SSL_CONTEXT, pid_tgid, err, ORIGIN_SSL_URETPROBE_CODE);
-        return 0;
-    }
-
-    output_ssl_chunk(ctx, &info, info.buffer_len, pid_tgid, 0);
-
-    return 0;
+void BPF_KPROBE(go_crypto_tls_write_ex) {
+    go_crypto_tls_ex_uprobe(ctx, &go_write_context, 0);
 }
 
 SEC("uprobe/go_crypto_tls_read")
-static int go_crypto_tls_read_uprobe(struct pt_regs *ctx) {
-    __u64 pid_tgid = bpf_get_current_pid_tgid();
-    __u64 pid = pid_tgid >> 32;
-    if (!should_tap(pid)) {
-        return 0;
-    }
-
-    struct ssl_info info = new_ssl_info();
-
-    info.buffer_len = GO_ABI_INTERNAL_PT_REGS_R2(ctx);
-    info.buffer = (void*)GO_ABI_INTERNAL_PT_REGS_R4(ctx);
-    info.fd = get_fd_from_tcp_conn(ctx);
-
-    __u64 pid_fp = pid << 32 | GO_ABI_INTERNAL_PT_REGS_GP(ctx);
-    long err = bpf_map_update_elem(&go_read_context, &pid_fp, &info, BPF_ANY);
-
-    if (err != 0) {
-        log_error(ctx, LOG_ERROR_PUTTING_SSL_CONTEXT, pid_tgid, err, 0l);
-    }
-
-    return 0;
+void BPF_KPROBE(go_crypto_tls_read) {
+    go_crypto_tls_uprobe(ctx, &go_read_context);
 }
 
 SEC("uprobe/go_crypto_tls_read_ex")
-static int go_crypto_tls_read_ex_uprobe(struct pt_regs *ctx) {
-    __u64 pid_tgid = bpf_get_current_pid_tgid();
-    __u64 pid = pid_tgid >> 32;
-    if (!should_tap(pid)) {
-        return 0;
-    }
-
-    __u64 pid_fp = pid << 32 | GO_ABI_INTERNAL_PT_REGS_GP(ctx);
-    struct ssl_info *info_ptr = bpf_map_lookup_elem(&go_read_context, &pid_fp);
-
-    if (info_ptr == NULL) {
-        return 0;
-    }
-
-    struct ssl_info info;
-    long err = bpf_probe_read(&info, sizeof(struct ssl_info), info_ptr);
-
-    if (err != 0) {
-        log_error(ctx, LOG_ERROR_READING_SSL_CONTEXT, pid_tgid, err, ORIGIN_SSL_URETPROBE_CODE);
-        return 0;
-    }
-
-    output_ssl_chunk(ctx, &info, info.buffer_len, pid_tgid, FLAGS_IS_READ_BIT);
-
-    return 0;
+void BPF_KPROBE(go_crypto_tls_read_ex) {
+    go_crypto_tls_ex_uprobe(ctx, &go_read_context, FLAGS_IS_READ_BIT);
 }
