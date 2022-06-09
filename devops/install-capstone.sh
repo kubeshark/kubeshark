@@ -5,7 +5,8 @@ if (( $EUID != 0 )); then
     SUDO='sudo'
 fi
 
-git clone https://github.com/capstone-engine/capstone.git -b 4.0.2 --depth 1 && \
-cd capstone && \
-./make.sh && \
-$SUDO ./make.sh install
+curl https://github.com/aquynh/capstone/archive/4.0.2.tar.gz -Lo ./capstone.tar.gz \
+ && tar -xzf capstone.tar.gz && mv ./capstone-* ./capstone \
+ && cd capstone \
+ && ./make.sh \
+ && $SUDO ./make.sh install
