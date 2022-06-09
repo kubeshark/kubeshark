@@ -9,7 +9,6 @@ Copyright (C) UP9 Inc.
 
 const int32_t invalid_fd = -1;
 
-static int get_count_bytes(struct pt_regs *ctx, struct ssl_info* info, __u64 id);
 static int add_address_to_chunk(struct pt_regs *ctx, struct tls_chunk* chunk, __u64 id, __u32 fd);
 static void send_chunk_part(struct pt_regs *ctx, __u8* buffer, __u64 id, struct tls_chunk* chunk, int start, int end);
 static void send_chunk(struct pt_regs *ctx, __u8* buffer, __u64 id, struct tls_chunk* chunk);

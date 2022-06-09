@@ -13,6 +13,34 @@ Copyright (C) UP9 Inc.
 #include "include/common.h"
 
 
+static __always_inline int get_count_bytes(struct pt_regs *ctx, struct ssl_info* info, __u64 id) {
+    int returnValue = PT_REGS_RC(ctx);
+
+    if (info->count_ptr == NULL) {
+        // ssl_read and ssl_write return the number of bytes written/read
+        //
+        return returnValue;
+    }
+
+    // ssl_read_ex and ssl_write_ex return 1 for success
+    //
+    if (returnValue != 1) {
+        return 0;
+    }
+
+    // ssl_read_ex and ssl_write_ex write the number of bytes to an arg named *count
+    //
+    size_t countBytes;
+    long err = bpf_probe_read(&countBytes, sizeof(size_t), (void*) info->count_ptr);
+
+    if (err != 0) {
+        log_error(ctx, LOG_ERROR_READING_BYTES_COUNT, id, err, 0l);
+        return 0;
+    }
+
+    return countBytes;
+}
+
 static __always_inline void ssl_uprobe(struct pt_regs *ctx, void* ssl, void* buffer, int num, struct bpf_map_def* map_fd, size_t *count_ptr) {
 	__u64 id = bpf_get_current_pid_tgid();
 	
