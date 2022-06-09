@@ -8,23 +8,28 @@ Copyright (C) UP9 Inc.
 
 README
 
-Go does not follow any platform ABI like x86-64 ABI.
-Before 1.17, Go followed stack-based Plan9 (Bell Labs) calling convention.
-After 1.17, Go switched to an internal register-based calling convention. (Go internal ABI)
-The probes in this file supports Go 1.17+
+Go does not follow any platform ABI like x86-64 System V ABI.
+Before 1.17, Go followed stack-based Plan9 (Bell Labs) calling convention. (ABI0)
+After 1.17, Go switched to an internal register-based calling convention. (ABIInternal)
+For now, the probes in this file supports only ABIInternal (Go 1.17+)
 
 `uretprobe` in Linux kernel uses trampoline pattern to jump to original return
 address of the probed function. A Goroutine's stack size is 2Kb while a C thread is 2MB on Linux.
-If stack size exceeds 2Kb, Go runtime reallocates the stack. That causes the
-return address to become wrong in case of `uretprobe` and probed Go program crashes.
+If stack size exceeds 2Kb, Go runtime relocates the stack. That causes the
+return address to become incorrect in case of `uretprobe` and probed Go program crashes.
 Therefore `uretprobe` CAN'T BE USED for a Go program.
 
 `_ex_uprobe` suffixed probes suppose to be `uretprobe`(s) are actually `uprobe`(s)
-because of the non-standard ABI of Go. Therefore we probe `ret` mnemonics under the symbol
+because of the non-standard ABI of Go. Therefore we probe all `ret` mnemonics under the symbol
 by automatically finding them through reading the ELF binary and disassembling the symbols.
-Disassembly related code located in `go_offsets.go` file.
-Example: We probe an arbitrary point in a function body (offset +559):
-https://github.com/golang/go/blob/go1.17.6/src/crypto/tls/conn.go#L1296
+Disassembly related code located in `go_offsets.go` file and it uses Capstone Engine.
+Solution based on: https://github.com/iovisor/bcc/issues/1320#issuecomment-407927542
+*Example* We probe an arbitrary point in a function body (offset +559):
+https://github.com/golang/go/blob/go1.17.6/src/crypto/tls/conn.go#L1299
+
+We get the file descriptor using the common $rax register that holds the address
+of `go.itab.*net.TCPConn,net.Conn` and through a series of dereferencing
+using `bpf_probe_read` calls in `go_crypto_tls_get_fd_from_tcp_conn` function.
 
 ---
 
@@ -39,6 +44,8 @@ Proposal of Register-based Go calling convention: https://go.googlesource.com/pr
 Go internal ABI (1.17) specification: https://go.googlesource.com/go/+/refs/heads/dev.regabi/src/cmd/compile/internal-abi.md
 Go internal ABI (current) specification: https://go.googlesource.com/go/+/refs/heads/master/src/cmd/compile/abi-internal.md
 A Quick Guide to Go's Assembler: https://go.googlesource.com/go/+/refs/heads/dev.regabi/doc/asm.html
+Dissecting Go Binaries: https://www.grant.pizza/blog/dissecting-go-binaries/
+Capstone Engine: https://www.capstone-engine.org/
 */
 
 #include "include/headers.h"
@@ -51,7 +58,7 @@ A Quick Guide to Go's Assembler: https://go.googlesource.com/go/+/refs/heads/dev
 #include "include/go_abi_internal.h"
 #include "include/go_types.h"
 
-static __always_inline __u32 get_fd_from_tcp_conn(struct pt_regs *ctx) {
+static __always_inline __u32 go_crypto_tls_get_fd_from_tcp_conn(struct pt_regs *ctx) {
     struct go_interface conn;
     long err = bpf_probe_read(&conn, sizeof(conn), (void*)GO_ABI_INTERNAL_PT_REGS_R1(ctx));
     if (err != 0) {
@@ -84,7 +91,7 @@ static __always_inline void go_crypto_tls_uprobe(struct pt_regs *ctx, struct bpf
 
     info.buffer_len = GO_ABI_INTERNAL_PT_REGS_R2(ctx);
     info.buffer = (void*)GO_ABI_INTERNAL_PT_REGS_R4(ctx);
-    info.fd = get_fd_from_tcp_conn(ctx);
+    info.fd = go_crypto_tls_get_fd_from_tcp_conn(ctx);
 
     __u64 pid_fp = pid << 32 | GO_ABI_INTERNAL_PT_REGS_GP(ctx);
     long err = bpf_map_update_elem(go_context, &pid_fp, &info, BPF_ANY);
