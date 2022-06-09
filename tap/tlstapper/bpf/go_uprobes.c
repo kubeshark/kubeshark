@@ -8,7 +8,7 @@ Copyright (C) UP9 Inc.
 
 README
 
-Golang does not follow any platform ABI like x86-64 ABI.
+Go does not follow any platform ABI like x86-64 ABI.
 Before 1.17, Go followed stack-based Plan9 (Bell Labs) calling convention.
 After 1.17, Go switched to an internal register-based calling convention. (Go internal ABI)
 The probes in this file supports Go 1.17+
@@ -22,7 +22,7 @@ Therefore `uretprobe` CAN'T BE USED for a Go program.
 `_ex_uprobe` suffixed probes suppose to be `uretprobe`(s) are actually `uprobe`(s)
 because of the non-standard ABI of Go. Therefore we probe `ret` mnemonics under the symbol
 by automatically finding them through reading the ELF binary and disassembling the symbols.
-Disassembly related code located in `golang_offsets.go` file.
+Disassembly related code located in `go_offsets.go` file.
 Example: We probe an arbitrary point in a function body (offset +559):
 https://github.com/golang/go/blob/go1.17.6/src/crypto/tls/conn.go#L1296
 
@@ -73,8 +73,8 @@ static __always_inline __u32 get_fd_from_tcp_conn(struct pt_regs *ctx) {
     return fd;
 }
 
-SEC("uprobe/golang_crypto_tls_write")
-static int golang_crypto_tls_write_uprobe(struct pt_regs *ctx) {
+SEC("uprobe/go_crypto_tls_write")
+static int go_crypto_tls_write_uprobe(struct pt_regs *ctx) {
     __u64 pid_tgid = bpf_get_current_pid_tgid();
     __u64 pid = pid_tgid >> 32;
     if (!should_tap(pid)) {
@@ -97,8 +97,8 @@ static int golang_crypto_tls_write_uprobe(struct pt_regs *ctx) {
     return 0;
 }
 
-SEC("uprobe/golang_crypto_tls_write_ex")
-static int golang_crypto_tls_write_ex_uprobe(struct pt_regs *ctx) {
+SEC("uprobe/go_crypto_tls_write_ex")
+static int go_crypto_tls_write_ex_uprobe(struct pt_regs *ctx) {
     __u64 pid_tgid = bpf_get_current_pid_tgid();
     __u64 pid = pid_tgid >> 32;
     if (!should_tap(pid)) {
@@ -125,8 +125,8 @@ static int golang_crypto_tls_write_ex_uprobe(struct pt_regs *ctx) {
     return 0;
 }
 
-SEC("uprobe/golang_crypto_tls_read")
-static int golang_crypto_tls_read_uprobe(struct pt_regs *ctx) {
+SEC("uprobe/go_crypto_tls_read")
+static int go_crypto_tls_read_uprobe(struct pt_regs *ctx) {
     __u64 pid_tgid = bpf_get_current_pid_tgid();
     __u64 pid = pid_tgid >> 32;
     if (!should_tap(pid)) {
@@ -149,8 +149,8 @@ static int golang_crypto_tls_read_uprobe(struct pt_regs *ctx) {
     return 0;
 }
 
-SEC("uprobe/golang_crypto_tls_read_ex")
-static int golang_crypto_tls_read_ex_uprobe(struct pt_regs *ctx) {
+SEC("uprobe/go_crypto_tls_read_ex")
+static int go_crypto_tls_read_ex_uprobe(struct pt_regs *ctx) {
     __u64 pid_tgid = bpf_get_current_pid_tgid();
     __u64 pid = pid_tgid >> 32;
     if (!should_tap(pid)) {

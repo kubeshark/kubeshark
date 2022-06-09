@@ -287,7 +287,7 @@ func startTlsTapper(extension *api.Extension, outputItems chan *api.OutputChanne
 	// A quick way to instrument Go `crypto/tls` without PID filtering - used for debuging and troubleshooting
 	//
 	if os.Getenv("MIZU_GLOBAL_GOLANG_PID") != "" {
-		if err := tls.GlobalGolangTap(*procfs, os.Getenv("MIZU_GLOBAL_GOLANG_PID")); err != nil {
+		if err := tls.GlobalGoTap(*procfs, os.Getenv("MIZU_GLOBAL_GOLANG_PID")); err != nil {
 			tlstapper.LogError(err)
 			return nil
 		}

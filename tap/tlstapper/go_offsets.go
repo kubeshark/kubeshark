@@ -11,60 +11,60 @@ import (
 	"github.com/knightsc/gapstone"
 )
 
-type golangOffsets struct {
-	GolangWriteOffset *golangExtendedOffset
-	GolangReadOffset  *golangExtendedOffset
+type goOffsets struct {
+	GoWriteOffset *goExtendedOffset
+	GoReadOffset  *goExtendedOffset
 }
 
-type golangExtendedOffset struct {
+type goExtendedOffset struct {
 	enter uint64
 	exits []uint64
 }
 
 const (
 	minimumSupportedGoVersion = "1.17.0"
-	golangVersionSymbol       = "runtime.buildVersion.str"
-	golangWriteSymbol         = "crypto/tls.(*Conn).Write"
-	golangReadSymbol          = "crypto/tls.(*Conn).Read"
+	goVersionSymbol           = "runtime.buildVersion.str"
+	goWriteSymbol             = "crypto/tls.(*Conn).Write"
+	goReadSymbol              = "crypto/tls.(*Conn).Read"
 )
 
-func findGolangOffsets(filePath string) (golangOffsets, error) {
+func findGoOffsets(filePath string) (goOffsets, error) {
 	offsets, err := getOffsets(filePath)
 	if err != nil {
-		return golangOffsets{}, err
+		return goOffsets{}, err
 	}
 
-	goVersionOffset, err := getOffset(offsets, golangVersionSymbol)
+	goVersionOffset, err := getOffset(offsets, goVersionSymbol)
 	if err != nil {
-		return golangOffsets{}, err
+		return goOffsets{}, err
 	}
 
 	passed, goVersion, err := checkGoVersion(filePath, goVersionOffset)
 	if err != nil {
-		return golangOffsets{}, fmt.Errorf("Checking Go version: %s", err)
+		return goOffsets{}, fmt.Errorf("Checking Go version: %s", err)
 	}
 
 	if !passed {
-		return golangOffsets{}, fmt.Errorf("Unsupported Go version: %s", goVersion)
+		return goOffsets{}, fmt.Errorf("Unsupported Go version: %s", goVersion)
 	}
 
-	writeOffset, err := getOffset(offsets, golangWriteSymbol)
+	writeOffset, err := getOffset(offsets, goWriteSymbol)
 	if err != nil {
-		return golangOffsets{}, fmt.Errorf("reading offset [%s]: %s", golangWriteSymbol, err)
+		return goOffsets{}, fmt.Errorf("reading offset [%s]: %s", goWriteSymbol, err)
 	}
 
-	readOffset, err := getOffset(offsets, golangReadSymbol)
+	readOffset, err := getOffset(offsets, goReadSymbol)
 	if err != nil {
-		return golangOffsets{}, fmt.Errorf("reading offset [%s]: %s", golangReadSymbol, err)
+		return goOffsets{}, fmt.Errorf("reading offset [%s]: %s", goReadSymbol, err)
 	}
 
-	return golangOffsets{
-		GolangWriteOffset: writeOffset,
-		GolangReadOffset:  readOffset,
+	return goOffsets{
+		GoWriteOffset: writeOffset,
+		GoReadOffset:  readOffset,
 	}, nil
 }
 
-func getOffsets(filePath string) (offsets map[string]*golangExtendedOffset, err error) {
+func getOffsets(filePath string) (offsets map[string]*goExtendedOffset, err error) {
 	var engine gapstone.Engine
 	engine, err = gapstone.New(
 		gapstone.CS_ARCH_X86,
@@ -74,7 +74,7 @@ func getOffsets(filePath string) (offsets map[string]*golangExtendedOffset, err 
 		return
 	}
 
-	offsets = make(map[string]*golangExtendedOffset)
+	offsets = make(map[string]*goExtendedOffset)
 	var fd *os.File
 	fd, err = os.Open(filePath)
 	if err != nil {
@@ -114,7 +114,7 @@ func getOffsets(filePath string) (offsets map[string]*golangExtendedOffset, err 
 			}
 		}
 
-		extendedOffset := &golangExtendedOffset{enter: offset}
+		extendedOffset := &goExtendedOffset{enter: offset}
 
 		// source: https://gist.github.com/grantseltzer/3efa8ecc5de1fb566e8091533050d608
 		// skip over any symbols that aren't functinons/methods
@@ -156,14 +156,14 @@ func getOffsets(filePath string) (offsets map[string]*golangExtendedOffset, err 
 	return
 }
 
-func getOffset(offsets map[string]*golangExtendedOffset, symbol string) (*golangExtendedOffset, error) {
+func getOffset(offsets map[string]*goExtendedOffset, symbol string) (*goExtendedOffset, error) {
 	if offset, ok := offsets[symbol]; ok {
 		return offset, nil
 	}
 	return nil, fmt.Errorf("symbol %s: %w", symbol, link.ErrNoSymbol)
 }
 
-func checkGoVersion(filePath string, offset *golangExtendedOffset) (bool, string, error) {
+func checkGoVersion(filePath string, offset *goExtendedOffset) (bool, string, error) {
 	fd, err := os.Open(filePath)
 	if err != nil {
 		return false, "", err

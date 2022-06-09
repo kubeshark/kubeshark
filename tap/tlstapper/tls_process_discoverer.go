@@ -32,7 +32,7 @@ func UpdateTapTargets(tls *TlsTapper, pods *[]v1.Pod, procfs string) error {
 			LogError(err)
 		}
 
-		if err := tls.AddGolangPid(procfs, pid, pod.Namespace); err != nil {
+		if err := tls.AddGoPid(procfs, pid, pod.Namespace); err != nil {
 			LogError(err)
 		}
 	}

@@ -4,8 +4,8 @@ SPDX-License-Identifier: GPL-2.0
 Copyright (C) UP9 Inc.
 */
 
-#ifndef __GOLANG_ABI_INTERNAL__
-#define __GOLANG_ABI_INTERNAL__
+#ifndef __GO_ABI_INTERNAL__
+#define __GO_ABI_INTERNAL__
 
 /*
 Go internal ABI specification
@@ -138,4 +138,4 @@ https://github.com/golang/go/blob/go1.17.6/src/cmd/compile/internal/ssa/gen/PPC6
 
 #endif
 
-#endif /* __GOLANG_ABI_INTERNAL__ */
+#endif /* __GO_ABI_INTERNAL__ */

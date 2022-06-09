@@ -26,7 +26,7 @@ Copyright (C) UP9 Inc.
 #define LOG_ERROR_PUTTING_CONNECT_INFO (14)
 #define LOG_ERROR_GETTING_CONNECT_INFO (15)
 #define LOG_ERROR_READING_CONNECT_INFO (16)
-#define LOG_ERROR_GOLANG_READ_READING_DATA_POINTER (17)
+#define LOG_ERROR_GO_READ_READING_DATA_POINTER (17)
 
 // Sometimes we have the same error, happening from different locations.
 // 	in order to be able to distinct between them in the log, we add an 
