@@ -35,6 +35,11 @@ jobs:
         run: |
           sudo apt-get install libpcap-dev
 
+      - name: Install Capstone
+        shell: bash
+        run: |
+          ./devops/install-capstone.sh
+
       - name: Check CLI modified files
         id: cli_modified_files
         run: devops/check_modified_files.sh cli/

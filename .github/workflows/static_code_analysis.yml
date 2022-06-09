@@ -26,6 +26,7 @@ jobs:
         run: |
           sudo apt update
           sudo apt install -y libpcap-dev
+          ./devops/install-capstone.sh
 
       - name: Check Agent modified files
         id: agent_modified_files
