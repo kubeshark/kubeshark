@@ -57,12 +57,26 @@ kubectl expose deployment redis --type=LoadBalancer --port=6379 -n mizu-tests --
 echo "Creating rabbitmq service"
 kubectl expose deployment rabbitmq --type=LoadBalancer --port=5672 -n mizu-tests --dry-run=client -o yaml | kubectl apply -f -
 
-# TODO: need to understand how to fail if address already in use
-echo "Starting proxy"
-rm -f ${PROXY_LOG}
-kubectl proxy --port=8080 > ${PROXY_LOG} &
-PID1=$!
-echo "kubectl proxy process id is ${PID1} and log of proxy in ${PROXY_LOG}"
+kubectl-proxy-start() {
+  echo "Starting proxy"
+  pkill -9 -f "kubectl proxy"
+  rm -f ${PROXY_LOG}
+  kubectl proxy --port="$1" > ${PROXY_LOG} &
+  PID1=$!
+  echo "kubectl proxy process id is ${PID1} and log of proxy in ${PROXY_LOG}"
+}
+
+minikube-tunnel-start() {
+    echo "Starting tunnel"
+    pkill -9 -f "minikube tunnel"
+    rm -f ${TUNNEL_LOG}
+    minikube tunnel > ${TUNNEL_LOG} &
+    PID2=$!
+    echo "Minikube tunnel process id is ${PID2} and log of tunnel in ${TUNNEL_LOG}"
+}
+
+
+kubectl-proxy-start 8080
 
 if [[ -z "${CI}" ]]; then
   echo "Setting env var of mizu ci image"
@@ -78,9 +92,4 @@ minikube image load "${MIZU_CI_IMAGE}"
 echo "Build cli"
 cd cli && make build GIT_BRANCH=ci SUFFIX=ci
 
-# TODO: need to understand how to fail if password is asked (sudo)
-echo "Starting tunnel"
-rm -f ${TUNNEL_LOG}
-minikube tunnel > ${TUNNEL_LOG} &
-PID2=$!
-echo "Minikube tunnel process id is ${PID2} and log of tunnel in ${TUNNEL_LOG}"
+minikube-tunnel-start

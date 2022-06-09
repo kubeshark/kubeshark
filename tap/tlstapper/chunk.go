@@ -9,8 +9,8 @@ import (
 	"github.com/up9inc/mizu/tap/api"
 )
 
-const FLAGS_IS_CLIENT_BIT uint32 = (1 << 0)
-const FLAGS_IS_READ_BIT uint32 = (1 << 1)
+const FLAGS_IS_CLIENT_BIT uint32 = 1 << 0
+const FLAGS_IS_READ_BIT uint32 = 1 << 1
 
 // The same struct can be found in maps.h
 //

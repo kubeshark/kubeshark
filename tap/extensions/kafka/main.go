@@ -10,7 +10,7 @@ import (
 	"github.com/up9inc/mizu/tap/api"
 )
 
-var _protocol api.Protocol = api.Protocol{
+var _protocol = api.Protocol{
 	Name:            "kafka",
 	LongName:        "Apache Kafka Protocol",
 	Abbreviation:    "KAFKA",

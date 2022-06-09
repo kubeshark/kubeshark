@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"net/url"
 	"os"
 	"os/signal"
 	"syscall"
@@ -59,17 +58,6 @@ func CheckErr(e error) {
 	}
 }
 
-func SetHostname(address, newHostname string) string {
-	replacedUrl, err := url.Parse(address)
-	if err != nil {
-		logger.Log.Errorf("error replacing hostname to %s in address %s, returning original %v", newHostname, address, err)
-		return address
-	}
-	replacedUrl.Host = newHostname
-	return replacedUrl.String()
-
-}
-
 func ReadJsonFile(filePath string, value interface{}) error {
 	if content, err := ioutil.ReadFile(filePath); err != nil {
 		return err
@@ -92,19 +80,4 @@ func SaveJsonFile(filePath string, value interface{}) error {
 	}
 
 	return nil
-}
-
-func UniqueStringSlice(s []string) []string {
-	uniqueSlice := make([]string, 0)
-	uniqueMap := map[string]bool{}
-
-	for _, val := range s {
-		if uniqueMap[val] {
-			continue
-		}
-		uniqueMap[val] = true
-		uniqueSlice = append(uniqueSlice, val)
-	}
-
-	return uniqueSlice
 }

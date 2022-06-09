@@ -24,13 +24,13 @@ const (
 
 func loadOAS(ctx context.Context) (doc *openapi3.T, contractContent string, router routers.Router, err error) {
 	path := fmt.Sprintf("%s%s", shared.ConfigDirPath, shared.ContractFileName)
-	bytes, err := ioutil.ReadFile(path)
+	bytesValue, err := ioutil.ReadFile(path)
 	if err != nil {
 		return
 	}
-	contractContent = string(bytes)
+	contractContent = string(bytesValue)
 	loader := &openapi3.Loader{Context: ctx}
-	doc, _ = loader.LoadFromData(bytes)
+	doc, _ = loader.LoadFromData(bytesValue)
 	err = doc.Validate(ctx)
 	if err != nil {
 		return

@@ -65,7 +65,7 @@ func (t *TlsTapper) PollForLogging() {
 }
 
 func (t *TlsTapper) GlobalTap(sslLibrary string) error {
-	return t.tapPid(GLOABL_TAP_PID, sslLibrary, api.UNKNOWN_NAMESPACE)
+	return t.tapPid(GLOABL_TAP_PID, sslLibrary, api.UnknownNamespace)
 }
 
 func (t *TlsTapper) AddPid(procfs string, pid uint32, namespace string) error {
@@ -108,27 +108,27 @@ func (t *TlsTapper) ClearPids() {
 }
 
 func (t *TlsTapper) Close() []error {
-	errors := make([]error, 0)
+	returnValue := make([]error, 0)
 
 	if err := t.bpfObjects.Close(); err != nil {
-		errors = append(errors, err)
+		returnValue = append(returnValue, err)
 	}
 
-	errors = append(errors, t.syscallHooks.close()...)
+	returnValue = append(returnValue, t.syscallHooks.close()...)
 
 	for _, sslHooks := range t.sslHooksStructs {
-		errors = append(errors, sslHooks.close()...)
+		returnValue = append(returnValue, sslHooks.close()...)
 	}
 
 	if err := t.bpfLogger.close(); err != nil {
-		errors = append(errors, err)
+		returnValue = append(returnValue, err)
 	}
 
 	if err := t.poller.close(); err != nil {
-		errors = append(errors, err)
+		returnValue = append(returnValue, err)
 	}
 
-	return errors
+	return returnValue
 }
 
 func setupRLimit() error {

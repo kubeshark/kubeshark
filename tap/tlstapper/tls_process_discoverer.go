@@ -86,14 +86,14 @@ func buildContainerIdsMap(pods *[]v1.Pod) map[string]v1.Pod {
 
 	for _, pod := range *pods {
 		for _, container := range pod.Status.ContainerStatuses {
-			url, err := url.Parse(container.ContainerID)
+			parsedUrl, err := url.Parse(container.ContainerID)
 
 			if err != nil {
 				logger.Log.Warningf("Expecting URL like container ID %v", container.ContainerID)
 				continue
 			}
 
-			result[url.Host] = pod
+			result[parsedUrl.Host] = pod
 		}
 	}
 
