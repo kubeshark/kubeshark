@@ -80,7 +80,6 @@ func getOffsets(filePath string) (offsets map[string]*goExtendedOffset, err erro
 		)
 	default:
 		err = fmt.Errorf("Unsupported architecture: %v", runtime.GOARCH)
-		return
 	}
 	if err != nil {
 		return
