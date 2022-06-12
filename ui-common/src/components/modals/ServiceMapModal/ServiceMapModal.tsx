@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { Box, Fade, Modal, Backdrop, Button } from "@mui/material";
 import { toast } from "react-toastify";
-import spinnerStyle from './Spinner.module.sass';
 import spinnerImg from '../../assets/spinner.svg';
 import Graph from "react-graph-vis";
 import debounce from 'lodash/debounce';
@@ -244,7 +243,7 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
                         <div className={styles.graphSection}>
                             <div style={{ display: "flex", justifyContent: "space-between" }}>
                             </div>
-                            {isLoading && <div className={spinnerStyle.spinnerContainer}>
+                            {isLoading && <div className={styles.spinnerContainer}>
                                 <img alt="spinner" src={spinnerImg} style={{ height: 50 }} />
                             </div>}
                             {!isLoading && <div style={{ height: "100%", width: "100%" }}>
