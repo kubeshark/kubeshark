@@ -4,15 +4,15 @@ import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
 import styles from './EntryListItem.module.sass';
 import StatusCode, {getClassification, StatusCodeClassification} from "../UI/StatusCode/StatusCode";
 import Protocol, {ProtocolInterface} from "../UI/Protocol/Protocol"
-import eBPFLogo from './assets/lock.svg';
+import eBPFLogo from 'assets/lock.svg';
 import {Summary} from "../UI/Summary/Summary";
 import Queryable from "../UI/Queryable/Queryable";
-import ingoingIconSuccess from "./assets/ingoing-traffic-success.svg"
-import ingoingIconFailure from "./assets/ingoing-traffic-failure.svg"
-import ingoingIconNeutral from "./assets/ingoing-traffic-neutral.svg"
-import outgoingIconSuccess from "./assets/outgoing-traffic-success.svg"
-import outgoingIconFailure from "./assets/outgoing-traffic-failure.svg"
-import outgoingIconNeutral from "./assets/outgoing-traffic-neutral.svg"
+import ingoingIconSuccess from "assets/ingoing-traffic-success.svg"
+import ingoingIconFailure from "assets/ingoing-traffic-failure.svg"
+import ingoingIconNeutral from "assets/ingoing-traffic-neutral.svg"
+import outgoingIconSuccess from "assets/outgoing-traffic-success.svg"
+import outgoingIconFailure from "assets/outgoing-traffic-failure.svg"
+import outgoingIconNeutral from "assets/outgoing-traffic-neutral.svg"
 import {useRecoilState} from "recoil";
 import focusedEntryIdAtom from "../../recoil/focusedEntryId";
 import queryAtom from "../../recoil/query";
