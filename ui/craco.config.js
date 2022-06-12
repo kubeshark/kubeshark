@@ -13,7 +13,8 @@ module.exports = {
                 instanceOfMiniCssExtractPlugin.options.ignoreOrder = true;
 
             webpackConfig.resolve.alias['react']= path.resolve(__dirname, 'node_modules/react'); // solve 2  react instances
-            webpackConfig.resolve.alias['@material-ui/styles']= path.resolve("node_modules", "@material-ui/styles");
+            webpackConfig.resolve.alias['@emotion/react']= path.resolve("node_modules", "@emotion/react");
+            webpackConfig.resolve.alias['@mui/styles']= path.resolve("node_modules", "@mui/styles");
 
             return webpackConfig;
         }
