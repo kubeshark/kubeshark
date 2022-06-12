@@ -93,6 +93,7 @@ static __always_inline void go_crypto_tls_uprobe(struct pt_regs *ctx, struct bpf
     info.buffer = (void*)GO_ABI_INTERNAL_PT_REGS_R4(ctx);
     info.fd = go_crypto_tls_get_fd_from_tcp_conn(ctx);
 
+    // GO_ABI_INTERNAL_PT_REGS_GP is Goroutine address
     __u64 pid_fp = pid << 32 | GO_ABI_INTERNAL_PT_REGS_GP(ctx);
     long err = bpf_map_update_elem(go_context, &pid_fp, &info, BPF_ANY);
 
@@ -110,6 +111,7 @@ static __always_inline void go_crypto_tls_ex_uprobe(struct pt_regs *ctx, struct 
         return;
     }
 
+    // GO_ABI_INTERNAL_PT_REGS_GP is Goroutine address
     __u64 pid_fp = pid << 32 | GO_ABI_INTERNAL_PT_REGS_GP(ctx);
     struct ssl_info *info_ptr = bpf_map_lookup_elem(go_context, &pid_fp);
 
