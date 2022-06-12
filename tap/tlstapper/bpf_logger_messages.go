@@ -20,5 +20,4 @@ var bpfLogMessages = []string{
 	/*0014*/ "[%d] Unable to put connect info [err: %d]",
 	/*0015*/ "[%d] Unable to get connect info",
 	/*0016*/ "[%d] Unable to read connect info [err: %d]",
-	/*0017*/ "[%d] Go read unable to read data pointer [err: %d]",
 }
