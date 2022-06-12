@@ -5,7 +5,6 @@ import (
 	"debug/elf"
 	"fmt"
 	"os"
-	"runtime"
 
 	"github.com/Masterminds/semver"
 	"github.com/cilium/ebpf/link"
@@ -67,21 +66,10 @@ func findGoOffsets(filePath string) (goOffsets, error) {
 
 func getOffsets(filePath string) (offsets map[string]*goExtendedOffset, err error) {
 	var engine gapstone.Engine
-	switch runtime.GOARCH {
-	case "amd64":
-		engine, err = gapstone.New(
-			gapstone.CS_ARCH_X86,
-			gapstone.CS_MODE_64,
-		)
-	case "arm64":
-		engine, err = gapstone.New(
-			gapstone.CS_ARCH_ARM64,
-			gapstone.CS_MODE_ARM,
-		)
-	default:
-		err = fmt.Errorf("Unsupported architecture: %v", runtime.GOARCH)
-		return
-	}
+	engine, err = gapstone.New(
+		gapstone.CS_ARCH_X86,
+		gapstone.CS_MODE_64,
+	)
 	if err != nil {
 		return
 	}
