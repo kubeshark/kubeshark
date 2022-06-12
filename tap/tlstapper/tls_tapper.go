@@ -12,7 +12,7 @@ import (
 
 const GLOABL_TAP_PID = 0
 
-//go:generate go run github.com/cilium/ebpf/cmd/bpf2go@0d0727ef53e2f53b1731c73f4c61e0f58693083a -type tls_chunk tlsTapper bpf/tls_tapper.c -- -O2 -g -D__TARGET_ARCH_x86
+//go:generate go run github.com/cilium/ebpf/cmd/bpf2go@0d0727ef53e2f53b1731c73f4c61e0f58693083a -cflags $BPF_CFLAGS -type tls_chunk tlsTapper bpf/tls_tapper.c
 
 type TlsTapper struct {
 	bpfObjects      tlsTapperObjects
