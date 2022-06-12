@@ -14,9 +14,9 @@ import (
 	"fmt"
 	"os"
 	"runtime"
+	"strconv"
 	"strings"
 	"time"
-	"strconv"
 
 	"github.com/shirou/gopsutil/cpu"
 	"github.com/struCoder/pidusage"
@@ -59,8 +59,8 @@ var tls = flag.Bool("tls", false, "Enable TLS tapper")
 var memprofile = flag.String("memprofile", "", "Write memory profile")
 
 type TapOpts struct {
-	HostMode         bool
-	IgnoredPorts     []uint16
+	HostMode     bool
+	IgnoredPorts []uint16
 }
 
 var extensions []*api.Extension                     // global
@@ -100,7 +100,7 @@ func UpdateTapTargets(newTapTargets []v1.Pod) {
 
 	packetSourceManager.UpdatePods(tapTargets, !*nodefrag, mainPacketInputChan)
 
-	if tlsTapperInstance != nil {
+	if tlsTapperInstance != nil && os.Getenv("MIZU_GLOBAL_GOLANG_PID") == "" {
 		if err := tlstapper.UpdateTapTargets(tlsTapperInstance, &tapTargets, *procfs); err != nil {
 			tlstapper.LogError(err)
 			success = false
@@ -278,7 +278,16 @@ func startTlsTapper(extension *api.Extension, outputItems chan *api.OutputChanne
 	// A quick way to instrument libssl.so without PID filtering - used for debuging and troubleshooting
 	//
 	if os.Getenv("MIZU_GLOBAL_SSL_LIBRARY") != "" {
-		if err := tls.GlobalTap(os.Getenv("MIZU_GLOBAL_SSL_LIBRARY")); err != nil {
+		if err := tls.GlobalSsllibTap(os.Getenv("MIZU_GLOBAL_SSL_LIBRARY")); err != nil {
+			tlstapper.LogError(err)
+			return nil
+		}
+	}
+
+	// A quick way to instrument Go `crypto/tls` without PID filtering - used for debuging and troubleshooting
+	//
+	if os.Getenv("MIZU_GLOBAL_GOLANG_PID") != "" {
+		if err := tls.GlobalGoTap(*procfs, os.Getenv("MIZU_GLOBAL_GOLANG_PID")); err != nil {
 			tlstapper.LogError(err)
 			return nil
 		}

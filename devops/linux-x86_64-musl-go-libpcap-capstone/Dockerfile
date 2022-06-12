@@ -29,3 +29,11 @@ RUN curl https://www.tcpdump.org/release/libpcap-1.10.1.tar.gz -Lo ./libpcap.tar
 WORKDIR /libpcap
 RUN ./configure --host=x86_64 && make \
  && cp /libpcap/libpcap.a /usr/local/musl/lib/gcc/x86_64-unknown-linux-musl/*/
+WORKDIR /
+
+# Build and install Capstone from source
+RUN curl https://github.com/capstone-engine/capstone/archive/4.0.2.tar.gz -Lo ./capstone.tar.gz \
+ && tar -xzf capstone.tar.gz && mv ./capstone-* ./capstone
+WORKDIR /capstone
+RUN ./make.sh \
+ && cp /capstone/libcapstone.a /usr/local/musl/lib/gcc/x86_64-unknown-linux-musl/*/

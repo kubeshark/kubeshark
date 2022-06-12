@@ -17,4 +17,11 @@ RUN curl https://www.tcpdump.org/release/libpcap-1.10.1.tar.gz -Lo ./libpcap.tar
 WORKDIR /work/libpcap
 RUN ./configure --host=arm && make \
  && cp /work/libpcap/libpcap.a /usr/xcc/aarch64-linux-musl-cross/lib/gcc/aarch64-linux-musl/*/
+WORKDIR /work
 
+# Build and install Capstone from source
+RUN curl https://github.com/capstone-engine/capstone/archive/4.0.2.tar.gz -Lo ./capstone.tar.gz \
+ && tar -xzf capstone.tar.gz && mv ./capstone-* ./capstone
+WORKDIR /work/capstone
+RUN CAPSTONE_ARCHS="aarch64" CAPSTONE_STATIC=yes ./make.sh \
+&& cp /work/capstone/libcapstone.a /usr/xcc/aarch64-linux-musl-cross/lib/gcc/aarch64-linux-musl/*/

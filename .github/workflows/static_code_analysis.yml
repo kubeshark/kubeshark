@@ -26,6 +26,7 @@ jobs:
         run: |
           sudo apt update
           sudo apt install -y libpcap-dev
+          ./devops/install-capstone.sh
 
       - name: Check Agent modified files
         id: agent_modified_files
@@ -37,7 +38,7 @@ jobs:
         with:
           version: latest
           working-directory: agent
-          args: --timeout=3m
+          args: --timeout=10m
 
       - name: Check shared modified files
         id: shared_modified_files
@@ -49,7 +50,7 @@ jobs:
         with:
           version: latest
           working-directory: shared
-          args: --timeout=3m
+          args: --timeout=10m
 
       - name: Check tap modified files
         id: tap_modified_files
@@ -61,7 +62,7 @@ jobs:
         with:
           version: latest
           working-directory: tap
-          args: --timeout=3m
+          args: --timeout=10m
 
       - name: Check cli modified files
         id: cli_modified_files
@@ -73,7 +74,7 @@ jobs:
         with:
           version: latest
           working-directory: cli
-          args: --timeout=3m
+          args: --timeout=10m
 
       - name: Check acceptanceTests modified files
         id: acceptanceTests_modified_files
@@ -85,7 +86,7 @@ jobs:
         with:
           version: latest
           working-directory: acceptanceTests
-          args: --timeout=3m
+          args: --timeout=10m
 
       - name: Check tap/api modified files
         id: tap_api_modified_files
