@@ -8,7 +8,7 @@ Copyright (C) UP9 Inc.
 #define __GO_TYPES__
 
 struct go_interface {
-    int64_t type;
+    __s64 type;
     void* ptr;
 };
 
