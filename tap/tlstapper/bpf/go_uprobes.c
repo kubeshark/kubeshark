@@ -116,6 +116,7 @@ static __always_inline void go_crypto_tls_ex_uprobe(struct pt_regs *ctx, struct 
     if (info_ptr == NULL) {
         return;
     }
+    bpf_map_delete_elem(go_context, &pid_fp);
 
     struct ssl_info info;
     long err = bpf_probe_read(&info, sizeof(struct ssl_info), info_ptr);
