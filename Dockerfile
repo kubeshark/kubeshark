@@ -25,7 +25,7 @@ RUN npm run build
 ### Base builder image for native builds architecture
 FROM golang:1.17-alpine AS builder-native-base
 ENV CGO_ENABLED=1 GOOS=linux
-RUN apk add --no-cache libpcap-dev g++ perl-utils curl build-base bash
+RUN apk add --no-cache libpcap-dev g++ perl-utils curl build-base binutils-gold bash
 COPY devops/install-capstone.sh .
 RUN ./install-capstone.sh
 
@@ -47,9 +47,9 @@ ENV GOARCH=arm64 CGO_CFLAGS="-I/work/libpcap -I/work/capstone/include"
 
 
 ### Builder image for AArch64 to x86-64 cross-compilation
-FROM up9inc/linux-x86_64-musl-go-libpcap AS builder-from-arm64v8-to-amd64
+FROM up9inc/linux-x86_64-musl-go-libpcap-capstone AS builder-from-arm64v8-to-amd64
 ENV CGO_ENABLED=1 GOOS=linux
-ENV GOARCH=amd64 CGO_CFLAGS="-I/libpcap"
+ENV GOARCH=amd64 CGO_CFLAGS="-I/libpcap -I/capstone/include"
 
 
 ### Final builder image where the build happens

@@ -36,4 +36,4 @@ RUN curl https://github.com/capstone-engine/capstone/archive/4.0.2.tar.gz -Lo ./
  && tar -xzf capstone.tar.gz && mv ./capstone-* ./capstone
 WORKDIR /capstone
 RUN ./make.sh \
- && ./make.sh install
+ && cp /capstone/libcapstone.a /usr/local/musl/lib/gcc/x86_64-unknown-linux-musl/*/
