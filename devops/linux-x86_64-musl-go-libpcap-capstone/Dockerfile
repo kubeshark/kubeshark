@@ -32,7 +32,7 @@ RUN ./configure --host=x86_64 && make \
 WORKDIR /
 
 # Build and install Capstone from source
-RUN curl https://github.com/aquynh/capstone/archive/4.0.2.tar.gz -Lo ./capstone.tar.gz \
+RUN curl https://github.com/capstone-engine/capstone/archive/4.0.2.tar.gz -Lo ./capstone.tar.gz \
  && tar -xzf capstone.tar.gz && mv ./capstone-* ./capstone
 WORKDIR /capstone
 RUN ./make.sh \
