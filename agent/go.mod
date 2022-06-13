@@ -20,7 +20,7 @@ require (
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
 	github.com/orcaman/concurrent-map v1.0.0
 	github.com/stretchr/testify v1.7.0
-	github.com/up9inc/basenine/client/go v0.0.0-20220509204026-c37adfc587f4
+	github.com/up9inc/basenine/client/go v0.0.0-20220612112747-3b28eeac9c51
 	github.com/up9inc/mizu/logger v0.0.0
 	github.com/up9inc/mizu/shared v0.0.0
 	github.com/up9inc/mizu/tap v0.0.0
@@ -47,12 +47,13 @@ require (
 	github.com/Azure/go-autorest/logger v0.2.1 // indirect
 	github.com/Azure/go-autorest/tracing v0.6.0 // indirect
 	github.com/MakeNowJust/heredoc v1.0.0 // indirect
+	github.com/Masterminds/semver v1.5.0 // indirect
 	github.com/PuerkitoBio/purell v1.1.1 // indirect
 	github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 // indirect
 	github.com/beevik/etree v1.1.0 // indirect
 	github.com/chai2010/gettext-go v0.0.0-20160711120539-c6fed771bfd5 // indirect
 	github.com/chanced/dynamic v0.0.0-20211210164248-f8fadb1d735b // indirect
-	github.com/cilium/ebpf v0.8.0 // indirect
+	github.com/cilium/ebpf v0.8.1 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/evanphx/json-patch v5.6.0+incompatible // indirect
 	github.com/exponent-io/jsonpath v0.0.0-20210407135951-1de76d718b3f // indirect
@@ -84,6 +85,7 @@ require (
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/compress v1.14.2 // indirect
+	github.com/knightsc/gapstone v0.0.0-20211014144438-5e0e64002a6e // indirect
 	github.com/leodido/go-urn v1.2.1 // indirect
 	github.com/liggitt/tabwriter v0.0.0-20181228230101-89fcab3d43de // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect

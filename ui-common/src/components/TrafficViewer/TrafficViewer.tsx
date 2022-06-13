@@ -1,10 +1,10 @@
-import React, {useEffect, useRef, useState} from "react";
-import {Filters} from "./Filters";
-import {EntriesList} from "./EntriesList";
+import React, { useEffect, useRef, useState } from "react";
+import { Filters } from "../Filters/Filters";
+import { EntriesList } from "../EntriesList/EntriesList";
 import makeStyles from '@mui/styles/makeStyles';
 import TrafficViewerStyles from "./TrafficViewer.module.sass";
-import styles from '../style/EntriesList.module.sass';
-import { EntryDetailed } from "./EntryDetailed";
+import styles from '../EntriesList/EntriesList.module.sass';
+import { EntryDetailed } from "../EntryDetailed/EntryDetailed";
 import playIcon from 'assets/run.svg';
 import pauseIcon from 'assets/pause.svg';
 import variables from '../../variables.module.scss';
@@ -15,7 +15,7 @@ import focusedEntryIdAtom from "../../recoil/focusedEntryId";
 import queryAtom from "../../recoil/query";
 import trafficViewerApiAtom from "../../recoil/TrafficViewerApi"
 import TrafficViewerApi from "./TrafficViewerApi";
-import { StatusBar } from "../UI/StatusBar";
+import { StatusBar } from "../UI/StatusBar/StatusBar";
 import tappingStatusAtom from "../../recoil/tappingStatus/atom";
 import { TOAST_CONTAINER_ID } from "../../configs/Consts";
 import leftOffTopAtom from "../../recoil/leftOffTop";

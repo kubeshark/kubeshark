@@ -46,7 +46,7 @@ func findLibraryByPid(procfs string, pid uint32, libraryName string) (string, er
 
 		filepath := parts[5]
 
-		if !strings.Contains(filepath, libraryName) {
+		if libraryName != "" && !strings.Contains(filepath, libraryName) {
 			continue
 		}
 
