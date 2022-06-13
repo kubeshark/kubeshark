@@ -18,15 +18,16 @@ type GeneralStats struct {
 }
 
 type AccumulativeStatsMethod struct {
-	MethodName   string
-	RequestCount int
-	ByteCount    int
+	MethodName   string `json:"methodName"`
+	RequestCount int    `json:"requestCount"`
+	ByteCount    int    `json:"byteCount"`
 }
+
 type AccumulativeStatsProtocol struct {
-	ProtocolName string
-	RequestCount int
-	ByteCount    int
-	Methods      []*AccumulativeStatsMethod
+	ProtocolName string                     `json:"protocolName"`
+	RequestCount int                        `json:"requestCount"`
+	ByteCount    int                        `json:"byteCount"`
+	Methods      []*AccumulativeStatsMethod `json:"methods"`
 }
 
 var generalStats = ResetGeneralStats()
