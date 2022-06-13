@@ -1,8 +1,8 @@
 import style from './StatusBar.module.sass';
 import React, {useState} from "react";
-import warningIcon from '../assets/warning_icon.svg';
-import failIcon from '../assets/failed.svg';
-import successIcon from '../assets/success.svg';
+import warningIcon from 'assets/warning_icon.svg';
+import failIcon from 'assets/failed.svg';
+import successIcon from 'assets/success.svg';
 import {useRecoilValue} from "recoil";
 import tappingStatusAtom, {tappingStatusDetails} from "../../../recoil/tappingStatus";
 import Tooltip from "../Tooltip/Tooltip";
