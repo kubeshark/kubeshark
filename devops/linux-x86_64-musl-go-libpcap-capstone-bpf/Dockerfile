@@ -37,3 +37,6 @@ RUN curl https://github.com/capstone-engine/capstone/archive/4.0.2.tar.gz -Lo ./
 WORKDIR /capstone
 RUN ./make.sh \
  && cp /capstone/libcapstone.a /usr/local/musl/lib/gcc/x86_64-unknown-linux-musl/*/
+
+# Install eBPF related dependencies
+RUN apt-get -y install clang llvm libbpf-dev

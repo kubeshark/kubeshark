@@ -61,10 +61,10 @@ ENV BPF_CFLAGS="-O2 -g -D__TARGET_ARCH_arm64 -I/usr/xcc/aarch64-linux-musl-cross
 
 
 ### Builder image for AArch64 to x86-64 cross-compilation
-FROM up9inc/linux-x86_64-musl-go-libpcap-capstone AS builder-from-arm64v8-to-amd64
+FROM up9inc/linux-x86_64-musl-go-libpcap-capstone-bpf AS builder-from-arm64v8-to-amd64
 ENV CGO_ENABLED=1 GOOS=linux
 ENV GOARCH=amd64 CGO_CFLAGS="-I/libpcap -I/capstone/include"
-ENV BPF_CFLAGS="-O2 -g -D__TARGET_ARCH_x86"
+ENV BPF_CFLAGS="-O2 -g -D__TARGET_ARCH_x86  -I/usr/local/musl/x86_64-unknown-linux-musl/include/"
 
 
 ### Final builder image where the build happens
