@@ -83,5 +83,5 @@ export const Select: React.FC<SelectProps> = ({
             {multiple && <MenuItem key={ALL_KEY} value={ALL_KEY}>{transformItem(ALL_KEY)}</MenuItem>}
             {children}
         </MUISelect>
-    </div>
+    </div> 
 }
