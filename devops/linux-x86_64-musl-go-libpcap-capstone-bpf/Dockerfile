@@ -39,4 +39,10 @@ RUN CAPSTONE_ARCHS="x86" CAPSTONE_STATIC=yes ./make.sh \
  && cp /capstone/libcapstone.a /usr/local/musl/lib/gcc/x86_64-unknown-linux-musl/*/
 
 # Install eBPF related dependencies
-RUN apt-get -y install clang llvm libbpf-dev
+RUN apt-get -y install clang llvm libelf-dev pkg-config
+
+# Build and install libbpf from source
+RUN curl https://github.com/libbpf/libbpf/archive/refs/tags/v0.8.0.tar.gz -Lo ./libbpf.tar.gz \
+ && tar -xzf libbpf.tar.gz && mv ./libbpf-* ./libbpf
+WORKDIR /libbpf
+RUN make && make install
