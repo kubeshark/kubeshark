@@ -1,5 +1,5 @@
 import React from "react";
-import circleImg from '../assets/dotted-circle.svg';
+import circleImg from 'assets/dotted-circle.svg';
 import styles from './NoDataMessage.module.sass'
 
 export interface Props {
