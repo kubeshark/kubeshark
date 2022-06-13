@@ -144,7 +144,7 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 			continue
 		}
 
-		providers.EntryAdded(len(data))
+		providers.EntryAdded(len(data), item.Summary)
 
 		entryInserter := dependency.GetInstance(dependency.EntriesInserter).(EntryInserter)
 		if err := entryInserter.Insert(mizuEntry); err != nil {
