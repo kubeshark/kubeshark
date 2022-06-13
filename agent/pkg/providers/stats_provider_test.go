@@ -42,7 +42,8 @@ func TestEntryAddedCount(t *testing.T) {
 			}
 
 			t.Cleanup(func() {
-				generalStats := providers.ResetGeneralStats()
+				providers.ResetGeneralStats()
+				generalStats := providers.GetGeneralStats()
 				if generalStats.EntriesCount != 0 {
 					t.Errorf("unexpected result - expected: %v, actual: %v", 0, generalStats.EntriesCount)
 				}

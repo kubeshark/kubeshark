@@ -30,13 +30,17 @@ type AccumulativeStatsProtocol struct {
 	Methods      []*AccumulativeStatsMethod `json:"methods"`
 }
 
-var generalStats = ResetGeneralStats()
+var generalStats = InitGeneralStats()
 
-func ResetGeneralStats() GeneralStats {
-	generalStats = GeneralStats{}
-	generalStats.CountPerProtocolMethod = map[string]map[string]int{}
-	generalStats.SizePerProtocolMethod = map[string]map[string]int{}
-	return generalStats
+func ResetGeneralStats() {
+	generalStats = InitGeneralStats()
+}
+
+func InitGeneralStats() GeneralStats {
+	generalStatsObj := GeneralStats{}
+	generalStatsObj.CountPerProtocolMethod = map[string]map[string]int{}
+	generalStatsObj.SizePerProtocolMethod = map[string]map[string]int{}
+	return generalStatsObj
 }
 
 func GetGeneralStats() GeneralStats {
