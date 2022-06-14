@@ -2,6 +2,7 @@ package tap
 
 import (
 	"encoding/hex"
+	"fmt"
 	"os"
 	"os/signal"
 	"sync"
@@ -10,6 +11,7 @@ import (
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
 	"github.com/google/gopacket/reassembly"
+	"github.com/hashicorp/golang-lru/simplelru"
 	"github.com/up9inc/mizu/logger"
 	"github.com/up9inc/mizu/tap/api"
 	"github.com/up9inc/mizu/tap/dbgctl"
@@ -17,14 +19,19 @@ import (
 	"github.com/up9inc/mizu/tap/source"
 )
 
-const PACKETS_SEEN_LOG_THRESHOLD = 1000
+const (
+	lastClosedConnectionsMaxItems = 1000
+	packetsSeenLogThreshold       = 1000
+	lastAckThreshold              = time.Duration(50) * time.Millisecond
+)
 
 type tcpAssembler struct {
 	*reassembly.Assembler
-	streamPool     *reassembly.StreamPool
-	streamFactory  *tcpStreamFactory
-	assemblerMutex sync.Mutex
-	ignoredPorts   []uint16
+	streamPool            *reassembly.StreamPool
+	streamFactory         *tcpStreamFactory
+	assemblerMutex        sync.Mutex
+	ignoredPorts          []uint16
+	lastClosedConnections *simplelru.LRU // Actual type is map[string]int64 which is "connId -> lastSeen"
 }
 
 // Context
@@ -44,23 +51,29 @@ func NewTcpAssembler(outputItems chan *api.OutputChannelItem, streamsMap api.Tcp
 		OutputChannel: outputItems,
 	}
 
-	streamFactory := NewTcpStreamFactory(emitter, streamsMap, opts)
-	streamPool := reassembly.NewStreamPool(streamFactory)
-	assembler := reassembly.NewAssembler(streamPool)
+	lastClosedConnections, err := simplelru.NewLRU(lastClosedConnectionsMaxItems, func(key interface{}, value interface{}) {})
+
+	if err != nil {
+		// The check here is for the linter only, nothing can or should be done without changing the return value of this method
+	}
+
+	a := &tcpAssembler{
+		ignoredPorts:          opts.IgnoredPorts,
+		lastClosedConnections: lastClosedConnections,
+	}
+
+	a.streamFactory = NewTcpStreamFactory(emitter, streamsMap, opts, a)
+	a.streamPool = reassembly.NewStreamPool(a.streamFactory)
+	a.Assembler = reassembly.NewAssembler(a.streamPool)
 
 	maxBufferedPagesTotal := GetMaxBufferedPagesPerConnection()
 	maxBufferedPagesPerConnection := GetMaxBufferedPagesTotal()
 	logger.Log.Infof("Assembler options: maxBufferedPagesTotal=%d, maxBufferedPagesPerConnection=%d, opts=%v",
 		maxBufferedPagesTotal, maxBufferedPagesPerConnection, opts)
-	assembler.AssemblerOptions.MaxBufferedPagesTotal = maxBufferedPagesTotal
-	assembler.AssemblerOptions.MaxBufferedPagesPerConnection = maxBufferedPagesPerConnection
+	a.Assembler.AssemblerOptions.MaxBufferedPagesTotal = maxBufferedPagesTotal
+	a.Assembler.AssemblerOptions.MaxBufferedPagesPerConnection = maxBufferedPagesPerConnection
 
-	return &tcpAssembler{
-		Assembler:     assembler,
-		streamPool:    streamPool,
-		streamFactory: streamFactory,
-		ignoredPorts:  opts.IgnoredPorts,
-	}
+	return a
 }
 
 func (a *tcpAssembler) processPackets(dumpPacket bool, packets <-chan source.TcpPacketInfo) {
@@ -70,7 +83,7 @@ func (a *tcpAssembler) processPackets(dumpPacket bool, packets <-chan source.Tcp
 	for packetInfo := range packets {
 		packetsCount := diagnose.AppStats.IncPacketsCount()
 
-		if packetsCount%PACKETS_SEEN_LOG_THRESHOLD == 0 {
+		if packetsCount%packetsSeenLogThreshold == 0 {
 			logger.Log.Debugf("Packets seen: #%d", packetsCount)
 		}
 
@@ -83,23 +96,7 @@ func (a *tcpAssembler) processPackets(dumpPacket bool, packets <-chan source.Tcp
 
 		tcp := packet.Layer(layers.LayerTypeTCP)
 		if tcp != nil {
-			diagnose.AppStats.IncTcpPacketsCount()
-			tcp := tcp.(*layers.TCP)
-
-			if a.shouldIgnorePort(uint16(tcp.DstPort)) {
-				diagnose.AppStats.IncIgnoredPacketsCount()
-			} else {
-				c := context{
-					CaptureInfo: packet.Metadata().CaptureInfo,
-					Origin:      packetInfo.Source.Origin,
-				}
-				diagnose.InternalStats.Totalsz += len(tcp.Payload)
-				if !dbgctl.MizuTapperDisableTcpReassembly {
-					a.assemblerMutex.Lock()
-					a.AssembleWithContext(packet.NetworkLayer().NetworkFlow(), tcp, &c)
-					a.assemblerMutex.Unlock()
-				}
-			}
+			a.processTcpPacket(packetInfo.Source.Origin, packet, tcp.(*layers.TCP))
 		}
 
 		done := *maxcount > 0 && int64(diagnose.AppStats.PacketsCount) >= *maxcount
@@ -131,6 +128,52 @@ func (a *tcpAssembler) processPackets(dumpPacket bool, packets <-chan source.Tcp
 	logger.Log.Debugf("Final flush: %d closed", closed)
 }
 
+func (a *tcpAssembler) processTcpPacket(origin api.Capture, packet gopacket.Packet, tcp *layers.TCP) {
+	diagnose.AppStats.IncTcpPacketsCount()
+	if a.shouldIgnorePort(uint16(tcp.DstPort)) || a.shouldIgnorePort(uint16(tcp.SrcPort)) {
+		diagnose.AppStats.IncIgnoredPacketsCount()
+		return
+	}
+
+	if a.isLastAck(packet) {
+		diagnose.AppStats.IncIgnoredLastAckCount()
+		return
+	}
+
+	c := context{
+		CaptureInfo: packet.Metadata().CaptureInfo,
+		Origin:      origin,
+	}
+	diagnose.InternalStats.Totalsz += len(tcp.Payload)
+	if !dbgctl.MizuTapperDisableTcpReassembly {
+		a.assemblerMutex.Lock()
+		a.AssembleWithContext(packet.NetworkLayer().NetworkFlow(), tcp, &c)
+		a.assemblerMutex.Unlock()
+	}
+}
+
+func (a *tcpAssembler) tcpStreamCreated(stream *tcpStream) {
+
+}
+
+func (a *tcpAssembler) tcpStreamClosed(stream *tcpStream) {
+	a.lastClosedConnections.Add(stream.connectionId, time.Now().UnixMilli())
+}
+
+func (a *tcpAssembler) isLastAck(packet gopacket.Packet) bool {
+	id := getConnectionId(packet.NetworkLayer().NetworkFlow().Src().String(),
+		packet.TransportLayer().TransportFlow().Src().String(),
+		packet.NetworkLayer().NetworkFlow().Dst().String(),
+		packet.TransportLayer().TransportFlow().Dst().String())
+	if closedTimeMillis, ok := a.lastClosedConnections.Get(id); ok {
+		millisSinceClosed := time.Since(time.UnixMilli(closedTimeMillis.(int64)))
+		if millisSinceClosed < lastAckThreshold {
+			return true
+		}
+	}
+	return false
+}
+
 func (a *tcpAssembler) dumpStreamPool() {
 	a.streamPool.Dump()
 }
@@ -150,4 +193,14 @@ func (a *tcpAssembler) shouldIgnorePort(port uint16) bool {
 	}
 
 	return false
+}
+
+func getConnectionId(saddr string, sport string, daddr string, dport string) string {
+	s := fmt.Sprintf("%s:%s", saddr, sport)
+	d := fmt.Sprintf("%s:%s", daddr, dport)
+	if s > d {
+		return fmt.Sprintf("%s#%s", s, d)
+	} else {
+		return fmt.Sprintf("%s#%s", d, s)
+	}
 }

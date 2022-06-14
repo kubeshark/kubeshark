@@ -151,6 +151,6 @@ func (t *tcpReassemblyStream) ReassemblyComplete(ac reassembly.AssemblerContext)
 	if t.tcpStream.GetIsTapTarget() && !t.tcpStream.GetIsClosed() {
 		t.tcpStream.close()
 	}
-	// do not remove the connection to allow last ACK
-	return false
+
+	return true
 }
