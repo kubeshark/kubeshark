@@ -23,7 +23,7 @@ func TestNoEntryAddedCount(t *testing.T) {
 func TestEntryAddedCount(t *testing.T) {
 	tests := []int{1, 5, 10, 100, 500, 1000}
 
-	mockSummery := api.BaseEntry{Protocol: api.Protocol{Name: "mock"}, Method: "mock-method"}
+	mockSummery := &api.BaseEntry{Protocol: api.Protocol{Name: "mock"}, Method: "mock-method"}
 
 	for _, entriesCount := range tests {
 		t.Run(fmt.Sprintf("%d", entriesCount), func(t *testing.T) {
@@ -59,7 +59,7 @@ func TestEntryAddedVolume(t *testing.T) {
 	var expectedEntriesCount int
 	var expectedVolumeInGB float64
 
-	mockSummery := api.BaseEntry{Protocol: api.Protocol{Name: "mock"}, Method: "mock-method"}
+	mockSummery := &api.BaseEntry{Protocol: api.Protocol{Name: "mock"}, Method: "mock-method"}
 
 	for _, data := range tests {
 		t.Run(fmt.Sprintf("%d", len(data)), func(t *testing.T) {

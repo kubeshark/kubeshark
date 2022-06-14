@@ -79,7 +79,7 @@ func GetAccumulativeStats() []*AccumulativeStatsProtocol {
 	return result
 }
 
-func EntryAdded(size int, summery api.BaseEntry) {
+func EntryAdded(size int, summery *api.BaseEntry) {
 	generalStats.EntriesCount++
 	generalStats.EntriesVolumeInGB += float64(size) / (1 << 30)
 

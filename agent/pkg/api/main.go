@@ -11,15 +11,14 @@ import (
 	"strings"
 	"time"
 
-	"github.com/up9inc/mizu/agent/pkg/models"
-
 	"github.com/up9inc/mizu/agent/pkg/dependency"
+	"github.com/up9inc/mizu/agent/pkg/models"
+	"github.com/up9inc/mizu/agent/pkg/oas"
+	"github.com/up9inc/mizu/agent/pkg/servicemap"
+
 	"github.com/up9inc/mizu/agent/pkg/har"
 	"github.com/up9inc/mizu/agent/pkg/holder"
 	"github.com/up9inc/mizu/agent/pkg/providers"
-
-	"github.com/up9inc/mizu/agent/pkg/oas"
-	"github.com/up9inc/mizu/agent/pkg/servicemap"
 
 	"github.com/up9inc/mizu/agent/pkg/resolver"
 	"github.com/up9inc/mizu/agent/pkg/utils"
@@ -144,7 +143,8 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 			continue
 		}
 
-		providers.EntryAdded(len(data), *item.Summary)
+		summary := extension.Dissector.Summarize(mizuEntry)
+		providers.EntryAdded(len(data), summary)
 
 		entryInserter := dependency.GetInstance(dependency.EntriesInserter).(EntryInserter)
 		if err := entryInserter.Insert(mizuEntry); err != nil {
