@@ -22,7 +22,7 @@ import (
 const (
 	lastClosedConnectionsMaxItems = 1000
 	packetsSeenLogThreshold       = 1000
-	lastAckThreshold              = time.Duration(50) * time.Millisecond
+	lastAckThreshold              = time.Duration(3) * time.Second
 )
 
 type tcpAssembler struct {
@@ -166,8 +166,8 @@ func (a *tcpAssembler) isLastAck(packet gopacket.Packet) bool {
 		packet.NetworkLayer().NetworkFlow().Dst().String(),
 		packet.TransportLayer().TransportFlow().Dst().String())
 	if closedTimeMillis, ok := a.lastClosedConnections.Get(id); ok {
-		millisSinceClosed := time.Since(time.UnixMilli(closedTimeMillis.(int64)))
-		if millisSinceClosed < lastAckThreshold {
+		timeSinceClosed := time.Since(time.UnixMilli(closedTimeMillis.(int64)))
+		if timeSinceClosed < lastAckThreshold {
 			return true
 		}
 	}
