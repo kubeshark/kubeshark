@@ -109,6 +109,19 @@ func EntryAdded(size int, summery api.BaseEntry) {
 		generalStats.FirstEntryTimestamp = currentTimestamp
 	}
 
+	if _, found := generalStats.CountPerProtocolMethod[summery.Protocol.Name]; !found {
+		generalStats.CountPerProtocolMethod[summery.Protocol.Name] = map[string]int{}
+	}
+	if _, found := generalStats.CountPerProtocolMethod[summery.Protocol.Name][summery.Method]; !found {
+		generalStats.CountPerProtocolMethod[summery.Protocol.Name][summery.Method] = 0
+	}
+
+	if _, found := generalStats.SizePerProtocolMethod[summery.Protocol.Name]; !found {
+		generalStats.SizePerProtocolMethod[summery.Protocol.Name] = map[string]int{}
+	}
+	if _, found := generalStats.SizePerProtocolMethod[summery.Protocol.Name][summery.Method]; !found {
+		generalStats.SizePerProtocolMethod[summery.Protocol.Name][summery.Method] = 0
+	}
 	generalStats.CountPerProtocolMethod[summery.Protocol.Name][summery.Method] += 1
 	generalStats.SizePerProtocolMethod[summery.Protocol.Name][summery.Method] += size
 
