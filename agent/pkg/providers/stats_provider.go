@@ -4,17 +4,20 @@ import (
 	"reflect"
 	"time"
 
-	"github.com/up9inc/mizu/agent/pkg/utils"
 	"github.com/up9inc/mizu/tap/api"
 )
 
 type GeneralStats struct {
-	EntriesCount           int
-	EntriesVolumeInGB      float64
-	FirstEntryTimestamp    int
-	LastEntryTimestamp     int
-	CountPerProtocolMethod map[string]map[string]int
-	SizePerProtocolMethod  map[string]map[string]int
+	EntriesCount        int
+	EntriesVolumeInGB   float64
+	FirstEntryTimestamp int
+	LastEntryTimestamp  int
+	ProtocolCounters    map[string]map[string]*SizeAndRequestCount
+}
+
+type SizeAndRequestCount struct {
+	Count     int
+	BytesSize int
 }
 
 type AccumulativeStatsMethod struct {
@@ -38,8 +41,7 @@ func ResetGeneralStats() {
 
 func InitGeneralStats() GeneralStats {
 	generalStatsObj := GeneralStats{}
-	generalStatsObj.CountPerProtocolMethod = map[string]map[string]int{}
-	generalStatsObj.SizePerProtocolMethod = map[string]map[string]int{}
+	generalStatsObj.ProtocolCounters = map[string]map[string]*SizeAndRequestCount{}
 	return generalStatsObj
 }
 
@@ -48,48 +50,26 @@ func GetGeneralStats() GeneralStats {
 }
 
 func GetAccumulativeStats() []*AccumulativeStatsProtocol {
-	allProtocols := make([]string, 0)
-	for protocolName, _ := range generalStats.CountPerProtocolMethod {
-		allProtocols = append(allProtocols, protocolName)
-	}
-	for protocolName, _ := range generalStats.SizePerProtocolMethod {
-		allProtocols = append(allProtocols, protocolName)
-	}
-	allProtocols = utils.UniqueStringSlice(allProtocols)
-
 	result := make([]*AccumulativeStatsProtocol, 0)
-	for _, protocol := range allProtocols {
+	for protocolName, value := range generalStats.ProtocolCounters {
 		totalProtocolRequestCount := 0
 		totalBytesProtocol := 0
 		methods := make([]*AccumulativeStatsMethod, 0)
 
-		allProtocolMethods := make([]string, 0)
-		for protocolName, _ := range generalStats.CountPerProtocolMethod {
-			allProtocolMethods = append(allProtocolMethods, protocolName)
-		}
-		for protocolName, _ := range generalStats.SizePerProtocolMethod {
-			allProtocolMethods = append(allProtocolMethods, protocolName)
-		}
-		allProtocolMethods = utils.UniqueStringSlice(allProtocolMethods)
-
-		for _, method := range allProtocolMethods {
+		for method, countersValue := range value {
 			methodData := &AccumulativeStatsMethod{
 				MethodName:   method,
 				RequestCount: 0,
 				ByteCount:    0,
 			}
-			if value, ok := generalStats.CountPerProtocolMethod[protocol][method]; ok {
-				totalProtocolRequestCount += value
-				methodData.RequestCount += value
-			}
-			if value, ok := generalStats.SizePerProtocolMethod[protocol][method]; ok {
-				totalBytesProtocol += value
-				methodData.ByteCount += value
-			}
+			totalProtocolRequestCount += countersValue.Count
+			methodData.RequestCount += countersValue.Count
+			totalBytesProtocol += countersValue.BytesSize
+			methodData.ByteCount += countersValue.BytesSize
 			methods = append(methods, methodData)
 		}
 		newProtocolData := &AccumulativeStatsProtocol{
-			ProtocolName: protocol,
+			ProtocolName: protocolName,
 			RequestCount: totalProtocolRequestCount,
 			ByteCount:    totalBytesProtocol,
 			Methods:      methods,
@@ -109,21 +89,18 @@ func EntryAdded(size int, summery api.BaseEntry) {
 		generalStats.FirstEntryTimestamp = currentTimestamp
 	}
 
-	if _, found := generalStats.CountPerProtocolMethod[summery.Protocol.Name]; !found {
-		generalStats.CountPerProtocolMethod[summery.Protocol.Name] = map[string]int{}
+	if _, found := generalStats.ProtocolCounters[summery.Protocol.Name]; !found {
+		generalStats.ProtocolCounters[summery.Protocol.Name] = map[string]*SizeAndRequestCount{}
 	}
-	if _, found := generalStats.CountPerProtocolMethod[summery.Protocol.Name][summery.Method]; !found {
-		generalStats.CountPerProtocolMethod[summery.Protocol.Name][summery.Method] = 0
+	if _, found := generalStats.ProtocolCounters[summery.Protocol.Name][summery.Method]; !found {
+		generalStats.ProtocolCounters[summery.Protocol.Name][summery.Method] = &SizeAndRequestCount{
+			BytesSize: 0,
+			Count:     0,
+		}
 	}
 
-	if _, found := generalStats.SizePerProtocolMethod[summery.Protocol.Name]; !found {
-		generalStats.SizePerProtocolMethod[summery.Protocol.Name] = map[string]int{}
-	}
-	if _, found := generalStats.SizePerProtocolMethod[summery.Protocol.Name][summery.Method]; !found {
-		generalStats.SizePerProtocolMethod[summery.Protocol.Name][summery.Method] = 0
-	}
-	generalStats.CountPerProtocolMethod[summery.Protocol.Name][summery.Method] += 1
-	generalStats.SizePerProtocolMethod[summery.Protocol.Name][summery.Method] += size
+	generalStats.ProtocolCounters[summery.Protocol.Name][summery.Method].Count += 1
+	generalStats.ProtocolCounters[summery.Protocol.Name][summery.Method].BytesSize += size
 
 	generalStats.LastEntryTimestamp = currentTimestamp
 }
