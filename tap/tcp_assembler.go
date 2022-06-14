@@ -51,11 +51,7 @@ func NewTcpAssembler(outputItems chan *api.OutputChannelItem, streamsMap api.Tcp
 		OutputChannel: outputItems,
 	}
 
-	lastClosedConnections, err := simplelru.NewLRU(lastClosedConnectionsMaxItems, func(key interface{}, value interface{}) {})
-
-	if err != nil {
-		// The check here is for the linter only, nothing can or should be done without changing the return value of this method
-	}
+	lastClosedConnections, _ := simplelru.NewLRU(lastClosedConnectionsMaxItems, func(key interface{}, value interface{}) {})
 
 	a := &tcpAssembler{
 		ignoredPorts:          opts.IgnoredPorts,
