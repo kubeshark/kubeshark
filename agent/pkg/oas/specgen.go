@@ -42,6 +42,8 @@ type reqResp struct { // hello, generics in Go
 }
 
 type SpecGen struct {
+	MaxExampleLen int // -1 unlimited, 0 and above sets limit
+
 	oas  *openapi.OpenAPI
 	tree *Node
 	lock sync.Mutex
@@ -59,7 +61,11 @@ func NewGen(server string) *SpecGen {
 	spec.Servers = make([]*openapi.Server, 0)
 	spec.Servers = append(spec.Servers, &openapi.Server{URL: server})
 
-	gen := SpecGen{oas: spec, tree: new(Node)}
+	gen := SpecGen{
+		oas:           spec,
+		tree:          new(Node),
+		MaxExampleLen: -1,
+	}
 	return &gen
 }
 
@@ -510,7 +516,7 @@ func fillContent(reqResp reqResp, respContent openapi.Content, ctype string, sam
 			handleFormDataMultipart(text, content, params)
 		}
 
-		if content.Example == nil && len(exampleMsg) > len(content.Example) {
+		if content.Example == nil && len(exampleMsg) > len(content.Example) { // TODO: conditional
 			content.Example = exampleMsg
 		}
 	}
