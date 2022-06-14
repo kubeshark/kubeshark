@@ -124,7 +124,7 @@ func printNewTapTargets(success bool) {
 	}
 }
 
-func printPeriodicStats(cleaner *Cleaner) {
+func printPeriodicStats(cleaner *Cleaner, assembler *tcpAssembler) {
 	statsPeriod := time.Second * time.Duration(*statsevery)
 	ticker := time.NewTicker(statsPeriod)
 
@@ -162,8 +162,10 @@ func printPeriodicStats(cleaner *Cleaner) {
 			}
 		}
 		logger.Log.Infof(
-			"mem: %d, goroutines: %d, cpu: %f, cores: %d/%d, rss: %f",
+			"heap-alloc: %d, heap-idle: %d, heap-objects: %d, goroutines: %d, cpu: %f, cores: %d/%d, rss: %f",
 			memStats.HeapAlloc,
+			memStats.HeapIdle,
+			memStats.HeapObjects,
 			runtime.NumGoroutine(),
 			sysInfo.CPU,
 			logicalCoreCount,
@@ -181,6 +183,9 @@ func printPeriodicStats(cleaner *Cleaner) {
 		currentAppStats := diagnose.AppStats.DumpStats()
 		appStatsJSON, _ := json.Marshal(currentAppStats)
 		logger.Log.Infof("app stats - %v", string(appStatsJSON))
+
+		// At the moment
+		logger.Log.Infof("assembler-stats: %s, packet-source-stats: %s", assembler.Dump(), packetSourceManager.Stats())
 	}
 }
 
@@ -240,7 +245,7 @@ func startPassiveTapper(streamsMap api.TcpStreamMap, assembler *tcpAssembler) {
 	}
 	cleaner.start()
 
-	go printPeriodicStats(&cleaner)
+	go printPeriodicStats(&cleaner, assembler)
 
 	assembler.processPackets(*hexdumppkt, mainPacketInputChan)
 
