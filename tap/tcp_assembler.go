@@ -32,6 +32,8 @@ type tcpAssembler struct {
 	assemblerMutex        sync.Mutex
 	ignoredPorts          []uint16
 	lastClosedConnections *simplelru.LRU // Actual type is map[string]int64 which is "connId -> lastSeen"
+	liveConnections       map[string]bool
+	maxLiveStreams        int
 	streamsMutex          sync.RWMutex
 }
 
@@ -57,6 +59,8 @@ func NewTcpAssembler(outputItems chan *api.OutputChannelItem, streamsMap api.Tcp
 	a := &tcpAssembler{
 		ignoredPorts:          opts.IgnoredPorts,
 		lastClosedConnections: lastClosedConnections,
+		liveConnections:       make(map[string]bool),
+		maxLiveStreams:        opts.maxLiveStreams,
 	}
 
 	a.streamFactory = NewTcpStreamFactory(emitter, streamsMap, opts, a)
@@ -132,8 +136,18 @@ func (a *tcpAssembler) processTcpPacket(origin api.Capture, packet gopacket.Pack
 		return
 	}
 
-	if a.isLastAck(packet) {
+	id := getConnectionId(packet.NetworkLayer().NetworkFlow().Src().String(),
+		packet.TransportLayer().TransportFlow().Src().String(),
+		packet.NetworkLayer().NetworkFlow().Dst().String(),
+		packet.TransportLayer().TransportFlow().Dst().String())
+
+	if a.isLastAck(id) {
 		diagnose.AppStats.IncIgnoredLastAckCount()
+		return
+	}
+
+	if a.shouldThrottle(id) {
+		diagnose.AppStats.IncThrottledPackets()
 		return
 	}
 
@@ -150,29 +164,38 @@ func (a *tcpAssembler) processTcpPacket(origin api.Capture, packet gopacket.Pack
 }
 
 func (a *tcpAssembler) tcpStreamCreated(stream *tcpStream) {
-
+	a.streamsMutex.Lock()
+	defer a.streamsMutex.Unlock()
+	a.liveConnections[stream.connectionId] = true
 }
 
 func (a *tcpAssembler) tcpStreamClosed(stream *tcpStream) {
 	a.streamsMutex.Lock()
-	defer a.assemblerMutex.Unlock()
+	defer a.streamsMutex.Unlock()
 	a.lastClosedConnections.Add(stream.connectionId, time.Now().UnixMilli())
+	delete(a.liveConnections, stream.connectionId)
 }
 
-func (a *tcpAssembler) isLastAck(packet gopacket.Packet) bool {
+func (a *tcpAssembler) isLastAck(connectionId string) bool {
 	a.streamsMutex.RLock()
 	defer a.streamsMutex.RUnlock()
-	id := getConnectionId(packet.NetworkLayer().NetworkFlow().Src().String(),
-		packet.TransportLayer().TransportFlow().Src().String(),
-		packet.NetworkLayer().NetworkFlow().Dst().String(),
-		packet.TransportLayer().TransportFlow().Dst().String())
-	if closedTimeMillis, ok := a.lastClosedConnections.Get(id); ok {
+	if closedTimeMillis, ok := a.lastClosedConnections.Get(connectionId); ok {
 		timeSinceClosed := time.Since(time.UnixMilli(closedTimeMillis.(int64)))
 		if timeSinceClosed < lastAckThreshold {
 			return true
 		}
 	}
 	return false
+}
+
+func (a *tcpAssembler) shouldThrottle(connectionId string) bool {
+	a.streamsMutex.RLock()
+	defer a.streamsMutex.RUnlock()
+	if _, ok := a.liveConnections[connectionId]; ok {
+		return false
+	}
+
+	return len(a.liveConnections) > a.maxLiveStreams
 }
 
 func (a *tcpAssembler) dumpStreamPool() {
