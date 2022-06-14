@@ -44,27 +44,27 @@ RUN ./install-capstone.sh
 ### Intermediate builder image for x86-64 to x86-64 native builds
 FROM builder-native-base AS builder-from-amd64-to-amd64
 ENV GOARCH=amd64
-ENV BPF_CFLAGS="-O2 -g -D__TARGET_ARCH_x86"
+ENV BPF_TARGET=amd64 BPF_CFLAGS="-O2 -g -D__TARGET_ARCH_x86"
 
 
 ### Intermediate builder image for AArch64 to AArch64 native builds
 FROM builder-native-base AS builder-from-arm64v8-to-arm64v8
 ENV GOARCH=arm64
-ENV BPF_CFLAGS="-O2 -g -D__TARGET_ARCH_arm64"
+ENV BPF_TARGET=arm64 BPF_CFLAGS="-O2 -g -D__TARGET_ARCH_arm64"
 
 
 ### Builder image for x86-64 to AArch64 cross-compilation
 FROM up9inc/linux-arm64-musl-go-libpcap-capstone-bpf AS builder-from-amd64-to-arm64v8
 ENV CGO_ENABLED=1 GOOS=linux
 ENV GOARCH=arm64 CGO_CFLAGS="-I/work/libpcap -I/work/capstone/include"
-ENV BPF_CFLAGS="-O2 -g -D__TARGET_ARCH_arm64 -I/usr/xcc/aarch64-linux-musl-cross/aarch64-linux-musl/include/"
+ENV BPF_TARGET=arm64 BPF_CFLAGS="-O2 -g -D__TARGET_ARCH_arm64 -I/usr/xcc/aarch64-linux-musl-cross/aarch64-linux-musl/include/"
 
 
 ### Builder image for AArch64 to x86-64 cross-compilation
 FROM up9inc/linux-x86_64-musl-go-libpcap-capstone-bpf AS builder-from-arm64v8-to-amd64
 ENV CGO_ENABLED=1 GOOS=linux
 ENV GOARCH=amd64 CGO_CFLAGS="-I/libpcap -I/capstone/include"
-ENV BPF_CFLAGS="-O2 -g -D__TARGET_ARCH_x86  -I/usr/local/musl/x86_64-unknown-linux-musl/include/"
+ENV BPF_TARGET=amd64 BPF_CFLAGS="-O2 -g -D__TARGET_ARCH_x86  -I/usr/local/musl/x86_64-unknown-linux-musl/include/"
 
 
 ### Final builder image where the build happens
@@ -103,9 +103,12 @@ ARG GIT_BRANCH
 ARG BUILD_TIMESTAMP
 ARG VER=0.0
 
-WORKDIR /app/agent-build
+WORKDIR /app/tap/tlstapper
 
-RUN GOARCH=${BUILDARCH} go generate ../tap/tlstapper/tls_tapper.go
+RUN rm tlstapper_bpf*
+RUN GOARCH=${BUILDARCH} go generate tls_tapper.go
+
+WORKDIR /app/agent-build
 
 RUN go build -ldflags="-extldflags=-static -s -w \
     -X 'github.com/up9inc/mizu/agent/pkg/version.GitCommitHash=${COMMIT_HASH}' \
