@@ -32,6 +32,7 @@ type tcpAssembler struct {
 	assemblerMutex        sync.Mutex
 	ignoredPorts          []uint16
 	lastClosedConnections *simplelru.LRU // Actual type is map[string]int64 which is "connId -> lastSeen"
+	streamsMutex          sync.RWMutex
 }
 
 // Context
@@ -153,10 +154,14 @@ func (a *tcpAssembler) tcpStreamCreated(stream *tcpStream) {
 }
 
 func (a *tcpAssembler) tcpStreamClosed(stream *tcpStream) {
+	a.streamsMutex.Lock()
+	defer a.assemblerMutex.Unlock()
 	a.lastClosedConnections.Add(stream.connectionId, time.Now().UnixMilli())
 }
 
 func (a *tcpAssembler) isLastAck(packet gopacket.Packet) bool {
+	a.streamsMutex.RLock()
+	defer a.streamsMutex.RUnlock()
 	id := getConnectionId(packet.NetworkLayer().NetworkFlow().Src().String(),
 		packet.TransportLayer().TransportFlow().Src().String(),
 		packet.NetworkLayer().NetworkFlow().Dst().String(),
