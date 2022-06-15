@@ -1,8 +1,8 @@
-import React, {useEffect, useState} from "react";
+import React, {useEffect, useMemo, useState} from "react";
 import {Backdrop, Box, Button, Fade, Modal} from "@mui/material";
 import styles from "./TrafficStatsModal.module.sass";
 import closeIcon from "assets/close.svg";
-import {Cell, Pie, PieChart, Tooltip} from "recharts";
+import {Cell, Legend, Pie, PieChart, Tooltip} from "recharts";
 import {Utils} from "../../../helpers/Utils";
 
 const modalStyle = {
@@ -63,8 +63,8 @@ const mock = [
 ]
 
 enum PieChartMode {
-  REQUESTS = "requestCount",
-  VOLUME = "byteCount"
+  REQUESTS = "entriesCount",
+  VOLUME = "volumeSizeBytes"
 }
 
 const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042"];
@@ -109,26 +109,14 @@ export const TrafficStatsModal: React.FC<TrafficStatsModalProps> = ({ isOpen, on
   const [protocolsStats, setProtocolsStats] = useState([]);
   const [commandStats, setCommandStats] = useState(null);
   const [selectedProtocol, setSelectedProtocol] = useState(null as string);
-  const [formattedData, setFormattedData] = useState(null);
-
-  // useEffect(() => {
-  //   if(!data) return;
-  //   const formattedDataArray = data.map(protocol => {
-  //     const formattedMethods = protocol.methods.map(method => {
-  //       return {...method, byteCount: Utils.humanFileSize(method.byteCount)}
-  //     })
-  //     return {...protocol, byteCount: Utils.humanFileSize(protocol.byteCount), methods: formattedMethods};
-  //   })
-  //   setFormattedData(formattedDataArray);
-  // }, [data])
-
 
   useEffect(() => {
     if(!data) return;
     const protocolsPieData = data.map(protocol => {
       return {
-        name: protocol.protocolName,
-        value: protocol[PieChartMode[pieChartMode]]
+        name: protocol.name,
+        value: protocol[PieChartMode[pieChartMode]],
+        color: protocol.color
       }
     })
     setProtocolsStats(protocolsPieData)
@@ -139,15 +127,28 @@ export const TrafficStatsModal: React.FC<TrafficStatsModalProps> = ({ isOpen, on
       setCommandStats(null);
       return;
     }
-    const commandsPieData = data.find(protocol => protocol.protocolName === selectedProtocol).methods.map(command => {
+    const commandsPieData = data.find(protocol => protocol.name === selectedProtocol).methods.map(command => {
       return {
-        name: command.methodName,
+        name: command.name,
         value: command[PieChartMode[pieChartMode]]
       }
     })
     setCommandStats(commandsPieData);
   },[selectedProtocol, pieChartMode, data])
 
+  const pieLegend = useMemo(() => {
+    if(!data) return;
+    let legend;
+    if(!selectedProtocol) {
+      legend = data.map(protocol => <div style={{marginBottom: 5, display: "flex"}}>
+        <span style={{marginRight: 5, width: 50}}>
+          {protocol.name}
+        </span>
+        <div style={{height: 15, width: 30, background: protocol?.color || "black"}}/>
+      </div>)
+    }
+    return <div>{legend}</div>;
+  }, [data, selectedProtocol])
 
   return (
     <Modal
@@ -167,7 +168,7 @@ export const TrafficStatsModal: React.FC<TrafficStatsModalProps> = ({ isOpen, on
           <div className={styles.mainContainer}>
             <div>
               <span style={{marginRight: 15}}>Breakdown By</span>
-              <select value={pieChartMode} onChange={(e) => setPieChartMode(e.target.value)}>
+              <select className={styles.select} value={pieChartMode} onChange={(e) => setPieChartMode(e.target.value)}>
                 {modes.map(mode => <option value={mode}>{mode}</option>)}
               </select>
             </div>
@@ -178,8 +179,7 @@ export const TrafficStatsModal: React.FC<TrafficStatsModalProps> = ({ isOpen, on
                 <span className={styles.nonClickableTag}>{selectedProtocol}</span>
               </div>}
             </div>
-            {/*{selectedProtocol && <Button onClick={() => setSelectedProtocol(null)}>Back</Button>}*/}
-            {/*<span style={{fontWeight: 600, fontSize: 16, marginLeft: 30}}>{selectedProtocol}</span>*/}
+
             {protocolsStats?.length > 0 && <div style={{width: "100%", display: "flex", justifyContent: "center"}}><PieChart width={300} height={300}>
               <Pie
                 data={commandStats || protocolsStats}
@@ -193,10 +193,10 @@ export const TrafficStatsModal: React.FC<TrafficStatsModalProps> = ({ isOpen, on
                 onClick={(section) => !commandStats && setSelectedProtocol(section.name)}
               >
                 {(commandStats || protocolsStats).map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                ))}
+                  <Cell key={`cell-${index}`} fill={entry.color || COLORS[index % COLORS.length]} />)
+                )}
               </Pie>
-              {/*<Legend content={() => <div>Legend</div>} verticalAlign="top" />*/}
+              <Legend wrapperStyle={{position: "absolute", width: "auto", height: "auto", right: -75, top: 0}} content={pieLegend} />
               <Tooltip formatter={(value, name, props) => pieChartMode === "VOLUME" ? Utils.humanFileSize(value) : value + " Requests"}/>
             </PieChart></div>}
           </div>
