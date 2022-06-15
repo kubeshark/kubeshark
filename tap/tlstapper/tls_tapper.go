@@ -161,13 +161,13 @@ func setupRLimit() error {
 }
 
 func (t *TlsTapper) tapSsllibPid(pid uint32, sslLibrary string, namespace string) error {
-	logger.Log.Infof("Tapping TLS (pid: %v) (sslLibrary: %v)", pid, sslLibrary)
-
 	newSsl := sslHooks{}
 
 	if err := newSsl.installUprobes(&t.bpfObjects, sslLibrary); err != nil {
 		return err
 	}
+
+	logger.Log.Infof("Tapping TLS (pid: %v) (sslLibrary: %v)", pid, sslLibrary)
 
 	t.sslHooksStructs = append(t.sslHooksStructs, newSsl)
 
