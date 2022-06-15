@@ -22,14 +22,14 @@ type ProtocolStats struct {
 }
 
 type SizeAndEntriesCount struct {
-	EntriesCount int
-	BytesSize    int
+	EntriesCount  int
+	VolumeInBytes int
 }
 
 type AccumulativeStatsCounter struct {
-	Name         string `json:"name"`
-	EntriesCount int    `json:"entriesCount"`
-	ByteCount    int    `json:"byteCount"`
+	Name            string `json:"name"`
+	EntriesCount    int    `json:"entriesCount"`
+	VolumeSizeBytes int    `json:"volumeSizeBytes"`
 }
 
 type AccumulativeStatsProtocol struct {
@@ -54,37 +54,53 @@ func GetGeneralStats() GeneralStats {
 }
 
 func GetAccumulativeStats() []*AccumulativeStatsProtocol {
-	result := make([]*AccumulativeStatsProtocol, 0)
-	for _, counters := range bucketsStats {
-		for protocolName, value := range counters {
-			totalProtocolRequestCount := 0
-			totalBytesProtocol := 0
-			methods := make([]*AccumulativeStatsCounter, 0)
+	result := make(map[string]*AccumulativeStatsProtocol, 0)
+	methodsPerProtocolAggregated := make(map[string]map[string]*AccumulativeStatsCounter, 0)
+
+	for _, countersOfTimeFrame := range bucketsStats {
+		for protocolName, value := range countersOfTimeFrame {
+
+			if _, found := result[protocolName]; !found {
+				result[protocolName] = &AccumulativeStatsProtocol{
+					AccumulativeStatsCounter: AccumulativeStatsCounter{
+						Name:            protocolName,
+						EntriesCount:    0,
+						VolumeSizeBytes: 0,
+					},
+					Color:   value.Color,
+				}
+			}
+			if _, found := methodsPerProtocolAggregated[protocolName]; !found {
+				methodsPerProtocolAggregated[protocolName] = map[string]*AccumulativeStatsCounter{}
+			}
 
 			for method, countersValue := range value.MethodsStats {
-				methodData := &AccumulativeStatsCounter{
-					Name:         method,
-					EntriesCount: 0,
-					ByteCount:    0,
+				if _, found := methodsPerProtocolAggregated[protocolName][method]; !found {
+					methodsPerProtocolAggregated[protocolName][method] = &AccumulativeStatsCounter{
+						Name:            method,
+						EntriesCount:    0,
+						VolumeSizeBytes: 0,
+					}
 				}
-				totalProtocolRequestCount += countersValue.EntriesCount
-				methodData.EntriesCount += countersValue.EntriesCount
-				totalBytesProtocol += countersValue.BytesSize
-				methodData.ByteCount += countersValue.BytesSize
-				methods = append(methods, methodData)
+
+				result[protocolName].AccumulativeStatsCounter.EntriesCount += countersValue.EntriesCount
+				methodsPerProtocolAggregated[protocolName][method].EntriesCount += countersValue.EntriesCount
+				result[protocolName].AccumulativeStatsCounter.VolumeSizeBytes += countersValue.VolumeInBytes
+				methodsPerProtocolAggregated[protocolName][method].VolumeSizeBytes += countersValue.VolumeInBytes
 			}
-			newProtocolData := &AccumulativeStatsProtocol{
-				AccumulativeStatsCounter: AccumulativeStatsCounter{
-					Name:         protocolName,
-					EntriesCount: totalProtocolRequestCount,
-					ByteCount:    totalBytesProtocol,
-				},
-				Methods: methods,
-			}
-			result = append(result, newProtocolData)
 		}
 	}
-	return result
+
+	finalResult := make([]*AccumulativeStatsProtocol, 0)
+	for _, value := range result {
+		methodsForProtocol := make([]*AccumulativeStatsCounter, 0)
+		for _, methodValue := range methodsPerProtocolAggregated[value.Name] {
+			methodsForProtocol = append(methodsForProtocol, methodValue)
+		}
+		value.Methods = methodsForProtocol
+		finalResult = append(finalResult, value)
+	}
+	return finalResult
 }
 
 func EntryAdded(size int, summery *api.BaseEntry) {
@@ -115,11 +131,11 @@ func addToBucketStats(size int, summery *api.BaseEntry) {
 	}
 	if _, found := bucketsStats[entryTimeBucketRounded][summery.Protocol.Abbreviation].MethodsStats[summery.Method]; !found {
 		bucketsStats[entryTimeBucketRounded][summery.Protocol.Abbreviation].MethodsStats[summery.Method] = &SizeAndEntriesCount{
-			BytesSize:    0,
-			EntriesCount: 0,
+			VolumeInBytes: 0,
+			EntriesCount:  0,
 		}
 	}
 
 	bucketsStats[entryTimeBucketRounded][summery.Protocol.Abbreviation].MethodsStats[summery.Method].EntriesCount += 1
-	bucketsStats[entryTimeBucketRounded][summery.Protocol.Abbreviation].MethodsStats[summery.Method].BytesSize += size
+	bucketsStats[entryTimeBucketRounded][summery.Protocol.Abbreviation].MethodsStats[summery.Method].VolumeInBytes += size
 }
