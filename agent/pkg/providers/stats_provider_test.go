@@ -3,6 +3,7 @@ package providers_test
 import (
 	"fmt"
 	"testing"
+	"time"
 
 	"github.com/up9inc/mizu/agent/pkg/providers"
 	"github.com/up9inc/mizu/tap/api"
@@ -23,8 +24,9 @@ func TestNoEntryAddedCount(t *testing.T) {
 func TestEntryAddedCount(t *testing.T) {
 	tests := []int{1, 5, 10, 100, 500, 1000}
 
-	mockSummery := &api.BaseEntry{Protocol: api.Protocol{Name: "mock"}, Method: "mock-method"}
-
+	entryBucketKey := time.Date(2021, 1, 1, 10, 0, 0, 0, time.UTC)
+	valueLessThanBucketThreshold := time.Second * 130
+	mockSummery := &api.BaseEntry{Protocol: api.Protocol{Name: "mock"}, Method: "mock-method", Timestamp: entryBucketKey.Add(valueLessThanBucketThreshold).UnixNano()}
 	for _, entriesCount := range tests {
 		t.Run(fmt.Sprintf("%d", entriesCount), func(t *testing.T) {
 			for i := 0; i < entriesCount; i++ {
@@ -39,6 +41,23 @@ func TestEntryAddedCount(t *testing.T) {
 
 			if entriesStats.EntriesVolumeInGB != 0 {
 				t.Errorf("unexpected result - expected: %v, actual: %v", 0, entriesStats.EntriesVolumeInGB)
+			}
+
+			bucketValue, found := entriesStats.Buckets[entryBucketKey]
+			if !found {
+				t.Errorf("unexpected result - entry didn't insreted to the correct bucket")
+			}
+			protocolValue, found := bucketValue[mockSummery.Protocol.Name]
+			if !found {
+				t.Errorf("unexpected result - entry didn't insreted to the correct protocol")
+			}
+			methodValue, found := protocolValue[mockSummery.Method]
+			if !found {
+				t.Errorf("unexpected result - entry didn't insreted to the correct method")
+			}
+
+			if methodValue.EntriesCount != 1 {
+				t.Errorf("unexpected result - entries count in the method is not correct, expected: %v, actual: %v", 1, methodValue.EntriesCount)
 			}
 
 			t.Cleanup(func() {
@@ -59,7 +78,7 @@ func TestEntryAddedVolume(t *testing.T) {
 	var expectedEntriesCount int
 	var expectedVolumeInGB float64
 
-	mockSummery := &api.BaseEntry{Protocol: api.Protocol{Name: "mock"}, Method: "mock-method"}
+	mockSummery := &api.BaseEntry{Protocol: api.Protocol{Name: "mock"}, Method: "mock-method", Timestamp: time.Date(2021, 1, 1, 10, 0, 0, 0, time.UTC).UnixNano()}
 
 	for _, data := range tests {
 		t.Run(fmt.Sprintf("%d", len(data)), func(t *testing.T) {
