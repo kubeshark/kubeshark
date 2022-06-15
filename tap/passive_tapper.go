@@ -89,7 +89,13 @@ func StartPassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem, 
 		diagnose.StartMemoryProfiler(os.Getenv(MemoryProfilingDumpPath), os.Getenv(MemoryProfilingTimeIntervalSeconds))
 	}
 
-	assembler := initializePassiveTapper(opts, outputItems, streamsMap)
+	assembler, err := initializePassiveTapper(opts, outputItems, streamsMap)
+
+	if err != nil {
+		logger.Log.Errorf("Error initializing tapper %w", err)
+		return
+	}
+
 	go startPassiveTapper(streamsMap, assembler)
 }
 
@@ -213,7 +219,7 @@ func initializePacketSources() error {
 	return err
 }
 
-func initializePassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem, streamsMap api.TcpStreamMap) *tcpAssembler {
+func initializePassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem, streamsMap api.TcpStreamMap) (*tcpAssembler, error) {
 	diagnose.InitializeErrorsMap(*debug, *verbose, *quiet)
 	diagnose.InitializeTapperInternalStats()
 
@@ -225,9 +231,7 @@ func initializePassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelI
 
 	opts.IgnoredPorts = append(opts.IgnoredPorts, buildIgnoredPortsList(*ignoredPorts)...)
 
-	assembler := NewTcpAssembler(outputItems, streamsMap, opts)
-
-	return assembler
+	return NewTcpAssembler(outputItems, streamsMap, opts)
 }
 
 func startPassiveTapper(streamsMap api.TcpStreamMap, assembler *tcpAssembler) {
