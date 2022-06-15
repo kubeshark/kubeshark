@@ -45,7 +45,7 @@ var quiet = flag.Bool("quiet", false, "Be quiet regarding errors")
 var hexdumppkt = flag.Bool("dumppkt", false, "Dump packet as hex")
 var procfs = flag.String("procfs", "/proc", "The procfs directory, used when mapping host volumes into a container")
 var ignoredPorts = flag.String("ignore-ports", "", "A comma separated list of ports to ignore")
-var maxLiveStreams = flag.Int("max-live-streams", 100, "Maximum live streams to handle concurrently")
+var maxLiveStreams = flag.Int("max-live-streams", 500, "Maximum live streams to handle concurrently")
 
 // capture
 var iface = flag.String("i", "en0", "Interface to read packets from")
