@@ -25,6 +25,12 @@ const (
 	lastAckThreshold              = time.Duration(3) * time.Second
 )
 
+type connectionId string
+
+func NewConnectionId(c string) connectionId {
+	return connectionId(c)
+}
+
 type tcpAssembler struct {
 	*reassembly.Assembler
 	streamPool            *reassembly.StreamPool
@@ -32,7 +38,7 @@ type tcpAssembler struct {
 	assemblerMutex        sync.Mutex
 	ignoredPorts          []uint16
 	lastClosedConnections *simplelru.LRU // Actual type is map[string]int64 which is "connId -> lastSeen"
-	liveConnections       map[string]bool
+	liveConnections       map[connectionId]bool
 	maxLiveStreams        int
 	streamsMutex          sync.RWMutex
 }
@@ -59,7 +65,7 @@ func NewTcpAssembler(outputItems chan *api.OutputChannelItem, streamsMap api.Tcp
 	a := &tcpAssembler{
 		ignoredPorts:          opts.IgnoredPorts,
 		lastClosedConnections: lastClosedConnections,
-		liveConnections:       make(map[string]bool),
+		liveConnections:       make(map[connectionId]bool),
 		maxLiveStreams:        opts.maxLiveStreams,
 	}
 
@@ -176,10 +182,10 @@ func (a *tcpAssembler) tcpStreamClosed(stream *tcpStream) {
 	delete(a.liveConnections, stream.connectionId)
 }
 
-func (a *tcpAssembler) isLastAck(connectionId string) bool {
+func (a *tcpAssembler) isLastAck(c connectionId) bool {
 	a.streamsMutex.RLock()
 	defer a.streamsMutex.RUnlock()
-	if closedTimeMillis, ok := a.lastClosedConnections.Get(connectionId); ok {
+	if closedTimeMillis, ok := a.lastClosedConnections.Get(c); ok {
 		timeSinceClosed := time.Since(time.UnixMilli(closedTimeMillis.(int64)))
 		if timeSinceClosed < lastAckThreshold {
 			return true
@@ -188,10 +194,10 @@ func (a *tcpAssembler) isLastAck(connectionId string) bool {
 	return false
 }
 
-func (a *tcpAssembler) shouldThrottle(connectionId string) bool {
+func (a *tcpAssembler) shouldThrottle(c connectionId) bool {
 	a.streamsMutex.RLock()
 	defer a.streamsMutex.RUnlock()
-	if _, ok := a.liveConnections[connectionId]; ok {
+	if _, ok := a.liveConnections[c]; ok {
 		return false
 	}
 
@@ -219,12 +225,12 @@ func (a *tcpAssembler) shouldIgnorePort(port uint16) bool {
 	return false
 }
 
-func getConnectionId(saddr string, sport string, daddr string, dport string) string {
+func getConnectionId(saddr string, sport string, daddr string, dport string) connectionId {
 	s := fmt.Sprintf("%s:%s", saddr, sport)
 	d := fmt.Sprintf("%s:%s", daddr, dport)
 	if s > d {
-		return fmt.Sprintf("%s#%s", s, d)
+		return NewConnectionId(fmt.Sprintf("%s#%s", s, d))
 	} else {
-		return fmt.Sprintf("%s#%s", d, s)
+		return NewConnectionId(fmt.Sprintf("%s#%s", d, s))
 	}
 }
