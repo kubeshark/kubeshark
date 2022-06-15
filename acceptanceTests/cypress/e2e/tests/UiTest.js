@@ -269,7 +269,7 @@ function checkRightSideResponseBody() {
         const responseBody = JSON.parse(decodedBody);
 
 
-        const expectdJsonBody = {
+        const expectedJsonBody = {
             args: RegExp({}),
             url: RegExp('http://.*/get'),
             headers: {
@@ -279,22 +279,24 @@ function checkRightSideResponseBody() {
             }
         };
 
-        expect(responseBody.args).to.match(expectdJsonBody.args);
-        expect(responseBody.url).to.match(expectdJsonBody.url);
-        expect(responseBody.headers['User-Agent']).to.match(expectdJsonBody.headers['User-Agent']);
-        expect(responseBody.headers['Accept-Encoding']).to.match(expectdJsonBody.headers['Accept-Encoding']);
-        expect(responseBody.headers['X-Forwarded-Uri']).to.match(expectdJsonBody.headers['X-Forwarded-Uri']);
+        const expectedStringInJsonBody = RegExp('/api/v1/namespaces/.*/services/.*/proxy/get');
+        
+
+        expect(responseBody.args).to.match(expectedJsonBody.args);
+        expect(responseBody.url).to.match(expectedJsonBody.url);
+        expect(responseBody.headers['User-Agent']).to.match(expectedJsonBody.headers['User-Agent']);
+        expect(responseBody.headers['Accept-Encoding']).to.match(expectedJsonBody.headers['Accept-Encoding']);
+        expect(responseBody.headers['X-Forwarded-Uri']).to.match(expectedJsonBody.headers['X-Forwarded-Uri']);
 
         cy.get(`${Cypress.env('bodyJsonClass')}`).should('have.text', encodedBody);
-        cy.contains('Line numbers').prev().children().should('be.disabled');
+        cy.get(`[data-cy="lineNumbersCheckBoxInput"]`).should('be.disabled');
+
         clickCheckbox('Decode Base64');
-        cy.contains('Line numbers').prev().children().should('not.be.disabled');
+        cy.get(`[data-cy="lineNumbersCheckBoxInput"]`).should('not.be.disabled');
 
         cy.get(`${Cypress.env('bodyJsonClass')} > `).its('length').should('be.gt', 1).then(linesNum => {
             cy.get(`${Cypress.env('bodyJsonClass')} > >`).its('length').should('be.gt', linesNum).then(jsonItemsNum => {
-                
-                clickCheckbox('Line numbers');
-                checkOnlyLineNumberes(jsonItemsNum, decodedBody);
+                checkOnlyLineNumberes(jsonItemsNum, expectedStringInJsonBody);
             });
         });
     });
@@ -305,8 +307,8 @@ function clickCheckbox(type) {
 }
 
 function checkOnlyLineNumberes(jsonItems, decodedText) {
-    cy.get(`${Cypress.env('bodyJsonClass')} >`).should('have.length', 1).and('have.text', decodedText);
-    cy.get(`${Cypress.env('bodyJsonClass')} > >`).should('have.length', jsonItems)
+    cy.get(`${Cypress.env('bodyJsonClass')} > >`).should('have.length', jsonItems);
+    cy.get(`${Cypress.env('bodyJsonClass')} >`).contains(decodedText);
 }
 
 function serviceMapCheck() {
