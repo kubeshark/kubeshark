@@ -24,6 +24,12 @@ const (
 	lastAckThreshold              = time.Duration(3) * time.Second
 )
 
+type connectionId string
+
+func NewConnectionId(c string) connectionId {
+	return connectionId(c)
+}
+
 type AssemblerStats struct {
 	flushedConnections int
 	closedConnections  int
@@ -35,7 +41,7 @@ type tcpAssembler struct {
 	streamFactory          *tcpStreamFactory
 	ignoredPorts           []uint16
 	lastClosedConnections  *simplelru.LRU // Actual type is map[string]int64 which is "connId -> lastSeen"
-	liveConnections        map[string]bool
+	liveConnections        map[connectionId]bool
 	maxLiveStreams         int
 	staleConnectionTimeout time.Duration
 	stats                  AssemblerStats
@@ -52,18 +58,22 @@ func (c *context) GetCaptureInfo() gopacket.CaptureInfo {
 	return c.CaptureInfo
 }
 
-func NewTcpAssembler(outputItems chan *api.OutputChannelItem, streamsMap api.TcpStreamMap, opts *TapOpts) *tcpAssembler {
+func NewTcpAssembler(outputItems chan *api.OutputChannelItem, streamsMap api.TcpStreamMap, opts *TapOpts) (*tcpAssembler, error) {
 	var emitter api.Emitter = &api.Emitting{
 		AppStats:      &diagnose.AppStats,
 		OutputChannel: outputItems,
 	}
 
-	lastClosedConnections, _ := simplelru.NewLRU(lastClosedConnectionsMaxItems, func(key interface{}, value interface{}) {})
+	lastClosedConnections, err := simplelru.NewLRU(lastClosedConnectionsMaxItems, func(key interface{}, value interface{}) {})
+
+	if err != nil {
+		return nil, err
+	}
 
 	a := &tcpAssembler{
 		ignoredPorts:           opts.IgnoredPorts,
 		lastClosedConnections:  lastClosedConnections,
-		liveConnections:        make(map[string]bool),
+		liveConnections:        make(map[connectionId]bool),
 		maxLiveStreams:         opts.maxLiveStreams,
 		staleConnectionTimeout: opts.staleConnectionTimeout,
 		stats:                  AssemblerStats{},
@@ -80,19 +90,21 @@ func NewTcpAssembler(outputItems chan *api.OutputChannelItem, streamsMap api.Tcp
 	a.Assembler.AssemblerOptions.MaxBufferedPagesTotal = maxBufferedPagesTotal
 	a.Assembler.AssemblerOptions.MaxBufferedPagesPerConnection = maxBufferedPagesPerConnection
 
-	return a
+	return a, nil
 }
 
 func (a *tcpAssembler) processPackets(dumpPacket bool, packets <-chan source.TcpPacketInfo) {
 	signalChan := make(chan os.Signal, 1)
 	signal.Notify(signalChan, os.Interrupt)
-
 	ticker := time.NewTicker(a.staleConnectionTimeout)
 
 out:
 	for {
 		select {
-		case packetInfo := <-packets:
+		case packetInfo, ok := <-packets:
+			if !ok {
+				break out
+			}
 			if a.processPacket(packetInfo, dumpPacket) {
 				break out
 			}
@@ -100,10 +112,7 @@ out:
 			logger.Log.Infof("Caught SIGINT: aborting")
 			break out
 		case <-ticker.C:
-			flushed, closed := a.FlushCloseOlderThan(time.Now().Add(-a.staleConnectionTimeout))
-			stats := a.stats
-			stats.closedConnections += closed
-			stats.flushedConnections += flushed
+			a.periodicClean()
 		}
 	}
 
@@ -155,7 +164,7 @@ func (a *tcpAssembler) processTcpPacket(origin api.Capture, packet gopacket.Pack
 		packet.NetworkLayer().NetworkFlow().Dst().String(),
 		packet.TransportLayer().TransportFlow().Dst().String())
 
-	if a.isLastAck(id) {
+	if a.isRecentlyClosed(id) {
 		diagnose.AppStats.IncIgnoredLastAckCount()
 		return
 	}
@@ -184,8 +193,8 @@ func (a *tcpAssembler) tcpStreamClosed(stream *tcpStream) {
 	delete(a.liveConnections, stream.connectionId)
 }
 
-func (a *tcpAssembler) isLastAck(connectionId string) bool {
-	if closedTimeMillis, ok := a.lastClosedConnections.Get(connectionId); ok {
+func (a *tcpAssembler) isRecentlyClosed(c connectionId) bool {
+	if closedTimeMillis, ok := a.lastClosedConnections.Get(c); ok {
 		timeSinceClosed := time.Since(time.UnixMilli(closedTimeMillis.(int64)))
 		if timeSinceClosed < lastAckThreshold {
 			return true
@@ -194,8 +203,8 @@ func (a *tcpAssembler) isLastAck(connectionId string) bool {
 	return false
 }
 
-func (a *tcpAssembler) shouldThrottle(connectionId string) bool {
-	if _, ok := a.liveConnections[connectionId]; ok {
+func (a *tcpAssembler) shouldThrottle(c connectionId) bool {
+	if _, ok := a.liveConnections[c]; ok {
 		return false
 	}
 
@@ -221,18 +230,25 @@ func (a *tcpAssembler) shouldIgnorePort(port uint16) bool {
 	return false
 }
 
+func (a *tcpAssembler) periodicClean() {
+	flushed, closed := a.FlushCloseOlderThan(time.Now().Add(-a.staleConnectionTimeout))
+	stats := a.stats
+	stats.closedConnections += closed
+	stats.flushedConnections += flushed
+}
+
 func (a *tcpAssembler) DumpStats() AssemblerStats {
 	result := a.stats
 	a.stats = AssemblerStats{}
 	return result
 }
 
-func getConnectionId(saddr string, sport string, daddr string, dport string) string {
+func getConnectionId(saddr string, sport string, daddr string, dport string) connectionId {
 	s := fmt.Sprintf("%s:%s", saddr, sport)
 	d := fmt.Sprintf("%s:%s", daddr, dport)
 	if s > d {
-		return fmt.Sprintf("%s#%s", s, d)
+		return NewConnectionId(fmt.Sprintf("%s#%s", s, d))
 	} else {
-		return fmt.Sprintf("%s#%s", d, s)
+		return NewConnectionId(fmt.Sprintf("%s#%s", d, s))
 	}
 }

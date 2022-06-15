@@ -45,7 +45,7 @@ var quiet = flag.Bool("quiet", false, "Be quiet regarding errors")
 var hexdumppkt = flag.Bool("dumppkt", false, "Dump packet as hex")
 var procfs = flag.String("procfs", "/proc", "The procfs directory, used when mapping host volumes into a container")
 var ignoredPorts = flag.String("ignore-ports", "", "A comma separated list of ports to ignore")
-var maxLiveStreams = flag.Int("max-live-streams", 100, "Maximum live streams to handle concurrently")
+var maxLiveStreams = flag.Int("max-live-streams", 500, "Maximum live streams to handle concurrently")
 
 // capture
 var iface = flag.String("i", "en0", "Interface to read packets from")
@@ -92,7 +92,13 @@ func StartPassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem, 
 		diagnose.StartMemoryProfiler(os.Getenv(MemoryProfilingDumpPath), os.Getenv(MemoryProfilingTimeIntervalSeconds))
 	}
 
-	assembler := initializePassiveTapper(opts, outputItems, streamsMap)
+	assembler, err := initializePassiveTapper(opts, outputItems, streamsMap)
+
+	if err != nil {
+		logger.Log.Errorf("Error initializing tapper %w", err)
+		return
+	}
+
 	go startPassiveTapper(streamsMap, assembler)
 }
 
@@ -217,7 +223,7 @@ func initializePacketSources() error {
 	return err
 }
 
-func initializePassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem, streamsMap api.TcpStreamMap) *tcpAssembler {
+func initializePassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem, streamsMap api.TcpStreamMap) (*tcpAssembler, error) {
 	diagnose.InitializeErrorsMap(*debug, *verbose, *quiet)
 	diagnose.InitializeTapperInternalStats()
 
@@ -231,9 +237,7 @@ func initializePassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelI
 	opts.maxLiveStreams = *maxLiveStreams
 	opts.staleConnectionTimeout = time.Duration(*staleTimeoutSeconds) * time.Second
 
-	assembler := NewTcpAssembler(outputItems, streamsMap, opts)
-
-	return assembler
+	return NewTcpAssembler(outputItems, streamsMap, opts)
 }
 
 func startPassiveTapper(streamsMap api.TcpStreamMap, assembler *tcpAssembler) {
