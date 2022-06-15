@@ -10,8 +10,6 @@ import (
 )
 
 type CleanerStats struct {
-	flushed int
-	closed  int
 	deleted int
 }
 
@@ -28,11 +26,6 @@ type Cleaner struct {
 func (cl *Cleaner) clean() {
 	startCleanTime := time.Now()
 
-	cl.assemblerMutex.Lock()
-	logger.Log.Debugf("Assembler Stats before cleaning %s", cl.assembler.Dump())
-	flushed, closed := cl.assembler.FlushCloseOlderThan(startCleanTime.Add(-cl.connectionTimeout))
-	cl.assemblerMutex.Unlock()
-
 	cl.streamsMap.Range(func(k, v interface{}) bool {
 		reqResMatchers := v.(api.TcpStream).GetReqResMatchers()
 		for _, reqResMatcher := range reqResMatchers {
@@ -47,8 +40,6 @@ func (cl *Cleaner) clean() {
 
 	cl.statsMutex.Lock()
 	logger.Log.Debugf("Assembler Stats after cleaning %s", cl.assembler.Dump())
-	cl.stats.flushed += flushed
-	cl.stats.closed += closed
 	cl.statsMutex.Unlock()
 }
 
@@ -67,17 +58,12 @@ func (cl *Cleaner) dumpStats() CleanerStats {
 	cl.statsMutex.Lock()
 
 	stats := CleanerStats{
-		flushed: cl.stats.flushed,
-		closed:  cl.stats.closed,
 		deleted: cl.stats.deleted,
 	}
 
-	cl.stats.flushed = 0
-	cl.stats.closed = 0
 	cl.stats.deleted = 0
 
 	cl.statsMutex.Unlock()
-
 	return stats
 }
 

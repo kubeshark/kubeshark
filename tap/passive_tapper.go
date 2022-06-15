@@ -60,9 +60,10 @@ var tls = flag.Bool("tls", false, "Enable TLS tapper")
 var memprofile = flag.String("memprofile", "", "Write memory profile")
 
 type TapOpts struct {
-	HostMode       bool
-	IgnoredPorts   []uint16
-	maxLiveStreams int
+	HostMode               bool
+	IgnoredPorts           []uint16
+	maxLiveStreams         int
+	staleConnectionTimeout time.Duration
 }
 
 var extensions []*api.Extension                     // global
@@ -176,10 +177,11 @@ func printPeriodicStats(cleaner *Cleaner, assembler *tcpAssembler) {
 
 		// Since the last print
 		cleanStats := cleaner.dumpStats()
+		assemblerStats := assembler.DumpStats()
 		logger.Log.Infof(
 			"cleaner - flushed connections: %d, closed connections: %d, deleted messages: %d",
-			cleanStats.flushed,
-			cleanStats.closed,
+			assemblerStats.flushedConnections,
+			assemblerStats.closedConnections,
 			cleanStats.deleted,
 		)
 		currentAppStats := diagnose.AppStats.DumpStats()
@@ -227,6 +229,7 @@ func initializePassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelI
 
 	opts.IgnoredPorts = append(opts.IgnoredPorts, buildIgnoredPortsList(*ignoredPorts)...)
 	opts.maxLiveStreams = *maxLiveStreams
+	opts.staleConnectionTimeout = time.Duration(*staleTimeoutSeconds) * time.Second
 
 	assembler := NewTcpAssembler(outputItems, streamsMap, opts)
 
@@ -241,7 +244,6 @@ func startPassiveTapper(streamsMap api.TcpStreamMap, assembler *tcpAssembler) {
 	staleConnectionTimeout := time.Second * time.Duration(*staleTimeoutSeconds)
 	cleaner := Cleaner{
 		assembler:         assembler.Assembler,
-		assemblerMutex:    &assembler.assemblerMutex,
 		cleanPeriod:       cleanPeriod,
 		connectionTimeout: staleConnectionTimeout,
 		streamsMap:        streamsMap,
