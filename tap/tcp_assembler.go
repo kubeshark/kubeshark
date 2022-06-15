@@ -54,13 +54,17 @@ func (c *context) GetCaptureInfo() gopacket.CaptureInfo {
 	return c.CaptureInfo
 }
 
-func NewTcpAssembler(outputItems chan *api.OutputChannelItem, streamsMap api.TcpStreamMap, opts *TapOpts) *tcpAssembler {
+func NewTcpAssembler(outputItems chan *api.OutputChannelItem, streamsMap api.TcpStreamMap, opts *TapOpts) (*tcpAssembler, error) {
 	var emitter api.Emitter = &api.Emitting{
 		AppStats:      &diagnose.AppStats,
 		OutputChannel: outputItems,
 	}
 
-	lastClosedConnections, _ := simplelru.NewLRU(lastClosedConnectionsMaxItems, func(key interface{}, value interface{}) {})
+	lastClosedConnections, err := simplelru.NewLRU(lastClosedConnectionsMaxItems, func(key interface{}, value interface{}) {})
+
+	if err != nil {
+		return nil, err
+	}
 
 	a := &tcpAssembler{
 		ignoredPorts:          opts.IgnoredPorts,
@@ -80,7 +84,7 @@ func NewTcpAssembler(outputItems chan *api.OutputChannelItem, streamsMap api.Tcp
 	a.Assembler.AssemblerOptions.MaxBufferedPagesTotal = maxBufferedPagesTotal
 	a.Assembler.AssemblerOptions.MaxBufferedPagesPerConnection = maxBufferedPagesPerConnection
 
-	return a
+	return a, nil
 }
 
 func (a *tcpAssembler) processPackets(dumpPacket bool, packets <-chan source.TcpPacketInfo) {
@@ -147,7 +151,7 @@ func (a *tcpAssembler) processTcpPacket(origin api.Capture, packet gopacket.Pack
 		packet.NetworkLayer().NetworkFlow().Dst().String(),
 		packet.TransportLayer().TransportFlow().Dst().String())
 
-	if a.isLastAck(id) {
+	if a.isRecentlyClosed(id) {
 		diagnose.AppStats.IncIgnoredLastAckCount()
 		return
 	}
@@ -182,7 +186,7 @@ func (a *tcpAssembler) tcpStreamClosed(stream *tcpStream) {
 	delete(a.liveConnections, stream.connectionId)
 }
 
-func (a *tcpAssembler) isLastAck(c connectionId) bool {
+func (a *tcpAssembler) isRecentlyClosed(c connectionId) bool {
 	a.streamsMutex.RLock()
 	defer a.streamsMutex.RUnlock()
 	if closedTimeMillis, ok := a.lastClosedConnections.Get(c); ok {
