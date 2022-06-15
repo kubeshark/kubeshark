@@ -93,10 +93,6 @@ static __always_inline void go_crypto_tls_uprobe(struct pt_regs *ctx, struct bpf
     info.buffer = (void*)GO_ABI_INTERNAL_PT_REGS_R4(ctx);
     info.fd = go_crypto_tls_get_fd_from_tcp_conn(ctx);
 
-    if (info.buffer_len <= 0) {
-        return;
-    }
-
     // GO_ABI_INTERNAL_PT_REGS_GP is Goroutine address
     __u64 pid_fp = pid << 32 | GO_ABI_INTERNAL_PT_REGS_GP(ctx);
     long err = bpf_map_update_elem(go_context, &pid_fp, &info, BPF_ANY);
@@ -136,7 +132,7 @@ static __always_inline void go_crypto_tls_ex_uprobe(struct pt_regs *ctx, struct 
     if (flags == FLAGS_IS_READ_BIT) {
         info.buffer_len = GO_ABI_INTERNAL_PT_REGS_R1(ctx); // n in return n, nil
         // This check achieves ignoring 0 length reads (the reads result with an error)
-        if (info.buffer_len == 0) {
+        if (info.buffer_len <= 0) {
             return;
         }
     }
