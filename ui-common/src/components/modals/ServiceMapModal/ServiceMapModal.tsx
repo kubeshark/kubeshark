@@ -197,14 +197,14 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
             <Fade in={isOpen}>
                 <Box sx={modalStyle}>
                     <div className={styles.closeIcon}>
-                        <img src={closeIcon} alt="close" onClick={() => onClose()} style={{ cursor: "pointer", userSelect: "none" }}></img>
+                        <img src={closeIcon} alt="close" onClick={() => onClose()} style={{ cursor: "pointer", userSelect: "none" }}/>
                     </div>
                     <div className={styles.headerContainer}>
                         <div className={styles.headerSection}>
                             <span className={styles.title}>Services</span>
                             <Button size="medium"
                                 variant="contained"
-                                startIcon={<img src={isFilterClicked ? filterIconClicked : filterIcon} className="custom" alt="refresh" style={{ height: "26px", width: "26px" }}></img>}
+                                startIcon={<img src={isFilterClicked ? filterIconClicked : filterIcon} className="custom" alt="refresh" style={{ height: "26px", width: "26px" }}/>}
                                 className={commonClasses.outlinedButton + " " + commonClasses.imagedButton + ` ${isFilterClicked ? commonClasses.clickedButton : ""}`}
                                 onClick={() => setIsFilterClicked(prevState => !prevState)}
                                 style={{ textTransform: 'unset' }}>
