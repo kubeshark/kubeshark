@@ -2,24 +2,24 @@ package providers
 
 import (
 	"reflect"
-	"sync"
 	"time"
 
 	"github.com/up9inc/mizu/tap/api"
 )
 
 type GeneralStats struct {
-	generalStatsMutex   *sync.Mutex
 	EntriesCount        int
 	EntriesVolumeInGB   float64
 	FirstEntryTimestamp int
 	LastEntryTimestamp  int
-	Buckets             map[time.Time]TimeFrameStatsValue
 }
 
 type TimeFrameStatsValue map[string]ProtocolStats
 
-type ProtocolStats map[string]*SizeAndEntriesCount
+type ProtocolStats struct {
+	MethodsStats map[string]*SizeAndEntriesCount
+	Color        string
+}
 
 type SizeAndEntriesCount struct {
 	EntriesCount int
@@ -34,21 +34,19 @@ type AccumulativeStatsCounter struct {
 
 type AccumulativeStatsProtocol struct {
 	AccumulativeStatsCounter
+	Color   string                      `json:"color"`
 	Methods []*AccumulativeStatsCounter `json:"methods"`
 }
 
-var generalStats = InitGeneralStats()
+type BucketStats map[time.Time]TimeFrameStatsValue
+
+var (
+	generalStats = GeneralStats{}
+	bucketsStats = BucketStats{}
+)
 
 func ResetGeneralStats() {
-	generalStats = InitGeneralStats()
-}
-
-func InitGeneralStats() GeneralStats {
-	generalStatsObj := GeneralStats{
-		generalStatsMutex: &sync.Mutex{},
-		Buckets:           map[time.Time]TimeFrameStatsValue{},
-	}
-	return generalStatsObj
+	generalStats = GeneralStats{}
 }
 
 func GetGeneralStats() GeneralStats {
@@ -57,13 +55,13 @@ func GetGeneralStats() GeneralStats {
 
 func GetAccumulativeStats() []*AccumulativeStatsProtocol {
 	result := make([]*AccumulativeStatsProtocol, 0)
-	for _, counters := range generalStats.Buckets {
+	for _, counters := range bucketsStats {
 		for protocolName, value := range counters {
 			totalProtocolRequestCount := 0
 			totalBytesProtocol := 0
 			methods := make([]*AccumulativeStatsCounter, 0)
 
-			for method, countersValue := range value {
+			for method, countersValue := range value.MethodsStats {
 				methodData := &AccumulativeStatsCounter{
 					Name:         method,
 					EntriesCount: 0,
@@ -90,7 +88,6 @@ func GetAccumulativeStats() []*AccumulativeStatsProtocol {
 }
 
 func EntryAdded(size int, summery *api.BaseEntry) {
-	generalStats.generalStatsMutex.Lock()
 	generalStats.EntriesCount++
 	generalStats.EntriesVolumeInGB += float64(size) / (1 << 30)
 
@@ -100,23 +97,29 @@ func EntryAdded(size int, summery *api.BaseEntry) {
 		generalStats.FirstEntryTimestamp = currentTimestamp
 	}
 
-	entryTimeBucket := time.Unix(summery.Timestamp, 0).Round(time.Minute * 5)
-	if _, found := generalStats.Buckets[entryTimeBucket]; !found {
-		generalStats.Buckets[entryTimeBucket] = TimeFrameStatsValue{}
+	addToBucketStats(size, summery)
+
+	generalStats.LastEntryTimestamp = currentTimestamp
+}
+
+func addToBucketStats(size int, summery *api.BaseEntry) {
+	entryTimeBucketRounded := time.Unix(summery.Timestamp, 0).Round(time.Minute * 5)
+	if _, found := bucketsStats[entryTimeBucketRounded]; !found {
+		bucketsStats[entryTimeBucketRounded] = TimeFrameStatsValue{}
 	}
-	if _, found := generalStats.Buckets[entryTimeBucket][summery.Protocol.Name]; !found {
-		generalStats.Buckets[entryTimeBucket][summery.Protocol.Name] = ProtocolStats{}
+	if _, found := bucketsStats[entryTimeBucketRounded][summery.Protocol.Abbreviation]; !found {
+		bucketsStats[entryTimeBucketRounded][summery.Protocol.Abbreviation] = ProtocolStats{
+			MethodsStats: map[string]*SizeAndEntriesCount{},
+			Color:        summery.Protocol.BackgroundColor,
+		}
 	}
-	if _, found := generalStats.Buckets[entryTimeBucket][summery.Protocol.Name][summery.Method]; !found {
-		generalStats.Buckets[entryTimeBucket][summery.Protocol.Name][summery.Method] = &SizeAndEntriesCount{
+	if _, found := bucketsStats[entryTimeBucketRounded][summery.Protocol.Abbreviation].MethodsStats[summery.Method]; !found {
+		bucketsStats[entryTimeBucketRounded][summery.Protocol.Abbreviation].MethodsStats[summery.Method] = &SizeAndEntriesCount{
 			BytesSize:    0,
 			EntriesCount: 0,
 		}
 	}
 
-	generalStats.Buckets[entryTimeBucket][summery.Protocol.Name][summery.Method].EntriesCount += 1
-	generalStats.Buckets[entryTimeBucket][summery.Protocol.Name][summery.Method].BytesSize += size
-
-	generalStats.LastEntryTimestamp = currentTimestamp
-	generalStats.generalStatsMutex.Lock()
+	bucketsStats[entryTimeBucketRounded][summery.Protocol.Abbreviation].MethodsStats[summery.Method].EntriesCount += 1
+	bucketsStats[entryTimeBucketRounded][summery.Protocol.Abbreviation].MethodsStats[summery.Method].BytesSize += size
 }

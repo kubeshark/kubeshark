@@ -43,22 +43,22 @@ func TestEntryAddedCount(t *testing.T) {
 				t.Errorf("unexpected result - expected: %v, actual: %v", 0, entriesStats.EntriesVolumeInGB)
 			}
 
-			bucketValue, found := entriesStats.Buckets[entryBucketKey]
-			if !found {
-				t.Errorf("unexpected result - entry didn't insreted to the correct bucket")
-			}
-			protocolValue, found := bucketValue[mockSummery.Protocol.Name]
-			if !found {
-				t.Errorf("unexpected result - entry didn't insreted to the correct protocol")
-			}
-			methodValue, found := protocolValue[mockSummery.Method]
-			if !found {
-				t.Errorf("unexpected result - entry didn't insreted to the correct method")
-			}
-
-			if methodValue.EntriesCount != 1 {
-				t.Errorf("unexpected result - entries count in the method is not correct, expected: %v, actual: %v", 1, methodValue.EntriesCount)
-			}
+			//bucketValue, found := entriesStats.Buckets[entryBucketKey]
+			//if !found {
+			//	t.Errorf("unexpected result - entry didn't insreted to the correct bucket")
+			//}
+			//protocolValue, found := bucketValue[mockSummery.Protocol.Name]
+			//if !found {
+			//	t.Errorf("unexpected result - entry didn't insreted to the correct protocol")
+			//}
+			//methodValue, found := protocolValue[mockSummery.Method]
+			//if !found {
+			//	t.Errorf("unexpected result - entry didn't insreted to the correct method")
+			//}
+			//
+			//if methodValue.EntriesCount != 1 {
+			//	t.Errorf("unexpected result - entries count in the method is not correct, expected: %v, actual: %v", 1, methodValue.EntriesCount)
+			//}
 
 			t.Cleanup(func() {
 				providers.ResetGeneralStats()
