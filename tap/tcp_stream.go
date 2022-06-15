@@ -30,13 +30,13 @@ type tcpStream struct {
 	reqResMatchers []api.RequestResponseMatcher
 	createdAt      time.Time
 	streamsMap     api.TcpStreamMap
-	connectionId   string
+	connectionId   connectionId
 	callbacks      tcpStreamCallbacks
 	sync.Mutex
 }
 
 func NewTcpStream(isTapTarget bool, streamsMap api.TcpStreamMap, capture api.Capture,
-	connectionId string, callbacks tcpStreamCallbacks) *tcpStream {
+	connectionId connectionId, callbacks tcpStreamCallbacks) *tcpStream {
 	t := &tcpStream{
 		isTapTarget:  isTapTarget,
 		streamsMap:   streamsMap,
