@@ -8,7 +8,7 @@ import (
 )
 
 func TestOASGen(t *testing.T) {
-	gen := GetDefaultOasGeneratorInstance()
+	gen := GetDefaultOasGeneratorInstance(-1)
 
 	e := new(har.Entry)
 	err := json.Unmarshal([]byte(`{"startedDateTime": "20000101","request": {"url": "https://host/path", "method": "GET"}, "response": {"status": 200}}`), e)
