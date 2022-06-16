@@ -192,17 +192,17 @@ export const EntryBodySection: React.FC<EntryBodySectionProps> = ({
         >
             <div style={{ display: 'flex', alignItems: 'center', alignContent: 'center', margin: "5px 0" }}>
                 {supportsPrettying && <div style={{ paddingTop: 3 }}>
-                    <Checkbox checked={isPretty} onToggle={() => { setIsPretty(!isPretty) }} />
+                    <Checkbox checked={isPretty} onToggle={() => { setIsPretty(!isPretty) }} data-cy="prettyCheckBoxInput"/>
                 </div>}
                 {supportsPrettying && <span style={{ marginLeft: '.2rem' }}>Pretty</span>}
 
                 <div style={{ paddingTop: 3, paddingLeft: supportsPrettying ? 20 : 0 }}>
-                    <Checkbox checked={showLineNumbers} onToggle={() => { setShowLineNumbers(!showLineNumbers) }} disabled={!isLineNumbersGreaterThenOne || !decodeBase64} />
+                    <Checkbox checked={showLineNumbers} onToggle={() => { setShowLineNumbers(!showLineNumbers) }} disabled={!isLineNumbersGreaterThenOne || !decodeBase64} data-cy="lineNumbersCheckBoxInput"/>
                 </div>
                 <span style={{ marginLeft: '.2rem' }}>Line numbers</span>
 
                 {isBase64Encoding && <div style={{ paddingTop: 3, paddingLeft: (isLineNumbersGreaterThenOne || supportsPrettying) ? 20 : 0 }}>
-                    <Checkbox checked={decodeBase64} onToggle={() => { setDecodeBase64(!decodeBase64) }} />
+                    <Checkbox checked={decodeBase64} onToggle={() => { setDecodeBase64(!decodeBase64) }}  data-cy="decodeBase64CheckboxInput"/>
                 </div>}
                 {isBase64Encoding && <span style={{ marginLeft: '.2rem' }}>Decode Base64</span>}
                 {!isDecodeGrpc && <span style={{ fontSize: '12px', color: '#DB2156', marginLeft: '.8rem' }}>More than one message in protobuf payload is not supported</span>}

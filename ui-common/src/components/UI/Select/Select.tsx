@@ -1,4 +1,4 @@
-import {ReactComponent as DefaultIconDown} from '../assets/default_icon_down.svg';
+import {ReactComponent as DefaultIconDown} from './assets/defaultIconDown.svg';
 import {MenuItem, Select as MUISelect, SelectProps as MUISelectProps} from '@mui/material';
 import React from 'react';
 import styles from './Select.module.sass';
