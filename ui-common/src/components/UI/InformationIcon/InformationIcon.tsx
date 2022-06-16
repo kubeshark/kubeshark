@@ -5,8 +5,9 @@ const DEFUALT_LINK = "https://getmizu.io/docs"
 
 interface LinkProps {
     link?: string,
-    className?: string
-    title?: string
+    className?: string,
+    title?: string,
+    children?: React.ReactNode
 }
 
 export const Link: React.FC<LinkProps> = ({ link, className, title, children }) => {
