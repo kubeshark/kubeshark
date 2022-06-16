@@ -1,6 +1,6 @@
 import React from "react";
-import collapsedImg from "../assets/collapsed.svg";
-import expandedImg from "../assets/expanded.svg";
+import collapsedImg from "assets/collapsed.svg";
+import expandedImg from "assets/expanded.svg";
 import styles from "./CollapsibleContainer.module.sass";
 
 interface Props {

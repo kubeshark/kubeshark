@@ -39,7 +39,7 @@ type ConfigStruct struct {
 	HeadlessMode           bool                        `yaml:"headless" default:"false"`
 	LogLevelStr            string                      `yaml:"log-level,omitempty" default:"INFO" readonly:""`
 	ServiceMap             bool                        `yaml:"service-map" default:"true"`
-	OAS                    bool                        `yaml:"oas" default:"true"`
+	OAS                    shared.OASConfig            `yaml:"oas"`
 }
 
 func (config *ConfigStruct) validate() error {

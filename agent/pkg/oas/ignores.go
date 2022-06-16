@@ -9,7 +9,7 @@ var ignoredCtypes = []string{"application/javascript", "application/x-javascript
 
 var ignoredHeaders = []string{
 	"a-im", "accept",
-	"authorization", "cache-control", "connection", "content-encoding", "content-length", "content-type", "cookie",
+	"authorization", "cache-control", "connection", "content-encoding", "content-length", "content-range", "content-type", "cookie",
 	"date", "dnt", "expect", "forwarded", "from", "front-end-https", "host", "http2-settings",
 	"max-forwards", "origin", "pragma", "proxy-authorization", "proxy-connection", "range", "referer",
 	"save-data", "te", "trailer", "transfer-encoding", "upgrade", "upgrade-insecure-requests", "x-download-options",
