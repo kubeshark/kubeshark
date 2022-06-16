@@ -34,7 +34,7 @@ type Resources struct {
 
 type OASConfig struct {
 	Enable        bool `yaml:"enabled" default:"true"`
-	MaxExampleLen int  `yaml:"max-example-len" default:"-1"`
+	MaxExampleLen int  `yaml:"max-example-len" default:"10240"`
 }
 
 type MizuAgentConfig struct {
