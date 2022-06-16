@@ -67,7 +67,7 @@ enum PieChartMode {
   VOLUME = "volumeSizeBytes"
 }
 
-const COLORS = ["#0088FE", "#00C49F", "#FFBB28", "#FF8042"];
+const COLORS = ['#e6194b', '#3cb44b', '#ffe119', '#4363d8', '#f58231', '#911eb4', '#46f0f0', '#f032e6', '#bcf60c', '#fabebe', '#008080', '#e6beff', '#9a6324', '#fffac8', '#800000', '#aaffc3', '#808000', '#ffd8b1', '#000075', '#808080', '#ffffff', '#000000'];
 
 const RADIAN = Math.PI / 180;
 const renderCustomizedLabel = ({
@@ -141,10 +141,17 @@ export const TrafficStatsModal: React.FC<TrafficStatsModalProps> = ({ isOpen, on
     let legend;
     if(!selectedProtocol) {
       legend = data.map(protocol => <div style={{marginBottom: 5, display: "flex"}}>
-        <span style={{marginRight: 5, width: 50}}>
+        <div style={{height: 15, width: 30, background: protocol?.color}}/>
+        <span style={{marginLeft: 5}}>
           {protocol.name}
         </span>
-        <div style={{height: 15, width: 30, background: protocol?.color || "black"}}/>
+      </div>)
+    } else {
+      legend = data.find(protocol => protocol.name === selectedProtocol).methods.map((method, index) => <div style={{marginBottom: 5, display: "flex"}}>
+        <div style={{height: 15, width: 30, background: COLORS[index % COLORS.length]}}/>
+        <span style={{marginLeft: 5}}>
+          {method.name}
+        </span>
       </div>)
     }
     return <div>{legend}</div>;
