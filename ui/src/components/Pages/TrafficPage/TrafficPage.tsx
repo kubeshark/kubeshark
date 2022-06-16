@@ -72,7 +72,7 @@ export const TrafficPage: React.FC = () => {
   return (
     <>
       <TrafficViewer webSocketUrl={MizuWebsocketURL} shouldCloseWebSocket={shouldCloseWebSocket} setShouldCloseWebSocket={setShouldCloseWebSocket}
-        trafficViewerApiProp={trafficViewerApi} actionButtons={actionButtons} isShowStatusBar={!(openOasModal || serviceMapModalOpen)} isDemoBannerView={false} />
+        trafficViewerApiProp={trafficViewerApi} actionButtons={actionButtons} isShowStatusBar={!(openOasModal || serviceMapModalOpen || trafficStatsModalOpen)} isDemoBannerView={false} />
     </>
   );
 };
