@@ -1,5 +1,5 @@
 import React, {useEffect, useMemo, useState} from "react";
-import styles from "../TrafficStatsModal.module.sass";
+import styles from "./TrafficPieChart.module.sass";
 import {Cell, Legend, Pie, PieChart, Tooltip} from "recharts";
 import {Utils} from "../../../../helpers/Utils";
 
@@ -39,7 +39,7 @@ const renderCustomizedLabel = ({
 
 interface TrafficPieChartProps {
   pieChartMode: string;
-  data: any; // todo: create model
+  data: any;
 }
 
 export const TrafficPieChart: React.FC<TrafficPieChartProps> = ({pieChartMode , data}) => {

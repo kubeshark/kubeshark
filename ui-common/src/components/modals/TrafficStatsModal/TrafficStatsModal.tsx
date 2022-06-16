@@ -1,10 +1,9 @@
-import React, {useEffect, useMemo, useState} from "react";
-import {Backdrop, Box, Button, Fade, Modal} from "@mui/material";
+import React, {useEffect, useState} from "react";
+import {Backdrop, Box, Fade, Modal} from "@mui/material";
 import styles from "./TrafficStatsModal.module.sass";
 import closeIcon from "assets/close.svg";
-import {Cell, Legend, Pie, PieChart, Tooltip} from "recharts";
-import {Utils} from "../../../helpers/Utils";
 import {TrafficPieChart} from "./TrafficPieChart/TrafficPieChart";
+import spinnerImg from "assets/spinner.svg";
 
 const modalStyle = {
   position: 'absolute',
@@ -20,49 +19,6 @@ const modalStyle = {
   color: '#000',
 };
 
-
-const mock = [
-  {
-    name: "HTTP",
-    reqCount: 400,
-    byteCount: 1000,
-    commands: [
-      {
-        name: "POST",
-        reqCount: 150,
-        byteCount: 400
-      },
-      {
-        name: "GET",
-        reqCount: 200,
-        byteCount: 500
-      },
-      {
-        name: "PUT",
-        reqCount: 50,
-        byteCount: 100
-      }
-    ]
-  },
-  {
-    name: "KAFKA",
-    reqCount: 100,
-    byteCount: 300,
-    commands: [
-      {
-        name: "COMMAND1",
-        reqCount: 70,
-        byteCount: 200
-      },
-      {
-        name: "COMMAND2",
-        reqCount: 30,
-        byteCount: 100
-      }
-    ]
-  }
-]
-
 enum StatsMode {
   REQUESTS = "entriesCount",
   VOLUME = "volumeSizeBytes"
@@ -71,13 +27,31 @@ enum StatsMode {
 interface TrafficStatsModalProps {
   isOpen: boolean;
   onClose: () => void;
-  data: any; // todo: create model
+  getTrafficStatsDataApi: () => Promise<any>
 }
 
-export const TrafficStatsModal: React.FC<TrafficStatsModalProps> = ({ isOpen, onClose, data }) => {
+export const TrafficStatsModal: React.FC<TrafficStatsModalProps> = ({ isOpen, onClose, getTrafficStatsDataApi }) => {
 
   const modes = Object.keys(StatsMode).filter(x => !(parseInt(x) >= 0));
   const [statsMode, setStatsMode] = useState(modes[0]);
+  const [statsData, setStatsData] = useState(null);
+  const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    if(isOpen && getTrafficStatsDataApi) {
+      (async () => {
+        try {
+          setIsLoading(true);
+          const data = await getTrafficStatsDataApi();
+          setStatsData(data);
+        } catch (e) {
+          console.error(e)
+        } finally {
+          setIsLoading(false)
+        }
+      })()
+    }
+  }, [isOpen, getTrafficStatsDataApi])
 
   return (
     <Modal
@@ -101,7 +75,9 @@ export const TrafficStatsModal: React.FC<TrafficStatsModalProps> = ({ isOpen, on
                 {modes.map(mode => <option value={mode}>{mode}</option>)}
               </select>
             </div>
-           <TrafficPieChart pieChartMode={statsMode} data={data}/>
+            {isLoading ? <div style={{textAlign: "center", marginTop: 20}}>
+                <img alt="spinner" src={spinnerImg} style={{ height: 50 }} />
+            </div> : <TrafficPieChart pieChartMode={statsMode} data={statsData}/>}
           </div>
         </Box>
       </Fade>
