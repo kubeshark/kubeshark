@@ -516,7 +516,7 @@ func fillContent(reqResp reqResp, respContent openapi.Content, ctype string, sam
 			handleFormDataMultipart(text, content, params)
 		}
 
-		if len(exampleMsg) > len(content.Example) && (limit < 0 || len(exampleMsg) >= limit) {
+		if len(exampleMsg) > len(content.Example) && (limit < 0 || len(exampleMsg) <= limit) {
 			content.Example = exampleMsg
 		}
 	}
