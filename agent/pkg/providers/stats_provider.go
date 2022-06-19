@@ -4,6 +4,8 @@ import (
 	"reflect"
 	"time"
 
+	"github.com/jinzhu/copier"
+	"github.com/up9inc/mizu/logger"
 	"github.com/up9inc/mizu/tap/api"
 )
 
@@ -43,7 +45,6 @@ type AccumulativeStatsProtocol struct {
 	Methods []*AccumulativeStatsCounter `json:"methods"`
 }
 
-
 var (
 	generalStats = GeneralStats{}
 	bucketsStats = BucketStats{}
@@ -58,10 +59,15 @@ func GetGeneralStats() GeneralStats {
 }
 
 func GetAccumulativeStats() []*AccumulativeStatsProtocol {
+	var bucketStatsCopy []*TimeFrameStatsValue
+	if err := copier.Copy(bucketsStats, bucketStatsCopy); err != nil {
+		logger.Log.Errorf("Error while copying src stats into temporary copied object")
+		return make([]*AccumulativeStatsProtocol, 0)
+	}
+
 	result := make(map[string]*AccumulativeStatsProtocol, 0)
 	methodsPerProtocolAggregated := make(map[string]map[string]*AccumulativeStatsCounter, 0)
-
-	for _, countersOfTimeFrame := range bucketsStats {
+	for _, countersOfTimeFrame := range bucketStatsCopy {
 		for protocolName, value := range countersOfTimeFrame.ProtocolStats {
 
 			if _, found := result[protocolName]; !found {

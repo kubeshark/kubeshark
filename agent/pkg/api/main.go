@@ -143,13 +143,13 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 			continue
 		}
 
-		summary := extension.Dissector.Summarize(mizuEntry)
-		providers.EntryAdded(len(data), summary)
-
 		entryInserter := dependency.GetInstance(dependency.EntriesInserter).(EntryInserter)
 		if err := entryInserter.Insert(mizuEntry); err != nil {
 			logger.Log.Errorf("Error inserting entry, err: %v", err)
 		}
+
+		summary := extension.Dissector.Summarize(mizuEntry)
+		providers.EntryAdded(len(data), summary)
 
 		serviceMapGenerator := dependency.GetInstance(dependency.ServiceMapGeneratorDependency).(servicemap.ServiceMapSink)
 		serviceMapGenerator.NewTCPEntry(mizuEntry.Source, mizuEntry.Destination, &item.Protocol)
