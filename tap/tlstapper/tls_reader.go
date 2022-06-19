@@ -9,7 +9,7 @@ import (
 
 type tlsReader struct {
 	key           string
-	chunks        chan *tlsChunk
+	chunks        chan *tlsTapperTlsChunk
 	seenChunks    int
 	data          []byte
 	doneHandler   func(r *tlsReader)
@@ -24,14 +24,14 @@ type tlsReader struct {
 	reqResMatcher api.RequestResponseMatcher
 }
 
-func (r *tlsReader) newChunk(chunk *tlsChunk) {
+func (r *tlsReader) newChunk(chunk *tlsTapperTlsChunk) {
 	r.captureTime = time.Now()
 	r.seenChunks = r.seenChunks + 1
 	r.chunks <- chunk
 }
 
 func (r *tlsReader) Read(p []byte) (int, error) {
-	var chunk *tlsChunk
+	var chunk *tlsTapperTlsChunk
 
 	for len(r.data) == 0 {
 		var ok bool
@@ -42,7 +42,7 @@ func (r *tlsReader) Read(p []byte) (int, error) {
 			}
 
 			r.data = chunk.getRecordedData()
-		case <-time.After(time.Second * 3):
+		case <-time.After(time.Second * 120):
 			r.doneHandler(r)
 			return 0, io.EOF
 		}

@@ -333,7 +333,7 @@
                   }
                 }
               },
-              "example": "agent-id=ade\u0026callback-url=\u0026token=sometoken",
+              "example": "agent-id=ade\u0026callback-url=\u0026token=sometoken-second-val\u0026optional=another",
               "x-sample-entry": "000000000000000000000008"
             }
           },
