@@ -32,6 +32,11 @@ type Resources struct {
 	MemoryRequests string `yaml:"memory-requests" default:"50Mi"`
 }
 
+type OASConfig struct {
+	Enable        bool `yaml:"enabled" default:"true"`
+	MaxExampleLen int  `yaml:"max-example-len" default:"10240"`
+}
+
 type MizuAgentConfig struct {
 	MaxDBSizeBytes         int64         `json:"maxDBSizeBytes"`
 	InsertionFilter        string        `json:"insertionFilter"`
@@ -42,7 +47,7 @@ type MizuAgentConfig struct {
 	MizuResourcesNamespace string        `json:"mizuResourceNamespace"`
 	AgentDatabasePath      string        `json:"agentDatabasePath"`
 	ServiceMap             bool          `json:"serviceMap"`
-	OAS                    bool          `json:"oas"`
+	OAS                    OASConfig     `json:"oas"`
 	Telemetry              bool          `json:"telemetry"`
 }
 

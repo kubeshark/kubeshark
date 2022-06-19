@@ -25,7 +25,7 @@ func runMizuInstall() {
 	var sb strings.Builder
 	sb.WriteString("Hello! This command can be used to install Mizu Pro edition on your Kubernetes cluster.")
 	sb.WriteString("\nPlease run:")
-	sb.WriteString("\n\tmizu install -o | kubectl apply -f -")
+	sb.WriteString("\n\tmizu install -o | kubectl apply -n mizu -f -")
 	sb.WriteString("\n\nor use helm chart as described in https://getmizu.io/docs/installing-mizu/centralized-installation\n")
 
 	fmt.Print(sb.String())

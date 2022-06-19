@@ -25,7 +25,9 @@ RUN npm run build
 ### Base builder image for native builds architecture
 FROM golang:1.17-alpine AS builder-native-base
 ENV CGO_ENABLED=1 GOOS=linux
-RUN apk add --no-cache libpcap-dev g++ perl-utils
+RUN apk add --no-cache libpcap-dev g++ perl-utils curl build-base binutils-gold bash
+COPY devops/install-capstone.sh .
+RUN ./install-capstone.sh
 
 
 ### Intermediate builder image for x86-64 to x86-64 native builds
@@ -39,15 +41,15 @@ ENV GOARCH=arm64
 
 
 ### Builder image for x86-64 to AArch64 cross-compilation
-FROM up9inc/linux-arm64-musl-go-libpcap AS builder-from-amd64-to-arm64v8
+FROM up9inc/linux-arm64-musl-go-libpcap-capstone AS builder-from-amd64-to-arm64v8
 ENV CGO_ENABLED=1 GOOS=linux
-ENV GOARCH=arm64 CGO_CFLAGS="-I/work/libpcap"
+ENV GOARCH=arm64 CGO_CFLAGS="-I/work/libpcap -I/work/capstone/include"
 
 
 ### Builder image for AArch64 to x86-64 cross-compilation
-FROM up9inc/linux-x86_64-musl-go-libpcap AS builder-from-arm64v8-to-amd64
+FROM up9inc/linux-x86_64-musl-go-libpcap-capstone AS builder-from-arm64v8-to-amd64
 ENV CGO_ENABLED=1 GOOS=linux
-ENV GOARCH=amd64 CGO_CFLAGS="-I/libpcap"
+ENV GOARCH=amd64 CGO_CFLAGS="-I/libpcap -I/capstone/include"
 
 
 ### Final builder image where the build happens
@@ -95,8 +97,8 @@ RUN go build -ldflags="-extldflags=-static -s -w \
     -X 'github.com/up9inc/mizu/agent/pkg/version.Ver=${VER}'" -o mizuagent .
 
 # Download Basenine executable, verify the sha1sum
-ADD https://github.com/up9inc/basenine/releases/download/v0.8.2/basenine_linux_${GOARCH} ./basenine_linux_${GOARCH}
-ADD https://github.com/up9inc/basenine/releases/download/v0.8.2/basenine_linux_${GOARCH}.sha256 ./basenine_linux_${GOARCH}.sha256
+ADD https://github.com/up9inc/basenine/releases/download/v0.8.3/basenine_linux_${GOARCH} ./basenine_linux_${GOARCH}
+ADD https://github.com/up9inc/basenine/releases/download/v0.8.3/basenine_linux_${GOARCH}.sha256 ./basenine_linux_${GOARCH}.sha256
 
 RUN shasum -a 256 -c basenine_linux_"${GOARCH}".sha256 && \
     chmod +x ./basenine_linux_"${GOARCH}" && \

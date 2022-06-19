@@ -2,7 +2,7 @@ package tlstapper
 
 // Must be synced with logger_messages.h
 //
-var bpfLogMessages = []string {
+var bpfLogMessages = []string{
 	/*0000*/ "[%d] Unable to read bytes count from _ex methods [err: %d]",
 	/*0001*/ "[%d] Unable to read ipv4 address [err: %d]",
 	/*0002*/ "[%d] Unable to read ssl buffer [err: %d]",
@@ -20,6 +20,4 @@ var bpfLogMessages = []string {
 	/*0014*/ "[%d] Unable to put connect info [err: %d]",
 	/*0015*/ "[%d] Unable to get connect info",
 	/*0016*/ "[%d] Unable to read connect info [err: %d]",
-	
 }
-

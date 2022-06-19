@@ -28,7 +28,11 @@ func UpdateTapTargets(tls *TlsTapper, pods *[]v1.Pod, procfs string) error {
 	tls.ClearPids()
 
 	for pid, pod := range containerPids {
-		if err := tls.AddPid(procfs, pid, pod.Namespace); err != nil {
+		if err := tls.AddSsllibPid(procfs, pid, pod.Namespace); err != nil {
+			LogError(err)
+		}
+
+		if err := tls.AddGoPid(procfs, pid, pod.Namespace); err != nil {
 			LogError(err)
 		}
 	}

@@ -23,7 +23,7 @@
     "mobx": "^6.6.0",
     "moment": "^2.29.3",
     "node-fetch": "^3.2.4",
-    "node-sass": "^6.0.1",
+    "sass": "^1.52.3",
     "numeral": "^2.0.6",
     "react": "^17.0.2",
     "react-copy-to-clipboard": "^5.1.0",
