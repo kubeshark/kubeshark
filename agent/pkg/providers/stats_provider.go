@@ -14,7 +14,12 @@ type GeneralStats struct {
 	LastEntryTimestamp  int
 }
 
-type TimeFrameStatsValue map[string]ProtocolStats
+type BucketStats []*TimeFrameStatsValue
+
+type TimeFrameStatsValue struct {
+	BucketTime    time.Time
+	ProtocolStats map[string]ProtocolStats
+}
 
 type ProtocolStats struct {
 	MethodsStats map[string]*SizeAndEntriesCount
@@ -38,7 +43,6 @@ type AccumulativeStatsProtocol struct {
 	Methods []*AccumulativeStatsCounter `json:"methods"`
 }
 
-type BucketStats map[time.Time]TimeFrameStatsValue
 
 var (
 	generalStats = GeneralStats{}
@@ -58,7 +62,7 @@ func GetAccumulativeStats() []*AccumulativeStatsProtocol {
 	methodsPerProtocolAggregated := make(map[string]map[string]*AccumulativeStatsCounter, 0)
 
 	for _, countersOfTimeFrame := range bucketsStats {
-		for protocolName, value := range countersOfTimeFrame {
+		for protocolName, value := range countersOfTimeFrame.ProtocolStats {
 
 			if _, found := result[protocolName]; !found {
 				result[protocolName] = &AccumulativeStatsProtocol{
@@ -67,7 +71,7 @@ func GetAccumulativeStats() []*AccumulativeStatsProtocol {
 						EntriesCount:    0,
 						VolumeSizeBytes: 0,
 					},
-					Color:   value.Color,
+					Color: value.Color,
 				}
 			}
 			if _, found := methodsPerProtocolAggregated[protocolName]; !found {
@@ -119,23 +123,34 @@ func EntryAdded(size int, summery *api.BaseEntry) {
 }
 
 func addToBucketStats(size int, summery *api.BaseEntry) {
-	entryTimeBucketRounded := time.Unix(summery.Timestamp, 0).Round(time.Minute * 5)
-	if _, found := bucketsStats[entryTimeBucketRounded]; !found {
-		bucketsStats[entryTimeBucketRounded] = TimeFrameStatsValue{}
+	entryTimeBucketRounded := time.Unix(summery.Timestamp, 0).Round(time.Minute * 1)
+	if len(bucketsStats) == 0 {
+		bucketsStats = append(bucketsStats, &TimeFrameStatsValue{
+			BucketTime:    entryTimeBucketRounded,
+			ProtocolStats: map[string]ProtocolStats{},
+		})
 	}
-	if _, found := bucketsStats[entryTimeBucketRounded][summery.Protocol.Abbreviation]; !found {
-		bucketsStats[entryTimeBucketRounded][summery.Protocol.Abbreviation] = ProtocolStats{
+	bucketOfEntry := bucketsStats[len(bucketsStats)-1]
+	if bucketOfEntry.BucketTime != entryTimeBucketRounded {
+		bucketOfEntry = &TimeFrameStatsValue{
+			BucketTime:    entryTimeBucketRounded,
+			ProtocolStats: map[string]ProtocolStats{},
+		}
+		bucketsStats = append(bucketsStats, bucketOfEntry)
+	}
+	if _, found := bucketOfEntry.ProtocolStats[summery.Protocol.Abbreviation]; !found {
+		bucketOfEntry.ProtocolStats[summery.Protocol.Abbreviation] = ProtocolStats{
 			MethodsStats: map[string]*SizeAndEntriesCount{},
 			Color:        summery.Protocol.BackgroundColor,
 		}
 	}
-	if _, found := bucketsStats[entryTimeBucketRounded][summery.Protocol.Abbreviation].MethodsStats[summery.Method]; !found {
-		bucketsStats[entryTimeBucketRounded][summery.Protocol.Abbreviation].MethodsStats[summery.Method] = &SizeAndEntriesCount{
+	if _, found := bucketOfEntry.ProtocolStats[summery.Protocol.Abbreviation].MethodsStats[summery.Method]; !found {
+		bucketOfEntry.ProtocolStats[summery.Protocol.Abbreviation].MethodsStats[summery.Method] = &SizeAndEntriesCount{
 			VolumeInBytes: 0,
 			EntriesCount:  0,
 		}
 	}
 
-	bucketsStats[entryTimeBucketRounded][summery.Protocol.Abbreviation].MethodsStats[summery.Method].EntriesCount += 1
-	bucketsStats[entryTimeBucketRounded][summery.Protocol.Abbreviation].MethodsStats[summery.Method].VolumeInBytes += size
+	bucketOfEntry.ProtocolStats[summery.Protocol.Abbreviation].MethodsStats[summery.Method].EntriesCount += 1
+	bucketOfEntry.ProtocolStats[summery.Protocol.Abbreviation].MethodsStats[summery.Method].VolumeInBytes += size
 }
