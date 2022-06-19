@@ -148,8 +148,8 @@ func getOffsets(filePath string) (offsets map[string]*goExtendedOffset, err erro
 		// collect the bytes of the symbol
 		textSectionDataLen := uint64(len(textSectionData) - 1)
 		if symEndingIndex > textSectionDataLen {
-			logger.Log.Errorf(
-				"Error: Skipping symbol %v, ending index %v is bigger than text section data length %v",
+			logger.Log.Warningf(
+				"Skipping symbol %v, ending index %v is bigger than text section data length %v",
 				sym.Name,
 				symEndingIndex,
 				textSectionDataLen,
