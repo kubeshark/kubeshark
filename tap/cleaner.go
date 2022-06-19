@@ -15,7 +15,6 @@ type CleanerStats struct {
 
 type Cleaner struct {
 	assembler         *reassembly.Assembler
-	assemblerMutex    *sync.Mutex
 	cleanPeriod       time.Duration
 	connectionTimeout time.Duration
 	stats             CleanerStats
