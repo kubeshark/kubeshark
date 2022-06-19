@@ -28,13 +28,14 @@ type OasGenerator interface {
 }
 
 type defaultOasGenerator struct {
-	started      bool
-	serviceSpecs *sync.Map
+	started       bool
+	serviceSpecs  *sync.Map
+	maxExampleLen int
 }
 
-func GetDefaultOasGeneratorInstance() *defaultOasGenerator {
+func GetDefaultOasGeneratorInstance(maxExampleLen int) *defaultOasGenerator {
 	syncOnce.Do(func() {
-		instance = NewDefaultOasGenerator()
+		instance = NewDefaultOasGenerator(maxExampleLen)
 		logger.Log.Debug("OAS Generator Initialized")
 	})
 	return instance
@@ -117,6 +118,7 @@ func (g *defaultOasGenerator) getGen(dest string, urlStr string) *SpecGen {
 	var gen *SpecGen
 	if !found {
 		gen = NewGen(u.Scheme + "://" + dest)
+		gen.MaxExampleLen = g.maxExampleLen
 		g.serviceSpecs.Store(dest, gen)
 	} else {
 		gen = val.(*SpecGen)
@@ -132,9 +134,10 @@ func (g *defaultOasGenerator) GetServiceSpecs() *sync.Map {
 	return g.serviceSpecs
 }
 
-func NewDefaultOasGenerator() *defaultOasGenerator {
+func NewDefaultOasGenerator(maxExampleLen int) *defaultOasGenerator {
 	return &defaultOasGenerator{
-		started:      false,
-		serviceSpecs: &sync.Map{},
+		started:       false,
+		serviceSpecs:  &sync.Map{},
+		maxExampleLen: maxExampleLen,
 	}
 }
