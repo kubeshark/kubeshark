@@ -8,6 +8,11 @@ import (
 	"github.com/up9inc/mizu/tap/dbgctl"
 )
 
+type tcpStreamCallbacks interface {
+	tcpStreamCreated(stream *tcpStream)
+	tcpStreamClosed(stream *tcpStream)
+}
+
 /* It's a connection (bidirectional)
  * Implements gopacket.reassembly.Stream interface (Accept, ReassembledSG, ReassemblyComplete)
  * ReassembledSG gets called when new reassembled data is ready (i.e. bytes in order, no duplicates, complete)
@@ -25,16 +30,25 @@ type tcpStream struct {
 	reqResMatchers []api.RequestResponseMatcher
 	createdAt      time.Time
 	streamsMap     api.TcpStreamMap
+	connectionId   connectionId
+	callbacks      tcpStreamCallbacks
 	sync.Mutex
 }
 
-func NewTcpStream(isTapTarget bool, streamsMap api.TcpStreamMap, capture api.Capture) *tcpStream {
-	return &tcpStream{
-		isTapTarget: isTapTarget,
-		streamsMap:  streamsMap,
-		origin:      capture,
-		createdAt:   time.Now(),
+func NewTcpStream(isTapTarget bool, streamsMap api.TcpStreamMap, capture api.Capture,
+	connectionId connectionId, callbacks tcpStreamCallbacks) *tcpStream {
+	t := &tcpStream{
+		isTapTarget:  isTapTarget,
+		streamsMap:   streamsMap,
+		origin:       capture,
+		createdAt:    time.Now(),
+		connectionId: connectionId,
+		callbacks:    callbacks,
 	}
+
+	t.callbacks.tcpStreamCreated(t)
+
+	return t
 }
 
 func (t *tcpStream) getId() int64 {
@@ -56,9 +70,9 @@ func (t *tcpStream) close() {
 	t.isClosed = true
 
 	t.streamsMap.Delete(t.id)
-
 	t.client.close()
 	t.server.close()
+	t.callbacks.tcpStreamClosed(t)
 }
 
 func (t *tcpStream) addCounterPair(counterPair *api.CounterPair) {

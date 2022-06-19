@@ -10,6 +10,7 @@ import (
 	"github.com/Masterminds/semver"
 	"github.com/cilium/ebpf/link"
 	"github.com/knightsc/gapstone"
+	"github.com/up9inc/mizu/logger"
 )
 
 type goOffsets struct {
@@ -145,6 +146,16 @@ func getOffsets(filePath string) (offsets map[string]*goExtendedOffset, err erro
 		symEndingIndex := symStartingIndex + sym.Size
 
 		// collect the bytes of the symbol
+		textSectionDataLen := uint64(len(textSectionData) - 1)
+		if symEndingIndex > textSectionDataLen {
+			logger.Log.Warningf(
+				"Skipping symbol %v, ending index %v is bigger than text section data length %v",
+				sym.Name,
+				symEndingIndex,
+				textSectionDataLen,
+			)
+			continue
+		}
 		symBytes := textSectionData[symStartingIndex:symEndingIndex]
 
 		// disasemble the symbol
