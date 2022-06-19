@@ -106,8 +106,8 @@ ARG VER=0.0
 WORKDIR /app/tap/tlstapper
 
 RUN rm tlstapper_bpf*
-RUN BPF_TARGET=BPF_TARGET_EL GOARCH=${BUILDARCH} go generate tls_tapper.go
-RUN BPF_TARGET=BPF_TARGET_EB GOARCH=${BUILDARCH} go generate tls_tapper.go
+RUN BPF_TARGET=${BPF_TARGET_EL} GOARCH=${BUILDARCH} go generate tls_tapper.go
+RUN BPF_TARGET=${BPF_TARGET_EB} GOARCH=${BUILDARCH} go generate tls_tapper.go
 
 WORKDIR /app/agent-build
 
