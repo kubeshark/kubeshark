@@ -5,9 +5,11 @@ import { ServiceMapModal } from '@up9/mizu-common';
 import { useRecoilState } from "recoil";
 import serviceMapModalOpenAtom from "./recoil/serviceMapModalOpen";
 import oasModalOpenAtom from './recoil/oasModalOpen/atom';
+import trafficStatsModalOpenAtom from "./recoil/trafficStatsModalOpen";
 import { OasModal } from '@up9/mizu-common';
 import Api from './helpers/api';
-import { ThemeProvider, StyledEngineProvider, createTheme } from '@mui/material';
+import {ThemeProvider, StyledEngineProvider, createTheme} from '@mui/material';
+import { TrafficStatsModal } from '@up9/mizu-common';
 
 const api = Api.getInstance()
 
@@ -15,6 +17,7 @@ const App = () => {
 
     const [serviceMapModalOpen, setServiceMapModalOpen] = useRecoilState(serviceMapModalOpenAtom);
     const [oasModalOpen, setOasModalOpen] = useRecoilState(oasModalOpenAtom)
+    const [trafficStatsModalOpen, setTrafficStatsModalOpen] = useRecoilState(trafficStatsModalOpenAtom);
 
     return (
         <StyledEngineProvider injectFirst>
@@ -33,6 +36,7 @@ const App = () => {
                         openModal={oasModalOpen}
                         handleCloseModal={() => setOasModalOpen(false)}
                     />}
+                    <TrafficStatsModal isOpen={trafficStatsModalOpen} onClose={() => setTrafficStatsModalOpen(false)} getTrafficStatsDataApi={api.getStats}/>
                 </div>
             </ThemeProvider>
         </StyledEngineProvider>

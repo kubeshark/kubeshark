@@ -110,4 +110,9 @@ export default class Api {
             headers
         });
     }
+
+    getStats = async () => {
+        const response = await client.get("/status/accumulative");
+        return response.data;
+    }
 }
