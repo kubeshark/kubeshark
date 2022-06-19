@@ -60,7 +60,7 @@ func GetGeneralStats() GeneralStats {
 
 func GetAccumulativeStats() []*AccumulativeStatsProtocol {
 	var bucketStatsCopy []*TimeFrameStatsValue
-	if err := copier.Copy(bucketsStats, bucketStatsCopy); err != nil {
+	if err := copier.Copy(bucketStatsCopy, bucketsStats); err != nil {
 		logger.Log.Errorf("Error while copying src stats into temporary copied object")
 		return make([]*AccumulativeStatsProtocol, 0)
 	}
