@@ -19,14 +19,15 @@ import (
  * Generates a new tcp stream for each new tcp connection. Closes the stream when the connection closes.
  */
 type tcpStreamFactory struct {
-	wg         sync.WaitGroup
-	emitter    api.Emitter
-	streamsMap api.TcpStreamMap
-	ownIps     []string
-	opts       *TapOpts
+	wg               sync.WaitGroup
+	emitter          api.Emitter
+	streamsMap       api.TcpStreamMap
+	ownIps           []string
+	opts             *TapOpts
+	streamsCallbacks tcpStreamCallbacks
 }
 
-func NewTcpStreamFactory(emitter api.Emitter, streamsMap api.TcpStreamMap, opts *TapOpts) *tcpStreamFactory {
+func NewTcpStreamFactory(emitter api.Emitter, streamsMap api.TcpStreamMap, opts *TapOpts, streamsCallbacks tcpStreamCallbacks) *tcpStreamFactory {
 	var ownIps []string
 
 	if localhostIPs, err := getLocalhostIPs(); err != nil {
@@ -39,10 +40,11 @@ func NewTcpStreamFactory(emitter api.Emitter, streamsMap api.TcpStreamMap, opts 
 	}
 
 	return &tcpStreamFactory{
-		emitter:    emitter,
-		streamsMap: streamsMap,
-		ownIps:     ownIps,
-		opts:       opts,
+		emitter:          emitter,
+		streamsMap:       streamsMap,
+		ownIps:           ownIps,
+		opts:             opts,
+		streamsCallbacks: streamsCallbacks,
 	}
 }
 
@@ -57,7 +59,8 @@ func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcpLayer *lay
 
 	props := factory.getStreamProps(srcIp, srcPort, dstIp, dstPort)
 	isTapTarget := props.isTapTarget
-	stream := NewTcpStream(isTapTarget, factory.streamsMap, getPacketOrigin(ac))
+	connectionId := getConnectionId(srcIp, srcPort, dstIp, dstPort)
+	stream := NewTcpStream(isTapTarget, factory.streamsMap, getPacketOrigin(ac), connectionId, factory.streamsCallbacks)
 	reassemblyStream := NewTcpReassemblyStream(fmt.Sprintf("%s:%s", net, transport), tcpLayer, fsmOptions, stream)
 	if stream.GetIsTapTarget() {
 		stream.setId(factory.streamsMap.NextId())
