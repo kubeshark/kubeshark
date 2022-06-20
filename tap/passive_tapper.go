@@ -9,7 +9,6 @@
 package tap
 
 import (
-	"encoding/binary"
 	"encoding/json"
 	"flag"
 	"fmt"
@@ -18,7 +17,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-	"unsafe"
 
 	"github.com/shirou/gopsutil/cpu"
 	"github.com/struCoder/pidusage"
@@ -300,10 +298,8 @@ func startTlsTapper(extension *api.Extension, outputItems chan *api.OutputChanne
 		OutputChannel: outputItems,
 	}
 
-	byteOrder := getByteOrder()
-
-	go tls.PollForLogging(byteOrder)
-	go tls.Poll(byteOrder, emitter, options, streamsMap)
+	go tls.PollForLogging()
+	go tls.Poll(emitter, options, streamsMap)
 
 	return &tls
 }
@@ -322,21 +318,4 @@ func buildIgnoredPortsList(ignoredPorts string) []uint16 {
 	}
 
 	return result
-}
-
-func getByteOrder() (byteOrder binary.ByteOrder) {
-	buf := [2]byte{}
-	*(*uint16)(unsafe.Pointer(&buf[0])) = uint16(0xABCD)
-
-	switch buf {
-	case [2]byte{0xCD, 0xAB}:
-		byteOrder = binary.LittleEndian
-	case [2]byte{0xAB, 0xCD}:
-		byteOrder = binary.BigEndian
-	default:
-		logger.Log.Warning("Could not determine native endianness. Defaulting to little-endian")
-		byteOrder = binary.LittleEndian
-	}
-
-	return
 }

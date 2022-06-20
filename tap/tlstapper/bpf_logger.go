@@ -52,7 +52,7 @@ func (p *bpfLogger) close() error {
 	return p.logReader.Close()
 }
 
-func (p *bpfLogger) poll(byteOrder binary.ByteOrder) {
+func (p *bpfLogger) poll() {
 	logger.Log.Infof("Start polling for bpf logs")
 
 	for {
@@ -76,7 +76,7 @@ func (p *bpfLogger) poll(byteOrder binary.ByteOrder) {
 
 		var log logMessage
 
-		if err := binary.Read(buffer, byteOrder, &log); err != nil {
+		if err := binary.Read(buffer, binary.LittleEndian, &log); err != nil {
 			LogError(errors.Errorf("Error parsing log %v", err))
 			continue
 		}
