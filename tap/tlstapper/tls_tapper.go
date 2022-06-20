@@ -1,6 +1,7 @@
 package tlstapper
 
 import (
+	"encoding/binary"
 	"strconv"
 	"sync"
 
@@ -58,12 +59,12 @@ func (t *TlsTapper) Init(chunksBufferSize int, logBufferSize int, procfs string,
 	return t.poller.init(&t.bpfObjects, chunksBufferSize)
 }
 
-func (t *TlsTapper) Poll(emitter api.Emitter, options *api.TrafficFilteringOptions, streamsMap api.TcpStreamMap) {
-	t.poller.poll(emitter, options, streamsMap)
+func (t *TlsTapper) Poll(byteOrder binary.ByteOrder, emitter api.Emitter, options *api.TrafficFilteringOptions, streamsMap api.TcpStreamMap) {
+	t.poller.poll(byteOrder, emitter, options, streamsMap)
 }
 
-func (t *TlsTapper) PollForLogging() {
-	t.bpfLogger.poll()
+func (t *TlsTapper) PollForLogging(byteOrder binary.ByteOrder) {
+	t.bpfLogger.poll(byteOrder)
 }
 
 func (t *TlsTapper) GlobalSsllibTap(sslLibrary string) error {
