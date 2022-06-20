@@ -1,6 +1,8 @@
 package providers
 
 import (
+	"encoding/json"
+	"fmt"
 	"reflect"
 	"time"
 
@@ -19,18 +21,18 @@ type GeneralStats struct {
 type BucketStats []*TimeFrameStatsValue
 
 type TimeFrameStatsValue struct {
-	BucketTime    time.Time
-	ProtocolStats map[string]ProtocolStats
+	BucketTime    time.Time                `json:"timestamp"`
+	ProtocolStats map[string]ProtocolStats `json:"protocols"`
 }
 
 type ProtocolStats struct {
-	MethodsStats map[string]*SizeAndEntriesCount
-	Color        string
+	MethodsStats map[string]*SizeAndEntriesCount `json:"methods"`
+	Color        string                          `json:"color"`
 }
 
 type SizeAndEntriesCount struct {
-	EntriesCount  int
-	VolumeInBytes int
+	EntriesCount  int `json:"entriesCount"`
+	VolumeInBytes int `json:"volumeInBytes"`
 }
 
 type AccumulativeStatsCounter struct {
@@ -45,9 +47,15 @@ type AccumulativeStatsProtocol struct {
 	Methods []*AccumulativeStatsCounter `json:"methods"`
 }
 
+type AccumulativeStatsProtocolWithTime struct {
+	ProtocolsData map[string]*AccumulativeStatsProtocol `json:"protocols"`
+	Time          int64                                 `json:"timestamp"`
+}
+
 var (
-	generalStats = GeneralStats{}
-	bucketsStats = BucketStats{}
+	generalStats            = GeneralStats{}
+	bucketsStats            = BucketStats{}
+	internalBucketThreshold = time.Minute * 1
 )
 
 func ResetGeneralStats() {
@@ -113,6 +121,91 @@ func GetAccumulativeStats() []*AccumulativeStatsProtocol {
 	return finalResult
 }
 
+func GetAccumulativeStatsTiming(intervalSeconds int, numberOfBars int) []*AccumulativeStatsProtocolWithTime {
+	txt, _ := json.Marshal(bucketsStats)
+	fmt.Printf("%v\n", txt)
+	bucketStatsCopy := BucketStats{}
+	if err := copier.Copy(&bucketStatsCopy, bucketsStats); err != nil {
+		logger.Log.Errorf("Error while copying src stats into temporary copied object")
+		return make([]*AccumulativeStatsProtocolWithTime, 0)
+	}
+
+	if len(bucketStatsCopy) == 0 {
+		return make([]*AccumulativeStatsProtocolWithTime, 0)
+	}
+
+	result := make(map[time.Time]*AccumulativeStatsProtocolWithTime, 0)
+	methodsPerProtocolPerTimeAggregated := make(map[time.Time]map[string]map[string]*AccumulativeStatsCounter, 0)
+	lastBucketTime := time.Now().UTC().Add(-1 * internalBucketThreshold / 2).Round(internalBucketThreshold)
+	firstBucketTime := lastBucketTime.Add(-1 * time.Second * time.Duration(intervalSeconds*numberOfBars))
+	bucketStatsIndex := len(bucketStatsCopy) - 1
+
+	for bucketStatsIndex >= 0 && (bucketStatsCopy[bucketStatsIndex].BucketTime.Before(lastBucketTime) || bucketStatsCopy[bucketStatsIndex].BucketTime.Equal(lastBucketTime)) &&
+		(bucketStatsCopy[bucketStatsIndex].BucketTime.After(firstBucketTime) || bucketStatsCopy[bucketStatsIndex].BucketTime.Equal(firstBucketTime)) {
+
+		resultBucketRoundedKey := bucketStatsCopy[bucketStatsIndex].BucketTime.Round(time.Second * time.Duration(intervalSeconds))
+
+		if _, ok := result[resultBucketRoundedKey]; !ok {
+			result[resultBucketRoundedKey] = &AccumulativeStatsProtocolWithTime{
+				Time:          resultBucketRoundedKey.UnixMilli(),
+				ProtocolsData: make(map[string]*AccumulativeStatsProtocol, 0),
+			}
+		}
+
+		for protocolName, data := range bucketStatsCopy[bucketStatsIndex].ProtocolStats {
+			if _, ok := result[resultBucketRoundedKey].ProtocolsData[protocolName]; !ok {
+				result[resultBucketRoundedKey].ProtocolsData[protocolName] = &AccumulativeStatsProtocol{
+					AccumulativeStatsCounter: AccumulativeStatsCounter{
+						Name:            protocolName,
+						EntriesCount:    0,
+						VolumeSizeBytes: 0,
+					},
+					Color:   data.Color,
+					Methods: make([]*AccumulativeStatsCounter, 0),
+				}
+			}
+
+			for methodName, dataOfMethod := range data.MethodsStats {
+				result[resultBucketRoundedKey].ProtocolsData[protocolName].EntriesCount += dataOfMethod.EntriesCount
+				result[resultBucketRoundedKey].ProtocolsData[protocolName].VolumeSizeBytes += dataOfMethod.VolumeInBytes
+
+				if _, ok := methodsPerProtocolPerTimeAggregated[resultBucketRoundedKey]; !ok {
+					methodsPerProtocolPerTimeAggregated[resultBucketRoundedKey] = map[string]map[string]*AccumulativeStatsCounter{}
+				}
+				if _, ok := methodsPerProtocolPerTimeAggregated[resultBucketRoundedKey][protocolName]; !ok {
+					methodsPerProtocolPerTimeAggregated[resultBucketRoundedKey][protocolName] = map[string]*AccumulativeStatsCounter{}
+				}
+				if _, ok := methodsPerProtocolPerTimeAggregated[resultBucketRoundedKey][protocolName][methodName]; !ok {
+					methodsPerProtocolPerTimeAggregated[resultBucketRoundedKey][protocolName][methodName] = &AccumulativeStatsCounter{
+						Name:            methodName,
+						EntriesCount:    0,
+						VolumeSizeBytes: 0,
+					}
+				}
+				methodsPerProtocolPerTimeAggregated[resultBucketRoundedKey][protocolName][methodName].EntriesCount += dataOfMethod.EntriesCount
+				methodsPerProtocolPerTimeAggregated[resultBucketRoundedKey][protocolName][methodName].VolumeSizeBytes += dataOfMethod.VolumeInBytes
+			}
+		}
+
+		bucketStatsIndex--
+	}
+
+	finalResult := make([]*AccumulativeStatsProtocolWithTime, 0)
+	for _, value := range result {
+		for _, data := range methodsPerProtocolPerTimeAggregated[time.UnixMilli(value.Time)] {
+			methods := make([]*AccumulativeStatsCounter, 0)
+			for _, item := range data {
+				methods = append(methods, item)
+			}
+			fmt.Printf("[ROEE] %+v\n", methods)
+		}
+		// TODO: add the methods
+		finalResult = append(finalResult, value)
+	}
+	return finalResult
+
+}
+
 func EntryAdded(size int, summery *api.BaseEntry) {
 	generalStats.EntriesCount++
 	generalStats.EntriesVolumeInGB += float64(size) / (1 << 30)
@@ -129,7 +222,7 @@ func EntryAdded(size int, summery *api.BaseEntry) {
 }
 
 func addToBucketStats(size int, summery *api.BaseEntry) {
-	entryTimeBucketRounded := time.Unix(summery.Timestamp, 0).Round(time.Minute * 1)
+	entryTimeBucketRounded := time.UnixMilli(summery.Timestamp).Add(-1 * internalBucketThreshold / 2).Round(internalBucketThreshold)
 	if len(bucketsStats) == 0 {
 		bucketsStats = append(bucketsStats, &TimeFrameStatsValue{
 			BucketTime:    entryTimeBucketRounded,

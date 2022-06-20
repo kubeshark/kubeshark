@@ -83,6 +83,10 @@ func GetAccumulativeStats(c *gin.Context) {
 	c.JSON(http.StatusOK, providers.GetAccumulativeStats())
 }
 
+func GetAccumulativeStatsTiming(c *gin.Context) {
+	c.JSON(http.StatusOK, providers.GetAccumulativeStatsTiming(300, 10))
+}
+
 func GetCurrentResolvingInformation(c *gin.Context) {
 	c.JSON(http.StatusOK, holder.GetResolver().GetMap())
 }
