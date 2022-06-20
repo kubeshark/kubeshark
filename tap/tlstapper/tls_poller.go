@@ -34,7 +34,7 @@ type tlsPoller struct {
 	extension      *api.Extension
 	procfs         string
 	pidToNamespace sync.Map
-	fdCache        *simplelru.LRU // Actual typs is map[string]addressPair
+	fdCache        *simplelru.LRU // Actual type is map[string]addressPair
 	evictedCounter int
 }
 

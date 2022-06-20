@@ -10,6 +10,8 @@ import "@up9/mizu-common/dist/index.css"
 import oasModalOpenAtom from "../../../recoil/oasModalOpen/atom";
 import serviceMap from "../../assets/serviceMap.svg";
 import services from "../../assets/services.svg";
+import trafficStatsIcon from "../../assets/trafficStats.svg";
+import trafficStatsModalOpenAtom from "../../../recoil/trafficStatsModalOpen";
 
 const api = Api.getInstance();
 
@@ -17,6 +19,7 @@ export const TrafficPage: React.FC = () => {
   const commonClasses = useCommonStyles();
   const [serviceMapModalOpen, setServiceMapModalOpen] = useRecoilState(serviceMapModalOpenAtom);
   const [openOasModal, setOpenOasModal] = useRecoilState(oasModalOpenAtom);
+  const [trafficStatsModalOpen, setTrafficStatsModalOpen] = useRecoilState(trafficStatsModalOpenAtom);
   const [shouldCloseWebSocket, setShouldCloseWebSocket] = useState(false);
 
   const trafficViewerApi = { ...api }
@@ -26,13 +29,17 @@ export const TrafficPage: React.FC = () => {
     setOpenOasModal(true);
   }
 
+  const handleOpenStatsModal = () => {
+    setShouldCloseWebSocket(true)
+    setTrafficStatsModalOpen(true);
+  }
+
   const openServiceMapModalDebounce = debounce(() => {
     setShouldCloseWebSocket(true)
     setServiceMapModalOpen(true)
   }, 500);
 
-  const actionButtons = (window["isOasEnabled"] || window["isServiceMapEnabled"]) &&
-    <div style={{ display: 'flex', height: "100%" }}>
+  const actionButtons = <div style={{ display: 'flex', height: "100%" }}>
       {window["isOasEnabled"] && <Button
         startIcon={<img className="custom" src={services} alt="services" />}
         size="large"
@@ -48,15 +55,24 @@ export const TrafficPage: React.FC = () => {
         variant="contained"
         className={commonClasses.outlinedButton + " " + commonClasses.imagedButton}
         onClick={openServiceMapModalDebounce}
-        style={{ textTransform: 'unset' }}>
+        style={{ marginRight: 25, textTransform: 'unset' }}>
         Service Map
       </Button>}
+    <Button
+        startIcon={<img className="custom" src={trafficStatsIcon} alt="services" />}
+        size="large"
+        variant="contained"
+        className={commonClasses.outlinedButton + " " + commonClasses.imagedButton}
+        style={{ textTransform: 'unset' }}
+        onClick={handleOpenStatsModal}>
+      Traffic Stats
+    </Button>
     </div>
 
   return (
     <>
       <TrafficViewer webSocketUrl={MizuWebsocketURL} shouldCloseWebSocket={shouldCloseWebSocket} setShouldCloseWebSocket={setShouldCloseWebSocket}
-        trafficViewerApiProp={trafficViewerApi} actionButtons={actionButtons} isShowStatusBar={!(openOasModal || serviceMapModalOpen)} isDemoBannerView={false} />
+        trafficViewerApiProp={trafficViewerApi} actionButtons={actionButtons} isShowStatusBar={!(openOasModal || serviceMapModalOpen || trafficStatsModalOpen)} isDemoBannerView={false} />
     </>
   );
 };
