@@ -12,7 +12,7 @@ import TrafficViewerApiAtom from "../../recoil/TrafficViewerApi/atom";
 import queryAtom from "../../recoil/query/atom";
 import useWindowDimensions, { useRequestTextByWidth } from "../../hooks/WindowDimensionsHook";
 import { TOAST_CONTAINER_ID } from "../../configs/Consts";
-import spinner from "../assets/spinner.svg";
+import spinner from "assets/spinner.svg";
 
 const useStyles = makeStyles(() => ({
     entryTitle: {

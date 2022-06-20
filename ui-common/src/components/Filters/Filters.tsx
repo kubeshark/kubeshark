@@ -4,8 +4,8 @@ import {Button, Grid, Modal, Box, Typography, Backdrop, Fade, Divider, debounce}
 import CodeEditor from '@uiw/react-textarea-code-editor';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
 import { SyntaxHighlighter } from "../UI/SyntaxHighlighter";
-import filterUIExample1 from "../TrafficViewer/assets/filter-ui-example-1.png"
-import filterUIExample2 from "../TrafficViewer/assets/filter-ui-example-2.png"
+import filterUIExample1 from "assets/filter-ui-example-1.png"
+import filterUIExample2 from "assets/filter-ui-example-2.png"
 import variables from '../../variables.module.scss';
 import { useRecoilState, useRecoilValue } from "recoil";
 import queryAtom from "../../recoil/query";
