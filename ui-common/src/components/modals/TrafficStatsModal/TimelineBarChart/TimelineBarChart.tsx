@@ -1,4 +1,5 @@
 import styles from "./TimelineBarChart.module.module.sass";
+import {StatsMode} from "../TrafficStatsModal"
 import React, { useEffect, useMemo, useState } from "react";
 import {
     BarChart,
@@ -9,16 +10,16 @@ import {
     Tooltip,
     Legend
 } from "recharts";
-
-const colors = ["#003f5c", "#374c80", "#7a5195", "#bc5090", "#ef5675", "#ff764a", "#ffa600"];
+import { Utils } from "../../../../helpers/Utils";
 
 interface TimelineBarChartProps {
+    timeLineBarChartMode: string;
     data: any;
 }
 
-export const TimelineBarChart: React.FC<TimelineBarChartProps> = ({ data }) => {
+export const TimelineBarChart: React.FC<TimelineBarChartProps> = ({timeLineBarChartMode, data}) => {
     const [protocolStats, setProtocolStats] = useState([]);
-    const [protocolsNames, setProtocolsNames] = useState([]);
+    const [protocolsNamesAndColors, setProtocolsNamesAndColors] = useState([]);
 
     const padTo2Digits = (num) => {
         return String(num).padStart(2, '0');
@@ -30,45 +31,54 @@ export const TimelineBarChart: React.FC<TimelineBarChartProps> = ({ data }) => {
         return hoursAndMinutes;
     }
 
+    const creatUniqueObjArray = (objArray) => {
+        return [
+            ...new Map(objArray.map((item) => [item["name"], item])).values(),
+        ];
+    }
+
     useEffect(() => {
         if (!data) return;
         let protocolsBarsData = [];
         let prtcNames = [];
         data.map(protocolObj => {
             let obj: { [k: string]: any } = {};
-            obj.time = getHoursAndMinutes(protocolObj.key * 1000);
-            protocolObj.protocol.map(protocol => {
-                obj[`${protocol.name}`] = protocol.entriesCount;
-                prtcNames.push(protocol.name);
+            obj.timestamp = getHoursAndMinutes(protocolObj.timestamp);
+            protocolObj.protocols.map(protocol => {
+                obj[`${protocol.name}`] = protocol[StatsMode[timeLineBarChartMode]];
+                prtcNames.push({name: protocol.name, color: protocol.color});
             })
             protocolsBarsData.push(obj);
         })
+        let uniqueObjArray = creatUniqueObjArray(prtcNames);
         setProtocolStats(protocolsBarsData);
-        setProtocolsNames(prtcNames);
-    }, [data])
+        setProtocolsNamesAndColors(uniqueObjArray);
+    }, [data,timeLineBarChartMode])
 
-    const bars = useMemo(() => protocolsNames.map((protoclName, index) => {
-        return <Bar key={protoclName} dataKey={protoclName} stackId="a" fill={colors[index]} />
-    }), [protocolsNames])
+    const bars = useMemo(() => protocolsNamesAndColors.map((protoclToDIsplay) => {
+        return <Bar key={protoclToDIsplay.name} dataKey={protoclToDIsplay.name} stackId="a" fill={protoclToDIsplay.color} />
+    }), [protocolsNamesAndColors])
 
     return (
-        <BarChart
-            width={500}
-            height={300}
-            data={protocolStats}
-            margin={{
-                top: 20,
-                right: 30,
-                left: 20,
-                bottom: 5
-            }}
-        >
-            <CartesianGrid strokeDasharray="3 3" />
-            <XAxis dataKey="time" />
-            <YAxis />
-            <Tooltip />
-            <Legend />
-            {bars}
-        </BarChart>
+        <div style={{ width: "100%", display: "flex", justifyContent: "center" }}>
+            <BarChart
+                width={730}
+                height={250}
+                data={protocolStats}
+                margin={{
+                    top: 20,
+                    right: 30,
+                    left: 20,
+                    bottom: 5
+                }}
+            >
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="timestamp" domain={[0,10]}/>
+                <YAxis tickFormatter={(value) => timeLineBarChartMode === "VOLUME" ? Utils.humanFileSize(value) : value }/>
+                <Tooltip formatter={(value) => timeLineBarChartMode === "VOLUME" ? Utils.humanFileSize(value) : value + " Requests"}/>
+                <Legend />
+                {bars}
+            </BarChart>
+        </div>
     );
 }
