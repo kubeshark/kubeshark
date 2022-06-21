@@ -1,4 +1,4 @@
-import styles from "./TimelineBarChart.module.module.sass";
+import styles from "./TimelineBarChart.module.sass";
 import {StatsMode} from "../TrafficStatsModal"
 import React, { useEffect, useMemo, useState } from "react";
 import {
@@ -61,7 +61,7 @@ export const TimelineBarChart: React.FC<TimelineBarChartProps> = ({timeLineBarCh
     }), [protocolsNamesAndColors])
 
     return (
-        <div style={{ width: "100%", display: "flex", justifyContent: "center" }}>
+        <div className={styles.barChartContainer}>
             <BarChart
                 width={730}
                 height={250}
@@ -73,7 +73,6 @@ export const TimelineBarChart: React.FC<TimelineBarChartProps> = ({timeLineBarCh
                     bottom: 5
                 }}
             >
-                <CartesianGrid strokeDasharray="3 3" />
                 <XAxis dataKey="timestamp" />
                 <YAxis tickFormatter={(value) => timeLineBarChartMode === "VOLUME" ? Utils.humanFileSize(value) : value }/>
                 <Tooltip formatter={(value) => timeLineBarChartMode === "VOLUME" ? Utils.humanFileSize(value) : value + " Requests"}/>

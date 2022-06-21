@@ -20,6 +20,8 @@ const renderCustomizedLabel = ({
   const x = cx + radius * Math.cos(-midAngle * RADIAN);
   const y = cy + radius * Math.sin(-midAngle * RADIAN);
 
+  if (Number((percent * 100).toFixed(0)) <= 1) return;
+
   return (
     <text
       x={x}

@@ -20,36 +20,6 @@ const modalStyle = {
   color: '#000',
 };
 
-const timeLineData = [
-  {
-    key: "1655632800", // seconds or milliseconds
-    protocol: [
-      {
-        name: "redis",
-        entriesCount: 6,
-        volume: 12365,
-        // methods: nil
-      },
-      {
-        name: "amqp",
-        entriesCount: 5,
-        volume: 6326,
-        // "methods": nil
-      },
-    ]
-  },
-  {
-    key: "1655633100",
-    protocol: [
-      {
-        name: "http",
-        entriesCount: 3,
-        volume: 15435,
-        // "methods": nil
-      }
-    ]
-  }
-]
 
 export enum StatsMode {
   REQUESTS = "entriesCount",
