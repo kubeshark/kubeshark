@@ -69,7 +69,7 @@ func GetGeneralStats() GeneralStats {
 	return generalStats
 }
 
-func GetBucketStats() BucketStats {
+func getBucketStatsCopy() BucketStats {
 	bucketStatsCopy := BucketStats{}
 	bucketStatsLocker.Lock()
 	if err := copier.Copy(&bucketStatsCopy, bucketsStats); err != nil {
@@ -81,7 +81,7 @@ func GetBucketStats() BucketStats {
 }
 
 func GetAccumulativeStats() []*AccumulativeStatsProtocol {
-	bucketStatsCopy := GetBucketStats()
+	bucketStatsCopy := getBucketStatsCopy()
 	if bucketStatsCopy == nil {
 		return make([]*AccumulativeStatsProtocol, 0)
 	}
@@ -138,52 +138,49 @@ func ConvertToPieData(methodsPerProtocolAggregated map[string]map[string]*Accumu
 }
 
 func GetAccumulativeStatsTiming(intervalSeconds int, numberOfBars int) []*AccumulativeStatsProtocolTime {
-	bucketStatsCopy := GetBucketStats()
-	if bucketStatsCopy == nil {
-		return make([]*AccumulativeStatsProtocolTime, 0)
-	}
-
-	if len(bucketStatsCopy) == 0 {
+	bucketStatsCopy := getBucketStatsCopy()
+	if bucketStatsCopy == nil || len(bucketStatsCopy) == 0 {
 		return make([]*AccumulativeStatsProtocolTime, 0)
 	}
 
 	protocolToColor := make(map[string]string, 0)
 	methodsPerProtocolPerTimeAggregated := make(map[time.Time]map[string]map[string]*AccumulativeStatsCounter, 0)
 
+	// TODO: Extract to function and add tests for those values
 	lastBucketTime := time.Now().UTC().Add(-1 * InternalBucketThreshold / 2).Round(InternalBucketThreshold)
 	firstBucketTime := lastBucketTime.Add(-1 * time.Second * time.Duration(intervalSeconds*(numberOfBars-1)))
 	bucketStatsIndex := len(bucketStatsCopy) - 1
 
-	for bucketStatsIndex >= 0 && (bucketStatsCopy[bucketStatsIndex].BucketTime.Before(lastBucketTime) || bucketStatsCopy[bucketStatsIndex].BucketTime.Equal(lastBucketTime)) &&
-		(bucketStatsCopy[bucketStatsIndex].BucketTime.After(firstBucketTime) || bucketStatsCopy[bucketStatsIndex].BucketTime.Equal(firstBucketTime)) {
+	for bucketStatsIndex >= 0 {
+		currentBucketTime := bucketStatsCopy[bucketStatsIndex].BucketTime
+		if currentBucketTime.After(firstBucketTime) || currentBucketTime.Equal(firstBucketTime) {
+			resultBucketRoundedKey := currentBucketTime.Add(-1 * time.Second * time.Duration(intervalSeconds) / 2).Round(time.Second * time.Duration(intervalSeconds))
 
-		resultBucketRoundedKey := bucketStatsCopy[bucketStatsIndex].BucketTime.Round(time.Second * time.Duration(intervalSeconds))
-
-		for protocolName, data := range bucketStatsCopy[bucketStatsIndex].ProtocolStats {
-			if _, ok := protocolToColor[protocolName]; !ok {
-				protocolToColor[protocolName] = data.Color
-			}
-
-			for methodName, dataOfMethod := range data.MethodsStats {
-
-				if _, ok := methodsPerProtocolPerTimeAggregated[resultBucketRoundedKey]; !ok {
-					methodsPerProtocolPerTimeAggregated[resultBucketRoundedKey] = map[string]map[string]*AccumulativeStatsCounter{}
+			for protocolName, data := range bucketStatsCopy[bucketStatsIndex].ProtocolStats {
+				if _, ok := protocolToColor[protocolName]; !ok {
+					protocolToColor[protocolName] = data.Color
 				}
-				if _, ok := methodsPerProtocolPerTimeAggregated[resultBucketRoundedKey][protocolName]; !ok {
-					methodsPerProtocolPerTimeAggregated[resultBucketRoundedKey][protocolName] = map[string]*AccumulativeStatsCounter{}
-				}
-				if _, ok := methodsPerProtocolPerTimeAggregated[resultBucketRoundedKey][protocolName][methodName]; !ok {
-					methodsPerProtocolPerTimeAggregated[resultBucketRoundedKey][protocolName][methodName] = &AccumulativeStatsCounter{
-						Name:            methodName,
-						EntriesCount:    0,
-						VolumeSizeBytes: 0,
+
+				for methodName, dataOfMethod := range data.MethodsStats {
+
+					if _, ok := methodsPerProtocolPerTimeAggregated[resultBucketRoundedKey]; !ok {
+						methodsPerProtocolPerTimeAggregated[resultBucketRoundedKey] = map[string]map[string]*AccumulativeStatsCounter{}
 					}
+					if _, ok := methodsPerProtocolPerTimeAggregated[resultBucketRoundedKey][protocolName]; !ok {
+						methodsPerProtocolPerTimeAggregated[resultBucketRoundedKey][protocolName] = map[string]*AccumulativeStatsCounter{}
+					}
+					if _, ok := methodsPerProtocolPerTimeAggregated[resultBucketRoundedKey][protocolName][methodName]; !ok {
+						methodsPerProtocolPerTimeAggregated[resultBucketRoundedKey][protocolName][methodName] = &AccumulativeStatsCounter{
+							Name:            methodName,
+							EntriesCount:    0,
+							VolumeSizeBytes: 0,
+						}
+					}
+					methodsPerProtocolPerTimeAggregated[resultBucketRoundedKey][protocolName][methodName].EntriesCount += dataOfMethod.EntriesCount
+					methodsPerProtocolPerTimeAggregated[resultBucketRoundedKey][protocolName][methodName].VolumeSizeBytes += dataOfMethod.VolumeInBytes
 				}
-				methodsPerProtocolPerTimeAggregated[resultBucketRoundedKey][protocolName][methodName].EntriesCount += dataOfMethod.EntriesCount
-				methodsPerProtocolPerTimeAggregated[resultBucketRoundedKey][protocolName][methodName].VolumeSizeBytes += dataOfMethod.VolumeInBytes
 			}
 		}
-
 		bucketStatsIndex--
 	}
 
