@@ -101,6 +101,9 @@ static __always_inline void ssl_uretprobe(struct pt_regs *ctx, struct bpf_map_de
 	}
 
     int count_bytes = get_count_bytes(ctx, &info, id);
+    if (count_bytes <= 0) {
+        return;
+    }
 
 	output_ssl_chunk(ctx, &info, count_bytes, id, flags);
 }

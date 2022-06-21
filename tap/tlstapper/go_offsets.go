@@ -113,7 +113,11 @@ func getOffsets(filePath string) (offsets map[string]*goExtendedOffset, err erro
 		return
 	}
 
-	syms, err := se.Symbols()
+	var syms []elf.Symbol
+	syms, err = se.Symbols()
+	if err != nil {
+		return
+	}
 	for _, sym := range syms {
 		offset := sym.Value
 
@@ -158,7 +162,7 @@ func getOffsets(filePath string) (offsets map[string]*goExtendedOffset, err erro
 		}
 		symBytes := textSectionData[symStartingIndex:symEndingIndex]
 
-		// disasemble the symbol
+		// disassemble the symbol
 		var instructions []gapstone.Instruction
 		instructions, err = engine.Disasm(symBytes, sym.Value, 0)
 		if err != nil {

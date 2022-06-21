@@ -80,10 +80,6 @@ static __always_inline void send_chunk(struct pt_regs *ctx, __u8* buffer, __u64 
 }
 
 static __always_inline void output_ssl_chunk(struct pt_regs *ctx, struct ssl_info* info, int count_bytes, __u64 id, __u32 flags) {
-    if (count_bytes <= 0) {
-        return;
-    }
-
     if (count_bytes > (CHUNK_SIZE * MAX_CHUNKS_PER_OPERATION)) {
         log_error(ctx, LOG_ERROR_BUFFER_TOO_BIG, id, count_bytes, 0l);
         return;
