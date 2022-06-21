@@ -1,8 +1,6 @@
 package providers
 
 import (
-	"encoding/json"
-	"fmt"
 	"reflect"
 	"time"
 
@@ -47,9 +45,9 @@ type AccumulativeStatsProtocol struct {
 	Methods []*AccumulativeStatsCounter `json:"methods"`
 }
 
-type AccumulativeStatsProtocolWithTime struct {
-	ProtocolsData map[string]*AccumulativeStatsProtocol `json:"protocols"`
-	Time          int64                                 `json:"timestamp"`
+type AccumulativeStatsProtocolTime struct {
+	ProtocolsData []*AccumulativeStatsProtocol `json:"protocols"`
+	Time          int64                        `json:"timestamp"`
 }
 
 var (
@@ -121,20 +119,18 @@ func GetAccumulativeStats() []*AccumulativeStatsProtocol {
 	return finalResult
 }
 
-func GetAccumulativeStatsTiming(intervalSeconds int, numberOfBars int) []*AccumulativeStatsProtocolWithTime {
-	txt, _ := json.Marshal(bucketsStats)
-	fmt.Printf("%v\n", txt)
+func GetAccumulativeStatsTiming(intervalSeconds int, numberOfBars int) []*AccumulativeStatsProtocolTime {
 	bucketStatsCopy := BucketStats{}
 	if err := copier.Copy(&bucketStatsCopy, bucketsStats); err != nil {
 		logger.Log.Errorf("Error while copying src stats into temporary copied object")
-		return make([]*AccumulativeStatsProtocolWithTime, 0)
+		return make([]*AccumulativeStatsProtocolTime, 0)
 	}
 
 	if len(bucketStatsCopy) == 0 {
-		return make([]*AccumulativeStatsProtocolWithTime, 0)
+		return make([]*AccumulativeStatsProtocolTime, 0)
 	}
 
-	result := make(map[time.Time]*AccumulativeStatsProtocolWithTime, 0)
+	result := make(map[time.Time]map[string]*AccumulativeStatsProtocol, 0)
 	methodsPerProtocolPerTimeAggregated := make(map[time.Time]map[string]map[string]*AccumulativeStatsCounter, 0)
 	lastBucketTime := time.Now().UTC().Add(-1 * internalBucketThreshold / 2).Round(internalBucketThreshold)
 	firstBucketTime := lastBucketTime.Add(-1 * time.Second * time.Duration(intervalSeconds*numberOfBars))
@@ -146,15 +142,12 @@ func GetAccumulativeStatsTiming(intervalSeconds int, numberOfBars int) []*Accumu
 		resultBucketRoundedKey := bucketStatsCopy[bucketStatsIndex].BucketTime.Round(time.Second * time.Duration(intervalSeconds))
 
 		if _, ok := result[resultBucketRoundedKey]; !ok {
-			result[resultBucketRoundedKey] = &AccumulativeStatsProtocolWithTime{
-				Time:          resultBucketRoundedKey.UnixMilli(),
-				ProtocolsData: make(map[string]*AccumulativeStatsProtocol, 0),
-			}
+			result[resultBucketRoundedKey] = map[string]*AccumulativeStatsProtocol{}
 		}
 
 		for protocolName, data := range bucketStatsCopy[bucketStatsIndex].ProtocolStats {
-			if _, ok := result[resultBucketRoundedKey].ProtocolsData[protocolName]; !ok {
-				result[resultBucketRoundedKey].ProtocolsData[protocolName] = &AccumulativeStatsProtocol{
+			if _, ok := result[resultBucketRoundedKey][protocolName]; !ok {
+				result[resultBucketRoundedKey][protocolName] = &AccumulativeStatsProtocol{
 					AccumulativeStatsCounter: AccumulativeStatsCounter{
 						Name:            protocolName,
 						EntriesCount:    0,
@@ -166,8 +159,8 @@ func GetAccumulativeStatsTiming(intervalSeconds int, numberOfBars int) []*Accumu
 			}
 
 			for methodName, dataOfMethod := range data.MethodsStats {
-				result[resultBucketRoundedKey].ProtocolsData[protocolName].EntriesCount += dataOfMethod.EntriesCount
-				result[resultBucketRoundedKey].ProtocolsData[protocolName].VolumeSizeBytes += dataOfMethod.VolumeInBytes
+				result[resultBucketRoundedKey][protocolName].EntriesCount += dataOfMethod.EntriesCount
+				result[resultBucketRoundedKey][protocolName].VolumeSizeBytes += dataOfMethod.VolumeInBytes
 
 				if _, ok := methodsPerProtocolPerTimeAggregated[resultBucketRoundedKey]; !ok {
 					methodsPerProtocolPerTimeAggregated[resultBucketRoundedKey] = map[string]map[string]*AccumulativeStatsCounter{}
@@ -190,16 +183,26 @@ func GetAccumulativeStatsTiming(intervalSeconds int, numberOfBars int) []*Accumu
 		bucketStatsIndex--
 	}
 
-	finalResult := make([]*AccumulativeStatsProtocolWithTime, 0)
-	for _, value := range result {
-		for _, data := range methodsPerProtocolPerTimeAggregated[time.UnixMilli(value.Time)] {
+	for timeKey, item := range result {
+		for protocolName, _ := range item {
 			methods := make([]*AccumulativeStatsCounter, 0)
-			for _, item := range data {
-				methods = append(methods, item)
+			for _, methodAccData := range methodsPerProtocolPerTimeAggregated[timeKey][protocolName] {
+				methods = append(methods, methodAccData)
 			}
-			fmt.Printf("[ROEE] %+v\n", methods)
+			result[timeKey][protocolName].Methods = methods
 		}
-		// TODO: add the methods
+	}
+
+	finalResult := make([]*AccumulativeStatsProtocolTime, 0)
+	for timeKey, dataOfBucket := range result {
+		protocolStats := make([]*AccumulativeStatsProtocol, 0)
+		for _, data := range dataOfBucket {
+			protocolStats = append(protocolStats, data)
+		}
+		value := &AccumulativeStatsProtocolTime{
+			ProtocolsData: protocolStats,
+			Time:          timeKey.UnixMilli(),
+		}
 		finalResult = append(finalResult, value)
 	}
 	return finalResult
