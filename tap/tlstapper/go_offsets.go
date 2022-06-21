@@ -86,6 +86,16 @@ func getOffsets(filePath string) (offsets map[string]*goExtendedOffset, err erro
 		return
 	}
 
+	engineMajor, engineMinor := engine.Version()
+	logger.Log.Infof(
+		"Disassembling %s with Capstone %d.%d (arch: %d, mode: %d)",
+		filePath,
+		engineMajor,
+		engineMinor,
+		engine.Arch(),
+		engine.Mode(),
+	)
+
 	offsets = make(map[string]*goExtendedOffset)
 	var fd *os.File
 	fd, err = os.Open(filePath)
