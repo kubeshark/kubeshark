@@ -128,6 +128,15 @@ static __always_inline void go_crypto_tls_ex_uprobe(struct pt_regs *ctx, struct 
         return;
     }
 
+    // In case of read, the length is determined on return
+    if (flags == FLAGS_IS_READ_BIT) {
+        info.buffer_len = GO_ABI_INTERNAL_PT_REGS_R1(ctx); // n in return n, nil
+        // This check achieves ignoring 0 length reads (the reads result with an error)
+        if (info.buffer_len <= 0) {
+            return;
+        }
+    }
+
     output_ssl_chunk(ctx, &info, info.buffer_len, pid_tgid, flags);
 
     return;
