@@ -15,7 +15,6 @@ import outgoingIconFailure from "assets/outgoing-traffic-failure.svg"
 import outgoingIconNeutral from "assets/outgoing-traffic-neutral.svg"
 import {useRecoilState} from "recoil";
 import focusedEntryIdAtom from "../../recoil/focusedEntryId";
-import queryAtom from "../../recoil/query";
 
 interface TCPInterface {
     ip: string
@@ -66,7 +65,6 @@ enum CaptureTypes {
 export const EntryItem: React.FC<EntryProps> = ({entry, style, headingMode, namespace}) => {
 
     const [focusedEntryId, setFocusedEntryId] = useRecoilState(focusedEntryIdAtom);
-    const [queryState, setQuery] = useRecoilState(queryAtom);
     const isSelected = focusedEntryId === entry.id;
 
     const classification = getClassification(entry.status)

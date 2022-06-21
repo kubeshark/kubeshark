@@ -109,7 +109,7 @@ export const EntriesList: React.FC<EntriesListProps> = ({
     if (scrollTo) {
       scrollableRef.current.scrollToIndex(data.data.length - 1);
     }
-  }, [setLoadMoreTop, setIsLoadingTop, entries, setEntries, query, setNoMoreDataTop, leftOffTop, setLeftOffTop, setQueriedTotal, setTruncatedTimestamp, scrollableRef]);
+  }, [setLoadMoreTop, setIsLoadingTop, entries, setEntries, query, setNoMoreDataTop, leftOffTop, setLeftOffTop, setQueriedTotal, setTruncatedTimestamp, scrollableRef, trafficViewerApi]);
 
   useEffect(() => {
     if (!isWsConnectionClosed || !loadMoreTop || noMoreDataTop) return;
@@ -121,7 +121,7 @@ export const EntriesList: React.FC<EntriesListProps> = ({
   useEffect(() => {
     if (!focusedEntryId && entries.length > 0)
       setFocusedEntryId(entries[0].id);
-  }, [focusedEntryId, entries])
+  }, [focusedEntryId, entries, setFocusedEntryId])
 
   useEffect(() => {
     const newEntries = [...entries];
@@ -131,7 +131,7 @@ export const EntriesList: React.FC<EntriesListProps> = ({
       setNoMoreDataTop(false);
       setEntries(newEntries);
     }
-  }, [entries])
+  }, [entries, setLeftOffTop, setNoMoreDataTop, setEntries])
 
   if(ws.current && !ws.current.onmessage) {
     ws.current.onmessage = (e) => {
