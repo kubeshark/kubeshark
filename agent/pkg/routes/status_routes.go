@@ -18,7 +18,6 @@ func StatusRoutes(ginApp *gin.Engine) {
 	routeGroup.GET("/general", controllers.GetGeneralStats) // get general stats about entries in DB
 	routeGroup.GET("/accumulative", controllers.GetAccumulativeStats)
 	routeGroup.GET("/accumulativeTiming", controllers.GetAccumulativeStatsTiming)
-	routeGroup.GET("/accumulativeBoth", controllers.GetAccumulativeStatsAll)
 
 	routeGroup.GET("/resolving", controllers.GetCurrentResolvingInformation)
 }

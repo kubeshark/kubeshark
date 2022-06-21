@@ -84,17 +84,8 @@ func GetAccumulativeStats(c *gin.Context) {
 }
 
 func GetAccumulativeStatsTiming(c *gin.Context) {
+	// for now hardcoded 10 bars of 5 minutes interval
 	c.JSON(http.StatusOK, providers.GetAccumulativeStatsTiming(300, 10))
-}
-
-func GetAccumulativeStatsAll(c *gin.Context) {
-	c.JSON(http.StatusOK, struct {
-		Pie      []*providers.AccumulativeStatsProtocol     `json:"pie"`
-		Timeline []*providers.AccumulativeStatsProtocolTime `json:"timeline"`
-	}{
-		Pie:      providers.GetAccumulativeStats(),
-		Timeline: providers.GetAccumulativeStatsTiming(300, 10),
-	})
 }
 
 func GetCurrentResolvingInformation(c *gin.Context) {
