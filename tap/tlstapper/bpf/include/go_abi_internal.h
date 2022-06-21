@@ -101,7 +101,7 @@ https://github.com/golang/go/blob/go1.17.6/src/cmd/compile/internal/ssa/gen/ARM6
 #define GO_ABI_INTERNAL_PT_REGS_R4(x) ((x)->uregs[3])
 #define GO_ABI_INTERNAL_PT_REGS_R5(x) ((x)->uregs[4])
 #define GO_ABI_INTERNAL_PT_REGS_R6(x) ((x)->uregs[5])
-#define GO_ABI_INTERNAL_PT_REGS_SP(x) ((x)->uregs[14])
+#define GO_ABI_INTERNAL_PT_REGS_SP(x) ((x)->uregs[13])
 #define GO_ABI_INTERNAL_PT_REGS_FP(x) ((x)->uregs[29])
 #define GO_ABI_INTERNAL_PT_REGS_GP(x) ((x)->uregs[28])
 
@@ -116,7 +116,7 @@ struct pt_regs;
 #define GO_ABI_INTERNAL_PT_REGS_R4(x) (((PT_REGS_ARM64 *)(x))->regs[3])
 #define GO_ABI_INTERNAL_PT_REGS_R5(x) (((PT_REGS_ARM64 *)(x))->regs[4])
 #define GO_ABI_INTERNAL_PT_REGS_R6(x) (((PT_REGS_ARM64 *)(x))->regs[5])
-#define GO_ABI_INTERNAL_PT_REGS_SP(x) (((PT_REGS_ARM64 *)(x))->regs[30])
+#define GO_ABI_INTERNAL_PT_REGS_SP(x) (((PT_REGS_ARM64 *)(x))->sp)
 #define GO_ABI_INTERNAL_PT_REGS_FP(x) (((PT_REGS_ARM64 *)(x))->regs[29])
 #define GO_ABI_INTERNAL_PT_REGS_GP(x) (((PT_REGS_ARM64 *)(x))->regs[28])
 
