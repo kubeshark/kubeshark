@@ -51,6 +51,7 @@ export const TimelineBarChart: React.FC<TimelineBarChartProps> = ({timeLineBarCh
             protocolsBarsData.push(obj);
         })
         let uniqueObjArray = creatUniqueObjArray(prtcNames);
+        protocolsBarsData.sort((a, b) => a.timestamp < b.timestamp ? -1 : 1);
         setProtocolStats(protocolsBarsData);
         setProtocolsNamesAndColors(uniqueObjArray);
     }, [data,timeLineBarChartMode])
@@ -73,7 +74,7 @@ export const TimelineBarChart: React.FC<TimelineBarChartProps> = ({timeLineBarCh
                 }}
             >
                 <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="timestamp" domain={[0,10]}/>
+                <XAxis dataKey="timestamp" />
                 <YAxis tickFormatter={(value) => timeLineBarChartMode === "VOLUME" ? Utils.humanFileSize(value) : value }/>
                 <Tooltip formatter={(value) => timeLineBarChartMode === "VOLUME" ? Utils.humanFileSize(value) : value + " Requests"}/>
                 <Legend />
