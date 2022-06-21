@@ -133,7 +133,7 @@ func GetAccumulativeStatsTiming(intervalSeconds int, numberOfBars int) []*Accumu
 	result := make(map[time.Time]map[string]*AccumulativeStatsProtocol, 0)
 	methodsPerProtocolPerTimeAggregated := make(map[time.Time]map[string]map[string]*AccumulativeStatsCounter, 0)
 	lastBucketTime := time.Now().UTC().Add(-1 * internalBucketThreshold / 2).Round(internalBucketThreshold)
-	firstBucketTime := lastBucketTime.Add(-1 * time.Second * time.Duration(intervalSeconds*numberOfBars))
+	firstBucketTime := lastBucketTime.Add(-1 * time.Second * time.Duration(intervalSeconds*numberOfBars-1))
 	bucketStatsIndex := len(bucketStatsCopy) - 1
 
 	for bucketStatsIndex >= 0 && (bucketStatsCopy[bucketStatsIndex].BucketTime.Before(lastBucketTime) || bucketStatsCopy[bucketStatsIndex].BucketTime.Equal(lastBucketTime)) &&
@@ -184,7 +184,7 @@ func GetAccumulativeStatsTiming(intervalSeconds int, numberOfBars int) []*Accumu
 	}
 
 	for timeKey, item := range result {
-		for protocolName, _ := range item {
+		for protocolName := range item {
 			methods := make([]*AccumulativeStatsCounter, 0)
 			for _, methodAccData := range methodsPerProtocolPerTimeAggregated[timeKey][protocolName] {
 				methods = append(methods, methodAccData)
