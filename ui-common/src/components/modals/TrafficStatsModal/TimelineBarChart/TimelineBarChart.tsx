@@ -40,7 +40,7 @@ export const TimelineBarChart: React.FC<TimelineBarChartProps> = ({ timeLineBarC
         if (!data) return;
         const protocolsBarsData = [];
         const prtcNames = [];
-        data.map(protocolObj => {
+        data.forEach(protocolObj => {
             let obj: { [k: string]: any } = {};
             obj.timestamp = getHoursAndMinutes(protocolObj.timestamp);
             protocolObj.protocols.forEach(protocol => {
