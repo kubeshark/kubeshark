@@ -8,7 +8,7 @@ require (
 	github.com/go-errors/errors v1.4.2
 	github.com/google/gopacket v1.1.19
 	github.com/hashicorp/golang-lru v0.5.4
-	github.com/knightsc/gapstone v0.0.0-20211014144438-5e0e64002a6e
+	github.com/knightsc/gapstone v0.0.0-20191231144527-6fa5afaf11a9
 	github.com/shirou/gopsutil v3.21.11+incompatible
 	github.com/struCoder/pidusage v0.2.1
 	github.com/up9inc/mizu/logger v0.0.0
