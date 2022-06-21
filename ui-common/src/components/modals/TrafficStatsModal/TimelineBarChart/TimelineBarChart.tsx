@@ -1,12 +1,11 @@
 import styles from "./TimelineBarChart.module.sass";
-import {StatsMode} from "../TrafficStatsModal"
-import React, { useEffect, useMemo, useState } from "react";
+import { StatsMode } from "../TrafficStatsModal"
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import {
     BarChart,
     Bar,
     XAxis,
     YAxis,
-    CartesianGrid,
     Tooltip,
     Legend
 } from "recharts";
@@ -17,47 +16,47 @@ interface TimelineBarChartProps {
     data: any;
 }
 
-export const TimelineBarChart: React.FC<TimelineBarChartProps> = ({timeLineBarChartMode, data}) => {
+export const TimelineBarChart: React.FC<TimelineBarChartProps> = ({ timeLineBarChartMode, data }) => {
     const [protocolStats, setProtocolStats] = useState([]);
     const [protocolsNamesAndColors, setProtocolsNamesAndColors] = useState([]);
 
-    const padTo2Digits = (num) => {
+    const padTo2Digits = useCallback((num) => {
         return String(num).padStart(2, '0');
-    }
+    }, [])
 
-    const getHoursAndMinutes = (protocolTimeKey) => {
+    const getHoursAndMinutes = useCallback((protocolTimeKey) => {
         const time = new Date(protocolTimeKey)
         const hoursAndMinutes = padTo2Digits(time.getHours()) + ':' + padTo2Digits(time.getMinutes());
         return hoursAndMinutes;
-    }
+    }, [padTo2Digits])
 
-    const creatUniqueObjArray = (objArray) => {
+    const creatUniqueObjArray = useCallback((objArray) => {
         return [
             ...new Map(objArray.map((item) => [item["name"], item])).values(),
         ];
-    }
+    }, [])
 
     useEffect(() => {
         if (!data) return;
-        let protocolsBarsData = [];
-        let prtcNames = [];
+        const protocolsBarsData = [];
+        const prtcNames = [];
         data.map(protocolObj => {
             let obj: { [k: string]: any } = {};
             obj.timestamp = getHoursAndMinutes(protocolObj.timestamp);
-            protocolObj.protocols.map(protocol => {
+            protocolObj.protocols.forEach(protocol => {
                 obj[`${protocol.name}`] = protocol[StatsMode[timeLineBarChartMode]];
-                prtcNames.push({name: protocol.name, color: protocol.color});
+                prtcNames.push({ name: protocol.name, color: protocol.color });
             })
             protocolsBarsData.push(obj);
         })
-        let uniqueObjArray = creatUniqueObjArray(prtcNames);
+        const uniqueObjArray = creatUniqueObjArray(prtcNames);
         protocolsBarsData.sort((a, b) => a.timestamp < b.timestamp ? -1 : 1);
         setProtocolStats(protocolsBarsData);
         setProtocolsNamesAndColors(uniqueObjArray);
-    }, [data,timeLineBarChartMode])
+    }, [data, timeLineBarChartMode, setProtocolStats, setProtocolsNamesAndColors, creatUniqueObjArray, getHoursAndMinutes])
 
-    const bars = useMemo(() => protocolsNamesAndColors.map((protoclToDIsplay) => {
-        return <Bar key={protoclToDIsplay.name} dataKey={protoclToDIsplay.name} stackId="a" fill={protoclToDIsplay.color} />
+    const bars = useMemo(() => protocolsNamesAndColors.map((protocolToDIsplay) => {
+        return <Bar key={protocolToDIsplay.name} dataKey={protocolToDIsplay.name} stackId="a" fill={protocolToDIsplay.color} />
     }), [protocolsNamesAndColors])
 
     return (
@@ -74,8 +73,8 @@ export const TimelineBarChart: React.FC<TimelineBarChartProps> = ({timeLineBarCh
                 }}
             >
                 <XAxis dataKey="timestamp" />
-                <YAxis tickFormatter={(value) => timeLineBarChartMode === "VOLUME" ? Utils.humanFileSize(value) : value }/>
-                <Tooltip formatter={(value) => timeLineBarChartMode === "VOLUME" ? Utils.humanFileSize(value) : value + " Requests"}/>
+                <YAxis tickFormatter={(value) => timeLineBarChartMode === "VOLUME" ? Utils.humanFileSize(value) : value} />
+                <Tooltip formatter={(value) => timeLineBarChartMode === "VOLUME" ? Utils.humanFileSize(value) : value + " Requests"} />
                 <Legend />
                 {bars}
             </BarChart>

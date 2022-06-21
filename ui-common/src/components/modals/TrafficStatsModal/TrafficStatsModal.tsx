@@ -20,7 +20,6 @@ const modalStyle = {
   color: '#000',
 };
 
-
 export enum StatsMode {
   REQUESTS = "entriesCount",
   VOLUME = "volumeSizeBytes"
@@ -48,8 +47,8 @@ export const TrafficStatsModal: React.FC<TrafficStatsModalProps> = ({ isOpen, on
           setIsLoading(true);
           const pieData = await getPieStatsDataApi();
           setPieStatsData(pieData);
-          const timelineDta = await getTimelineStatsDataApi();
-          setTimelineStatsData(timelineDta);
+          const timelineData = await getTimelineStatsDataApi();
+          setTimelineStatsData(timelineData);
         } catch (e) {
           console.error(e)
         } finally {
@@ -57,7 +56,7 @@ export const TrafficStatsModal: React.FC<TrafficStatsModalProps> = ({ isOpen, on
         }
       })()
     }
-  }, [isOpen, getPieStatsDataApi])
+  }, [isOpen, getPieStatsDataApi, getTimelineStatsDataApi, setPieStatsData, setTimelineStatsData])
 
   return (
     <Modal
@@ -82,12 +81,14 @@ export const TrafficStatsModal: React.FC<TrafficStatsModalProps> = ({ isOpen, on
               </select>
             </div>
             <div>
-            {isLoading ? <div style={{ textAlign: "center", marginTop: 20 }}>
-              <img alt="spinner" src={spinnerImg} style={{ height: 50 }} />
-            </div> : <div><TrafficPieChart pieChartMode={statsMode} data={pieStatsData} /> </div>}
-            {isLoading ? <div style={{ textAlign: "center", marginTop: 20 }}>
-              <img alt="spinner" src={spinnerImg} style={{ height: 50 }} />
-            </div> : <div> <TimelineBarChart timeLineBarChartMode={statsMode} data={timelineStatsData} /> </div>}
+              {isLoading ? <div style={{ textAlign: "center", marginTop: 20 }}>
+                <img alt="spinner" src={spinnerImg} style={{ height: 50 }} />
+              </div> : <React.Fragment>
+                <div>
+                  <TrafficPieChart pieChartMode={statsMode} data={pieStatsData} />
+                  <TimelineBarChart timeLineBarChartMode={statsMode} data={timelineStatsData} />
+                </div>
+              </React.Fragment>}
             </div>
           </div>
         </Box>
