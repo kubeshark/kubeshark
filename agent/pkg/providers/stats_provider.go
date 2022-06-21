@@ -139,7 +139,7 @@ func ConvertToPieData(methodsPerProtocolAggregated map[string]map[string]*Accumu
 
 func GetAccumulativeStatsTiming(intervalSeconds int, numberOfBars int) []*AccumulativeStatsProtocolTime {
 	bucketStatsCopy := getBucketStatsCopy()
-	if bucketStatsCopy == nil || len(bucketStatsCopy) == 0 {
+	if len(bucketStatsCopy) == 0 {
 		return make([]*AccumulativeStatsProtocolTime, 0)
 	}
 
