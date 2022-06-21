@@ -83,12 +83,11 @@ export const TrafficStatsModal: React.FC<TrafficStatsModalProps> = ({ isOpen, on
             <div>
               {isLoading ? <div style={{ textAlign: "center", marginTop: 20 }}>
                 <img alt="spinner" src={spinnerImg} style={{ height: 50 }} />
-              </div> : <React.Fragment>
+              </div> : 
                 <div>
                   <TrafficPieChart pieChartMode={statsMode} data={pieStatsData} />
                   <TimelineBarChart timeLineBarChartMode={statsMode} data={timelineStatsData} />
-                </div>
-              </React.Fragment>}
+                </div>}
             </div>
           </div>
         </Box>
