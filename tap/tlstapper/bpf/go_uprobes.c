@@ -140,7 +140,7 @@ static __always_inline void go_crypto_tls_ex_uprobe(struct pt_regs *ctx, struct 
     // In case of read, the length is determined on return
     if (flags == FLAGS_IS_READ_BIT) {
 #if defined(bpf_target_arm64)
-        info.buffer_len = GO_ABI_INTERNAL_PT_REGS_R4(ctx); // n in return n, nil
+        info.buffer_len = GO_ABI_INTERNAL_PT_REGS_R7(ctx); // n in return n, nil
 #else
         info.buffer_len = GO_ABI_INTERNAL_PT_REGS_R1(ctx); // n in return n, nil
 #endif
