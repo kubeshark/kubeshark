@@ -1,5 +1,18 @@
 FROM messense/rust-musl-cross:x86_64-musl AS builder-from-arm64v8-to-amd64
 
+WORKDIR /
+
+# Install eBPF related dependencies
+RUN apt-get update
+RUN apt-get -y install clang llvm libelf-dev pkg-config
+
+# Build and install libbpf from source
+RUN curl https://github.com/libbpf/libbpf/archive/refs/tags/v0.8.0.tar.gz -Lo ./libbpf.tar.gz \
+ && tar -xzf libbpf.tar.gz && mv ./libbpf-* ./libbpf
+WORKDIR /libbpf/src
+RUN make && make install
+WORKDIR /
+
 ENV CROSS_TRIPLE x86_64-unknown-linux-musl
 ENV CROSS_ROOT /usr/local/musl
 
@@ -12,7 +25,6 @@ ENV AS=${CROSS_ROOT}/bin/${CROSS_TRIPLE}-as \
     FC=${CROSS_ROOT}/bin/${CROSS_TRIPLE}-gfortran
 
 # Install Go
-WORKDIR /
 RUN curl https://go.dev/dl/go1.17.6.linux-arm64.tar.gz -Lo ./go.linux-arm64.tar.gz \
  && curl https://go.dev/dl/go1.17.6.linux-arm64.tar.gz.asc -Lo ./go.linux-arm64.tar.gz.asc \
  && curl https://dl.google.com/dl/linux/linux_signing_key.pub  -Lo linux_signing_key.pub \
@@ -35,5 +47,5 @@ WORKDIR /
 RUN curl https://github.com/capstone-engine/capstone/archive/4.0.2.tar.gz -Lo ./capstone.tar.gz \
  && tar -xzf capstone.tar.gz && mv ./capstone-* ./capstone
 WORKDIR /capstone
-RUN ./make.sh \
+RUN CAPSTONE_ARCHS="x86" CAPSTONE_STATIC=yes ./make.sh \
  && cp /capstone/libcapstone.a /usr/local/musl/lib/gcc/x86_64-unknown-linux-musl/*/

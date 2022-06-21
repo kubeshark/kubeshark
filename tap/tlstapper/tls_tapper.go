@@ -12,7 +12,7 @@ import (
 
 const GlobalTapPid = 0
 
-//go:generate go run github.com/cilium/ebpf/cmd/bpf2go@0d0727ef53e2f53b1731c73f4c61e0f58693083a -type tls_chunk tlsTapper bpf/tls_tapper.c -- -O2 -g -D__TARGET_ARCH_x86
+//go:generate go run github.com/cilium/ebpf/cmd/bpf2go@0d0727ef53e2f53b1731c73f4c61e0f58693083a -target $BPF_TARGET -cflags $BPF_CFLAGS -type tls_chunk tlsTapper bpf/tls_tapper.c
 
 type TlsTapper struct {
 	bpfObjects      tlsTapperObjects
@@ -161,13 +161,14 @@ func setupRLimit() error {
 }
 
 func (t *TlsTapper) tapSSLLibPid(pid uint32, sslLibrary string, namespace string) error {
-	logger.Log.Infof("Tapping TLS (pid: %v) (sslLibrary: %v)", pid, sslLibrary)
 
 	newSsl := sslHooks{}
 
 	if err := newSsl.installUprobes(&t.bpfObjects, sslLibrary); err != nil {
 		return err
 	}
+
+	logger.Log.Infof("Tapping TLS (pid: %v) (sslLibrary: %v)", pid, sslLibrary)
 
 	t.sslHooksStructs = append(t.sslHooksStructs, newSsl)
 
