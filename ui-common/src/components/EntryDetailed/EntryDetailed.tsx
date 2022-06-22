@@ -13,6 +13,7 @@ import queryAtom from "../../recoil/query/atom";
 import useWindowDimensions, { useRequestTextByWidth } from "../../hooks/WindowDimensionsHook";
 import { TOAST_CONTAINER_ID } from "../../configs/Consts";
 import spinner from "assets/spinner.svg";
+import ReplayRequestModal from "../modals/ReplayRequestModal/ReplayRequestModal";
 
 const useStyles = makeStyles(() => ({
     entryTitle: {
@@ -39,6 +40,7 @@ const useStyles = makeStyles(() => ({
 export const formatSize = (n: number) => n > 1000 ? `${Math.round(n / 1000)}KB` : `${n} B`;
 const minSizeDisplayRequestSize = 880;
 const EntryTitle: React.FC<any> = ({ protocol, data, elapsedTime }) => {
+    const [isOpenRequestModal, setIsOpenRequestModal] = useState(false)
     const classes = useStyles();
     const request = data.request;
     const response = data.response;
@@ -85,7 +87,9 @@ const EntryTitle: React.FC<any> = ({ protocol, data, elapsedTime }) => {
                     {`${elapsedTimeText}${Math.round(elapsedTime)}ms`}
                 </div>
             </Queryable>}
+            <button onClick={() => setIsOpenRequestModal(true)}>Replay</button>
         </div>}
+        <ReplayRequestModal request={request} isOpen={isOpenRequestModal} onClose={() => setIsOpenRequestModal(false)} />
     </div>;
 };
 

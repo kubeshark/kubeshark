@@ -8,7 +8,7 @@ enum SectionTypes {
     SectionBody = "body",
 }
 
-const SectionsRepresentation: React.FC<any> = ({data, color}) => {
+export const SectionsRepresentation: React.FC<any> = ({data, color}) => {
     const sections = []
 
     if (data) {
