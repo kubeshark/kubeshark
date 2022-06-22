@@ -60,7 +60,18 @@ Capstone Engine: https://www.capstone-engine.org/
 
 static __always_inline __u32 go_crypto_tls_get_fd_from_tcp_conn(struct pt_regs *ctx) {
     struct go_interface conn;
-    long err = bpf_probe_read(&conn, sizeof(conn), (void*)GO_ABI_INTERNAL_PT_REGS_R1(ctx));
+    long err;
+    __u64 addr;
+#if defined(bpf_target_arm64)
+    err = bpf_probe_read(&addr, sizeof(addr), (void*)GO_ABI_INTERNAL_PT_REGS_SP(ctx)+0x8);
+    if (err != 0) {
+        return invalid_fd;
+    }
+#else
+    addr = GO_ABI_INTERNAL_PT_REGS_R1(ctx);
+#endif
+
+    err = bpf_probe_read(&conn, sizeof(conn), (void*)addr);
     if (err != 0) {
         return invalid_fd;
     }
@@ -140,6 +151,10 @@ static __always_inline void go_crypto_tls_ex_uprobe(struct pt_regs *ctx, struct 
     // In case of read, the length is determined on return
     if (flags == FLAGS_IS_READ_BIT) {
 #if defined(bpf_target_arm64)
+        // On ARM64 we look at a general-purpose register as an indicator of error return
+        if (GO_ABI_INTERNAL_PT_REGS_R6(ctx) == 0x10) {
+            return;
+        }
         info.buffer_len = GO_ABI_INTERNAL_PT_REGS_R7(ctx); // n in return n, nil
 #else
         info.buffer_len = GO_ABI_INTERNAL_PT_REGS_R1(ctx); // n in return n, nil
