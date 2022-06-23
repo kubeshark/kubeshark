@@ -58,9 +58,8 @@ echo "Creating rabbitmq service"
 kubectl expose deployment rabbitmq --type=LoadBalancer --port=5672 -n mizu-tests --dry-run=client -o yaml | kubectl apply -f -
 
 echo "Starting proxy"
-pkill -9 -f "kubectl proxy"
 rm -f ${PROXY_LOG}
-kubectl proxy --port=8008 >  ${PROXY_LOG} &
+kubectl proxy --port=8080 >  ${PROXY_LOG} &
 PID1=$!
 echo "kubectl proxy process id is ${PID1} and log of proxy in ${PROXY_LOG}"
 
@@ -79,7 +78,6 @@ echo "Build cli"
 cd cli && make build GIT_BRANCH=ci SUFFIX=ci
 
 echo "Starting tunnel"
-pkill -9 -f "minikube tunnel"
 rm -f ${TUNNEL_LOG}
 minikube tunnel > ${TUNNEL_LOG} &
 PID2=$!
