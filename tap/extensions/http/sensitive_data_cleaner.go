@@ -66,7 +66,7 @@ func filterRequestBody(request *http.Request, options *api.TrafficFilteringOptio
 	if err != nil {
 		return
 	}
-	filteredBody, err := filterHttpBody([]byte(body), contenType, options)
+	filteredBody, err := filterHttpBody(body, contenType, options)
 	if err == nil {
 		request.Body = ioutil.NopCloser(bytes.NewBuffer(filteredBody))
 	} else {
@@ -80,7 +80,7 @@ func filterResponseBody(response *http.Response, options *api.TrafficFilteringOp
 	if err != nil {
 		return
 	}
-	filteredBody, err := filterHttpBody([]byte(body), contentType, options)
+	filteredBody, err := filterHttpBody(body, contentType, options)
 	if err == nil {
 		response.Body = ioutil.NopCloser(bytes.NewBuffer(filteredBody))
 	} else {

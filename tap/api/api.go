@@ -20,9 +20,9 @@ import (
 )
 
 const mizuTestEnvVar = "MIZU_TEST"
-const UNKNOWN_NAMESPACE = ""
+const UnknownNamespace = ""
 
-var UnknownIp net.IP = net.IP{0, 0, 0, 0}
+var UnknownIp = net.IP{0, 0, 0, 0}
 var UnknownPort uint16 = 0
 
 type Protocol struct {

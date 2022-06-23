@@ -14,7 +14,7 @@ import (
 	"github.com/up9inc/mizu/tap/api"
 )
 
-var http10protocol api.Protocol = api.Protocol{
+var http10protocol = api.Protocol{
 	Name:            "http",
 	LongName:        "Hypertext Transfer Protocol -- HTTP/1.0",
 	Abbreviation:    "HTTP",
@@ -28,7 +28,7 @@ var http10protocol api.Protocol = api.Protocol{
 	Priority:        0,
 }
 
-var http11protocol api.Protocol = api.Protocol{
+var http11protocol = api.Protocol{
 	Name:            "http",
 	LongName:        "Hypertext Transfer Protocol -- HTTP/1.1",
 	Abbreviation:    "HTTP",
@@ -42,7 +42,7 @@ var http11protocol api.Protocol = api.Protocol{
 	Priority:        0,
 }
 
-var http2Protocol api.Protocol = api.Protocol{
+var http2Protocol = api.Protocol{
 	Name:            "http",
 	LongName:        "Hypertext Transfer Protocol Version 2 (HTTP/2)",
 	Abbreviation:    "HTTP/2",
@@ -56,7 +56,7 @@ var http2Protocol api.Protocol = api.Protocol{
 	Priority:        0,
 }
 
-var grpcProtocol api.Protocol = api.Protocol{
+var grpcProtocol = api.Protocol{
 	Name:            "http",
 	LongName:        "Hypertext Transfer Protocol Version 2 (HTTP/2) [ gRPC over HTTP/2 ]",
 	Abbreviation:    "gRPC",
@@ -70,7 +70,7 @@ var grpcProtocol api.Protocol = api.Protocol{
 	Priority:        0,
 }
 
-var graphQL1Protocol api.Protocol = api.Protocol{
+var graphQL1Protocol = api.Protocol{
 	Name:            "http",
 	LongName:        "Hypertext Transfer Protocol -- HTTP/1.1 [ GraphQL over HTTP/1.1 ]",
 	Abbreviation:    "GQL",
@@ -84,7 +84,7 @@ var graphQL1Protocol api.Protocol = api.Protocol{
 	Priority:        0,
 }
 
-var graphQL2Protocol api.Protocol = api.Protocol{
+var graphQL2Protocol = api.Protocol{
 	Name:            "http",
 	LongName:        "Hypertext Transfer Protocol Version 2 (HTTP/2) [ GraphQL over HTTP/2 ]",
 	Abbreviation:    "GQL",

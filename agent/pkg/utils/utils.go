@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"net/url"
 	"os"
 	"os/signal"
 	"syscall"
@@ -57,17 +56,6 @@ func CheckErr(e error) {
 	if e != nil {
 		logger.Log.Errorf("%v", e)
 	}
-}
-
-func SetHostname(address, newHostname string) string {
-	replacedUrl, err := url.Parse(address)
-	if err != nil {
-		logger.Log.Errorf("error replacing hostname to %s in address %s, returning original %v", newHostname, address, err)
-		return address
-	}
-	replacedUrl.Host = newHostname
-	return replacedUrl.String()
-
 }
 
 func ReadJsonFile(filePath string, value interface{}) error {

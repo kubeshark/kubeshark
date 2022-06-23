@@ -10,7 +10,7 @@ import (
 	"github.com/up9inc/mizu/tap/api"
 )
 
-var protocol api.Protocol = api.Protocol{
+var protocol = api.Protocol{
 	Name:            "redis",
 	LongName:        "Redis Serialization Protocol",
 	Abbreviation:    "REDIS",
