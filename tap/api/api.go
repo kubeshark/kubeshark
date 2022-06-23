@@ -9,7 +9,6 @@ import (
 	"github.com/up9inc/mizu/tap/dbgctl"
 )
 
-const mizuTestEnvVar = "MIZU_TEST"
 const UnknownNamespace = ""
 
 var UnknownIp = net.IP{0, 0, 0, 0}
