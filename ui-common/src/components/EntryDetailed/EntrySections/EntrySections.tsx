@@ -364,20 +364,3 @@ export const EntryTablePolicySection: React.FC<EntryPolicySectionProps> = ({ tit
         }
     </React.Fragment>
 }
-
-interface EntryContractSectionProps {
-    color: string,
-    requestReason: string,
-    responseReason: string,
-}
-
-export const EntryContractSection: React.FC<EntryContractSectionProps> = ({ color, requestReason, responseReason }) => {
-    return <React.Fragment>
-        {requestReason && <EntrySectionContainer title="Request" color={color}>
-            {requestReason}
-        </EntrySectionContainer>}
-        {responseReason && <EntrySectionContainer title="Response" color={color}>
-            {responseReason}
-        </EntrySectionContainer>}
-    </React.Fragment>
-}
