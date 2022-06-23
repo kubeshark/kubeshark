@@ -81,24 +81,4 @@ func TestEntryAddedVolume(t *testing.T) {
 			}
 		})
 	}
-
-}
-
-func TestGetBucketOfTimeStamp(t *testing.T) {
-	tests := map[int64]time.Time{
-		time.Date(2022, time.Month(1), 1, 10, 34, 45, 0, time.Local).UnixMilli(): time.Date(2022, time.Month(1), 1, 10, 34, 00, 0, time.Local),
-		time.Date(2022, time.Month(1), 1, 10, 34, 00, 0, time.Local).UnixMilli(): time.Date(2022, time.Month(1), 1, 10, 34, 00, 0, time.Local),
-		time.Date(2022, time.Month(1), 1, 10, 59, 01, 0, time.Local).UnixMilli(): time.Date(2022, time.Month(1), 1, 10, 59, 00, 0, time.Local),
-	}
-
-	for key, value := range tests {
-		t.Run(fmt.Sprintf("%v", key), func(t *testing.T) {
-
-			actual := providers.GetBucketOfTimeStamp(key)
-
-			if actual != value {
-				t.Errorf("unexpected result - expected: %v, actual: %v", value, actual)
-			}
-		})
-	}
 }
