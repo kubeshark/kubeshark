@@ -38,7 +38,6 @@ interface Entry {
     isOutgoing?: boolean;
     latency: number;
     rules: Rules;
-    contractStatus: number,
 }
 
 interface Rules {
@@ -117,26 +116,6 @@ export const EntryItem: React.FC<EntryProps> = ({entry, style, headingMode, name
         }
     }
 
-    let contractEnabled = true;
-    let contractText = "";
-    switch (entry.contractStatus) {
-        case 0:
-            contractEnabled = false;
-            break;
-        case 1:
-            additionalRulesProperties = styles.ruleSuccessRow
-            ruleSuccess = true
-            contractText = "No Breaches"
-            break;
-        case 2:
-            additionalRulesProperties = styles.ruleFailureRow
-            ruleSuccess = false
-            contractText = "Breach"
-            break;
-        default:
-            break;
-    }
-
 
     const isStatusCodeEnabled = ((entry.proto.name === "http" && "status" in entry) || entry.status !== 0);
 
@@ -144,7 +123,7 @@ export const EntryItem: React.FC<EntryProps> = ({entry, style, headingMode, name
         <div
             id={`entry-${entry.id}`}
             className={`${styles.row}
-            ${isSelected && !rule && !contractEnabled ? styles.rowSelected : additionalRulesProperties}`}
+            ${isSelected && !rule ? styles.rowSelected : additionalRulesProperties}`}
             onClick={() => {
                 if (!setFocusedEntryId) return;
                 setFocusedEntryId(entry.id);
@@ -210,15 +189,8 @@ export const EntryItem: React.FC<EntryProps> = ({entry, style, headingMode, name
             </div>
             {
                 rule ?
-                    <div className={`${styles.ruleNumberText} ${ruleSuccess ? styles.ruleNumberTextSuccess : styles.ruleNumberTextFailure} ${rule && contractEnabled ? styles.separatorRight : ""}`}>
+                    <div className={`${styles.ruleNumberText} ${ruleSuccess ? styles.ruleNumberTextSuccess : styles.ruleNumberTextFailure} ${rule ? styles.separatorRight : ""}`}>
                         {`Rules (${numberOfRules})`}
-                    </div>
-                : ""
-            }
-            {
-                contractEnabled ?
-                    <div className={`${styles.ruleNumberText} ${ruleSuccess ? styles.ruleNumberTextSuccess : styles.ruleNumberTextFailure} ${rule && contractEnabled ? styles.separatorLeft : ""}`}>
-                        {contractText}
                     </div>
                 : ""
             }

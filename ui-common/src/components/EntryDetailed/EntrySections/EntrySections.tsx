@@ -369,22 +369,15 @@ interface EntryContractSectionProps {
     color: string,
     requestReason: string,
     responseReason: string,
-    contractContent: string,
 }
 
-export const EntryContractSection: React.FC<EntryContractSectionProps> = ({ color, requestReason, responseReason, contractContent }) => {
+export const EntryContractSection: React.FC<EntryContractSectionProps> = ({ color, requestReason, responseReason }) => {
     return <React.Fragment>
         {requestReason && <EntrySectionContainer title="Request" color={color}>
             {requestReason}
         </EntrySectionContainer>}
         {responseReason && <EntrySectionContainer title="Response" color={color}>
             {responseReason}
-        </EntrySectionContainer>}
-        {contractContent && <EntrySectionContainer title="Contract" color={color}>
-            <SyntaxHighlighter
-                code={contractContent}
-                language={"yaml"}
-            />
         </EntrySectionContainer>}
     </React.Fragment>
 }
