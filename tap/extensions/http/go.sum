@@ -15,8 +15,6 @@ github.com/mertyildiran/gqlparser/v2 v2.4.6 h1:enAq4F5PYgW/rYExPNzYt7IYrrZnzrfqd
 github.com/mertyildiran/gqlparser/v2 v2.4.6/go.mod h1:XZId58F+XqRSmoLrdsOLgqA918oNvBzuOORruJWBjDo=
 github.com/pmezard/go-difflib v1.0.0 h1:4DBwDE0NGyQoBHbLQYPwSUPoCMWR5BEzIk/f1lZbAQM=
 github.com/pmezard/go-difflib v1.0.0/go.mod h1:iKH77koFhYxTK1pcRnkKkqfTogsbg7gZNVY4sRDYZ/4=
-github.com/romana/rlog v0.0.0-20220412051723-c08f605858a9 h1:8tVb/1pwM1HrrK4HuBJIWREOSJ5Z1oouS6nilsXrL+Q=
-github.com/romana/rlog v0.0.0-20220412051723-c08f605858a9/go.mod h1:kPzumBKm/AKQWtDbtf8w0s/R+LwoYT1rTjsOYGcS82k=
 github.com/stretchr/objx v0.1.0/go.mod h1:HFkY916IF+rwdDfMAkV7OtwuqBVzrE8GR6GFx+wExME=
 github.com/stretchr/testify v1.7.0 h1:nwc3DEeHmmLAfoZucVR881uASk0Mfjw8xYJ99tb5CcY=
 github.com/stretchr/testify v1.7.0/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
