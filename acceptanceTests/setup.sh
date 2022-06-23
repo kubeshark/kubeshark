@@ -59,7 +59,7 @@ kubectl expose deployment rabbitmq --type=LoadBalancer --port=5672 -n mizu-tests
 
 echo "Starting proxy"
 rm -f ${PROXY_LOG}
-kubectl proxy --port=8080 >  ${PROXY_LOG} &
+kubectl proxy --port=8080 > ${PROXY_LOG} &
 PID1=$!
 echo "kubectl proxy process id is ${PID1} and log of proxy in ${PROXY_LOG}"
 
