@@ -1,3 +1,5 @@
+@import '../../../variables.module'
+
 .tryNowHeadersContainer
   width: 100%
   background-color: inherit
@@ -13,7 +15,7 @@
     align-items: center
 
 .roundInputContainer
-  background-color: rgba(255, 255, 255, 0.06)
+  background-color: $main-background-color
   border-radius: 15px
   margin-right: 5px
   padding: 5px
@@ -21,29 +23,8 @@
   input
     border: none
     outline: none
-    color: white
     background-color: transparent
-    width: 100%
-
-.urlSection
-  display: flex
-  align-items: center
-  margin: 0 15px 15px
-
-  span
-    margin-right: 10px
+    color: $light-gray
+    font-size: 15px
     font-weight: 600
-    width: 100px
-
-  .urlParam
-    width: 30%
-    padding: 6px 7px
-    overflow: hidden
-    text-overflow: ellipsis
-    background-color: transparent
-    color: rgba(255, 255, 255, 0.5)
-
-  .urlPath
-    width: calc(80% - 15px)
-    background: transparent
-    color: rgba(255, 255, 255, 0.5)
+    width: 100%

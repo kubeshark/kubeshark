@@ -1,13 +1,36 @@
 @import '../ServiceMapModal/ServiceMapModal.module'
 @import '../../../variables.module'
 
+
+
 .modalContainer
     flex-direction: column
+    margin: 0 $modalMargin-from-edge
+    padding: 0
+
 .path
     display: flex
 
-.tabContent
-    background-color: black
-    max-height: 30%
-    overflow: hidden
+    input
+        border-radius: 0 5px 5px 0
+        flex: 1
+        font-size: 15px
+        color: unset
+        border-left-width: 0px
+        text-indent: 5px
 
+    select
+        border-radius: 5px 0 0 5px
+        text-transform: uppercase
+        flex: 0 0 90px
+        text-align: center
+        font-size: 15px
+        font-weight: 600
+.tabs
+    margin-top: 25px
+
+.tabContent
+    background-color: $content-section-color
+    height: 30%
+    border-radius: 5px
+    margin-top: 15px

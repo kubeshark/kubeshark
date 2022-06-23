@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useCallback, useEffect, useState } from "react";
 import EntryViewer from "./EntryViewer/EntryViewer";
 import { EntryItem } from "../EntryListItem/EntryListItem";
 import makeStyles from '@mui/styles/makeStyles';
@@ -13,6 +13,7 @@ import queryAtom from "../../recoil/query/atom";
 import useWindowDimensions, { useRequestTextByWidth } from "../../hooks/WindowDimensionsHook";
 import { TOAST_CONTAINER_ID } from "../../configs/Consts";
 import spinner from "assets/spinner.svg";
+import playIcon from 'assets/run.svg';
 import ReplayRequestModal from "../modals/ReplayRequestModal/ReplayRequestModal";
 
 const useStyles = makeStyles(() => ({
@@ -37,6 +38,8 @@ const useStyles = makeStyles(() => ({
     }
 }));
 
+const enabledProtocolsForReplay = ["http"]
+
 export const formatSize = (n: number) => n > 1000 ? `${Math.round(n / 1000)}KB` : `${n} B`;
 const minSizeDisplayRequestSize = 880;
 const EntryTitle: React.FC<any> = ({ protocol, data, elapsedTime }) => {
@@ -47,6 +50,9 @@ const EntryTitle: React.FC<any> = ({ protocol, data, elapsedTime }) => {
 
     const { width } = useWindowDimensions();
     const { requestText, responseText, elapsedTimeText } = useRequestTextByWidth(width)
+    const isReplayAllowed = useCallback(() => {
+        return enabledProtocolsForReplay.find(x => x === protocol.name)
+    }, [protocol])
 
     return <div className={classes.entryTitle}>
         <Protocol protocol={protocol} horizontal={true} />
@@ -87,7 +93,7 @@ const EntryTitle: React.FC<any> = ({ protocol, data, elapsedTime }) => {
                     {`${elapsedTimeText}${Math.round(elapsedTime)}ms`}
                 </div>
             </Queryable>}
-            <button onClick={() => setIsOpenRequestModal(true)}>Replay</button>
+            {isReplayAllowed() && <img title="Replay Request" src={playIcon} style={{ marginLeft: "10px", cursor: "pointer" }} onClick={() => setIsOpenRequestModal(true)} alt="Replay Request" />}
         </div>}
         <ReplayRequestModal request={request} isOpen={isOpenRequestModal} onClose={() => setIsOpenRequestModal(false)} />
     </div>;
