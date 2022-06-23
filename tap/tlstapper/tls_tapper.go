@@ -123,31 +123,31 @@ func (t *TlsTapper) ClearPids() {
 }
 
 func (t *TlsTapper) Close() []error {
-	errorsResult := make([]error, 0)
+	returnValue := make([]error, 0)
 
 	if err := t.bpfObjects.Close(); err != nil {
-		errorsResult = append(errorsResult, err)
+		returnValue = append(returnValue, err)
 	}
 
-	errorsResult = append(errorsResult, t.syscallHooks.close()...)
+	returnValue = append(returnValue, t.syscallHooks.close()...)
 
 	for _, sslHooks := range t.sslHooksStructs {
-		errorsResult = append(errorsResult, sslHooks.close()...)
+		returnValue = append(returnValue, sslHooks.close()...)
 	}
 
 	for _, goHooks := range t.goHooksStructs {
-		errorsResult = append(errorsResult, goHooks.close()...)
+		returnValue = append(returnValue, goHooks.close()...)
 	}
 
 	if err := t.bpfLogger.close(); err != nil {
-		errorsResult = append(errorsResult, err)
+		returnValue = append(returnValue, err)
 	}
 
 	if err := t.poller.close(); err != nil {
-		errorsResult = append(errorsResult, err)
+		returnValue = append(returnValue, err)
 	}
 
-	return errorsResult
+	return returnValue
 }
 
 func setupRLimit() error {
@@ -161,7 +161,6 @@ func setupRLimit() error {
 }
 
 func (t *TlsTapper) tapSSLLibPid(pid uint32, sslLibrary string, namespace string) error {
-
 	newSsl := sslHooks{}
 
 	if err := newSsl.installUprobes(&t.bpfObjects, sslLibrary); err != nil {

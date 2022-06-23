@@ -299,7 +299,7 @@ func readArray(r io.Reader) ([]interface{}, error) {
 
 	var (
 		lim   = &io.LimitedReader{R: r, N: int64(size)}
-		arr   []interface{}
+		arr   = []interface{}{}
 		field interface{}
 	)
 
