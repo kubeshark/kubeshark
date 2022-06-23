@@ -86,7 +86,7 @@ func GetAccumulativeStatsTiming(intervalSeconds int, numberOfBars int) []*Accumu
 		return make([]*AccumulativeStatsProtocolTime, 0)
 	}
 
-	firstBucketTime := getBucketBorders(time.Now().UTC(), intervalSeconds, numberOfBars)
+	firstBucketTime := getFirstBucketTime(time.Now().UTC(), intervalSeconds, numberOfBars)
 
 	methodsPerProtocolPerTimeAggregated, protocolToColor := getAggregatedResultTimingFromSpecificTime(intervalSeconds, bucketStatsCopy, firstBucketTime)
 
@@ -109,7 +109,7 @@ func EntryAdded(size int, summery *api.BaseEntry) {
 }
 
 func addToBucketStats(size int, summery *api.BaseEntry) {
-	entryTimeBucketRounded := getBucketOfTimeStamp(summery.Timestamp)
+	entryTimeBucketRounded := getBucketFromTimeStamp(summery.Timestamp)
 
 	if len(bucketsStats) == 0 {
 		bucketsStats = append(bucketsStats, &TimeFrameStatsValue{
@@ -142,13 +142,12 @@ func addToBucketStats(size int, summery *api.BaseEntry) {
 	bucketOfEntry.ProtocolStats[summery.Protocol.Abbreviation].MethodsStats[summery.Method].VolumeInBytes += size
 }
 
-//getBucketOfTimeStamp Round the entry to the nearest threshold (one minute) floored (e.g: 15:31:45 -> 15:31:00)
-func getBucketOfTimeStamp(timestamp int64) time.Time {
+func getBucketFromTimeStamp(timestamp int64) time.Time {
 	entryTimeStampAsTime := time.UnixMilli(timestamp)
 	return entryTimeStampAsTime.Add(-1 * InternalBucketThreshold / 2).Round(InternalBucketThreshold)
 }
 
-func getBucketBorders(endTime time.Time, intervalSeconds int, numberOfBars int) time.Time {
+func getFirstBucketTime(endTime time.Time, intervalSeconds int, numberOfBars int) time.Time {
 	lastBucketTime := endTime.Add(-1 * time.Second * time.Duration(intervalSeconds) / 2).Round(time.Second * time.Duration(intervalSeconds))
 	firstBucketTime := lastBucketTime.Add(-1 * time.Second * time.Duration(intervalSeconds*(numberOfBars-1)))
 	return firstBucketTime

@@ -17,7 +17,7 @@ func TestGetBucketOfTimeStamp(t *testing.T) {
 	for key, value := range tests {
 		t.Run(fmt.Sprintf("%v", key), func(t *testing.T) {
 
-			actual := getBucketOfTimeStamp(key)
+			actual := getBucketFromTimeStamp(key)
 
 			if actual != value {
 				t.Errorf("unexpected result - expected: %v, actual: %v", value, actual)
@@ -49,7 +49,7 @@ func TestGetBucketBorders(t *testing.T) {
 	for key, value := range tests {
 		t.Run(fmt.Sprintf("%v", key), func(t *testing.T) {
 
-			actual := getBucketBorders(key.EndTime, key.IntervalInSeconds, key.NumberOfBars)
+			actual := getFirstBucketTime(key.EndTime, key.IntervalInSeconds, key.NumberOfBars)
 
 			if actual != value {
 				t.Errorf("unexpected result - expected: %v, actual: %v", value, actual)
