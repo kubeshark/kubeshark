@@ -62,6 +62,8 @@ export const CodeEditor = React.forwardRef<ReactAce, CodeEditorProps>((
             showPrintMargin={false}
             value={code}
             width="100%"
+            height="100%"
+            style={{ borderRadius: "inherit" }}
         />
 
     );

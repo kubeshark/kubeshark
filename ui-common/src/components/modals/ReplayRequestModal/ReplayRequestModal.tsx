@@ -59,7 +59,7 @@ const ReplayRequestModal: React.FC<ReplayRequestModalProps> = ({ isOpen, onClose
     const commonClasses = useCommonStyles();
     const [currentTab, setCurrentTab] = useState(TABS[0].tab);
     const [response, setResponse] = useState(null);
-    const [postData, setPostData] = useState(request?.postData?.text);
+    const [postData, setPostData] = useState(request?.postData?.text || JSON.stringify(request?.postData?.params));
     const [params, setParams] = useState(convertParamsToArr(request?.queryString))
     const [headers, setHeaders] = useState(convertParamsToArr(request?.headers))
 
@@ -82,7 +82,7 @@ const ReplayRequestModal: React.FC<ReplayRequestModalProps> = ({ isOpen, onClose
             break;
         case RequestTabs.Body:
             //const formatedCode = formatRequest(postData, request?.postData?.mimeType, true, true, true)
-            innerComponent = <div style={{ width: '100%', position: "relative", minHeight: "12vh" }}>
+            innerComponent = <div style={{ width: '100%', position: "relative", height: "100%", borderRadius: "inherit" }}>
                 <CodeEditor language={request?.postData?.mimeType.split("/")[1]}
                     code={isJson(postData) ? JSON.stringify(JSON.parse(postData || "{}"), null, 2) : postData}
                     onChange={setPostData} />
