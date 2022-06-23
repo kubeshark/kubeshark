@@ -36,7 +36,7 @@ const App = () => {
                         openModal={oasModalOpen}
                         handleCloseModal={() => setOasModalOpen(false)}
                     />}
-                    <TrafficStatsModal isOpen={trafficStatsModalOpen} onClose={() => setTrafficStatsModalOpen(false)} getTrafficStatsDataApi={api.getStats}/>
+                    <TrafficStatsModal isOpen={trafficStatsModalOpen} onClose={() => setTrafficStatsModalOpen(false)} getPieStatsDataApi={api.getPieStats} getTimelineStatsDataApi={api.getTimelineStats}/>
                 </div>
             </ThemeProvider>
         </StyledEngineProvider>

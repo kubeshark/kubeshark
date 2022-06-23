@@ -111,8 +111,13 @@ export default class Api {
         });
     }
 
-    getStats = async () => {
+    getPieStats = async () => {
         const response = await client.get("/status/accumulative");
+        return response.data;
+    }
+
+    getTimelineStats = async () => {
+        const response = await client.get("/status/accumulativeTiming");
         return response.data;
     }
 }

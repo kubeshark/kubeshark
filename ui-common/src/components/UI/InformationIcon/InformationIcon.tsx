@@ -11,7 +11,7 @@ interface LinkProps {
 }
 
 export const Link: React.FC<LinkProps> = ({ link, className, title, children }) => {
-    return <a href={link} className={className} title={title} target="_blank">
+    return <a href={link} className={className} title={title} target="_blank" rel="noreferrer">
         {children}
     </a>
 }
