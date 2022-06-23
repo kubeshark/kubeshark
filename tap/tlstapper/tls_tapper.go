@@ -193,7 +193,8 @@ func (t *TlsTapper) tapGoPid(procfs string, pid uint32, namespace string) error 
 	hooks := goHooks{}
 
 	if err := hooks.installUprobes(&t.bpfObjects, exePath); err != nil {
-		return err
+		logger.Log.Infof("PID skipped not a Go binary or symbol table is stripped (pid: %v) %v", pid, exePath)
+		return nil // hide the error on purpose, its OK for a process to be not a Go binary or stripped Go binary
 	}
 
 	logger.Log.Infof("Tapping TLS (pid: %v) (Go: %v)", pid, exePath)
