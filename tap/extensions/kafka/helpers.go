@@ -817,12 +817,12 @@ func representDeleteTopicsRequest(data map[string]interface{}) []interface{} {
 	repPayload, _ := json.Marshal([]api.TableData{
 		{
 			Name:     "TopicNames",
-			Value:    string(topicNames),
+			Value:    topicNames,
 			Selector: `request.payload.topicNames`,
 		},
 		{
 			Name:     "Topics",
-			Value:    string(topics),
+			Value:    topics,
 			Selector: `request.payload.topics`,
 		},
 		{

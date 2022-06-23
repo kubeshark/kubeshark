@@ -4,7 +4,7 @@ type RedisType string
 type RedisCommand string
 type RedisKeyword string
 
-var types map[rune]RedisType = map[rune]RedisType{
+var types = map[rune]RedisType{
 	plusByte:          "Simple String",
 	dollarByte:        "Bulk String",
 	asteriskByte:      "Array",
@@ -13,7 +13,7 @@ var types map[rune]RedisType = map[rune]RedisType{
 	notApplicableByte: "N/A",
 }
 
-var commands []RedisCommand = []RedisCommand{
+var commands = []RedisCommand{
 	"PING",
 	"SET",
 	"GET",
@@ -200,7 +200,7 @@ var commands []RedisCommand = []RedisCommand{
 	"XCLAIM",
 }
 
-var keywords []RedisKeyword = []RedisKeyword{
+var keywords = []RedisKeyword{
 	"AGGREGATE",
 	"ALPHA",
 	"ASC",

@@ -111,7 +111,7 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 		extension := extensionsMap[item.Protocol.Name]
 		resolvedSource, resolvedDestionation, namespace := resolveIP(item.ConnectionInfo)
 
-		if namespace == "" && item.Namespace != tapApi.UNKNOWN_NAMESPACE {
+		if namespace == "" && item.Namespace != tapApi.UnknownNamespace {
 			namespace = item.Namespace
 		}
 
