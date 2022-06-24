@@ -49,7 +49,7 @@ const KeyValueTable: React.FC<KeyValueTableProps> = ({ data, onDataChange, keyPl
         setKeyValueData(currentData);
     }
 
-    return <div className={styles.tryNowHeadersContainer}>
+    return <div className={styles.keyValueTableContainer}>
         {keyValueData?.map((row, index) => {
             return <div key={index} className={styles.headerRow}>
                 <div className={styles.roundInputContainer} style={{ width: "30%" }}>

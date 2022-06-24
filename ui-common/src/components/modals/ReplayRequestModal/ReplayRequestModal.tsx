@@ -1,13 +1,18 @@
 import { Backdrop, Box, Button, Fade, Modal } from "@mui/material";
-import React, { useEffect, useState } from "react";
-import styles from './ReplayRequestModal.module.sass'
-import closeIcon from "assets/close.svg"
+import React, { useCallback, useEffect, useState } from "react";
 import { useCommonStyles } from "../../../helpers/commonStyle";
 import { Tabs } from "../../UI";
 import { SectionsRepresentation } from "../../EntryDetailed/EntryViewer/EntryViewer";
 import KeyValueTable from "../../UI/KeyValueTable/KeyValueTable";
 import { CodeEditor } from "../../UI/CodeEditor/CodeEditor";
-import { formatRequest } from "../../EntryDetailed/EntrySections/EntrySections";
+import { useRecoilValue, RecoilState } from "recoil";
+import TrafficViewerApiAtom from "../../../recoil/TrafficViewerApi/atom";
+import TrafficViewerApi from "../../TrafficViewer/TrafficViewerApi";
+import { toast } from "react-toastify";
+import { TOAST_CONTAINER_ID } from "../../../configs/Consts";
+import styles from './ReplayRequestModal.module.sass'
+import closeIcon from "assets/close.svg"
+import spinnerImg from "assets/spinner.svg"
 
 
 const modalStyle = {
@@ -49,11 +54,10 @@ const isJson = (str) => {
 
 const httpMethods = ['get', 'post', 'put', 'delete']
 const TABS = [{ tab: RequestTabs.Params }, { tab: RequestTabs.Headers }, { tab: RequestTabs.Body }];
-const queryBackgroundColor = "#f5f5f5";
 const convertParamsToArr = (paramsObj) => Object.entries(paramsObj).map(([key, value]) => { return { key, value } })
 const ReplayRequestModal: React.FC<ReplayRequestModalProps> = ({ isOpen, onClose, request }) => {
 
-    const [selectedMethod, setSelectedMethod] = useState(request?.method?.toLowerCase())
+    const [method, setMethod] = useState(request?.method?.toLowerCase() as string)
     const [path, setPath] = useState(request.path);
     const [url, setUrl] = useState("");
     const commonClasses = useCommonStyles();
@@ -62,6 +66,8 @@ const ReplayRequestModal: React.FC<ReplayRequestModalProps> = ({ isOpen, onClose
     const [postData, setPostData] = useState(request?.postData?.text || JSON.stringify(request?.postData?.params));
     const [params, setParams] = useState(convertParamsToArr(request?.queryString))
     const [headers, setHeaders] = useState(convertParamsToArr(request?.headers))
+    const trafficViewerApi = useRecoilValue(TrafficViewerApiAtom as RecoilState<TrafficViewerApi>)
+    const [isLoading, setIsLoading] = useState(false)
 
     useEffect(() => {
         let newUrl = params.length > 0 ? `${path}?` : path
@@ -71,7 +77,26 @@ const ReplayRequestModal: React.FC<ReplayRequestModalProps> = ({ isOpen, onClose
         setUrl(newUrl)
     }, [params, path, url])
 
-    const sendRequest = () => { }
+    const sendRequest = useCallback(async () => {
+        const headersData = headers.reduce((prev, corrent) => {
+            prev[corrent.key] = corrent.value
+            return prev
+        }, {})
+        const requestData = { url, headers: headersData, data: postData, method }
+        try {
+            setIsLoading(true)
+            const response = await trafficViewerApi.replayRequest(requestData)
+            setResponse(response)
+        } catch (error) {
+            toast.error("Error occurred while fetching response", { containerId: TOAST_CONTAINER_ID });
+            console.error(error);
+        }
+        finally {
+            //setIsLoading(false)
+        }
+
+    }, [headers, method, postData, trafficViewerApi, url])
+
     let innerComponent
     switch (currentTab) {
         case RequestTabs.Params:
@@ -114,7 +139,7 @@ const ReplayRequestModal: React.FC<ReplayRequestModalProps> = ({ isOpen, onClose
                     </div>
                     <div className={styles.modalContainer}>
                         <div className={styles.path}>
-                            <select className={styles.select} value={selectedMethod} onChange={(e) => setSelectedMethod(e.target.value)}>
+                            <select className={styles.select} value={method} onChange={(e) => setMethod(e.target.value)}>
                                 {httpMethods.map(method => <option value={method} key={method}>{method}</option>)}
                             </select>
                             <input className={commonClasses.textField} placeholder="Url" value={url}
@@ -136,7 +161,8 @@ const ReplayRequestModal: React.FC<ReplayRequestModalProps> = ({ isOpen, onClose
                             {innerComponent}
                         </div>
                         <div className={styles.responseContainer}>
-                            {response && <SectionsRepresentation data={response} />}
+                            {isLoading && <img alt="spinner" src={spinnerImg} style={{ height: 50 }} />}
+                            {response && !isLoading && <SectionsRepresentation data={response} />}
                         </div>
                     </div>
                 </Box>
