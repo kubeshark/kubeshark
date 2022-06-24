@@ -92,7 +92,7 @@ const ReplayRequestModal: React.FC<ReplayRequestModalProps> = ({ isOpen, onClose
             console.error(error);
         }
         finally {
-            //setIsLoading(false)
+            setIsLoading(false)
         }
 
     }, [headers, method, postData, trafficViewerApi, url])
