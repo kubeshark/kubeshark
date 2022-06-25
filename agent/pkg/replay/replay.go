@@ -56,28 +56,46 @@ func ExecuteRequest(replayData *shared.ReplayDetails) (interface{}, error) {
 			return nil, requestErr
 		}
 
-		//var entry *tapApi.Entry
-		//bytes, err := basenine.Single(shared.BasenineHost, shared.BaseninePort, entryId, singleEntryRequest.Query)
-		//if err != nil {
-		//	return nil, err
-		//}
-		//err = json.Unmarshal(bytes, &entry)
-		//if err != nil {
-		//	return nil, errors.New(string(bytes))
-		//}
-		//
-		//extension := app.ExtensionsMap[entry.Protocol.Name]
-		//base := extension.Dissector.Summarize(entry)
-		//var representation []byte
-		//representation, err = extension.Dissector.Represent(entry.Request, entry.Response)
-		//if err != nil {
-		//	return nil, err
-		//}
+		captureTime := time.Now()
+		item := tapApi.OutputChannelItem{
+			Protocol:  *app.ExtensionsMap["http"].Protocol,
+			Capture:   "",
+			Timestamp: time.Now().UnixMilli(),
+			Pair: &tapApi.RequestResponsePair{
+				Request: tapApi.GenericMessage{
+					IsRequest:   true,
+					CaptureTime: captureTime,
+					CaptureSize: 0,
+					Payload: tapApi.HTTPPayload{
+						Type: tapApi.TypeHttpRequest,
+						Data: request,
+					},
+				},
+				Response: tapApi.GenericMessage{
+					IsRequest:   false,
+					CaptureTime: captureTime,
+					CaptureSize: 0,
+					Payload: tapApi.HTTPPayload{
+						Type: tapApi.TypeHttpResponse,
+						Data: response,
+					},
+				},
+			},
+		}
+
+		extension := app.ExtensionsMap["http"]
+		entry := *extension.Dissector.Analyze(&item, "", "", "")
+		base := extension.Dissector.Summarize(&entry)
+		var representation []byte
+		representation, err = extension.Dissector.Represent(entry.Request, entry.Response)
+		if err != nil {
+			return nil, err
+		}
 
 		return &tapApi.EntryWrapper{
 			Protocol:       *app.ExtensionsMap["http"].Protocol,
 			Representation: string(representation),
-			Data:           entry,
+			Data:           &entry,
 			Base:           base,
 			Rules:          nil,
 			IsRulesEnabled: false,
