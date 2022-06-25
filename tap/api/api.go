@@ -102,7 +102,6 @@ type OutputChannelItem struct {
 	Timestamp      int64
 	ConnectionInfo *ConnectionInfo
 	Pair           *RequestResponsePair
-	Summary        *BaseEntry
 	Namespace      string
 }
 
