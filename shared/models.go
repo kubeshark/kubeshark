@@ -84,6 +84,13 @@ func (np NodeToPodsMap) Summary() map[string][]string {
 	return summary
 }
 
+type ReplayDetails struct {
+	Method  string            `json:"method"`
+	Url     string            `json:"url"`
+	Body    string            `json:"body"`
+	Headers map[string]string `json:"headers"`
+}
+
 type TapperStatus struct {
 	TapperName string `json:"tapperName"`
 	NodeName   string `json:"nodeName"`
