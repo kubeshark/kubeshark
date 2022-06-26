@@ -51,7 +51,7 @@ func (config *ConfigStruct) validate() error {
 }
 
 func (config *ConfigStruct) SetDefaults() {
-	config.AgentImage = fmt.Sprintf("%s:%s", "gcr.io/up9-docker-hub/mizu/feature/refactor_entry_protocol", mizu.Ver)
+	config.AgentImage = fmt.Sprintf("%s:%s", shared.MizuAgentImageRepo, mizu.Ver)
 	config.ConfigFilePath = path.Join(mizu.GetMizuFolderPath(), "config.yaml")
 }
 
