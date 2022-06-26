@@ -19,8 +19,8 @@ var (
 )
 
 const (
-	maxParallelAction             = 5
-	timeoutForSingleActionSeconds = time.Second * 120
+	maxParallelAction      = 5
+	timeoutForSingleAction = time.Second * 120
 )
 
 func canMakeRequest() bool {
@@ -34,11 +34,11 @@ func canMakeRequest() bool {
 	return result
 }
 
-func ExecuteRequest(replayData *shared.ReplayDetails) (interface{}, error) {
+func ExecuteRequest(replayData *shared.ReplayDetails) (*tapApi.EntryWrapper, error) {
 	if canMakeRequest() {
 		defer decrementCounter()
 		client := &http.Client{
-			Timeout: timeoutForSingleActionSeconds,
+			Timeout: timeoutForSingleAction,
 		}
 
 		request, err := http.NewRequest(replayData.Method, replayData.Url, bytes.NewBufferString(replayData.Body))
@@ -57,8 +57,10 @@ func ExecuteRequest(replayData *shared.ReplayDetails) (interface{}, error) {
 		}
 
 		captureTime := time.Now()
+		extension := app.ExtensionsMap["http"]
+
 		item := tapApi.OutputChannelItem{
-			Protocol:  *app.ExtensionsMap["http"].Protocol,
+			Protocol:  *extension.Protocol,
 			Capture:   "",
 			Timestamp: time.Now().UnixMilli(),
 			Pair: &tapApi.RequestResponsePair{
@@ -83,7 +85,6 @@ func ExecuteRequest(replayData *shared.ReplayDetails) (interface{}, error) {
 			},
 		}
 
-		extension := app.ExtensionsMap["http"]
 		entry := *extension.Dissector.Analyze(&item, "", "", "")
 		base := extension.Dissector.Summarize(&entry)
 		var representation []byte
@@ -93,7 +94,7 @@ func ExecuteRequest(replayData *shared.ReplayDetails) (interface{}, error) {
 		}
 
 		return &tapApi.EntryWrapper{
-			Protocol:       *app.ExtensionsMap["http"].Protocol,
+			Protocol:       *extension.Protocol,
 			Representation: string(representation),
 			Data:           &entry,
 			Base:           base,
