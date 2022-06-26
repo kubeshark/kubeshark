@@ -57,7 +57,6 @@ kubectl expose deployment redis --type=LoadBalancer --port=6379 -n mizu-tests --
 echo "Creating rabbitmq service"
 kubectl expose deployment rabbitmq --type=LoadBalancer --port=5672 -n mizu-tests --dry-run=client -o yaml | kubectl apply -f -
 
-# TODO: need to understand how to fail if address already in use
 echo "Starting proxy"
 rm -f ${PROXY_LOG}
 kubectl proxy --port=8080 > ${PROXY_LOG} &
@@ -78,7 +77,6 @@ minikube image load "${MIZU_CI_IMAGE}"
 echo "Build cli"
 cd cli && make build GIT_BRANCH=ci SUFFIX=ci
 
-# TODO: need to understand how to fail if password is asked (sudo)
 echo "Starting tunnel"
 rm -f ${TUNNEL_LOG}
 minikube tunnel > ${TUNNEL_LOG} &

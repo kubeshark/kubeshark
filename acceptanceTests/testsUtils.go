@@ -6,10 +6,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/clientcmd"
-	"k8s.io/client-go/util/homedir"
 	"net/http"
 	"os"
 	"os/exec"
@@ -19,6 +15,11 @@ import (
 	"syscall"
 	"testing"
 	"time"
+
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/client-go/util/homedir"
 
 	"github.com/up9inc/mizu/shared"
 )
@@ -175,7 +176,7 @@ func ApplyKubeFilesForTest(t *testing.T, kubeContext string, namespace string, f
 	return nil
 }
 
-func ApplyKubeFile(kubeContext string, namespace string, filename string) (error) {
+func ApplyKubeFile(kubeContext string, namespace string, filename string) error {
 	cmdArgs := []string{
 		"apply",
 		"--context", kubeContext,

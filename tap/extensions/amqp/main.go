@@ -12,7 +12,7 @@ import (
 	"github.com/up9inc/mizu/tap/api"
 )
 
-var protocol api.Protocol = api.Protocol{
+var protocol = api.Protocol{
 	Name:            "amqp",
 	LongName:        "Advanced Message Queuing Protocol 0-9-1",
 	Abbreviation:    "AMQP",
@@ -74,13 +74,13 @@ func (d dissecting) Dissect(b *bufio.Reader, reader api.TcpReader, options *api.
 	var lastMethodFrameMessage Message
 
 	for {
-		frame, err := r.ReadFrame()
+		frameVal, err := r.readFrame()
 		if err == io.EOF {
 			// We must read until we see an EOF... very important!
 			return err
 		}
 
-		switch f := frame.(type) {
+		switch f := frameVal.(type) {
 		case *HeartbeatFrame:
 			// drop
 
@@ -203,7 +203,7 @@ func (d dissecting) Dissect(b *bufio.Reader, reader api.TcpReader, options *api.
 			}
 
 		default:
-			// log.Printf("unexpected frame: %+v", f)
+			// log.Printf("unexpected frameVal: %+v", f)
 		}
 	}
 }
@@ -276,22 +276,21 @@ func (d dissecting) Summarize(entry *api.Entry) *api.BaseEntry {
 	}
 
 	return &api.BaseEntry{
-		Id:             entry.Id,
-		Protocol:       entry.Protocol,
-		Capture:        entry.Capture,
-		Summary:        summary,
-		SummaryQuery:   summaryQuery,
-		Status:         0,
-		StatusQuery:    "",
-		Method:         method,
-		MethodQuery:    methodQuery,
-		Timestamp:      entry.Timestamp,
-		Source:         entry.Source,
-		Destination:    entry.Destination,
-		IsOutgoing:     entry.Outgoing,
-		Latency:        entry.ElapsedTime,
-		Rules:          entry.Rules,
-		ContractStatus: entry.ContractStatus,
+		Id:           entry.Id,
+		Protocol:     entry.Protocol,
+		Capture:      entry.Capture,
+		Summary:      summary,
+		SummaryQuery: summaryQuery,
+		Status:       0,
+		StatusQuery:  "",
+		Method:       method,
+		MethodQuery:  methodQuery,
+		Timestamp:    entry.Timestamp,
+		Source:       entry.Source,
+		Destination:  entry.Destination,
+		IsOutgoing:   entry.Outgoing,
+		Latency:      entry.ElapsedTime,
+		Rules:        entry.Rules,
 	}
 }
 

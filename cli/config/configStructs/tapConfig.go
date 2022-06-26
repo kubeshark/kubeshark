@@ -24,7 +24,6 @@ const (
 	InsertionFilterName           = "insertion-filter"
 	DryRunTapName                 = "dry-run"
 	EnforcePolicyFile             = "traffic-validation-file"
-	ContractFile                  = "contract"
 	ServiceMeshName               = "service-mesh"
 	TlsName                       = "tls"
 	ProfilerName                  = "profiler"
@@ -43,7 +42,6 @@ type TapConfig struct {
 	InsertionFilter        string           `yaml:"insertion-filter" default:""`
 	DryRun                 bool             `yaml:"dry-run" default:"false"`
 	EnforcePolicyFile      string           `yaml:"traffic-validation-file"`
-	ContractFile           string           `yaml:"contract"`
 	ApiServerResources     shared.Resources `yaml:"api-server-resources"`
 	TapperResources        shared.Resources `yaml:"tapper-resources"`
 	ServiceMesh            bool             `yaml:"service-mesh" default:"false"`
