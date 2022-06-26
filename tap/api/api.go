@@ -150,21 +150,21 @@ func (e *Emitting) Emit(item *OutputChannelItem) {
 }
 
 type Entry struct {
-	Id                 string                 `json:"id"`
-	ProtocolUniqueName string                 `json:"protocol"`
-	Capture            Capture                `json:"capture"`
-	Source             *TCP                   `json:"src"`
-	Destination        *TCP                   `json:"dst"`
-	Namespace          string                 `json:"namespace"`
-	Outgoing           bool                   `json:"outgoing"`
-	Timestamp          int64                  `json:"timestamp"`
-	StartTime          time.Time              `json:"startTime"`
-	Request            map[string]interface{} `json:"request"`
-	Response           map[string]interface{} `json:"response"`
-	RequestSize        int                    `json:"requestSize"`
-	ResponseSize       int                    `json:"responseSize"`
-	ElapsedTime        int64                  `json:"elapsedTime"`
-	Rules              ApplicableRules        `json:"rules,omitempty"`
+	Id           string                 `json:"id"`
+	ProtocolId   string                 `json:"protocol"`
+	Capture      Capture                `json:"capture"`
+	Source       *TCP                   `json:"src"`
+	Destination  *TCP                   `json:"dst"`
+	Namespace    string                 `json:"namespace"`
+	Outgoing     bool                   `json:"outgoing"`
+	Timestamp    int64                  `json:"timestamp"`
+	StartTime    time.Time              `json:"startTime"`
+	Request      map[string]interface{} `json:"request"`
+	Response     map[string]interface{} `json:"response"`
+	RequestSize  int                    `json:"requestSize"`
+	ResponseSize int                    `json:"responseSize"`
+	ElapsedTime  int64                  `json:"elapsedTime"`
+	Rules        ApplicableRules        `json:"rules,omitempty"`
 }
 
 type EntryWrapper struct {

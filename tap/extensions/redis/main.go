@@ -78,8 +78,8 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, 
 		elapsedTime = 0
 	}
 	return &api.Entry{
-		ProtocolUniqueName: fmt.Sprintf("%s/%s/%s", protocol.Name, protocol.Version, protocol.Abbreviation),
-		Capture:            item.Capture,
+		ProtocolId: fmt.Sprintf("%s/%s/%s", protocol.Name, protocol.Version, protocol.Abbreviation),
+		Capture:    item.Capture,
 		Source: &api.TCP{
 			Name: resolvedSource,
 			IP:   item.ConnectionInfo.ClientIP,
@@ -123,7 +123,7 @@ func (d dissecting) Summarize(entry *api.Entry) *api.BaseEntry {
 
 	return &api.BaseEntry{
 		Id:           entry.Id,
-		Protocol:     *protocolsMap[entry.ProtocolUniqueName],
+		Protocol:     *protocolsMap[entry.ProtocolId],
 		Capture:      entry.Capture,
 		Summary:      summary,
 		SummaryQuery: summaryQuery,

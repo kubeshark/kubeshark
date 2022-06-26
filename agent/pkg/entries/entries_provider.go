@@ -3,6 +3,7 @@ package entries
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"time"
 
 	basenine "github.com/up9inc/basenine/client/go"
@@ -38,8 +39,16 @@ func (e *BasenineEntriesProvider) GetEntries(entriesRequest *models.EntriesReque
 			return nil, nil, err
 		}
 
-		protocol := app.ProtocolsMap[entry.ProtocolUniqueName]
-		extension := app.ExtensionsMap[protocol.Name]
+		protocol, ok := app.ProtocolsMap[entry.ProtocolId]
+		if !ok {
+			return nil, nil, fmt.Errorf("protocol not found, protocol: %v", protocol)
+		}
+
+		extension, ok := app.ExtensionsMap[protocol.Name]
+		if !ok {
+			return nil, nil, fmt.Errorf("extension not found, extension: %v", protocol.Name)
+		}
+
 		base := extension.Dissector.Summarize(entry)
 
 		dataSlice = append(dataSlice, &tapApi.EntryWrapper{
@@ -69,8 +78,16 @@ func (e *BasenineEntriesProvider) GetEntry(singleEntryRequest *models.SingleEntr
 		return nil, errors.New(string(bytes))
 	}
 
-	protocol := app.ProtocolsMap[entry.ProtocolUniqueName]
-	extension := app.ExtensionsMap[protocol.Name]
+	protocol, ok := app.ProtocolsMap[entry.ProtocolId]
+	if !ok {
+		return nil, fmt.Errorf("protocol not found, protocol: %v", protocol)
+	}
+
+	extension, ok := app.ExtensionsMap[protocol.Name]
+	if !ok {
+		return nil, fmt.Errorf("extension not found, extension: %v", protocol.Name)
+	}
+
 	base := extension.Dissector.Summarize(entry)
 	var representation []byte
 	representation, err = extension.Dissector.Represent(entry.Request, entry.Response)
