@@ -13,6 +13,7 @@ import { TOAST_CONTAINER_ID } from "../../../configs/Consts";
 import styles from './ReplayRequestModal.module.sass'
 import closeIcon from "assets/close.svg"
 import spinnerImg from "assets/spinner.svg"
+import { formatRequest } from "../../EntryDetailed/EntrySections/EntrySections";
 
 
 const modalStyle = {
@@ -52,7 +53,7 @@ const isJson = (str) => {
     return true;
 }
 
-const httpMethods = ['get', 'post', 'put', 'delete']
+const httpMethods = ["get", "post", "put", "head", "options", "delete"]
 const TABS = [{ tab: RequestTabs.Params }, { tab: RequestTabs.Headers }, { tab: RequestTabs.Body }];
 const convertParamsToArr = (paramsObj) => Object.entries(paramsObj).map(([key, value]) => { return { key, value } })
 const ReplayRequestModal: React.FC<ReplayRequestModalProps> = ({ isOpen, onClose, request }) => {
@@ -64,8 +65,8 @@ const ReplayRequestModal: React.FC<ReplayRequestModalProps> = ({ isOpen, onClose
     const [currentTab, setCurrentTab] = useState(TABS[0].tab);
     const [response, setResponse] = useState(null);
     const [postData, setPostData] = useState(request?.postData?.text || JSON.stringify(request?.postData?.params));
-    const [params, setParams] = useState(convertParamsToArr(request?.queryString))
-    const [headers, setHeaders] = useState(convertParamsToArr(request?.headers))
+    const [params, setParams] = useState(convertParamsToArr(request?.queryString || {}))
+    const [headers, setHeaders] = useState(convertParamsToArr(request?.headers || {}))
     const trafficViewerApi = useRecoilValue(TrafficViewerApiAtom as RecoilState<TrafficViewerApi>)
     const [isLoading, setIsLoading] = useState(false)
 
@@ -106,10 +107,10 @@ const ReplayRequestModal: React.FC<ReplayRequestModalProps> = ({ isOpen, onClose
             innerComponent = <KeyValueTable data={headers} onDataChange={(heaedrs) => setHeaders(heaedrs)} key={"Header"} valuePlaceholder="New Headers Value" keyPlaceholder="New Headers Key" />
             break;
         case RequestTabs.Body:
-            //const formatedCode = formatRequest(postData, request?.postData?.mimeType, true, true, true)
+            const formatedCode = formatRequest(postData, request?.postData?.mimeType)
             innerComponent = <div style={{ width: '100%', position: "relative", height: "100%", borderRadius: "inherit" }}>
                 <CodeEditor language={request?.postData?.mimeType.split("/")[1]}
-                    code={isJson(postData) ? JSON.stringify(JSON.parse(postData || "{}"), null, 2) : postData}
+                    code={isJson(formatedCode) ? JSON.stringify(JSON.parse(formatedCode || "{}"), null, 2) : formatedCode}
                     onChange={setPostData} />
             </div>
             break;
@@ -153,7 +154,7 @@ const ReplayRequestModal: React.FC<ReplayRequestModalProps> = ({ isOpen, onClose
                                     width: "fit-content",
                                     marginLeft: "10px"
                                 }}>
-                                Play
+                                Execute
                             </Button >
                         </div>
                         <Tabs tabs={TABS} currentTab={currentTab} onChange={setCurrentTab} leftAligned classes={{ root: styles.tabs }} />

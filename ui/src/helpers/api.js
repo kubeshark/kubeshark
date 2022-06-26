@@ -58,7 +58,7 @@ export default class Api {
     }
 
     replayRequest = async (requestData) => {
-        const response = await client.post(``, requestData);
+        const response = await client.post(`/replay/`, requestData);
         return response.data;
     }
 
