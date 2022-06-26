@@ -279,7 +279,7 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, 
 	if elapsedTime < 0 {
 		elapsedTime = 0
 	}
-	httpPair, _ := json.Marshal(item.Pair)
+
 	return &api.Entry{
 		Protocol: item.Protocol,
 		Capture:  item.Capture,
@@ -302,7 +302,6 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, 
 		Timestamp:    item.Timestamp,
 		StartTime:    item.Pair.Request.CaptureTime,
 		ElapsedTime:  elapsedTime,
-		HTTPPair:     string(httpPair),
 	}
 }
 
@@ -315,22 +314,21 @@ func (d dissecting) Summarize(entry *api.Entry) *api.BaseEntry {
 	statusQuery := fmt.Sprintf(`response.status == %d`, status)
 
 	return &api.BaseEntry{
-		Id:             entry.Id,
-		Protocol:       entry.Protocol,
-		Capture:        entry.Capture,
-		Summary:        summary,
-		SummaryQuery:   summaryQuery,
-		Status:         status,
-		StatusQuery:    statusQuery,
-		Method:         method,
-		MethodQuery:    methodQuery,
-		Timestamp:      entry.Timestamp,
-		Source:         entry.Source,
-		Destination:    entry.Destination,
-		IsOutgoing:     entry.Outgoing,
-		Latency:        entry.ElapsedTime,
-		Rules:          entry.Rules,
-		ContractStatus: entry.ContractStatus,
+		Id:           entry.Id,
+		Protocol:     entry.Protocol,
+		Capture:      entry.Capture,
+		Summary:      summary,
+		SummaryQuery: summaryQuery,
+		Status:       status,
+		StatusQuery:  statusQuery,
+		Method:       method,
+		MethodQuery:  methodQuery,
+		Timestamp:    entry.Timestamp,
+		Source:       entry.Source,
+		Destination:  entry.Destination,
+		IsOutgoing:   entry.Outgoing,
+		Latency:      entry.ElapsedTime,
+		Rules:        entry.Rules,
 	}
 }
 

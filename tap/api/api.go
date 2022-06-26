@@ -2,24 +2,13 @@ package api
 
 import (
 	"bufio"
-	"bytes"
-	"encoding/json"
-	"errors"
-	"fmt"
-	"io/ioutil"
 	"net"
-	"net/http"
-	"os"
-	"sort"
 	"sync"
 	"time"
-
-	"github.com/google/martian/har"
 
 	"github.com/up9inc/mizu/tap/dbgctl"
 )
 
-const mizuTestEnvVar = "MIZU_TEST"
 const UnknownNamespace = ""
 
 var UnknownIp = net.IP{0, 0, 0, 0}
@@ -161,26 +150,21 @@ func (e *Emitting) Emit(item *OutputChannelItem) {
 }
 
 type Entry struct {
-	Id                     string                 `json:"id"`
-	Protocol               Protocol               `json:"proto"`
-	Capture                Capture                `json:"capture"`
-	Source                 *TCP                   `json:"src"`
-	Destination            *TCP                   `json:"dst"`
-	Namespace              string                 `json:"namespace"`
-	Outgoing               bool                   `json:"outgoing"`
-	Timestamp              int64                  `json:"timestamp"`
-	StartTime              time.Time              `json:"startTime"`
-	Request                map[string]interface{} `json:"request"`
-	Response               map[string]interface{} `json:"response"`
-	RequestSize            int                    `json:"requestSize"`
-	ResponseSize           int                    `json:"responseSize"`
-	ElapsedTime            int64                  `json:"elapsedTime"`
-	Rules                  ApplicableRules        `json:"rules,omitempty"`
-	ContractStatus         ContractStatus         `json:"contractStatus,omitempty"`
-	ContractRequestReason  string                 `json:"contractRequestReason,omitempty"`
-	ContractResponseReason string                 `json:"contractResponseReason,omitempty"`
-	ContractContent        string                 `json:"contractContent,omitempty"`
-	HTTPPair               string                 `json:"httpPair,omitempty"`
+	Id           string                 `json:"id"`
+	Protocol     Protocol               `json:"proto"`
+	Capture      Capture                `json:"capture"`
+	Source       *TCP                   `json:"src"`
+	Destination  *TCP                   `json:"dst"`
+	Namespace    string                 `json:"namespace"`
+	Outgoing     bool                   `json:"outgoing"`
+	Timestamp    int64                  `json:"timestamp"`
+	StartTime    time.Time              `json:"startTime"`
+	Request      map[string]interface{} `json:"request"`
+	Response     map[string]interface{} `json:"response"`
+	RequestSize  int                    `json:"requestSize"`
+	ResponseSize int                    `json:"responseSize"`
+	ElapsedTime  int64                  `json:"elapsedTime"`
+	Rules        ApplicableRules        `json:"rules,omitempty"`
 }
 
 type EntryWrapper struct {
@@ -193,37 +177,27 @@ type EntryWrapper struct {
 }
 
 type BaseEntry struct {
-	Id             string          `json:"id"`
-	Protocol       Protocol        `json:"proto,omitempty"`
-	Capture        Capture         `json:"capture"`
-	Summary        string          `json:"summary,omitempty"`
-	SummaryQuery   string          `json:"summaryQuery,omitempty"`
-	Status         int             `json:"status"`
-	StatusQuery    string          `json:"statusQuery"`
-	Method         string          `json:"method,omitempty"`
-	MethodQuery    string          `json:"methodQuery,omitempty"`
-	Timestamp      int64           `json:"timestamp,omitempty"`
-	Source         *TCP            `json:"src"`
-	Destination    *TCP            `json:"dst"`
-	IsOutgoing     bool            `json:"isOutgoing,omitempty"`
-	Latency        int64           `json:"latency"`
-	Rules          ApplicableRules `json:"rules,omitempty"`
-	ContractStatus ContractStatus  `json:"contractStatus"`
+	Id           string          `json:"id"`
+	Protocol     Protocol        `json:"proto,omitempty"`
+	Capture      Capture         `json:"capture"`
+	Summary      string          `json:"summary,omitempty"`
+	SummaryQuery string          `json:"summaryQuery,omitempty"`
+	Status       int             `json:"status"`
+	StatusQuery  string          `json:"statusQuery"`
+	Method       string          `json:"method,omitempty"`
+	MethodQuery  string          `json:"methodQuery,omitempty"`
+	Timestamp    int64           `json:"timestamp,omitempty"`
+	Source       *TCP            `json:"src"`
+	Destination  *TCP            `json:"dst"`
+	IsOutgoing   bool            `json:"isOutgoing,omitempty"`
+	Latency      int64           `json:"latency"`
+	Rules        ApplicableRules `json:"rules,omitempty"`
 }
 
 type ApplicableRules struct {
 	Latency       int64 `json:"latency,omitempty"`
 	Status        bool  `json:"status,omitempty"`
 	NumberOfRules int   `json:"numberOfRules,omitempty"`
-}
-
-type ContractStatus int
-
-type Contract struct {
-	Status         ContractStatus `json:"status"`
-	RequestReason  string         `json:"requestReason"`
-	ResponseReason string         `json:"responseReason"`
-	Content        string         `json:"content"`
 }
 
 const (
@@ -244,170 +218,6 @@ type TableData struct {
 	Name     string      `json:"name"`
 	Value    interface{} `json:"value"`
 	Selector string      `json:"selector"`
-}
-
-const (
-	TypeHttpRequest = iota
-	TypeHttpResponse
-)
-
-type HTTPPayload struct {
-	Type uint8
-	Data interface{}
-}
-
-type HTTPPayloader interface {
-	MarshalJSON() ([]byte, error)
-}
-
-type HTTPWrapper struct {
-	Method      string               `json:"method"`
-	Url         string               `json:"url"`
-	Details     interface{}          `json:"details"`
-	RawRequest  *HTTPRequestWrapper  `json:"rawRequest"`
-	RawResponse *HTTPResponseWrapper `json:"rawResponse"`
-}
-
-func (h HTTPPayload) MarshalJSON() ([]byte, error) {
-	_, testEnvEnabled := os.LookupEnv(mizuTestEnvVar)
-	switch h.Type {
-	case TypeHttpRequest:
-		harRequest, err := har.NewRequest(h.Data.(*http.Request), true)
-		if err != nil {
-			return nil, errors.New("Failed converting request to HAR")
-		}
-		sort.Slice(harRequest.Headers, func(i, j int) bool {
-			if harRequest.Headers[i].Name < harRequest.Headers[j].Name {
-				return true
-			}
-			if harRequest.Headers[i].Name > harRequest.Headers[j].Name {
-				return false
-			}
-			return harRequest.Headers[i].Value < harRequest.Headers[j].Value
-		})
-		sort.Slice(harRequest.QueryString, func(i, j int) bool {
-			if harRequest.QueryString[i].Name < harRequest.QueryString[j].Name {
-				return true
-			}
-			if harRequest.QueryString[i].Name > harRequest.QueryString[j].Name {
-				return false
-			}
-			return harRequest.QueryString[i].Value < harRequest.QueryString[j].Value
-		})
-		if harRequest.PostData != nil {
-			sort.Slice(harRequest.PostData.Params, func(i, j int) bool {
-				if harRequest.PostData.Params[i].Name < harRequest.PostData.Params[j].Name {
-					return true
-				}
-				if harRequest.PostData.Params[i].Name > harRequest.PostData.Params[j].Name {
-					return false
-				}
-				return harRequest.PostData.Params[i].Value < harRequest.PostData.Params[j].Value
-			})
-		}
-		if testEnvEnabled {
-			harRequest.URL = ""
-		}
-		var reqWrapper *HTTPRequestWrapper
-		if !testEnvEnabled {
-			reqWrapper = &HTTPRequestWrapper{Request: h.Data.(*http.Request)}
-		}
-		return json.Marshal(&HTTPWrapper{
-			Method:     harRequest.Method,
-			Details:    harRequest,
-			RawRequest: reqWrapper,
-		})
-	case TypeHttpResponse:
-		harResponse, err := har.NewResponse(h.Data.(*http.Response), true)
-		if err != nil {
-			return nil, errors.New("Failed converting response to HAR")
-		}
-		sort.Slice(harResponse.Headers, func(i, j int) bool {
-			if harResponse.Headers[i].Name < harResponse.Headers[j].Name {
-				return true
-			}
-			if harResponse.Headers[i].Name > harResponse.Headers[j].Name {
-				return false
-			}
-			return harResponse.Headers[i].Value < harResponse.Headers[j].Value
-		})
-		sort.Slice(harResponse.Cookies, func(i, j int) bool {
-			if harResponse.Cookies[i].Name < harResponse.Cookies[j].Name {
-				return true
-			}
-			if harResponse.Cookies[i].Name > harResponse.Cookies[j].Name {
-				return false
-			}
-			return harResponse.Cookies[i].Value < harResponse.Cookies[j].Value
-		})
-		var resWrapper *HTTPResponseWrapper
-		if !testEnvEnabled {
-			resWrapper = &HTTPResponseWrapper{Response: h.Data.(*http.Response)}
-		}
-		return json.Marshal(&HTTPWrapper{
-			Method:      "",
-			Url:         "",
-			Details:     harResponse,
-			RawResponse: resWrapper,
-		})
-	default:
-		panic(fmt.Sprintf("HTTP payload cannot be marshaled: %v", h.Type))
-	}
-}
-
-type HTTPWrapperTricky struct {
-	Method      string         `json:"method"`
-	Url         string         `json:"url"`
-	Details     interface{}    `json:"details"`
-	RawRequest  *http.Request  `json:"rawRequest"`
-	RawResponse *http.Response `json:"rawResponse"`
-}
-
-type HTTPMessage struct {
-	IsRequest   bool              `json:"isRequest"`
-	CaptureTime time.Time         `json:"captureTime"`
-	Payload     HTTPWrapperTricky `json:"payload"`
-}
-
-type HTTPRequestResponsePair struct {
-	Request  HTTPMessage `json:"request"`
-	Response HTTPMessage `json:"response"`
-}
-
-type HTTPRequestWrapper struct {
-	*http.Request
-}
-
-func (r *HTTPRequestWrapper) MarshalJSON() ([]byte, error) {
-	body, _ := ioutil.ReadAll(r.Request.Body)
-	r.Request.Body = ioutil.NopCloser(bytes.NewBuffer(body))
-	return json.Marshal(&struct { //nolint
-		Body    string `json:"Body,omitempty"`
-		GetBody string `json:"GetBody,omitempty"`
-		Cancel  string `json:"Cancel,omitempty"`
-		*http.Request
-	}{
-		Body:    string(body),
-		Request: r.Request,
-	})
-}
-
-type HTTPResponseWrapper struct {
-	*http.Response
-}
-
-func (r *HTTPResponseWrapper) MarshalJSON() ([]byte, error) {
-	body, _ := ioutil.ReadAll(r.Response.Body)
-	r.Response.Body = ioutil.NopCloser(bytes.NewBuffer(body))
-	return json.Marshal(&struct { //nolint
-		Body    string `json:"Body,omitempty"`
-		GetBody string `json:"GetBody,omitempty"`
-		Cancel  string `json:"Cancel,omitempty"`
-		*http.Response
-	}{
-		Body:     string(body),
-		Response: r.Response,
-	})
 }
 
 type TcpReaderDataMsg interface {
