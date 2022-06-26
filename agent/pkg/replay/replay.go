@@ -61,7 +61,14 @@ func ExecuteRequest(replayData *shared.ReplayDetails) (*tapApi.EntryWrapper, err
 		extension := app.ExtensionsMap["http"]
 
 		item := tapApi.OutputChannelItem{
-			Protocol:  *extension.Protocol,
+			Protocol: *extension.Protocol,
+			ConnectionInfo: &tapApi.ConnectionInfo{
+				ClientIP:   "",
+				ClientPort: "1",
+				ServerIP:   "",
+				ServerPort: "1",
+				IsOutgoing: false,
+			},
 			Capture:   "",
 			Timestamp: time.Now().UnixMilli(),
 			Pair: &tapApi.RequestResponsePair{
