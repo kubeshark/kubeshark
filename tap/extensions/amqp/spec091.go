@@ -70,10 +70,10 @@ func (msg *ConnectionStart) read(r io.Reader) (err error) {
 		return
 	}
 
-	if msg.Mechanisms, err = readLongstr(r); err != nil {
+	if msg.Mechanisms, err = readLongStr(r); err != nil {
 		return
 	}
-	if msg.Locales, err = readLongstr(r); err != nil {
+	if msg.Locales, err = readLongStr(r); err != nil {
 		return
 	}
 
@@ -93,15 +93,15 @@ func (msg *ConnectionStartOk) read(r io.Reader) (err error) {
 		return
 	}
 
-	if msg.Mechanism, err = readShortstr(r); err != nil {
+	if msg.Mechanism, err = readShortStr(r); err != nil {
 		return
 	}
 
-	if msg.Response, err = readLongstr(r); err != nil {
+	if msg.Response, err = readLongStr(r); err != nil {
 		return
 	}
 
-	if msg.Locale, err = readShortstr(r); err != nil {
+	if msg.Locale, err = readShortStr(r); err != nil {
 		return
 	}
 
@@ -114,7 +114,7 @@ type connectionSecure struct {
 
 func (msg *connectionSecure) read(r io.Reader) (err error) {
 
-	if msg.Challenge, err = readLongstr(r); err != nil {
+	if msg.Challenge, err = readLongStr(r); err != nil {
 		return
 	}
 
@@ -127,7 +127,7 @@ type connectionSecureOk struct {
 
 func (msg *connectionSecureOk) read(r io.Reader) (err error) {
 
-	if msg.Response, err = readLongstr(r); err != nil {
+	if msg.Response, err = readLongStr(r); err != nil {
 		return
 	}
 
@@ -189,17 +189,17 @@ type connectionOpen struct {
 func (msg *connectionOpen) read(r io.Reader) (err error) {
 	var bits byte
 
-	if msg.VirtualHost, err = readShortstr(r); err != nil {
+	if msg.VirtualHost, err = readShortStr(r); err != nil {
 		return
 	}
-	if msg.reserved1, err = readShortstr(r); err != nil {
+	if msg.reserved1, err = readShortStr(r); err != nil {
 		return
 	}
 
 	if err = binary.Read(r, binary.BigEndian, &bits); err != nil {
 		return
 	}
-	msg.reserved2 = (bits&(1<<0) > 0)
+	msg.reserved2 = bits&(1<<0) > 0
 
 	return
 }
@@ -210,7 +210,7 @@ type connectionOpenOk struct {
 
 func (msg *connectionOpenOk) read(r io.Reader) (err error) {
 
-	if msg.reserved1, err = readShortstr(r); err != nil {
+	if msg.reserved1, err = readShortStr(r); err != nil {
 		return
 	}
 
@@ -230,7 +230,7 @@ func (msg *ConnectionClose) read(r io.Reader) (err error) {
 		return
 	}
 
-	if msg.ReplyText, err = readShortstr(r); err != nil {
+	if msg.ReplyText, err = readShortStr(r); err != nil {
 		return
 	}
 
@@ -258,7 +258,7 @@ type connectionBlocked struct {
 
 func (msg *connectionBlocked) read(r io.Reader) (err error) {
 
-	if msg.Reason, err = readShortstr(r); err != nil {
+	if msg.Reason, err = readShortStr(r); err != nil {
 		return
 	}
 
@@ -279,7 +279,7 @@ type channelOpen struct {
 
 func (msg *channelOpen) read(r io.Reader) (err error) {
 
-	if msg.reserved1, err = readShortstr(r); err != nil {
+	if msg.reserved1, err = readShortStr(r); err != nil {
 		return
 	}
 
@@ -292,7 +292,7 @@ type channelOpenOk struct {
 
 func (msg *channelOpenOk) read(r io.Reader) (err error) {
 
-	if msg.reserved1, err = readLongstr(r); err != nil {
+	if msg.reserved1, err = readLongStr(r); err != nil {
 		return
 	}
 
@@ -309,7 +309,7 @@ func (msg *channelFlow) read(r io.Reader) (err error) {
 	if err = binary.Read(r, binary.BigEndian, &bits); err != nil {
 		return
 	}
-	msg.Active = (bits&(1<<0) > 0)
+	msg.Active = bits&(1<<0) > 0
 
 	return
 }
@@ -324,7 +324,7 @@ func (msg *channelFlowOk) read(r io.Reader) (err error) {
 	if err = binary.Read(r, binary.BigEndian, &bits); err != nil {
 		return
 	}
-	msg.Active = (bits&(1<<0) > 0)
+	msg.Active = bits&(1<<0) > 0
 
 	return
 }
@@ -342,7 +342,7 @@ func (msg *channelClose) read(r io.Reader) (err error) {
 		return
 	}
 
-	if msg.ReplyText, err = readShortstr(r); err != nil {
+	if msg.ReplyText, err = readShortStr(r); err != nil {
 		return
 	}
 
@@ -383,21 +383,21 @@ func (msg *ExchangeDeclare) read(r io.Reader) (err error) {
 		return
 	}
 
-	if msg.Exchange, err = readShortstr(r); err != nil {
+	if msg.Exchange, err = readShortStr(r); err != nil {
 		return
 	}
-	if msg.Type, err = readShortstr(r); err != nil {
+	if msg.Type, err = readShortStr(r); err != nil {
 		return
 	}
 
 	if err = binary.Read(r, binary.BigEndian, &bits); err != nil {
 		return
 	}
-	msg.Passive = (bits&(1<<0) > 0)
-	msg.Durable = (bits&(1<<1) > 0)
-	msg.AutoDelete = (bits&(1<<2) > 0)
-	msg.Internal = (bits&(1<<3) > 0)
-	msg.NoWait = (bits&(1<<4) > 0)
+	msg.Passive = bits&(1<<0) > 0
+	msg.Durable = bits&(1<<1) > 0
+	msg.AutoDelete = bits&(1<<2) > 0
+	msg.Internal = bits&(1<<3) > 0
+	msg.NoWait = bits&(1<<4) > 0
 
 	if msg.Arguments, err = readTable(r); err != nil {
 		return
@@ -428,15 +428,15 @@ func (msg *exchangeDelete) read(r io.Reader) (err error) {
 		return
 	}
 
-	if msg.Exchange, err = readShortstr(r); err != nil {
+	if msg.Exchange, err = readShortStr(r); err != nil {
 		return
 	}
 
 	if err = binary.Read(r, binary.BigEndian, &bits); err != nil {
 		return
 	}
-	msg.IfUnused = (bits&(1<<0) > 0)
-	msg.NoWait = (bits&(1<<1) > 0)
+	msg.IfUnused = bits&(1<<0) > 0
+	msg.NoWait = bits&(1<<1) > 0
 
 	return
 }
@@ -465,20 +465,20 @@ func (msg *exchangeBind) read(r io.Reader) (err error) {
 		return
 	}
 
-	if msg.Destination, err = readShortstr(r); err != nil {
+	if msg.Destination, err = readShortStr(r); err != nil {
 		return
 	}
-	if msg.Source, err = readShortstr(r); err != nil {
+	if msg.Source, err = readShortStr(r); err != nil {
 		return
 	}
-	if msg.RoutingKey, err = readShortstr(r); err != nil {
+	if msg.RoutingKey, err = readShortStr(r); err != nil {
 		return
 	}
 
 	if err = binary.Read(r, binary.BigEndian, &bits); err != nil {
 		return
 	}
-	msg.NoWait = (bits&(1<<0) > 0)
+	msg.NoWait = bits&(1<<0) > 0
 
 	if msg.Arguments, err = readTable(r); err != nil {
 		return
@@ -511,20 +511,20 @@ func (msg *exchangeUnbind) read(r io.Reader) (err error) {
 		return
 	}
 
-	if msg.Destination, err = readShortstr(r); err != nil {
+	if msg.Destination, err = readShortStr(r); err != nil {
 		return
 	}
-	if msg.Source, err = readShortstr(r); err != nil {
+	if msg.Source, err = readShortStr(r); err != nil {
 		return
 	}
-	if msg.RoutingKey, err = readShortstr(r); err != nil {
+	if msg.RoutingKey, err = readShortStr(r); err != nil {
 		return
 	}
 
 	if err = binary.Read(r, binary.BigEndian, &bits); err != nil {
 		return
 	}
-	msg.NoWait = (bits&(1<<0) > 0)
+	msg.NoWait = bits&(1<<0) > 0
 
 	if msg.Arguments, err = readTable(r); err != nil {
 		return
@@ -559,18 +559,18 @@ func (msg *QueueDeclare) read(r io.Reader) (err error) {
 		return
 	}
 
-	if msg.Queue, err = readShortstr(r); err != nil {
+	if msg.Queue, err = readShortStr(r); err != nil {
 		return
 	}
 
 	if err = binary.Read(r, binary.BigEndian, &bits); err != nil {
 		return
 	}
-	msg.Passive = (bits&(1<<0) > 0)
-	msg.Durable = (bits&(1<<1) > 0)
-	msg.Exclusive = (bits&(1<<2) > 0)
-	msg.AutoDelete = (bits&(1<<3) > 0)
-	msg.NoWait = (bits&(1<<4) > 0)
+	msg.Passive = bits&(1<<0) > 0
+	msg.Durable = bits&(1<<1) > 0
+	msg.Exclusive = bits&(1<<2) > 0
+	msg.AutoDelete = bits&(1<<3) > 0
+	msg.NoWait = bits&(1<<4) > 0
 
 	if msg.Arguments, err = readTable(r); err != nil {
 		return
@@ -587,7 +587,7 @@ type QueueDeclareOk struct {
 
 func (msg *QueueDeclareOk) read(r io.Reader) (err error) {
 
-	if msg.Queue, err = readShortstr(r); err != nil {
+	if msg.Queue, err = readShortStr(r); err != nil {
 		return
 	}
 
@@ -617,20 +617,20 @@ func (msg *QueueBind) read(r io.Reader) (err error) {
 		return
 	}
 
-	if msg.Queue, err = readShortstr(r); err != nil {
+	if msg.Queue, err = readShortStr(r); err != nil {
 		return
 	}
-	if msg.Exchange, err = readShortstr(r); err != nil {
+	if msg.Exchange, err = readShortStr(r); err != nil {
 		return
 	}
-	if msg.RoutingKey, err = readShortstr(r); err != nil {
+	if msg.RoutingKey, err = readShortStr(r); err != nil {
 		return
 	}
 
 	if err = binary.Read(r, binary.BigEndian, &bits); err != nil {
 		return
 	}
-	msg.NoWait = (bits&(1<<0) > 0)
+	msg.NoWait = bits&(1<<0) > 0
 
 	if msg.Arguments, err = readTable(r); err != nil {
 		return
@@ -661,13 +661,13 @@ func (msg *queueUnbind) read(r io.Reader) (err error) {
 		return
 	}
 
-	if msg.Queue, err = readShortstr(r); err != nil {
+	if msg.Queue, err = readShortStr(r); err != nil {
 		return
 	}
-	if msg.Exchange, err = readShortstr(r); err != nil {
+	if msg.Exchange, err = readShortStr(r); err != nil {
 		return
 	}
-	if msg.RoutingKey, err = readShortstr(r); err != nil {
+	if msg.RoutingKey, err = readShortStr(r); err != nil {
 		return
 	}
 
@@ -699,14 +699,14 @@ func (msg *queuePurge) read(r io.Reader) (err error) {
 		return
 	}
 
-	if msg.Queue, err = readShortstr(r); err != nil {
+	if msg.Queue, err = readShortStr(r); err != nil {
 		return
 	}
 
 	if err = binary.Read(r, binary.BigEndian, &bits); err != nil {
 		return
 	}
-	msg.NoWait = (bits&(1<<0) > 0)
+	msg.NoWait = bits&(1<<0) > 0
 
 	return
 }
@@ -739,16 +739,16 @@ func (msg *queueDelete) read(r io.Reader) (err error) {
 		return
 	}
 
-	if msg.Queue, err = readShortstr(r); err != nil {
+	if msg.Queue, err = readShortStr(r); err != nil {
 		return
 	}
 
 	if err = binary.Read(r, binary.BigEndian, &bits); err != nil {
 		return
 	}
-	msg.IfUnused = (bits&(1<<0) > 0)
-	msg.IfEmpty = (bits&(1<<1) > 0)
-	msg.NoWait = (bits&(1<<2) > 0)
+	msg.IfUnused = bits&(1<<0) > 0
+	msg.IfEmpty = bits&(1<<1) > 0
+	msg.NoWait = bits&(1<<2) > 0
 
 	return
 }
@@ -786,7 +786,7 @@ func (msg *basicQos) read(r io.Reader) (err error) {
 	if err = binary.Read(r, binary.BigEndian, &bits); err != nil {
 		return
 	}
-	msg.Global = (bits&(1<<0) > 0)
+	msg.Global = bits&(1<<0) > 0
 
 	return
 }
@@ -817,20 +817,20 @@ func (msg *BasicConsume) read(r io.Reader) (err error) {
 		return
 	}
 
-	if msg.Queue, err = readShortstr(r); err != nil {
+	if msg.Queue, err = readShortStr(r); err != nil {
 		return
 	}
-	if msg.ConsumerTag, err = readShortstr(r); err != nil {
+	if msg.ConsumerTag, err = readShortStr(r); err != nil {
 		return
 	}
 
 	if err = binary.Read(r, binary.BigEndian, &bits); err != nil {
 		return
 	}
-	msg.NoLocal = (bits&(1<<0) > 0)
-	msg.NoAck = (bits&(1<<1) > 0)
-	msg.Exclusive = (bits&(1<<2) > 0)
-	msg.NoWait = (bits&(1<<3) > 0)
+	msg.NoLocal = bits&(1<<0) > 0
+	msg.NoAck = bits&(1<<1) > 0
+	msg.Exclusive = bits&(1<<2) > 0
+	msg.NoWait = bits&(1<<3) > 0
 
 	if msg.Arguments, err = readTable(r); err != nil {
 		return
@@ -845,7 +845,7 @@ type BasicConsumeOk struct {
 
 func (msg *BasicConsumeOk) read(r io.Reader) (err error) {
 
-	if msg.ConsumerTag, err = readShortstr(r); err != nil {
+	if msg.ConsumerTag, err = readShortStr(r); err != nil {
 		return
 	}
 
@@ -860,14 +860,14 @@ type basicCancel struct {
 func (msg *basicCancel) read(r io.Reader) (err error) {
 	var bits byte
 
-	if msg.ConsumerTag, err = readShortstr(r); err != nil {
+	if msg.ConsumerTag, err = readShortStr(r); err != nil {
 		return
 	}
 
 	if err = binary.Read(r, binary.BigEndian, &bits); err != nil {
 		return
 	}
-	msg.NoWait = (bits&(1<<0) > 0)
+	msg.NoWait = bits&(1<<0) > 0
 
 	return
 }
@@ -878,7 +878,7 @@ type basicCancelOk struct {
 
 func (msg *basicCancelOk) read(r io.Reader) (err error) {
 
-	if msg.ConsumerTag, err = readShortstr(r); err != nil {
+	if msg.ConsumerTag, err = readShortStr(r); err != nil {
 		return
 	}
 
@@ -910,18 +910,18 @@ func (msg *BasicPublish) read(r io.Reader) (err error) {
 		return
 	}
 
-	if msg.Exchange, err = readShortstr(r); err != nil {
+	if msg.Exchange, err = readShortStr(r); err != nil {
 		return
 	}
-	if msg.RoutingKey, err = readShortstr(r); err != nil {
+	if msg.RoutingKey, err = readShortStr(r); err != nil {
 		return
 	}
 
 	if err = binary.Read(r, binary.BigEndian, &bits); err != nil {
 		return
 	}
-	msg.Mandatory = (bits&(1<<0) > 0)
-	msg.Immediate = (bits&(1<<1) > 0)
+	msg.Mandatory = bits&(1<<0) > 0
+	msg.Immediate = bits&(1<<1) > 0
 
 	return
 }
@@ -949,13 +949,13 @@ func (msg *basicReturn) read(r io.Reader) (err error) {
 		return
 	}
 
-	if msg.ReplyText, err = readShortstr(r); err != nil {
+	if msg.ReplyText, err = readShortStr(r); err != nil {
 		return
 	}
-	if msg.Exchange, err = readShortstr(r); err != nil {
+	if msg.Exchange, err = readShortStr(r); err != nil {
 		return
 	}
-	if msg.RoutingKey, err = readShortstr(r); err != nil {
+	if msg.RoutingKey, err = readShortStr(r); err != nil {
 		return
 	}
 
@@ -983,7 +983,7 @@ func (msg *BasicDeliver) setContent(props Properties, body []byte) {
 func (msg *BasicDeliver) read(r io.Reader) (err error) {
 	var bits byte
 
-	if msg.ConsumerTag, err = readShortstr(r); err != nil {
+	if msg.ConsumerTag, err = readShortStr(r); err != nil {
 		return
 	}
 
@@ -994,12 +994,12 @@ func (msg *BasicDeliver) read(r io.Reader) (err error) {
 	if err = binary.Read(r, binary.BigEndian, &bits); err != nil {
 		return
 	}
-	msg.Redelivered = (bits&(1<<0) > 0)
+	msg.Redelivered = bits&(1<<0) > 0
 
-	if msg.Exchange, err = readShortstr(r); err != nil {
+	if msg.Exchange, err = readShortStr(r); err != nil {
 		return
 	}
-	if msg.RoutingKey, err = readShortstr(r); err != nil {
+	if msg.RoutingKey, err = readShortStr(r); err != nil {
 		return
 	}
 
@@ -1019,14 +1019,14 @@ func (msg *basicGet) read(r io.Reader) (err error) {
 		return
 	}
 
-	if msg.Queue, err = readShortstr(r); err != nil {
+	if msg.Queue, err = readShortStr(r); err != nil {
 		return
 	}
 
 	if err = binary.Read(r, binary.BigEndian, &bits); err != nil {
 		return
 	}
-	msg.NoAck = (bits&(1<<0) > 0)
+	msg.NoAck = bits&(1<<0) > 0
 
 	return
 }
@@ -1059,12 +1059,12 @@ func (msg *basicGetOk) read(r io.Reader) (err error) {
 	if err = binary.Read(r, binary.BigEndian, &bits); err != nil {
 		return
 	}
-	msg.Redelivered = (bits&(1<<0) > 0)
+	msg.Redelivered = bits&(1<<0) > 0
 
-	if msg.Exchange, err = readShortstr(r); err != nil {
+	if msg.Exchange, err = readShortStr(r); err != nil {
 		return
 	}
-	if msg.RoutingKey, err = readShortstr(r); err != nil {
+	if msg.RoutingKey, err = readShortStr(r); err != nil {
 		return
 	}
 
@@ -1081,7 +1081,7 @@ type basicGetEmpty struct {
 
 func (msg *basicGetEmpty) read(r io.Reader) (err error) {
 
-	if msg.reserved1, err = readShortstr(r); err != nil {
+	if msg.reserved1, err = readShortStr(r); err != nil {
 		return
 	}
 
@@ -1103,7 +1103,7 @@ func (msg *basicAck) read(r io.Reader) (err error) {
 	if err = binary.Read(r, binary.BigEndian, &bits); err != nil {
 		return
 	}
-	msg.Multiple = (bits&(1<<0) > 0)
+	msg.Multiple = bits&(1<<0) > 0
 
 	return
 }
@@ -1123,7 +1123,7 @@ func (msg *basicReject) read(r io.Reader) (err error) {
 	if err = binary.Read(r, binary.BigEndian, &bits); err != nil {
 		return
 	}
-	msg.Requeue = (bits&(1<<0) > 0)
+	msg.Requeue = bits&(1<<0) > 0
 
 	return
 }
@@ -1138,7 +1138,7 @@ func (msg *basicRecoverAsync) read(r io.Reader) (err error) {
 	if err = binary.Read(r, binary.BigEndian, &bits); err != nil {
 		return
 	}
-	msg.Requeue = (bits&(1<<0) > 0)
+	msg.Requeue = bits&(1<<0) > 0
 
 	return
 }
@@ -1153,7 +1153,7 @@ func (msg *basicRecover) read(r io.Reader) (err error) {
 	if err = binary.Read(r, binary.BigEndian, &bits); err != nil {
 		return
 	}
-	msg.Requeue = (bits&(1<<0) > 0)
+	msg.Requeue = bits&(1<<0) > 0
 
 	return
 }
@@ -1182,8 +1182,8 @@ func (msg *basicNack) read(r io.Reader) (err error) {
 	if err = binary.Read(r, binary.BigEndian, &bits); err != nil {
 		return
 	}
-	msg.Multiple = (bits&(1<<0) > 0)
-	msg.Requeue = (bits&(1<<1) > 0)
+	msg.Multiple = bits&(1<<0) > 0
+	msg.Requeue = bits&(1<<1) > 0
 
 	return
 }
@@ -1246,7 +1246,7 @@ func (msg *confirmSelect) read(r io.Reader) (err error) {
 	if err = binary.Read(r, binary.BigEndian, &bits); err != nil {
 		return
 	}
-	msg.Nowait = (bits&(1<<0) > 0)
+	msg.Nowait = bits&(1<<0) > 0
 
 	return
 }

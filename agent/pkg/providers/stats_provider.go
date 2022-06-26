@@ -2,6 +2,7 @@ package providers
 
 import (
 	"reflect"
+	"sync"
 	"time"
 
 	"github.com/jinzhu/copier"
@@ -19,18 +20,18 @@ type GeneralStats struct {
 type BucketStats []*TimeFrameStatsValue
 
 type TimeFrameStatsValue struct {
-	BucketTime    time.Time
-	ProtocolStats map[string]ProtocolStats
+	BucketTime    time.Time                `json:"timestamp"`
+	ProtocolStats map[string]ProtocolStats `json:"protocols"`
 }
 
 type ProtocolStats struct {
-	MethodsStats map[string]*SizeAndEntriesCount
-	Color        string
+	MethodsStats map[string]*SizeAndEntriesCount `json:"methods"`
+	Color        string                          `json:"color"`
 }
 
 type SizeAndEntriesCount struct {
-	EntriesCount  int
-	VolumeInBytes int
+	EntriesCount  int `json:"entriesCount"`
+	VolumeInBytes int `json:"volumeInBytes"`
 }
 
 type AccumulativeStatsCounter struct {
@@ -45,9 +46,19 @@ type AccumulativeStatsProtocol struct {
 	Methods []*AccumulativeStatsCounter `json:"methods"`
 }
 
+type AccumulativeStatsProtocolTime struct {
+	ProtocolsData []*AccumulativeStatsProtocol `json:"protocols"`
+	Time          int64                        `json:"timestamp"`
+}
+
 var (
-	generalStats = GeneralStats{}
-	bucketsStats = BucketStats{}
+	generalStats      = GeneralStats{}
+	bucketsStats      = BucketStats{}
+	bucketStatsLocker = sync.Mutex{}
+)
+
+const (
+	InternalBucketThreshold = time.Minute * 1
 )
 
 func ResetGeneralStats() {
@@ -59,58 +70,27 @@ func GetGeneralStats() GeneralStats {
 }
 
 func GetAccumulativeStats() []*AccumulativeStatsProtocol {
-	bucketStatsCopy := BucketStats{}
-	if err := copier.Copy(&bucketStatsCopy, bucketsStats); err != nil {
-		logger.Log.Errorf("Error while copying src stats into temporary copied object")
+	bucketStatsCopy := getBucketStatsCopy()
+	if len(bucketStatsCopy) == 0 {
 		return make([]*AccumulativeStatsProtocol, 0)
 	}
 
-	result := make(map[string]*AccumulativeStatsProtocol, 0)
-	methodsPerProtocolAggregated := make(map[string]map[string]*AccumulativeStatsCounter, 0)
-	for _, countersOfTimeFrame := range bucketStatsCopy {
-		for protocolName, value := range countersOfTimeFrame.ProtocolStats {
+	methodsPerProtocolAggregated, protocolToColor := getAggregatedStatsAllTime(bucketStatsCopy)
 
-			if _, found := result[protocolName]; !found {
-				result[protocolName] = &AccumulativeStatsProtocol{
-					AccumulativeStatsCounter: AccumulativeStatsCounter{
-						Name:            protocolName,
-						EntriesCount:    0,
-						VolumeSizeBytes: 0,
-					},
-					Color: value.Color,
-				}
-			}
-			if _, found := methodsPerProtocolAggregated[protocolName]; !found {
-				methodsPerProtocolAggregated[protocolName] = map[string]*AccumulativeStatsCounter{}
-			}
+	return convertAccumulativeStatsDictToArray(methodsPerProtocolAggregated, protocolToColor)
+}
 
-			for method, countersValue := range value.MethodsStats {
-				if _, found := methodsPerProtocolAggregated[protocolName][method]; !found {
-					methodsPerProtocolAggregated[protocolName][method] = &AccumulativeStatsCounter{
-						Name:            method,
-						EntriesCount:    0,
-						VolumeSizeBytes: 0,
-					}
-				}
-
-				result[protocolName].AccumulativeStatsCounter.EntriesCount += countersValue.EntriesCount
-				methodsPerProtocolAggregated[protocolName][method].EntriesCount += countersValue.EntriesCount
-				result[protocolName].AccumulativeStatsCounter.VolumeSizeBytes += countersValue.VolumeInBytes
-				methodsPerProtocolAggregated[protocolName][method].VolumeSizeBytes += countersValue.VolumeInBytes
-			}
-		}
+func GetAccumulativeStatsTiming(intervalSeconds int, numberOfBars int) []*AccumulativeStatsProtocolTime {
+	bucketStatsCopy := getBucketStatsCopy()
+	if len(bucketStatsCopy) == 0 {
+		return make([]*AccumulativeStatsProtocolTime, 0)
 	}
 
-	finalResult := make([]*AccumulativeStatsProtocol, 0)
-	for _, value := range result {
-		methodsForProtocol := make([]*AccumulativeStatsCounter, 0)
-		for _, methodValue := range methodsPerProtocolAggregated[value.Name] {
-			methodsForProtocol = append(methodsForProtocol, methodValue)
-		}
-		value.Methods = methodsForProtocol
-		finalResult = append(finalResult, value)
-	}
-	return finalResult
+	firstBucketTime := getFirstBucketTime(time.Now().UTC(), intervalSeconds, numberOfBars)
+
+	methodsPerProtocolPerTimeAggregated, protocolToColor := getAggregatedResultTimingFromSpecificTime(intervalSeconds, bucketStatsCopy, firstBucketTime)
+
+	return convertAccumulativeStatsTimelineDictToArray(methodsPerProtocolPerTimeAggregated, protocolToColor)
 }
 
 func EntryAdded(size int, summery *api.BaseEntry) {
@@ -129,7 +109,8 @@ func EntryAdded(size int, summery *api.BaseEntry) {
 }
 
 func addToBucketStats(size int, summery *api.BaseEntry) {
-	entryTimeBucketRounded := time.Unix(summery.Timestamp, 0).Round(time.Minute * 1)
+	entryTimeBucketRounded := getBucketFromTimeStamp(summery.Timestamp)
+
 	if len(bucketsStats) == 0 {
 		bucketsStats = append(bucketsStats, &TimeFrameStatsValue{
 			BucketTime:    entryTimeBucketRounded,
@@ -159,4 +140,149 @@ func addToBucketStats(size int, summery *api.BaseEntry) {
 
 	bucketOfEntry.ProtocolStats[summery.Protocol.Abbreviation].MethodsStats[summery.Method].EntriesCount += 1
 	bucketOfEntry.ProtocolStats[summery.Protocol.Abbreviation].MethodsStats[summery.Method].VolumeInBytes += size
+}
+
+func getBucketFromTimeStamp(timestamp int64) time.Time {
+	entryTimeStampAsTime := time.UnixMilli(timestamp)
+	return entryTimeStampAsTime.Add(-1 * InternalBucketThreshold / 2).Round(InternalBucketThreshold)
+}
+
+func getFirstBucketTime(endTime time.Time, intervalSeconds int, numberOfBars int) time.Time {
+	lastBucketTime := endTime.Add(-1 * time.Second * time.Duration(intervalSeconds) / 2).Round(time.Second * time.Duration(intervalSeconds))
+	firstBucketTime := lastBucketTime.Add(-1 * time.Second * time.Duration(intervalSeconds*(numberOfBars-1)))
+	return firstBucketTime
+}
+
+func convertAccumulativeStatsTimelineDictToArray(methodsPerProtocolPerTimeAggregated map[time.Time]map[string]map[string]*AccumulativeStatsCounter, protocolToColor map[string]string) []*AccumulativeStatsProtocolTime {
+	finalResult := make([]*AccumulativeStatsProtocolTime, 0)
+	for timeKey, item := range methodsPerProtocolPerTimeAggregated {
+		protocolsData := make([]*AccumulativeStatsProtocol, 0)
+		for protocolName := range item {
+			entriesCount := 0
+			volumeSizeBytes := 0
+			methods := make([]*AccumulativeStatsCounter, 0)
+			for _, methodAccData := range methodsPerProtocolPerTimeAggregated[timeKey][protocolName] {
+				entriesCount += methodAccData.EntriesCount
+				volumeSizeBytes += methodAccData.VolumeSizeBytes
+				methods = append(methods, methodAccData)
+			}
+			protocolsData = append(protocolsData, &AccumulativeStatsProtocol{
+				AccumulativeStatsCounter: AccumulativeStatsCounter{
+					Name:            protocolName,
+					EntriesCount:    entriesCount,
+					VolumeSizeBytes: volumeSizeBytes,
+				},
+				Color:   protocolToColor[protocolName],
+				Methods: methods,
+			})
+		}
+		finalResult = append(finalResult, &AccumulativeStatsProtocolTime{
+			Time:          timeKey.UnixMilli(),
+			ProtocolsData: protocolsData,
+		})
+	}
+	return finalResult
+}
+
+func convertAccumulativeStatsDictToArray(methodsPerProtocolAggregated map[string]map[string]*AccumulativeStatsCounter, protocolToColor map[string]string) []*AccumulativeStatsProtocol {
+	protocolsData := make([]*AccumulativeStatsProtocol, 0)
+	for protocolName, value := range methodsPerProtocolAggregated {
+		entriesCount := 0
+		volumeSizeBytes := 0
+		methods := make([]*AccumulativeStatsCounter, 0)
+		for _, methodAccData := range value {
+			entriesCount += methodAccData.EntriesCount
+			volumeSizeBytes += methodAccData.VolumeSizeBytes
+			methods = append(methods, methodAccData)
+		}
+		protocolsData = append(protocolsData, &AccumulativeStatsProtocol{
+			AccumulativeStatsCounter: AccumulativeStatsCounter{
+				Name:            protocolName,
+				EntriesCount:    entriesCount,
+				VolumeSizeBytes: volumeSizeBytes,
+			},
+			Color:   protocolToColor[protocolName],
+			Methods: methods,
+		})
+	}
+	return protocolsData
+}
+
+func getBucketStatsCopy() BucketStats {
+	bucketStatsCopy := BucketStats{}
+	bucketStatsLocker.Lock()
+	if err := copier.Copy(&bucketStatsCopy, bucketsStats); err != nil {
+		logger.Log.Errorf("Error while copying src stats into temporary copied object")
+		return nil
+	}
+	bucketStatsLocker.Unlock()
+	return bucketStatsCopy
+}
+
+func getAggregatedResultTimingFromSpecificTime(intervalSeconds int, bucketStats BucketStats, firstBucketTime time.Time) (map[time.Time]map[string]map[string]*AccumulativeStatsCounter, map[string]string) {
+	protocolToColor := map[string]string{}
+	methodsPerProtocolPerTimeAggregated := map[time.Time]map[string]map[string]*AccumulativeStatsCounter{}
+
+	bucketStatsIndex := len(bucketStats) - 1
+	for bucketStatsIndex >= 0 {
+		currentBucketTime := bucketStats[bucketStatsIndex].BucketTime
+		if currentBucketTime.After(firstBucketTime) || currentBucketTime.Equal(firstBucketTime) {
+			resultBucketRoundedKey := currentBucketTime.Add(-1 * time.Second * time.Duration(intervalSeconds) / 2).Round(time.Second * time.Duration(intervalSeconds))
+
+			for protocolName, data := range bucketStats[bucketStatsIndex].ProtocolStats {
+				if _, ok := protocolToColor[protocolName]; !ok {
+					protocolToColor[protocolName] = data.Color
+				}
+
+				for methodName, dataOfMethod := range data.MethodsStats {
+
+					if _, ok := methodsPerProtocolPerTimeAggregated[resultBucketRoundedKey]; !ok {
+						methodsPerProtocolPerTimeAggregated[resultBucketRoundedKey] = map[string]map[string]*AccumulativeStatsCounter{}
+					}
+					if _, ok := methodsPerProtocolPerTimeAggregated[resultBucketRoundedKey][protocolName]; !ok {
+						methodsPerProtocolPerTimeAggregated[resultBucketRoundedKey][protocolName] = map[string]*AccumulativeStatsCounter{}
+					}
+					if _, ok := methodsPerProtocolPerTimeAggregated[resultBucketRoundedKey][protocolName][methodName]; !ok {
+						methodsPerProtocolPerTimeAggregated[resultBucketRoundedKey][protocolName][methodName] = &AccumulativeStatsCounter{
+							Name:            methodName,
+							EntriesCount:    0,
+							VolumeSizeBytes: 0,
+						}
+					}
+					methodsPerProtocolPerTimeAggregated[resultBucketRoundedKey][protocolName][methodName].EntriesCount += dataOfMethod.EntriesCount
+					methodsPerProtocolPerTimeAggregated[resultBucketRoundedKey][protocolName][methodName].VolumeSizeBytes += dataOfMethod.VolumeInBytes
+				}
+			}
+		}
+		bucketStatsIndex--
+	}
+	return methodsPerProtocolPerTimeAggregated, protocolToColor
+}
+
+func getAggregatedStatsAllTime(bucketStatsCopy BucketStats) (map[string]map[string]*AccumulativeStatsCounter, map[string]string) {
+	protocolToColor := make(map[string]string, 0)
+	methodsPerProtocolAggregated := make(map[string]map[string]*AccumulativeStatsCounter, 0)
+	for _, countersOfTimeFrame := range bucketStatsCopy {
+		for protocolName, value := range countersOfTimeFrame.ProtocolStats {
+			if _, ok := protocolToColor[protocolName]; !ok {
+				protocolToColor[protocolName] = value.Color
+			}
+
+			for method, countersValue := range value.MethodsStats {
+				if _, found := methodsPerProtocolAggregated[protocolName]; !found {
+					methodsPerProtocolAggregated[protocolName] = map[string]*AccumulativeStatsCounter{}
+				}
+				if _, found := methodsPerProtocolAggregated[protocolName][method]; !found {
+					methodsPerProtocolAggregated[protocolName][method] = &AccumulativeStatsCounter{
+						Name:            method,
+						EntriesCount:    0,
+						VolumeSizeBytes: 0,
+					}
+				}
+				methodsPerProtocolAggregated[protocolName][method].EntriesCount += countersValue.EntriesCount
+				methodsPerProtocolAggregated[protocolName][method].VolumeSizeBytes += countersValue.VolumeInBytes
+			}
+		}
+	}
+	return methodsPerProtocolAggregated, protocolToColor
 }

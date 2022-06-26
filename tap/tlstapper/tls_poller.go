@@ -273,13 +273,13 @@ func (p *tlsPoller) getNamespace(pid uint32) string {
 	namespaceIfc, ok := p.pidToNamespace.Load(pid)
 
 	if !ok {
-		return api.UNKNOWN_NAMESPACE
+		return api.UnknownNamespace
 	}
 
 	namespace, ok := namespaceIfc.(string)
 
 	if !ok {
-		return api.UNKNOWN_NAMESPACE
+		return api.UnknownNamespace
 	}
 
 	return namespace

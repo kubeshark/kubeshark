@@ -9,8 +9,8 @@ import (
 	"github.com/up9inc/mizu/tap/api"
 )
 
-const FLAGS_IS_CLIENT_BIT uint32 = (1 << 0)
-const FLAGS_IS_READ_BIT uint32 = (1 << 1)
+const FlagsIsClientBit uint32 = 1 << 0
+const FlagsIsReadBit uint32 = 1 << 1
 
 func (c *tlsTapperTlsChunk) getAddress() (net.IP, uint16, error) {
 	address := bytes.NewReader(c.Address[:])
@@ -36,7 +36,7 @@ func (c *tlsTapperTlsChunk) getAddress() (net.IP, uint16, error) {
 }
 
 func (c *tlsTapperTlsChunk) isClient() bool {
-	return c.Flags&FLAGS_IS_CLIENT_BIT != 0
+	return c.Flags&FlagsIsClientBit != 0
 }
 
 func (c *tlsTapperTlsChunk) isServer() bool {
@@ -44,7 +44,7 @@ func (c *tlsTapperTlsChunk) isServer() bool {
 }
 
 func (c *tlsTapperTlsChunk) isRead() bool {
-	return c.Flags&FLAGS_IS_READ_BIT != 0
+	return c.Flags&FlagsIsReadBit != 0
 }
 
 func (c *tlsTapperTlsChunk) isWrite() bool {

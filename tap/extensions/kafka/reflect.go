@@ -56,6 +56,6 @@ func makeArray(t reflect.Type, n int) array {
 
 func (a array) index(i int) value { return value{val: a.val.Index(i)} }
 
-func indexOf(s reflect.StructField) index { return index(s.Index) }
+func indexOf(s reflect.StructField) index { return s.Index }
 
 func bytesToString(b []byte) string { return string(b) }

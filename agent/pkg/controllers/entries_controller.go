@@ -44,10 +44,10 @@ func GetEntries(c *gin.Context) {
 	}
 
 	entriesProvider := dependency.GetInstance(dependency.EntriesProvider).(entries.EntriesProvider)
-	entries, metadata, err := entriesProvider.GetEntries(entriesRequest)
+	entryWrappers, metadata, err := entriesProvider.GetEntries(entriesRequest)
 	if !HandleEntriesError(c, err) {
 		baseEntries := make([]interface{}, 0)
-		for _, entry := range entries {
+		for _, entry := range entryWrappers {
 			baseEntries = append(baseEntries, entry.Base)
 		}
 		c.JSON(http.StatusOK, models.EntriesResponse{

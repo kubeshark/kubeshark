@@ -199,7 +199,7 @@ func DecodeEnforcePolicy(path string) (RulesPolicy, error) {
 	if err != nil {
 		return enforcePolicy, err
 	}
-	err = yaml.Unmarshal([]byte(content), &enforcePolicy)
+	err = yaml.Unmarshal(content, &enforcePolicy)
 	if err != nil {
 		return enforcePolicy, err
 	}

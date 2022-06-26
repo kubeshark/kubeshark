@@ -1,8 +1,9 @@
-import React, {useEffect, useState} from "react";
-import {Backdrop, Box, Fade, Modal} from "@mui/material";
+import React, { useEffect, useState } from "react";
+import { Backdrop, Box, Fade, Modal } from "@mui/material";
 import styles from "./TrafficStatsModal.module.sass";
 import closeIcon from "assets/close.svg";
-import {TrafficPieChart} from "./TrafficPieChart/TrafficPieChart";
+import { TrafficPieChart } from "./TrafficPieChart/TrafficPieChart";
+import { TimelineBarChart } from "./TimelineBarChart/TimelineBarChart";
 import spinnerImg from "assets/spinner.svg";
 
 const modalStyle = {
@@ -19,7 +20,7 @@ const modalStyle = {
   color: '#000',
 };
 
-enum StatsMode {
+export enum StatsMode {
   REQUESTS = "entriesCount",
   VOLUME = "volumeSizeBytes"
 }
@@ -27,23 +28,27 @@ enum StatsMode {
 interface TrafficStatsModalProps {
   isOpen: boolean;
   onClose: () => void;
-  getTrafficStatsDataApi: () => Promise<any>
+  getPieStatsDataApi: () => Promise<any>
+  getTimelineStatsDataApi: () => Promise<any>
 }
 
-export const TrafficStatsModal: React.FC<TrafficStatsModalProps> = ({ isOpen, onClose, getTrafficStatsDataApi }) => {
+export const TrafficStatsModal: React.FC<TrafficStatsModalProps> = ({ isOpen, onClose, getPieStatsDataApi, getTimelineStatsDataApi }) => {
 
   const modes = Object.keys(StatsMode).filter(x => !(parseInt(x) >= 0));
   const [statsMode, setStatsMode] = useState(modes[0]);
-  const [statsData, setStatsData] = useState(null);
+  const [pieStatsData, setPieStatsData] = useState(null);
+  const [timelineStatsData, setTimelineStatsData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    if(isOpen && getTrafficStatsDataApi) {
+    if (isOpen && getPieStatsDataApi) {
       (async () => {
         try {
           setIsLoading(true);
-          const data = await getTrafficStatsDataApi();
-          setStatsData(data);
+          const pieData = await getPieStatsDataApi();
+          setPieStatsData(pieData);
+          const timelineData = await getTimelineStatsDataApi();
+          setTimelineStatsData(timelineData);
         } catch (e) {
           console.error(e)
         } finally {
@@ -51,7 +56,7 @@ export const TrafficStatsModal: React.FC<TrafficStatsModalProps> = ({ isOpen, on
         }
       })()
     }
-  }, [isOpen, getTrafficStatsDataApi])
+  }, [isOpen, getPieStatsDataApi, getTimelineStatsDataApi, setPieStatsData, setTimelineStatsData])
 
   return (
     <Modal
@@ -65,19 +70,25 @@ export const TrafficStatsModal: React.FC<TrafficStatsModalProps> = ({ isOpen, on
       <Fade in={isOpen}>
         <Box sx={modalStyle}>
           <div className={styles.closeIcon}>
-            <img src={closeIcon} alt="close" onClick={() => onClose()} style={{ cursor: "pointer", userSelect: "none" }}/>
+            <img src={closeIcon} alt="close" onClick={() => onClose()} style={{ cursor: "pointer", userSelect: "none" }} />
           </div>
           <div className={styles.title}>Traffic Statistics</div>
           <div className={styles.mainContainer}>
             <div>
-              <span style={{marginRight: 15}}>Breakdown By</span>
+              <span style={{ marginRight: 15 }}>Breakdown By</span>
               <select className={styles.select} value={statsMode} onChange={(e) => setStatsMode(e.target.value)}>
-                {modes.map(mode => <option value={mode}>{mode}</option>)}
+                {modes.map(mode => <option key={mode} value={mode}>{mode}</option>)}
               </select>
             </div>
-            {isLoading ? <div style={{textAlign: "center", marginTop: 20}}>
+            <div>
+              {isLoading ? <div style={{ textAlign: "center", marginTop: 20 }}>
                 <img alt="spinner" src={spinnerImg} style={{ height: 50 }} />
-            </div> : <TrafficPieChart pieChartMode={statsMode} data={statsData}/>}
+              </div> : 
+                <div>
+                  <TrafficPieChart pieChartMode={statsMode} data={pieStatsData} />
+                  <TimelineBarChart timeLineBarChartMode={statsMode} data={timelineStatsData} />
+                </div>}
+            </div>
           </div>
         </Box>
       </Fade>

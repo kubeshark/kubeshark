@@ -73,11 +73,7 @@ func shouldRunTelemetry() bool {
 		return false
 	}
 
-	if mizu.Branch != "main" && mizu.Branch != "develop" {
-		return false
-	}
-
-	return true
+	return mizu.Branch == "main" || mizu.Branch == "develop"
 }
 
 func sendTelemetry(argsMap map[string]interface{}) error {

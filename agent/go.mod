@@ -6,7 +6,6 @@ require (
 	github.com/antelman107/net-wait-go v0.0.0-20210623112055-cf684aebda7b
 	github.com/chanced/openapi v0.0.8
 	github.com/djherbis/atime v1.1.0
-	github.com/getkin/kin-openapi v0.89.0
 	github.com/gin-contrib/pprof v1.3.0
 	github.com/gin-contrib/static v0.0.1
 	github.com/gin-gonic/gin v1.7.7
@@ -59,7 +58,6 @@ require (
 	github.com/exponent-io/jsonpath v0.0.0-20210407135951-1de76d718b3f // indirect
 	github.com/fatih/camelcase v1.0.0 // indirect
 	github.com/fvbommel/sortorder v1.0.2 // indirect
-	github.com/ghodss/yaml v1.0.0 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
 	github.com/go-errors/errors v1.4.2 // indirect
 	github.com/go-logr/logr v1.2.2 // indirect

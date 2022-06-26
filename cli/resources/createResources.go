@@ -14,14 +14,14 @@ import (
 	core "k8s.io/api/core/v1"
 )
 
-func CreateTapMizuResources(ctx context.Context, kubernetesProvider *kubernetes.Provider, serializedValidationRules string, serializedContract string, serializedMizuConfig string, isNsRestrictedMode bool, mizuResourcesNamespace string, agentImage string, maxEntriesDBSizeBytes int64, apiServerResources shared.Resources, imagePullPolicy core.PullPolicy, logLevel logging.Level, profiler bool) (bool, error) {
+func CreateTapMizuResources(ctx context.Context, kubernetesProvider *kubernetes.Provider, serializedValidationRules string, serializedMizuConfig string, isNsRestrictedMode bool, mizuResourcesNamespace string, agentImage string, maxEntriesDBSizeBytes int64, apiServerResources shared.Resources, imagePullPolicy core.PullPolicy, logLevel logging.Level, profiler bool) (bool, error) {
 	if !isNsRestrictedMode {
 		if err := createMizuNamespace(ctx, kubernetesProvider, mizuResourcesNamespace); err != nil {
 			return false, err
 		}
 	}
 
-	if err := createMizuConfigmap(ctx, kubernetesProvider, serializedValidationRules, serializedContract, serializedMizuConfig, mizuResourcesNamespace); err != nil {
+	if err := createMizuConfigmap(ctx, kubernetesProvider, serializedValidationRules, serializedMizuConfig, mizuResourcesNamespace); err != nil {
 		return false, err
 	}
 
@@ -71,8 +71,8 @@ func createMizuNamespace(ctx context.Context, kubernetesProvider *kubernetes.Pro
 	return err
 }
 
-func createMizuConfigmap(ctx context.Context, kubernetesProvider *kubernetes.Provider, serializedValidationRules string, serializedContract string, serializedMizuConfig string, mizuResourcesNamespace string) error {
-	err := kubernetesProvider.CreateConfigMap(ctx, mizuResourcesNamespace, kubernetes.ConfigMapName, serializedValidationRules, serializedContract, serializedMizuConfig)
+func createMizuConfigmap(ctx context.Context, kubernetesProvider *kubernetes.Provider, serializedValidationRules string, serializedMizuConfig string, mizuResourcesNamespace string) error {
+	err := kubernetesProvider.CreateConfigMap(ctx, mizuResourcesNamespace, kubernetes.ConfigMapName, serializedValidationRules, serializedMizuConfig)
 	return err
 }
 
