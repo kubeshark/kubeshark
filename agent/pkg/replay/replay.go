@@ -11,6 +11,7 @@ import (
 	"github.com/up9inc/mizu/agent/pkg/app"
 	"github.com/up9inc/mizu/shared"
 	tapApi "github.com/up9inc/mizu/tap/api"
+	mizuhttp "github.com/up9inc/mizu/tap/extensions/http"
 )
 
 var (
@@ -68,8 +69,8 @@ func ExecuteRequest(replayData *shared.ReplayDetails) (*tapApi.EntryWrapper, err
 					IsRequest:   true,
 					CaptureTime: captureTime,
 					CaptureSize: 0,
-					Payload: tapApi.HTTPPayload{
-						Type: tapApi.TypeHttpRequest,
+					Payload: mizuhttp.HTTPPayload{
+						Type: mizuhttp.TypeHttpRequest,
 						Data: request,
 					},
 				},
@@ -77,8 +78,8 @@ func ExecuteRequest(replayData *shared.ReplayDetails) (*tapApi.EntryWrapper, err
 					IsRequest:   false,
 					CaptureTime: captureTime,
 					CaptureSize: 0,
-					Payload: tapApi.HTTPPayload{
-						Type: tapApi.TypeHttpResponse,
+					Payload: mizuhttp.HTTPPayload{
+						Type: mizuhttp.TypeHttpResponse,
 						Data: response,
 					},
 				},
