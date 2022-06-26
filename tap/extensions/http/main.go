@@ -99,12 +99,12 @@ var graphQL2Protocol = api.Protocol{
 }
 
 var protocolsMap = map[string]*api.Protocol{
-	fmt.Sprintf("%v/%v/%v", http10protocol.Name, http10protocol.Version, http10protocol.Abbreviation):       &http10protocol,
-	fmt.Sprintf("%v/%v/%v", http11protocol.Name, http11protocol.Version, http11protocol.Abbreviation):       &http11protocol,
-	fmt.Sprintf("%v/%v/%v", http2Protocol.Name, http2Protocol.Version, http2Protocol.Abbreviation):          &http2Protocol,
-	fmt.Sprintf("%v/%v/%v", grpcProtocol.Name, grpcProtocol.Version, grpcProtocol.Abbreviation):             &grpcProtocol,
-	fmt.Sprintf("%v/%v/%v", graphQL1Protocol.Name, graphQL1Protocol.Version, graphQL1Protocol.Abbreviation): &graphQL1Protocol,
-	fmt.Sprintf("%v/%v/%v", graphQL2Protocol.Name, graphQL2Protocol.Version, graphQL2Protocol.Abbreviation): &graphQL2Protocol,
+	fmt.Sprintf("%s/%s/%s", http10protocol.Name, http10protocol.Version, http10protocol.Abbreviation):       &http10protocol,
+	fmt.Sprintf("%s/%s/%s", http11protocol.Name, http11protocol.Version, http11protocol.Abbreviation):       &http11protocol,
+	fmt.Sprintf("%s/%s/%s", http2Protocol.Name, http2Protocol.Version, http2Protocol.Abbreviation):          &http2Protocol,
+	fmt.Sprintf("%s/%s/%s", grpcProtocol.Name, grpcProtocol.Version, grpcProtocol.Abbreviation):             &grpcProtocol,
+	fmt.Sprintf("%s/%s/%s", graphQL1Protocol.Name, graphQL1Protocol.Version, graphQL1Protocol.Abbreviation): &graphQL1Protocol,
+	fmt.Sprintf("%s/%s/%s", graphQL2Protocol.Name, graphQL2Protocol.Version, graphQL2Protocol.Abbreviation): &graphQL2Protocol,
 }
 
 const (
@@ -294,7 +294,7 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, 
 	}
 
 	return &api.Entry{
-		ProtocolUniqueName: fmt.Sprintf("%v/%v/%v", item.Protocol.Name, item.Protocol.Version, item.Protocol.Abbreviation),
+		ProtocolUniqueName: fmt.Sprintf("%s/%s/%s", item.Protocol.Name, item.Protocol.Version, item.Protocol.Abbreviation),
 		Capture:            item.Capture,
 		Source: &api.TCP{
 			Name: resolvedSource,
@@ -516,10 +516,10 @@ func (d dissecting) Represent(request map[string]interface{}, response map[strin
 
 func (d dissecting) Macros() map[string]string {
 	return map[string]string{
-		`http`:  fmt.Sprintf(`protocol == "%v/%v/%v" or protocol == "%v/%v/%v"`, http10protocol.Name, http10protocol.Version, http10protocol.Abbreviation, http11protocol.Name, http11protocol.Version, http11protocol.Abbreviation),
-		`http2`: fmt.Sprintf(`protocol == "%v/%v/%v"`, http2Protocol.Name, http2Protocol.Version, http2Protocol.Abbreviation),
-		`grpc`:  fmt.Sprintf(`protocol == "%v/%v/%v"`, grpcProtocol.Name, grpcProtocol.Version, grpcProtocol.Abbreviation),
-		`gql`:   fmt.Sprintf(`protocol == "%v/%v/%v" or protocol == "%v/%v/%v"`, graphQL1Protocol.Name, graphQL1Protocol.Version, graphQL1Protocol.Abbreviation, graphQL2Protocol.Name, graphQL2Protocol.Version, graphQL2Protocol.Abbreviation),
+		`http`:  fmt.Sprintf(`protocol == "%s/%s/%s" or protocol == "%s/%s/%s"`, http10protocol.Name, http10protocol.Version, http10protocol.Abbreviation, http11protocol.Name, http11protocol.Version, http11protocol.Abbreviation),
+		`http2`: fmt.Sprintf(`protocol == "%s/%s/%s"`, http2Protocol.Name, http2Protocol.Version, http2Protocol.Abbreviation),
+		`grpc`:  fmt.Sprintf(`protocol == "%s/%s/%s"`, grpcProtocol.Name, grpcProtocol.Version, grpcProtocol.Abbreviation),
+		`gql`:   fmt.Sprintf(`protocol == "%s/%s/%s" or protocol == "%s/%s/%s"`, graphQL1Protocol.Name, graphQL1Protocol.Version, graphQL1Protocol.Abbreviation, graphQL2Protocol.Name, graphQL2Protocol.Version, graphQL2Protocol.Abbreviation),
 	}
 }
 

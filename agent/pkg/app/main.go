@@ -80,7 +80,7 @@ func LoadExtensions() {
 		return Extensions[i].Protocol.Priority < Extensions[j].Protocol.Priority
 	})
 
-	api.Init(ExtensionsMap, ProtocolsMap)
+	api.InitMaps(ExtensionsMap, ProtocolsMap)
 }
 
 func ConfigureBasenineServer(host string, port string, dbSize int64, logLevel logging.Level, insertionFilter string) {

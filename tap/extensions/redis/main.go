@@ -25,7 +25,7 @@ var protocol = api.Protocol{
 }
 
 var protocolsMap = map[string]*api.Protocol{
-	fmt.Sprintf("%v/%v/%v", protocol.Name, protocol.Version, protocol.Abbreviation): &protocol,
+	fmt.Sprintf("%s/%s/%s", protocol.Name, protocol.Version, protocol.Abbreviation): &protocol,
 }
 
 type dissecting string
@@ -78,7 +78,7 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, 
 		elapsedTime = 0
 	}
 	return &api.Entry{
-		ProtocolUniqueName: fmt.Sprintf("%v/%v/%v", protocol.Name, protocol.Version, protocol.Abbreviation),
+		ProtocolUniqueName: fmt.Sprintf("%s/%s/%s", protocol.Name, protocol.Version, protocol.Abbreviation),
 		Capture:            item.Capture,
 		Source: &api.TCP{
 			Name: resolvedSource,
@@ -152,7 +152,7 @@ func (d dissecting) Represent(request map[string]interface{}, response map[strin
 
 func (d dissecting) Macros() map[string]string {
 	return map[string]string{
-		`redis`: fmt.Sprintf(`protocol == "%v/%v/%v"`, protocol.Name, protocol.Version, protocol.Abbreviation),
+		`redis`: fmt.Sprintf(`protocol == "%s/%s/%s"`, protocol.Name, protocol.Version, protocol.Abbreviation),
 	}
 }
 

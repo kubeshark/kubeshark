@@ -25,7 +25,7 @@ var _protocol = api.Protocol{
 }
 
 var protocolsMap = map[string]*api.Protocol{
-	fmt.Sprintf("%v/%v/%v", _protocol.Name, _protocol.Version, _protocol.Abbreviation): &_protocol,
+	fmt.Sprintf("%s/%s/%s", _protocol.Name, _protocol.Version, _protocol.Abbreviation): &_protocol,
 }
 
 type dissecting string
@@ -70,7 +70,7 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, 
 		elapsedTime = 0
 	}
 	return &api.Entry{
-		ProtocolUniqueName: fmt.Sprintf("%v/%v/%v", _protocol.Name, _protocol.Version, _protocol.Abbreviation),
+		ProtocolUniqueName: fmt.Sprintf("%s/%s/%s", _protocol.Name, _protocol.Version, _protocol.Abbreviation),
 		Capture:            item.Capture,
 		Source: &api.TCP{
 			Name: resolvedSource,
@@ -251,7 +251,7 @@ func (d dissecting) Represent(request map[string]interface{}, response map[strin
 
 func (d dissecting) Macros() map[string]string {
 	return map[string]string{
-		`kafka`: fmt.Sprintf(`protocol == "%v/%v/%v"`, _protocol.Name, _protocol.Version, _protocol.Abbreviation),
+		`kafka`: fmt.Sprintf(`protocol == "%s/%s/%s"`, _protocol.Name, _protocol.Version, _protocol.Abbreviation),
 	}
 }
 

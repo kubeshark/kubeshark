@@ -19,7 +19,7 @@ var (
 	protocolsMap  map[string]*tapApi.Protocol  //global
 )
 
-func Init(extensions map[string]*tapApi.Extension, protocols map[string]*tapApi.Protocol) {
+func InitMaps(extensions map[string]*tapApi.Extension, protocols map[string]*tapApi.Protocol) {
 	extensionsMap = extensions
 	protocolsMap = protocols
 }
