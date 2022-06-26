@@ -1,11 +1,11 @@
-import React, { useCallback, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import EntryViewer from "./EntryViewer/EntryViewer";
 import { EntryItem } from "../EntryListItem/EntryListItem";
 import makeStyles from '@mui/styles/makeStyles';
 import Protocol from "../UI/Protocol/Protocol"
 import Queryable from "../UI/Queryable/Queryable";
 import { toast } from "react-toastify";
-import { RecoilState, useRecoilValue } from "recoil";
+import { RecoilState, useRecoilState, useRecoilValue } from "recoil";
 import focusedEntryIdAtom from "../../recoil/focusedEntryId";
 import TrafficViewerApi from "../TrafficViewer/TrafficViewerApi";
 import TrafficViewerApiAtom from "../../recoil/TrafficViewerApi/atom";
@@ -13,8 +13,7 @@ import queryAtom from "../../recoil/query/atom";
 import useWindowDimensions, { useRequestTextByWidth } from "../../hooks/WindowDimensionsHook";
 import { TOAST_CONTAINER_ID } from "../../configs/Consts";
 import spinner from "assets/spinner.svg";
-import playIcon from 'assets/run.svg';
-import ReplayRequestModal from "../modals/ReplayRequestModal/ReplayRequestModal";
+import entryDataAtom from "../../recoil/entryData";
 
 const useStyles = makeStyles(() => ({
     entryTitle: {
@@ -38,21 +37,15 @@ const useStyles = makeStyles(() => ({
     }
 }));
 
-const enabledProtocolsForReplay = ["http"]
-
 export const formatSize = (n: number) => n > 1000 ? `${Math.round(n / 1000)}KB` : `${n} B`;
 const minSizeDisplayRequestSize = 880;
 const EntryTitle: React.FC<any> = ({ protocol, data, elapsedTime }) => {
-    const [isOpenRequestModal, setIsOpenRequestModal] = useState(false)
     const classes = useStyles();
     const request = data.request;
     const response = data.response;
 
     const { width } = useWindowDimensions();
     const { requestText, responseText, elapsedTimeText } = useRequestTextByWidth(width)
-    const isReplayAllowed = useCallback(() => {
-        return enabledProtocolsForReplay.find(x => x === protocol.name)
-    }, [protocol])
 
     return <div className={classes.entryTitle}>
         <Protocol protocol={protocol} horizontal={true} />
@@ -93,9 +86,7 @@ const EntryTitle: React.FC<any> = ({ protocol, data, elapsedTime }) => {
                     {`${elapsedTimeText}${Math.round(elapsedTime)}ms`}
                 </div>
             </Queryable>}
-            {isReplayAllowed() && <img title="Replay Request" src={playIcon} style={{ marginLeft: "10px", cursor: "pointer" }} onClick={() => setIsOpenRequestModal(true)} alt="Replay Request" />}
         </div>}
-        <ReplayRequestModal request={request} isOpen={isOpenRequestModal} onClose={() => setIsOpenRequestModal(false)} />
     </div>;
 };
 
@@ -117,7 +108,7 @@ export const EntryDetailed = () => {
     const trafficViewerApi = useRecoilValue(TrafficViewerApiAtom as RecoilState<TrafficViewerApi>)
     const query = useRecoilValue(queryAtom);
     const [isLoading, setIsLoading] = useState(false);
-    const [entryData, setEntryData] = useState(null);
+    const [entryData, setEntryData] = useRecoilState(entryDataAtom)
 
     useEffect(() => {
       setEntryData(null);
