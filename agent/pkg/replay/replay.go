@@ -2,6 +2,7 @@ package replay
 
 import (
 	"bytes"
+	"encoding/json"
 	"errors"
 	"net/http"
 	"sync"
@@ -60,6 +61,20 @@ func ExecuteRequest(replayData *shared.ReplayDetails) (*tapApi.EntryWrapper, err
 		captureTime := time.Now()
 		extension := app.ExtensionsMap["http"]
 
+		httpRequestWrapperBytes, _ := json.Marshal(&mizuhttp.HTTPPayload{
+			Type: mizuhttp.TypeHttpRequest,
+			Data: request,
+		})
+		var httpRequestWrapper map[string]interface{}
+		_ = json.Unmarshal(httpRequestWrapperBytes, &httpRequestWrapper)
+
+		httpResponseWrapperBytes, _ := json.Marshal(&mizuhttp.HTTPPayload{
+			Type: mizuhttp.TypeHttpResponse,
+			Data: response,
+		})
+		var httpResponseWrapper map[string]interface{}
+		_ = json.Unmarshal(httpResponseWrapperBytes, &httpResponseWrapper)
+
 		item := tapApi.OutputChannelItem{
 			Protocol: *extension.Protocol,
 			ConnectionInfo: &tapApi.ConnectionInfo{
@@ -78,7 +93,7 @@ func ExecuteRequest(replayData *shared.ReplayDetails) (*tapApi.EntryWrapper, err
 					CaptureSize: 0,
 					Payload: mizuhttp.HTTPPayload{
 						Type: mizuhttp.TypeHttpRequest,
-						Data: request,
+						Data: httpRequestWrapper,
 					},
 				},
 				Response: tapApi.GenericMessage{
@@ -87,7 +102,7 @@ func ExecuteRequest(replayData *shared.ReplayDetails) (*tapApi.EntryWrapper, err
 					CaptureSize: 0,
 					Payload: mizuhttp.HTTPPayload{
 						Type: mizuhttp.TypeHttpResponse,
-						Data: response,
+						Data: httpResponseWrapper,
 					},
 				},
 			},
