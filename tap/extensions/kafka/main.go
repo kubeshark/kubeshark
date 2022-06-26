@@ -24,7 +24,9 @@ var _protocol = api.Protocol{
 	Priority:        2,
 }
 
-var protocolsMap map[string]*api.Protocol
+var protocolsMap = map[string]*api.Protocol{
+	fmt.Sprintf("%v/%v/%v", _protocol.Name, _protocol.Version, _protocol.Abbreviation): &_protocol,
+}
 
 type dissecting string
 
@@ -33,10 +35,6 @@ func (d dissecting) Register(extension *api.Extension) {
 }
 
 func (d dissecting) GetProtocols() map[string]*api.Protocol {
-	protocolsMap = make(map[string]*api.Protocol)
-
-	protocolsMap[fmt.Sprintf("%v/%v/%v", _protocol.Name, _protocol.Version, _protocol.Abbreviation)] = &_protocol
-
 	return protocolsMap
 }
 

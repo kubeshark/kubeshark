@@ -98,7 +98,14 @@ var graphQL2Protocol = api.Protocol{
 	Priority:        0,
 }
 
-var protocolsMap map[string]*api.Protocol
+var protocolsMap = map[string]*api.Protocol{
+	fmt.Sprintf("%v/%v/%v", http10protocol.Name, http10protocol.Version, http10protocol.Abbreviation):       &http10protocol,
+	fmt.Sprintf("%v/%v/%v", http11protocol.Name, http11protocol.Version, http11protocol.Abbreviation):       &http11protocol,
+	fmt.Sprintf("%v/%v/%v", http2Protocol.Name, http2Protocol.Version, http2Protocol.Abbreviation):          &http2Protocol,
+	fmt.Sprintf("%v/%v/%v", grpcProtocol.Name, grpcProtocol.Version, grpcProtocol.Abbreviation):             &grpcProtocol,
+	fmt.Sprintf("%v/%v/%v", graphQL1Protocol.Name, graphQL1Protocol.Version, graphQL1Protocol.Abbreviation): &graphQL1Protocol,
+	fmt.Sprintf("%v/%v/%v", graphQL2Protocol.Name, graphQL2Protocol.Version, graphQL2Protocol.Abbreviation): &graphQL2Protocol,
+}
 
 const (
 	TypeHttpRequest = iota
@@ -112,15 +119,6 @@ func (d dissecting) Register(extension *api.Extension) {
 }
 
 func (d dissecting) GetProtocols() map[string]*api.Protocol {
-	protocolsMap = make(map[string]*api.Protocol)
-
-	protocolsMap[fmt.Sprintf("%v/%v/%v", http10protocol.Name, http10protocol.Version, http10protocol.Abbreviation)] = &http10protocol
-	protocolsMap[fmt.Sprintf("%v/%v/%v", http11protocol.Name, http11protocol.Version, http11protocol.Abbreviation)] = &http11protocol
-	protocolsMap[fmt.Sprintf("%v/%v/%v", http2Protocol.Name, http2Protocol.Version, http2Protocol.Abbreviation)] = &http2Protocol
-	protocolsMap[fmt.Sprintf("%v/%v/%v", grpcProtocol.Name, grpcProtocol.Version, grpcProtocol.Abbreviation)] = &grpcProtocol
-	protocolsMap[fmt.Sprintf("%v/%v/%v", graphQL1Protocol.Name, graphQL1Protocol.Version, graphQL1Protocol.Abbreviation)] = &graphQL1Protocol
-	protocolsMap[fmt.Sprintf("%v/%v/%v", graphQL2Protocol.Name, graphQL2Protocol.Version, graphQL2Protocol.Abbreviation)] = &graphQL2Protocol
-
 	return protocolsMap
 }
 
