@@ -127,6 +127,7 @@ func (p *ReadProgress) Reset() {
 
 type Dissector interface {
 	Register(*Extension)
+	GetProtocols() map[string]*Protocol
 	Ping()
 	Dissect(b *bufio.Reader, reader TcpReader, options *TrafficFilteringOptions) error
 	Analyze(item *OutputChannelItem, resolvedSource string, resolvedDestination string, namespace string) *Entry
@@ -162,7 +163,7 @@ func (e *Emitting) Emit(item *OutputChannelItem) {
 
 type Entry struct {
 	Id                     string                 `json:"id"`
-	Protocol               Protocol               `json:"proto"`
+	ProtocolUniqueName     string                 `json:"protocol"`
 	Capture                Capture                `json:"capture"`
 	Source                 *TCP                   `json:"src"`
 	Destination            *TCP                   `json:"dst"`

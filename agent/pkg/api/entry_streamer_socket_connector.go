@@ -22,7 +22,8 @@ func (e *DefaultEntryStreamerSocketConnector) SendEntry(socketId int, entry *tap
 	if params.EnableFullEntries {
 		message, _ = models.CreateFullEntryWebSocketMessage(entry)
 	} else {
-		extension := extensionsMap[entry.Protocol.Name]
+		protocol := protocolsMap[entry.ProtocolUniqueName]
+		extension := extensionsMap[protocol.Name]
 		base := extension.Dissector.Summarize(entry)
 		message, _ = models.CreateBaseEntryWebSocketMessage(base)
 	}

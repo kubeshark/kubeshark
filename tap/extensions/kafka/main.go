@@ -24,10 +24,20 @@ var _protocol = api.Protocol{
 	Priority:        2,
 }
 
+var protocolsMap map[string]*api.Protocol
+
 type dissecting string
 
 func (d dissecting) Register(extension *api.Extension) {
 	extension.Protocol = &_protocol
+}
+
+func (d dissecting) GetProtocols() map[string]*api.Protocol {
+	protocolsMap = make(map[string]*api.Protocol)
+
+	protocolsMap[fmt.Sprintf("%v/%v/%v", _protocol.Name, _protocol.Version, _protocol.Abbreviation)] = &_protocol
+
+	return protocolsMap
 }
 
 func (d dissecting) Ping() {
@@ -62,8 +72,8 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, 
 		elapsedTime = 0
 	}
 	return &api.Entry{
-		Protocol: _protocol,
-		Capture:  item.Capture,
+		ProtocolUniqueName: fmt.Sprintf("%v/%v/%v", _protocol.Name, _protocol.Version, _protocol.Abbreviation),
+		Capture:            item.Capture,
 		Source: &api.TCP{
 			Name: resolvedSource,
 			IP:   item.ConnectionInfo.ClientIP,
@@ -187,7 +197,7 @@ func (d dissecting) Summarize(entry *api.Entry) *api.BaseEntry {
 
 	return &api.BaseEntry{
 		Id:             entry.Id,
-		Protocol:       entry.Protocol,
+		Protocol:       *protocolsMap[entry.ProtocolUniqueName],
 		Capture:        entry.Capture,
 		Summary:        summary,
 		SummaryQuery:   summaryQuery,

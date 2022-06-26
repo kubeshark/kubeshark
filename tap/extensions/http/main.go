@@ -98,6 +98,8 @@ var graphQL2Protocol = api.Protocol{
 	Priority:        0,
 }
 
+var protocolsMap map[string]*api.Protocol
+
 const (
 	TypeHttpRequest = iota
 	TypeHttpResponse
@@ -107,6 +109,19 @@ type dissecting string
 
 func (d dissecting) Register(extension *api.Extension) {
 	extension.Protocol = &http11protocol
+}
+
+func (d dissecting) GetProtocols() map[string]*api.Protocol {
+	protocolsMap = make(map[string]*api.Protocol)
+
+	protocolsMap[fmt.Sprintf("%v/%v/%v", http10protocol.Name, http10protocol.Version, http10protocol.Abbreviation)] = &http10protocol
+	protocolsMap[fmt.Sprintf("%v/%v/%v", http11protocol.Name, http11protocol.Version, http11protocol.Abbreviation)] = &http11protocol
+	protocolsMap[fmt.Sprintf("%v/%v/%v", http2Protocol.Name, http2Protocol.Version, http2Protocol.Abbreviation)] = &http2Protocol
+	protocolsMap[fmt.Sprintf("%v/%v/%v", grpcProtocol.Name, grpcProtocol.Version, grpcProtocol.Abbreviation)] = &grpcProtocol
+	protocolsMap[fmt.Sprintf("%v/%v/%v", graphQL1Protocol.Name, graphQL1Protocol.Version, graphQL1Protocol.Abbreviation)] = &graphQL1Protocol
+	protocolsMap[fmt.Sprintf("%v/%v/%v", graphQL2Protocol.Name, graphQL2Protocol.Version, graphQL2Protocol.Abbreviation)] = &graphQL2Protocol
+
+	return protocolsMap
 }
 
 func (d dissecting) Ping() {
@@ -281,8 +296,8 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, 
 	}
 	httpPair, _ := json.Marshal(item.Pair)
 	return &api.Entry{
-		Protocol: item.Protocol,
-		Capture:  item.Capture,
+		ProtocolUniqueName: fmt.Sprintf("%v/%v/%v", item.Protocol.Name, item.Protocol.Version, item.Protocol.Abbreviation),
+		Capture:            item.Capture,
 		Source: &api.TCP{
 			Name: resolvedSource,
 			IP:   item.ConnectionInfo.ClientIP,
@@ -316,7 +331,7 @@ func (d dissecting) Summarize(entry *api.Entry) *api.BaseEntry {
 
 	return &api.BaseEntry{
 		Id:             entry.Id,
-		Protocol:       entry.Protocol,
+		Protocol:       *protocolsMap[entry.ProtocolUniqueName],
 		Capture:        entry.Capture,
 		Summary:        summary,
 		SummaryQuery:   summaryQuery,

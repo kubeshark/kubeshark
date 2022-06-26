@@ -38,11 +38,12 @@ func (e *BasenineEntriesProvider) GetEntries(entriesRequest *models.EntriesReque
 			return nil, nil, err
 		}
 
-		extension := app.ExtensionsMap[entry.Protocol.Name]
+		protocol := app.ProtocolsMap[entry.ProtocolUniqueName]
+		extension := app.ExtensionsMap[protocol.Name]
 		base := extension.Dissector.Summarize(entry)
 
 		dataSlice = append(dataSlice, &tapApi.EntryWrapper{
-			Protocol: entry.Protocol,
+			Protocol: *protocol,
 			Data:     entry,
 			Base:     base,
 		})
@@ -68,7 +69,8 @@ func (e *BasenineEntriesProvider) GetEntry(singleEntryRequest *models.SingleEntr
 		return nil, errors.New(string(bytes))
 	}
 
-	extension := app.ExtensionsMap[entry.Protocol.Name]
+	protocol := app.ProtocolsMap[entry.ProtocolUniqueName]
+	extension := app.ExtensionsMap[protocol.Name]
 	base := extension.Dissector.Summarize(entry)
 	var representation []byte
 	representation, err = extension.Dissector.Represent(entry.Request, entry.Response)
@@ -78,7 +80,7 @@ func (e *BasenineEntriesProvider) GetEntry(singleEntryRequest *models.SingleEntr
 
 	var rules []map[string]interface{}
 	var isRulesEnabled bool
-	if entry.Protocol.Name == "http" {
+	if protocol.Name == "http" {
 		harEntry, _ := har.NewEntry(entry.Request, entry.Response, entry.StartTime, entry.ElapsedTime)
 		_, rulesMatched, _isRulesEnabled := models.RunValidationRulesState(*harEntry, entry.Destination.Name)
 		isRulesEnabled = _isRulesEnabled
@@ -89,7 +91,7 @@ func (e *BasenineEntriesProvider) GetEntry(singleEntryRequest *models.SingleEntr
 	}
 
 	return &tapApi.EntryWrapper{
-		Protocol:       entry.Protocol,
+		Protocol:       *protocol,
 		Representation: string(representation),
 		Data:           entry,
 		Base:           base,
