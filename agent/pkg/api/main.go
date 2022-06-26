@@ -99,14 +99,6 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 		panic("Channel of captured messages is nil")
 	}
 
-	disableOASValidation := false
-	ctx := context.Background()
-	doc, contractContent, router, err := loadOAS(ctx)
-	if err != nil {
-		logger.Log.Infof("Disabled OAS validation: %s", err.Error())
-		disableOASValidation = true
-	}
-
 	for item := range outputItems {
 		extension := extensionsMap[item.Protocol.Name]
 		resolvedSource, resolvedDestionation, namespace := resolveIP(item.ConnectionInfo)
@@ -117,19 +109,6 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 
 		mizuEntry := extension.Dissector.Analyze(item, resolvedSource, resolvedDestionation, namespace)
 		if extension.Protocol.Name == "http" {
-			if !disableOASValidation {
-				var httpPair tapApi.HTTPRequestResponsePair
-				if err := json.Unmarshal([]byte(mizuEntry.HTTPPair), &httpPair); err != nil {
-					logger.Log.Error(err)
-				} else {
-					contract := handleOAS(ctx, doc, router, httpPair.Request.Payload.RawRequest, httpPair.Response.Payload.RawResponse, contractContent)
-					mizuEntry.ContractStatus = contract.Status
-					mizuEntry.ContractRequestReason = contract.RequestReason
-					mizuEntry.ContractResponseReason = contract.ResponseReason
-					mizuEntry.ContractContent = contract.Content
-				}
-			}
-
 			harEntry, err := har.NewEntry(mizuEntry.Request, mizuEntry.Response, mizuEntry.StartTime, mizuEntry.ElapsedTime)
 			if err == nil {
 				rules, _, _ := models.RunValidationRulesState(*harEntry, mizuEntry.Destination.Name)

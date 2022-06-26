@@ -147,10 +147,6 @@ export const EntryDetailed = () => {
                 representation={entryData.representation}
                 isRulesEnabled={entryData.isRulesEnabled}
                 rulesMatched={entryData.rulesMatched}
-                contractStatus={entryData.data.contractStatus}
-                requestReason={entryData.data.contractRequestReason}
-                responseReason={entryData.data.contractResponseReason}
-                contractContent={entryData.data.contractContent}
                 elapsedTime={entryData.data.elapsedTime}
                 color={entryData.protocol.backgroundColor}
             />}
