@@ -20,8 +20,8 @@ RUN ./configure --host=arm && make \
 WORKDIR /work
 
 # Build and install Capstone from source
-RUN curl https://github.com/capstone-engine/capstone/archive/4.0.2.tar.gz -Lo ./capstone.tar.gz \
- && tar -xzf capstone.tar.gz && mv ./capstone-* ./capstone
+RUN curl https://github.com/capstone-engine/capstone/releases/download/5.0-rc2/capstone-5.0-rc2.tar.xz -Lo ./capstone.tar.xz \
+ && tar -xf capstone.tar.xz && mv ./capstone-* ./capstone
 WORKDIR /work/capstone
 RUN CAPSTONE_ARCHS="aarch64" CAPSTONE_STATIC=yes ./make.sh \
 && cp /work/capstone/libcapstone.a /usr/xcc/aarch64-linux-musl-cross/lib/gcc/aarch64-linux-musl/*/
