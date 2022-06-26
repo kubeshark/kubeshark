@@ -152,7 +152,7 @@ func (d dissecting) Represent(request map[string]interface{}, response map[strin
 
 func (d dissecting) Macros() map[string]string {
 	return map[string]string{
-		`redis`: fmt.Sprintf(`proto.name == "%s"`, protocol.Name),
+		`redis`: fmt.Sprintf(`protocol == "%v/%v/%v"`, protocol.Name, protocol.Version, protocol.Abbreviation),
 	}
 }
 

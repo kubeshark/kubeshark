@@ -516,10 +516,10 @@ func (d dissecting) Represent(request map[string]interface{}, response map[strin
 
 func (d dissecting) Macros() map[string]string {
 	return map[string]string{
-		`http`:  fmt.Sprintf(`proto.name == "%s" and proto.version.startsWith("%c")`, http11protocol.Name, http11protocol.Version[0]),
-		`http2`: fmt.Sprintf(`proto.name == "%s" and proto.version == "%s"`, http11protocol.Name, http2Protocol.Version),
-		`grpc`:  fmt.Sprintf(`proto.name == "%s" and proto.version == "%s" and proto.macro == "%s"`, http11protocol.Name, grpcProtocol.Version, grpcProtocol.Macro),
-		`gql`:   fmt.Sprintf(`proto.name == "%s" and proto.macro == "%s"`, graphQL1Protocol.Name, graphQL1Protocol.Macro),
+		`http`:  fmt.Sprintf(`protocol == "%v/%v/%v" or protocol == "%v/%v/%v"`, http10protocol.Name, http10protocol.Version, http10protocol.Abbreviation, http11protocol.Name, http11protocol.Version, http11protocol.Abbreviation),
+		`http2`: fmt.Sprintf(`protocol == "%v/%v/%v"`, http2Protocol.Name, http2Protocol.Version, http2Protocol.Abbreviation),
+		`grpc`:  fmt.Sprintf(`protocol == "%v/%v/%v"`, grpcProtocol.Name, grpcProtocol.Version, grpcProtocol.Abbreviation),
+		`gql`:   fmt.Sprintf(`protocol == "%v/%v/%v" or protocol == "%v/%v/%v"`, graphQL1Protocol.Name, graphQL1Protocol.Version, graphQL1Protocol.Abbreviation, graphQL2Protocol.Name, graphQL2Protocol.Version, graphQL2Protocol.Abbreviation),
 	}
 }
 

@@ -330,7 +330,7 @@ func (d dissecting) Represent(request map[string]interface{}, response map[strin
 
 func (d dissecting) Macros() map[string]string {
 	return map[string]string{
-		`amqp`: fmt.Sprintf(`proto.name == "%s"`, protocol.Name),
+		`amqp`: fmt.Sprintf(`protocol == "%v/%v/%v"`, protocol.Name, protocol.Version, protocol.Abbreviation),
 	}
 }
 
