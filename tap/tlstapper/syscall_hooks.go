@@ -57,31 +57,31 @@ func (s *syscallHooks) installSyscallHooks(bpfObjects *tlsTapperObjects) error {
 }
 
 func (s *syscallHooks) close() []error {
-	errors := make([]error, 0)
+	returnValue := make([]error, 0)
 
 	if err := s.sysEnterRead.Close(); err != nil {
-		errors = append(errors, err)
+		returnValue = append(returnValue, err)
 	}
 
 	if err := s.sysEnterWrite.Close(); err != nil {
-		errors = append(errors, err)
+		returnValue = append(returnValue, err)
 	}
 
 	if err := s.sysEnterAccept4.Close(); err != nil {
-		errors = append(errors, err)
+		returnValue = append(returnValue, err)
 	}
 
 	if err := s.sysExitAccept4.Close(); err != nil {
-		errors = append(errors, err)
+		returnValue = append(returnValue, err)
 	}
 
 	if err := s.sysEnterConnect.Close(); err != nil {
-		errors = append(errors, err)
+		returnValue = append(returnValue, err)
 	}
 
 	if err := s.sysExitConnect.Close(); err != nil {
-		errors = append(errors, err)
+		returnValue = append(returnValue, err)
 	}
 
-	return errors
+	return returnValue
 }

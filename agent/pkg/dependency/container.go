@@ -1,11 +1,11 @@
 package dependency
 
-var typeIntializerMap = make(map[DependencyContainerType]func() interface{}, 0)
+var typeInitializerMap = make(map[ContainerType]func() interface{}, 0)
 
-func RegisterGenerator(name DependencyContainerType, fn func() interface{}) {
-	typeIntializerMap[name] = fn
+func RegisterGenerator(name ContainerType, fn func() interface{}) {
+	typeInitializerMap[name] = fn
 }
 
-func GetInstance(name DependencyContainerType) interface{} {
-	return typeIntializerMap[name]()
+func GetInstance(name ContainerType) interface{} {
+	return typeInitializerMap[name]()
 }

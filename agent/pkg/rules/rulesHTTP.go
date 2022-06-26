@@ -56,7 +56,7 @@ func MatchRequestPolicy(harEntry har.Entry, service string) (resultPolicyToSend 
 		}
 		if rule.Type == "json" {
 			var bodyJsonMap interface{}
-			contentTextDecoded, _ := base64.StdEncoding.DecodeString(string(harEntry.Response.Content.Text))
+			contentTextDecoded, _ := base64.StdEncoding.DecodeString(harEntry.Response.Content.Text)
 			if err := json.Unmarshal(contentTextDecoded, &bodyJsonMap); err != nil {
 				continue
 			}

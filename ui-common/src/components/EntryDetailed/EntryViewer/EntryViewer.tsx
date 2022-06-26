@@ -1,7 +1,7 @@
 import React, {useState} from 'react';
 import styles from './EntryViewer.module.sass';
 import Tabs from "../../UI/Tabs/Tabs";
-import {EntryTableSection, EntryBodySection, EntryTablePolicySection, EntryContractSection} from "../EntrySections/EntrySections";
+import {EntryTableSection, EntryBodySection, EntryTablePolicySection} from "../EntrySections/EntrySections";
 
 enum SectionTypes {
     SectionTable = "table",
@@ -33,7 +33,7 @@ const SectionsRepresentation: React.FC<any> = ({data, color}) => {
     return <React.Fragment>{sections}</React.Fragment>;
 }
 
-const AutoRepresentation: React.FC<any> = ({representation, isRulesEnabled, rulesMatched, contractStatus, requestReason, responseReason, contractContent, elapsedTime, color}) => {
+const AutoRepresentation: React.FC<any> = ({representation, isRulesEnabled, rulesMatched, elapsedTime, color}) => {
     var TABS = [
         {
             tab: 'Request'
@@ -50,7 +50,6 @@ const AutoRepresentation: React.FC<any> = ({representation, isRulesEnabled, rule
 
     let responseTabIndex = 0;
     let rulesTabIndex = 0;
-    let contractTabIndex = 0;
 
     if (response) {
         TABS.push(
@@ -70,15 +69,6 @@ const AutoRepresentation: React.FC<any> = ({representation, isRulesEnabled, rule
         rulesTabIndex = TABS.length - 1;
     }
 
-    if (contractStatus !== 0 && contractContent) {
-        TABS.push(
-            {
-                tab: 'Contract',
-            }
-        );
-        contractTabIndex = TABS.length - 1;
-    }
-
     return <div className={styles.Entry}>
         {<div className={styles.body}>
             <div className={styles.bodyHeader}>
@@ -93,9 +83,6 @@ const AutoRepresentation: React.FC<any> = ({representation, isRulesEnabled, rule
             {isRulesEnabled && currentTab === TABS[rulesTabIndex].tab && <React.Fragment>
                 <EntryTablePolicySection title={'Rule'} color={color} latency={elapsedTime} arrayToIterate={rulesMatched ? rulesMatched : []}/>
             </React.Fragment>}
-            {contractStatus !== 0 && contractContent && currentTab === TABS[contractTabIndex].tab && <React.Fragment>
-                <EntryContractSection color={color} requestReason={requestReason} responseReason={responseReason} contractContent={contractContent}/>
-            </React.Fragment>}
         </div>}
     </div>;
 }
@@ -104,23 +91,15 @@ interface Props {
     representation: any;
     isRulesEnabled: boolean;
     rulesMatched: any;
-    contractStatus: number;
-    requestReason: string;
-    responseReason: string;
-    contractContent: string;
     color: string;
     elapsedTime: number;
 }
 
-const EntryViewer: React.FC<Props> = ({representation, isRulesEnabled, rulesMatched, contractStatus, requestReason, responseReason, contractContent, elapsedTime, color}) => {
+const EntryViewer: React.FC<Props> = ({representation, isRulesEnabled, rulesMatched, elapsedTime, color}) => {
     return <AutoRepresentation
         representation={representation}
         isRulesEnabled={isRulesEnabled}
         rulesMatched={rulesMatched}
-        contractStatus={contractStatus}
-        requestReason={requestReason}
-        responseReason={responseReason}
-        contractContent={contractContent}
         elapsedTime={elapsedTime}
         color={color}
     />
