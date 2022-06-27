@@ -7,10 +7,14 @@
     flex-direction: column
     margin: 0 $modalMargin-from-edge
     padding: 0
+    overflow-y: auto
+
+.sectionHeader
+    font-weight: 600
+    font-size: 1.2rem
 
 .path
     display: flex
-    margin-top: 25px
 
     input
         border-radius: 0 5px 5px 0
@@ -20,6 +24,10 @@
         border-left-width: 0px
         text-indent: 5px
 
+    .hostPort
+        border-radius : 0
+        border-width: 1px 1px 1px 0px
+        
     select
         border-radius: 5px 0 0 5px
         text-transform: uppercase
