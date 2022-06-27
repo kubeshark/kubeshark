@@ -16,7 +16,6 @@ import spinnerImg from "assets/spinner.svg"
 import { formatRequest } from "../../EntryDetailed/EntrySections/EntrySections";
 import entryDataAtom from "../../../recoil/entryData";
 import { AutoRepresentation } from "../../EntryDetailed/EntryViewer/AutoRepresentation";
-import { indexOf } from "lodash";
 
 
 const modalStyle = {
