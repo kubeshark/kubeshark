@@ -35,11 +35,12 @@ using `bpf_probe_read` calls in `go_crypto_tls_get_fd_from_tcp_conn` function.
 
 SOURCES:
 
-Tracing Go Functions with eBPF (before 1.17): https://www.grant.pizza/blog/tracing-go-functions-with-ebpf-part-2/
+Tracing Go Functions with eBPF (<=1.16): https://www.grant.pizza/blog/tracing-go-functions-with-ebpf-part-2/
 Challenges of BPF Tracing Go: https://blog.0x74696d.com/posts/challenges-of-bpf-tracing-go/
 x86 calling conventions: https://en.wikipedia.org/wiki/X86_calling_conventions
 Plan 9 from Bell Labs: https://en.wikipedia.org/wiki/Plan_9_from_Bell_Labs
 The issue for calling convention change in Go: https://github.com/golang/go/issues/40724
+Go ABI0 (<=1.16) specification: https://go.dev/doc/asm
 Proposal of Register-based Go calling convention: https://go.googlesource.com/proposal/+/master/design/40724-register-calling.md
 Go internal ABI (1.17) specification: https://go.googlesource.com/go/+/refs/heads/dev.regabi/src/cmd/compile/internal-abi.md
 Go internal ABI (current) specification: https://go.googlesource.com/go/+/refs/heads/master/src/cmd/compile/abi-internal.md
@@ -57,6 +58,11 @@ Capstone Engine: https://www.capstone-engine.org/
 #include "include/common.h"
 #include "include/go_abi_internal.h"
 #include "include/go_types.h"
+
+enum ABI {
+    ABI0=0,
+    ABIInternal=1,
+};
 
 static __always_inline __u32 go_crypto_tls_get_fd_from_tcp_conn(struct pt_regs *ctx) {
     struct go_interface conn;
@@ -91,7 +97,7 @@ static __always_inline __u32 go_crypto_tls_get_fd_from_tcp_conn(struct pt_regs *
     return fd;
 }
 
-static __always_inline void go_crypto_tls_uprobe(struct pt_regs *ctx, struct bpf_map_def* go_context) {
+static __always_inline void go_crypto_tls_uprobe(struct pt_regs *ctx, struct bpf_map_def* go_context, enum ABI abi) {
     __u64 pid_tgid = bpf_get_current_pid_tgid();
     __u64 pid = pid_tgid >> 32;
     if (!should_tap(pid)) {
@@ -124,7 +130,7 @@ static __always_inline void go_crypto_tls_uprobe(struct pt_regs *ctx, struct bpf
     return;
 }
 
-static __always_inline void go_crypto_tls_ex_uprobe(struct pt_regs *ctx, struct bpf_map_def* go_context, __u32 flags) {
+static __always_inline void go_crypto_tls_ex_uprobe(struct pt_regs *ctx, struct bpf_map_def* go_context, __u32 flags, enum ABI abi) {
     __u64 pid_tgid = bpf_get_current_pid_tgid();
     __u64 pid = pid_tgid >> 32;
     if (!should_tap(pid)) {
@@ -170,22 +176,42 @@ static __always_inline void go_crypto_tls_ex_uprobe(struct pt_regs *ctx, struct 
     return;
 }
 
-SEC("uprobe/go_crypto_tls_write")
-void BPF_KPROBE(go_crypto_tls_write) {
-    go_crypto_tls_uprobe(ctx, &go_write_context);
+SEC("uprobe/go_crypto_tls_abi0_write")
+void BPF_KPROBE(go_crypto_tls_abi0_write) {
+    go_crypto_tls_uprobe(ctx, &go_write_context, ABI0);
 }
 
-SEC("uprobe/go_crypto_tls_write_ex")
-void BPF_KPROBE(go_crypto_tls_write_ex) {
-    go_crypto_tls_ex_uprobe(ctx, &go_write_context, 0);
+SEC("uprobe/go_crypto_tls_abi0_write_ex")
+void BPF_KPROBE(go_crypto_tls_abi0_write_ex) {
+    go_crypto_tls_ex_uprobe(ctx, &go_write_context, 0, ABI0);
 }
 
-SEC("uprobe/go_crypto_tls_read")
-void BPF_KPROBE(go_crypto_tls_read) {
-    go_crypto_tls_uprobe(ctx, &go_read_context);
+SEC("uprobe/go_crypto_tls_abi0_read")
+void BPF_KPROBE(go_crypto_tls_abi0_read) {
+    go_crypto_tls_uprobe(ctx, &go_read_context, ABI0);
 }
 
-SEC("uprobe/go_crypto_tls_read_ex")
-void BPF_KPROBE(go_crypto_tls_read_ex) {
-    go_crypto_tls_ex_uprobe(ctx, &go_read_context, FLAGS_IS_READ_BIT);
+SEC("uprobe/go_crypto_tls_abi0_read_ex")
+void BPF_KPROBE(go_crypto_tls_abi0_read_ex) {
+    go_crypto_tls_ex_uprobe(ctx, &go_read_context, FLAGS_IS_READ_BIT, ABI0);
+}
+
+SEC("uprobe/go_crypto_tls_abi_internal_write")
+void BPF_KPROBE(go_crypto_tls_abi_internal_write) {
+    go_crypto_tls_uprobe(ctx, &go_write_context, ABIInternal);
+}
+
+SEC("uprobe/go_crypto_tls_abi_internal_write_ex")
+void BPF_KPROBE(go_crypto_tls_abi_internal_write_ex) {
+    go_crypto_tls_ex_uprobe(ctx, &go_write_context, 0, ABIInternal);
+}
+
+SEC("uprobe/go_crypto_tls_abi_internal_read")
+void BPF_KPROBE(go_crypto_tls_abi_internal_read) {
+    go_crypto_tls_uprobe(ctx, &go_read_context, ABIInternal);
+}
+
+SEC("uprobe/go_crypto_tls_abi_internal_read_ex")
+void BPF_KPROBE(go_crypto_tls_abi_internal_read_ex) {
+    go_crypto_tls_ex_uprobe(ctx, &go_read_context, FLAGS_IS_READ_BIT, ABIInternal);
 }
