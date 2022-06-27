@@ -1,4 +1,4 @@
-import { Accordion, AccordionDetails, AccordionSummary, Backdrop, Box, Button, Fade, Modal } from "@mui/material";
+import { Accordion, AccordionDetails, AccordionSummary, Alert, Backdrop, Box, Button, Fade, Modal } from "@mui/material";
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import React, { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 import { useCommonStyles } from "../../../helpers/commonStyle";
@@ -16,6 +16,7 @@ import spinnerImg from "assets/spinner.svg"
 import { formatRequest } from "../../EntryDetailed/EntrySections/EntrySections";
 import entryDataAtom from "../../../recoil/entryData";
 import { AutoRepresentation } from "../../EntryDetailed/EntryViewer/AutoRepresentation";
+import useDebounce from "../../../hooks/useDebounce";
 
 
 const modalStyle = {
@@ -71,6 +72,7 @@ const ReplayRequestModal: React.FC<ReplayRequestModalProps> = ({ isOpen, onClose
     const [path, setPath] = useState(request.path);
     const [host, setHost] = useState(entryData.data.dst.name ? entryData.data?.dst?.name : entryData.data.dst.ip)
     const [port, setPort] = useState(entryData.data.dst.port)
+    const [hostPortInput, setHostPortInput] = useState(`${host}:${port}`)
     const [finalPath, setFinalPath] = useState("");
     const commonClasses = useCommonStyles();
     const [currentTab, setCurrentTab] = useState(TABS[0].tab);
@@ -83,9 +85,15 @@ const ReplayRequestModal: React.FC<ReplayRequestModalProps> = ({ isOpen, onClose
     const [requestExpanded, setRequestExpanded] = useState(true)
     const [responseExpanded, setResponseExpanded] = useState(false)
 
+    const debouncedhostPortInput = useDebounce(hostPortInput, 300);
 
     useEffect(() => {
-        //const pathParams = getQueryStringParams(path)
+        const [host, port] = debouncedhostPortInput.split(":")
+        setHost(host)
+        setPort(port ? port : "")
+    }, [debouncedhostPortInput])
+
+    useEffect(() => {
         let newUrl = `${path ? path.split('?')[0] : ""}`
         let finalSpecialChar = ["?", "&", "="].includes(path.slice(-1)) ? path.slice(-1) : ""
         params.forEach(({ key, value }, index) => {
@@ -94,19 +102,13 @@ const ReplayRequestModal: React.FC<ReplayRequestModalProps> = ({ isOpen, onClose
         })
         newUrl += finalSpecialChar
         setFinalPath(newUrl)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [params])
 
     useEffect(() => {
         const newParams = getQueryStringParams(path);
         setParams(convertParamsToArr(newParams))
     }, [path])
-
-    const setHostPort = (hostPort) => {
-        const [host, port] = hostPort.split(":")
-        setHost(host)
-        setPort(port ? port : "")
-    }
 
     const hostPort = useMemo(() => {
         return port ? `${host}:${port}` : host
@@ -130,7 +132,7 @@ const ReplayRequestModal: React.FC<ReplayRequestModalProps> = ({ isOpen, onClose
             setRequestExpanded(false)
             setResponseExpanded(true)
             const response = await trafficViewerApi.replayRequest(requestData)
-            setResponse(response.data.representation)
+            setResponse(response?.data?.representation)
             response.errorMessage && toast.error(response.errorMessage, { containerId: TOAST_CONTAINER_ID });
         } catch (error) {
             toast.error("Error occurred while fetching response", { containerId: TOAST_CONTAINER_ID });
@@ -150,11 +152,13 @@ const ReplayRequestModal: React.FC<ReplayRequestModalProps> = ({ isOpen, onClose
             break;
         case RequestTabs.Headers:
             innerComponent = <Fragment><KeyValueTable data={headers} onDataChange={(heaedrs) => setHeaders(heaedrs)} key={"Header"} valuePlaceholder="New Headers Value" keyPlaceholder="New Headers Key" />
-                <span><i>X-Mizu Header added to Request</i></span></Fragment>
+                <div><Alert severity="info">X-mizu Header added to reuqests</Alert></div>
+            </Fragment>
             break;
         case RequestTabs.Body:
             const formatedCode = formatRequest(postData, request?.postData?.mimeType)
-            innerComponent = <div style={{ width: '100%', position: "relative", height: "100%", borderRadius: "inherit" }}>
+            const lines = formatedCode.split("\n").length + 1
+            innerComponent = <div style={{ width: '100%', position: "relative", height: `calc(${lines} * 1rem)`, borderRadius: "inherit", maxHeight: "40vh", minHeight: "50px" }}>
                 <CodeEditor language={request?.postData?.mimeType.split("/")[1]}
                     code={isJson(formatedCode) ? JSON.stringify(JSON.parse(formatedCode || "{}"), null, 2) : formatedCode}
                     onChange={setPostData} />
@@ -194,7 +198,7 @@ const ReplayRequestModal: React.FC<ReplayRequestModalProps> = ({ isOpen, onClose
                                     <select className={styles.select} value={method} onChange={(e) => setMethod(e.target.value)}>
                                         {httpMethods.map(method => <option value={method} key={method}>{method}</option>)}
                                     </select>
-                                    <input placeholder="Host:Port" value={hostPort} onChange={(event) => setHostPort(event.target.value)} className={`${commonClasses.textField} ${styles.hostPort}`} />
+                                    <input placeholder="Host:Port" value={hostPortInput} onChange={(event) => setHostPortInput(event.target.value)} className={`${commonClasses.textField} ${styles.hostPort}`} />
                                     <input className={commonClasses.textField} placeholder="Enter Path" value={finalPath}
                                         onChange={(event) => setPath(event.target.value)} />
                                     <Button size="medium"
