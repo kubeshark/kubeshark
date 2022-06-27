@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"reflect"
 	"strings"
 	"time"
 
@@ -361,7 +362,18 @@ func representRequest(request map[string]interface{}) (repRequest []interface{})
 		Data:  string(details),
 	})
 
-	pathSegments := request["pathSegments"].([]interface{})
+	pathSegmentsRaw := request["pathSegments"]
+	var pathSegments []interface{}
+	if reflect.TypeOf(request["pathSegments"]) == reflect.TypeOf(make([]string, 0)) {
+		pathSegmentsString := request["pathSegments"].([]string)
+		pathSegments = make([]interface{}, len(pathSegmentsString))
+		for i := range pathSegmentsString {
+			pathSegments[i] = pathSegmentsString[i]
+		}
+	} else {
+		pathSegments = pathSegmentsRaw.([]interface{})
+	}
+
 	if len(pathSegments) > 1 {
 		repRequest = append(repRequest, api.SectionData{
 			Type:  api.TABLE,

@@ -91,19 +91,13 @@ func ExecuteRequest(replayData *shared.ReplayDetails) (*tapApi.EntryWrapper, err
 					IsRequest:   true,
 					CaptureTime: captureTime,
 					CaptureSize: 0,
-					Payload: mizuhttp.HTTPPayload{
-						Type: mizuhttp.TypeHttpRequest,
-						Data: httpRequestWrapper,
-					},
+					Payload:     httpRequestWrapper,
 				},
 				Response: tapApi.GenericMessage{
 					IsRequest:   false,
 					CaptureTime: captureTime,
 					CaptureSize: 0,
-					Payload: mizuhttp.HTTPPayload{
-						Type: mizuhttp.TypeHttpResponse,
-						Data: httpResponseWrapper,
-					},
+					Payload:     httpResponseWrapper,
 				},
 			},
 		}

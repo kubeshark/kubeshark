@@ -18,10 +18,12 @@ func Test(t *testing.T) {
 		Timeout: timeoutForSingleAction,
 	}
 	replayData := shared.ReplayDetails{
-		Method:  "GET",
-		Url:     "http://google.com",
-		Body:    "",
-		Headers: map[string]string{},
+		Method: "GET",
+		Url:    "http://httpbin.org/bla",
+		Body:   "",
+		Headers: map[string]string{
+			"Content-type": "plain/text",
+		},
 	}
 	request, err := http.NewRequest(replayData.Method, replayData.Url, bytes.NewBufferString(replayData.Body))
 	if err != nil {
@@ -89,7 +91,20 @@ func Test(t *testing.T) {
 
 	entry := *extension.Dissector.Analyze(&item, "", "", "")
 	base := extension.Dissector.Summarize(&entry)
-	t.Logf("%+v", entry)
-	t.Logf("%+v", base)
 
+	var representation []byte
+	representation, err = extension.Dissector.Represent(entry.Request, entry.Response)
+	if err != nil {
+		t.Errorf("failed: %v, ", err)
+	}
+
+	result := &tapApi.EntryWrapper{
+		Protocol:       *extension.Protocol,
+		Representation: string(representation),
+		Data:           &entry,
+		Base:           base,
+		Rules:          nil,
+		IsRulesEnabled: false,
+	}
+	t.Logf("%+v", result)
 }
