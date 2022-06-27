@@ -73,7 +73,7 @@ const ReplayRequestModal: React.FC<ReplayRequestModalProps> = ({ isOpen, onClose
     const [host, setHost] = useState(entryData.data.dst.name ? entryData.data?.dst?.name : entryData.data.dst.ip)
     const [port, setPort] = useState(entryData.data.dst.port)
     const [hostPortInput, setHostPortInput] = useState(`${host}:${port}`)
-    const [finalPath, setFinalPath] = useState("");
+    const [pathInput, setPathInput] = useState(path);
     const commonClasses = useCommonStyles();
     const [currentTab, setCurrentTab] = useState(TABS[0].tab);
     const [response, setResponse] = useState(null);
@@ -85,30 +85,31 @@ const ReplayRequestModal: React.FC<ReplayRequestModalProps> = ({ isOpen, onClose
     const [requestExpanded, setRequestExpanded] = useState(true)
     const [responseExpanded, setResponseExpanded] = useState(false)
 
-    const debouncedhostPortInput = useDebounce(hostPortInput, 300);
+    const debouncedHostPort = useDebounce(hostPortInput, 300);
+    const debouncedPath = useDebounce(pathInput, 500);
 
     useEffect(() => {
-        const [host, port] = debouncedhostPortInput.split(":")
+        const [host, port] = debouncedHostPort.split(":")
         setHost(host)
         setPort(port ? port : "")
-    }, [debouncedhostPortInput])
+    }, [debouncedHostPort])
 
     useEffect(() => {
-        let newUrl = `${path ? path.split('?')[0] : ""}`
-        let finalSpecialChar = ["?", "&", "="].includes(path.slice(-1)) ? path.slice(-1) : ""
+        let newUrl = `${debouncedPath ? debouncedPath.split('?')[0] : ""}`
         params.forEach(({ key, value }, index) => {
             newUrl += index > 0 ? '&' : '?'
             newUrl += `${key}` + (value ? `=${value}` : "")
         })
-        newUrl += finalSpecialChar
-        setFinalPath(newUrl)
+
+        setPath(newUrl)
+        setPathInput(newUrl)
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [params])
 
     useEffect(() => {
-        const newParams = getQueryStringParams(path);
+        const newParams = getQueryStringParams(debouncedPath);
         setParams(convertParamsToArr(newParams))
-    }, [path])
+    }, [debouncedPath])
 
     const hostPort = useMemo(() => {
         return port ? `${host}:${port}` : host
@@ -199,8 +200,8 @@ const ReplayRequestModal: React.FC<ReplayRequestModalProps> = ({ isOpen, onClose
                                         {httpMethods.map(method => <option value={method} key={method}>{method}</option>)}
                                     </select>
                                     <input placeholder="Host:Port" value={hostPortInput} onChange={(event) => setHostPortInput(event.target.value)} className={`${commonClasses.textField} ${styles.hostPort}`} />
-                                    <input className={commonClasses.textField} placeholder="Enter Path" value={finalPath}
-                                        onChange={(event) => setPath(event.target.value)} />
+                                    <input className={commonClasses.textField} placeholder="Enter Path" value={pathInput}
+                                        onChange={(event) => setPathInput(event.target.value)} />
                                     <Button size="medium"
                                         variant="contained"
                                         className={commonClasses.button}
