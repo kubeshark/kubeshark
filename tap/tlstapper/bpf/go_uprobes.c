@@ -60,7 +60,18 @@ Capstone Engine: https://www.capstone-engine.org/
 
 static __always_inline __u32 go_crypto_tls_get_fd_from_tcp_conn(struct pt_regs *ctx) {
     struct go_interface conn;
-    long err = bpf_probe_read(&conn, sizeof(conn), (void*)GO_ABI_INTERNAL_PT_REGS_R1(ctx));
+    long err;
+    __u64 addr;
+#if defined(bpf_target_arm64)
+    err = bpf_probe_read(&addr, sizeof(addr), (void*)GO_ABI_INTERNAL_PT_REGS_SP(ctx)+0x8);
+    if (err != 0) {
+        return invalid_fd;
+    }
+#else
+    addr = GO_ABI_INTERNAL_PT_REGS_R1(ctx);
+#endif
+
+    err = bpf_probe_read(&conn, sizeof(conn), (void*)addr);
     if (err != 0) {
         return invalid_fd;
     }
@@ -88,14 +99,23 @@ static __always_inline void go_crypto_tls_uprobe(struct pt_regs *ctx, struct bpf
     }
 
     struct ssl_info info = new_ssl_info();
+    long err;
 
+#if defined(bpf_target_arm64)
+    err = bpf_probe_read(&info.buffer_len, sizeof(__u32), (void*)GO_ABI_INTERNAL_PT_REGS_SP(ctx)+0x18);
+    if (err != 0) {
+        log_error(ctx, LOG_ERROR_READING_BYTES_COUNT, pid_tgid, err, ORIGIN_SSL_UPROBE_CODE);
+        return;
+    }
+#else
     info.buffer_len = GO_ABI_INTERNAL_PT_REGS_R2(ctx);
+#endif
     info.buffer = (void*)GO_ABI_INTERNAL_PT_REGS_R4(ctx);
     info.fd = go_crypto_tls_get_fd_from_tcp_conn(ctx);
 
     // GO_ABI_INTERNAL_PT_REGS_GP is Goroutine address
     __u64 pid_fp = pid << 32 | GO_ABI_INTERNAL_PT_REGS_GP(ctx);
-    long err = bpf_map_update_elem(go_context, &pid_fp, &info, BPF_ANY);
+    err = bpf_map_update_elem(go_context, &pid_fp, &info, BPF_ANY);
 
     if (err != 0) {
         log_error(ctx, LOG_ERROR_PUTTING_SSL_CONTEXT, pid_tgid, err, 0l);
@@ -130,7 +150,15 @@ static __always_inline void go_crypto_tls_ex_uprobe(struct pt_regs *ctx, struct 
 
     // In case of read, the length is determined on return
     if (flags == FLAGS_IS_READ_BIT) {
+#if defined(bpf_target_arm64)
+        // On ARM64 we look at a general-purpose register as an indicator of error return
+        if (GO_ABI_INTERNAL_PT_REGS_R6(ctx) == 0x10) {
+            return;
+        }
+        info.buffer_len = GO_ABI_INTERNAL_PT_REGS_R7(ctx); // n in return n, nil
+#else
         info.buffer_len = GO_ABI_INTERNAL_PT_REGS_R1(ctx); // n in return n, nil
+#endif
         // This check achieves ignoring 0 length reads (the reads result with an error)
         if (info.buffer_len <= 0) {
             return;

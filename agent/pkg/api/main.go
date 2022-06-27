@@ -134,7 +134,7 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 		serviceMapGenerator.NewTCPEntry(mizuEntry.Source, mizuEntry.Destination, &item.Protocol)
 
 		oasGenerator := dependency.GetInstance(dependency.OasGeneratorDependency).(oas.OasGeneratorSink)
-		oasGenerator.HandleEntry(mizuEntry)
+		oasGenerator.HandleEntry(mizuEntry, &item.Protocol)
 	}
 }
 
