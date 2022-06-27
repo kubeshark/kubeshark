@@ -22,7 +22,16 @@ func (e *DefaultEntryStreamerSocketConnector) SendEntry(socketId int, entry *tap
 	if params.EnableFullEntries {
 		message, _ = models.CreateFullEntryWebSocketMessage(entry)
 	} else {
-		extension := extensionsMap[entry.Protocol.Name]
+		protocol, ok := protocolsMap[entry.ProtocolId]
+		if !ok {
+			return fmt.Errorf("protocol not found, protocol: %v", protocol)
+		}
+
+		extension, ok := extensionsMap[protocol.Name]
+		if !ok {
+			return fmt.Errorf("extension not found, extension: %v", protocol.Name)
+		}
+
 		base := extension.Dissector.Summarize(entry)
 		message, _ = models.CreateBaseEntryWebSocketMessage(base)
 	}
