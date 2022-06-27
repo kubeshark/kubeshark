@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"fmt"
 	"net/http"
 
 	"github.com/gin-gonic/gin"
@@ -12,28 +11,23 @@ import (
 )
 
 func ReplayRequest(c *gin.Context) {
-	fmt.Print("Starting replay")
+	logger.Log.Debug("Starting replay")
 	replayDetails := &shared.ReplayDetails{}
 	if err := c.Bind(replayDetails); err != nil {
-		logger.Log.Errorf("ERR1 %v", err)
 		c.JSON(http.StatusBadRequest, err)
 		return
 	}
 
-	logger.Log.Warningf("Validating replay, %+v", replayDetails)
+	logger.Log.Debugf("Validating replay, %v", replayDetails)
 	if err := validation.Validate(replayDetails); err != nil {
-		logger.Log.Errorf("ERR2 %v", err)
+		logger.Log.Errorf("Error Validating replay details object %v", err)
 		c.JSON(http.StatusBadRequest, err)
 		return
 	}
 
-	logger.Log.Warningf("Executing replay")
-	resp, err := replay.ExecuteRequest(replayDetails)
-	if err != nil {
-		logger.Log.Errorf("ERR3 %v", err)
-		c.JSON(http.StatusBadRequest, err.Error())
-	}
-
-	logger.Log.Infof("Result %v", resp)
-	c.JSON(http.StatusOK, resp)
+	logger.Log.Debug("Executing replay")
+	resultChannel := make(chan *shared.ReplayResponse, 1)
+	replay.ExecuteRequest(replayDetails, resultChannel)
+	result := <-resultChannel
+	c.JSON(http.StatusOK, result)
 }

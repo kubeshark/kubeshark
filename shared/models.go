@@ -55,7 +55,6 @@ type WebSocketMessageMetadata struct {
 	MessageType WebSocketMessageType `json:"messageType,omitempty"`
 }
 
-
 type WebSocketStatusMessage struct {
 	*WebSocketMessageMetadata
 	TappingStatus []TappedPodStatus `json:"tappingStatus"`
@@ -89,6 +88,12 @@ type ReplayDetails struct {
 	Url     string            `json:"url"`
 	Body    string            `json:"body"`
 	Headers map[string]string `json:"headers"`
+}
+
+type ReplayResponse struct {
+	Success      bool        `json:"status"`
+	Data         interface{} `json:"data"`
+	ErrorMessage string      `json:"errorMessage"`
 }
 
 type TapperStatus struct {
