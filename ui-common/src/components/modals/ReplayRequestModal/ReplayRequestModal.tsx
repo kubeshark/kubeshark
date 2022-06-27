@@ -158,7 +158,7 @@ const ReplayRequestModal: React.FC<ReplayRequestModalProps> = ({ isOpen, onClose
             </Fragment>
             break;
         case RequestTabs.Body:
-            const formatedCode = formatRequest(postData || {}, request?.postData?.mimeType)
+            const formatedCode = formatRequest(postData || "", request?.postData?.mimeType)
             const lines = formatedCode.split("\n").length + 1
             innerComponent = <div style={{ width: '100%', position: "relative", height: `calc(${lines} * 1rem)`, borderRadius: "inherit", maxHeight: "40vh", minHeight: "50px" }}>
                 <CodeEditor language={request?.postData?.mimeType.split("/")[1]}
