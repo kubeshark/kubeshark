@@ -13,6 +13,7 @@ import { TOAST_CONTAINER_ID } from "../../../configs/Consts";
 import styles from './ReplayRequestModal.module.sass'
 import closeIcon from "assets/close.svg"
 import spinnerImg from "assets/spinner.svg"
+import refreshImg from "assets/refresh.svg"
 import { formatRequest } from "../../EntryDetailed/EntrySections/EntrySections";
 import entryDataAtom from "../../../recoil/entryData";
 import { AutoRepresentation } from "../../EntryDetailed/EntryViewer/AutoRepresentation";
@@ -64,7 +65,6 @@ const getQueryStringParams = (link: String) => {
     return Object.fromEntries(urlSearchParams.entries());
 };
 const ReplayRequestModal: React.FC<ReplayRequestModalProps> = ({ isOpen, onClose }) => {
-
     const entryData = useRecoilValue(entryDataAtom)
     const request = entryData.data.request
     const [method, setMethod] = useState(request?.method?.toLowerCase() as string)
@@ -119,6 +119,25 @@ const ReplayRequestModal: React.FC<ReplayRequestModalProps> = ({ isOpen, onClose
         setResponseExpanded(true)
         onClose()
     }
+
+    const resetModel = useCallback(() => {
+        setMethod(request?.method?.toLowerCase() as string)
+        setPath(request.path);
+        setHost(entryData.data.dst.name ? entryData.data?.dst?.name : entryData.data.dst.ip)
+        setPort(entryData.data.dst.port)
+        setHostPortInput(`${host}:${port}`)
+        setPathInput(path);
+        setResponse(null);
+        setPostData(request?.postData?.text || JSON.stringify(request?.postData?.params));
+        setParams(convertParamsToArr(request?.queryString || {}))
+        setHeaders(convertParamsToArr(request?.headers || {}))
+    }, [entryData.data.dst.ip, entryData.data.dst.name, entryData.data.dst.port, host, path, port, request?.headers, request?.method, request.path, request?.postData?.params, request?.postData?.text, request?.queryString])
+
+    const onRefreshRequest = useCallback((event) => {
+        event.stopPropagation()
+        resetModel()
+    }, [resetModel])
+
 
     const sendRequest = useCallback(async () => {
         const headersData = headers.reduce((prev, corrent) => {
@@ -194,6 +213,7 @@ const ReplayRequestModal: React.FC<ReplayRequestModalProps> = ({ isOpen, onClose
                         <Accordion TransitionProps={{ unmountOnExit: true }} expanded={requestExpanded} onChange={() => setRequestExpanded(!requestExpanded)}>
                             <AccordionSummary expandIcon={<ExpandMoreIcon />} aria-controls="response-content">
                                 <span className={styles.sectionHeader}>REQUEST</span>
+                                <img src={refreshImg} style={{ marginLeft: "10px" }} title="Refresh Reuqest" alt="Refresh Reuqest" onClick={onRefreshRequest} />
                             </AccordionSummary>
                             <AccordionDetails>
                                 <div className={styles.path}>
