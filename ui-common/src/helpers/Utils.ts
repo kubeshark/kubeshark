@@ -26,4 +26,20 @@ export class Utils {
 
     return bytes.toFixed(dp) + ' ' + units[u];
   }
+
+static padTo2Digits = (num) => {
+    return String(num).padStart(2, '0');
+}
+
+static getHoursAndMinutes = (protocolTimeKey) => {
+    const time = new Date(protocolTimeKey)
+    const hoursAndMinutes = Utils.padTo2Digits(time.getHours()) + ':' + Utils.padTo2Digits(time.getMinutes());
+    return hoursAndMinutes;
+}
+
+static creatUniqueObjArrayByProp = (objArray, prop) => {
+  const map = new Map(objArray.map((item) => [item[prop], item])).values()
+  return Array.from(map);
+}
+
 }
