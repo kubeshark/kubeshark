@@ -2,8 +2,10 @@ package tlstapper
 
 import (
 	"bufio"
+	"debug/dwarf"
 	"debug/elf"
 	"fmt"
+	"io"
 	"os"
 	"runtime"
 
@@ -13,9 +15,19 @@ import (
 	"github.com/up9inc/mizu/logger"
 )
 
+type goAbi int
+
+const (
+	ABI0 goAbi = iota
+	ABIInternal
+)
+
 type goOffsets struct {
 	GoWriteOffset *goExtendedOffset
 	GoReadOffset  *goExtendedOffset
+	GoVersion     string
+	Abi           goAbi
+	GoidOffset    dwarf.Offset
 }
 
 type goExtendedOffset struct {
@@ -24,14 +36,14 @@ type goExtendedOffset struct {
 }
 
 const (
-	minimumSupportedGoVersion = "1.17.0"
-	goVersionSymbol           = "runtime.buildVersion.str"
-	goWriteSymbol             = "crypto/tls.(*Conn).Write"
-	goReadSymbol              = "crypto/tls.(*Conn).Read"
+	minimumABIInternalGoVersion = "1.17.0"
+	goVersionSymbol             = "runtime.buildVersion.str"
+	goWriteSymbol               = "crypto/tls.(*Conn).Write"
+	goReadSymbol                = "crypto/tls.(*Conn).Read"
 )
 
 func findGoOffsets(filePath string) (goOffsets, error) {
-	offsets, err := getOffsets(filePath)
+	offsets, goidOffset, err := getOffsets(filePath)
 	if err != nil {
 		return goOffsets{}, err
 	}
@@ -46,8 +58,10 @@ func findGoOffsets(filePath string) (goOffsets, error) {
 		return goOffsets{}, fmt.Errorf("Checking Go version: %s", err)
 	}
 
-	if !passed {
-		return goOffsets{}, fmt.Errorf("Unsupported Go version: %s", goVersion)
+	abi := ABI0
+
+	if passed {
+		abi = ABIInternal
 	}
 
 	writeOffset, err := getOffset(offsets, goWriteSymbol)
@@ -63,10 +77,65 @@ func findGoOffsets(filePath string) (goOffsets, error) {
 	return goOffsets{
 		GoWriteOffset: writeOffset,
 		GoReadOffset:  readOffset,
+		GoVersion:     goVersion,
+		Abi:           abi,
+		GoidOffset:    goidOffset,
 	}, nil
 }
 
-func getOffsets(filePath string) (offsets map[string]*goExtendedOffset, err error) {
+func getGoidOffset(elfFile *elf.File) (offset dwarf.Offset, err error) {
+	var dwarfData *dwarf.Data
+	dwarfData, err = elfFile.DWARF()
+	if err != nil {
+		return
+	}
+
+	entryReader := dwarfData.Reader()
+
+	var seenRuntimeG bool
+
+	for {
+		// Read all entries in sequence
+		var entry *dwarf.Entry
+		entry, err = entryReader.Next()
+		if err == io.EOF || entry == nil {
+			// We've reached the end of DWARF entries
+			break
+		}
+
+		// Check if this entry is a struct
+		if entry.Tag == dwarf.TagStructType {
+			// Go through fields
+			for _, field := range entry.Field {
+				if field.Attr == dwarf.AttrName {
+					val := field.Val.(string)
+					if val == "runtime.g" {
+						seenRuntimeG = true
+					}
+				}
+			}
+		}
+
+		// Check if this entry is a struct member
+		if seenRuntimeG && entry.Tag == dwarf.TagMember {
+			// Go through fields
+			for _, field := range entry.Field {
+				if field.Attr == dwarf.AttrName {
+					val := field.Val.(string)
+					if val == "goid" {
+						offset = entry.Offset
+						return
+					}
+				}
+			}
+		}
+	}
+
+	err = fmt.Errorf("goid not found in DWARF")
+	return
+}
+
+func getOffsets(filePath string) (offsets map[string]*goExtendedOffset, goidOffset dwarf.Offset, err error) {
 	var engine gapstone.Engine
 	switch runtime.GOARCH {
 	case "amd64":
@@ -104,13 +173,13 @@ func getOffsets(filePath string) (offsets map[string]*goExtendedOffset, err erro
 	}
 	defer fd.Close()
 
-	var se *elf.File
-	se, err = elf.NewFile(fd)
+	var elfFile *elf.File
+	elfFile, err = elf.NewFile(fd)
 	if err != nil {
 		return
 	}
 
-	textSection := se.Section(".text")
+	textSection := elfFile.Section(".text")
 	if textSection == nil {
 		err = fmt.Errorf("No text section")
 		return
@@ -124,7 +193,7 @@ func getOffsets(filePath string) (offsets map[string]*goExtendedOffset, err erro
 	}
 
 	var syms []elf.Symbol
-	syms, err = se.Symbols()
+	syms, err = elfFile.Symbols()
 	if err != nil {
 		return
 	}
@@ -132,7 +201,7 @@ func getOffsets(filePath string) (offsets map[string]*goExtendedOffset, err erro
 		offset := sym.Value
 
 		var lastProg *elf.Prog
-		for _, prog := range se.Progs {
+		for _, prog := range elfFile.Progs {
 			if prog.Vaddr <= sym.Value && sym.Value < (prog.Vaddr+prog.Memsz) {
 				offset = sym.Value - prog.Vaddr + prog.Off
 				lastProg = prog
@@ -189,6 +258,8 @@ func getOffsets(filePath string) (offsets map[string]*goExtendedOffset, err erro
 		offsets[sym.Name] = extendedOffset
 	}
 
+	goidOffset, err = getGoidOffset(elfFile)
+
 	return
 }
 
@@ -229,7 +300,7 @@ func checkGoVersion(filePath string, offset *goExtendedOffset) (bool, string, er
 		return false, goVersionStr, err
 	}
 
-	goVersionConstraint, err := semver.NewConstraint(fmt.Sprintf(">= %s", minimumSupportedGoVersion))
+	goVersionConstraint, err := semver.NewConstraint(fmt.Sprintf(">= %s", minimumABIInternalGoVersion))
 	if err != nil {
 		return false, goVersionStr, err
 	}
