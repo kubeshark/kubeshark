@@ -16,8 +16,7 @@ import spinnerImg from "assets/spinner.svg"
 import { formatRequest } from "../../EntryDetailed/EntrySections/EntrySections";
 import entryDataAtom from "../../../recoil/entryData";
 import { AutoRepresentation } from "../../EntryDetailed/EntryViewer/AutoRepresentation";
-import useDebounce from "../../../hooks/useDebounce";
-
+import useDebounce from "../../../hooks/useDebounce"
 
 const modalStyle = {
     position: 'absolute',
@@ -149,15 +148,17 @@ const ReplayRequestModal: React.FC<ReplayRequestModalProps> = ({ isOpen, onClose
     let innerComponent
     switch (currentTab) {
         case RequestTabs.Params:
-            innerComponent = <KeyValueTable data={params} onDataChange={(params) => setParams(params)} key={"params"} valuePlaceholder="New Param Value" keyPlaceholder="New param Key" />
+            innerComponent = <div className={styles.keyValueContainer}><KeyValueTable data={params} onDataChange={(params) => setParams(params)} key={"params"} valuePlaceholder="New Param Value" keyPlaceholder="New param Key" /></div>
             break;
         case RequestTabs.Headers:
-            innerComponent = <Fragment><KeyValueTable data={headers} onDataChange={(heaedrs) => setHeaders(heaedrs)} key={"Header"} valuePlaceholder="New Headers Value" keyPlaceholder="New Headers Key" />
-                <div><Alert severity="info">X-mizu Header added to reuqests</Alert></div>
+            innerComponent = <Fragment>
+                <div className={styles.keyValueContainer}><KeyValueTable data={headers} onDataChange={(heaedrs) => setHeaders(heaedrs)} key={"Header"} valuePlaceholder="New Headers Value" keyPlaceholder="New Headers Key" />
+                </div>
+                <span className={styles.note}><b>* </b> X-mizu Header added to reuqests</span>
             </Fragment>
             break;
         case RequestTabs.Body:
-            const formatedCode = formatRequest(postData, request?.postData?.mimeType)
+            const formatedCode = formatRequest(postData || {}, request?.postData?.mimeType)
             const lines = formatedCode.split("\n").length + 1
             innerComponent = <div style={{ width: '100%', position: "relative", height: `calc(${lines} * 1rem)`, borderRadius: "inherit", maxHeight: "40vh", minHeight: "50px" }}>
                 <CodeEditor language={request?.postData?.mimeType.split("/")[1]}

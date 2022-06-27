@@ -1,13 +1,16 @@
 @import '../ServiceMapModal/ServiceMapModal.module'
 @import '../../../variables.module'
 
-
-
 .modalContainer
     flex-direction: column
     margin: 0 $modalMargin-from-edge
     padding: 0
     overflow-y: auto
+
+.keyValueContainer
+    background-color: $content-section-color
+    height: 30%
+    border-radius: 5px
 
 .sectionHeader
     font-weight: 600
@@ -39,7 +42,6 @@
     margin-top: 25px
 
 .tabContent
-    background-color: $content-section-color
     height: 30%
     border-radius: 5px
     margin-top: 15px
@@ -49,3 +51,20 @@
     display: flex
     justify-content: center
     align-items: center
+
+.note
+    color: $data-background-color
+    padding: 10px
+    margin-top: 10px
+    box-sizing: border-box
+    display: flex
+    font-style: italic
+    font-weight: 300
+    background-color: $light-gray
+    border-left: solid 4px $failure-color
+    line-height: 18px
+    overflow: hidden
+    
+    b::after
+       content: '\b'
+        display: inline

@@ -4,7 +4,7 @@ import entryDataAtom from "../../../recoil/entryData"
 import SectionsRepresentation from "./SectionsRepresentation";
 import { EntryTablePolicySection, EntryContractSection } from "../EntrySections/EntrySections";
 import ReplayRequestModal from "../../modals/ReplayRequestModal/ReplayRequestModal";
-import replayIcon from 'replay.png';
+import { ReactComponent as ReplayIcon } from './replay.svg';
 import styles from './EntryViewer.module.sass';
 import { Tabs } from "../../UI";
 
@@ -20,7 +20,7 @@ export const AutoRepresentation: React.FC<any> = ({ representation, isRulesEnabl
     const TABS = [
         {
             tab: 'Request',
-            badge: isReplayDisplayed() && <img title="Replay Request" src={replayIcon} style={{ marginLeft: "10px", cursor: "pointer" }} alt="Replay Request" onClick={() => setIsOpenRequestModal(true)} />
+            badge: isReplayDisplayed() && <span title="Replay Request"><ReplayIcon fill={color} stroke={color} style={{ marginLeft: "10px", cursor: "pointer", height: "22px" }} onClick={() => setIsOpenRequestModal(true)} /></span>
         }
     ];
     const [currentTab, setCurrentTab] = useState(TABS[0].tab);
