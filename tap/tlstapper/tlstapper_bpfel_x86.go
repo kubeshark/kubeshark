@@ -84,6 +84,7 @@ type tlsTapperProgramSpecs struct {
 	SysEnterWrite      *ebpf.ProgramSpec `ebpf:"sys_enter_write"`
 	SysExitAccept4     *ebpf.ProgramSpec `ebpf:"sys_exit_accept4"`
 	SysExitConnect     *ebpf.ProgramSpec `ebpf:"sys_exit_connect"`
+	TcpSendmsg         *ebpf.ProgramSpec `ebpf:"tcp_sendmsg"`
 }
 
 // tlsTapperMapSpecs contains maps before they are loaded into the kernel.
@@ -173,6 +174,7 @@ type tlsTapperPrograms struct {
 	SysEnterWrite      *ebpf.Program `ebpf:"sys_enter_write"`
 	SysExitAccept4     *ebpf.Program `ebpf:"sys_exit_accept4"`
 	SysExitConnect     *ebpf.Program `ebpf:"sys_exit_connect"`
+	TcpSendmsg         *ebpf.Program `ebpf:"tcp_sendmsg"`
 }
 
 func (p *tlsTapperPrograms) Close() error {
@@ -195,6 +197,7 @@ func (p *tlsTapperPrograms) Close() error {
 		p.SysEnterWrite,
 		p.SysExitAccept4,
 		p.SysExitConnect,
+		p.TcpSendmsg,
 	)
 }
 

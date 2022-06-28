@@ -147,3 +147,17 @@ SEC("uretprobe/ssl_read_ex")
 void BPF_KPROBE(ssl_ret_read_ex) {
 	ssl_uretprobe(ctx, &openssl_read_context, FLAGS_IS_READ_BIT);
 }
+// Move to a separate file?
+SEC("kprobe/tcp_sendmsg")
+void BPF_KPROBE(tcp_sendmsg) {
+	__u64 id = bpf_get_current_pid_tgid();
+	__u32 pid = id >> 32;
+
+	// Do I need this check?
+	if (!should_tap(id >> 32)) {
+		return;
+	}
+
+	// Debug
+	log_info(ctx, LOG_INFO_DEBUG, pid, 0, 0);
+}
