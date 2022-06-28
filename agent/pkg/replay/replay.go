@@ -19,9 +19,7 @@ var (
 	inProcessRequests       = 0
 )
 
-const (
-	maxParallelAction = 5
-)
+const maxParallelAction = 5
 
 type Details struct {
 	Method  string            `json:"method"`
@@ -56,21 +54,7 @@ func decrementCounter() {
 func getEntryFromRequestResponse(extension *tapApi.Extension, request *http.Request, response *http.Response) *tapApi.Entry {
 	captureTime := time.Now()
 
-	httpRequestWrapperBytes, _ := json.Marshal(&mizuhttp.HTTPPayload{
-		Type: mizuhttp.TypeHttpRequest,
-		Data: request,
-	})
-	var httpRequestWrapper map[string]interface{}
-	_ = json.Unmarshal(httpRequestWrapperBytes, &httpRequestWrapper)
-
-	httpResponseWrapperBytes, _ := json.Marshal(&mizuhttp.HTTPPayload{
-		Type: mizuhttp.TypeHttpResponse,
-		Data: response,
-	})
-	var httpResponseWrapper map[string]interface{}
-	_ = json.Unmarshal(httpResponseWrapperBytes, &httpResponseWrapper)
-
-	item := tapApi.OutputChannelItem{
+	itemTmp := tapApi.OutputChannelItem{
 		Protocol: *extension.Protocol,
 		ConnectionInfo: &tapApi.ConnectionInfo{
 			ClientIP:   "",
@@ -86,18 +70,34 @@ func getEntryFromRequestResponse(extension *tapApi.Extension, request *http.Requ
 				IsRequest:   true,
 				CaptureTime: captureTime,
 				CaptureSize: 0,
-				Payload:     httpRequestWrapper,
+				Payload: &mizuhttp.HTTPPayload{
+					Type: mizuhttp.TypeHttpRequest,
+					Data: request,
+				},
 			},
 			Response: tapApi.GenericMessage{
 				IsRequest:   false,
 				CaptureTime: captureTime,
 				CaptureSize: 0,
-				Payload:     httpResponseWrapper,
+				Payload: &mizuhttp.HTTPPayload{
+					Type: mizuhttp.TypeHttpResponse,
+					Data: response,
+				},
 			},
 		},
 	}
 
-	return extension.Dissector.Analyze(&item, "", "", "")
+	// Analyze is expecting an item that's marshalled and unmarshalled
+	itemMarshalled, err := json.Marshal(itemTmp)
+	if err != nil {
+		return nil
+	}
+	var finalItem *tapApi.OutputChannelItem
+	if err := json.Unmarshal(itemMarshalled, &finalItem); err != nil {
+		return nil
+	}
+
+	return extension.Dissector.Analyze(finalItem, "", "", "")
 }
 
 func ExecuteRequest(replayData *Details, timeout time.Duration) *Response {
