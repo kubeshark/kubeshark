@@ -3,6 +3,7 @@ package replay
 import (
 	"bytes"
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strings"
 	"sync"
