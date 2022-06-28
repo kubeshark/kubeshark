@@ -8,7 +8,6 @@ import (
 	"log"
 	"net/http"
 	"net/url"
-	"reflect"
 	"strings"
 	"time"
 
@@ -250,7 +249,7 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, 
 	}
 
 	if resDetails["bodySize"].(float64) < 0 {
-		resDetails["bodySize"] = float64(0)
+		resDetails["bodySize"] = 0
 	}
 
 	if item.Protocol.Version == "2.0" && !isRequestUpgradedH2C {
@@ -375,17 +374,7 @@ func representRequest(request map[string]interface{}) (repRequest []interface{})
 		Data:  string(details),
 	})
 
-	pathSegmentsRaw := request["pathSegments"]
-	var pathSegments []interface{}
-	if reflect.TypeOf(request["pathSegments"]) == reflect.TypeOf(make([]string, 0)) {
-		pathSegmentsString := request["pathSegments"].([]string)
-		pathSegments = make([]interface{}, len(pathSegmentsString))
-		for i := range pathSegmentsString {
-			pathSegments[i] = pathSegmentsString[i]
-		}
-	} else {
-		pathSegments = pathSegmentsRaw.([]interface{})
-	}
+	pathSegments := request["pathSegments"].([]interface{})
 
 	if len(pathSegments) > 1 {
 		repRequest = append(repRequest, api.SectionData{

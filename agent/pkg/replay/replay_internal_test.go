@@ -8,6 +8,8 @@ import (
 	"testing"
 	"time"
 
+	"encoding/json"
+
 	"github.com/google/uuid"
 	tapApi "github.com/up9inc/mizu/tap/api"
 	mizuhttp "github.com/up9inc/mizu/tap/extensions/http"
@@ -74,8 +76,18 @@ func TestValid(t *testing.T) {
 			entry := getEntryFromRequestResponse(extension, request, response)
 			base := extension.Dissector.Summarize(entry)
 
+			// Represent is expecting an entry that's marshalled and unmarshalled
+			entryMarshalled, err := json.Marshal(entry)
+			if err != nil {
+				t.Errorf("failed marshaling entry: %v, ", err)
+			}
+			var entryUnmarshalled *tapApi.Entry
+			if err := json.Unmarshal(entryMarshalled, &entryUnmarshalled); err != nil {
+				t.Errorf("failed unmarshaling entry: %v, ", err)
+			}
+
 			var representation []byte
-			representation, err = extension.Dissector.Represent(entry.Request, entry.Response)
+			representation, err = extension.Dissector.Represent(entryUnmarshalled.Request, entryUnmarshalled.Response)
 			if err != nil {
 				t.Errorf("failed: %v, ", err)
 			}
