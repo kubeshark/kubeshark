@@ -3,16 +3,13 @@ package replay
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strings"
 	"sync"
 	"time"
 
-	"github.com/go-errors/errors"
 	"github.com/google/uuid"
 	"github.com/up9inc/mizu/agent/pkg/app"
-	"github.com/up9inc/mizu/logger"
 	"github.com/up9inc/mizu/shared"
 	tapApi "github.com/up9inc/mizu/tap/api"
 	mizuhttp "github.com/up9inc/mizu/tap/extensions/http"
@@ -92,8 +89,6 @@ func ExecuteRequest(replayData *shared.ReplayDetails, resultChannel chan *shared
 		// Handle Panics
 		defer func() {
 			if err := recover(); err != nil {
-				fmt.Println(errors.Wrap(err, 2).ErrorStack())
-				logger.Log.Errorf("%v", err)
 				resultChannel <- &shared.ReplayResponse{
 					Success:      false,
 					Data:         nil,
@@ -131,7 +126,7 @@ func ExecuteRequest(replayData *shared.ReplayDetails, resultChannel chan *shared
 			return
 		}
 
-		extension := app.ExtensionsMap["http"]
+		extension := app.ExtensionsMap["http"] // # TODO: maybe pass the extension to the function so it can be tested
 		entry := getEntryFromRequestResponse(extension, request, response)
 		base := extension.Dissector.Summarize(entry)
 		var representation []byte
