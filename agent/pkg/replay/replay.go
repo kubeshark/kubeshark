@@ -5,7 +5,6 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
-	"runtime/debug"
 	"strings"
 	"sync"
 	"time"
@@ -109,9 +108,6 @@ func ExecuteRequest(replayData *shared.ReplayDetails, resultChannel chan *shared
 
 		request, err := http.NewRequest(strings.ToUpper(replayData.Method), replayData.Url, bytes.NewBufferString(replayData.Body))
 		if err != nil {
-			debug.PrintStack() // TODO:
-			logger.Log.Errorf("ERR0 %v ", request)
-
 			resultChannel <- &shared.ReplayResponse{
 				Success:      false,
 				Data:         nil,
@@ -127,8 +123,6 @@ func ExecuteRequest(replayData *shared.ReplayDetails, resultChannel chan *shared
 		response, requestErr := client.Do(request)
 
 		if requestErr != nil {
-			debug.PrintStack() // TODO:
-			logger.Log.Errorf("ERR1 %v %v, %v", requestErr, request, response)
 			resultChannel <- &shared.ReplayResponse{
 				Success:      false,
 				Data:         nil,
@@ -143,8 +137,6 @@ func ExecuteRequest(replayData *shared.ReplayDetails, resultChannel chan *shared
 		var representation []byte
 		representation, err = extension.Dissector.Represent(entry.Request, entry.Response)
 		if err != nil {
-			debug.PrintStack() // TODO:
-			logger.Log.Errorf("ERR2 %v %v, %v", requestErr, request, response)
 			resultChannel <- &shared.ReplayResponse{
 				Success:      false,
 				Data:         nil,
