@@ -57,4 +57,5 @@ func init() {
 	tapCmd.Flags().Bool(configStructs.ServiceMeshName, defaultTapConfig.ServiceMesh, "Record decrypted traffic if the cluster is configured with a service mesh and with mtls")
 	tapCmd.Flags().Bool(configStructs.TlsName, defaultTapConfig.Tls, "Record tls traffic")
 	tapCmd.Flags().Bool(configStructs.ProfilerName, defaultTapConfig.Profiler, "Run pprof server")
+	tapCmd.Flags().Int(configStructs.MaxLiveStreamsName, defaultTapConfig.MaxLiveStreams, "Maximum live tcp streams to handle concurrently")
 }

@@ -176,6 +176,7 @@ func startTapperSyncer(ctx context.Context, cancel context.CancelFunc, provider 
 		MizuServiceAccountExists: state.mizuServiceAccountExists,
 		ServiceMesh:              config.Config.Tap.ServiceMesh,
 		Tls:                      config.Config.Tap.Tls,
+		MaxLiveStreams:           config.Config.Tap.MaxLiveStreams,
 	}, startTime)
 
 	if err != nil {
