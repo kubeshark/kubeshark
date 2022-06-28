@@ -91,7 +91,7 @@ BPF_LRU_HASH(openssl_write_context, __u64, struct ssl_info);
 BPF_LRU_HASH(openssl_read_context, __u64, struct ssl_info);
 
 // Go specific
-BPF_HASH(goid_offset, __u32, __u32);
+BPF_HASH(goid_offset_map, __u32, __u32);
 BPF_LRU_HASH(go_write_context, __u64, struct ssl_info);
 BPF_LRU_HASH(go_read_context, __u64, struct ssl_info);
 

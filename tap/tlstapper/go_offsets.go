@@ -28,6 +28,7 @@ type goOffsets struct {
 	GoVersion     string
 	Abi           goAbi
 	GoidOffset    dwarf.Offset
+	GStructOffset dwarf.Offset
 }
 
 type goExtendedOffset struct {
@@ -43,7 +44,7 @@ const (
 )
 
 func findGoOffsets(filePath string) (goOffsets, error) {
-	offsets, goidOffset, err := getOffsets(filePath)
+	offsets, goidOffset, gStructOffset, err := getOffsets(filePath)
 	if err != nil {
 		return goOffsets{}, err
 	}
@@ -80,10 +81,11 @@ func findGoOffsets(filePath string) (goOffsets, error) {
 		GoVersion:     goVersion,
 		Abi:           abi,
 		GoidOffset:    goidOffset,
+		GStructOffset: gStructOffset,
 	}, nil
 }
 
-func getGoidOffset(elfFile *elf.File) (offset dwarf.Offset, err error) {
+func getGoidOffset(elfFile *elf.File) (goidOffset dwarf.Offset, gStructOffset dwarf.Offset, err error) {
 	var dwarfData *dwarf.Data
 	dwarfData, err = elfFile.DWARF()
 	if err != nil {
@@ -110,6 +112,7 @@ func getGoidOffset(elfFile *elf.File) (offset dwarf.Offset, err error) {
 				if field.Attr == dwarf.AttrName {
 					val := field.Val.(string)
 					if val == "runtime.g" {
+						gStructOffset = entry.Offset
 						seenRuntimeG = true
 					}
 				}
@@ -123,7 +126,7 @@ func getGoidOffset(elfFile *elf.File) (offset dwarf.Offset, err error) {
 				if field.Attr == dwarf.AttrName {
 					val := field.Val.(string)
 					if val == "goid" {
-						offset = entry.Offset
+						goidOffset = entry.Offset
 						return
 					}
 				}
@@ -135,7 +138,7 @@ func getGoidOffset(elfFile *elf.File) (offset dwarf.Offset, err error) {
 	return
 }
 
-func getOffsets(filePath string) (offsets map[string]*goExtendedOffset, goidOffset dwarf.Offset, err error) {
+func getOffsets(filePath string) (offsets map[string]*goExtendedOffset, goidOffset dwarf.Offset, gStructOffset dwarf.Offset, err error) {
 	var engine gapstone.Engine
 	switch runtime.GOARCH {
 	case "amd64":
@@ -258,7 +261,7 @@ func getOffsets(filePath string) (offsets map[string]*goExtendedOffset, goidOffs
 		offsets[sym.Name] = extendedOffset
 	}
 
-	goidOffset, err = getGoidOffset(elfFile)
+	goidOffset, gStructOffset, err = getGoidOffset(elfFile)
 
 	return
 }

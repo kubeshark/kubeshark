@@ -64,6 +64,46 @@ enum ABI {
     ABIInternal=1,
 };
 
+static __always_inline int get_goid_from_thread_local_storage(__u64 *goroutine_id) {
+    int zero = 0;
+    int one = 1;
+    __u32* g_addr_offset = bpf_map_lookup_elem(&goid_offset_map, &zero);
+    __u32* goid_offset = bpf_map_lookup_elem(&goid_offset_map, &one);
+    if (g_addr_offset == NULL || goid_offset == NULL) {
+        return 0;
+    }
+
+    // Since eBPF programs have such strict stack requirements
+    // me must implement our own heap using a ringbuffer.
+    // Reserve some memory in our "heap" for the task_struct.
+    struct task_struct *task;
+    task = bpf_ringbuf_reserve(&heap, sizeof(struct task_struct), 0);
+    if (!task) {
+        return 0;
+    }
+
+    // Get the current task.
+    __u64 task_ptr = bpf_get_current_task();
+    if (!task_ptr) {
+        bpf_ringbuf_discard(task, 0);
+        return 0;
+    }
+    // The bpf_get_current_task helper returns us the address of the task_struct in
+    // kernel memory. Use the bpf_probe_read_kernel helper to read the struct out of
+    // kernel memory.
+    bpf_probe_read_kernel(task, sizeof(struct task_struct), (void*)(task_ptr));
+
+    // Get the Goroutine ID which is stored in thread local storage.
+    size_t g_addr;
+    bpf_probe_read_user(&g_addr, sizeof(void *), (void*)(task->thread.fsbase + g_addr_offset));
+    bpf_probe_read_user(goroutine_id, sizeof(void *), (void*)(g_addr + goid_offset));
+
+    // Free back up the memory we reserved for the task_struct.
+    bpf_ringbuf_discard(task, 0);
+
+    return 1;
+}
+
 static __always_inline __u32 go_crypto_tls_get_fd_from_tcp_conn(struct pt_regs *ctx) {
     struct go_interface conn;
     long err;
@@ -119,8 +159,18 @@ static __always_inline void go_crypto_tls_uprobe(struct pt_regs *ctx, struct bpf
     info.buffer = (void*)GO_ABI_INTERNAL_PT_REGS_R4(ctx);
     info.fd = go_crypto_tls_get_fd_from_tcp_conn(ctx);
 
-    // GO_ABI_INTERNAL_PT_REGS_GP is Goroutine address
-    __u64 pid_fp = pid << 32 | GO_ABI_INTERNAL_PT_REGS_GP(ctx);
+    __u64 goroutine_id;
+    if (abi == ABI0) {
+        // In case of ABI0 and amd64, it's stored in the thread-local storage
+        int status = get_goid_from_thread_local_storage(&goroutine_id);
+        if (!status) {
+            return;
+        }
+    } else {
+        // GO_ABI_INTERNAL_PT_REGS_GP is Goroutine address
+        goroutine_id = GO_ABI_INTERNAL_PT_REGS_GP(ctx);
+    }
+    __u64 pid_fp = pid << 32 | goroutine_id;
     err = bpf_map_update_elem(go_context, &pid_fp, &info, BPF_ANY);
 
     if (err != 0) {
@@ -137,8 +187,18 @@ static __always_inline void go_crypto_tls_ex_uprobe(struct pt_regs *ctx, struct 
         return;
     }
 
-    // GO_ABI_INTERNAL_PT_REGS_GP is Goroutine address
-    __u64 pid_fp = pid << 32 | GO_ABI_INTERNAL_PT_REGS_GP(ctx);
+    __u64 goroutine_id;
+    if (abi == ABI0) {
+        // In case of ABI0 and amd64, it's stored in the thread-local storage
+        int status = get_goid_from_thread_local_storage(&goroutine_id);
+        if (!status) {
+            return;
+        }
+    } else {
+        // GO_ABI_INTERNAL_PT_REGS_GP is Goroutine address
+        goroutine_id = GO_ABI_INTERNAL_PT_REGS_GP(ctx);
+    }
+    __u64 pid_fp = pid << 32 | goroutine_id;
     struct ssl_info *info_ptr = bpf_map_lookup_elem(go_context, &pid_fp);
 
     if (info_ptr == NULL) {
