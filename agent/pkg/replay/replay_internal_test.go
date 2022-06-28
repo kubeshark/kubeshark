@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/up9inc/mizu/shared"
 	tapApi "github.com/up9inc/mizu/tap/api"
 	mizuhttp "github.com/up9inc/mizu/tap/extensions/http"
 )
@@ -19,7 +18,7 @@ func TestValid(t *testing.T) {
 		Timeout: 10 * time.Second,
 	}
 
-	tests := map[string]*shared.ReplayDetails{
+	tests := map[string]*Details{
 		"40x": {
 			Method:  "GET",
 			Url:     "http://httpbin.org/status/404",
@@ -38,6 +37,15 @@ func TestValid(t *testing.T) {
 			Body:    "",
 			Headers: map[string]string{},
 		},
+		// TODO: this should be fixes, currently not working because of header name with ":"
+		//":path-header": {
+		//	Method: "GET",
+		//	Url:    "http://httpbin.org/get",
+		//	Body:   "",
+		//	Headers: map[string]string{
+		//		":path": "/get",
+		//	},
+		// },
 	}
 
 	for testCaseName, replayData := range tests {

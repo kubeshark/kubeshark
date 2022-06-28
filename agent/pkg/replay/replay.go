@@ -10,7 +10,6 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/up9inc/mizu/agent/pkg/app"
-	"github.com/up9inc/mizu/shared"
 	tapApi "github.com/up9inc/mizu/tap/api"
 	mizuhttp "github.com/up9inc/mizu/tap/extensions/http"
 )
@@ -21,11 +20,23 @@ var (
 )
 
 const (
-	maxParallelAction      = 5
-	timeoutForSingleAction = time.Second * 30
+	maxParallelAction = 5
 )
 
-func canMakeRequest() bool {
+type Details struct {
+	Method  string            `json:"method"`
+	Url     string            `json:"url"`
+	Body    string            `json:"body"`
+	Headers map[string]string `json:"headers"`
+}
+
+type Response struct {
+	Success      bool        `json:"status"`
+	Data         interface{} `json:"data"`
+	ErrorMessage string      `json:"errorMessage"`
+}
+
+func incrementCounter() bool {
 	result := false
 	inProcessRequestsLocker.Lock()
 	if inProcessRequests < maxParallelAction {
@@ -34,6 +45,12 @@ func canMakeRequest() bool {
 	}
 	inProcessRequestsLocker.Unlock()
 	return result
+}
+
+func decrementCounter() {
+	inProcessRequestsLocker.Lock()
+	inProcessRequests--
+	inProcessRequestsLocker.Unlock()
 }
 
 func getEntryFromRequestResponse(extension *tapApi.Extension, request *http.Request, response *http.Response) *tapApi.Entry {
@@ -83,32 +100,21 @@ func getEntryFromRequestResponse(extension *tapApi.Extension, request *http.Requ
 	return extension.Dissector.Analyze(&item, "", "", "")
 }
 
-func ExecuteRequest(replayData *shared.ReplayDetails, resultChannel chan *shared.ReplayResponse) {
-	if canMakeRequest() {
+func ExecuteRequest(replayData *Details, timeout time.Duration) *Response {
+	if incrementCounter() {
 		defer decrementCounter()
-		// Handle Panics
-		defer func() {
-			if err := recover(); err != nil {
-				resultChannel <- &shared.ReplayResponse{
-					Success:      false,
-					Data:         nil,
-					ErrorMessage: err.(error).Error(),
-				}
-			}
-		}()
 
 		client := &http.Client{
-			Timeout: timeoutForSingleAction,
+			Timeout: timeout,
 		}
 
 		request, err := http.NewRequest(strings.ToUpper(replayData.Method), replayData.Url, bytes.NewBufferString(replayData.Body))
 		if err != nil {
-			resultChannel <- &shared.ReplayResponse{
+			return &Response{
 				Success:      false,
 				Data:         nil,
 				ErrorMessage: err.Error(),
 			}
-			return
 		}
 
 		for headerKey, headerValue := range replayData.Headers {
@@ -118,12 +124,11 @@ func ExecuteRequest(replayData *shared.ReplayDetails, resultChannel chan *shared
 		response, requestErr := client.Do(request)
 
 		if requestErr != nil {
-			resultChannel <- &shared.ReplayResponse{
+			return &Response{
 				Success:      false,
 				Data:         nil,
 				ErrorMessage: requestErr.Error(),
 			}
-			return
 		}
 
 		extension := app.ExtensionsMap["http"] // # TODO: maybe pass the extension to the function so it can be tested
@@ -132,15 +137,14 @@ func ExecuteRequest(replayData *shared.ReplayDetails, resultChannel chan *shared
 		var representation []byte
 		representation, err = extension.Dissector.Represent(entry.Request, entry.Response)
 		if err != nil {
-			resultChannel <- &shared.ReplayResponse{
+			return &Response{
 				Success:      false,
 				Data:         nil,
 				ErrorMessage: err.Error(),
 			}
-			return
 		}
 
-		resultChannel <- &shared.ReplayResponse{
+		return &Response{
 			Success: true,
 			Data: &tapApi.EntryWrapper{
 				Protocol:       *extension.Protocol,
@@ -153,16 +157,10 @@ func ExecuteRequest(replayData *shared.ReplayDetails, resultChannel chan *shared
 			ErrorMessage: "",
 		}
 	} else {
-		resultChannel <- &shared.ReplayResponse{
+		return &Response{
 			Success:      false,
 			Data:         nil,
 			ErrorMessage: "busy in too many requests",
 		}
 	}
-}
-
-func decrementCounter() {
-	inProcessRequestsLocker.Lock()
-	inProcessRequests--
-	inProcessRequestsLocker.Unlock()
 }
