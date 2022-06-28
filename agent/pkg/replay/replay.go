@@ -160,7 +160,7 @@ func ExecuteRequest(replayData *Details, timeout time.Duration) *Response {
 		return &Response{
 			Success:      false,
 			Data:         nil,
-			ErrorMessage: "busy in too many requests",
+			ErrorMessage: fmt.Sprintf("reached threshold of %d requests", maxParallelAction),
 		}
 	}
 }
