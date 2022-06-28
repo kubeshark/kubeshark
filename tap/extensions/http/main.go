@@ -375,7 +375,6 @@ func representRequest(request map[string]interface{}) (repRequest []interface{})
 	})
 
 	pathSegments := request["pathSegments"].([]interface{})
-
 	if len(pathSegments) > 1 {
 		repRequest = append(repRequest, api.SectionData{
 			Type:  api.TABLE,
