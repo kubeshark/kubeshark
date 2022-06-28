@@ -6,7 +6,6 @@ const (
 	NodeNameEnvVar             = "NODE_NAME"
 	ConfigDirPath              = "/app/config/"
 	DataDirPath                = "/app/data/"
-	ValidationRulesFileName    = "validation-rules.yaml"
 	ConfigFileName             = "mizu-config.json"
 	DefaultApiServerPort       = 8899
 	LogLevelEnvVar             = "LOG_LEVEL"
