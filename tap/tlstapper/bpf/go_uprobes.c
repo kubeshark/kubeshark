@@ -56,6 +56,7 @@ Capstone Engine: https://www.capstone-engine.org/
 #include "include/logger_messages.h"
 #include "include/pids.h"
 #include "include/common.h"
+#include "include/go_abi_0.h"
 #include "include/go_abi_internal.h"
 #include "include/go_types.h"
 
@@ -159,9 +160,25 @@ static __always_inline void go_crypto_tls_uprobe(struct pt_regs *ctx, struct bpf
         return;
     }
 #else
-    info.buffer_len = GO_ABI_INTERNAL_PT_REGS_R2(ctx);
+    if (abi == ABI0) {
+        err = bpf_probe_read(&info.buffer_len, sizeof(__u32), (void*)GO_ABI_0_PT_REGS_SP(ctx)+0x18);
+        if (err != 0) {
+            log_error(ctx, LOG_ERROR_READING_BYTES_COUNT, pid_tgid, err, ORIGIN_SSL_UPROBE_CODE);
+            return;
+        }
+    } else {
+        info.buffer_len = GO_ABI_INTERNAL_PT_REGS_R2(ctx);
+    }
 #endif
-    info.buffer = (void*)GO_ABI_INTERNAL_PT_REGS_R4(ctx);
+    if (abi == ABI0) {
+        err = bpf_probe_read(&info.buffer, sizeof(__u32), (void*)GO_ABI_0_PT_REGS_SP(ctx)+0x11);
+        if (err != 0) {
+            log_error(ctx, LOG_ERROR_READING_FROM_SSL_BUFFER, pid_tgid, err, ORIGIN_SSL_UPROBE_CODE);
+            return;
+        }
+    } else {
+        info.buffer = (void*)GO_ABI_INTERNAL_PT_REGS_R4(ctx);
+    }
     info.fd = go_crypto_tls_get_fd_from_tcp_conn(ctx);
 
     __u64 goroutine_id;
@@ -228,7 +245,15 @@ static __always_inline void go_crypto_tls_ex_uprobe(struct pt_regs *ctx, struct 
         }
         info.buffer_len = GO_ABI_INTERNAL_PT_REGS_R7(ctx); // n in return n, nil
 #else
-        info.buffer_len = GO_ABI_INTERNAL_PT_REGS_R1(ctx); // n in return n, nil
+        if (abi == ABI0) {
+            err = bpf_probe_read(&info.buffer_len, sizeof(__u32), (void*)GO_ABI_0_PT_REGS_SP(ctx)+0x28);
+            if (err != 0) {
+                log_error(ctx, LOG_ERROR_READING_BYTES_COUNT, pid_tgid, err, ORIGIN_SSL_UPROBE_CODE);
+                return;
+            }
+        } else {
+            info.buffer_len = GO_ABI_INTERNAL_PT_REGS_R1(ctx); // n in return n, nil
+        }
 #endif
         // This check achieves ignoring 0 length reads (the reads result with an error)
         if (info.buffer_len <= 0) {
