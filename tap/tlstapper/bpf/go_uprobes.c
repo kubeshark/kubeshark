@@ -80,34 +80,32 @@ static __always_inline __u32 get_goid_from_thread_local_storage(__u64 *goroutine
         return 0;
     }
 
-    // Since eBPF programs have such strict stack requirements
-    // me must implement our own heap using a ringbuffer.
-    // Reserve some memory in our "heap" for the task_struct.
+    // We need another heap for task_struct in here.
+    // So we reserve from BPF_MAP_TYPE_RINGBUF defined above.
+    // It's different than the heap for tls_cunk in maps.h
+    // Using BPF_MAP_TYPE_PERCPU_ARRAY for task_struct makes the generator fail.
     struct task_struct *task;
     task = bpf_ringbuf_reserve(&task_struct_heap, sizeof(struct task_struct), 0);
     if (!task) {
         return 0;
     }
 
-    // Get the current task.
+    // Get the task that currently assigned to this thread.
     __u64 task_ptr = bpf_get_current_task();
     if (!task_ptr) {
         bpf_ringbuf_discard(task, BPF_RB_FORCE_WAKEUP);
         return 0;
     }
-    // The bpf_get_current_task helper returns us the address of the task_struct in
-    // kernel memory. Use the bpf_probe_read_kernel helper to read the struct out of
-    // kernel memory.
+
+    // Read the struct out of kernel memory.
     bpf_probe_read_kernel(task, sizeof(struct task_struct), (void*)(task_ptr));
 
-    // Get the Goroutine ID which is stored in thread local storage.
+    // Get the Goroutine ID (goid) which is stored in thread-local storage.
     size_t g_addr;
     bpf_probe_read_user(&g_addr, sizeof(void *), (void*)(task->thread.fsbase + *g_addr_offset));
     bpf_probe_read_user(goroutine_id, sizeof(void *), (void*)(g_addr + *goid_offset));
 
-    // Free back up the memory we reserved for the task_struct.
     bpf_ringbuf_discard(task, BPF_RB_FORCE_WAKEUP);
-
     return 1;
 }
 
