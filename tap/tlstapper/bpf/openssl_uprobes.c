@@ -169,7 +169,6 @@ void BPF_KPROBE(tcp_sendmsg) {
 		log_info(ctx, LOG_INFO_DEBUG, -1, -1, -1);
 		return;
 	}
-	// Check return code
 	if (family != AF_INET) {
 		return;
 	}
