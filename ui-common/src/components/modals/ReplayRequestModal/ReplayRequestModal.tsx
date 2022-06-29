@@ -171,7 +171,7 @@ const ReplayRequestModal: React.FC<ReplayRequestModalProps> = ({ isOpen, onClose
             innerComponent = <Fragment>
                 <div className={styles.keyValueContainer}><KeyValueTable data={headers} onDataChange={(heaedrs) => setHeaders(heaedrs)} key={"Header"} valuePlaceholder="New Headers Value" keyPlaceholder="New Headers Key" />
                 </div>
-                <span className={styles.note}><b>* </b> X-mizu Header added to reuqests</span>
+                <span className={styles.note}><b>* </b> X-Mizu Header added to reuqests</span>
             </Fragment>
             break;
         case RequestTabs.Body:
