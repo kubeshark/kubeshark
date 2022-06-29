@@ -4,7 +4,7 @@ go 1.17
 
 require (
 	github.com/Masterminds/semver v1.5.0
-	github.com/cilium/ebpf v0.8.1
+	github.com/cilium/ebpf v0.9.0
 	github.com/go-errors/errors v1.4.2
 	github.com/google/gopacket v1.1.19
 	github.com/hashicorp/golang-lru v0.5.4
