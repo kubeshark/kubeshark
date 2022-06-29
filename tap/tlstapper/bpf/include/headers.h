@@ -9,6 +9,6 @@ Copyright (C) UP9 Inc.
 
 #include "vmlinux.h"
 #include <bpf/bpf_helpers.h>
-#include "bpf/bpf_tracing.h"
+#include <bpf/bpf_tracing.h>
 
 #endif /* __HEADERS__ */
