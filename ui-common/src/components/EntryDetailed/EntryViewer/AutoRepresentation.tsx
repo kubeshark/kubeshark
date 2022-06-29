@@ -1,18 +1,18 @@
 import React, { useState, useCallback } from "react"
-import { useRecoilValue } from "recoil"
+import { useRecoilValue, useSetRecoilState } from "recoil"
 import entryDataAtom from "../../../recoil/entryData"
 import SectionsRepresentation from "./SectionsRepresentation";
 import { EntryTablePolicySection, EntryContractSection } from "../EntrySections/EntrySections";
-import ReplayRequestModal from "../../modals/ReplayRequestModal/ReplayRequestModal";
 import { ReactComponent as ReplayIcon } from './replay.svg';
 import styles from './EntryViewer.module.sass';
 import { Tabs } from "../../UI";
+import replayRequestModalOpenAtom from "../../../recoil/replayRequestModalOpen";
 
 const enabledProtocolsForReplay = ["http"]
 
 export const AutoRepresentation: React.FC<any> = ({ representation, isRulesEnabled, rulesMatched, contractStatus, requestReason, responseReason, contractContent, elapsedTime, color, isDisplayReplay = false }) => {
-    const [isOpenRequestModal, setIsOpenRequestModal] = useState(false)
     const entryData = useRecoilValue(entryDataAtom)
+    const setIsOpenRequestModal = useSetRecoilState(replayRequestModalOpenAtom)
     const isReplayDisplayed = useCallback(() => {
         return enabledProtocolsForReplay.find(x => x === entryData.protocol.name) && isDisplayReplay
     }, [entryData.protocol.name, isDisplayReplay])
@@ -84,6 +84,5 @@ export const AutoRepresentation: React.FC<any> = ({ representation, isRulesEnabl
                 <EntryContractSection color={color} requestReason={requestReason} responseReason={responseReason} contractContent={contractContent} />
             </React.Fragment>}
         </div>}
-        {isReplayDisplayed() && <ReplayRequestModal request={request} isOpen={isOpenRequestModal} onClose={() => setIsOpenRequestModal(false)} />}
     </div>;
 }

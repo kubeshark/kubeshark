@@ -1,11 +1,11 @@
-import { Accordion, AccordionDetails, AccordionSummary, Alert, Backdrop, Box, Button, Fade, Modal } from "@mui/material";
+import { Accordion, AccordionDetails, AccordionSummary, Backdrop, Box, Button, Fade, Modal } from "@mui/material";
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import React, { Fragment, useCallback, useEffect, useMemo, useState } from "react";
+import React, { Fragment, useCallback, useEffect, useState } from "react";
 import { useCommonStyles } from "../../../helpers/commonStyle";
 import { Tabs } from "../../UI";
 import KeyValueTable from "../../UI/KeyValueTable/KeyValueTable";
 import { CodeEditor } from "../../UI/CodeEditor/CodeEditor";
-import { useRecoilValue, RecoilState } from "recoil";
+import { useRecoilValue, RecoilState, useRecoilState } from "recoil";
 import TrafficViewerApiAtom from "../../../recoil/TrafficViewerApi/atom";
 import TrafficViewerApi from "../../TrafficViewer/TrafficViewerApi";
 import { toast } from "react-toastify";
@@ -18,6 +18,7 @@ import { formatRequest } from "../../EntryDetailed/EntrySections/EntrySections";
 import entryDataAtom from "../../../recoil/entryData";
 import { AutoRepresentation } from "../../EntryDetailed/EntryViewer/AutoRepresentation";
 import useDebounce from "../../../hooks/useDebounce"
+import replayRequestModalOpenAtom from "../../../recoil/replayRequestModalOpen";
 
 const modalStyle = {
     position: 'absolute',
@@ -38,7 +39,6 @@ const modalStyle = {
 interface ReplayRequestModalProps {
     isOpen: boolean;
     onClose: () => void;
-    request: any
 }
 
 enum RequestTabs {
@@ -60,19 +60,30 @@ const httpMethods = ["get", "post", "put", "head", "options", "delete"]
 const TABS = [{ tab: RequestTabs.Headers }, { tab: RequestTabs.Params }, { tab: RequestTabs.Body }];
 const convertParamsToArr = (paramsObj) => Object.entries(paramsObj).map(([key, value]) => { return { key, value } })
 const getQueryStringParams = (link: String) => {
-    const query = link ? link.split('?')[1] : ""
-    const urlSearchParams = new URLSearchParams(query);
-    return Object.fromEntries(urlSearchParams.entries());
+
+    if (link) {
+        const decodedURL = decodeQueryParam(link)
+        const query = decodedURL.split('?')[1]
+        const urlSearchParams = new URLSearchParams(query);
+        return Object.fromEntries(urlSearchParams.entries());
+    }
+
+    return ""
 };
+
+const decodeQueryParam = (p) => {
+    return decodeURIComponent(p.replace(/\+/g, ' '));
+}
+
 const ReplayRequestModal: React.FC<ReplayRequestModalProps> = ({ isOpen, onClose }) => {
     const entryData = useRecoilValue(entryDataAtom)
     const request = entryData.data.request
     const [method, setMethod] = useState(request?.method?.toLowerCase() as string)
-    const [path, setPath] = useState(request.path);
-    const [host, setHost] = useState(entryData.data.dst.name ? entryData.data?.dst?.name : entryData.data.dst.ip)
-    const [port, setPort] = useState(entryData.data.dst.port)
-    const [hostPortInput, setHostPortInput] = useState(`${host}:${port}`)
-    const [pathInput, setPathInput] = useState(path);
+    const getHostUrl = useCallback(() => {
+        return entryData.data.dst.name ? entryData.data?.dst?.name : entryData.data.dst.ip
+    }, [entryData.data.dst.ip, entryData.data.dst.name])
+    const [hostPortInput, setHostPortInput] = useState(`${entryData.base.proto.name}://${getHostUrl()}:${entryData.data.dst.port}`)
+    const [pathInput, setPathInput] = useState(request.path);
     const commonClasses = useCommonStyles();
     const [currentTab, setCurrentTab] = useState(TABS[0].tab);
     const [response, setResponse] = useState(null);
@@ -84,35 +95,24 @@ const ReplayRequestModal: React.FC<ReplayRequestModalProps> = ({ isOpen, onClose
     const [requestExpanded, setRequestExpanded] = useState(true)
     const [responseExpanded, setResponseExpanded] = useState(false)
 
-    const debouncedHostPort = useDebounce(hostPortInput, 300);
     const debouncedPath = useDebounce(pathInput, 500);
 
-    useEffect(() => {
-        const [host, port] = debouncedHostPort.split(":")
-        setHost(host)
-        setPort(port ? port : "")
-    }, [debouncedHostPort])
-
-    useEffect(() => {
+    const onParamsChange = useCallback((newParams) => {
+        setParams(newParams);
         let newUrl = `${debouncedPath ? debouncedPath.split('?')[0] : ""}`
-        params.forEach(({ key, value }, index) => {
+        newParams.forEach(({ key, value }, index) => {
             newUrl += index > 0 ? '&' : '?'
             newUrl += `${key}` + (value ? `=${value}` : "")
         })
 
-        setPath(newUrl)
         setPathInput(newUrl)
-        // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [params])
+
+    }, [debouncedPath])
 
     useEffect(() => {
         const newParams = getQueryStringParams(debouncedPath);
         setParams(convertParamsToArr(newParams))
     }, [debouncedPath])
-
-    const hostPort = useMemo(() => {
-        return port ? `${host}:${port}` : host
-    }, [host, port])
 
     const onModalClose = () => {
         setRequestExpanded(true)
@@ -122,16 +122,13 @@ const ReplayRequestModal: React.FC<ReplayRequestModalProps> = ({ isOpen, onClose
 
     const resetModel = useCallback(() => {
         setMethod(request?.method?.toLowerCase() as string)
-        setPath(request.path);
-        setHost(entryData.data.dst.name ? entryData.data?.dst?.name : entryData.data.dst.ip)
-        setPort(entryData.data.dst.port)
-        setHostPortInput(`${host}:${port}`)
-        setPathInput(path);
+        setHostPortInput(`${entryData.base.proto.name}://${getHostUrl()}:${entryData.data.dst.port}`)
+        setPathInput(request.path);
         setResponse(null);
         setPostData(request?.postData?.text || JSON.stringify(request?.postData?.params));
         setParams(convertParamsToArr(request?.queryString || {}))
         setHeaders(convertParamsToArr(request?.headers || {}))
-    }, [entryData.data.dst.ip, entryData.data.dst.name, entryData.data.dst.port, host, path, port, request?.headers, request?.method, request.path, request?.postData?.params, request?.postData?.text, request?.queryString])
+    }, [entryData.base.proto.name, entryData.data.dst.port, getHostUrl, request?.headers, request?.method, request.path, request?.postData?.params, request?.postData?.text, request?.queryString])
 
     const onRefreshRequest = useCallback((event) => {
         event.stopPropagation()
@@ -140,34 +137,35 @@ const ReplayRequestModal: React.FC<ReplayRequestModalProps> = ({ isOpen, onClose
 
 
     const sendRequest = useCallback(async () => {
+        setResponse(null)
         const headersData = headers.reduce((prev, corrent) => {
             prev[corrent.key] = corrent.value
             return prev
         }, {})
-        const buildUrl = `${entryData.base.proto.name}://${hostPort}${path}`
+        const buildUrl = `${hostPortInput}${pathInput}`
         const requestData = { url: buildUrl, headers: headersData, data: postData, method }
         try {
             setIsLoading(true)
-            setRequestExpanded(false)
             setResponseExpanded(true)
             const response = await trafficViewerApi.replayRequest(requestData)
             setResponse(response?.data?.representation)
+            !response.errorMessage && setRequestExpanded(false)
             response.errorMessage && toast.error(response.errorMessage, { containerId: TOAST_CONTAINER_ID });
         } catch (error) {
+            setRequestExpanded(true)
             toast.error("Error occurred while fetching response", { containerId: TOAST_CONTAINER_ID });
             console.error(error);
         }
         finally {
             setIsLoading(false)
-
         }
 
-    }, [entryData.base.proto.name, headers, hostPort, method, path, postData, trafficViewerApi])
+    }, [headers, hostPortInput, method, pathInput, postData, trafficViewerApi])
 
     let innerComponent
     switch (currentTab) {
         case RequestTabs.Params:
-            innerComponent = <div className={styles.keyValueContainer}><KeyValueTable data={params} onDataChange={(params) => setParams(params)} key={"params"} valuePlaceholder="New Param Value" keyPlaceholder="New param Key" /></div>
+            innerComponent = <div className={styles.keyValueContainer}><KeyValueTable data={params} onDataChange={onParamsChange} key={"params"} valuePlaceholder="New Param Value" keyPlaceholder="New param Key" /></div>
             break;
         case RequestTabs.Headers:
             innerComponent = <Fragment>
@@ -178,8 +176,7 @@ const ReplayRequestModal: React.FC<ReplayRequestModalProps> = ({ isOpen, onClose
             break;
         case RequestTabs.Body:
             const formatedCode = formatRequest(postData || "", request?.postData?.mimeType)
-            const lines = formatedCode.split("\n").length + 1
-            innerComponent = <div style={{ width: '100%', position: "relative", height: `calc(${lines} * 1rem)`, borderRadius: "inherit", maxHeight: "40vh", minHeight: "50px" }}>
+            innerComponent = <div className={styles.codeEditor}>
                 <CodeEditor language={request?.postData?.mimeType.split("/")[1]}
                     code={isJson(formatedCode) ? JSON.stringify(JSON.parse(formatedCode || "{}"), null, 2) : formatedCode}
                     onChange={setPostData} />
@@ -225,13 +222,8 @@ const ReplayRequestModal: React.FC<ReplayRequestModalProps> = ({ isOpen, onClose
                                         onChange={(event) => setPathInput(event.target.value)} />
                                     <Button size="medium"
                                         variant="contained"
-                                        className={commonClasses.button}
-                                        onClick={sendRequest}
-                                        style={{
-                                            textTransform: 'uppercase',
-                                            width: "fit-content",
-                                            marginLeft: "10px"
-                                        }}>
+                                        className={commonClasses.button + ` ${styles.executeButton}`}
+                                        onClick={sendRequest}>
                                         Execute
                                     </Button >
                                 </div>
@@ -241,15 +233,15 @@ const ReplayRequestModal: React.FC<ReplayRequestModalProps> = ({ isOpen, onClose
                                 </div>
                             </AccordionDetails>
                         </Accordion>
-                        <Accordion TransitionProps={{ unmountOnExit: true }} expanded={responseExpanded} onChange={() => setResponseExpanded(!responseExpanded)}>
+                        {isLoading && <img alt="spinner" src={spinnerImg} style={{ height: 50 }} />}
+                        {response && !isLoading && (<Accordion TransitionProps={{ unmountOnExit: true }} expanded={responseExpanded} onChange={() => setResponseExpanded(!responseExpanded)}>
                             <AccordionSummary expandIcon={<ExpandMoreIcon />} aria-controls="response-content">
                                 <span className={styles.sectionHeader}>RESPONSE</span>
                             </AccordionSummary>
                             <AccordionDetails>
-                                {isLoading && <img alt="spinner" src={spinnerImg} style={{ height: 50 }} />}
-                                {response && !isLoading && <AutoRepresentation representation={response} />}
+                                <AutoRepresentation representation={response} />
                             </AccordionDetails>
-                        </Accordion>
+                        </Accordion>)}
                     </div>
                 </Box>
             </Fade>
@@ -257,4 +249,9 @@ const ReplayRequestModal: React.FC<ReplayRequestModalProps> = ({ isOpen, onClose
     );
 }
 
-export default ReplayRequestModal
+const ReplayRequestModalContiner = () => {
+    const [isOpenRequestModal, setIsOpenRequestModal] = useRecoilState(replayRequestModalOpenAtom)
+    return isOpenRequestModal && < ReplayRequestModal isOpen={isOpenRequestModal} onClose={() => setIsOpenRequestModal(false)} />
+}
+
+export default ReplayRequestModalContiner
