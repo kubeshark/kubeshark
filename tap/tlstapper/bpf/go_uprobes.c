@@ -60,11 +60,12 @@ Capstone Engine: https://www.capstone-engine.org/
 #include "include/go_abi_internal.h"
 #include "include/go_types.h"
 
-#define BPF_MAX_VAR_SIZ	(1 << 29)
 
+// Ring buffer map type requires Linux kernel version at least 5.8
+// Source: https://github.com/iovisor/bcc/blob/master/docs/kernel-versions.md#tables-aka-maps
 struct {
     __uint(type, BPF_MAP_TYPE_RINGBUF);
-    __uint(max_entries, BPF_MAX_VAR_SIZ);
+    __uint(max_entries, 1 << 24);
 } task_struct_heap SEC(".maps");
 
 enum ABI {
