@@ -12,8 +12,6 @@ Copyright (C) UP9 Inc.
 #include "include/pids.h"
 #include "include/common.h"
 
-#define AF_INET		2	/* Internet IP Protocol 	*/
-
 static __always_inline int get_count_bytes(struct pt_regs *ctx, struct ssl_info* info, __u64 id) {
     int returnValue = PT_REGS_RC(ctx);
 
@@ -147,54 +145,4 @@ void BPF_KPROBE(ssl_read_ex, void* ssl, void* buffer, size_t num, size_t *readby
 SEC("uretprobe/ssl_read_ex")
 void BPF_KPROBE(ssl_ret_read_ex) {
 	ssl_uretprobe(ctx, &openssl_read_context, FLAGS_IS_READ_BIT);
-}
-// Move to a separate file?
-SEC("kprobe/tcp_sendmsg")
-void BPF_KPROBE(tcp_sendmsg) {
-	long err;
-
-	__u64 id = bpf_get_current_pid_tgid();
-	__u32 pid = id >> 32;
-
-	// Do I need this check?
-	if (!should_tap(id >> 32)) {
-		return;
-	}
-
-	struct sock *sk = (struct sock *) PT_REGS_PARM1(ctx);
-
-	short unsigned int family;
-	err = bpf_probe_read(&family, sizeof(family), (void *)&sk->__sk_common.skc_family);
-	if (err != 0) {
-		// TODO: Raise error
-		log_info(ctx, LOG_INFO_DEBUG, -1, -1, -1);
-		return;
-	}
-	if (family != AF_INET) {
-		return;
-	}
-
-	__be32 saddr;
-	__be32 daddr;
-	__be16 dport;
-	err = bpf_probe_read(&saddr, sizeof(saddr), (void *)&sk->__sk_common.skc_rcv_saddr);
-	if (err != 0) {
-		// TODO: Raise error
-		log_info(ctx, LOG_INFO_DEBUG, -1, -1, -1);
-		return;
-	}
-	err = bpf_probe_read(&daddr, sizeof(daddr), (void *)&sk->__sk_common.skc_daddr);
-	if (err != 0) {
-		// TODO: Raise error
-		log_info(ctx, LOG_INFO_DEBUG, -1, -1, -1);
-		return;
-	}
-	err = bpf_probe_read(&dport, sizeof(dport), (void *)&sk->__sk_common.skc_dport);
-	if (err != 0) {
-		// TODO: Raise error
-		log_info(ctx, LOG_INFO_DEBUG, -1, -1, -1);
-		return;
-	}
-	// Debug
-	log_info(ctx, LOG_INFO_DEBUG, pid, saddr, daddr);
 }

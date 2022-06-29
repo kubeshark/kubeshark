@@ -7,6 +7,8 @@ Copyright (C) UP9 Inc.
 #ifndef __COMMON__
 #define __COMMON__
 
+#define AF_INET	2	/* Internet IP Protocol */
+
 const __s32 invalid_fd = -1;
 
 static int add_address_to_chunk(struct pt_regs *ctx, struct tls_chunk* chunk, __u64 id, __u32 fd);
