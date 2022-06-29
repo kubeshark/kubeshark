@@ -59,12 +59,19 @@ Capstone Engine: https://www.capstone-engine.org/
 #include "include/go_abi_internal.h"
 #include "include/go_types.h"
 
+#define BPF_MAX_VAR_SIZ	(1 << 29)
+
+struct {
+    __uint(type, BPF_MAP_TYPE_RINGBUF);
+    __uint(max_entries, BPF_MAX_VAR_SIZ);
+} task_struct_heap SEC(".maps");
+
 enum ABI {
     ABI0=0,
     ABIInternal=1,
 };
 
-static __always_inline int get_goid_from_thread_local_storage(__u64 *goroutine_id) {
+static __always_inline __u32 get_goid_from_thread_local_storage(__u64 *goroutine_id) {
     int zero = 0;
     int one = 1;
     __u32* g_addr_offset = bpf_map_lookup_elem(&goid_offset_map, &zero);
@@ -77,7 +84,7 @@ static __always_inline int get_goid_from_thread_local_storage(__u64 *goroutine_i
     // me must implement our own heap using a ringbuffer.
     // Reserve some memory in our "heap" for the task_struct.
     struct task_struct *task;
-    task = bpf_ringbuf_reserve(&heap, sizeof(struct task_struct), 0);
+    task = bpf_ringbuf_reserve(&task_struct_heap, sizeof(struct task_struct), 0);
     if (!task) {
         return 0;
     }
@@ -85,7 +92,7 @@ static __always_inline int get_goid_from_thread_local_storage(__u64 *goroutine_i
     // Get the current task.
     __u64 task_ptr = bpf_get_current_task();
     if (!task_ptr) {
-        bpf_ringbuf_discard(task, 0);
+        bpf_ringbuf_discard(task, BPF_RB_FORCE_WAKEUP);
         return 0;
     }
     // The bpf_get_current_task helper returns us the address of the task_struct in
@@ -95,11 +102,11 @@ static __always_inline int get_goid_from_thread_local_storage(__u64 *goroutine_i
 
     // Get the Goroutine ID which is stored in thread local storage.
     size_t g_addr;
-    bpf_probe_read_user(&g_addr, sizeof(void *), (void*)(task->thread.fsbase + g_addr_offset));
-    bpf_probe_read_user(goroutine_id, sizeof(void *), (void*)(g_addr + goid_offset));
+    bpf_probe_read_user(&g_addr, sizeof(void *), (void*)(task->thread.fsbase + *g_addr_offset));
+    bpf_probe_read_user(goroutine_id, sizeof(void *), (void*)(g_addr + *goid_offset));
 
     // Free back up the memory we reserved for the task_struct.
-    bpf_ringbuf_discard(task, 0);
+    bpf_ringbuf_discard(task, BPF_RB_FORCE_WAKEUP);
 
     return 1;
 }
@@ -237,41 +244,49 @@ static __always_inline void go_crypto_tls_ex_uprobe(struct pt_regs *ctx, struct 
 }
 
 SEC("uprobe/go_crypto_tls_abi0_write")
-void BPF_KPROBE(go_crypto_tls_abi0_write) {
+int BPF_KPROBE(go_crypto_tls_abi0_write) {
     go_crypto_tls_uprobe(ctx, &go_write_context, ABI0);
+    return 1;
 }
 
 SEC("uprobe/go_crypto_tls_abi0_write_ex")
-void BPF_KPROBE(go_crypto_tls_abi0_write_ex) {
+int BPF_KPROBE(go_crypto_tls_abi0_write_ex) {
     go_crypto_tls_ex_uprobe(ctx, &go_write_context, 0, ABI0);
+    return 1;
 }
 
 SEC("uprobe/go_crypto_tls_abi0_read")
-void BPF_KPROBE(go_crypto_tls_abi0_read) {
+int BPF_KPROBE(go_crypto_tls_abi0_read) {
     go_crypto_tls_uprobe(ctx, &go_read_context, ABI0);
+    return 1;
 }
 
 SEC("uprobe/go_crypto_tls_abi0_read_ex")
-void BPF_KPROBE(go_crypto_tls_abi0_read_ex) {
+int BPF_KPROBE(go_crypto_tls_abi0_read_ex) {
     go_crypto_tls_ex_uprobe(ctx, &go_read_context, FLAGS_IS_READ_BIT, ABI0);
+    return 1;
 }
 
 SEC("uprobe/go_crypto_tls_abi_internal_write")
-void BPF_KPROBE(go_crypto_tls_abi_internal_write) {
+int BPF_KPROBE(go_crypto_tls_abi_internal_write) {
     go_crypto_tls_uprobe(ctx, &go_write_context, ABIInternal);
+    return 1;
 }
 
 SEC("uprobe/go_crypto_tls_abi_internal_write_ex")
-void BPF_KPROBE(go_crypto_tls_abi_internal_write_ex) {
+int BPF_KPROBE(go_crypto_tls_abi_internal_write_ex) {
     go_crypto_tls_ex_uprobe(ctx, &go_write_context, 0, ABIInternal);
+    return 1;
 }
 
 SEC("uprobe/go_crypto_tls_abi_internal_read")
-void BPF_KPROBE(go_crypto_tls_abi_internal_read) {
+int BPF_KPROBE(go_crypto_tls_abi_internal_read) {
     go_crypto_tls_uprobe(ctx, &go_read_context, ABIInternal);
+    return 1;
 }
 
 SEC("uprobe/go_crypto_tls_abi_internal_read_ex")
-void BPF_KPROBE(go_crypto_tls_abi_internal_read_ex) {
+int BPF_KPROBE(go_crypto_tls_abi_internal_read_ex) {
     go_crypto_tls_ex_uprobe(ctx, &go_read_context, FLAGS_IS_READ_BIT, ABIInternal);
+    return 1;
 }

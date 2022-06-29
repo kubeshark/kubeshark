@@ -106,6 +106,7 @@ type tlsTapperMapSpecs struct {
 	OpensslReadContext   *ebpf.MapSpec `ebpf:"openssl_read_context"`
 	OpensslWriteContext  *ebpf.MapSpec `ebpf:"openssl_write_context"`
 	PidsMap              *ebpf.MapSpec `ebpf:"pids_map"`
+	TaskStructHeap       *ebpf.MapSpec `ebpf:"task_struct_heap"`
 }
 
 // tlsTapperObjects contains all objects after they have been loaded into the kernel.
@@ -139,6 +140,7 @@ type tlsTapperMaps struct {
 	OpensslReadContext   *ebpf.Map `ebpf:"openssl_read_context"`
 	OpensslWriteContext  *ebpf.Map `ebpf:"openssl_write_context"`
 	PidsMap              *ebpf.Map `ebpf:"pids_map"`
+	TaskStructHeap       *ebpf.Map `ebpf:"task_struct_heap"`
 }
 
 func (m *tlsTapperMaps) Close() error {
@@ -155,6 +157,7 @@ func (m *tlsTapperMaps) Close() error {
 		m.OpensslReadContext,
 		m.OpensslWriteContext,
 		m.PidsMap,
+		m.TaskStructHeap,
 	)
 }
 
