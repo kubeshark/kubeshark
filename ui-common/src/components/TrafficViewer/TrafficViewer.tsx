@@ -277,7 +277,7 @@ const TrafficViewerContainer: React.FC<TrafficViewerProps> = ({
                     closeOnClick
                     rtl={false}
                     pauseOnFocusLoss
-                    draggable
+      draggable />
     <ReplayRequestModalContiner />
   </RecoilRoot>
 }
