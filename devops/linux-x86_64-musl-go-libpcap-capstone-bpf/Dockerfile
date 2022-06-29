@@ -44,8 +44,8 @@ RUN ./configure --host=x86_64 && make \
 WORKDIR /
 
 # Build and install Capstone from source
-RUN curl https://github.com/capstone-engine/capstone/archive/4.0.2.tar.gz -Lo ./capstone.tar.gz \
- && tar -xzf capstone.tar.gz && mv ./capstone-* ./capstone
+RUN curl https://github.com/capstone-engine/capstone/releases/download/5.0-rc2/capstone-5.0-rc2.tar.xz -Lo ./capstone.tar.xz \
+ && tar -xf capstone.tar.xz && mv ./capstone-* ./capstone
 WORKDIR /capstone
 RUN CAPSTONE_ARCHS="x86" CAPSTONE_STATIC=yes ./make.sh \
  && cp /capstone/libcapstone.a /usr/local/musl/lib/gcc/x86_64-unknown-linux-musl/*/

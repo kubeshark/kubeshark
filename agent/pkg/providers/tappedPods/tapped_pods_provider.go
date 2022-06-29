@@ -60,7 +60,7 @@ func GetTappedPodsStatus() []shared.TappedPodStatus {
 
 func SetNodeToTappedPodMap(nodeToTappedPodsMap shared.NodeToPodsMap) {
 	summary := nodeToTappedPodsMap.Summary()
-	logger.Log.Infof("Setting node to tapped pods map to %v", summary)
+	logger.Log.Debugf("Setting node to tapped pods map to %v", summary)
 
 	nodeHostToTappedPodsMap = nodeToTappedPodsMap
 }

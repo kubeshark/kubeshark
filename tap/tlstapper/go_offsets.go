@@ -77,7 +77,7 @@ func getOffsets(filePath string) (offsets map[string]*goExtendedOffset, err erro
 	case "arm64":
 		engine, err = gapstone.New(
 			gapstone.CS_ARCH_ARM64,
-			gapstone.CS_MODE_ARM,
+			gapstone.CS_MODE_LITTLE_ENDIAN,
 		)
 	default:
 		err = fmt.Errorf("Unsupported architecture: %v", runtime.GOARCH)
@@ -85,6 +85,16 @@ func getOffsets(filePath string) (offsets map[string]*goExtendedOffset, err erro
 	if err != nil {
 		return
 	}
+
+	engineMajor, engineMinor := engine.Version()
+	logger.Log.Infof(
+		"Disassembling %s with Capstone %d.%d (arch: %d, mode: %d)",
+		filePath,
+		engineMajor,
+		engineMinor,
+		engine.Arch(),
+		engine.Mode(),
+	)
 
 	offsets = make(map[string]*goExtendedOffset)
 	var fd *os.File
@@ -133,7 +143,7 @@ func getOffsets(filePath string) (offsets map[string]*goExtendedOffset, err erro
 		extendedOffset := &goExtendedOffset{enter: offset}
 
 		// source: https://gist.github.com/grantseltzer/3efa8ecc5de1fb566e8091533050d608
-		// skip over any symbols that aren't functinons/methods
+		// skip over any symbols that aren't functions/methods
 		if sym.Info != byte(2) && sym.Info != byte(18) {
 			offsets[sym.Name] = extendedOffset
 			continue
