@@ -2,7 +2,7 @@ import React, { useState, useCallback } from "react"
 import { useRecoilValue, useSetRecoilState } from "recoil"
 import entryDataAtom from "../../../recoil/entryData"
 import SectionsRepresentation from "./SectionsRepresentation";
-import { EntryTablePolicySection, EntryContractSection } from "../EntrySections/EntrySections";
+import { EntryTablePolicySection } from "../EntrySections/EntrySections";
 import { ReactComponent as ReplayIcon } from './replay.svg';
 import styles from './EntryViewer.module.sass';
 import { Tabs } from "../../UI";
@@ -10,7 +10,7 @@ import replayRequestModalOpenAtom from "../../../recoil/replayRequestModalOpen";
 
 const enabledProtocolsForReplay = ["http"]
 
-export const AutoRepresentation: React.FC<any> = ({ representation, isRulesEnabled, rulesMatched, contractStatus, requestReason, responseReason, contractContent, elapsedTime, color, isDisplayReplay = false }) => {
+export const AutoRepresentation: React.FC<any> = ({ representation, isRulesEnabled, rulesMatched, elapsedTime, color, isDisplayReplay = false }) => {
     const entryData = useRecoilValue(entryDataAtom)
     const setIsOpenRequestModal = useSetRecoilState(replayRequestModalOpenAtom)
     const isReplayDisplayed = useCallback(() => {
@@ -34,7 +34,6 @@ export const AutoRepresentation: React.FC<any> = ({ representation, isRulesEnabl
 
     let responseTabIndex = 0;
     let rulesTabIndex = 0;
-    let contractTabIndex = 0;
 
     if (response) {
         TABS.push(
@@ -56,16 +55,6 @@ export const AutoRepresentation: React.FC<any> = ({ representation, isRulesEnabl
         rulesTabIndex = TABS.length - 1;
     }
 
-    if (contractStatus !== 0 && contractContent) {
-        TABS.push(
-            {
-                tab: 'Contract',
-                badge: null
-            }
-        );
-        contractTabIndex = TABS.length - 1;
-    }
-
     return <div className={styles.Entry}>
         {<div className={styles.body}>
             <div className={styles.bodyHeader}>
@@ -79,9 +68,6 @@ export const AutoRepresentation: React.FC<any> = ({ representation, isRulesEnabl
             </React.Fragment>}
             {isRulesEnabled && currentTab === TABS[rulesTabIndex].tab && <React.Fragment>
                 <EntryTablePolicySection title={'Rule'} color={color} latency={elapsedTime} arrayToIterate={rulesMatched ? rulesMatched : []} />
-            </React.Fragment>}
-            {contractStatus !== 0 && contractContent && currentTab === TABS[contractTabIndex].tab && <React.Fragment>
-                <EntryContractSection color={color} requestReason={requestReason} responseReason={responseReason} contractContent={contractContent} />
             </React.Fragment>}
         </div>}
     </div>;

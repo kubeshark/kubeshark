@@ -24,10 +24,10 @@ const (
 	InsertionFilterName           = "insertion-filter"
 	DryRunTapName                 = "dry-run"
 	EnforcePolicyFile             = "traffic-validation-file"
-	ContractFile                  = "contract"
 	ServiceMeshName               = "service-mesh"
 	TlsName                       = "tls"
 	ProfilerName                  = "profiler"
+	MaxLiveStreamsName            = "max-live-streams"
 )
 
 type TapConfig struct {
@@ -43,12 +43,12 @@ type TapConfig struct {
 	InsertionFilter        string           `yaml:"insertion-filter" default:""`
 	DryRun                 bool             `yaml:"dry-run" default:"false"`
 	EnforcePolicyFile      string           `yaml:"traffic-validation-file"`
-	ContractFile           string           `yaml:"contract"`
 	ApiServerResources     shared.Resources `yaml:"api-server-resources"`
 	TapperResources        shared.Resources `yaml:"tapper-resources"`
 	ServiceMesh            bool             `yaml:"service-mesh" default:"false"`
 	Tls                    bool             `yaml:"tls" default:"false"`
 	Profiler               bool             `yaml:"profiler" default:"false"`
+	MaxLiveStreams         int              `yaml:"max-live-streams" default:"500"`
 }
 
 func (config *TapConfig) PodRegex() *regexp.Regexp {

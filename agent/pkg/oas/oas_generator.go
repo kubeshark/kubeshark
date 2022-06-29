@@ -6,9 +6,8 @@ import (
 	"sync"
 
 	"github.com/up9inc/mizu/agent/pkg/har"
-	"github.com/up9inc/mizu/tap/api"
-
 	"github.com/up9inc/mizu/logger"
+	"github.com/up9inc/mizu/tap/api"
 )
 
 var (
@@ -17,7 +16,7 @@ var (
 )
 
 type OasGeneratorSink interface {
-	HandleEntry(mizuEntry *api.Entry)
+	HandleEntry(mizuEntry *api.Entry, protocol *api.Protocol)
 }
 
 type OasGenerator interface {
@@ -59,12 +58,12 @@ func (g *defaultOasGenerator) IsStarted() bool {
 	return g.started
 }
 
-func (g *defaultOasGenerator) HandleEntry(mizuEntry *api.Entry) {
+func (g *defaultOasGenerator) HandleEntry(mizuEntry *api.Entry, protocol *api.Protocol) {
 	if !g.started {
 		return
 	}
 
-	if mizuEntry.Protocol.Name == "http" {
+	if protocol.Name == "http" {
 		dest := mizuEntry.Destination.Name
 		if dest == "" {
 			logger.Log.Debugf("OAS: Unresolved entry %d", mizuEntry.Id)
@@ -86,7 +85,7 @@ func (g *defaultOasGenerator) HandleEntry(mizuEntry *api.Entry) {
 
 		g.handleHARWithSource(entryWSource)
 	} else {
-		logger.Log.Debugf("OAS: Unsupported protocol in entry %d: %s", mizuEntry.Id, mizuEntry.Protocol.Name)
+		logger.Log.Debugf("OAS: Unsupported protocol in entry %d: %s", mizuEntry.Id, protocol.Name)
 	}
 }
 

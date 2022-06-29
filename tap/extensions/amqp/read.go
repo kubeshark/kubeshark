@@ -43,14 +43,14 @@ In realistic implementations where performance is a concern, we would use
 
 “gathering reads” to avoid doing three separate system calls to read a frame.
 */
-func (r *AmqpReader) ReadFrame() (frame frame, err error) {
+func (r *AmqpReader) readFrame() (frame frame, err error) {
 	var scratch [7]byte
 
 	if _, err = io.ReadFull(r.R, scratch[:7]); err != nil {
 		return
 	}
 
-	typ := uint8(scratch[0])
+	typ := scratch[0]
 	channel := binary.BigEndian.Uint16(scratch[1:3])
 	size := binary.BigEndian.Uint32(scratch[3:7])
 
@@ -94,20 +94,20 @@ func (r *AmqpReader) ReadFrame() (frame frame, err error) {
 	return
 }
 
-func readShortstr(r io.Reader) (v string, err error) {
+func readShortStr(r io.Reader) (v string, err error) {
 	var length uint8
 	if err = binary.Read(r, binary.BigEndian, &length); err != nil {
 		return
 	}
 
-	bytes := make([]byte, length)
-	if _, err = io.ReadFull(r, bytes); err != nil {
+	bytesValue := make([]byte, length)
+	if _, err = io.ReadFull(r, bytesValue); err != nil {
 		return
 	}
-	return string(bytes), nil
+	return string(bytesValue), nil
 }
 
-func readLongstr(r io.Reader) (v string, err error) {
+func readLongStr(r io.Reader) (v string, err error) {
 	var length uint32
 	if err = binary.Read(r, binary.BigEndian, &length); err != nil {
 		return
@@ -118,11 +118,11 @@ func readLongstr(r io.Reader) (v string, err error) {
 		return
 	}
 
-	bytes := make([]byte, length)
-	if _, err = io.ReadFull(r, bytes); err != nil {
+	bytesValue := make([]byte, length)
+	if _, err = io.ReadFull(r, bytesValue); err != nil {
 		return
 	}
-	return string(bytes), nil
+	return string(bytesValue), nil
 }
 
 func readDecimal(r io.Reader) (v Decimal, err error) {
@@ -171,7 +171,7 @@ func readField(r io.Reader) (v interface{}, err error) {
 		if err = binary.Read(r, binary.BigEndian, &value); err != nil {
 			return
 		}
-		return (value != 0), nil
+		return value != 0, nil
 
 	case 'b':
 		var value [1]byte
@@ -219,7 +219,7 @@ func readField(r io.Reader) (v interface{}, err error) {
 		return readDecimal(r)
 
 	case 'S':
-		return readLongstr(r)
+		return readLongStr(r)
 
 	case 'A':
 		return readArray(r)
@@ -231,12 +231,12 @@ func readField(r io.Reader) (v interface{}, err error) {
 		return readTable(r)
 
 	case 'x':
-		var len int32
-		if err = binary.Read(r, binary.BigEndian, &len); err != nil {
+		var lenVal int32
+		if err = binary.Read(r, binary.BigEndian, &lenVal); err != nil {
 			return nil, err
 		}
 
-		value := make([]byte, len)
+		value := make([]byte, lenVal)
 		if _, err = io.ReadFull(r, value); err != nil {
 			return nil, err
 		}
@@ -261,7 +261,7 @@ func readTable(r io.Reader) (table Table, err error) {
 	var nested bytes.Buffer
 	var str string
 
-	if str, err = readLongstr(r); err != nil {
+	if str, err = readLongStr(r); err != nil {
 		return
 	}
 
@@ -273,7 +273,7 @@ func readTable(r io.Reader) (table Table, err error) {
 		var key string
 		var value interface{}
 
-		if key, err = readShortstr(&nested); err != nil {
+		if key, err = readShortStr(&nested); err != nil {
 			return
 		}
 
@@ -349,12 +349,12 @@ func (r *AmqpReader) parseHeaderFrame(channel uint16, size uint32) (frame frame,
 	}
 
 	if hasProperty(flags, flagContentType) {
-		if hf.Properties.ContentType, err = readShortstr(r.R); err != nil {
+		if hf.Properties.ContentType, err = readShortStr(r.R); err != nil {
 			return
 		}
 	}
 	if hasProperty(flags, flagContentEncoding) {
-		if hf.Properties.ContentEncoding, err = readShortstr(r.R); err != nil {
+		if hf.Properties.ContentEncoding, err = readShortStr(r.R); err != nil {
 			return
 		}
 	}
@@ -374,22 +374,22 @@ func (r *AmqpReader) parseHeaderFrame(channel uint16, size uint32) (frame frame,
 		}
 	}
 	if hasProperty(flags, flagCorrelationId) {
-		if hf.Properties.CorrelationId, err = readShortstr(r.R); err != nil {
+		if hf.Properties.CorrelationId, err = readShortStr(r.R); err != nil {
 			return
 		}
 	}
 	if hasProperty(flags, flagReplyTo) {
-		if hf.Properties.ReplyTo, err = readShortstr(r.R); err != nil {
+		if hf.Properties.ReplyTo, err = readShortStr(r.R); err != nil {
 			return
 		}
 	}
 	if hasProperty(flags, flagExpiration) {
-		if hf.Properties.Expiration, err = readShortstr(r.R); err != nil {
+		if hf.Properties.Expiration, err = readShortStr(r.R); err != nil {
 			return
 		}
 	}
 	if hasProperty(flags, flagMessageId) {
-		if hf.Properties.MessageId, err = readShortstr(r.R); err != nil {
+		if hf.Properties.MessageId, err = readShortStr(r.R); err != nil {
 			return
 		}
 	}
@@ -399,22 +399,22 @@ func (r *AmqpReader) parseHeaderFrame(channel uint16, size uint32) (frame frame,
 		}
 	}
 	if hasProperty(flags, flagType) {
-		if hf.Properties.Type, err = readShortstr(r.R); err != nil {
+		if hf.Properties.Type, err = readShortStr(r.R); err != nil {
 			return
 		}
 	}
 	if hasProperty(flags, flagUserId) {
-		if hf.Properties.UserId, err = readShortstr(r.R); err != nil {
+		if hf.Properties.UserId, err = readShortStr(r.R); err != nil {
 			return
 		}
 	}
 	if hasProperty(flags, flagAppId) {
-		if hf.Properties.AppId, err = readShortstr(r.R); err != nil {
+		if hf.Properties.AppId, err = readShortStr(r.R); err != nil {
 			return
 		}
 	}
 	if hasProperty(flags, flagReserved1) {
-		if hf.Properties.reserved1, err = readShortstr(r.R); err != nil {
+		if hf.Properties.reserved1, err = readShortStr(r.R); err != nil {
 			return
 		}
 	}
@@ -436,7 +436,7 @@ func (r *AmqpReader) parseBodyFrame(channel uint16, size uint32) (frame frame, e
 	return bf, nil
 }
 
-var errHeartbeatPayload = errors.New("Heartbeats should not have a payload")
+var errHeartbeatPayload = errors.New("heartbeats should not have a payload")
 
 func (r *AmqpReader) parseHeartbeatFrame(channel uint16, size uint32) (frame frame, err error) {
 	hf := &HeartbeatFrame{

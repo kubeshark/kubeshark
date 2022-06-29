@@ -12,7 +12,7 @@ import (
 	"github.com/up9inc/mizu/tap/api"
 )
 
-var protocol api.Protocol = api.Protocol{
+var protocol = api.Protocol{
 	Name:            "amqp",
 	LongName:        "Advanced Message Queuing Protocol 0-9-1",
 	Abbreviation:    "AMQP",
@@ -26,10 +26,18 @@ var protocol api.Protocol = api.Protocol{
 	Priority:        1,
 }
 
+var protocolsMap = map[string]*api.Protocol{
+	fmt.Sprintf("%s/%s/%s", protocol.Name, protocol.Version, protocol.Abbreviation): &protocol,
+}
+
 type dissecting string
 
 func (d dissecting) Register(extension *api.Extension) {
 	extension.Protocol = &protocol
+}
+
+func (d dissecting) GetProtocols() map[string]*api.Protocol {
+	return protocolsMap
 }
 
 func (d dissecting) Ping() {
@@ -74,13 +82,13 @@ func (d dissecting) Dissect(b *bufio.Reader, reader api.TcpReader, options *api.
 	var lastMethodFrameMessage Message
 
 	for {
-		frame, err := r.ReadFrame()
+		frameVal, err := r.readFrame()
 		if err == io.EOF {
 			// We must read until we see an EOF... very important!
 			return err
 		}
 
-		switch f := frame.(type) {
+		switch f := frameVal.(type) {
 		case *HeartbeatFrame:
 			// drop
 
@@ -203,7 +211,7 @@ func (d dissecting) Dissect(b *bufio.Reader, reader api.TcpReader, options *api.
 			}
 
 		default:
-			// log.Printf("unexpected frame: %+v", f)
+			// log.Printf("unexpected frameVal: %+v", f)
 		}
 	}
 }
@@ -214,8 +222,8 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, 
 
 	reqDetails["method"] = request["method"]
 	return &api.Entry{
-		Protocol: protocol,
-		Capture:  item.Capture,
+		ProtocolId: fmt.Sprintf("%s/%s/%s", protocol.Name, protocol.Version, protocol.Abbreviation),
+		Capture:    item.Capture,
 		Source: &api.TCP{
 			Name: resolvedSource,
 			IP:   item.ConnectionInfo.ClientIP,
@@ -276,22 +284,21 @@ func (d dissecting) Summarize(entry *api.Entry) *api.BaseEntry {
 	}
 
 	return &api.BaseEntry{
-		Id:             entry.Id,
-		Protocol:       entry.Protocol,
-		Capture:        entry.Capture,
-		Summary:        summary,
-		SummaryQuery:   summaryQuery,
-		Status:         0,
-		StatusQuery:    "",
-		Method:         method,
-		MethodQuery:    methodQuery,
-		Timestamp:      entry.Timestamp,
-		Source:         entry.Source,
-		Destination:    entry.Destination,
-		IsOutgoing:     entry.Outgoing,
-		Latency:        entry.ElapsedTime,
-		Rules:          entry.Rules,
-		ContractStatus: entry.ContractStatus,
+		Id:           entry.Id,
+		Protocol:     *protocolsMap[entry.ProtocolId],
+		Capture:      entry.Capture,
+		Summary:      summary,
+		SummaryQuery: summaryQuery,
+		Status:       0,
+		StatusQuery:  "",
+		Method:       method,
+		MethodQuery:  methodQuery,
+		Timestamp:    entry.Timestamp,
+		Source:       entry.Source,
+		Destination:  entry.Destination,
+		IsOutgoing:   entry.Outgoing,
+		Latency:      entry.ElapsedTime,
+		Rules:        entry.Rules,
 	}
 }
 
@@ -323,7 +330,7 @@ func (d dissecting) Represent(request map[string]interface{}, response map[strin
 
 func (d dissecting) Macros() map[string]string {
 	return map[string]string{
-		`amqp`: fmt.Sprintf(`proto.name == "%s"`, protocol.Name),
+		`amqp`: fmt.Sprintf(`protocol == "%s/%s/%s"`, protocol.Name, protocol.Version, protocol.Abbreviation),
 	}
 }
 
