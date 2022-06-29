@@ -37,13 +37,6 @@ interface Entry {
     dst: TCPInterface,
     isOutgoing?: boolean;
     latency: number;
-    rules: Rules;
-}
-
-interface Rules {
-    status: boolean;
-    latency: number;
-    numberOfRules: number;
 }
 
 interface EntryProps {
@@ -67,7 +60,6 @@ export const EntryItem: React.FC<EntryProps> = ({entry, style, headingMode, name
     const isSelected = focusedEntryId === entry.id;
 
     const classification = getClassification(entry.status)
-    const numberOfRules = entry.rules.numberOfRules
     let ingoingIcon;
     let outgoingIcon;
     switch(classification) {
@@ -87,35 +79,6 @@ export const EntryItem: React.FC<EntryProps> = ({entry, style, headingMode, name
             break;
         }
     }
-    let additionalRulesProperties = "";
-    let ruleSuccess = true;
-    let rule = 'latency' in entry.rules
-    if (rule) {
-        if (entry.rules.latency !== -1) {
-            if (entry.rules.latency >= entry.latency || !('latency' in entry)) {
-                additionalRulesProperties = styles.ruleSuccessRow
-                ruleSuccess = true
-            } else {
-                additionalRulesProperties = styles.ruleFailureRow
-                ruleSuccess = false
-            }
-            if (isSelected) {
-                additionalRulesProperties += ` ${entry.rules.latency >= entry.latency ? styles.ruleSuccessRowSelected : styles.ruleFailureRowSelected}`
-            }
-        } else {
-            if (entry.rules.status) {
-                additionalRulesProperties = styles.ruleSuccessRow
-                ruleSuccess = true
-            } else {
-                additionalRulesProperties = styles.ruleFailureRow
-                ruleSuccess = false
-            }
-            if (isSelected) {
-                additionalRulesProperties += ` ${entry.rules.status ? styles.ruleSuccessRowSelected : styles.ruleFailureRowSelected}`
-            }
-        }
-    }
-
 
     const isStatusCodeEnabled = ((entry.proto.name === "http" && "status" in entry) || entry.status !== 0);
 
@@ -123,7 +86,7 @@ export const EntryItem: React.FC<EntryProps> = ({entry, style, headingMode, name
         <div
             id={`entry-${entry.id}`}
             className={`${styles.row}
-            ${isSelected && !rule ? styles.rowSelected : additionalRulesProperties}`}
+            ${isSelected ? styles.rowSelected : ""}`}
             onClick={() => {
                 if (!setFocusedEntryId) return;
                 setFocusedEntryId(entry.id);
@@ -187,13 +150,7 @@ export const EntryItem: React.FC<EntryProps> = ({entry, style, headingMode, name
                     </Queryable>
                 </div>
             </div>
-            {
-                rule ?
-                    <div className={`${styles.ruleNumberText} ${ruleSuccess ? styles.ruleNumberTextSuccess : styles.ruleNumberTextFailure} ${rule ? styles.separatorRight : ""}`}>
-                        {`Rules (${numberOfRules})`}
-                    </div>
-                : ""
-            }
+
             <div className={styles.separatorRight}>
                 {headingMode ? <Queryable
                         query={`namespace == "${namespace}"`}

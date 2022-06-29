@@ -1,7 +1,7 @@
 import React, {useState} from 'react';
 import styles from './EntryViewer.module.sass';
 import Tabs from "../../UI/Tabs/Tabs";
-import {EntryTableSection, EntryBodySection, EntryTablePolicySection} from "../EntrySections/EntrySections";
+import {EntryTableSection, EntryBodySection} from "../EntrySections/EntrySections";
 
 enum SectionTypes {
     SectionTable = "table",
@@ -33,8 +33,8 @@ const SectionsRepresentation: React.FC<any> = ({data, color}) => {
     return <React.Fragment>{sections}</React.Fragment>;
 }
 
-const AutoRepresentation: React.FC<any> = ({representation, isRulesEnabled, rulesMatched, elapsedTime, color}) => {
-    var TABS = [
+const AutoRepresentation: React.FC<any> = ({representation, elapsedTime, color}) => {
+    const TABS = [
         {
             tab: 'Request'
         }
@@ -49,7 +49,6 @@ const AutoRepresentation: React.FC<any> = ({representation, isRulesEnabled, rule
     const {request, response} = JSON.parse(representation);
 
     let responseTabIndex = 0;
-    let rulesTabIndex = 0;
 
     if (response) {
         TABS.push(
@@ -58,15 +57,6 @@ const AutoRepresentation: React.FC<any> = ({representation, isRulesEnabled, rule
             }
         );
         responseTabIndex = TABS.length - 1;
-    }
-
-    if (isRulesEnabled) {
-        TABS.push(
-            {
-                tab: 'Rules',
-            }
-        );
-        rulesTabIndex = TABS.length - 1;
     }
 
     return <div className={styles.Entry}>
@@ -80,26 +70,19 @@ const AutoRepresentation: React.FC<any> = ({representation, isRulesEnabled, rule
             {response && currentTab === TABS[responseTabIndex].tab && <React.Fragment>
                 <SectionsRepresentation data={response} color={color}/>
             </React.Fragment>}
-            {isRulesEnabled && currentTab === TABS[rulesTabIndex].tab && <React.Fragment>
-                <EntryTablePolicySection title={'Rule'} color={color} latency={elapsedTime} arrayToIterate={rulesMatched ? rulesMatched : []}/>
-            </React.Fragment>}
         </div>}
     </div>;
 }
 
 interface Props {
     representation: any;
-    isRulesEnabled: boolean;
-    rulesMatched: any;
     color: string;
     elapsedTime: number;
 }
 
-const EntryViewer: React.FC<Props> = ({representation, isRulesEnabled, rulesMatched, elapsedTime, color}) => {
+const EntryViewer: React.FC<Props> = ({representation, elapsedTime, color}) => {
     return <AutoRepresentation
         representation={representation}
-        isRulesEnabled={isRulesEnabled}
-        rulesMatched={rulesMatched}
         elapsedTime={elapsedTime}
         color={color}
     />
