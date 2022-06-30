@@ -38,7 +38,7 @@ type goExtendedOffset struct {
 
 const (
 	minimumABIInternalGoVersion = "1.17.0"
-	goVersionSymbol             = "runtime.buildVersion.str"
+	goVersionSymbol             = "runtime.buildVersion.str" // symbol does not exist in Go (<=1.16)
 	goWriteSymbol               = "crypto/tls.(*Conn).Write"
 	goReadSymbol                = "crypto/tls.(*Conn).Read"
 )
@@ -49,17 +49,18 @@ func findGoOffsets(filePath string) (goOffsets, error) {
 		return goOffsets{}, err
 	}
 
-	goVersionOffset, err := getOffset(offsets, goVersionSymbol)
-	if err != nil {
-		return goOffsets{}, err
-	}
-
-	passed, goVersion, err := checkGoVersion(filePath, goVersionOffset)
-	if err != nil {
-		return goOffsets{}, fmt.Errorf("Checking Go version: %s", err)
-	}
-
 	abi := ABI0
+	var passed bool
+	var goVersion string
+
+	goVersionOffset, err := getOffset(offsets, goVersionSymbol)
+	if err == nil {
+		// TODO: Replace this logic with https://pkg.go.dev/debug/buildinfo#ReadFile once we upgrade to 1.18
+		passed, goVersion, err = checkGoVersion(filePath, goVersionOffset)
+		if err != nil {
+			return goOffsets{}, fmt.Errorf("Checking Go version: %s", err)
+		}
+	}
 
 	if passed {
 		abi = ABIInternal
