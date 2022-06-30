@@ -89,10 +89,10 @@ func (s *goHooks) installHooks(bpfObjects *tlsTapperObjects, ex *link.Executable
 
 	// Pass goid and g struct offsets to an eBPF map to retrieve it in eBPF context
 	goidOffsetMap := bpfObjects.tlsTapperMaps.GoidOffsetMap
-	if err := goidOffsetMap.Put(0, offsets.GStructOffset); err != nil {
+	if err := goidOffsetMap.Put(uint32(0), offsets.GStructOffset); err != nil {
 		return errors.Wrap(err, 0)
 	}
-	if err := goidOffsetMap.Put(1, offsets.GoidOffset); err != nil {
+	if err := goidOffsetMap.Put(uint32(1), offsets.GoidOffset); err != nil {
 		return errors.Wrap(err, 0)
 	}
 
