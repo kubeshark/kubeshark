@@ -1,5 +1,4 @@
 import React, { useEffect, useMemo, useState } from "react";
-import styles from "./TrafficPieChart.module.sass";
 import { Cell, Legend, Pie, PieChart, Tooltip } from "recharts";
 import { Utils } from "../../../../helpers/Utils";
 import { ALL_PROTOCOLS, StatsMode as PieChartMode } from "../TrafficStatsModal"
