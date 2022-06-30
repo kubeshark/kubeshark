@@ -27,8 +27,7 @@ void BPF_KPROBE(tcp_sendmsg) {
 	short unsigned int family;
 	err = bpf_probe_read(&family, sizeof(family), (void *)&sk->__sk_common.skc_family);
 	if (err != 0) {
-		// TODO: Raise error
-		log_info(ctx, LOG_INFO_DEBUG, -1, 0, 2);
+		log_error(ctx, LOG_ERROR_READING_SOCKET_FAMILY, id, err, 0l);
 		return;
 	}
 	if (family != AF_INET) {
@@ -41,26 +40,22 @@ void BPF_KPROBE(tcp_sendmsg) {
 	__u16 sport;
 	err = bpf_probe_read(&saddr, sizeof(saddr), (void *)&sk->__sk_common.skc_rcv_saddr);
 	if (err != 0) {
-		// TODO: Raise error
-		log_info(ctx, LOG_INFO_DEBUG, -1, 0, 3);
+		log_error(ctx, LOG_ERROR_READING_SOCKET_SADDR, id, err, 0l);
 		return;
 	}
 	err = bpf_probe_read(&daddr, sizeof(daddr), (void *)&sk->__sk_common.skc_daddr);
 	if (err != 0) {
-		// TODO: Raise error
-		log_info(ctx, LOG_INFO_DEBUG, -1, 0, 4);
+		log_error(ctx, LOG_ERROR_READING_SOCKET_DADDR, id, err, 0l);
 		return;
 	}
 	err = bpf_probe_read(&dport, sizeof(dport), (void *)&sk->__sk_common.skc_dport);
 	if (err != 0) {
-		// TODO: Raise error
-		log_info(ctx, LOG_INFO_DEBUG, -1, 0, 5);
+		log_error(ctx, LOG_ERROR_READING_SOCKET_DPORT, id, err, 0l);
 		return;
 	}
 	err = bpf_probe_read(&sport, sizeof(sport), (void *)&sk->__sk_common.skc_num);
 	if (err != 0) {
-		// TODO: Raise error
-		log_info(ctx, LOG_INFO_DEBUG, -1, 0, 6);
+		log_error(ctx, LOG_ERROR_READING_SOCKET_SPORT, id, err, 0l);
 		return;
 	}
 

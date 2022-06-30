@@ -66,8 +66,7 @@ static __always_inline void ssl_uprobe(struct pt_regs *ctx, void* ssl, void* buf
 	memset(&connect_info, 0, sizeof(connect_info));
 	err = bpf_map_update_elem(&openssl_connect_context, &id, &connect_info, BPF_ANY);
 	if (err != 0) {
-		// TODO: Raise error
-		log_info(ctx, LOG_INFO_DEBUG, -1, 0, 0);
+		log_error(ctx, LOG_ERROR_PUTTING_CONNECT_CONTEXT, id, err, 0l);
 		return;
 	}
 }
@@ -81,8 +80,7 @@ static __always_inline void ssl_uretprobe(struct pt_regs *ctx, struct bpf_map_de
 
 	struct connection_info *connection_info_ptr = bpf_map_lookup_elem(&openssl_connect_context, &id);
 	if (connection_info_ptr == NULL) {
-		// TODO: Raise error
-		log_info(ctx, LOG_INFO_DEBUG, -1, 0, 1);
+		log_error(ctx, LOG_ERROR_GETTING_CONNECT_CONTEXT, id, 0l, 0l);
 		return;
 	}
 	

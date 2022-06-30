@@ -26,7 +26,13 @@ Copyright (C) UP9 Inc.
 #define LOG_ERROR_PUTTING_CONNECT_INFO (14)
 #define LOG_ERROR_GETTING_CONNECT_INFO (15)
 #define LOG_ERROR_READING_CONNECT_INFO (16)
-#define LOG_INFO_DEBUG (17)
+#define LOG_ERROR_READING_SOCKET_FAMILY (17)
+#define LOG_ERROR_READING_SOCKET_DADDR (18)
+#define LOG_ERROR_READING_SOCKET_SADDR (19)
+#define LOG_ERROR_READING_SOCKET_DPORT (20)
+#define LOG_ERROR_READING_SOCKET_SPORT (21)
+#define LOG_ERROR_PUTTING_CONNECT_CONTEXT (22)
+#define LOG_ERROR_GETTING_CONNECT_CONTEXT (23)
 
 // Sometimes we have the same error, happening from different locations.
 // 	in order to be able to distinct between them in the log, we add an 
