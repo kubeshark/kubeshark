@@ -171,8 +171,6 @@ func ExecuteRequest(replayData *Details, timeout time.Duration) *Response {
 				Representation: string(representation),
 				Data:           entryUnmarshalled,
 				Base:           base,
-				Rules:          nil,
-				IsRulesEnabled: false,
 			},
 			ErrorMessage: "",
 		}
