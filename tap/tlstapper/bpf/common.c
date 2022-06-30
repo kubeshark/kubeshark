@@ -104,6 +104,11 @@ static __always_inline void output_ssl_chunk(struct pt_regs *ctx, struct ssl_inf
     chunk->len = count_bytes;
     chunk->fd = info->fd;
 
+    (void)memcpy(&chunk->daddr, &info->daddr, sizeof(chunk->daddr));
+    (void)memcpy(&chunk->saddr, &info->saddr, sizeof(chunk->saddr));
+    chunk->dport = info->dport;
+    chunk->sport = info->sport;
+
     if (!add_address_to_chunk(ctx, chunk, id, chunk->fd)) {
         // Without an address, we drop the chunk because there is not much to do with it in Go
         //

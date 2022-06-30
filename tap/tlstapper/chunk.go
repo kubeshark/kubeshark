@@ -35,6 +35,20 @@ func (c *tlsTapperTlsChunk) getAddress() (net.IP, uint16, error) {
 	return ip, port, nil
 }
 
+func (c *tlsTapperTlsChunk) getDstAddress() (net.IP, uint16) {
+	ip := bytesToIP(c.Daddr)
+	port := c.Dport
+
+	return ip, port
+}
+
+func (c *tlsTapperTlsChunk) getSrcAddress() (net.IP, uint16) {
+	ip := bytesToIP(c.Saddr)
+	port := c.Sport
+
+	return ip, port
+}
+
 func (c *tlsTapperTlsChunk) isClient() bool {
 	return c.Flags&FLAGS_IS_CLIENT_BIT != 0
 }
@@ -81,4 +95,34 @@ func (c *tlsTapperTlsChunk) getAddressPair() (addressPair, error) {
 			dstPort: api.UnknownPort,
 		}, nil
 	}
+}
+
+func (c *tlsTapperTlsChunk) getAddressPair2() addressPair {
+	dIP, dPort := c.getDstAddress()
+	sIP, sPort := c.getSrcAddress()
+
+	if c.isRequest() {
+		return addressPair{
+			srcIp:   sIP,
+			srcPort: sPort,
+			dstIp:   dIP,
+			dstPort: dPort,
+		}
+	} else {
+		return addressPair{
+			srcIp:   dIP,
+			srcPort: dPort,
+			dstIp:   sIP,
+			dstPort: sPort,
+		}
+	}
+}
+
+
+// bytesToIP converts IPv4 byte array to net.IP
+func bytesToIP(ipv4Bytes [4]byte) net.IP {
+	ipNum := binary.BigEndian.Uint32(ipv4Bytes[:])
+	ip := make(net.IP, 4)
+	binary.BigEndian.PutUint32(ip, ipNum)
+	return ip
 }

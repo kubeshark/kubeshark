@@ -33,6 +33,10 @@ struct tls_chunk {
     __u32 fd;
     __u32 flags;
     __u8 address[16];
+    __u8 saddr[4];
+    __u8 daddr[4];
+    __u16 sport;
+    __u16 dport;
     __u8 data[CHUNK_SIZE]; // Must be N^2
 };
 
@@ -41,11 +45,22 @@ struct ssl_info {
     __u32 buffer_len;
     __u32 fd;
     __u64 created_at_nano;
+    __u8 saddr[4];
+    __u8 daddr[4];
+    __u16 sport;
+    __u16 dport;
     
     // for ssl_write and ssl_read must be zero
     // for ssl_write_ex and ssl_read_ex save the *written/*readbytes pointer. 
     //
     size_t *count_ptr;
+};
+
+struct connection_info {
+    __u8 saddr[4];
+    __u8 daddr[4];
+    __u16 sport;
+    __u16 dport;
 };
 
 struct fd_info {
@@ -89,6 +104,7 @@ BPF_PERF_OUTPUT(log_buffer);
 // OpenSSL specific
 BPF_LRU_HASH(openssl_write_context, __u64, struct ssl_info);
 BPF_LRU_HASH(openssl_read_context, __u64, struct ssl_info);
+BPF_LRU_HASH(openssl_connect_context, __u64, struct connection_info);
 
 // Go specific
 BPF_LRU_HASH(go_write_context, __u64, struct ssl_info);

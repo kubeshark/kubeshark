@@ -42,6 +42,8 @@ static __always_inline int get_count_bytes(struct pt_regs *ctx, struct ssl_info*
 }
 
 static __always_inline void ssl_uprobe(struct pt_regs *ctx, void* ssl, void* buffer, int num, struct bpf_map_def* map_fd, size_t *count_ptr) {
+	long err;
+
 	__u64 id = bpf_get_current_pid_tgid();
 	
 	if (!should_tap(id >> 32)) {
@@ -54,10 +56,19 @@ static __always_inline void ssl_uprobe(struct pt_regs *ctx, void* ssl, void* buf
 	info.count_ptr = count_ptr;
 	info.buffer = buffer;
 	
-	long err = bpf_map_update_elem(map_fd, &id, &info, BPF_ANY);
+	err = bpf_map_update_elem(map_fd, &id, &info, BPF_ANY);
 	
 	if (err != 0) {
 		log_error(ctx, LOG_ERROR_PUTTING_SSL_CONTEXT, id, err, 0l);
+	}
+
+	struct connection_info connect_info;
+	memset(&connect_info, 0, sizeof(connect_info));
+	err = bpf_map_update_elem(&openssl_connect_context, &id, &connect_info, BPF_ANY);
+	if (err != 0) {
+		// TODO: Raise error
+		log_info(ctx, LOG_INFO_DEBUG, -1, 0, 0);
+		return;
 	}
 }
 
@@ -65,6 +76,13 @@ static __always_inline void ssl_uretprobe(struct pt_regs *ctx, struct bpf_map_de
 	__u64 id = bpf_get_current_pid_tgid();
 	
 	if (!should_tap(id >> 32)) {
+		return;
+	}
+
+	struct connection_info *connection_info_ptr = bpf_map_lookup_elem(&openssl_connect_context, &id);
+	if (connection_info_ptr == NULL) {
+		// TODO: Raise error
+		log_info(ctx, LOG_INFO_DEBUG, -1, 0, 1);
 		return;
 	}
 	
@@ -104,6 +122,11 @@ static __always_inline void ssl_uretprobe(struct pt_regs *ctx, struct bpf_map_de
     if (count_bytes <= 0) {
         return;
     }
+
+	(void)memcpy(&(info.daddr), &(connection_info_ptr->daddr), sizeof(info.daddr));
+	(void)memcpy(&info.saddr, &connection_info_ptr->saddr, sizeof(info.saddr));
+	info.dport = connection_info_ptr->dport;
+	info.sport = connection_info_ptr->sport;
 
 	output_ssl_chunk(ctx, &info, count_bytes, id, flags);
 }
