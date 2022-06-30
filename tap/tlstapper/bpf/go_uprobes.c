@@ -110,7 +110,7 @@ static __always_inline __u32 get_goid_from_thread_local_storage(__u64 *goroutine
     return 1;
 }
 
-static __always_inline __u32 go_crypto_tls_get_fd_from_tcp_conn(struct pt_regs *ctx) {
+static __always_inline __u32 go_crypto_tls_get_fd_from_tcp_conn(struct pt_regs *ctx, enum ABI abi) {
     struct go_interface conn;
     long err;
     __u64 addr;
@@ -120,7 +120,14 @@ static __always_inline __u32 go_crypto_tls_get_fd_from_tcp_conn(struct pt_regs *
         return invalid_fd;
     }
 #else
-    addr = GO_ABI_INTERNAL_PT_REGS_R1(ctx);
+    if (abi == ABI0) {
+        err = bpf_probe_read(&addr, sizeof(addr), (void*)GO_ABI_INTERNAL_PT_REGS_SP(ctx)+0x8);
+        if (err != 0) {
+            return invalid_fd;
+        }
+    } else {
+        addr = GO_ABI_INTERNAL_PT_REGS_R1(ctx);
+    }
 #endif
 
     err = bpf_probe_read(&conn, sizeof(conn), (void*)addr);
@@ -179,13 +186,15 @@ static __always_inline void go_crypto_tls_uprobe(struct pt_regs *ctx, struct bpf
             log_error(ctx, LOG_ERROR_READING_FROM_SSL_BUFFER, pid_tgid, err, ORIGIN_SSL_UPROBE_CODE);
             return;
         }
+        // We basically add 00 suffix to the hex address.
+        info.buffer = (void*)((long)info.buffer << 8);
     } else {
 #endif
         info.buffer = (void*)GO_ABI_INTERNAL_PT_REGS_R4(ctx);
 #if defined(bpf_target_x86)
     }
 #endif
-    info.fd = go_crypto_tls_get_fd_from_tcp_conn(ctx);
+    info.fd = go_crypto_tls_get_fd_from_tcp_conn(ctx, abi);
 
     __u64 goroutine_id;
     if (abi == ABI0) {
