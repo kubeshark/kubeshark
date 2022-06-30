@@ -3,12 +3,12 @@ package controllers
 import (
 	"net/http"
 
-	"github.com/up9inc/mizu/agent/pkg/providers"
 	core "k8s.io/api/core/v1"
 
 	"github.com/gin-gonic/gin"
 	"github.com/up9inc/mizu/agent/pkg/api"
 	"github.com/up9inc/mizu/agent/pkg/holder"
+	"github.com/up9inc/mizu/agent/pkg/providers"
 	"github.com/up9inc/mizu/agent/pkg/providers/tappedPods"
 	"github.com/up9inc/mizu/agent/pkg/providers/tappers"
 	"github.com/up9inc/mizu/agent/pkg/validation"
