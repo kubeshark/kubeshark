@@ -27,6 +27,7 @@ const (
 	ServiceMeshName               = "service-mesh"
 	TlsName                       = "tls"
 	ProfilerName                  = "profiler"
+	MaxLiveStreamsName            = "max-live-streams"
 )
 
 type TapConfig struct {
@@ -47,6 +48,7 @@ type TapConfig struct {
 	ServiceMesh            bool             `yaml:"service-mesh" default:"false"`
 	Tls                    bool             `yaml:"tls" default:"false"`
 	Profiler               bool             `yaml:"profiler" default:"false"`
+	MaxLiveStreams         int              `yaml:"max-live-streams" default:"500"`
 }
 
 func (config *TapConfig) PodRegex() *regexp.Regexp {

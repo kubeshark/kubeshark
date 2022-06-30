@@ -55,7 +55,6 @@ type WebSocketMessageMetadata struct {
 	MessageType WebSocketMessageType `json:"messageType,omitempty"`
 }
 
-
 type WebSocketStatusMessage struct {
 	*WebSocketMessageMetadata
 	TappingStatus []TappedPodStatus `json:"tappingStatus"`
