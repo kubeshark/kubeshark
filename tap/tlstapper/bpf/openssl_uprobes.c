@@ -118,10 +118,10 @@ static __always_inline void ssl_uretprobe(struct pt_regs *ctx, struct bpf_map_de
 		return;
 	}
 
-    int count_bytes = get_count_bytes(ctx, &info, id);
-    if (count_bytes <= 0) {
-        return;
-    }
+	int count_bytes = get_count_bytes(ctx, &info, id);
+	if (count_bytes <= 0) {
+		return;
+	}
 
 	(void)memcpy(&(info.daddr), &(connection_info_ptr->daddr), sizeof(info.daddr));
 	(void)memcpy(&info.saddr, &connection_info_ptr->saddr, sizeof(info.saddr));
