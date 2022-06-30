@@ -63,7 +63,4 @@ void BPF_KPROBE(tcp_sendmsg) {
 	(void)memcpy(&connection_info_ptr->saddr, &saddr, sizeof(connection_info_ptr->saddr));
 	connection_info_ptr->dport = dport;
 	connection_info_ptr->sport = sport;
-
-	// Debug
-	log_info(ctx, LOG_INFO_DEBUG, pid, saddr, daddr);
 }
