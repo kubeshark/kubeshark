@@ -16,13 +16,12 @@ type Row = { key: string, value: string }
 
 const KeyValueTable: React.FC<KeyValueTableProps> = ({ data, onDataChange, keyPlaceholder, valuePlaceholder }) => {
 
-    const [keyValueData, setKeyValueData] = useState([])
+    const [keyValueData, setKeyValueData] = useState([] as Row[])
 
     useEffect(() => {
         if (!data) return;
-        let currentState = [...data, { key: "", value: "" }]
+        const currentState = [...data, { key: "", value: "" }]
         setKeyValueData(currentState)
-        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [data])
 
     const deleteRow = (index) => {
@@ -32,7 +31,7 @@ const KeyValueTable: React.FC<KeyValueTableProps> = ({ data, onDataChange, keyPl
         onDataChange(newRows.filter(row => row.key))
     }
 
-    const addNewRow = (data) => {
+    const addNewRow = (data: Row[]) => {
         return data.filter(x => x.key === "").length === 0 ? [...data, { key: '', value: '' }] : data
     }
 

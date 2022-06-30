@@ -1,4 +1,4 @@
-import React, { } from 'react';
+import React from 'react';
 import { AutoRepresentation } from './AutoRepresentation';
 
 interface Props {

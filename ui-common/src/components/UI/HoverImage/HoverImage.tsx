@@ -22,11 +22,11 @@ const HoverImage: React.FC<HoverImageProps> = ({
 
     const mouseOver = React.useCallback(() => {
         setImageSrc(hoverSrc);
-    }, []);
+    }, [hoverSrc]);
 
     const mouseOut = React.useCallback(() => {
         setImageSrc(src);
-    }, []);
+    }, [src]);
 
     const handleClick = (e: React.MouseEvent) => {
         if (!onClick) return;

@@ -143,8 +143,10 @@ export const formatRequest = (body: any, contentType: string, decodeBase64: bool
             return jsonBeautify(protobufDecoded, null, 2, 80);
         }
     } catch (error) {
-        console.log(error)
+        console.error(error)
+        throw error
     }
+
     return bodyBuf;
 }
 
@@ -179,8 +181,6 @@ export const EntryBodySection: React.FC<EntryBodySectionProps> = ({
                     setIsDecodeGrpc(false);
             } else if (String(error).includes("Failed to parse")) {
                 console.warn(error);
-            } else {
-                console.error(error);
             }
         }
     }, [isPretty, contentType, isDecodeGrpc, decodeBase64, isBase64Encoding])

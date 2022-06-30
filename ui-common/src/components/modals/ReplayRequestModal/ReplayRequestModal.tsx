@@ -19,6 +19,7 @@ import entryDataAtom from "../../../recoil/entryData";
 import { AutoRepresentation } from "../../EntryDetailed/EntryViewer/AutoRepresentation";
 import useDebounce from "../../../hooks/useDebounce"
 import replayRequestModalOpenAtom from "../../../recoil/replayRequestModalOpen";
+import { Utils } from "../../../helpers/Utils";
 
 const modalStyle = {
     position: 'absolute',
@@ -47,18 +48,11 @@ enum RequestTabs {
     Body = "body"
 }
 
-const isJson = (str) => {
-    try {
-        JSON.parse(str);
-    } catch (e) {
-        return false;
-    }
-    return true;
-}
-
-const httpMethods = ["get", "post", "put", "head", "options", "delete"]
+const HTTP_METHODS = ["get", "post", "put", "head", "options", "delete"]
 const TABS = [{ tab: RequestTabs.Headers }, { tab: RequestTabs.Params }, { tab: RequestTabs.Body }];
+
 const convertParamsToArr = (paramsObj) => Object.entries(paramsObj).map(([key, value]) => { return { key, value } })
+
 const getQueryStringParams = (link: String) => {
 
     if (link) {
@@ -178,7 +172,7 @@ const ReplayRequestModal: React.FC<ReplayRequestModalProps> = ({ isOpen, onClose
             const formatedCode = formatRequest(postData || "", request?.postData?.mimeType)
             innerComponent = <div className={styles.codeEditor}>
                 <CodeEditor language={request?.postData?.mimeType.split("/")[1]}
-                    code={isJson(formatedCode) ? JSON.stringify(JSON.parse(formatedCode || "{}"), null, 2) : formatedCode}
+                    code={Utils.isJson(formatedCode) ? JSON.stringify(JSON.parse(formatedCode || "{}"), null, 2) : formatedCode}
                     onChange={setPostData} />
             </div>
             break;
@@ -215,7 +209,7 @@ const ReplayRequestModal: React.FC<ReplayRequestModalProps> = ({ isOpen, onClose
                             <AccordionDetails>
                                 <div className={styles.path}>
                                     <select className={styles.select} value={method} onChange={(e) => setMethod(e.target.value)}>
-                                        {httpMethods.map(method => <option value={method} key={method}>{method}</option>)}
+                                        {HTTP_METHODS.map(method => <option value={method} key={method}>{method}</option>)}
                                     </select>
                                     <input placeholder="Host:Port" value={hostPortInput} onChange={(event) => setHostPortInput(event.target.value)} className={`${commonClasses.textField} ${styles.hostPort}`} />
                                     <input className={commonClasses.textField} placeholder="Enter Path" value={pathInput}
@@ -249,9 +243,9 @@ const ReplayRequestModal: React.FC<ReplayRequestModalProps> = ({ isOpen, onClose
     );
 }
 
-const ReplayRequestModalContiner = () => {
+const ReplayRequestModalContainer = () => {
     const [isOpenRequestModal, setIsOpenRequestModal] = useRecoilState(replayRequestModalOpenAtom)
     return isOpenRequestModal && < ReplayRequestModal isOpen={isOpenRequestModal} onClose={() => setIsOpenRequestModal(false)} />
 }
 
-export default ReplayRequestModalContiner
+export default ReplayRequestModalContainer

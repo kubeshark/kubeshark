@@ -39,15 +39,8 @@ export const CodeEditor = React.forwardRef<ReactAce, CodeEditorProps>((
     {
         code,
         onChange,
-        isDisabled = false,
-        className,
-        name,
-        variableHeight = false,
-        language = 'python',
-        errorMessage,
-        hideTooltip = false,
-        hideGutter = false
-    }, ref) => {
+        language = 'json'
+    }) => {
     return (
         <AceEditor
             mode={language}
@@ -65,6 +58,5 @@ export const CodeEditor = React.forwardRef<ReactAce, CodeEditorProps>((
             height="100%"
             style={{ borderRadius: "inherit" }}
         />
-
     );
 });

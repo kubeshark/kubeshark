@@ -20,7 +20,7 @@ import tappingStatusAtom from "../../recoil/tappingStatus/atom";
 import { TOAST_CONTAINER_ID } from "../../configs/Consts";
 import leftOffTopAtom from "../../recoil/leftOffTop";
 import { DEFAULT_LEFTOFF, DEFAULT_FETCH, DEFAULT_FETCH_TIMEOUT_MS } from '../../hooks/useWS';
-import ReplayRequestModalContiner from "../modals/ReplayRequestModal/ReplayRequestModal";
+import ReplayRequestModalContainer from "../modals/ReplayRequestModal/ReplayRequestModal";
 
 const useLayoutStyles = makeStyles(() => ({
   details: {
@@ -277,8 +277,9 @@ const TrafficViewerContainer: React.FC<TrafficViewerProps> = ({
                     closeOnClick
                     rtl={false}
                     pauseOnFocusLoss
-      draggable />
-    <ReplayRequestModalContiner />
+                    draggable
+                    pauseOnHover/>
+    <ReplayRequestModalContainer />
   </RecoilRoot>
 }
 
