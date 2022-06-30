@@ -105,6 +105,7 @@ ARG VER=0.0
 
 WORKDIR /app/tap/tlstapper
 
+RUN rm bpf/include/vmlinux.h && cp vmlinux/vmlinux_${GOARCH}.h bpf/include/vmlinux.h
 RUN rm tlstapper_bpf*
 RUN GOARCH=${BUILDARCH} go generate tls_tapper.go
 
