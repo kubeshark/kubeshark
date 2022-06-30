@@ -4,7 +4,7 @@ import React, { Fragment, useCallback, useEffect, useState } from "react";
 import { useCommonStyles } from "../../../helpers/commonStyle";
 import { Tabs } from "../../UI";
 import KeyValueTable from "../../UI/KeyValueTable/KeyValueTable";
-import { CodeEditor } from "../../UI/CodeEditor/CodeEditor";
+import CodeEditor from "../../UI/CodeEditor/CodeEditor";
 import { useRecoilValue, RecoilState, useRecoilState } from "recoil";
 import TrafficViewerApiAtom from "../../../recoil/TrafficViewerApi/atom";
 import TrafficViewerApi from "../../TrafficViewer/TrafficViewerApi";

@@ -1,6 +1,5 @@
-import React, { } from "react";
+import React from "react";
 import AceEditor from "react-ace";
-import ReactAce from "react-ace/lib/ace";
 import { config } from 'ace-builds';
 
 import "ace-builds/src-noconflict/ext-searchbox";
@@ -24,23 +23,14 @@ config.setModuleUrl(
 
 export interface CodeEditorProps {
     code: string,
-    name?: string,
     onChange?: (code: string) => void,
-    isDisabled?: boolean,
-    className?: string,
-    variableHeight?: boolean,
-    language?: string,
-    errorMessage?: string,
-    hideTooltip?: boolean,
-    hideGutter?: boolean
+    language?: string
 }
-
-export const CodeEditor = React.forwardRef<ReactAce, CodeEditorProps>((
-    {
-        code,
-        onChange,
-        language = 'json'
-    }) => {
+const CodeEditor: React.FC<CodeEditorProps> = ({
+    language,
+    onChange,
+    code
+}) => {
     return (
         <AceEditor
             mode={language}
@@ -59,4 +49,6 @@ export const CodeEditor = React.forwardRef<ReactAce, CodeEditorProps>((
             style={{ borderRadius: "inherit" }}
         />
     );
-});
+}
+
+export default CodeEditor
