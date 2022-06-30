@@ -49142,13 +49142,13 @@ enum hugetlb_param {
 	Opt_uid___3 = 6,
 };
 
-typedef u16 wchar_t;
+typedef u16 vm_wchar_t;
 
 struct nls_table {
 	const char *charset;
 	const char *alias;
-	int (*uni2char)(wchar_t, unsigned char *, int);
-	int (*char2uni)(const unsigned char *, int, wchar_t *);
+	int (*uni2char)(vm_wchar_t, unsigned char *, int);
+	int (*char2uni)(const unsigned char *, int, vm_wchar_t *);
 	const unsigned char *charset2lower;
 	const unsigned char *charset2upper;
 	struct module *owner;
