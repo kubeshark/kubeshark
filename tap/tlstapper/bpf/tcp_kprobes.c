@@ -16,6 +16,12 @@ void BPF_KPROBE(tcp_sendmsg) {
 		return;
 	}
 
+	struct connection_info *connection_info_ptr = bpf_map_lookup_elem(&openssl_connect_context, &id);
+	// Happens when the connection is not tls
+	if (connection_info_ptr == NULL) {
+		return;
+	}
+
 	struct sock *sk = (struct sock *) PT_REGS_PARM1(ctx);
 
 	short unsigned int family;
