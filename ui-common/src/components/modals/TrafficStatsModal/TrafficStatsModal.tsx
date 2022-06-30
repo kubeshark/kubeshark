@@ -34,13 +34,13 @@ interface TrafficStatsModalProps {
   getTimelineStatsDataApi: () => Promise<any>
 }
 
-export const Protocols = ["ALL PROTOCOLS","gRPC", "REDIS", "HTTP", "GQL", "AMQP", "KFAKA"];
+export const PROTOCOLS = ["ALL PROTOCOLS","gRPC", "REDIS", "HTTP", "GQL", "AMQP", "KFAKA"];
 
 export const TrafficStatsModal: React.FC<TrafficStatsModalProps> = ({ isOpen, onClose, getPieStatsDataApi, getTimelineStatsDataApi }) => {
 
   const modes = Object.keys(StatsMode).filter(x => !(parseInt(x) >= 0));
   const [statsMode, setStatsMode] = useState(modes[0]);
-  const [selectedProtocol, setSelectedProtocol] = useState(Protocols[0]);
+  const [selectedProtocol, setSelectedProtocol] = useState("ALL PROTOCOLS");
   const [pieStatsData, setPieStatsData] = useState(null);
   const [timelineStatsData, setTimelineStatsData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -109,7 +109,7 @@ export const TrafficStatsModal: React.FC<TrafficStatsModalProps> = ({ isOpen, on
               <div>
                 <span style={{ marginRight: 15 }}>Protocol</span>
                 <select className={styles.select} value={selectedProtocol} onChange={(e) => setSelectedProtocol(e.target.value)}>
-                  {Protocols.map(protocol => <option key={protocol} value={protocol}>{protocol}</option>)}
+                  {PROTOCOLS.map(protocol => <option key={protocol} value={protocol}>{protocol}</option>)}
                 </select>
               </div>
             </div>

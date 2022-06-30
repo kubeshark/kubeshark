@@ -1,5 +1,5 @@
 import styles from "./TimelineBarChart.module.sass";
-import { Protocols, StatsMode } from "../TrafficStatsModal"
+import { PROTOCOLS, StatsMode } from "../TrafficStatsModal"
 import React, { useEffect, useMemo, useState } from "react";
 import {
     BarChart,
@@ -42,7 +42,7 @@ export const TimelineBarChart: React.FC<TimelineBarChartProps> = ({ timeLineBarC
     }, [data, timeLineBarChartMode])
 
     useEffect(() => {
-        if (selectedProtocol === Protocols[0]) {
+        if (selectedProtocol === "ALL PROTOCOLS") {
             setCommandStats(null);
             setcommandNames(null);
             return;
@@ -52,7 +52,7 @@ export const TimelineBarChart: React.FC<TimelineBarChartProps> = ({ timeLineBarC
         data.forEach(protocolObj => {
             let newCommandlbj: { [k: string]: any } = {};
             newCommandlbj.timestamp = Utils.getHoursAndMinutes(protocolObj.timestamp);
-            protocolObj.protocols.find(protocol => protocol.name === selectedProtocol)?.methods.map(command => {
+            protocolObj.protocols.find(protocol => protocol.name === selectedProtocol)?.methods.forEach(command => {
                 newCommandlbj[`${command.name}`] = command[StatsMode[timeLineBarChartMode]]
                 if (commandsNames.indexOf(command.name) === -1)
                     commandsNames.push(command.name);
