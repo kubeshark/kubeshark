@@ -22,13 +22,15 @@ const (
 	ABIInternal
 )
 
+const PtrSize int = 8
+
 type goOffsets struct {
 	GoWriteOffset *goExtendedOffset
 	GoReadOffset  *goExtendedOffset
 	GoVersion     string
 	Abi           goAbi
-	GoidOffset    dwarf.Offset
-	GStructOffset dwarf.Offset
+	GoidOffset    uint64
+	GStructOffset uint64
 }
 
 type goExtendedOffset struct {
@@ -86,7 +88,77 @@ func findGoOffsets(filePath string) (goOffsets, error) {
 	}, nil
 }
 
-func getGoidOffset(elfFile *elf.File) (goidOffset dwarf.Offset, gStructOffset dwarf.Offset, err error) {
+func getSymbol(exe *elf.File, name string) *elf.Symbol {
+	symbols, err := exe.Symbols()
+	if err != nil {
+		return nil
+	}
+
+	for _, symbol := range symbols {
+		if symbol.Name == name {
+			s := symbol
+			return &s
+		}
+	}
+	return nil
+}
+
+func getGStructOffset(exe *elf.File) (gStructOffset uint64, err error) {
+	// This is a bit arcane. Essentially:
+	// - If the program is pure Go, it can do whatever it wants, and puts the G
+	//   pointer at %fs-8 on 64 bit.
+	// - %Gs is the index of private storage in GDT on 32 bit, and puts the G
+	//   pointer at -4(tls).
+	// - Otherwise, Go asks the external linker to place the G pointer by
+	//   emitting runtime.tlsg, a TLS symbol, which is relocated to the chosen
+	//   offset in libc's TLS block.
+	// - On ARM64 (but really, any architecture other than i386 and 86x64) the
+	//   offset is calculate using runtime.tls_g and the formula is different.
+
+	var tls *elf.Prog
+	for _, prog := range exe.Progs {
+		if prog.Type == elf.PT_TLS {
+			tls = prog
+			break
+		}
+	}
+
+	switch exe.Machine {
+	case elf.EM_X86_64, elf.EM_386:
+		tlsg := getSymbol(exe, "runtime.tlsg")
+		if tlsg == nil || tls == nil {
+			gStructOffset = ^uint64(PtrSize) + 1 //-ptrSize
+			return
+		}
+
+		// According to https://reviews.llvm.org/D61824, linkers must pad the actual
+		// size of the TLS segment to ensure that (tlsoffset%align) == (vaddr%align).
+		// This formula, copied from the lld code, matches that.
+		// https://github.com/llvm-mirror/lld/blob/9aef969544981d76bea8e4d1961d3a6980980ef9/ELF/InputSection.cpp#L643
+		memsz := tls.Memsz + (-tls.Vaddr-tls.Memsz)&(tls.Align-1)
+
+		// The TLS register points to the end of the TLS block, which is
+		// tls.Memsz long. runtime.tlsg is an offset from the beginning of that block.
+		gStructOffset = ^(memsz) + 1 + tlsg.Value // -tls.Memsz + tlsg.Value
+
+	case elf.EM_AARCH64:
+		tlsg := getSymbol(exe, "runtime.tls_g")
+		if tlsg == nil || tls == nil {
+			gStructOffset = 2 * uint64(PtrSize)
+			return
+		}
+
+		gStructOffset = tlsg.Value + uint64(PtrSize*2) + ((tls.Vaddr - uint64(PtrSize*2)) & (tls.Align - 1))
+
+	default:
+		// we should never get here
+		err = fmt.Errorf("architecture not supported")
+	}
+
+	return
+}
+
+func getGoidOffset(elfFile *elf.File) (goidOffset uint64, gStructOffset uint64, err error) {
 	var dwarfData *dwarf.Data
 	dwarfData, err = elfFile.DWARF()
 	if err != nil {
@@ -113,7 +185,6 @@ func getGoidOffset(elfFile *elf.File) (goidOffset dwarf.Offset, gStructOffset dw
 				if field.Attr == dwarf.AttrName {
 					val := field.Val.(string)
 					if val == "runtime.g" {
-						gStructOffset = entry.Offset
 						seenRuntimeG = true
 					}
 				}
@@ -127,7 +198,8 @@ func getGoidOffset(elfFile *elf.File) (goidOffset dwarf.Offset, gStructOffset dw
 				if field.Attr == dwarf.AttrName {
 					val := field.Val.(string)
 					if val == "goid" {
-						goidOffset = entry.Offset
+						goidOffset = uint64(entry.Offset)
+						gStructOffset, err = getGStructOffset(elfFile)
 						return
 					}
 				}
@@ -139,7 +211,7 @@ func getGoidOffset(elfFile *elf.File) (goidOffset dwarf.Offset, gStructOffset dw
 	return
 }
 
-func getOffsets(filePath string) (offsets map[string]*goExtendedOffset, goidOffset dwarf.Offset, gStructOffset dwarf.Offset, err error) {
+func getOffsets(filePath string) (offsets map[string]*goExtendedOffset, goidOffset uint64, gStructOffset uint64, err error) {
 	var engine gapstone.Engine
 	switch runtime.GOARCH {
 	case "amd64":
