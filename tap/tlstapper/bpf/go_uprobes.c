@@ -73,6 +73,8 @@ enum ABI {
     ABIInternal=1,
 };
 
+#if defined(bpf_target_x86)
+// get_goid_from_thread_local_storage function is x86 specific
 static __always_inline __u32 get_goid_from_thread_local_storage(__u64 *goroutine_id) {
     int zero = 0;
     int one = 1;
@@ -109,6 +111,7 @@ static __always_inline __u32 get_goid_from_thread_local_storage(__u64 *goroutine
     bpf_ringbuf_discard(task, BPF_RB_FORCE_WAKEUP);
     return 1;
 }
+#endif
 
 static __always_inline __u32 go_crypto_tls_get_fd_from_tcp_conn(struct pt_regs *ctx, enum ABI abi) {
     struct go_interface conn;
@@ -197,13 +200,18 @@ static __always_inline void go_crypto_tls_uprobe(struct pt_regs *ctx, struct bpf
 
     __u64 goroutine_id;
     if (abi == ABI0) {
+#if defined(bpf_target_arm64)
+        // In case of ABI0 and arm64, it's stored in the Goroutine register
+        goroutine_id = GO_ABI_0_PT_REGS_GP(ctx);
+#else
         // In case of ABI0 and amd64, it's stored in the thread-local storage
         int status = get_goid_from_thread_local_storage(&goroutine_id);
         if (!status) {
             return;
         }
+#endif
     } else {
-        // GO_ABI_INTERNAL_PT_REGS_GP is Goroutine address
+        // GO_ABI_INTERNAL_PT_REGS_GP is the Goroutine address in ABIInternal
         goroutine_id = GO_ABI_INTERNAL_PT_REGS_GP(ctx);
     }
     __u64 pid_fp = pid << 32 | goroutine_id;
@@ -225,13 +233,18 @@ static __always_inline void go_crypto_tls_ex_uprobe(struct pt_regs *ctx, struct 
 
     __u64 goroutine_id;
     if (abi == ABI0) {
+#if defined(bpf_target_arm64)
+        // In case of ABI0 and arm64, it's stored in the Goroutine register
+        goroutine_id = GO_ABI_0_PT_REGS_GP(ctx);
+#else
         // In case of ABI0 and amd64, it's stored in the thread-local storage
         int status = get_goid_from_thread_local_storage(&goroutine_id);
         if (!status) {
             return;
         }
+#endif
     } else {
-        // GO_ABI_INTERNAL_PT_REGS_GP is Goroutine address
+        // GO_ABI_INTERNAL_PT_REGS_GP is the Goroutine address in ABIInternal
         goroutine_id = GO_ABI_INTERNAL_PT_REGS_GP(ctx);
     }
     __u64 pid_fp = pid << 32 | goroutine_id;
