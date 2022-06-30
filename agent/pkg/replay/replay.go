@@ -136,7 +136,26 @@ func ExecuteRequest(replayData *Details, timeout time.Duration) *Response {
 		entry := getEntryFromRequestResponse(extension, request, response)
 		base := extension.Dissector.Summarize(entry)
 		var representation []byte
-		representation, err = extension.Dissector.Represent(entry.Request, entry.Response)
+
+		// Represent is expecting an entry that's marshalled and unmarshalled
+		entryMarshalled, err := json.Marshal(entry)
+		if err != nil {
+			return &Response{
+				Success:      false,
+				Data:         nil,
+				ErrorMessage: err.Error(),
+			}
+		}
+		var entryUnmarshalled *tapApi.Entry
+		if err := json.Unmarshal(entryMarshalled, &entryUnmarshalled); err != nil {
+			return &Response{
+				Success:      false,
+				Data:         nil,
+				ErrorMessage: err.Error(),
+			}
+		}
+
+		representation, err = extension.Dissector.Represent(entryUnmarshalled.Request, entryUnmarshalled.Response)
 		if err != nil {
 			return &Response{
 				Success:      false,
@@ -150,7 +169,7 @@ func ExecuteRequest(replayData *Details, timeout time.Duration) *Response {
 			Data: &tapApi.EntryWrapper{
 				Protocol:       *extension.Protocol,
 				Representation: string(representation),
-				Data:           entry,
+				Data:           entryUnmarshalled,
 				Base:           base,
 				Rules:          nil,
 				IsRulesEnabled: false,
