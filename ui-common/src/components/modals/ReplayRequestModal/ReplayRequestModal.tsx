@@ -122,6 +122,7 @@ const ReplayRequestModal: React.FC<ReplayRequestModalProps> = ({ isOpen, onClose
         setPostData(request?.postData?.text || JSON.stringify(request?.postData?.params));
         setParams(convertParamsToArr(request?.queryString || {}))
         setHeaders(convertParamsToArr(request?.headers || {}))
+        setRequestExpanded(true)
     }, [entryData.base.proto.name, entryData.data.dst.port, getHostUrl, request?.headers, request?.method, request.path, request?.postData?.params, request?.postData?.text, request?.queryString])
 
     const onRefreshRequest = useCallback((event) => {
@@ -140,11 +141,16 @@ const ReplayRequestModal: React.FC<ReplayRequestModalProps> = ({ isOpen, onClose
         const requestData = { url: buildUrl, headers: headersData, data: postData, method }
         try {
             setIsLoading(true)
-            setResponseExpanded(true)
             const response = await trafficViewerApi.replayRequest(requestData)
             setResponse(response?.data?.representation)
-            !response.errorMessage && setRequestExpanded(false)
-            response.errorMessage && toast.error(response.errorMessage, { containerId: TOAST_CONTAINER_ID });
+            if (response.errorMessage) {
+                toast.error(response.errorMessage, { containerId: TOAST_CONTAINER_ID });
+            }
+            else {
+                setRequestExpanded(false)
+                setResponseExpanded(true)
+            }
+
         } catch (error) {
             setRequestExpanded(true)
             toast.error("Error occurred while fetching response", { containerId: TOAST_CONTAINER_ID });
