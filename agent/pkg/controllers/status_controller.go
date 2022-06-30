@@ -3,12 +3,12 @@ package controllers
 import (
 	"net/http"
 
+	"github.com/up9inc/mizu/agent/pkg/providers"
 	core "k8s.io/api/core/v1"
 
 	"github.com/gin-gonic/gin"
 	"github.com/up9inc/mizu/agent/pkg/api"
 	"github.com/up9inc/mizu/agent/pkg/holder"
-	"github.com/up9inc/mizu/agent/pkg/providers"
 	"github.com/up9inc/mizu/agent/pkg/providers/tappedPods"
 	"github.com/up9inc/mizu/agent/pkg/providers/tappers"
 	"github.com/up9inc/mizu/agent/pkg/validation"
@@ -79,13 +79,8 @@ func GetGeneralStats(c *gin.Context) {
 	c.JSON(http.StatusOK, providers.GetGeneralStats())
 }
 
-func GetAccumulativeStats(c *gin.Context) {
-	c.JSON(http.StatusOK, providers.GetAccumulativeStats())
-}
-
-func GetAccumulativeStatsTiming(c *gin.Context) {
-	// for now hardcoded 10 bars of 5 minutes interval
-	c.JSON(http.StatusOK, providers.GetAccumulativeStatsTiming(300, 10))
+func GetTrafficStats(c *gin.Context) {
+	c.JSON(http.StatusOK, providers.GetTrafficStats())
 }
 
 func GetCurrentResolvingInformation(c *gin.Context) {
