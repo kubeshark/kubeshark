@@ -12,7 +12,7 @@ import (
 
 const GlobalTapPid = 0
 
-//go:generate go run github.com/cilium/ebpf/cmd/bpf2go@v0.9.0 -target $BPF_TARGET -cflags $BPF_CFLAGS -type tls_chunk tlsTapper bpf/tls_tapper.c
+//go:generate go run github.com/cilium/ebpf/cmd/bpf2go@v0.9.0 -target $BPF_TARGET -cflags $BPF_CFLAGS -type tls_chunk -type goid_offsets tlsTapper bpf/tls_tapper.c
 
 type TlsTapper struct {
 	bpfObjects      tlsTapperObjects

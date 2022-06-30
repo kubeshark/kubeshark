@@ -13,6 +13,11 @@ import (
 	"github.com/cilium/ebpf"
 )
 
+type tlsTapperGoidOffsets struct {
+	G_addrOffset uint64
+	GoidOffset   uint64
+}
+
 type tlsTapperTlsChunk struct {
 	Pid      uint32
 	Tgid     uint32
@@ -100,7 +105,7 @@ type tlsTapperMapSpecs struct {
 	FileDescriptorToIpv4 *ebpf.MapSpec `ebpf:"file_descriptor_to_ipv4"`
 	GoReadContext        *ebpf.MapSpec `ebpf:"go_read_context"`
 	GoWriteContext       *ebpf.MapSpec `ebpf:"go_write_context"`
-	GoidOffsetMap        *ebpf.MapSpec `ebpf:"goid_offset_map"`
+	GoidOffsetsMap       *ebpf.MapSpec `ebpf:"goid_offsets_map"`
 	Heap                 *ebpf.MapSpec `ebpf:"heap"`
 	LogBuffer            *ebpf.MapSpec `ebpf:"log_buffer"`
 	OpensslReadContext   *ebpf.MapSpec `ebpf:"openssl_read_context"`
@@ -134,7 +139,7 @@ type tlsTapperMaps struct {
 	FileDescriptorToIpv4 *ebpf.Map `ebpf:"file_descriptor_to_ipv4"`
 	GoReadContext        *ebpf.Map `ebpf:"go_read_context"`
 	GoWriteContext       *ebpf.Map `ebpf:"go_write_context"`
-	GoidOffsetMap        *ebpf.Map `ebpf:"goid_offset_map"`
+	GoidOffsetsMap       *ebpf.Map `ebpf:"goid_offsets_map"`
 	Heap                 *ebpf.Map `ebpf:"heap"`
 	LogBuffer            *ebpf.Map `ebpf:"log_buffer"`
 	OpensslReadContext   *ebpf.Map `ebpf:"openssl_read_context"`
@@ -151,7 +156,7 @@ func (m *tlsTapperMaps) Close() error {
 		m.FileDescriptorToIpv4,
 		m.GoReadContext,
 		m.GoWriteContext,
-		m.GoidOffsetMap,
+		m.GoidOffsetsMap,
 		m.Heap,
 		m.LogBuffer,
 		m.OpensslReadContext,

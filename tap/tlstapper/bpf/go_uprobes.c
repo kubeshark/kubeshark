@@ -76,9 +76,8 @@ enum ABI {
 static __always_inline __u32 get_goid_from_thread_local_storage(__u64 *goroutine_id) {
     int zero = 0;
     int one = 1;
-    __u32* g_addr_offset = bpf_map_lookup_elem(&goid_offset_map, &zero);
-    __u32* goid_offset = bpf_map_lookup_elem(&goid_offset_map, &one);
-    if (g_addr_offset == NULL || goid_offset == NULL) {
+    struct goid_offsets* offsets = bpf_map_lookup_elem(&goid_offsets_map, &zero);
+    if (offsets == NULL) {
         return 0;
     }
 
@@ -104,8 +103,8 @@ static __always_inline __u32 get_goid_from_thread_local_storage(__u64 *goroutine
 
     // Get the Goroutine ID (goid) which is stored in thread-local storage.
     size_t g_addr;
-    bpf_probe_read_user(&g_addr, sizeof(void *), (void*)(task->thread.fsbase + *g_addr_offset));
-    bpf_probe_read_user(goroutine_id, sizeof(void *), (void*)(g_addr + *goid_offset));
+    bpf_probe_read_user(&g_addr, sizeof(void *), (void*)(task->thread.fsbase + offsets->g_addr_offset));
+    bpf_probe_read_user(goroutine_id, sizeof(void *), (void*)(g_addr + offsets->goid_offset));
 
     bpf_ringbuf_discard(task, BPF_RB_FORCE_WAKEUP);
     return 1;
@@ -162,6 +161,7 @@ static __always_inline void go_crypto_tls_uprobe(struct pt_regs *ctx, struct bpf
     }
 #else
     if (abi == ABI0) {
+        // bpf_printk("[go_crypto_tls_uprobe] It's ABI0");
         err = bpf_probe_read(&info.buffer_len, sizeof(__u32), (void*)GO_ABI_0_PT_REGS_SP(ctx)+0x18);
         if (err != 0) {
             log_error(ctx, LOG_ERROR_READING_BYTES_COUNT, pid_tgid, err, ORIGIN_SSL_UPROBE_CODE);

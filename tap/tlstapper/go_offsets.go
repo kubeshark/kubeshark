@@ -167,6 +167,7 @@ func getGoidOffset(elfFile *elf.File) (goidOffset uint64, gStructOffset uint64, 
 
 	entryReader := dwarfData.Reader()
 
+	var runtimeGOffset uint64
 	var seenRuntimeG bool
 
 	for {
@@ -185,6 +186,7 @@ func getGoidOffset(elfFile *elf.File) (goidOffset uint64, gStructOffset uint64, 
 				if field.Attr == dwarf.AttrName {
 					val := field.Val.(string)
 					if val == "runtime.g" {
+						runtimeGOffset = uint64(entry.Offset)
 						seenRuntimeG = true
 					}
 				}
@@ -198,7 +200,7 @@ func getGoidOffset(elfFile *elf.File) (goidOffset uint64, gStructOffset uint64, 
 				if field.Attr == dwarf.AttrName {
 					val := field.Val.(string)
 					if val == "goid" {
-						goidOffset = uint64(entry.Offset)
+						goidOffset = uint64(entry.Offset) - runtimeGOffset - 0x4b
 						gStructOffset, err = getGStructOffset(elfFile)
 						return
 					}
