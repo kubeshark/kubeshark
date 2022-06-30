@@ -35,6 +35,7 @@ interface TrafficStatsModalProps {
 }
 
 export const PROTOCOLS = ["ALL PROTOCOLS","gRPC", "REDIS", "HTTP", "GQL", "AMQP", "KFAKA"];
+export const ALL_PROTOCOLS = PROTOCOLS[0];
 
 export const TrafficStatsModal: React.FC<TrafficStatsModalProps> = ({ isOpen, onClose, getPieStatsDataApi, getTimelineStatsDataApi }) => {
 

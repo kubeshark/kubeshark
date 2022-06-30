@@ -2,7 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import styles from "./TrafficPieChart.module.sass";
 import { Cell, Legend, Pie, PieChart, Tooltip } from "recharts";
 import { Utils } from "../../../../helpers/Utils";
-import { PROTOCOLS, StatsMode as PieChartMode } from "../TrafficStatsModal"
+import { ALL_PROTOCOLS, StatsMode as PieChartMode } from "../TrafficStatsModal"
 
 const RADIAN = Math.PI / 180;
 const renderCustomizedLabel = ({
@@ -57,7 +57,7 @@ export const TrafficPieChart: React.FC<TrafficPieChartProps> = ({ pieChartMode, 
   }, [data, pieChartMode])
 
   useEffect(() => {
-    if (selectedProtocol === "ALL PROTOCOLS") {
+    if (selectedProtocol === ALL_PROTOCOLS) {
       setCommandStats(null);
       return;
     }
@@ -73,7 +73,7 @@ export const TrafficPieChart: React.FC<TrafficPieChartProps> = ({ pieChartMode, 
   const pieLegend = useMemo(() => {
     if (!data) return;
     let legend;
-    if (selectedProtocol === "ALL PROTOCOLS") {
+    if (selectedProtocol === ALL_PROTOCOLS) {
       legend = data.map(protocol => <div style={{ marginBottom: 5, display: "flex" }}>
         <div style={{ height: 15, width: 30, background: protocol?.color }} />
         <span style={{ marginLeft: 5 }}>
