@@ -20,6 +20,7 @@ docker run --rm \
 	-v $(go env GOPATH):/root/go \
 	-it mizu-ebpf-builder \
 	sh -c "
+        cp tap/tlstapper/vmlinux/vmlinux_${BPF_TARGET}.h tap/tlstapper/bpf/include/vmlinux.h
 		BPF_TARGET=\"$BPF_TARGET\" BPF_CFLAGS=\"$BPF_CFLAGS\" go generate tap/tlstapper/tls_tapper.go
 		chown $(id -u):$(id -g) tap/tlstapper/tlstapper_bpf*
 	" || exit 1
