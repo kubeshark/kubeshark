@@ -168,7 +168,6 @@ static __always_inline void go_crypto_tls_uprobe(struct pt_regs *ctx, struct bpf
     }
 #else
     if (abi == ABI0) {
-        // bpf_printk("[go_crypto_tls_uprobe] It's ABI0");
         err = bpf_probe_read(&info.buffer_len, sizeof(__u32), (void*)GO_ABI_0_PT_REGS_SP(ctx)+0x18);
         if (err != 0) {
             log_error(ctx, LOG_ERROR_READING_BYTES_COUNT, pid_tgid, err, ORIGIN_SSL_UPROBE_CODE);
