@@ -36,17 +36,25 @@ func (c *tlsTapperTlsChunk) getAddress() (net.IP, uint16, error) {
 }
 
 func (c *tlsTapperTlsChunk) getDstAddress() (net.IP, uint16) {
-	ip := bytesToIP(c.Daddr)
-	port := c.Dport
+	ip := intToIP(c.AddressPair.Daddr)
+	port := c.AddressPair.Dport
 
 	return ip, port
 }
 
 func (c *tlsTapperTlsChunk) getSrcAddress() (net.IP, uint16) {
-	ip := bytesToIP(c.Saddr)
-	port := c.Sport
+	ip := intToIP(c.AddressPair.Saddr)
+	port := c.AddressPair.Sport
 
 	return ip, port
+}
+
+func (c *tlsTapperTlsChunk) getIsAddressPairValid() bool {
+	if c.AddressPair.IsAddressPairValid == 1 {
+		return true
+	}
+
+	return false
 }
 
 func (c *tlsTapperTlsChunk) isClient() bool {
@@ -97,19 +105,22 @@ func (c *tlsTapperTlsChunk) getAddressPair() (addressPair, error) {
 	}
 }
 
-func (c *tlsTapperTlsChunk) getAddressPair2() addressPair {
+func (c *tlsTapperTlsChunk) getAddressPair2() (bool, addressPair) {
 	dIP, dPort := c.getDstAddress()
 	sIP, sPort := c.getSrcAddress()
+	isAddressPairValid := c.getIsAddressPairValid()
 
 	if c.isRequest() {
-		return addressPair{
+		return isAddressPairValid,
+		addressPair{
 			srcIp:   sIP,
 			srcPort: sPort,
 			dstIp:   dIP,
 			dstPort: dPort,
 		}
 	} else {
-		return addressPair{
+		return isAddressPairValid,
+		addressPair{
 			srcIp:   dIP,
 			srcPort: dPort,
 			dstIp:   sIP,
@@ -118,10 +129,8 @@ func (c *tlsTapperTlsChunk) getAddressPair2() addressPair {
 	}
 }
 
-
-// bytesToIP converts IPv4 byte array to net.IP
-func bytesToIP(ipv4Bytes [4]byte) net.IP {
-	ipNum := binary.BigEndian.Uint32(ipv4Bytes[:])
+// intToIP converts IPv4 number to net.IP
+func intToIP(ipNum uint32) net.IP {
 	ip := make(net.IP, 4)
 	binary.BigEndian.PutUint32(ip, ipNum)
 	return ip

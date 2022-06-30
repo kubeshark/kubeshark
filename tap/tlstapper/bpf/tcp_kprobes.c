@@ -16,9 +16,9 @@ void BPF_KPROBE(tcp_sendmsg) {
 		return;
 	}
 
-	struct connection_info *connection_info_ptr = bpf_map_lookup_elem(&openssl_connect_context, &id);
+	struct ssl_info *info_ptr = bpf_map_lookup_elem(&openssl_write_context, &id);
 	// Happens when the connection is not tls
-	if (connection_info_ptr == NULL) {
+	if (info_ptr == NULL) {
 		return;
 	}
 
@@ -59,8 +59,9 @@ void BPF_KPROBE(tcp_sendmsg) {
 		return;
 	}
 
-	(void)memcpy(&connection_info_ptr->daddr, &daddr, sizeof(connection_info_ptr->daddr));
-	(void)memcpy(&connection_info_ptr->saddr, &saddr, sizeof(connection_info_ptr->saddr));
-	connection_info_ptr->dport = dport;
-	connection_info_ptr->sport = sport;
+	info_ptr->address_pair.is_address_pair_valid = 1;
+	info_ptr->address_pair.daddr = daddr;
+	info_ptr->address_pair.saddr = saddr;
+	info_ptr->address_pair.dport = dport;
+	info_ptr->address_pair.sport = sport;
 }

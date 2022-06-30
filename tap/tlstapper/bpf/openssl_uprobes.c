@@ -60,14 +60,6 @@ static __always_inline void ssl_uprobe(struct pt_regs *ctx, void* ssl, void* buf
 	if (err != 0) {
 		log_error(ctx, LOG_ERROR_PUTTING_SSL_CONTEXT, id, err, 0l);
 	}
-
-	struct connection_info connect_info;
-	memset(&connect_info, 0, sizeof(connect_info));
-	err = bpf_map_update_elem(&openssl_connect_context, &id, &connect_info, BPF_ANY);
-	if (err != 0) {
-		log_error(ctx, LOG_ERROR_PUTTING_CONNECT_CONTEXT, id, err, 0l);
-		return;
-	}
 }
 
 static __always_inline void ssl_uretprobe(struct pt_regs *ctx, struct bpf_map_def* map_fd, __u32 flags) {
@@ -77,12 +69,6 @@ static __always_inline void ssl_uretprobe(struct pt_regs *ctx, struct bpf_map_de
 		return;
 	}
 
-	struct connection_info *connection_info_ptr = bpf_map_lookup_elem(&openssl_connect_context, &id);
-	if (connection_info_ptr == NULL) {
-		log_error(ctx, LOG_ERROR_GETTING_CONNECT_CONTEXT, id, 0l, 0l);
-		return;
-	}
-	
 	struct ssl_info *infoPtr = bpf_map_lookup_elem(map_fd, &id);
 	
 	if (infoPtr == NULL) {
@@ -119,11 +105,6 @@ static __always_inline void ssl_uretprobe(struct pt_regs *ctx, struct bpf_map_de
 	if (count_bytes <= 0) {
 		return;
 	}
-
-	(void)memcpy(&(info.daddr), &(connection_info_ptr->daddr), sizeof(info.daddr));
-	(void)memcpy(&info.saddr, &connection_info_ptr->saddr, sizeof(info.saddr));
-	info.dport = connection_info_ptr->dport;
-	info.sport = connection_info_ptr->sport;
 
 	output_ssl_chunk(ctx, &info, count_bytes, id, flags);
 }

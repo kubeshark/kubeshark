@@ -136,14 +136,16 @@ func (p *tlsPoller) handleTlsChunk(chunk *tlsTapperTlsChunk, extension *api.Exte
 	options *api.TrafficFilteringOptions, streamsMap api.TcpStreamMap) error {
 	address, err := p.getSockfdAddressPair(chunk)
 
-	addressPair2 := chunk.getAddressPair2()
-	logger.Log.Infof(
-		"DEBUG tls addresses: %v:%d->%v:%d",
-		addressPair2.srcIp,
-		addressPair2.srcPort,
-		addressPair2.dstIp,
-		addressPair2.dstPort,
-	)
+	isAddressPairValid, addressPair2 := chunk.getAddressPair2()
+	if isAddressPairValid {
+		logger.Log.Infof(
+			"DEBUG tls addresses: %v:%d->%v:%d",
+			addressPair2.srcIp,
+			addressPair2.srcPort,
+			addressPair2.dstIp,
+			addressPair2.dstPort,
+		)
+	}
 
 	if err != nil {
 		address, err = chunk.getAddressPair()

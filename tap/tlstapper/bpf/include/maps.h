@@ -24,6 +24,15 @@ Copyright (C) UP9 Inc.
 //  
 //  Be careful when editing, alignment and padding should be exactly the same in go/c.
 //
+
+struct address_pair {
+    __u32 is_address_pair_valid;
+    __u32 saddr;
+    __u32 daddr;
+    __u16 sport;
+    __u16 dport;
+};
+
 struct tls_chunk {
     __u32 pid;
     __u32 tgid;
@@ -33,10 +42,7 @@ struct tls_chunk {
     __u32 fd;
     __u32 flags;
     __u8 address[16];
-    __u8 saddr[4];
-    __u8 daddr[4];
-    __u16 sport;
-    __u16 dport;
+    struct address_pair address_pair;
     __u8 data[CHUNK_SIZE]; // Must be N^2
 };
 
@@ -45,22 +51,12 @@ struct ssl_info {
     __u32 buffer_len;
     __u32 fd;
     __u64 created_at_nano;
-    __u8 saddr[4];
-    __u8 daddr[4];
-    __u16 sport;
-    __u16 dport;
+    struct address_pair address_pair;
     
     // for ssl_write and ssl_read must be zero
     // for ssl_write_ex and ssl_read_ex save the *written/*readbytes pointer. 
     //
     size_t *count_ptr;
-};
-
-struct connection_info {
-    __u8 saddr[4];
-    __u8 daddr[4];
-    __u16 sport;
-    __u16 dport;
 };
 
 struct fd_info {
@@ -104,7 +100,6 @@ BPF_PERF_OUTPUT(log_buffer);
 // OpenSSL specific
 BPF_LRU_HASH(openssl_write_context, __u64, struct ssl_info);
 BPF_LRU_HASH(openssl_read_context, __u64, struct ssl_info);
-BPF_LRU_HASH(openssl_connect_context, __u64, struct connection_info);
 
 // Go specific
 BPF_LRU_HASH(go_write_context, __u64, struct ssl_info);
