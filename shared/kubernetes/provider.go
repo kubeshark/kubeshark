@@ -685,11 +685,8 @@ func (provider *Provider) handleRemovalError(err error) error {
 	return err
 }
 
-func (provider *Provider) CreateConfigMap(ctx context.Context, namespace string, configMapName string, serializedValidationRules string, serializedMizuConfig string) error {
+func (provider *Provider) CreateConfigMap(ctx context.Context, namespace string, configMapName string, serializedMizuConfig string) error {
 	configMapData := make(map[string]string)
-	if serializedValidationRules != "" {
-		configMapData[shared.ValidationRulesFileName] = serializedValidationRules
-	}
 	configMapData[shared.ConfigFileName] = serializedMizuConfig
 
 	configMap := &core.ConfigMap{
