@@ -68,7 +68,7 @@ export const TimelineBarChart: React.FC<TimelineBarChartProps> = ({ timeLineBarC
 
     const renderTick = (tickProps) => {
         const { x, y, payload } = tickProps;
-        const { index, value, offset } = payload;
+        const { index, value } = payload;
 
         if (index % 3 === 0) {
             return <text x={x} y={y + 10} textAnchor="end">{`${value}`}</text>;
