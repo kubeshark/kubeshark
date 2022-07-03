@@ -14,15 +14,14 @@ export enum TabsEnum {
     Response = 1
 }
 
-export const AutoRepresentation: React.FC<any> = ({ representation, color, defaultTab = TabsEnum.Request, isDisplayReplay = false }) => {
+export const AutoRepresentation: React.FC<any> = ({ representation, color, openedTab = TabsEnum.Request, isDisplayReplay = false }) => {
     const entryData = useRecoilValue(entryDataAtom)
     const setIsOpenRequestModal = useSetRecoilState(replayRequestModalOpenAtom)
     const isReplayDisplayed = useCallback(() => {
         return enabledProtocolsForReplay.find(x => x === entryData.protocol.name) && isDisplayReplay
     }, [entryData.protocol.name, isDisplayReplay])
 
-    const tabSelectedRef = useRef(defaultTab)
-
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     const TABS = [
         {
             tab: 'Request',
@@ -31,10 +30,17 @@ export const AutoRepresentation: React.FC<any> = ({ representation, color, defau
     ];
     const [currentTab, setCurrentTab] = useState(TABS[0].tab);
 
+    const getOpenedTabIndex = useCallback(() => {
+        const correntIndex = TABS.findIndex(current => current.tab === currentTab)
+        return correntIndex > -1 ? correntIndex : 0
+    }, [TABS, currentTab])
+
     useEffect(() => {
-        setCurrentTab(TABS[tabSelectedRef.current].tab)
+        if (openedTab) {
+            setCurrentTab(TABS[openedTab].tab)
+        }
         // eslint-disable-next-line react-hooks/exhaustive-deps
-    }, [tabSelectedRef.current])
+    }, [])
 
     // Don't fail even if `representation` is an empty string
     if (!representation) {
@@ -43,8 +49,6 @@ export const AutoRepresentation: React.FC<any> = ({ representation, color, defau
 
     const { request, response } = JSON.parse(representation);
 
-    let responseTabIndex = 0;
-
     if (response) {
         TABS.push(
             {
@@ -52,23 +56,17 @@ export const AutoRepresentation: React.FC<any> = ({ representation, color, defau
                 badge: null
             }
         );
-        responseTabIndex = TABS.length - 1;
-    }
-
-    const onTabChange = (tab) => {
-        setCurrentTab(tab)
-        tabSelectedRef.current = TABS.findIndex(tabItem => tabItem.tab === tab)
     }
 
     return <div className={styles.Entry}>
         {<div className={styles.body}>
             <div className={styles.bodyHeader}>
-                <Tabs tabs={TABS} currentTab={TABS[tabSelectedRef.current].tab} color={color} onChange={onTabChange} leftAligned />
+                <Tabs tabs={TABS} currentTab={currentTab} color={color} onChange={setCurrentTab} leftAligned />
             </div>
-            {currentTab === TABS[0].tab && <React.Fragment>
+            {getOpenedTabIndex() === TabsEnum.Request && <React.Fragment>
                 <SectionsRepresentation data={request} color={color} requestRepresentation={request} />
             </React.Fragment>}
-            {response && currentTab === TABS[responseTabIndex].tab && <React.Fragment>
+            {response && getOpenedTabIndex() === TabsEnum.Response && <React.Fragment>
                 <SectionsRepresentation data={response} color={color} />
             </React.Fragment>}
         </div>}

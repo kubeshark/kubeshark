@@ -239,7 +239,7 @@ const ReplayRequestModal: React.FC<ReplayRequestModalProps> = ({ isOpen, onClose
                                 <span className={styles.sectionHeader}>RESPONSE</span>
                             </AccordionSummary>
                             <AccordionDetails>
-                                <AutoRepresentation representation={response} color={entryData.protocol.backgroundColor} defaultTab={TabsEnum.Response} />
+                                <AutoRepresentation representation={response} color={entryData.protocol.backgroundColor} openedTab={TabsEnum.Response} />
                             </AccordionDetails>
                         </Accordion>)}
                     </div>

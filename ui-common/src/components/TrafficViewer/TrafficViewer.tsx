@@ -71,7 +71,7 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({
   const [wsReadyState, setWsReadyState] = useState(0);
   const setLeftOffTop = useSetRecoilState(leftOffTopAtom);
   const scrollableRef = useRef(null);
-  const isOpenReplaytModal = useRecoilValue(replayRequestModalOpenAtom)
+  const isOpenReplayModal = useRecoilValue(replayRequestModalOpenAtom)
 
 
   const ws = useRef(null);
@@ -91,8 +91,8 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({
   }, [shouldCloseWebSocket, setShouldCloseWebSocket, closeWebSocket])
 
   useEffect(() => {
-    isOpenReplaytModal && setShouldCloseWebSocket(true)
-  }, [isOpenReplaytModal, setShouldCloseWebSocket])
+    isOpenReplayModal && setShouldCloseWebSocket(true)
+  }, [isOpenReplayModal, setShouldCloseWebSocket])
 
   const sendQueryWhenWsOpen = useCallback((leftOff: string, query: string, fetch: number, fetchTimeoutMs: number) => {
     setTimeout(() => {
