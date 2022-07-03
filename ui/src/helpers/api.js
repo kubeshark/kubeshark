@@ -111,13 +111,8 @@ export default class Api {
         });
     }
 
-    getPieStats = async () => {
-        const response = await client.get("/status/accumulative");
-        return response.data;
-    }
-
-    getTimelineStats = async () => {
-        const response = await client.get("/status/accumulativeTiming");
+    getTrafficStats = async () => {
+        const response = await client.get("/status/trafficStats");
         return response.data;
     }
 }

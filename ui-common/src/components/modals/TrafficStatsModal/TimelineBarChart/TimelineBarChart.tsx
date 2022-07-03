@@ -1,6 +1,6 @@
 import styles from "./TimelineBarChart.module.sass";
 import { ALL_PROTOCOLS, StatsMode } from "../TrafficStatsModal"
-import React, { PureComponent, useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import {
     BarChart,
     Bar,
@@ -63,33 +63,28 @@ export const TimelineBarChart: React.FC<TimelineBarChartProps> = ({ timeLineBarC
     }, [data, timeLineBarChartMode, selectedProtocol])
 
     const bars = useMemo(() => (commandNames || protocolsNamesAndColors).map((entry) => {
-        return <Bar key={entry.name || entry} dataKey={entry.name || entry} stackId="a" fill={entry.color || Utils.stringToColor(entry)} />
+        return <Bar key={entry.name || entry} dataKey={entry.name || entry} stackId="a" fill={entry.color || Utils.stringToColor(entry)} barSize={30} />
     }), [protocolsNamesAndColors, commandNames])
 
     const renderTick = (tickProps) => {
         const { x, y, payload } = tickProps;
         const { index, value, offset } = payload;
 
-        if (index % 3 === 1) {
-          return <text x={x} y={y + 10} textAnchor="middle">{`${value}`}</text>;
-        }
-
-        if (index % 3 === 0 ) {
-          const pathX = Math.floor(x - offset) + 0.5;
-
-          return <path d={`M${pathX},${y + 10}v${-35}`} stroke="red" />;
+        if (index % 3 === 0) {
+            return <text x={x} y={y + 10} textAnchor="end">{`${value}`}</text>;
         }
         return null;
-      };
+    };
 
 
     return (
         <div className={styles.barChartContainer}>
             {protocolStats.length > 0 && <BarChart
-                width={730}
+                width={750}
                 height={250}
                 data={commandStats || protocolStats}
-                barGap={0}
+                barCategoryGap={0}
+                barSize={30}
                 margin={{
                     top: 20,
                     right: 30,
@@ -97,7 +92,7 @@ export const TimelineBarChart: React.FC<TimelineBarChartProps> = ({ timeLineBarC
                     bottom: 5
                 }}
             >
-                <XAxis dataKey="timestamp" tick={renderTick}/>
+                <XAxis dataKey="timestamp" tick={renderTick} tickLine={false} />
                 <YAxis tickFormatter={(value) => timeLineBarChartMode === "VOLUME" ? Utils.humanFileSize(value) : value} />
                 <Tooltip formatter={(value) => timeLineBarChartMode === "VOLUME" ? Utils.humanFileSize(value) : value + " Requests"} />
                 {bars}
