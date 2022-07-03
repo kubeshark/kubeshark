@@ -21,6 +21,7 @@ import { TOAST_CONTAINER_ID } from "../../configs/Consts";
 import leftOffTopAtom from "../../recoil/leftOffTop";
 import { DEFAULT_LEFTOFF, DEFAULT_FETCH, DEFAULT_FETCH_TIMEOUT_MS } from '../../hooks/useWS';
 import ReplayRequestModalContainer from "../modals/ReplayRequestModal/ReplayRequestModal";
+import replayRequestModalOpenAtom from "../../recoil/replayRequestModalOpen";
 
 const useLayoutStyles = makeStyles(() => ({
   details: {
@@ -70,6 +71,7 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({
   const [wsReadyState, setWsReadyState] = useState(0);
   const setLeftOffTop = useSetRecoilState(leftOffTopAtom);
   const scrollableRef = useRef(null);
+  const isOpenReplayModal = useRecoilValue(replayRequestModalOpenAtom)
 
 
   const ws = useRef(null);
@@ -87,6 +89,10 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({
       setShouldCloseWebSocket(false);
     }
   }, [shouldCloseWebSocket, setShouldCloseWebSocket, closeWebSocket])
+
+  useEffect(() => {
+    isOpenReplayModal && setShouldCloseWebSocket(true)
+  }, [isOpenReplayModal, setShouldCloseWebSocket])
 
   const sendQueryWhenWsOpen = useCallback((leftOff: string, query: string, fetch: number, fetchTimeoutMs: number) => {
     setTimeout(() => {

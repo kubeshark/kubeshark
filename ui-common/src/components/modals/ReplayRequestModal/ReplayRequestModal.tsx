@@ -16,7 +16,7 @@ import spinnerImg from "assets/spinner.svg"
 import refreshImg from "assets/refresh.svg"
 import { formatRequest } from "../../EntryDetailed/EntrySections/EntrySections";
 import entryDataAtom from "../../../recoil/entryData";
-import { AutoRepresentation } from "../../EntryDetailed/EntryViewer/AutoRepresentation";
+import { AutoRepresentation, TabsEnum } from "../../EntryDetailed/EntryViewer/AutoRepresentation";
 import useDebounce from "../../../hooks/useDebounce"
 import replayRequestModalOpenAtom from "../../../recoil/replayRequestModalOpen";
 import { Utils } from "../../../helpers/Utils";
@@ -239,7 +239,7 @@ const ReplayRequestModal: React.FC<ReplayRequestModalProps> = ({ isOpen, onClose
                                 <span className={styles.sectionHeader}>RESPONSE</span>
                             </AccordionSummary>
                             <AccordionDetails>
-                                <AutoRepresentation representation={response} color={entryData.protocol.backgroundColor} />
+                                <AutoRepresentation representation={response} color={entryData.protocol.backgroundColor} openedTab={TabsEnum.Response} />
                             </AccordionDetails>
                         </Accordion>)}
                     </div>
