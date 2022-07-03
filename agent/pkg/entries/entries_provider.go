@@ -8,7 +8,6 @@ import (
 
 	basenine "github.com/up9inc/basenine/client/go"
 	"github.com/up9inc/mizu/agent/pkg/app"
-	"github.com/up9inc/mizu/agent/pkg/har"
 	"github.com/up9inc/mizu/agent/pkg/models"
 	"github.com/up9inc/mizu/logger"
 	"github.com/up9inc/mizu/shared"
@@ -95,24 +94,10 @@ func (e *BasenineEntriesProvider) GetEntry(singleEntryRequest *models.SingleEntr
 		return nil, err
 	}
 
-	var rules []map[string]interface{}
-	var isRulesEnabled bool
-	if protocol.Name == "http" {
-		harEntry, _ := har.NewEntry(entry.Request, entry.Response, entry.StartTime, entry.ElapsedTime)
-		_, rulesMatched, _isRulesEnabled := models.RunValidationRulesState(*harEntry, entry.Destination.Name)
-		isRulesEnabled = _isRulesEnabled
-		inrec, _ := json.Marshal(rulesMatched)
-		if err := json.Unmarshal(inrec, &rules); err != nil {
-			logger.Log.Error(err)
-		}
-	}
-
 	return &tapApi.EntryWrapper{
 		Protocol:       *protocol,
 		Representation: string(representation),
 		Data:           entry,
 		Base:           base,
-		Rules:          rules,
-		IsRulesEnabled: isRulesEnabled,
 	}, nil
 }

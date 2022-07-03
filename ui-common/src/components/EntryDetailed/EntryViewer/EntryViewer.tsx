@@ -3,18 +3,12 @@ import { AutoRepresentation } from './AutoRepresentation';
 
 interface Props {
     representation: any;
-    isRulesEnabled: boolean;
-    rulesMatched: any;
     color: string;
-    elapsedTime: number;
 }
 
-const EntryViewer: React.FC<Props> = ({ representation, isRulesEnabled, rulesMatched, elapsedTime, color }) => {
+const EntryViewer: React.FC<Props> = ({representation, color}) => {
     return <AutoRepresentation
         representation={representation}
-        isRulesEnabled={isRulesEnabled}
-        rulesMatched={rulesMatched}
-        elapsedTime={elapsedTime}
         color={color}
         isDisplayReplay={true}
     />

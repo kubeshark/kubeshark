@@ -12,7 +12,6 @@ import (
 	"time"
 
 	"github.com/up9inc/mizu/agent/pkg/dependency"
-	"github.com/up9inc/mizu/agent/pkg/models"
 	"github.com/up9inc/mizu/agent/pkg/oas"
 	"github.com/up9inc/mizu/agent/pkg/servicemap"
 
@@ -101,20 +100,13 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 
 	for item := range outputItems {
 		extension := extensionsMap[item.Protocol.Name]
-		resolvedSource, resolvedDestionation, namespace := resolveIP(item.ConnectionInfo)
+		resolvedSource, resolvedDestination, namespace := resolveIP(item.ConnectionInfo)
 
 		if namespace == "" && item.Namespace != tapApi.UnknownNamespace {
 			namespace = item.Namespace
 		}
 
-		mizuEntry := extension.Dissector.Analyze(item, resolvedSource, resolvedDestionation, namespace)
-		if extension.Protocol.Name == "http" {
-			harEntry, err := har.NewEntry(mizuEntry.Request, mizuEntry.Response, mizuEntry.StartTime, mizuEntry.ElapsedTime)
-			if err == nil {
-				rules, _, _ := models.RunValidationRulesState(*harEntry, mizuEntry.Destination.Name)
-				mizuEntry.Rules = rules
-			}
-		}
+		mizuEntry := extension.Dissector.Analyze(item, resolvedSource, resolvedDestination, namespace)
 
 		data, err := json.Marshal(mizuEntry)
 		if err != nil {

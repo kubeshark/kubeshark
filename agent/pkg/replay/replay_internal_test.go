@@ -97,8 +97,6 @@ func TestValid(t *testing.T) {
 				Representation: string(representation),
 				Data:           entry,
 				Base:           base,
-				Rules:          nil,
-				IsRulesEnabled: false,
 			}
 			t.Logf("%+v", result)
 			//data, _ := json.MarshalIndent(result, "", "  ")
