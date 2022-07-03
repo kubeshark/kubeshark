@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from "react"
+import React, { useState, useCallback, useRef, useEffect } from "react"
 import { useRecoilValue, useSetRecoilState } from "recoil"
 import entryDataAtom from "../../../recoil/entryData"
 import SectionsRepresentation from "./SectionsRepresentation";
