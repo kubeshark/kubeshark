@@ -105,27 +105,27 @@ func (c *tlsTapperTlsChunk) getFdPartialAddressPair() (addressPair, error) {
 	}
 }
 
-func (c *tlsTapperTlsChunk) getKprobeAddressPair() (bool, addressPair) {
+func (c *tlsTapperTlsChunk) getKprobeAddressPair() (addressPair, bool) {
 	dIP, dPort := c.getDstAddress()
 	sIP, sPort := c.getSrcAddress()
 	isAddressPairValid := c.getIsAddressPairValid()
 
 	if c.isRequest() {
-		return isAddressPairValid,
-		addressPair{
+		return addressPair{
 			srcIp:   sIP,
 			srcPort: sPort,
 			dstIp:   dIP,
 			dstPort: dPort,
-		}
+		},
+		isAddressPairValid
 	} else {
-		return isAddressPairValid,
-		addressPair{
+		return addressPair{
 			srcIp:   dIP,
 			srcPort: dPort,
 			dstIp:   sIP,
 			dstPort: sPort,
-		}
+		},
+		isAddressPairValid
 	}
 }
 
