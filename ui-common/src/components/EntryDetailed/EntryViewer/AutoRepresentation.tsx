@@ -31,8 +31,8 @@ export const AutoRepresentation: React.FC<any> = ({ representation, color, opene
     const [currentTab, setCurrentTab] = useState(TABS[0].tab);
 
     const getOpenedTabIndex = useCallback(() => {
-        const correntIndex = TABS.findIndex(current => current.tab === currentTab)
-        return correntIndex > -1 ? correntIndex : 0
+        const currentIndex = TABS.findIndex(current => current.tab === currentTab)
+        return currentIndex > -1 ? currentIndex : 0
     }, [TABS, currentTab])
 
     useEffect(() => {
