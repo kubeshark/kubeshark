@@ -35,6 +35,17 @@ export const AutoRepresentation: React.FC<any> = ({ representation, color, opene
         return correntIndex > -1 ? correntIndex : 0
     }, [TABS, currentTab])
 
+    const { request, response } = JSON.parse(representation);
+
+    if (response) {
+        TABS.push(
+            {
+                tab: 'Response',
+                badge: null
+            }
+        );
+    }
+
     useEffect(() => {
         if (openedTab) {
             setCurrentTab(TABS[openedTab].tab)
@@ -45,17 +56,6 @@ export const AutoRepresentation: React.FC<any> = ({ representation, color, opene
     // Don't fail even if `representation` is an empty string
     if (!representation) {
         return <React.Fragment></React.Fragment>;
-    }
-
-    const { request, response } = JSON.parse(representation);
-
-    if (response) {
-        TABS.push(
-            {
-                tab: 'Response',
-                badge: null
-            }
-        );
     }
 
     return <div className={styles.Entry}>
