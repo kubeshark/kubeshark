@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react"
+import React, { useState, useCallback, useRef, useEffect } from "react"
 import { useRecoilValue, useSetRecoilState } from "recoil"
 import entryDataAtom from "../../../recoil/entryData"
 import SectionsRepresentation from "./SectionsRepresentation";
@@ -10,12 +10,19 @@ import replayRequestModalOpenAtom from "../../../recoil/replayRequestModalOpen";
 
 const enabledProtocolsForReplay = ["http"]
 
-export const AutoRepresentation: React.FC<any> = ({ representation, isRulesEnabled, rulesMatched, elapsedTime, color, isDisplayReplay = false }) => {
+export enum TabsEnum {
+    Request = 0,
+    Response = 1
+}
+
+export const AutoRepresentation: React.FC<any> = ({ representation, isRulesEnabled, rulesMatched, elapsedTime, color, defaultTab = TabsEnum.Request, isDisplayReplay = false }) => {
     const entryData = useRecoilValue(entryDataAtom)
     const setIsOpenRequestModal = useSetRecoilState(replayRequestModalOpenAtom)
     const isReplayDisplayed = useCallback(() => {
         return enabledProtocolsForReplay.find(x => x === entryData.protocol.name) && isDisplayReplay
     }, [entryData.protocol.name, isDisplayReplay])
+
+    const tabSelectedRef = useRef(defaultTab)
 
     const TABS = [
         {
@@ -24,6 +31,10 @@ export const AutoRepresentation: React.FC<any> = ({ representation, isRulesEnabl
         }
     ];
     const [currentTab, setCurrentTab] = useState(TABS[0].tab);
+    useEffect(() => {
+        setCurrentTab(TABS[tabSelectedRef.current].tab)
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [tabSelectedRef.current])
 
     // Don't fail even if `representation` is an empty string
     if (!representation) {
@@ -55,10 +66,17 @@ export const AutoRepresentation: React.FC<any> = ({ representation, isRulesEnabl
         rulesTabIndex = TABS.length - 1;
     }
 
+    const onTabChange = (tab) => {
+        setCurrentTab(tab)
+        tabSelectedRef.current = TABS.findIndex(tabItem => tabItem.tab === tab)
+    }
+
+    console.log(defaultTab)
+
     return <div className={styles.Entry}>
         {<div className={styles.body}>
             <div className={styles.bodyHeader}>
-                <Tabs tabs={TABS} currentTab={currentTab} color={color} onChange={setCurrentTab} leftAligned />
+                <Tabs tabs={TABS} currentTab={TABS[tabSelectedRef.current].tab} color={color} onChange={onTabChange} leftAligned />
             </div>
             {currentTab === TABS[0].tab && <React.Fragment>
                 <SectionsRepresentation data={request} color={color} requestRepresentation={request} />

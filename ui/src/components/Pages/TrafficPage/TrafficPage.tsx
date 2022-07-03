@@ -1,8 +1,8 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Button } from "@mui/material";
 import Api, { MizuWebsocketURL } from "../../../helpers/api";
 import debounce from 'lodash/debounce';
-import { useRecoilState } from "recoil";
+import { useRecoilState, useRecoilValue } from "recoil";
 import { useCommonStyles } from "../../../helpers/commonStyle"
 import serviceMapModalOpenAtom from "../../../recoil/serviceMapModalOpen";
 import TrafficViewer from "@up9/mizu-common"
@@ -12,6 +12,7 @@ import serviceMap from "../../assets/serviceMap.svg";
 import services from "../../assets/services.svg";
 import trafficStatsIcon from "../../assets/trafficStats.svg";
 import trafficStatsModalOpenAtom from "../../../recoil/trafficStatsModalOpen";
+import replayModalOpenAtom from "../../../recoil/replayModalOpen"
 
 const api = Api.getInstance();
 
@@ -20,6 +21,7 @@ export const TrafficPage: React.FC = () => {
   const [serviceMapModalOpen, setServiceMapModalOpen] = useRecoilState(serviceMapModalOpenAtom);
   const [openOasModal, setOpenOasModal] = useRecoilState(oasModalOpenAtom);
   const [trafficStatsModalOpen, setTrafficStatsModalOpen] = useRecoilState(trafficStatsModalOpenAtom);
+  const replayModalOpen = useRecoilValue(replayModalOpenAtom);
   const [shouldCloseWebSocket, setShouldCloseWebSocket] = useState(false);
 
   const trafficViewerApi = { ...api }
@@ -38,6 +40,10 @@ export const TrafficPage: React.FC = () => {
     setShouldCloseWebSocket(true)
     setServiceMapModalOpen(true)
   }, 500);
+
+  useEffect(() => {
+    replayModalOpen && setShouldCloseWebSocket(true)
+  }, [replayModalOpen])
 
   const actionButtons = <div style={{ display: 'flex', height: "100%" }}>
       {window["isOasEnabled"] && <Button
