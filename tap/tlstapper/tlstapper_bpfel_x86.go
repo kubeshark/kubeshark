@@ -14,15 +14,15 @@ import (
 )
 
 type tlsTapperTlsChunk struct {
-	Pid         uint32
-	Tgid        uint32
-	Len         uint32
-	Start       uint32
-	Recorded    uint32
-	Fd          uint32
-	Flags       uint32
-	Address     [16]uint8
-	AddressPair struct {
+	Pid               uint32
+	Tgid              uint32
+	Len               uint32
+	Start             uint32
+	Recorded          uint32
+	Fd                uint32
+	Flags             uint32
+	FdAddress         [16]uint8
+	KprobeAddressPair struct {
 		IsAddressPairValid uint32
 		Saddr              uint32
 		Daddr              uint32

@@ -22,7 +22,7 @@ static __always_inline int add_address_to_chunk(struct pt_regs *ctx, struct tls_
         return 0;
     }
 
-    int err = bpf_probe_read(chunk->address, sizeof(chunk->address), fdinfo->ipv4_addr);
+    int err = bpf_probe_read(chunk->fd_address, sizeof(chunk->fd_address), fdinfo->ipv4_addr);
     chunk->flags |= (fdinfo->flags & FLAGS_IS_CLIENT_BIT);
 
     if (err != 0) {
@@ -104,7 +104,7 @@ static __always_inline void output_ssl_chunk(struct pt_regs *ctx, struct ssl_inf
     chunk->len = count_bytes;
     chunk->fd = info->fd;
 
-    (void)memcpy(&chunk->address_pair, &info->address_pair, sizeof(chunk->address_pair));
+    (void)memcpy(&chunk->kprobe_address_pair, &info->kprobe_address_pair, sizeof(chunk->kprobe_address_pair));
 
     if (!add_address_to_chunk(ctx, chunk, id, chunk->fd)) {
         // Without an address, we drop the chunk because there is not much to do with it in Go

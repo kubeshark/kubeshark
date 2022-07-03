@@ -13,7 +13,7 @@ const FLAGS_IS_CLIENT_BIT uint32 = (1 << 0)
 const FLAGS_IS_READ_BIT uint32 = (1 << 1)
 
 func (c *tlsTapperTlsChunk) getAddress() (net.IP, uint16, error) {
-	address := bytes.NewReader(c.Address[:])
+	address := bytes.NewReader(c.FdAddress[:])
 	var family uint16
 	var port uint16
 	var ip32 uint32
@@ -36,21 +36,21 @@ func (c *tlsTapperTlsChunk) getAddress() (net.IP, uint16, error) {
 }
 
 func (c *tlsTapperTlsChunk) getDstAddress() (net.IP, uint16) {
-	ip := intToIP(c.AddressPair.Daddr)
-	port := c.AddressPair.Dport
+	ip := intToIP(c.KprobeAddressPair.Daddr)
+	port := c.KprobeAddressPair.Dport
 
 	return ip, port
 }
 
 func (c *tlsTapperTlsChunk) getSrcAddress() (net.IP, uint16) {
-	ip := intToIP(c.AddressPair.Saddr)
-	port := c.AddressPair.Sport
+	ip := intToIP(c.KprobeAddressPair.Saddr)
+	port := c.KprobeAddressPair.Sport
 
 	return ip, port
 }
 
 func (c *tlsTapperTlsChunk) getIsAddressPairValid() bool {
-	if c.AddressPair.IsAddressPairValid == 1 {
+	if c.KprobeAddressPair.IsAddressPairValid == 1 {
 		return true
 	}
 

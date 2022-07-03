@@ -58,11 +58,11 @@ static __always_inline void tcp_kprobe(struct pt_regs *ctx, struct bpf_map_def *
 		return;
 	}
 
-	info_ptr->address_pair.is_address_pair_valid = 1;
-	info_ptr->address_pair.daddr = daddr;
-	info_ptr->address_pair.saddr = saddr;
-	info_ptr->address_pair.dport = dport;
-	info_ptr->address_pair.sport = sport;
+	info_ptr->kprobe_address_pair.is_address_pair_valid = 1;
+	info_ptr->kprobe_address_pair.daddr = daddr;
+	info_ptr->kprobe_address_pair.saddr = saddr;
+	info_ptr->kprobe_address_pair.dport = dport;
+	info_ptr->kprobe_address_pair.sport = sport;
 }
 
 SEC("kprobe/tcp_sendmsg")
