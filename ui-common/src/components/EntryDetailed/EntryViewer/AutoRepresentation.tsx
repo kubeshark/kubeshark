@@ -30,6 +30,7 @@ export const AutoRepresentation: React.FC<any> = ({ representation, color, defau
         }
     ];
     const [currentTab, setCurrentTab] = useState(TABS[0].tab);
+
     useEffect(() => {
         setCurrentTab(TABS[tabSelectedRef.current].tab)
         // eslint-disable-next-line react-hooks/exhaustive-deps
