@@ -48,8 +48,7 @@ static __always_inline void ssl_uprobe(struct pt_regs *ctx, void* ssl, void* buf
 		return;
 	}
 	
-	struct ssl_info *infoPtr = bpf_map_lookup_elem(map_fd, &id);
-	struct ssl_info info = lookup_ssl_info(ctx, &openssl_write_context, id);
+	struct ssl_info info = lookup_ssl_info(ctx, map_fd, id);
 	
 	info.count_ptr = count_ptr;
 	info.buffer = buffer;

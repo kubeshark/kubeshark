@@ -33,14 +33,15 @@ interface TrafficStatsModalProps {
   getTrafficStatsDataApi: () => Promise<any>
 }
 
-export const PROTOCOLS = ["ALL PROTOCOLS","gRPC", "REDIS", "HTTP", "GQL", "AMQP", "KAFKA"];
+
+export const PROTOCOLS = ["ALL", "gRPC", "REDIS", "HTTP", "GQL", "AMQP", "KAFKA"];
 export const ALL_PROTOCOLS = PROTOCOLS[0];
 
 export const TrafficStatsModal: React.FC<TrafficStatsModalProps> = ({ isOpen, onClose, getTrafficStatsDataApi }) => {
 
   const modes = Object.keys(StatsMode).filter(x => !(parseInt(x) >= 0));
   const [statsMode, setStatsMode] = useState(modes[0]);
-  const [selectedProtocol, setSelectedProtocol] = useState("ALL PROTOCOLS");
+  const [selectedProtocol, setSelectedProtocol] = useState(ALL_PROTOCOLS);
   const [pieStatsData, setPieStatsData] = useState(null);
   const [timelineStatsData, setTimelineStatsData] = useState(null);
   const [isLoading, setIsLoading] = useState(false);

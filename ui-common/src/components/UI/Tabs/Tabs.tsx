@@ -30,10 +30,11 @@ const useTabsStyles = makeStyles((theme : Theme) => createStyles({
     },
 
     tab: {
-        display: 'inline-block',
+        display: 'inline-flex',
         textTransform: 'uppercase',
         color: variables.blueColor,
         cursor: 'pointer',
+        alignItems: "center"
     },
 
     tabsAlignLeft: {
