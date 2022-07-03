@@ -15,6 +15,7 @@ type sslHooks struct {
 	sslReadExProbe     link.Link
 	sslReadExRetProbe  link.Link
 	tcpSendmsg         link.Link
+	tcpRecvmsg         link.Link
 }
 
 func (s *sslHooks) installUprobes(bpfObjects *tlsTapperObjects, sslLibraryPath string) error {
@@ -109,6 +110,11 @@ func (s *sslHooks) installSslHooks(bpfObjects *tlsTapperObjects, sslLibrary *lin
 		return errors.Wrap(err, 0)
 	}
 
+	s.tcpRecvmsg, err = link.Kprobe("tcp_recvmsg", bpfObjects.TcpRecvmsg)
+	if err != nil {
+		return errors.Wrap(err, 0)
+	}
+
 	return nil
 }
 
@@ -157,6 +163,12 @@ func (s *sslHooks) close() []error {
 
 	if s.tcpSendmsg != nil {
 		if err := s.tcpSendmsg.Close(); err != nil {
+			errors = append(errors, err)
+		}
+	}
+
+	if s.tcpRecvmsg != nil {
+		if err := s.tcpRecvmsg.Close(); err != nil {
 			errors = append(errors, err)
 		}
 	}

@@ -5,8 +5,7 @@
 #include "include/pids.h"
 #include "include/common.h"
 
-SEC("kprobe/tcp_sendmsg")
-void BPF_KPROBE(tcp_sendmsg) {
+static __always_inline void tcp_kprobe(struct pt_regs *ctx, struct bpf_map_def *map_fd, _Bool is_send) {
 	long err;
 
 	__u64 id = bpf_get_current_pid_tgid();
@@ -16,7 +15,7 @@ void BPF_KPROBE(tcp_sendmsg) {
 		return;
 	}
 
-	struct ssl_info *info_ptr = bpf_map_lookup_elem(&openssl_write_context, &id);
+	struct ssl_info *info_ptr = bpf_map_lookup_elem(map_fd, &id);
 	// Happens when the connection is not tls
 	if (info_ptr == NULL) {
 		return;
@@ -64,4 +63,14 @@ void BPF_KPROBE(tcp_sendmsg) {
 	info_ptr->address_pair.saddr = saddr;
 	info_ptr->address_pair.dport = dport;
 	info_ptr->address_pair.sport = sport;
+}
+
+SEC("kprobe/tcp_sendmsg")
+void BPF_KPROBE(tcp_sendmsg) {
+	tcp_kprobe(ctx, &openssl_write_context, true);
+}
+
+SEC("kprobe/tcp_recvmsg")
+void BPF_KPROBE(tcp_recvmsg) {
+	tcp_kprobe(ctx, &openssl_read_context, false);
 }

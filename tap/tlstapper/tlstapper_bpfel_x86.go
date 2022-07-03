@@ -14,15 +14,22 @@ import (
 )
 
 type tlsTapperTlsChunk struct {
-	Pid      uint32
-	Tgid     uint32
-	Len      uint32
-	Start    uint32
-	Recorded uint32
-	Fd       uint32
-	Flags    uint32
-	Address  [16]uint8
-	Data     [4096]uint8
+	Pid         uint32
+	Tgid        uint32
+	Len         uint32
+	Start       uint32
+	Recorded    uint32
+	Fd          uint32
+	Flags       uint32
+	Address     [16]uint8
+	AddressPair struct {
+		IsAddressPairValid uint32
+		Saddr              uint32
+		Daddr              uint32
+		Sport              uint16
+		Dport              uint16
+	}
+	Data [4096]uint8
 }
 
 // loadTlsTapper returns the embedded CollectionSpec for tlsTapper.
@@ -84,6 +91,7 @@ type tlsTapperProgramSpecs struct {
 	SysEnterWrite      *ebpf.ProgramSpec `ebpf:"sys_enter_write"`
 	SysExitAccept4     *ebpf.ProgramSpec `ebpf:"sys_exit_accept4"`
 	SysExitConnect     *ebpf.ProgramSpec `ebpf:"sys_exit_connect"`
+	TcpRecvmsg         *ebpf.ProgramSpec `ebpf:"tcp_recvmsg"`
 	TcpSendmsg         *ebpf.ProgramSpec `ebpf:"tcp_sendmsg"`
 }
 
@@ -174,6 +182,7 @@ type tlsTapperPrograms struct {
 	SysEnterWrite      *ebpf.Program `ebpf:"sys_enter_write"`
 	SysExitAccept4     *ebpf.Program `ebpf:"sys_exit_accept4"`
 	SysExitConnect     *ebpf.Program `ebpf:"sys_exit_connect"`
+	TcpRecvmsg         *ebpf.Program `ebpf:"tcp_recvmsg"`
 	TcpSendmsg         *ebpf.Program `ebpf:"tcp_sendmsg"`
 }
 
@@ -197,6 +206,7 @@ func (p *tlsTapperPrograms) Close() error {
 		p.SysEnterWrite,
 		p.SysExitAccept4,
 		p.SysExitConnect,
+		p.TcpRecvmsg,
 		p.TcpSendmsg,
 	)
 }
