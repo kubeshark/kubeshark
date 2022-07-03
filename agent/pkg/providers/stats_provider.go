@@ -64,6 +64,7 @@ var (
 
 const (
 	InternalBucketThreshold = time.Minute * 1
+	MaxNumberOfBars         = 30
 )
 
 func ResetGeneralStats() {
@@ -92,18 +93,41 @@ func GetTrafficStats() *TrafficStatsResponse {
 }
 
 func calculateInterval(firstTimestamp int64, lastTimestamp int64) time.Duration {
-	if time.Duration(lastTimestamp-firstTimestamp)*time.Second < 15*time.Minute {
-		return time.Minute
-	} else if time.Duration(lastTimestamp-firstTimestamp)*time.Second < time.Hour {
-		return time.Minute * 3
-	} else if time.Duration(lastTimestamp-firstTimestamp)*time.Second < 7*time.Hour {
-		return time.Minute * 30
-	} else if time.Duration(lastTimestamp-firstTimestamp)*time.Second < 25*time.Hour {
-		return time.Hour * 2
-	} else if time.Duration(lastTimestamp-firstTimestamp)*time.Second < 8*24*time.Hour {
-		return time.Hour * 12
+	validDurations := []time.Duration{
+		time.Minute,
+		time.Minute * 2,
+		time.Minute * 3,
+		time.Minute * 5,
+		time.Minute * 10,
+		time.Minute * 15,
+		time.Minute * 20,
+		time.Minute * 30,
+		time.Minute * 45,
+		time.Minute * 60,
+		time.Minute * 75,
+		time.Minute * 90,   // 1.5 minutes
+		time.Minute * 120,  // 2 hours
+		time.Minute * 150,  // 2.5 hours
+		time.Minute * 180,  // 3 hours
+		time.Minute * 240,  // 4 hours
+		time.Minute * 300,  // 5 hours
+		time.Minute * 360,  // 6 hours
+		time.Minute * 420,  // 7 hours
+		time.Minute * 480,  // 8 hours
+		time.Minute * 540,  // 9 hours
+		time.Minute * 600,  // 10 hours
+		time.Minute * 660,  // 11 hours
+		time.Minute * 720,  // 12 hours
+		time.Minute * 1440, // 24 hours
 	}
-	return time.Hour * 24
+	duration := time.Duration(lastTimestamp-firstTimestamp) * time.Second / time.Duration(MaxNumberOfBars)
+	for _, validDuration := range validDurations {
+		if validDuration-duration >= 0 {
+			return validDuration
+		}
+	}
+	return duration.Round(validDurations[len(validDurations)-1])
+
 }
 
 func getAccumulativeStats(stats BucketStats) []*AccumulativeStatsProtocol {
