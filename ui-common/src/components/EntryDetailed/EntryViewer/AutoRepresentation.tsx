@@ -14,7 +14,7 @@ export enum TabsEnum {
     Response = 1
 }
 
-export const AutoRepresentation: React.FC<any> = ({ representation, isRulesEnabled, color, defaultTab = TabsEnum.Request, isDisplayReplay = false }) => {
+export const AutoRepresentation: React.FC<any> = ({ representation, color, defaultTab = TabsEnum.Request, isDisplayReplay = false }) => {
     const entryData = useRecoilValue(entryDataAtom)
     const setIsOpenRequestModal = useSetRecoilState(replayRequestModalOpenAtom)
     const isReplayDisplayed = useCallback(() => {
