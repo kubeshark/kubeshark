@@ -146,9 +146,6 @@ export const EntryDetailed = () => {
         <React.Fragment>
             {!isLoading && entryData && <EntryViewer
                 representation={entryData.representation}
-                isRulesEnabled={entryData.isRulesEnabled}
-                rulesMatched={entryData.rulesMatched}
-                elapsedTime={entryData.data.elapsedTime}
                 color={entryData.protocol.backgroundColor}
             />}
         </React.Fragment>
