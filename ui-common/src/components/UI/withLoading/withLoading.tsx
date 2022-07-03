@@ -3,8 +3,8 @@ import spinner from 'spinner.svg';
 
 export interface WithLoadingProps {
     isLoading: boolean
-    loaderMargin: number,
-    loaderHeight: number
+    loaderMargin?: number,
+    loaderHeight?: number
 }
 
 const withLoading = <P extends object>(
