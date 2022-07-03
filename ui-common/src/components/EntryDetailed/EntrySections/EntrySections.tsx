@@ -126,7 +126,7 @@ export const formatRequest = (body: any, contentType: string, decodeBase64: bool
     try {
         if (jsonLikeFormats.some(format => contentType?.indexOf(format) > -1)) {
             if (!isPretty) return bodyBuf;
-            return jsonBeautify(JSON.parse(bodyBuf), null, 2, 80);
+            return Utils.isJson(bodyBuf) ? jsonBeautify(JSON.parse(bodyBuf), null, 2, 80) : bodyBuf
         } else if (xmlLikeFormats.some(format => contentType?.indexOf(format) > -1)) {
             if (!isPretty) return bodyBuf;
             return xmlBeautify(bodyBuf, {
