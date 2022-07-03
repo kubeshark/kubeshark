@@ -12,7 +12,7 @@ import (
 const FLAGS_IS_CLIENT_BIT uint32 = (1 << 0)
 const FLAGS_IS_READ_BIT uint32 = (1 << 1)
 
-func (c *tlsTapperTlsChunk) getAddress() (net.IP, uint16, error) {
+func (c *tlsTapperTlsChunk) getFdAddress() (net.IP, uint16, error) {
 	address := bytes.NewReader(c.FdAddress[:])
 	var family uint16
 	var port uint16
@@ -81,8 +81,8 @@ func (c *tlsTapperTlsChunk) isRequest() bool {
 	return (c.isClient() && c.isWrite()) || (c.isServer() && c.isRead())
 }
 
-func (c *tlsTapperTlsChunk) getAddressPair() (addressPair, error) {
-	ip, port, err := c.getAddress()
+func (c *tlsTapperTlsChunk) getFdPartialAddressPair() (addressPair, error) {
+	ip, port, err := c.getFdAddress()
 
 	if err != nil {
 		return addressPair{}, err
@@ -105,7 +105,7 @@ func (c *tlsTapperTlsChunk) getAddressPair() (addressPair, error) {
 	}
 }
 
-func (c *tlsTapperTlsChunk) getAddressPair2() (bool, addressPair) {
+func (c *tlsTapperTlsChunk) getKprobeAddressPair() (bool, addressPair) {
 	dIP, dPort := c.getDstAddress()
 	sIP, sPort := c.getSrcAddress()
 	isAddressPairValid := c.getIsAddressPairValid()
