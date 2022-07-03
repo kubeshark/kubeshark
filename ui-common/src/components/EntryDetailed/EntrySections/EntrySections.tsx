@@ -117,6 +117,39 @@ interface EntryBodySectionProps {
     selector?: string,
 }
 
+export const formatRequest = (body: any, contentType: string, decodeBase64: boolean = true, isBase64Encoding: boolean = false, isPretty: boolean = true): string => {
+    if (!decodeBase64 || !body) return body;
+
+    const chunk = body.slice(0, MAXIMUM_BYTES_TO_FORMAT);
+    const bodyBuf = isBase64Encoding ? atob(chunk) : chunk;
+
+    try {
+        if (jsonLikeFormats.some(format => contentType?.indexOf(format) > -1)) {
+            if (!isPretty) return bodyBuf;
+            return jsonBeautify(JSON.parse(bodyBuf), null, 2, 80);
+        } else if (xmlLikeFormats.some(format => contentType?.indexOf(format) > -1)) {
+            if (!isPretty) return bodyBuf;
+            return xmlBeautify(bodyBuf, {
+                indentation: '  ',
+                filter: (node) => node.type !== 'Comment',
+                collapseContent: true,
+                lineSeparator: '\n'
+            });
+        } else if (protobufFormats.some(format => contentType?.indexOf(format) > -1)) {
+            // Replace all non printable characters (ASCII)
+            const protobufDecoder = new ProtobufDecoder(bodyBuf, true);
+            const protobufDecoded = protobufDecoder.decode().toSimple();
+            if (!isPretty) return JSON.stringify(protobufDecoded);
+            return jsonBeautify(protobufDecoded, null, 2, 80);
+        }
+    } catch (error) {
+        console.error(error)
+        throw error
+    }
+
+    return bodyBuf;
+}
+
 export const EntryBodySection: React.FC<EntryBodySectionProps> = ({
     title,
     color,
@@ -139,42 +172,17 @@ export const EntryBodySection: React.FC<EntryBodySectionProps> = ({
         !isLineNumbersGreaterThenOne && setShowLineNumbers(false);
     }, [isLineNumbersGreaterThenOne, isPretty])
 
-    const formatTextBody = useCallback((body: any): string => {
-        if (!decodeBase64) return body;
-
-        const chunk = body.slice(0, MAXIMUM_BYTES_TO_FORMAT);
-        const bodyBuf = isBase64Encoding ? atob(chunk) : chunk;
-
+    const formatTextBody = useCallback((body) => {
         try {
-            if (jsonLikeFormats.some(format => contentType?.indexOf(format) > -1)) {
-                if (!isPretty) return bodyBuf;
-                return jsonBeautify(JSON.parse(bodyBuf), null, 2, 80);
-            } else if (xmlLikeFormats.some(format => contentType?.indexOf(format) > -1)) {
-                if (!isPretty) return bodyBuf;
-                return xmlBeautify(bodyBuf, {
-                    indentation: '  ',
-                    filter: (node) => node.type !== 'Comment',
-                    collapseContent: true,
-                    lineSeparator: '\n'
-                });
-            } else if (protobufFormats.some(format => contentType?.indexOf(format) > -1)) {
-                // Replace all non printable characters (ASCII)
-                const protobufDecoder = new ProtobufDecoder(bodyBuf, true);
-                const protobufDecoded = protobufDecoder.decode().toSimple();
-                if (!isPretty) return JSON.stringify(protobufDecoded);
-                return jsonBeautify(protobufDecoded, null, 2, 80);
-            }
+            return formatRequest(body, contentType, decodeBase64, isBase64Encoding, isPretty)
         } catch (error) {
             if (String(error).includes("More than one message in")) {
                 if (isDecodeGrpc)
                     setIsDecodeGrpc(false);
             } else if (String(error).includes("Failed to parse")) {
                 console.warn(error);
-            } else {
-                console.error(error);
             }
         }
-        return bodyBuf;
     }, [isPretty, contentType, isDecodeGrpc, decodeBase64, isBase64Encoding])
 
     const formattedText = useMemo(() => formatTextBody(content), [formatTextBody, content]);

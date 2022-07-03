@@ -5,7 +5,7 @@ import makeStyles from '@mui/styles/makeStyles';
 import Protocol from "../UI/Protocol/Protocol"
 import Queryable from "../UI/Queryable/Queryable";
 import { toast } from "react-toastify";
-import { RecoilState, useRecoilValue } from "recoil";
+import { RecoilState, useRecoilState, useRecoilValue } from "recoil";
 import focusedEntryIdAtom from "../../recoil/focusedEntryId";
 import TrafficViewerApi from "../TrafficViewer/TrafficViewerApi";
 import TrafficViewerApiAtom from "../../recoil/TrafficViewerApi/atom";
@@ -13,6 +13,7 @@ import queryAtom from "../../recoil/query/atom";
 import useWindowDimensions, { useRequestTextByWidth } from "../../hooks/WindowDimensionsHook";
 import { TOAST_CONTAINER_ID } from "../../configs/Consts";
 import spinner from "assets/spinner.svg";
+import entryDataAtom from "../../recoil/entryData";
 
 const useStyles = makeStyles(() => ({
     entryTitle: {
@@ -107,7 +108,7 @@ export const EntryDetailed = () => {
     const trafficViewerApi = useRecoilValue(TrafficViewerApiAtom as RecoilState<TrafficViewerApi>)
     const query = useRecoilValue(queryAtom);
     const [isLoading, setIsLoading] = useState(false);
-    const [entryData, setEntryData] = useState(null);
+    const [entryData, setEntryData] = useRecoilState(entryDataAtom)
 
     useEffect(() => {
       setEntryData(null);

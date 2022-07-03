@@ -88,8 +88,17 @@
 .greenIndicatorContainer
     border: 2px #6fcf9770 solid
 
+@keyframes biggerIndication 
+    0%
+        transform: scale(2.0)
+    100% 
+        transform: scale(0.7)
+    
+
+
 .greenIndicator
     background-color: #27AE60
+    animation: biggerIndication 1.5s ease-out 0s alternate infinite none running
 
 .orangeIndicatorContainer
     border: 2px #fabd5970 solid
