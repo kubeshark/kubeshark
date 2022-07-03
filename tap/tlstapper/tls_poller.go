@@ -134,25 +134,9 @@ func (p *tlsPoller) pollChunksPerfBuffer(chunks chan<- *tlsTapperTlsChunk) {
 
 func (p *tlsPoller) handleTlsChunk(chunk *tlsTapperTlsChunk, extension *api.Extension, emitter api.Emitter,
 	options *api.TrafficFilteringOptions, streamsMap api.TcpStreamMap) error {
-	address, err := p.getSockfdAddressPair(chunk)
-
-	addressPair2, isAddressPairValid := chunk.getKprobeAddressPair()
-	if isAddressPairValid {
-		logger.Log.Infof(
-			"DEBUG tls addresses: %v:%d->%v:%d",
-			addressPair2.srcIp,
-			addressPair2.srcPort,
-			addressPair2.dstIp,
-			addressPair2.dstPort,
-		)
-	}
-
+	address, err := p.getAddressPair(chunk)
 	if err != nil {
-		address, err = chunk.getFdPartialAddressPair()
-
-		if err != nil {
-			return err
-		}
+		return err
 	}
 
 	key := buildTlsKey(address)
@@ -170,6 +154,28 @@ func (p *tlsPoller) handleTlsChunk(chunk *tlsTapperTlsChunk, extension *api.Exte
 	}
 
 	return nil
+}
+
+func (p *tlsPoller) getAddressPair(chunk *tlsTapperTlsChunk) (addressPair, error) {
+	var addrPair addressPair
+	var err error
+
+	addrPair, isAddressPairValid := chunk.getKprobeAddressPair()
+	if isAddressPairValid {
+		return addrPair, nil
+	}
+
+	addrPair, err = p.getSockfdAddressPair(chunk)
+	if err == nil {
+		return addrPair, nil
+	}
+
+	addrPair, err = chunk.getFdPartialAddressPair()
+	if err == nil {
+		return addrPair, nil
+	}
+
+	return addressPair{}, err
 }
 
 func (p *tlsPoller) startNewTlsReader(chunk *tlsTapperTlsChunk, address *addressPair, key string,
