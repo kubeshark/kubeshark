@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from "react"
+import React, { useState, useCallback, useEffect, useMemo } from "react"
 import { useRecoilValue, useSetRecoilState } from "recoil"
 import entryDataAtom from "../../../recoil/entryData"
 import SectionsRepresentation from "./SectionsRepresentation";
@@ -21,13 +21,27 @@ export const AutoRepresentation: React.FC<any> = ({ representation, color, opene
         return enabledProtocolsForReplay.find(x => x === entryData.protocol.name) && isDisplayReplay
     }, [entryData.protocol.name, isDisplayReplay])
 
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    const TABS = [
-        {
-            tab: 'Request',
-            badge: isReplayDisplayed() && <span title="Replay Request"><ReplayIcon fill={color} stroke={color} style={{ marginLeft: "10px", cursor: "pointer", height: "22px" }} onClick={() => setIsOpenRequestModal(true)} /></span>
+    const { request, response } = JSON.parse(representation);
+
+    const TABS = useMemo(() => {
+        const arr = [
+            {
+                tab: 'Request',
+                badge: isReplayDisplayed() && <span title="Replay Request"><ReplayIcon fill={color} stroke={color} style={{ marginLeft: "10px", cursor: "pointer", height: "22px" }} onClick={() => setIsOpenRequestModal(true)} /></span>
+            }]
+
+        if (response) {
+            arr.push(
+                {
+                    tab: 'Response',
+                    badge: null
+                }
+            );
         }
-    ];
+
+        return arr
+    }, [color, isReplayDisplayed, response, setIsOpenRequestModal]);
+
     const [currentTab, setCurrentTab] = useState(TABS[0].tab);
 
     const getOpenedTabIndex = useCallback(() => {
@@ -39,24 +53,13 @@ export const AutoRepresentation: React.FC<any> = ({ representation, color, opene
         if (openedTab) {
             setCurrentTab(TABS[openedTab].tab)
         }
+
         // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [])
 
     // Don't fail even if `representation` is an empty string
     if (!representation) {
         return <React.Fragment></React.Fragment>;
-    }
-
-
-    const { request, response } = JSON.parse(representation);
-
-    if (response) {
-        TABS.push(
-            {
-                tab: 'Response',
-                badge: null
-            }
-        );
     }
 
     return <div className={styles.Entry}>
