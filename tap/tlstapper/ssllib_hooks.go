@@ -104,7 +104,6 @@ func (s *sslHooks) installSslHooks(bpfObjects *tlsTapperObjects, sslLibrary *lin
 		}
 	}
 
-	// Find a right place for this. It shouldn't be in sslHooks.installUprobes
 	s.tcpSendmsg, err = link.Kprobe("tcp_sendmsg", bpfObjects.TcpSendmsg)
 	if err != nil {
 		return errors.Wrap(err, 0)
