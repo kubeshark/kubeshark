@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 
 	"github.com/up9inc/mizu/agent/pkg/har"
-	"github.com/up9inc/mizu/agent/pkg/rules"
 	tapApi "github.com/up9inc/mizu/tap/api"
 
 	basenine "github.com/up9inc/basenine/client/go"
@@ -142,10 +141,4 @@ type ExtendedLog struct {
 type ExtendedCreator struct {
 	*har.Creator
 	Source *string `json:"_source"`
-}
-
-func RunValidationRulesState(harEntry har.Entry, service string) (tapApi.ApplicableRules, []rules.RulesMatched, bool) {
-	resultPolicyToSend, isEnabled := rules.MatchRequestPolicy(harEntry, service)
-	statusPolicyToSend, latency, numberOfRules := rules.PassedValidationRules(resultPolicyToSend)
-	return tapApi.ApplicableRules{Status: statusPolicyToSend, Latency: latency, NumberOfRules: numberOfRules}, resultPolicyToSend, isEnabled
 }

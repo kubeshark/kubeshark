@@ -117,6 +117,39 @@ interface EntryBodySectionProps {
     selector?: string,
 }
 
+export const formatRequest = (body: any, contentType: string, decodeBase64: boolean = true, isBase64Encoding: boolean = false, isPretty: boolean = true): string => {
+    if (!decodeBase64 || !body) return body;
+
+    const chunk = body.slice(0, MAXIMUM_BYTES_TO_FORMAT);
+    const bodyBuf = isBase64Encoding ? atob(chunk) : chunk;
+
+    try {
+        if (jsonLikeFormats.some(format => contentType?.indexOf(format) > -1)) {
+            if (!isPretty) return bodyBuf;
+            return Utils.isJson(bodyBuf) ? jsonBeautify(JSON.parse(bodyBuf), null, 2, 80) : bodyBuf
+        } else if (xmlLikeFormats.some(format => contentType?.indexOf(format) > -1)) {
+            if (!isPretty) return bodyBuf;
+            return xmlBeautify(bodyBuf, {
+                indentation: '  ',
+                filter: (node) => node.type !== 'Comment',
+                collapseContent: true,
+                lineSeparator: '\n'
+            });
+        } else if (protobufFormats.some(format => contentType?.indexOf(format) > -1)) {
+            // Replace all non printable characters (ASCII)
+            const protobufDecoder = new ProtobufDecoder(bodyBuf, true);
+            const protobufDecoded = protobufDecoder.decode().toSimple();
+            if (!isPretty) return JSON.stringify(protobufDecoded);
+            return jsonBeautify(protobufDecoded, null, 2, 80);
+        }
+    } catch (error) {
+        console.error(error)
+        throw error
+    }
+
+    return bodyBuf;
+}
+
 export const EntryBodySection: React.FC<EntryBodySectionProps> = ({
     title,
     color,
@@ -139,42 +172,17 @@ export const EntryBodySection: React.FC<EntryBodySectionProps> = ({
         !isLineNumbersGreaterThenOne && setShowLineNumbers(false);
     }, [isLineNumbersGreaterThenOne, isPretty])
 
-    const formatTextBody = useCallback((body: any): string => {
-        if (!decodeBase64) return body;
-
-        const chunk = body.slice(0, MAXIMUM_BYTES_TO_FORMAT);
-        const bodyBuf = isBase64Encoding ? atob(chunk) : chunk;
-
+    const formatTextBody = useCallback((body) => {
         try {
-            if (jsonLikeFormats.some(format => contentType?.indexOf(format) > -1)) {
-                if (!isPretty) return bodyBuf;
-                return jsonBeautify(JSON.parse(bodyBuf), null, 2, 80);
-            } else if (xmlLikeFormats.some(format => contentType?.indexOf(format) > -1)) {
-                if (!isPretty) return bodyBuf;
-                return xmlBeautify(bodyBuf, {
-                    indentation: '  ',
-                    filter: (node) => node.type !== 'Comment',
-                    collapseContent: true,
-                    lineSeparator: '\n'
-                });
-            } else if (protobufFormats.some(format => contentType?.indexOf(format) > -1)) {
-                // Replace all non printable characters (ASCII)
-                const protobufDecoder = new ProtobufDecoder(bodyBuf, true);
-                const protobufDecoded = protobufDecoder.decode().toSimple();
-                if (!isPretty) return JSON.stringify(protobufDecoded);
-                return jsonBeautify(protobufDecoded, null, 2, 80);
-            }
+            return formatRequest(body, contentType, decodeBase64, isBase64Encoding, isPretty)
         } catch (error) {
             if (String(error).includes("More than one message in")) {
                 if (isDecodeGrpc)
                     setIsDecodeGrpc(false);
             } else if (String(error).includes("Failed to parse")) {
                 console.warn(error);
-            } else {
-                console.error(error);
             }
         }
-        return bodyBuf;
     }, [isPretty, contentType, isDecodeGrpc, decodeBase64, isBase64Encoding])
 
     const formattedText = useMemo(() => formatTextBody(content), [formatTextBody, content]);
@@ -254,113 +262,6 @@ export const EntryTableSection: React.FC<EntrySectionProps> = ({ title, color, a
                         </tbody>
                     </table>
                 </EntrySectionContainer> : <span />
-        }
-    </React.Fragment>
-}
-
-interface EntryPolicySectionProps {
-    title: string,
-    color: string,
-    latency?: number,
-    arrayToIterate: any[],
-}
-
-interface EntryPolicySectionCollapsibleTitleProps {
-    label: string;
-    matched: string;
-    expanded: boolean;
-    setExpanded: any;
-}
-
-const EntryPolicySectionCollapsibleTitle: React.FC<EntryPolicySectionCollapsibleTitleProps> = ({ label, matched, expanded, setExpanded }) => {
-    return <div className={styles.title}>
-        <span
-            className={`${styles.button}
-            ${expanded ? styles.expanded : ''}`}
-            onClick={() => {
-                setExpanded(!expanded)
-            }}
-        >
-            {expanded ? '-' : '+'}
-        </span>
-        <span>
-            <tr className={styles.dataLine}>
-                <td className={`${styles.dataKey} ${styles.rulesTitleSuccess}`}>{label}</td>
-                <td className={`${styles.dataKey} ${matched === 'Success' ? styles.rulesMatchedSuccess : styles.rulesMatchedFailure}`}>{matched}</td>
-            </tr>
-        </span>
-    </div>
-}
-
-interface EntryPolicySectionContainerProps {
-    label: string;
-    matched: string;
-    children?: any;
-}
-
-export const EntryPolicySectionContainer: React.FC<EntryPolicySectionContainerProps> = ({ label, matched, children }) => {
-    const [expanded, setExpanded] = useState(false);
-    return <CollapsibleContainer
-        className={styles.collapsibleContainer}
-        expanded={expanded}
-        title={<EntryPolicySectionCollapsibleTitle label={label} matched={matched} expanded={expanded} setExpanded={setExpanded} />}
-    >
-        {children}
-    </CollapsibleContainer>
-}
-
-export const EntryTablePolicySection: React.FC<EntryPolicySectionProps> = ({ title, color, latency, arrayToIterate }) => {
-    return <React.Fragment>
-        {
-            arrayToIterate && arrayToIterate.length > 0 ?
-                <React.Fragment>
-                    <EntrySectionContainer title={title} color={color}>
-                        <table>
-                            <tbody>
-                                {arrayToIterate.map(({ rule, matched }, index) => {
-                                    return (
-                                        <EntryPolicySectionContainer key={index} label={rule.Name} matched={matched && (rule.Type === 'slo' ? rule.ResponseTime >= latency : true) ? "Success" : "Failure"}>
-                                            {
-                                                <React.Fragment>
-                                                    {
-                                                        rule.Key &&
-                                                        <tr className={styles.dataValue}><td><b>Key:</b></td> <td>{rule.Key}</td></tr>
-                                                    }
-                                                    {
-                                                        rule.ResponseTime !== 0 &&
-                                                        <tr className={styles.dataValue}><td><b>Response Time:</b></td> <td>{rule.ResponseTime}</td></tr>
-                                                    }
-                                                    {
-                                                        rule.Method &&
-                                                        <tr className={styles.dataValue}><td><b>Method:</b></td> <td>{rule.Method}</td></tr>
-                                                    }
-                                                    {
-                                                        rule.Path &&
-                                                        <tr className={styles.dataValue}><td><b>Path:</b></td> <td>{rule.Path}</td></tr>
-                                                    }
-                                                    {
-                                                        rule.Service &&
-                                                        <tr className={styles.dataValue}><td><b>Service:</b></td> <td>{rule.Service}</td></tr>
-                                                    }
-                                                    {
-                                                        rule.Type &&
-                                                        <tr className={styles.dataValue}><td><b>Type:</b></td> <td>{rule.Type}</td></tr>
-                                                    }
-                                                    {
-                                                        rule.Value &&
-                                                        <tr className={styles.dataValue}><td><b>Value:</b></td> <td>{rule.Value}</td></tr>
-                                                    }
-                                                </React.Fragment>
-                                            }
-                                        </EntryPolicySectionContainer>
-                                    )
-                                }
-                                )
-                                }
-                            </tbody>
-                        </table>
-                    </EntrySectionContainer>
-                </React.Fragment> : <span className={styles.noRules}>No rules could be applied to this request.</span>
         }
     </React.Fragment>
 }

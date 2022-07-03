@@ -23,7 +23,6 @@ const (
 	HumanMaxEntriesDBSizeTapName  = "max-entries-db-size"
 	InsertionFilterName           = "insertion-filter"
 	DryRunTapName                 = "dry-run"
-	EnforcePolicyFile             = "traffic-validation-file"
 	ServiceMeshName               = "service-mesh"
 	TlsName                       = "tls"
 	ProfilerName                  = "profiler"
@@ -42,7 +41,6 @@ type TapConfig struct {
 	HumanMaxEntriesDBSize  string           `yaml:"max-entries-db-size" default:"200MB"`
 	InsertionFilter        string           `yaml:"insertion-filter" default:""`
 	DryRun                 bool             `yaml:"dry-run" default:"false"`
-	EnforcePolicyFile      string           `yaml:"traffic-validation-file"`
 	ApiServerResources     shared.Resources `yaml:"api-server-resources"`
 	TapperResources        shared.Resources `yaml:"tapper-resources"`
 	ServiceMesh            bool             `yaml:"service-mesh" default:"false"`

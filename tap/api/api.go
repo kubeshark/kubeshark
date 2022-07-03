@@ -164,40 +164,30 @@ type Entry struct {
 	RequestSize  int                    `json:"requestSize"`
 	ResponseSize int                    `json:"responseSize"`
 	ElapsedTime  int64                  `json:"elapsedTime"`
-	Rules        ApplicableRules        `json:"rules,omitempty"`
 }
 
 type EntryWrapper struct {
-	Protocol       Protocol                 `json:"protocol"`
-	Representation string                   `json:"representation"`
-	Data           *Entry                   `json:"data"`
-	Base           *BaseEntry               `json:"base"`
-	Rules          []map[string]interface{} `json:"rulesMatched,omitempty"`
-	IsRulesEnabled bool                     `json:"isRulesEnabled"`
+	Protocol       Protocol   `json:"protocol"`
+	Representation string     `json:"representation"`
+	Data           *Entry     `json:"data"`
+	Base           *BaseEntry `json:"base"`
 }
 
 type BaseEntry struct {
-	Id           string          `json:"id"`
-	Protocol     Protocol        `json:"proto,omitempty"`
-	Capture      Capture         `json:"capture"`
-	Summary      string          `json:"summary,omitempty"`
-	SummaryQuery string          `json:"summaryQuery,omitempty"`
-	Status       int             `json:"status"`
-	StatusQuery  string          `json:"statusQuery"`
-	Method       string          `json:"method,omitempty"`
-	MethodQuery  string          `json:"methodQuery,omitempty"`
-	Timestamp    int64           `json:"timestamp,omitempty"`
-	Source       *TCP            `json:"src"`
-	Destination  *TCP            `json:"dst"`
-	IsOutgoing   bool            `json:"isOutgoing,omitempty"`
-	Latency      int64           `json:"latency"`
-	Rules        ApplicableRules `json:"rules,omitempty"`
-}
-
-type ApplicableRules struct {
-	Latency       int64 `json:"latency,omitempty"`
-	Status        bool  `json:"status,omitempty"`
-	NumberOfRules int   `json:"numberOfRules,omitempty"`
+	Id           string   `json:"id"`
+	Protocol     Protocol `json:"proto,omitempty"`
+	Capture      Capture  `json:"capture"`
+	Summary      string   `json:"summary,omitempty"`
+	SummaryQuery string   `json:"summaryQuery,omitempty"`
+	Status       int      `json:"status"`
+	StatusQuery  string   `json:"statusQuery"`
+	Method       string   `json:"method,omitempty"`
+	MethodQuery  string   `json:"methodQuery,omitempty"`
+	Timestamp    int64    `json:"timestamp,omitempty"`
+	Source       *TCP     `json:"src"`
+	Destination  *TCP     `json:"dst"`
+	IsOutgoing   bool     `json:"isOutgoing,omitempty"`
+	Latency      int64    `json:"latency"`
 }
 
 const (
