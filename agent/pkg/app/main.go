@@ -82,7 +82,7 @@ func LoadExtensions() {
 	})
 
 	api.InitMaps(ExtensionsMap, ProtocolsMap)
-	providers.SetProtocolMap(ProtocolsMap)
+	providers.InitProtocolToColor(ProtocolsMap)
 }
 
 func ConfigureBasenineServer(host string, port string, dbSize int64, logLevel logging.Level, insertionFilter string) {

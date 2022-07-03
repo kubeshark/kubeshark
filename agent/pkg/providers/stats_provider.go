@@ -60,6 +60,7 @@ var (
 	generalStats      = GeneralStats{}
 	bucketsStats      = BucketStats{}
 	bucketStatsLocker = sync.Mutex{}
+	protocolToColor   = map[string]string{}
 )
 
 const (
@@ -75,11 +76,10 @@ func GetGeneralStats() *GeneralStats {
 	return &generalStats
 }
 
-var protocolMap map[string]*api.Protocol
-var protocolToColor map[string]string
-
-func SetProtocolMap(input map[string]*api.Protocol) {
-	protocolMap = input
+func InitProtocolToColor(protocolMap map[string]*api.Protocol) {
+	for item, value := range protocolMap {
+		protocolToColor[strings.Split(item, "/")[2]] = value.BackgroundColor
+	}
 }
 
 func GetTrafficStats() *TrafficStatsResponse {
@@ -222,7 +222,7 @@ func convertAccumulativeStatsTimelineDictToArray(methodsPerProtocolPerTimeAggreg
 					EntriesCount:    entriesCount,
 					VolumeSizeBytes: volumeSizeBytes,
 				},
-				Color:   getColor(protocolName),
+				Color:   protocolToColor[protocolName],
 				Methods: methods,
 			})
 		}
@@ -251,22 +251,11 @@ func convertAccumulativeStatsDictToArray(methodsPerProtocolAggregated map[string
 				EntriesCount:    entriesCount,
 				VolumeSizeBytes: volumeSizeBytes,
 			},
-			Color:   getColor(protocolName),
+			Color:   protocolToColor[protocolName],
 			Methods: methods,
 		})
 	}
 	return protocolsData
-}
-
-func getColor(protocolName string) string {
-	if protocolToColor == nil {
-		result := map[string]string{}
-		for item, value := range protocolMap {
-			result[strings.Split(item, "/")[2]] = value.BackgroundColor
-		}
-		protocolToColor = result
-	}
-	return protocolToColor[protocolName]
 }
 
 func getBucketStatsCopy() BucketStats {
