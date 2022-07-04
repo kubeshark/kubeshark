@@ -7,16 +7,27 @@ export interface WithLoadingProps {
     loaderHeight?: number
 }
 
+const Loader = ({ loaderMargin = 20, loaderHeight = 35 }: Omit<WithLoadingProps, "isLoading">) => {
+    return <div style={{ textAlign: "center", margin: loaderMargin }}>
+        <img alt="spinner" src={spinner} style={{ height: loaderHeight }} />
+    </div>
+}
+
 const withLoading = <P extends object>(
     Component: React.ComponentType<P>
 ): React.FC<P & WithLoadingProps> => ({
     isLoading,
-    loaderMargin = 20,
-    loaderHeight = 35,
+    loaderMargin,
+    loaderHeight,
     ...props
-}: WithLoadingProps) => isLoading ? <div style={{ textAlign: "center", margin: 20 }}>
-    <img alt="spinner" src={spinner} style={{ height: 35 }} />
-</div> : <Component {...props as P} />;
+}: WithLoadingProps) => isLoading ?
+            <Loader loaderMargin={loaderMargin} loaderHeight={loaderHeight} /> :
+            <Component {...props as P} />;
 
+export const LoadingWrapper: React.FC<WithLoadingProps> = ({ loaderMargin, loaderHeight, isLoading, children }) => {
+    return isLoading ?
+        <Loader loaderMargin={loaderMargin} loaderHeight={loaderHeight} /> :
+        <React.Fragment>{children}</React.Fragment>
+}
 
 export default withLoading
