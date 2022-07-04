@@ -329,13 +329,17 @@ func getAggregatedStats(stats BucketStats) map[string]map[string]*AccumulativeSt
 }
 
 func getAvailableProtocols(stats BucketStats) []string {
-	protocols := make([]string, 0)
+	protocols := map[string]bool{}
 	for _, countersOfTimeFrame := range stats {
 		for protocolName := range countersOfTimeFrame.ProtocolStats {
-			protocols = append(protocols, protocolName)
+			protocols[protocolName] = true
 		}
 	}
 
-	protocols = append(protocols, "ALL")
-	return protocols
+	result := make([]string, 0)
+	for protocol := range protocols {
+		result = append(result, protocol)
+	}
+	result = append(result, "ALL")
+	return result
 }
