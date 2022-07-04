@@ -27,7 +27,7 @@ export const AutoRepresentation: React.FC<any> = ({ representation, color, opene
         const arr = [
             {
                 tab: 'Request',
-                badge: isReplayDisplayed() && <span title="Replay Request"><ReplayIcon fill={color} stroke={color} style={{ marginLeft: "10px", cursor: "pointer", height: "22px" }} onClick={() => setIsOpenRequestModal(true)} /></span>
+                badge: null
             }]
 
         if (response) {
@@ -40,7 +40,7 @@ export const AutoRepresentation: React.FC<any> = ({ representation, color, opene
         }
 
         return arr
-    }, [color, isReplayDisplayed, response, setIsOpenRequestModal]);
+    }, [response]);
 
     const [currentTab, setCurrentTab] = useState(TABS[0].tab);
 
@@ -66,6 +66,7 @@ export const AutoRepresentation: React.FC<any> = ({ representation, color, opene
         {<div className={styles.body}>
             <div className={styles.bodyHeader}>
                 <Tabs tabs={TABS} currentTab={currentTab} color={color} onChange={setCurrentTab} leftAligned />
+                {isReplayDisplayed() && <span title="Replay Request"><ReplayIcon fill={color} stroke={color} style={{ marginLeft: "10px", cursor: "pointer", height: "22px" }} onClick={() => setIsOpenRequestModal(true)} /></span>}
             </div>
             {getOpenedTabIndex() === TabsEnum.Request && <React.Fragment>
                 <SectionsRepresentation data={request} color={color} requestRepresentation={request} />
