@@ -13,7 +13,7 @@ const modalStyle = {
   top: '6%',
   left: '50%',
   transform: 'translate(-50%, 0%)',
-  width: '50vw',
+  width: '60vw',
   height: '82vh',
   bgcolor: 'background.paper',
   borderRadius: '5px',
@@ -30,14 +30,14 @@ export enum StatsMode {
 interface TrafficStatsModalProps {
   isOpen: boolean;
   onClose: () => void;
-  getPieStatsDataApi: () => Promise<any>
-  getTimelineStatsDataApi: () => Promise<any>
+  getTrafficStatsDataApi: () => Promise<any>
 }
 
-export const PROTOCOLS = ["ALL", "gRPC", "REDIS", "HTTP", "GQL", "AMQP", "KFAKA"];
+
+export const PROTOCOLS = ["ALL", "gRPC", "REDIS", "HTTP", "GQL", "AMQP", "KAFKA"];
 export const ALL_PROTOCOLS = PROTOCOLS[0];
 
-export const TrafficStatsModal: React.FC<TrafficStatsModalProps> = ({ isOpen, onClose, getPieStatsDataApi, getTimelineStatsDataApi }) => {
+export const TrafficStatsModal: React.FC<TrafficStatsModalProps> = ({ isOpen, onClose, getTrafficStatsDataApi }) => {
 
   const modes = Object.keys(StatsMode).filter(x => !(parseInt(x) >= 0));
   const [statsMode, setStatsMode] = useState(modes[0]);
@@ -48,14 +48,13 @@ export const TrafficStatsModal: React.FC<TrafficStatsModalProps> = ({ isOpen, on
   const commonClasses = useCommonStyles();
 
   const getTrafficStats = useCallback(async () => {
-    if (isOpen && getPieStatsDataApi) {
+    if (isOpen && getTrafficStatsDataApi) {
       (async () => {
         try {
           setIsLoading(true);
-          const pieData = await getPieStatsDataApi();
-          setPieStatsData(pieData);
-          const timelineData = await getTimelineStatsDataApi();
-          setTimelineStatsData(timelineData);
+          const statsData = await getTrafficStatsDataApi();
+          setPieStatsData(statsData.pie);
+          setTimelineStatsData(statsData.timeline);
         } catch (e) {
           console.error(e)
         } finally {
@@ -63,7 +62,7 @@ export const TrafficStatsModal: React.FC<TrafficStatsModalProps> = ({ isOpen, on
         }
       })()
     }
-  }, [isOpen, getPieStatsDataApi, getTimelineStatsDataApi, setPieStatsData, setTimelineStatsData])
+  }, [isOpen, getTrafficStatsDataApi, setPieStatsData, setTimelineStatsData])
 
   useEffect(() => {
     getTrafficStats();

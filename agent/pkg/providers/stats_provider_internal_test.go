@@ -26,38 +26,6 @@ func TestGetBucketOfTimeStamp(t *testing.T) {
 	}
 }
 
-type DataForBucketBorderFunction struct {
-	EndTime           time.Time
-	IntervalInSeconds int
-	NumberOfBars      int
-}
-
-func TestGetBucketBorders(t *testing.T) {
-	tests := map[DataForBucketBorderFunction]time.Time{
-		DataForBucketBorderFunction{
-			time.Date(2022, time.Month(1), 1, 10, 34, 45, 0, time.UTC),
-			300,
-			10,
-		}: time.Date(2022, time.Month(1), 1, 9, 45, 0, 0, time.UTC),
-		DataForBucketBorderFunction{
-			time.Date(2022, time.Month(1), 1, 10, 35, 45, 0, time.UTC),
-			60,
-			5,
-		}: time.Date(2022, time.Month(1), 1, 10, 31, 00, 0, time.UTC),
-	}
-
-	for key, value := range tests {
-		t.Run(fmt.Sprintf("%v", key), func(t *testing.T) {
-
-			actual := getFirstBucketTime(key.EndTime, key.IntervalInSeconds, key.NumberOfBars)
-
-			if actual != value {
-				t.Errorf("unexpected result - expected: %v, actual: %v", value, actual)
-			}
-		})
-	}
-}
-
 func TestGetAggregatedStatsAllTime(t *testing.T) {
 	bucketStatsForTest := BucketStats{
 		&TimeFrameStatsValue{
@@ -140,7 +108,7 @@ func TestGetAggregatedStatsAllTime(t *testing.T) {
 			},
 		},
 	}
-	actual, _ := getAggregatedStatsAllTime(bucketStatsForTest)
+	actual := getAggregatedStats(bucketStatsForTest)
 
 	if !reflect.DeepEqual(actual, expected) {
 		t.Errorf("unexpected result - expected: %v, actual: %v", 3, len(actual))
@@ -227,7 +195,7 @@ func TestGetAggregatedStatsFromSpecificTime(t *testing.T) {
 			},
 		},
 	}
-	actual, _ := getAggregatedResultTimingFromSpecificTime(300, bucketStatsForTest, time.Date(2022, time.Month(1), 1, 10, 00, 00, 0, time.UTC))
+	actual := getAggregatedResultTiming(time.Minute*5, bucketStatsForTest)
 
 	if !reflect.DeepEqual(actual, expected) {
 		t.Errorf("unexpected result - expected: %v, actual: %v", 3, len(actual))
@@ -323,7 +291,7 @@ func TestGetAggregatedStatsFromSpecificTimeMultipleBuckets(t *testing.T) {
 			},
 		},
 	}
-	actual, _ := getAggregatedResultTimingFromSpecificTime(60, bucketStatsForTest, time.Date(2022, time.Month(1), 1, 10, 00, 00, 0, time.UTC))
+	actual := getAggregatedResultTiming(time.Minute, bucketStatsForTest)
 
 	if !reflect.DeepEqual(actual, expected) {
 		t.Errorf("unexpected result - expected: %v, actual: %v", 3, len(actual))

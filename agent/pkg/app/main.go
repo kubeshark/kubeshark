@@ -9,6 +9,7 @@ import (
 	"github.com/op/go-logging"
 	basenine "github.com/up9inc/basenine/client/go"
 	"github.com/up9inc/mizu/agent/pkg/api"
+	"github.com/up9inc/mizu/agent/pkg/providers"
 	"github.com/up9inc/mizu/agent/pkg/utils"
 	"github.com/up9inc/mizu/logger"
 	tapApi "github.com/up9inc/mizu/tap/api"
@@ -81,6 +82,7 @@ func LoadExtensions() {
 	})
 
 	api.InitMaps(ExtensionsMap, ProtocolsMap)
+	providers.InitProtocolToColor(ProtocolsMap)
 }
 
 func ConfigureBasenineServer(host string, port string, dbSize int64, logLevel logging.Level, insertionFilter string) {
