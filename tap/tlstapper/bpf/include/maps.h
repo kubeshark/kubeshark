@@ -26,11 +26,11 @@ Copyright (C) UP9 Inc.
 //
 
 struct address_pair {
-    __u32 is_address_pair_valid;
-    __u32 saddr;
-    __u32 daddr;
-    __u16 sport;
-    __u16 dport;
+    __be32 is_address_pair_valid;
+    __be32 saddr;
+    __be32 daddr;
+    __be16 sport;
+    __be16 dport;
 };
 
 struct tls_chunk {
