@@ -243,7 +243,6 @@ const ReplayRequestModal: React.FC<ReplayRequestModalProps> = ({ isOpen, onClose
                                 </AccordionDetails>
                             </Accordion>)}
                         </LoadingWrapper>
-                        </LoadingWrapper>
                     </div>
                 </Box>
             </Fade>
