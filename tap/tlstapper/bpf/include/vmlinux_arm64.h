@@ -1,3 +1,5 @@
+#if defined(bpf_target_arm64)
+
 #ifndef __VMLINUX_H__
 #define __VMLINUX_H__
 
@@ -157104,3 +157106,5 @@ union efi_pci_io_protocol {
 #endif
 
 #endif /* __VMLINUX_H__ */
+
+#endif /* defined(bpf_target_arm64) */

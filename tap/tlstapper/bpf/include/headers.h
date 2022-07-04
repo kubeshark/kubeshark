@@ -8,9 +8,13 @@ Copyright (C) UP9 Inc.
 #define __HEADERS__
 
 #include <stddef.h>
+
 #include "target_arch.h"
-#include "vmlinux.h"
-#include "vmlinux_legacy.h"
+#include "vmlinux_x86.h"
+#include "vmlinux_arm64.h"
+
+#include "legacy_kernel.h"
+
 #include <bpf/bpf_helpers.h>
 #include <bpf/bpf_tracing.h>
 #include <bpf/bpf_core_read.h>

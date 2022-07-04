@@ -1,5 +1,5 @@
-#ifndef __VMLINUX_LEGACY_H__
-#define __VMLINUX_LEGACY_H__
+#ifndef __LEGACY_KERNEL_H__
+#define __LEGACY_KERNEL_H__
 
 #if defined(bpf_target_x86)
 
@@ -47,4 +47,4 @@ struct thread_struct___v46 {
 
 #endif
 
-#endif /* __VMLINUX_H__ */
+#endif /* __LEGACY_KERNEL_H__ */

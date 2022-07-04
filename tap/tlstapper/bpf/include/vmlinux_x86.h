@@ -1,3 +1,5 @@
+#if defined(bpf_target_x86)
+
 #ifndef __VMLINUX_H__
 #define __VMLINUX_H__
 
@@ -124042,3 +124044,5 @@ struct restore_data_record {
 #endif
 
 #endif /* __VMLINUX_H__ */
+
+#endif /* defined(bpf_target_x86) */
