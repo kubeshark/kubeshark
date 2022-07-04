@@ -118,7 +118,7 @@ static __always_inline __u32 go_crypto_tls_get_fd_from_tcp_conn(struct pt_regs *
     if (err != 0) {
         return invalid_fd;
     }
-#else
+#elif defined(bpf_target_x86)
     if (abi == ABI0) {
         err = bpf_probe_read(&addr, sizeof(addr), (void*)GO_ABI_INTERNAL_PT_REGS_SP(ctx)+0x8);
         if (err != 0) {
@@ -165,7 +165,7 @@ static __always_inline void go_crypto_tls_uprobe(struct pt_regs *ctx, struct bpf
         log_error(ctx, LOG_ERROR_READING_BYTES_COUNT, pid_tgid, err, ORIGIN_SSL_UPROBE_CODE);
         return;
     }
-#else
+#elif defined(bpf_target_x86)
     if (abi == ABI0) {
         err = bpf_probe_read(&info.buffer_len, sizeof(__u32), (void*)GO_ABI_0_PT_REGS_SP(ctx)+0x18);
         if (err != 0) {
@@ -199,7 +199,7 @@ static __always_inline void go_crypto_tls_uprobe(struct pt_regs *ctx, struct bpf
 #if defined(bpf_target_arm64)
         // In case of ABI0 and arm64, it's stored in the Goroutine register
         goroutine_id = GO_ABI_0_PT_REGS_GP(ctx);
-#else
+#elif defined(bpf_target_x86)
         // In case of ABI0 and amd64, it's stored in the thread-local storage
         int status = get_goid_from_thread_local_storage(&goroutine_id);
         if (!status) {
@@ -232,7 +232,7 @@ static __always_inline void go_crypto_tls_ex_uprobe(struct pt_regs *ctx, struct 
 #if defined(bpf_target_arm64)
         // In case of ABI0 and arm64, it's stored in the Goroutine register
         goroutine_id = GO_ABI_0_PT_REGS_GP(ctx);
-#else
+#elif defined(bpf_target_x86)
         // In case of ABI0 and amd64, it's stored in the thread-local storage
         int status = get_goid_from_thread_local_storage(&goroutine_id);
         if (!status) {
@@ -267,7 +267,7 @@ static __always_inline void go_crypto_tls_ex_uprobe(struct pt_regs *ctx, struct 
             return;
         }
         info.buffer_len = GO_ABI_INTERNAL_PT_REGS_R7(ctx); // n in return n, nil
-#else
+#elif defined(bpf_target_x86)
         if (abi == ABI0) {
             // n in return n, nil
             err = bpf_probe_read(&info.buffer_len, sizeof(__u32), (void*)GO_ABI_0_PT_REGS_SP(ctx)+0x28);
