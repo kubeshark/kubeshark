@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"encoding/binary"
 	"net"
+	"unsafe"
 
 	"github.com/go-errors/errors"
 	"github.com/up9inc/mizu/tap/api"
@@ -37,14 +38,14 @@ func (c *tlsTapperTlsChunk) getFdAddress() (net.IP, uint16, error) {
 
 func (c *tlsTapperTlsChunk) getDstAddress() (net.IP, uint16) {
 	ip := intToIP(c.KprobeAddressPair.Daddr)
-	port := c.KprobeAddressPair.Dport
+	port := ntohs(c.KprobeAddressPair.Dport)
 
 	return ip, port
 }
 
 func (c *tlsTapperTlsChunk) getSrcAddress() (net.IP, uint16) {
 	ip := intToIP(c.KprobeAddressPair.Saddr)
-	port := c.KprobeAddressPair.Sport
+	port := ntohs(c.KprobeAddressPair.Sport)
 
 	return ip, port
 }
@@ -130,8 +131,13 @@ func (c *tlsTapperTlsChunk) getKprobeAddressPair() (addressPair, bool) {
 }
 
 // intToIP converts IPv4 number to net.IP
-func intToIP(ipNum uint32) net.IP {
-	ip := make(net.IP, 4)
-	binary.BigEndian.PutUint32(ip, ipNum)
-	return ip
+func intToIP(ip32be uint32) net.IP {
+	return net.IPv4(uint8(ip32be), uint8(ip32be >> 8), uint8(ip32be >> 16), uint8(ip32be >> 24))
+}
+
+// ntohs converts big endian (network byte order) to little endian (assuming that's the host byte order)
+func ntohs(i16be uint16) uint16 {
+	b := make([]byte, 2)
+	binary.BigEndian.PutUint16(b, i16be)
+	return *(*uint16)(unsafe.Pointer(&b[0]))
 }

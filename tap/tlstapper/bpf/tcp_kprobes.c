@@ -33,10 +33,13 @@ static __always_inline void tcp_kprobe(struct pt_regs *ctx, struct bpf_map_def *
 		return;
 	}
 
+	// daddr, saddr and dport are in network byte order (big endian)
+	// sport is in host byte order
 	__be32 saddr;
 	__be32 daddr;
 	__be16 dport;
 	__u16 sport;
+
 	err = bpf_probe_read(&saddr, sizeof(saddr), (void *)&sk->__sk_common.skc_rcv_saddr);
 	if (err != 0) {
 		log_error(ctx, LOG_ERROR_READING_SOCKET_SADDR, id, err, 0l);
@@ -62,7 +65,7 @@ static __always_inline void tcp_kprobe(struct pt_regs *ctx, struct bpf_map_def *
 	info_ptr->kprobe_address_pair.daddr = daddr;
 	info_ptr->kprobe_address_pair.saddr = saddr;
 	info_ptr->kprobe_address_pair.dport = dport;
-	info_ptr->kprobe_address_pair.sport = sport;
+	info_ptr->kprobe_address_pair.sport = bpf_htons(sport);
 }
 
 SEC("kprobe/tcp_sendmsg")
