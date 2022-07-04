@@ -135,11 +135,11 @@ export const EntryDetailed = () => {
         // eslint-disable-next-line
     }, [focusedEntryId]);
 
-    return <React.Fragment>
-        <LoadingWrapper isLoading={isLoading} loaderMargin={50} loaderHeight={60}>
-            {entryData && <EntryTitle protocol={entryData.protocol} data={entryData.data} elapsedTime={entryData.data.elapsedTime} />}
-            {entryData && <EntrySummary entry={entryData.base} namespace={entryData.data.namespace} />}
-            {entryData && <EntryViewer representation={entryData.representation} color={entryData.protocol.backgroundColor} />}
-        </LoadingWrapper>
-    </React.Fragment>
+    return <LoadingWrapper isLoading={isLoading} loaderMargin={50} loaderHeight={60}>
+        {entryData && <React.Fragment>
+            <EntryTitle protocol={entryData.protocol} data={entryData.data} elapsedTime={entryData.data.elapsedTime} />
+            <EntrySummary entry={entryData.base} namespace={entryData.data.namespace} />
+            <EntryViewer representation={entryData.representation} color={entryData.protocol.backgroundColor} />
+        </React.Fragment>}
+    </LoadingWrapper>
 };

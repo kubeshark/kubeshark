@@ -234,7 +234,7 @@ const ReplayRequestModal: React.FC<ReplayRequestModalProps> = ({ isOpen, onClose
                             </AccordionDetails>
                         </Accordion>
                         <LoadingWrapper isLoading={isLoading} loaderMargin={10} loaderHeight={50}>
-                            {response && !isLoading && (<Accordion TransitionProps={{ unmountOnExit: true }} expanded={responseExpanded} onChange={() => setResponseExpanded(!responseExpanded)}>
+                            {response && (<Accordion TransitionProps={{ unmountOnExit: true }} expanded={responseExpanded} onChange={() => setResponseExpanded(!responseExpanded)}>
                                 <AccordionSummary expandIcon={<ExpandMoreIcon />} aria-controls="response-content">
                                     <span className={styles.sectionHeader}>RESPONSE</span>
                                 </AccordionSummary>
@@ -242,6 +242,7 @@ const ReplayRequestModal: React.FC<ReplayRequestModalProps> = ({ isOpen, onClose
                                     <AutoRepresentation representation={response} color={entryData.protocol.backgroundColor} openedTab={TabsEnum.Response} />
                                 </AccordionDetails>
                             </Accordion>)}
+                        </LoadingWrapper>
                         </LoadingWrapper>
                     </div>
                 </Box>
