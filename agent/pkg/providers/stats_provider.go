@@ -52,6 +52,7 @@ type AccumulativeStatsProtocolTime struct {
 }
 
 type TrafficStatsResponse struct {
+	Protocols     []string                         `json:"protocols"`
 	PieStats      []*AccumulativeStatsProtocol     `json:"pie"`
 	TimelineStats []*AccumulativeStatsProtocolTime `json:"timeline"`
 }
@@ -84,12 +85,27 @@ func InitProtocolToColor(protocolMap map[string]*api.Protocol) {
 
 func GetTrafficStats() *TrafficStatsResponse {
 	bucketsStatsCopy := getBucketStatsCopy()
-	interval := calculateInterval(bucketsStatsCopy[0].BucketTime.Unix(), bucketsStatsCopy[len(bucketsStatsCopy)-1].BucketTime.Unix()) // in seconds
 
 	return &TrafficStatsResponse{
+		Protocols:     getAvailableProtocols(bucketsStatsCopy),
 		PieStats:      getAccumulativeStats(bucketsStatsCopy),
-		TimelineStats: getAccumulativeStatsTiming(bucketsStatsCopy, interval),
+		TimelineStats: getAccumulativeStatsTiming(bucketsStatsCopy),
 	}
+}
+
+func EntryAdded(size int, summery *api.BaseEntry) {
+	generalStats.EntriesCount++
+	generalStats.EntriesVolumeInGB += float64(size) / (1 << 30)
+
+	currentTimestamp := int(time.Now().Unix())
+
+	if reflect.Value.IsZero(reflect.ValueOf(generalStats.FirstEntryTimestamp)) {
+		generalStats.FirstEntryTimestamp = currentTimestamp
+	}
+
+	addToBucketStats(size, summery)
+
+	generalStats.LastEntryTimestamp = currentTimestamp
 }
 
 func calculateInterval(firstTimestamp int64, lastTimestamp int64) time.Duration {
@@ -140,29 +156,15 @@ func getAccumulativeStats(stats BucketStats) []*AccumulativeStatsProtocol {
 	return convertAccumulativeStatsDictToArray(methodsPerProtocolAggregated)
 }
 
-func getAccumulativeStatsTiming(stats BucketStats, interval time.Duration) []*AccumulativeStatsProtocolTime {
+func getAccumulativeStatsTiming(stats BucketStats) []*AccumulativeStatsProtocolTime {
 	if len(stats) == 0 {
 		return make([]*AccumulativeStatsProtocolTime, 0)
 	}
 
-	methodsPerProtocolPerTimeAggregated := getAggregatedResultTiming(interval, stats)
+	interval := calculateInterval(stats[0].BucketTime.Unix(), stats[len(stats)-1].BucketTime.Unix()) // in seconds
+	methodsPerProtocolPerTimeAggregated := getAggregatedResultTiming(stats, interval)
 
 	return convertAccumulativeStatsTimelineDictToArray(methodsPerProtocolPerTimeAggregated)
-}
-
-func EntryAdded(size int, summery *api.BaseEntry) {
-	generalStats.EntriesCount++
-	generalStats.EntriesVolumeInGB += float64(size) / (1 << 30)
-
-	currentTimestamp := int(time.Now().Unix())
-
-	if reflect.Value.IsZero(reflect.ValueOf(generalStats.FirstEntryTimestamp)) {
-		generalStats.FirstEntryTimestamp = currentTimestamp
-	}
-
-	addToBucketStats(size, summery)
-
-	generalStats.LastEntryTimestamp = currentTimestamp
 }
 
 func addToBucketStats(size int, summery *api.BaseEntry) {
@@ -269,7 +271,7 @@ func getBucketStatsCopy() BucketStats {
 	return bucketStatsCopy
 }
 
-func getAggregatedResultTiming(interval time.Duration, stats BucketStats) map[time.Time]map[string]map[string]*AccumulativeStatsCounter {
+func getAggregatedResultTiming(stats BucketStats, interval time.Duration) map[time.Time]map[string]map[string]*AccumulativeStatsCounter {
 	methodsPerProtocolPerTimeAggregated := map[time.Time]map[string]map[string]*AccumulativeStatsCounter{}
 
 	bucketStatsIndex := len(stats) - 1
@@ -303,9 +305,9 @@ func getAggregatedResultTiming(interval time.Duration, stats BucketStats) map[ti
 	return methodsPerProtocolPerTimeAggregated
 }
 
-func getAggregatedStats(bucketStatsCopy BucketStats) map[string]map[string]*AccumulativeStatsCounter {
+func getAggregatedStats(stats BucketStats) map[string]map[string]*AccumulativeStatsCounter {
 	methodsPerProtocolAggregated := make(map[string]map[string]*AccumulativeStatsCounter, 0)
-	for _, countersOfTimeFrame := range bucketStatsCopy {
+	for _, countersOfTimeFrame := range stats {
 		for protocolName, value := range countersOfTimeFrame.ProtocolStats {
 			for method, countersValue := range value.MethodsStats {
 				if _, found := methodsPerProtocolAggregated[protocolName]; !found {
@@ -324,4 +326,16 @@ func getAggregatedStats(bucketStatsCopy BucketStats) map[string]map[string]*Accu
 		}
 	}
 	return methodsPerProtocolAggregated
+}
+
+func getAvailableProtocols(stats BucketStats) []string {
+	protocols := make([]string, 0)
+	for _, countersOfTimeFrame := range stats {
+		for protocolName := range countersOfTimeFrame.ProtocolStats {
+			protocols = append(protocols, protocolName)
+		}
+	}
+
+	protocols = append(protocols, "ALL")
+	return protocols
 }
