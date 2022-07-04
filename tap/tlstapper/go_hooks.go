@@ -41,6 +41,17 @@ func (s *goHooks) installHooks(bpfObjects *tlsTapperObjects, ex *link.Executable
 		goCryptoTlsWriteEx = bpfObjects.GoCryptoTlsAbi0WriteEx
 		goCryptoTlsRead = bpfObjects.GoCryptoTlsAbi0Read
 		goCryptoTlsReadEx = bpfObjects.GoCryptoTlsAbi0ReadEx
+
+		// Pass goid and g struct offsets to an eBPF map to retrieve it in eBPF context
+		if err := bpfObjects.tlsTapperMaps.GoidOffsetsMap.Put(
+			uint32(0),
+			tlsTapperGoidOffsets{
+				G_addrOffset: offsets.GStructOffset,
+				GoidOffset:   offsets.GoidOffset,
+			},
+		); err != nil {
+			return errors.Wrap(err, 0)
+		}
 	}
 
 	// Symbol points to
@@ -85,17 +96,6 @@ func (s *goHooks) installHooks(bpfObjects *tlsTapperObjects, ex *link.Executable
 		}
 
 		s.goReadExProbes = append(s.goReadExProbes, probe)
-	}
-
-	// Pass goid and g struct offsets to an eBPF map to retrieve it in eBPF context
-	if err := bpfObjects.tlsTapperMaps.GoidOffsetsMap.Put(
-		uint32(0),
-		tlsTapperGoidOffsets{
-			G_addrOffset: offsets.GStructOffset,
-			GoidOffset:   offsets.GoidOffset,
-		},
-	); err != nil {
-		return errors.Wrap(err, 0)
 	}
 
 	return nil
