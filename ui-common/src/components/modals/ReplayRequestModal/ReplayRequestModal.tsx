@@ -14,7 +14,7 @@ import styles from './ReplayRequestModal.module.sass'
 import closeIcon from "assets/close.svg"
 import spinnerImg from "assets/spinner.svg"
 import refreshImg from "assets/refresh.svg"
-import { formatRequest } from "../../EntryDetailed/EntrySections/EntrySections";
+import { formatRequestWithOutError } from "../../EntryDetailed/EntrySections/EntrySections";
 import entryDataAtom from "../../../recoil/entryData";
 import { AutoRepresentation, TabsEnum } from "../../EntryDetailed/EntryViewer/AutoRepresentation";
 import useDebounce from "../../../hooks/useDebounce"
@@ -175,7 +175,7 @@ const ReplayRequestModal: React.FC<ReplayRequestModalProps> = ({ isOpen, onClose
             </Fragment>
             break;
         case RequestTabs.Body:
-            const formatedCode = formatRequest(postData || "", request?.postData?.mimeType)
+            const formatedCode = formatRequestWithOutError(postData || "", request?.postData?.mimeType)
             innerComponent = <div className={styles.codeEditor}>
                 <CodeEditor language={request?.postData?.mimeType.split("/")[1]}
                     code={Utils.isJson(formatedCode) ? JSON.stringify(JSON.parse(formatedCode || "{}"), null, 2) : formatedCode}
