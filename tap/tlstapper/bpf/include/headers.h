@@ -8,8 +8,11 @@ Copyright (C) UP9 Inc.
 #define __HEADERS__
 
 #include <stddef.h>
+#include "target_arch.h"
 #include "vmlinux.h"
+#include "vmlinux_legacy.h"
 #include <bpf/bpf_helpers.h>
-#include "bpf/bpf_tracing.h"
+#include <bpf/bpf_tracing.h>
+#include <bpf/bpf_core_read.h>
 
 #endif /* __HEADERS__ */

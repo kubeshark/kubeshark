@@ -61,12 +61,10 @@ Capstone Engine: https://www.capstone-engine.org/
 #include "include/go_types.h"
 
 
-// Ring buffer map type requires Linux kernel version at least 5.8
-// Source: https://github.com/iovisor/bcc/blob/master/docs/kernel-versions.md#tables-aka-maps
-struct {
-    __uint(type, BPF_MAP_TYPE_RINGBUF);
-    __uint(max_entries, 1 << 24);
-} task_struct_heap SEC(".maps");
+// TODO: cilium/ebpf does not support .kconfig Therefore; for now, we build object files per kernel version.
+// Error: reference to .kconfig: not supported
+// See: https://github.com/cilium/ebpf/issues/698
+// extern int LINUX_KERNEL_VERSION __kconfig;
 
 enum ABI {
     ABI0=0,
@@ -83,32 +81,30 @@ static __always_inline __u32 get_goid_from_thread_local_storage(__u64 *goroutine
         return 0;
     }
 
-    // We need another heap for task_struct in here.
-    // So we reserve from BPF_MAP_TYPE_RINGBUF defined above.
-    // It's different than the heap for tls_cunk in maps.h
-    // Using BPF_MAP_TYPE_PERCPU_ARRAY for task_struct makes the generator fail.
-    struct task_struct *task;
-    task = bpf_ringbuf_reserve(&task_struct_heap, sizeof(struct task_struct), 0);
-    if (!task) {
-        return 0;
-    }
-
     // Get the task that currently assigned to this thread.
-    __u64 task_ptr = bpf_get_current_task();
-    if (!task_ptr) {
-        bpf_ringbuf_discard(task, BPF_RB_FORCE_WAKEUP);
+    struct task_struct *task = (struct task_struct*) bpf_get_current_task();
+    if (task == NULL) {
         return 0;
     }
 
-    // Read the struct out of kernel memory.
-    bpf_probe_read_kernel(task, sizeof(struct task_struct), (void*)(task_ptr));
+    // Read task->thread
+    struct thread_struct *thr;
+    bpf_probe_read(&thr, sizeof(thr), &task->thread);
+
+    // Read task->thread.fsbase
+    u64 fsbase;
+#ifdef KERNEL_BEFORE_4_6
+    // TODO: if (LINUX_KERNEL_VERSION <= KERNEL_VERSION(4, 6, 0)) {
+    fsbase = BPF_CORE_READ((struct thread_struct___v46 *)thr, fs);
+#else
+    fsbase = BPF_CORE_READ(thr, fsbase);
+#endif
 
     // Get the Goroutine ID (goid) which is stored in thread-local storage.
     size_t g_addr;
-    bpf_probe_read_user(&g_addr, sizeof(void *), (void*)(task->thread.fsbase + offsets->g_addr_offset));
+    bpf_probe_read_user(&g_addr, sizeof(void *), (void*)(fsbase + offsets->g_addr_offset));
     bpf_probe_read_user(goroutine_id, sizeof(void *), (void*)(g_addr + offsets->goid_offset));
 
-    bpf_ringbuf_discard(task, BPF_RB_FORCE_WAKEUP);
     return 1;
 }
 #endif
