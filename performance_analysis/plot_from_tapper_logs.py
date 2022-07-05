@@ -57,7 +57,7 @@ def extract_samples(f: typing.IO) -> typing.Tuple[pd.Series, pd.Series, pd.Serie
         append_sample('"matchedPairs"', line, matched_samples)
         append_sample('"liveTcpStreams"', line, live_samples)
         append_sample('"processedBytes"', line, processed_samples)
-        append_sample('mem', line, heap_samples)
+        append_sample('heap-alloc', line, heap_samples)
         append_sample('goroutines', line, goroutines_samples)
 
     cpu_samples = pd.Series(cpu_samples)

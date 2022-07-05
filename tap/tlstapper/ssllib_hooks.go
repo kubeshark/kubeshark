@@ -107,47 +107,47 @@ func (s *sslHooks) installSslHooks(bpfObjects *tlsTapperObjects, sslLibrary *lin
 }
 
 func (s *sslHooks) close() []error {
-	errors := make([]error, 0)
+	returnValue := make([]error, 0)
 
 	if err := s.sslWriteProbe.Close(); err != nil {
-		errors = append(errors, err)
+		returnValue = append(returnValue, err)
 	}
 
 	if err := s.sslWriteRetProbe.Close(); err != nil {
-		errors = append(errors, err)
+		returnValue = append(returnValue, err)
 	}
 
 	if err := s.sslReadProbe.Close(); err != nil {
-		errors = append(errors, err)
+		returnValue = append(returnValue, err)
 	}
 
 	if err := s.sslReadRetProbe.Close(); err != nil {
-		errors = append(errors, err)
+		returnValue = append(returnValue, err)
 	}
 
 	if s.sslWriteExProbe != nil {
 		if err := s.sslWriteExProbe.Close(); err != nil {
-			errors = append(errors, err)
+			returnValue = append(returnValue, err)
 		}
 	}
 
 	if s.sslWriteExRetProbe != nil {
 		if err := s.sslWriteExRetProbe.Close(); err != nil {
-			errors = append(errors, err)
+			returnValue = append(returnValue, err)
 		}
 	}
 
 	if s.sslReadExProbe != nil {
 		if err := s.sslReadExProbe.Close(); err != nil {
-			errors = append(errors, err)
+			returnValue = append(returnValue, err)
 		}
 	}
 
 	if s.sslReadExRetProbe != nil {
 		if err := s.sslReadExRetProbe.Close(); err != nil {
-			errors = append(errors, err)
+			returnValue = append(returnValue, err)
 		}
 	}
 
-	return errors
+	return returnValue
 }

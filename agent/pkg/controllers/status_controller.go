@@ -79,6 +79,10 @@ func GetGeneralStats(c *gin.Context) {
 	c.JSON(http.StatusOK, providers.GetGeneralStats())
 }
 
+func GetTrafficStats(c *gin.Context) {
+	c.JSON(http.StatusOK, providers.GetTrafficStats())
+}
+
 func GetCurrentResolvingInformation(c *gin.Context) {
 	c.JSON(http.StatusOK, holder.GetResolver().GetMap())
 }

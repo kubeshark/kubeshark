@@ -6,7 +6,6 @@ require (
 	github.com/antelman107/net-wait-go v0.0.0-20210623112055-cf684aebda7b
 	github.com/chanced/openapi v0.0.8
 	github.com/djherbis/atime v1.1.0
-	github.com/getkin/kin-openapi v0.89.0
 	github.com/gin-contrib/pprof v1.3.0
 	github.com/gin-contrib/static v0.0.1
 	github.com/gin-gonic/gin v1.7.7
@@ -31,7 +30,6 @@ require (
 	github.com/up9inc/mizu/tap/extensions/kafka v0.0.0
 	github.com/up9inc/mizu/tap/extensions/redis v0.0.0
 	github.com/wI2L/jsondiff v0.1.1
-	github.com/yalp/jsonpath v0.0.0-20180802001716-5cc68e5049a0
 	k8s.io/api v0.23.3
 	k8s.io/apimachinery v0.23.3
 	k8s.io/client-go v0.23.3
@@ -59,7 +57,6 @@ require (
 	github.com/exponent-io/jsonpath v0.0.0-20210407135951-1de76d718b3f // indirect
 	github.com/fatih/camelcase v1.0.0 // indirect
 	github.com/fvbommel/sortorder v1.0.2 // indirect
-	github.com/ghodss/yaml v1.0.0 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
 	github.com/go-errors/errors v1.4.2 // indirect
 	github.com/go-logr/logr v1.2.2 // indirect
@@ -85,7 +82,7 @@ require (
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/compress v1.14.2 // indirect
-	github.com/knightsc/gapstone v0.0.0-20211014144438-5e0e64002a6e // indirect
+	github.com/knightsc/gapstone v0.0.0-20191231144527-6fa5afaf11a9 // indirect
 	github.com/leodido/go-urn v1.2.1 // indirect
 	github.com/liggitt/tabwriter v0.0.0-20181228230101-89fcab3d43de // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
