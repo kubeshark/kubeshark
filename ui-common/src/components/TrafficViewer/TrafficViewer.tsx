@@ -22,6 +22,7 @@ import leftOffTopAtom from "../../recoil/leftOffTop";
 import { DEFAULT_LEFTOFF, DEFAULT_FETCH, DEFAULT_FETCH_TIMEOUT_MS } from '../../hooks/useWS';
 import ReplayRequestModalContainer from "../modals/ReplayRequestModal/ReplayRequestModal";
 import replayRequestModalOpenAtom from "../../recoil/replayRequestModalOpen";
+import EntryDetailedProvider from "../context/EntryDetailedContext";
 
 const useLayoutStyles = makeStyles(() => ({
   details: {
