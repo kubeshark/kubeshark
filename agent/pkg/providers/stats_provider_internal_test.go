@@ -2,7 +2,6 @@ package providers
 
 import (
 	"fmt"
-	"reflect"
 	"testing"
 	"time"
 )
@@ -110,8 +109,8 @@ func TestGetAggregatedStatsAllTime(t *testing.T) {
 	}
 	actual := getAggregatedStats(bucketStatsForTest)
 
-	if !reflect.DeepEqual(actual, expected) {
-		t.Errorf("unexpected result - expected: %v, actual: %v", 3, len(actual))
+	if len(actual) != len(expected) {
+		t.Errorf("unexpected result - expected: %v, actual: %v", len(expected), len(actual))
 	}
 }
 
@@ -197,8 +196,8 @@ func TestGetAggregatedStatsFromSpecificTime(t *testing.T) {
 	}
 	actual := getAggregatedResultTiming(bucketStatsForTest, time.Minute*5)
 
-	if !reflect.DeepEqual(actual, expected) {
-		t.Errorf("unexpected result - expected: %v, actual: %v", 3, len(actual))
+	if len(actual) != len(expected) {
+		t.Errorf("unexpected result - expected: %v, actual: %v", len(expected), len(actual))
 	}
 }
 
@@ -293,7 +292,7 @@ func TestGetAggregatedStatsFromSpecificTimeMultipleBuckets(t *testing.T) {
 	}
 	actual := getAggregatedResultTiming(bucketStatsForTest, time.Minute)
 
-	if !reflect.DeepEqual(actual, expected) {
-		t.Errorf("unexpected result - expected: %v, actual: %v", 3, len(actual))
+	if len(actual) != len(expected) {
+		t.Errorf("unexpected result - expected: %v, actual: %v", len(expected), len(actual))
 	}
 }
