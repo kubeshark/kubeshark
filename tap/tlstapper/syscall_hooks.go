@@ -17,37 +17,37 @@ type syscallHooks struct {
 func (s *syscallHooks) installSyscallHooks(bpfObjects *tlsTapperObjects) error {
 	var err error
 
-	s.sysEnterRead, err = link.Tracepoint("syscalls", "sys_enter_read", bpfObjects.SysEnterRead)
+	s.sysEnterRead, err = link.Tracepoint("syscalls", "sys_enter_read", bpfObjects.SysEnterRead, nil)
 
 	if err != nil {
 		return errors.Wrap(err, 0)
 	}
 
-	s.sysEnterWrite, err = link.Tracepoint("syscalls", "sys_enter_write", bpfObjects.SysEnterWrite)
+	s.sysEnterWrite, err = link.Tracepoint("syscalls", "sys_enter_write", bpfObjects.SysEnterWrite, nil)
 
 	if err != nil {
 		return errors.Wrap(err, 0)
 	}
 
-	s.sysEnterAccept4, err = link.Tracepoint("syscalls", "sys_enter_accept4", bpfObjects.SysEnterAccept4)
+	s.sysEnterAccept4, err = link.Tracepoint("syscalls", "sys_enter_accept4", bpfObjects.SysEnterAccept4, nil)
 
 	if err != nil {
 		return errors.Wrap(err, 0)
 	}
 
-	s.sysExitAccept4, err = link.Tracepoint("syscalls", "sys_exit_accept4", bpfObjects.SysExitAccept4)
+	s.sysExitAccept4, err = link.Tracepoint("syscalls", "sys_exit_accept4", bpfObjects.SysExitAccept4, nil)
 
 	if err != nil {
 		return errors.Wrap(err, 0)
 	}
 
-	s.sysEnterConnect, err = link.Tracepoint("syscalls", "sys_enter_connect", bpfObjects.SysEnterConnect)
+	s.sysEnterConnect, err = link.Tracepoint("syscalls", "sys_enter_connect", bpfObjects.SysEnterConnect, nil)
 
 	if err != nil {
 		return errors.Wrap(err, 0)
 	}
 
-	s.sysExitConnect, err = link.Tracepoint("syscalls", "sys_exit_connect", bpfObjects.SysExitConnect)
+	s.sysExitConnect, err = link.Tracepoint("syscalls", "sys_exit_connect", bpfObjects.SysExitConnect, nil)
 
 	if err != nil {
 		return errors.Wrap(err, 0)
@@ -57,31 +57,31 @@ func (s *syscallHooks) installSyscallHooks(bpfObjects *tlsTapperObjects) error {
 }
 
 func (s *syscallHooks) close() []error {
-	errors := make([]error, 0)
+	returnValue := make([]error, 0)
 
 	if err := s.sysEnterRead.Close(); err != nil {
-		errors = append(errors, err)
+		returnValue = append(returnValue, err)
 	}
 
 	if err := s.sysEnterWrite.Close(); err != nil {
-		errors = append(errors, err)
+		returnValue = append(returnValue, err)
 	}
 
 	if err := s.sysEnterAccept4.Close(); err != nil {
-		errors = append(errors, err)
+		returnValue = append(returnValue, err)
 	}
 
 	if err := s.sysExitAccept4.Close(); err != nil {
-		errors = append(errors, err)
+		returnValue = append(returnValue, err)
 	}
 
 	if err := s.sysEnterConnect.Close(); err != nil {
-		errors = append(errors, err)
+		returnValue = append(returnValue, err)
 	}
 
 	if err := s.sysExitConnect.Close(); err != nil {
-		errors = append(errors, err)
+		returnValue = append(returnValue, err)
 	}
 
-	return errors
+	return returnValue
 }

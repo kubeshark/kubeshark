@@ -30,7 +30,7 @@ func IsIgnoredUserAgent(item *api.OutputChannelItem, options *api.TrafficFilteri
 		return false
 	}
 
-	request := item.Pair.Request.Payload.(api.HTTPPayload).Data.(*http.Request)
+	request := item.Pair.Request.Payload.(HTTPPayload).Data.(*http.Request)
 
 	for headerKey, headerValues := range request.Header {
 		if strings.ToLower(headerKey) == userAgent {
@@ -50,8 +50,8 @@ func IsIgnoredUserAgent(item *api.OutputChannelItem, options *api.TrafficFilteri
 }
 
 func FilterSensitiveData(item *api.OutputChannelItem, options *api.TrafficFilteringOptions) {
-	request := item.Pair.Request.Payload.(api.HTTPPayload).Data.(*http.Request)
-	response := item.Pair.Response.Payload.(api.HTTPPayload).Data.(*http.Response)
+	request := item.Pair.Request.Payload.(HTTPPayload).Data.(*http.Request)
+	response := item.Pair.Response.Payload.(HTTPPayload).Data.(*http.Response)
 
 	filterHeaders(&request.Header)
 	filterHeaders(&response.Header)
@@ -66,7 +66,7 @@ func filterRequestBody(request *http.Request, options *api.TrafficFilteringOptio
 	if err != nil {
 		return
 	}
-	filteredBody, err := filterHttpBody([]byte(body), contenType, options)
+	filteredBody, err := filterHttpBody(body, contenType, options)
 	if err == nil {
 		request.Body = ioutil.NopCloser(bytes.NewBuffer(filteredBody))
 	} else {
@@ -80,7 +80,7 @@ func filterResponseBody(response *http.Response, options *api.TrafficFilteringOp
 	if err != nil {
 		return
 	}
-	filteredBody, err := filterHttpBody([]byte(body), contentType, options)
+	filteredBody, err := filterHttpBody(body, contentType, options)
 	if err == nil {
 		response.Body = ioutil.NopCloser(bytes.NewBuffer(filteredBody))
 	} else {

@@ -6,7 +6,6 @@ require (
 	github.com/antelman107/net-wait-go v0.0.0-20210623112055-cf684aebda7b
 	github.com/chanced/openapi v0.0.8
 	github.com/djherbis/atime v1.1.0
-	github.com/getkin/kin-openapi v0.89.0
 	github.com/gin-contrib/pprof v1.3.0
 	github.com/gin-contrib/static v0.0.1
 	github.com/gin-gonic/gin v1.7.7
@@ -31,7 +30,6 @@ require (
 	github.com/up9inc/mizu/tap/extensions/kafka v0.0.0
 	github.com/up9inc/mizu/tap/extensions/redis v0.0.0
 	github.com/wI2L/jsondiff v0.1.1
-	github.com/yalp/jsonpath v0.0.0-20180802001716-5cc68e5049a0
 	k8s.io/api v0.23.3
 	k8s.io/apimachinery v0.23.3
 	k8s.io/client-go v0.23.3
@@ -53,13 +51,12 @@ require (
 	github.com/beevik/etree v1.1.0 // indirect
 	github.com/chai2010/gettext-go v0.0.0-20160711120539-c6fed771bfd5 // indirect
 	github.com/chanced/dynamic v0.0.0-20211210164248-f8fadb1d735b // indirect
-	github.com/cilium/ebpf v0.8.1 // indirect
+	github.com/cilium/ebpf v0.9.0 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/evanphx/json-patch v5.6.0+incompatible // indirect
 	github.com/exponent-io/jsonpath v0.0.0-20210407135951-1de76d718b3f // indirect
 	github.com/fatih/camelcase v1.0.0 // indirect
 	github.com/fvbommel/sortorder v1.0.2 // indirect
-	github.com/ghodss/yaml v1.0.0 // indirect
 	github.com/gin-contrib/sse v0.1.0 // indirect
 	github.com/go-errors/errors v1.4.2 // indirect
 	github.com/go-logr/logr v1.2.2 // indirect
@@ -85,13 +82,14 @@ require (
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/compress v1.14.2 // indirect
-	github.com/knightsc/gapstone v0.0.0-20211014144438-5e0e64002a6e // indirect
+	github.com/knightsc/gapstone v0.0.0-20191231144527-6fa5afaf11a9 // indirect
 	github.com/leodido/go-urn v1.2.1 // indirect
 	github.com/liggitt/tabwriter v0.0.0-20181228230101-89fcab3d43de // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattn/go-isatty v0.0.14 // indirect
 	github.com/mertyildiran/gqlparser/v2 v2.4.6 // indirect
 	github.com/mitchellh/go-wordwrap v1.0.1 // indirect
+	github.com/moby/moby v20.10.17+incompatible // indirect
 	github.com/moby/spdystream v0.2.0 // indirect
 	github.com/moby/term v0.0.0-20210619224110-3f7ff695adc6 // indirect
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
@@ -107,6 +105,7 @@ require (
 	github.com/santhosh-tekuri/jsonschema/v5 v5.0.0 // indirect
 	github.com/segmentio/kafka-go v0.4.27 // indirect
 	github.com/shirou/gopsutil v3.21.11+incompatible // indirect
+	github.com/sirupsen/logrus v1.8.1 // indirect
 	github.com/spf13/cobra v1.3.0 // indirect
 	github.com/spf13/pflag v1.0.5 // indirect
 	github.com/struCoder/pidusage v0.2.1 // indirect

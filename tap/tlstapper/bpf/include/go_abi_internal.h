@@ -8,54 +8,11 @@ Copyright (C) UP9 Inc.
 #define __GO_ABI_INTERNAL__
 
 /*
-Go internal ABI specification
+Go internal ABI (1.17/current) specification
 https://go.googlesource.com/go/+/refs/heads/master/src/cmd/compile/abi-internal.md
 */
 
-/* Scan the ARCH passed in from ARCH env variable */
-#if defined(__TARGET_ARCH_x86)
-    #define bpf_target_x86
-    #define bpf_target_defined
-#elif defined(__TARGET_ARCH_s390)
-    #define bpf_target_s390
-    #define bpf_target_defined
-#elif defined(__TARGET_ARCH_arm)
-    #define bpf_target_arm
-    #define bpf_target_defined
-#elif defined(__TARGET_ARCH_arm64)
-    #define bpf_target_arm64
-    #define bpf_target_defined
-#elif defined(__TARGET_ARCH_mips)
-    #define bpf_target_mips
-    #define bpf_target_defined
-#elif defined(__TARGET_ARCH_powerpc)
-    #define bpf_target_powerpc
-    #define bpf_target_defined
-#elif defined(__TARGET_ARCH_sparc)
-    #define bpf_target_sparc
-    #define bpf_target_defined
-#else
-    #undef bpf_target_defined
-#endif
-
-/* Fall back to what the compiler says */
-#ifndef bpf_target_defined
-#if defined(__x86_64__)
-    #define bpf_target_x86
-#elif defined(__s390__)
-    #define bpf_target_s390
-#elif defined(__arm__)
-    #define bpf_target_arm
-#elif defined(__aarch64__)
-    #define bpf_target_arm64
-#elif defined(__mips__)
-    #define bpf_target_mips
-#elif defined(__powerpc__)
-    #define bpf_target_powerpc
-#elif defined(__sparc__)
-    #define bpf_target_sparc
-#endif
-#endif
+#include "target_arch.h"
 
 #if defined(bpf_target_x86)
 
@@ -66,11 +23,12 @@ https://go.googlesource.com/go/+/refs/heads/dev.regabi/src/cmd/compile/internal-
 https://github.com/golang/go/blob/go1.17.6/src/cmd/compile/internal/ssa/gen/AMD64Ops.go#L100
 */
 #define GO_ABI_INTERNAL_PT_REGS_R1(x) ((x)->eax)
-#define GO_ABI_INTERNAL_PT_REGS_P2(x) ((x)->ecx)
-#define GO_ABI_INTERNAL_PT_REGS_P3(x) ((x)->edx)
-#define GO_ABI_INTERNAL_PT_REGS_P4(x) 0
-#define GO_ABI_INTERNAL_PT_REGS_P5(x) 0
-#define GO_ABI_INTERNAL_PT_REGS_P6(x) 0
+#define GO_ABI_INTERNAL_PT_REGS_R2(x) ((x)->ecx)
+#define GO_ABI_INTERNAL_PT_REGS_R3(x) ((x)->edx)
+#define GO_ABI_INTERNAL_PT_REGS_R4(x) 0
+#define GO_ABI_INTERNAL_PT_REGS_R5(x) 0
+#define GO_ABI_INTERNAL_PT_REGS_R6(x) 0
+#define GO_ABI_INTERNAL_PT_REGS_R7(x) 0
 #define GO_ABI_INTERNAL_PT_REGS_SP(x) ((x)->esp)
 #define GO_ABI_INTERNAL_PT_REGS_FP(x) ((x)->ebp)
 #define GO_ABI_INTERNAL_PT_REGS_GP(x) ((x)->e14)
@@ -83,6 +41,7 @@ https://github.com/golang/go/blob/go1.17.6/src/cmd/compile/internal/ssa/gen/AMD6
 #define GO_ABI_INTERNAL_PT_REGS_R4(x) ((x)->bx)
 #define GO_ABI_INTERNAL_PT_REGS_R5(x) ((x)->bp)
 #define GO_ABI_INTERNAL_PT_REGS_R6(x) ((x)->si)
+#define GO_ABI_INTERNAL_PT_REGS_R7(x) ((x)->di)
 #define GO_ABI_INTERNAL_PT_REGS_SP(x) ((x)->sp)
 #define GO_ABI_INTERNAL_PT_REGS_FP(x) ((x)->bp)
 #define GO_ABI_INTERNAL_PT_REGS_GP(x) ((x)->r14)
@@ -101,7 +60,8 @@ https://github.com/golang/go/blob/go1.17.6/src/cmd/compile/internal/ssa/gen/ARM6
 #define GO_ABI_INTERNAL_PT_REGS_R4(x) ((x)->uregs[3])
 #define GO_ABI_INTERNAL_PT_REGS_R5(x) ((x)->uregs[4])
 #define GO_ABI_INTERNAL_PT_REGS_R6(x) ((x)->uregs[5])
-#define GO_ABI_INTERNAL_PT_REGS_SP(x) ((x)->uregs[14])
+#define GO_ABI_INTERNAL_PT_REGS_R7(x) ((x)->uregs[6])
+#define GO_ABI_INTERNAL_PT_REGS_SP(x) ((x)->uregs[13])
 #define GO_ABI_INTERNAL_PT_REGS_FP(x) ((x)->uregs[29])
 #define GO_ABI_INTERNAL_PT_REGS_GP(x) ((x)->uregs[28])
 
@@ -116,7 +76,8 @@ struct pt_regs;
 #define GO_ABI_INTERNAL_PT_REGS_R4(x) (((PT_REGS_ARM64 *)(x))->regs[3])
 #define GO_ABI_INTERNAL_PT_REGS_R5(x) (((PT_REGS_ARM64 *)(x))->regs[4])
 #define GO_ABI_INTERNAL_PT_REGS_R6(x) (((PT_REGS_ARM64 *)(x))->regs[5])
-#define GO_ABI_INTERNAL_PT_REGS_SP(x) (((PT_REGS_ARM64 *)(x))->regs[30])
+#define GO_ABI_INTERNAL_PT_REGS_R7(x) (((PT_REGS_ARM64 *)(x))->regs[6])
+#define GO_ABI_INTERNAL_PT_REGS_SP(x) (((PT_REGS_ARM64 *)(x))->sp)
 #define GO_ABI_INTERNAL_PT_REGS_FP(x) (((PT_REGS_ARM64 *)(x))->regs[29])
 #define GO_ABI_INTERNAL_PT_REGS_GP(x) (((PT_REGS_ARM64 *)(x))->regs[28])
 
@@ -132,6 +93,7 @@ https://github.com/golang/go/blob/go1.17.6/src/cmd/compile/internal/ssa/gen/PPC6
 #define GO_ABI_INTERNAL_PT_REGS_R4(x) ((x)->gpr[6])
 #define GO_ABI_INTERNAL_PT_REGS_R5(x) ((x)->gpr[7])
 #define GO_ABI_INTERNAL_PT_REGS_R6(x) ((x)->gpr[8])
+#define GO_ABI_INTERNAL_PT_REGS_R7(x) ((x)->gpr[9])
 #define GO_ABI_INTERNAL_PT_REGS_SP(x) ((x)->sp)
 #define GO_ABI_INTERNAL_PT_REGS_FP(x) ((x)->gpr[12])
 #define GO_ABI_INTERNAL_PT_REGS_GP(x) ((x)->gpr[30])

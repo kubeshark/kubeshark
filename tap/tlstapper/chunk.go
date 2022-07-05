@@ -8,8 +8,8 @@ import (
 	"github.com/up9inc/mizu/tap/api"
 )
 
-const FLAGS_IS_CLIENT_BIT uint32 = (1 << 0)
-const FLAGS_IS_READ_BIT uint32 = (1 << 1)
+const FlagsIsClientBit uint32 = 1 << 0
+const FlagsIsReadBit uint32 = 1 << 1
 const (
 	addressInfoModeUndefined = iota
 	addressInfoModeSingle
@@ -44,7 +44,7 @@ func (c *tlsTapperTlsChunk) getIsAddressPairValid() bool {
 }
 
 func (c *tlsTapperTlsChunk) isClient() bool {
-	return c.Flags&FLAGS_IS_CLIENT_BIT != 0
+	return c.Flags&FlagsIsClientBit != 0
 }
 
 func (c *tlsTapperTlsChunk) isServer() bool {
@@ -52,7 +52,7 @@ func (c *tlsTapperTlsChunk) isServer() bool {
 }
 
 func (c *tlsTapperTlsChunk) isRead() bool {
-	return c.Flags&FLAGS_IS_READ_BIT != 0
+	return c.Flags&FlagsIsReadBit != 0
 }
 
 func (c *tlsTapperTlsChunk) isWrite() bool {
@@ -98,26 +98,26 @@ func (c *tlsTapperTlsChunk) getKprobeAddressPair() (addressPair, bool) {
 
 	if c.isRequest() {
 		return addressPair{
-			srcIp:   sIP,
-			srcPort: sPort,
-			dstIp:   dIP,
-			dstPort: dPort,
-		},
-		isAddressPairValid
+				srcIp:   sIP,
+				srcPort: sPort,
+				dstIp:   dIP,
+				dstPort: dPort,
+			},
+			isAddressPairValid
 	} else {
 		return addressPair{
-			srcIp:   dIP,
-			srcPort: dPort,
-			dstIp:   sIP,
-			dstPort: sPort,
-		},
-		isAddressPairValid
+				srcIp:   dIP,
+				srcPort: dPort,
+				dstIp:   sIP,
+				dstPort: sPort,
+			},
+			isAddressPairValid
 	}
 }
 
 // intToIP converts IPv4 number to net.IP
 func intToIP(ip32be uint32) net.IP {
-	return net.IPv4(uint8(ip32be), uint8(ip32be >> 8), uint8(ip32be >> 16), uint8(ip32be >> 24))
+	return net.IPv4(uint8(ip32be), uint8(ip32be>>8), uint8(ip32be>>16), uint8(ip32be>>24))
 }
 
 // ntohs converts big endian (network byte order) to little endian (assuming that's the host byte order)

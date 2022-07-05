@@ -91,7 +91,7 @@ func (ga *Http2Assembler) readMessage() (streamID uint32, messageHTTP1 interface
 	// Exactly one Framer is used for each half connection.
 	// (Instead of creating a new Framer for each ReadFrame operation)
 	// This is needed in order to decompress the headers,
-	// because the compression context is updated with each requests/response.
+	// because the compression context is updated with each request/response.
 	frame, err := ga.framer.ReadFrame()
 	if err != nil {
 		return

@@ -13,6 +13,11 @@ import (
 	"github.com/cilium/ebpf"
 )
 
+type tlsTapperGoidOffsets struct {
+	G_addrOffset uint64
+	GoidOffset   uint64
+}
+
 type tlsTapperTlsChunk struct {
 	Pid      uint32
 	Tgid     uint32
@@ -66,24 +71,28 @@ type tlsTapperSpecs struct {
 //
 // It can be passed ebpf.CollectionSpec.Assign.
 type tlsTapperProgramSpecs struct {
-	GoCryptoTlsRead    *ebpf.ProgramSpec `ebpf:"go_crypto_tls_read"`
-	GoCryptoTlsReadEx  *ebpf.ProgramSpec `ebpf:"go_crypto_tls_read_ex"`
-	GoCryptoTlsWrite   *ebpf.ProgramSpec `ebpf:"go_crypto_tls_write"`
-	GoCryptoTlsWriteEx *ebpf.ProgramSpec `ebpf:"go_crypto_tls_write_ex"`
-	SslRead            *ebpf.ProgramSpec `ebpf:"ssl_read"`
-	SslReadEx          *ebpf.ProgramSpec `ebpf:"ssl_read_ex"`
-	SslRetRead         *ebpf.ProgramSpec `ebpf:"ssl_ret_read"`
-	SslRetReadEx       *ebpf.ProgramSpec `ebpf:"ssl_ret_read_ex"`
-	SslRetWrite        *ebpf.ProgramSpec `ebpf:"ssl_ret_write"`
-	SslRetWriteEx      *ebpf.ProgramSpec `ebpf:"ssl_ret_write_ex"`
-	SslWrite           *ebpf.ProgramSpec `ebpf:"ssl_write"`
-	SslWriteEx         *ebpf.ProgramSpec `ebpf:"ssl_write_ex"`
-	SysEnterAccept4    *ebpf.ProgramSpec `ebpf:"sys_enter_accept4"`
-	SysEnterConnect    *ebpf.ProgramSpec `ebpf:"sys_enter_connect"`
-	SysEnterRead       *ebpf.ProgramSpec `ebpf:"sys_enter_read"`
-	SysEnterWrite      *ebpf.ProgramSpec `ebpf:"sys_enter_write"`
-	SysExitAccept4     *ebpf.ProgramSpec `ebpf:"sys_exit_accept4"`
-	SysExitConnect     *ebpf.ProgramSpec `ebpf:"sys_exit_connect"`
+	GoCryptoTlsAbi0Read           *ebpf.ProgramSpec `ebpf:"go_crypto_tls_abi0_read"`
+	GoCryptoTlsAbi0ReadEx         *ebpf.ProgramSpec `ebpf:"go_crypto_tls_abi0_read_ex"`
+	GoCryptoTlsAbi0Write          *ebpf.ProgramSpec `ebpf:"go_crypto_tls_abi0_write"`
+	GoCryptoTlsAbi0WriteEx        *ebpf.ProgramSpec `ebpf:"go_crypto_tls_abi0_write_ex"`
+	GoCryptoTlsAbiInternalRead    *ebpf.ProgramSpec `ebpf:"go_crypto_tls_abi_internal_read"`
+	GoCryptoTlsAbiInternalReadEx  *ebpf.ProgramSpec `ebpf:"go_crypto_tls_abi_internal_read_ex"`
+	GoCryptoTlsAbiInternalWrite   *ebpf.ProgramSpec `ebpf:"go_crypto_tls_abi_internal_write"`
+	GoCryptoTlsAbiInternalWriteEx *ebpf.ProgramSpec `ebpf:"go_crypto_tls_abi_internal_write_ex"`
+	SslRead                       *ebpf.ProgramSpec `ebpf:"ssl_read"`
+	SslReadEx                     *ebpf.ProgramSpec `ebpf:"ssl_read_ex"`
+	SslRetRead                    *ebpf.ProgramSpec `ebpf:"ssl_ret_read"`
+	SslRetReadEx                  *ebpf.ProgramSpec `ebpf:"ssl_ret_read_ex"`
+	SslRetWrite                   *ebpf.ProgramSpec `ebpf:"ssl_ret_write"`
+	SslRetWriteEx                 *ebpf.ProgramSpec `ebpf:"ssl_ret_write_ex"`
+	SslWrite                      *ebpf.ProgramSpec `ebpf:"ssl_write"`
+	SslWriteEx                    *ebpf.ProgramSpec `ebpf:"ssl_write_ex"`
+	SysEnterAccept4               *ebpf.ProgramSpec `ebpf:"sys_enter_accept4"`
+	SysEnterConnect               *ebpf.ProgramSpec `ebpf:"sys_enter_connect"`
+	SysEnterRead                  *ebpf.ProgramSpec `ebpf:"sys_enter_read"`
+	SysEnterWrite                 *ebpf.ProgramSpec `ebpf:"sys_enter_write"`
+	SysExitAccept4                *ebpf.ProgramSpec `ebpf:"sys_exit_accept4"`
+	SysExitConnect                *ebpf.ProgramSpec `ebpf:"sys_exit_connect"`
 }
 
 // tlsTapperMapSpecs contains maps before they are loaded into the kernel.
@@ -96,6 +105,7 @@ type tlsTapperMapSpecs struct {
 	FileDescriptorToIpv4 *ebpf.MapSpec `ebpf:"file_descriptor_to_ipv4"`
 	GoReadContext        *ebpf.MapSpec `ebpf:"go_read_context"`
 	GoWriteContext       *ebpf.MapSpec `ebpf:"go_write_context"`
+	GoidOffsetsMap       *ebpf.MapSpec `ebpf:"goid_offsets_map"`
 	Heap                 *ebpf.MapSpec `ebpf:"heap"`
 	LogBuffer            *ebpf.MapSpec `ebpf:"log_buffer"`
 	OpensslReadContext   *ebpf.MapSpec `ebpf:"openssl_read_context"`
@@ -128,6 +138,7 @@ type tlsTapperMaps struct {
 	FileDescriptorToIpv4 *ebpf.Map `ebpf:"file_descriptor_to_ipv4"`
 	GoReadContext        *ebpf.Map `ebpf:"go_read_context"`
 	GoWriteContext       *ebpf.Map `ebpf:"go_write_context"`
+	GoidOffsetsMap       *ebpf.Map `ebpf:"goid_offsets_map"`
 	Heap                 *ebpf.Map `ebpf:"heap"`
 	LogBuffer            *ebpf.Map `ebpf:"log_buffer"`
 	OpensslReadContext   *ebpf.Map `ebpf:"openssl_read_context"`
@@ -143,6 +154,7 @@ func (m *tlsTapperMaps) Close() error {
 		m.FileDescriptorToIpv4,
 		m.GoReadContext,
 		m.GoWriteContext,
+		m.GoidOffsetsMap,
 		m.Heap,
 		m.LogBuffer,
 		m.OpensslReadContext,
@@ -155,32 +167,40 @@ func (m *tlsTapperMaps) Close() error {
 //
 // It can be passed to loadTlsTapperObjects or ebpf.CollectionSpec.LoadAndAssign.
 type tlsTapperPrograms struct {
-	GoCryptoTlsRead    *ebpf.Program `ebpf:"go_crypto_tls_read"`
-	GoCryptoTlsReadEx  *ebpf.Program `ebpf:"go_crypto_tls_read_ex"`
-	GoCryptoTlsWrite   *ebpf.Program `ebpf:"go_crypto_tls_write"`
-	GoCryptoTlsWriteEx *ebpf.Program `ebpf:"go_crypto_tls_write_ex"`
-	SslRead            *ebpf.Program `ebpf:"ssl_read"`
-	SslReadEx          *ebpf.Program `ebpf:"ssl_read_ex"`
-	SslRetRead         *ebpf.Program `ebpf:"ssl_ret_read"`
-	SslRetReadEx       *ebpf.Program `ebpf:"ssl_ret_read_ex"`
-	SslRetWrite        *ebpf.Program `ebpf:"ssl_ret_write"`
-	SslRetWriteEx      *ebpf.Program `ebpf:"ssl_ret_write_ex"`
-	SslWrite           *ebpf.Program `ebpf:"ssl_write"`
-	SslWriteEx         *ebpf.Program `ebpf:"ssl_write_ex"`
-	SysEnterAccept4    *ebpf.Program `ebpf:"sys_enter_accept4"`
-	SysEnterConnect    *ebpf.Program `ebpf:"sys_enter_connect"`
-	SysEnterRead       *ebpf.Program `ebpf:"sys_enter_read"`
-	SysEnterWrite      *ebpf.Program `ebpf:"sys_enter_write"`
-	SysExitAccept4     *ebpf.Program `ebpf:"sys_exit_accept4"`
-	SysExitConnect     *ebpf.Program `ebpf:"sys_exit_connect"`
+	GoCryptoTlsAbi0Read           *ebpf.Program `ebpf:"go_crypto_tls_abi0_read"`
+	GoCryptoTlsAbi0ReadEx         *ebpf.Program `ebpf:"go_crypto_tls_abi0_read_ex"`
+	GoCryptoTlsAbi0Write          *ebpf.Program `ebpf:"go_crypto_tls_abi0_write"`
+	GoCryptoTlsAbi0WriteEx        *ebpf.Program `ebpf:"go_crypto_tls_abi0_write_ex"`
+	GoCryptoTlsAbiInternalRead    *ebpf.Program `ebpf:"go_crypto_tls_abi_internal_read"`
+	GoCryptoTlsAbiInternalReadEx  *ebpf.Program `ebpf:"go_crypto_tls_abi_internal_read_ex"`
+	GoCryptoTlsAbiInternalWrite   *ebpf.Program `ebpf:"go_crypto_tls_abi_internal_write"`
+	GoCryptoTlsAbiInternalWriteEx *ebpf.Program `ebpf:"go_crypto_tls_abi_internal_write_ex"`
+	SslRead                       *ebpf.Program `ebpf:"ssl_read"`
+	SslReadEx                     *ebpf.Program `ebpf:"ssl_read_ex"`
+	SslRetRead                    *ebpf.Program `ebpf:"ssl_ret_read"`
+	SslRetReadEx                  *ebpf.Program `ebpf:"ssl_ret_read_ex"`
+	SslRetWrite                   *ebpf.Program `ebpf:"ssl_ret_write"`
+	SslRetWriteEx                 *ebpf.Program `ebpf:"ssl_ret_write_ex"`
+	SslWrite                      *ebpf.Program `ebpf:"ssl_write"`
+	SslWriteEx                    *ebpf.Program `ebpf:"ssl_write_ex"`
+	SysEnterAccept4               *ebpf.Program `ebpf:"sys_enter_accept4"`
+	SysEnterConnect               *ebpf.Program `ebpf:"sys_enter_connect"`
+	SysEnterRead                  *ebpf.Program `ebpf:"sys_enter_read"`
+	SysEnterWrite                 *ebpf.Program `ebpf:"sys_enter_write"`
+	SysExitAccept4                *ebpf.Program `ebpf:"sys_exit_accept4"`
+	SysExitConnect                *ebpf.Program `ebpf:"sys_exit_connect"`
 }
 
 func (p *tlsTapperPrograms) Close() error {
 	return _TlsTapperClose(
-		p.GoCryptoTlsRead,
-		p.GoCryptoTlsReadEx,
-		p.GoCryptoTlsWrite,
-		p.GoCryptoTlsWriteEx,
+		p.GoCryptoTlsAbi0Read,
+		p.GoCryptoTlsAbi0ReadEx,
+		p.GoCryptoTlsAbi0Write,
+		p.GoCryptoTlsAbi0WriteEx,
+		p.GoCryptoTlsAbiInternalRead,
+		p.GoCryptoTlsAbiInternalReadEx,
+		p.GoCryptoTlsAbiInternalWrite,
+		p.GoCryptoTlsAbiInternalWriteEx,
 		p.SslRead,
 		p.SslReadEx,
 		p.SslRetRead,

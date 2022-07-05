@@ -131,6 +131,7 @@ func hostApi(socketHarOutputChannel chan<- *tapApi.OutputChannelItem) *gin.Engin
 	routes.MetadataRoutes(ginApp)
 	routes.StatusRoutes(ginApp)
 	routes.DbRoutes(ginApp)
+	routes.ReplayRoutes(ginApp)
 
 	return ginApp
 }
@@ -155,7 +156,7 @@ func runInTapperMode() {
 
 	hostMode := os.Getenv(shared.HostModeEnvVar) == "1"
 	tapOpts := &tap.TapOpts{
-		HostMode:     hostMode,
+		HostMode: hostMode,
 	}
 
 	filteredOutputItemsChannel := make(chan *tapApi.OutputChannelItem)

@@ -15,9 +15,8 @@ func StatusRoutes(ginApp *gin.Engine) {
 	routeGroup.GET("/connectedTappersCount", controllers.GetConnectedTappersCount)
 	routeGroup.GET("/tap", controllers.GetTappingStatus)
 
-	routeGroup.GET("/general", controllers.GetGeneralStats) // get general stats about entries in DB
-	routeGroup.GET("/accumulative", controllers.GetAccumulativeStats)
-	routeGroup.GET("/accumulativeTiming", controllers.GetAccumulativeStatsTiming)
+	routeGroup.GET("/general", controllers.GetGeneralStats)
+	routeGroup.GET("/trafficStats", controllers.GetTrafficStats)
 
 	routeGroup.GET("/resolving", controllers.GetCurrentResolvingInformation)
 }
