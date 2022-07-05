@@ -212,11 +212,11 @@ func convertAccumulativeStatsTimelineDictToArray(methodsPerProtocolPerTimeAggreg
 	finalResult := make([]*AccumulativeStatsProtocolTime, 0)
 	for timeKey, item := range methodsPerProtocolPerTimeAggregated {
 		protocolsData := make([]*AccumulativeStatsProtocol, 0)
-		for protocolName := range item {
+		for protocolName, value := range item {
 			entriesCount := 0
 			volumeSizeBytes := 0
 			methods := make([]*AccumulativeStatsCounter, 0)
-			for _, methodAccData := range methodsPerProtocolPerTimeAggregated[timeKey][protocolName] {
+			for _, methodAccData := range value {
 				entriesCount += methodAccData.EntriesCount
 				volumeSizeBytes += methodAccData.VolumeSizeBytes
 				methods = append(methods, methodAccData)
