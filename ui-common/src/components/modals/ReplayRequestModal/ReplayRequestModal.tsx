@@ -13,6 +13,7 @@ import { TOAST_CONTAINER_ID } from "../../../configs/Consts";
 import styles from './ReplayRequestModal.module.sass'
 import closeIcon from "assets/close.svg"
 import refreshImg from "assets/refresh.svg"
+import { ReactComponent as DownloadIcon } from './assets/download.svg'
 import { formatRequestWithOutError } from "../../EntryDetailed/EntrySections/EntrySections";
 import entryDataAtom from "../../../recoil/entryData";
 import { AutoRepresentation, TabsEnum } from "../../EntryDetailed/EntryViewer/AutoRepresentation";
@@ -162,6 +163,10 @@ const ReplayRequestModal: React.FC<ReplayRequestModalProps> = ({ isOpen, onClose
 
     }, [headers, hostPortInput, method, pathInput, postData, trafficViewerApi])
 
+    const onDownloadRequest = useCallback(() => {
+        Utils.exportToJson(null, `${getHostUrl()} - ${Utils.getTimeFormatted(Date.now())}`)
+    }, [getHostUrl])
+
     let innerComponent
     switch (currentTab) {
         case RequestTabs.Params:
@@ -210,7 +215,9 @@ const ReplayRequestModal: React.FC<ReplayRequestModalProps> = ({ isOpen, onClose
                         <Accordion TransitionProps={{ unmountOnExit: true }} expanded={requestExpanded} onChange={() => setRequestExpanded(!requestExpanded)}>
                             <AccordionSummary expandIcon={<ExpandMoreIcon />} aria-controls="response-content">
                                 <span className={styles.sectionHeader}>REQUEST</span>
-                                <img src={refreshImg} style={{ marginLeft: "10px" }} title="Refresh Reuqest" alt="Refresh Reuqest" onClick={onRefreshRequest} />
+                                <img src={refreshImg} style={{ marginLeft: "10px" }} title="Refresh Request" alt="Refresh Request" onClick={onRefreshRequest} />
+                                <DownloadIcon onClick={onDownloadRequest} fill={"#205CF5"} stroke={"#205CF5"} style={{ marginLeft: "10px" }} />
+                                {/* TODO: replace with variable */}
                             </AccordionSummary>
                             <AccordionDetails>
                                 <div className={styles.path}>

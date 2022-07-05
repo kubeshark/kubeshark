@@ -1,3 +1,5 @@
+import Moment from 'moment';
+
 const IP_ADDRESS_REGEX = /([0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3})(:([0-9]{1,5}))?/
 
 
@@ -51,4 +53,21 @@ export class Utils {
     return true;
   }
 
+  // download file from url
+  static downloadFile = (data: string, filename: string, fileType: string) => {
+    const blob = new Blob([data], { type: fileType })
+    const a = document.createElement('a');
+    a.href = window.URL.createObjectURL(blob);
+    a.download = filename;
+    a.click();
+    a.remove();
+  }
+
+  static exportToJson = (data: JSON, name) => {
+    Utils.downloadFile(JSON.stringify(data), name, 'text/json')
+  }
+
+  static getTimeFormatted = (time: Moment.MomentInput) => {
+    return Moment(time).utc().format('MM/DD/YYYY, h:mm:ss.SSS A')
+  }
 }
