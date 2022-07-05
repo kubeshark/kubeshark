@@ -1,12 +1,10 @@
 package tlstapper
 
 import (
-	"bytes"
 	"encoding/binary"
 	"net"
 	"unsafe"
 
-	"github.com/go-errors/errors"
 	"github.com/up9inc/mizu/tap/api"
 )
 
@@ -14,44 +12,26 @@ const FLAGS_IS_CLIENT_BIT uint32 = (1 << 0)
 const FLAGS_IS_READ_BIT uint32 = (1 << 1)
 
 func (c *tlsTapperTlsChunk) getFdAddress() (net.IP, uint16, error) {
-	address := bytes.NewReader(c.FdAddress[:])
-	var family uint16
-	var port uint16
-	var ip32 uint32
-
-	if err := binary.Read(address, binary.BigEndian, &family); err != nil {
-		return nil, 0, errors.Wrap(err, 0)
-	}
-
-	if err := binary.Read(address, binary.BigEndian, &port); err != nil {
-		return nil, 0, errors.Wrap(err, 0)
-	}
-
-	if err := binary.Read(address, binary.BigEndian, &ip32); err != nil {
-		return nil, 0, errors.Wrap(err, 0)
-	}
-
-	ip := net.IP{uint8(ip32 >> 24), uint8(ip32 >> 16), uint8(ip32 >> 8), uint8(ip32)}
-
-	return ip, port, nil
+	sIP, sPort := c.getSrcAddress()
+	return sIP, sPort, nil
 }
 
 func (c *tlsTapperTlsChunk) getDstAddress() (net.IP, uint16) {
-	ip := intToIP(c.KprobeAddressPair.Daddr)
-	port := ntohs(c.KprobeAddressPair.Dport)
+	ip := intToIP(c.AddressInfo.Daddr)
+	port := ntohs(c.AddressInfo.Dport)
 
 	return ip, port
 }
 
 func (c *tlsTapperTlsChunk) getSrcAddress() (net.IP, uint16) {
-	ip := intToIP(c.KprobeAddressPair.Saddr)
-	port := ntohs(c.KprobeAddressPair.Sport)
+	ip := intToIP(c.AddressInfo.Saddr)
+	port := ntohs(c.AddressInfo.Sport)
 
 	return ip, port
 }
 
 func (c *tlsTapperTlsChunk) getIsAddressPairValid() bool {
-	if c.KprobeAddressPair.IsAddressPairValid == 1 {
+	if c.AddressInfo.Mode == 2 {
 		return true
 	}
 

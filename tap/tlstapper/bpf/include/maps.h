@@ -25,8 +25,14 @@ Copyright (C) UP9 Inc.
 //  Be careful when editing, alignment and padding should be exactly the same in go/c.
 //
 
-struct address_pair {
-    __be32 is_address_pair_valid;
+typedef enum {
+    ADDRESS_INFO_MODE_UNDEFINED,
+    ADDRESS_INFO_MODE_SINGLE,
+    ADDRESS_INFO_MODE_PAIR,
+} address_info_mode;
+
+struct address_info {
+    address_info_mode mode;
     __be32 saddr;
     __be32 daddr;
     __be16 sport;
@@ -41,8 +47,7 @@ struct tls_chunk {
     __u32 recorded;
     __u32 fd;
     __u32 flags;
-    __u8 fd_address[16];
-    struct address_pair kprobe_address_pair;
+    struct address_info address_info;
     __u8 data[CHUNK_SIZE]; // Must be N^2
 };
 
@@ -51,7 +56,7 @@ struct ssl_info {
     __u32 buffer_len;
     __u32 fd;
     __u64 created_at_nano;
-    struct address_pair kprobe_address_pair;
+    struct address_info address_info;
     
     // for ssl_write and ssl_read must be zero
     // for ssl_write_ex and ssl_read_ex save the *written/*readbytes pointer. 
