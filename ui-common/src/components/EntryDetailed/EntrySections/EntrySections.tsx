@@ -117,7 +117,8 @@ interface EntryBodySectionProps {
     selector?: string,
 }
 
-export const formatRequest = (body: any, contentType: string, decodeBase64: boolean = true, isBase64Encoding: boolean = false, isPretty: boolean = true): string => {
+export const formatRequest = (bodyRef: any, contentType: string, decodeBase64: boolean = true, isBase64Encoding: boolean = false, isPretty: boolean = true): string => {
+    const { body } = bodyRef
     if (!decodeBase64 || !body) return body;
 
     const chunk = body.slice(0, MAXIMUM_BYTES_TO_FORMAT);
@@ -144,10 +145,22 @@ export const formatRequest = (body: any, contentType: string, decodeBase64: bool
         }
     } catch (error) {
         console.error(error)
+        bodyRef.body = bodyBuf
         throw error
     }
 
     return bodyBuf;
+}
+
+export const formatRequestWithOutError = (body: any, contentType: string, decodeBase64: boolean = true, isBase64Encoding: boolean = false, isPretty: boolean = true): string => {
+    const bodyRef = { body }
+    try {
+        return formatRequest(bodyRef, contentType, decodeBase64, isBase64Encoding, isPretty)
+    } catch (error) {
+        console.warn(error)
+    }
+
+    return bodyRef.body
 }
 
 export const EntryBodySection: React.FC<EntryBodySectionProps> = ({
@@ -173,8 +186,9 @@ export const EntryBodySection: React.FC<EntryBodySectionProps> = ({
     }, [isLineNumbersGreaterThenOne, isPretty])
 
     const formatTextBody = useCallback((body) => {
+        const bodyRef = { body }
         try {
-            return formatRequest(body, contentType, decodeBase64, isBase64Encoding, isPretty)
+            return formatRequest(bodyRef, contentType, decodeBase64, isBase64Encoding, isPretty)
         } catch (error) {
             if (String(error).includes("More than one message in")) {
                 if (isDecodeGrpc)
@@ -183,6 +197,8 @@ export const EntryBodySection: React.FC<EntryBodySectionProps> = ({
                 console.warn(error);
             }
         }
+
+        return bodyRef.body
     }, [isPretty, contentType, isDecodeGrpc, decodeBase64, isBase64Encoding])
 
     const formattedText = useMemo(() => formatTextBody(content), [formatTextBody, content]);

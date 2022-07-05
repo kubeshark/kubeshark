@@ -4,9 +4,9 @@ import styles from "./TrafficStatsModal.module.sass";
 import closeIcon from "assets/close.svg";
 import { TrafficPieChart } from "./TrafficPieChart/TrafficPieChart";
 import { TimelineBarChart } from "./TimelineBarChart/TimelineBarChart";
-import spinnerImg from "assets/spinner.svg";
 import refreshIcon from "assets/refresh.svg";
 import { useCommonStyles } from "../../../helpers/commonStyle";
+import { LoadingWrapper } from "../../UI/withLoading/withLoading";
 
 const modalStyle = {
   position: 'absolute',
@@ -114,13 +114,12 @@ export const TrafficStatsModal: React.FC<TrafficStatsModalProps> = ({ isOpen, on
               </div>
             </div>
             <div>
-              {isLoading ? <div style={{ textAlign: "center", marginTop: 20 }}>
-                <img alt="spinner" src={spinnerImg} style={{ height: 50 }} />
-              </div> :
+              <LoadingWrapper isLoading={isLoading} loaderMargin={20} loaderHeight={50}>
                 <div>
-                  <TrafficPieChart pieChartMode={statsMode} data={pieStatsData} selectedProtocol={selectedProtocol}/>
-                  <TimelineBarChart timeLineBarChartMode={statsMode} data={timelineStatsData} selectedProtocol={selectedProtocol}/>
-                </div>}
+                  <TrafficPieChart pieChartMode={statsMode} data={pieStatsData} selectedProtocol={selectedProtocol} />
+                  <TimelineBarChart timeLineBarChartMode={statsMode} data={timelineStatsData} selectedProtocol={selectedProtocol} />
+                </div>
+              </LoadingWrapper>
             </div>
           </div>
         </Box>

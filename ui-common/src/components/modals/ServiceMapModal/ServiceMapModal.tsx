@@ -1,7 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { Box, Fade, Modal, Backdrop, Button } from "@mui/material";
 import { toast } from "react-toastify";
-import spinnerImg from 'assets/spinner.svg';
 import Graph from "react-graph-vis";
 import debounce from 'lodash/debounce';
 import ServiceMapOptions from './ServiceMapOptions'
@@ -16,6 +15,7 @@ import { GraphData, ServiceMapGraph } from "./ServiceMapModalTypes"
 import { Utils } from "../../../helpers/Utils";
 import { TOAST_CONTAINER_ID } from "../../../configs/Consts";
 import Resizeable from "../../UI/Resizeable/Resizeable"
+import { LoadingWrapper } from "../../UI/withLoading/withLoading";
 
 const modalStyle = {
     position: 'absolute',
@@ -197,14 +197,14 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
             <Fade in={isOpen}>
                 <Box sx={modalStyle}>
                     <div className={styles.closeIcon}>
-                        <img src={closeIcon} alt="close" onClick={() => onClose()} style={{ cursor: "pointer", userSelect: "none" }}/>
+                        <img src={closeIcon} alt="close" onClick={() => onClose()} style={{ cursor: "pointer", userSelect: "none" }} />
                     </div>
                     <div className={styles.headerContainer}>
                         <div className={styles.headerSection}>
                             <span className={styles.title}>Services</span>
                             <Button size="medium"
                                 variant="contained"
-                                startIcon={<img src={isFilterClicked ? filterIconClicked : filterIcon} className="custom" alt="refresh" style={{ height: "26px", width: "26px" }}/>}
+                                startIcon={<img src={isFilterClicked ? filterIconClicked : filterIcon} className="custom" alt="refresh" style={{ height: "26px", width: "26px" }} />}
                                 className={commonClasses.outlinedButton + " " + commonClasses.imagedButton + ` ${isFilterClicked ? commonClasses.clickedButton : ""}`}
                                 onClick={() => setIsFilterClicked(prevState => !prevState)}
                                 style={{ textTransform: 'unset' }}>
@@ -243,16 +243,14 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
                         <div className={styles.graphSection}>
                             <div style={{ display: "flex", justifyContent: "space-between" }}>
                             </div>
-                            {isLoading && <div className={styles.spinnerContainer}>
-                                <img alt="spinner" src={spinnerImg} style={{ height: 50 }} />
-                            </div>}
-                            {!isLoading && <div style={{ height: "100%", width: "100%" }}>
-                                <Graph
-                                    graph={graphData}
-                                    options={graphOptions}
-                                />
-                            </div>
-                            }
+                            <LoadingWrapper isLoading={isLoading} loaderHeight={50} loaderMargin={20}>
+                                <div style={{ height: "100%", width: "100%" }}>
+                                    <Graph
+                                        graph={graphData}
+                                        options={graphOptions}
+                                    />
+                                </div>
+                            </LoadingWrapper>
                         </div>
                     </div>
                 </Box>
