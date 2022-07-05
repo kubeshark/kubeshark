@@ -21,7 +21,7 @@ docker run --rm \
 	-it mizu-ebpf-builder \
 	sh -c "
 		BPF_TARGET=\"$BPF_TARGET\" BPF_CFLAGS=\"$BPF_CFLAGS\" go generate tap/tlstapper/tls_tapper.go
-		chown $(id -u):$(id -g) tap/tlstapper/tlstapper_bpf*
+        chown $(id -u):$(id -g) tap/tlstapper/tlstapper*_bpf*
 	" || exit 1
 
 popd

@@ -12,8 +12,8 @@ import TrafficViewerApiAtom from "../../recoil/TrafficViewerApi/atom";
 import queryAtom from "../../recoil/query/atom";
 import useWindowDimensions, { useRequestTextByWidth } from "../../hooks/WindowDimensionsHook";
 import { TOAST_CONTAINER_ID } from "../../configs/Consts";
-import spinner from "assets/spinner.svg";
 import entryDataAtom from "../../recoil/entryData";
+import { LoadingWrapper } from "../UI/withLoading/withLoading";
 
 const useStyles = makeStyles(() => ({
     entryTitle: {
@@ -135,19 +135,11 @@ export const EntryDetailed = () => {
         // eslint-disable-next-line
     }, [focusedEntryId]);
 
-    return <React.Fragment>
-      {isLoading && <div style={{textAlign: "center", width: "100%", marginTop: 50}}><img alt="spinner" src={spinner} style={{height: 60}}/></div>}
-      {!isLoading && entryData && <EntryTitle
-            protocol={entryData.protocol}
-            data={entryData.data}
-            elapsedTime={entryData.data.elapsedTime}
-        />}
-        {!isLoading && entryData && <EntrySummary entry={entryData.base} namespace={entryData.data.namespace} />}
-        <React.Fragment>
-            {!isLoading && entryData && <EntryViewer
-                representation={entryData.representation}
-                color={entryData.protocol.backgroundColor}
-            />}
-        </React.Fragment>
-    </React.Fragment>
+    return <LoadingWrapper isLoading={isLoading} loaderMargin={50} loaderHeight={60}>
+        {entryData && <React.Fragment>
+            <EntryTitle protocol={entryData.protocol} data={entryData.data} elapsedTime={entryData.data.elapsedTime} />
+            <EntrySummary entry={entryData.base} namespace={entryData.data.namespace} />
+            <EntryViewer representation={entryData.representation} color={entryData.protocol.backgroundColor} />
+        </React.Fragment>}
+    </LoadingWrapper>
 };
