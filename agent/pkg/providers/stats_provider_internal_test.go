@@ -195,7 +195,7 @@ func TestGetAggregatedStatsFromSpecificTime(t *testing.T) {
 			},
 		},
 	}
-	actual := getAggregatedResultTiming(time.Minute*5, bucketStatsForTest)
+	actual := getAggregatedResultTiming(bucketStatsForTest, time.Minute*5)
 
 	if !reflect.DeepEqual(actual, expected) {
 		t.Errorf("unexpected result - expected: %v, actual: %v", 3, len(actual))
@@ -291,7 +291,7 @@ func TestGetAggregatedStatsFromSpecificTimeMultipleBuckets(t *testing.T) {
 			},
 		},
 	}
-	actual := getAggregatedResultTiming(time.Minute, bucketStatsForTest)
+	actual := getAggregatedResultTiming(bucketStatsForTest, time.Minute)
 
 	if !reflect.DeepEqual(actual, expected) {
 		t.Errorf("unexpected result - expected: %v, actual: %v", 3, len(actual))

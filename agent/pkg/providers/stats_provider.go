@@ -1,6 +1,9 @@
 package providers
 
 import (
+	"crypto/md5"
+	"encoding/hex"
+	"fmt"
 	"reflect"
 	"strings"
 	"sync"
@@ -36,13 +39,13 @@ type SizeAndEntriesCount struct {
 
 type AccumulativeStatsCounter struct {
 	Name            string `json:"name"`
+	Color           string `json:"color"`
 	EntriesCount    int    `json:"entriesCount"`
 	VolumeSizeBytes int    `json:"volumeSizeBytes"`
 }
 
 type AccumulativeStatsProtocol struct {
 	AccumulativeStatsCounter
-	Color   string                      `json:"color"`
 	Methods []*AccumulativeStatsCounter `json:"methods"`
 }
 
@@ -79,7 +82,8 @@ func GetGeneralStats() *GeneralStats {
 
 func InitProtocolToColor(protocolMap map[string]*api.Protocol) {
 	for item, value := range protocolMap {
-		protocolToColor[strings.Split(item, "/")[2]] = value.BackgroundColor
+		splitted := strings.SplitN(item, "/", 3)
+		protocolToColor[splitted[len(splitted)-1]] = value.BackgroundColor
 	}
 }
 
@@ -209,11 +213,11 @@ func convertAccumulativeStatsTimelineDictToArray(methodsPerProtocolPerTimeAggreg
 	finalResult := make([]*AccumulativeStatsProtocolTime, 0)
 	for timeKey, item := range methodsPerProtocolPerTimeAggregated {
 		protocolsData := make([]*AccumulativeStatsProtocol, 0)
-		for protocolName := range item {
+		for protocolName, value := range item {
 			entriesCount := 0
 			volumeSizeBytes := 0
 			methods := make([]*AccumulativeStatsCounter, 0)
-			for _, methodAccData := range methodsPerProtocolPerTimeAggregated[timeKey][protocolName] {
+			for _, methodAccData := range value {
 				entriesCount += methodAccData.EntriesCount
 				volumeSizeBytes += methodAccData.VolumeSizeBytes
 				methods = append(methods, methodAccData)
@@ -221,10 +225,10 @@ func convertAccumulativeStatsTimelineDictToArray(methodsPerProtocolPerTimeAggreg
 			protocolsData = append(protocolsData, &AccumulativeStatsProtocol{
 				AccumulativeStatsCounter: AccumulativeStatsCounter{
 					Name:            protocolName,
+					Color:           protocolToColor[protocolName],
 					EntriesCount:    entriesCount,
 					VolumeSizeBytes: volumeSizeBytes,
 				},
-				Color:   protocolToColor[protocolName],
 				Methods: methods,
 			})
 		}
@@ -250,10 +254,10 @@ func convertAccumulativeStatsDictToArray(methodsPerProtocolAggregated map[string
 		protocolsData = append(protocolsData, &AccumulativeStatsProtocol{
 			AccumulativeStatsCounter: AccumulativeStatsCounter{
 				Name:            protocolName,
+				Color:           protocolToColor[protocolName],
 				EntriesCount:    entriesCount,
 				VolumeSizeBytes: volumeSizeBytes,
 			},
-			Color:   protocolToColor[protocolName],
 			Methods: methods,
 		})
 	}
@@ -291,6 +295,7 @@ func getAggregatedResultTiming(stats BucketStats, interval time.Duration) map[ti
 				if _, ok := methodsPerProtocolPerTimeAggregated[resultBucketRoundedKey][protocolName][methodName]; !ok {
 					methodsPerProtocolPerTimeAggregated[resultBucketRoundedKey][protocolName][methodName] = &AccumulativeStatsCounter{
 						Name:            methodName,
+						Color:           getColorForMethod(protocolName, methodName),
 						EntriesCount:    0,
 						VolumeSizeBytes: 0,
 					}
@@ -316,6 +321,7 @@ func getAggregatedStats(stats BucketStats) map[string]map[string]*AccumulativeSt
 				if _, found := methodsPerProtocolAggregated[protocolName][method]; !found {
 					methodsPerProtocolAggregated[protocolName][method] = &AccumulativeStatsCounter{
 						Name:            method,
+						Color:           getColorForMethod(protocolName, method),
 						EntriesCount:    0,
 						VolumeSizeBytes: 0,
 					}
@@ -328,14 +334,24 @@ func getAggregatedStats(stats BucketStats) map[string]map[string]*AccumulativeSt
 	return methodsPerProtocolAggregated
 }
 
+func getColorForMethod(protocolName string, methodName string) string {
+	hash := md5.Sum([]byte(fmt.Sprintf("%v_%v", protocolName, methodName)))
+	input := hex.EncodeToString(hash[:])
+	return fmt.Sprintf("#%v", input[:6])
+}
+
 func getAvailableProtocols(stats BucketStats) []string {
-	protocols := make([]string, 0)
+	protocols := map[string]bool{}
 	for _, countersOfTimeFrame := range stats {
 		for protocolName := range countersOfTimeFrame.ProtocolStats {
-			protocols = append(protocols, protocolName)
+			protocols[protocolName] = true
 		}
 	}
 
-	protocols = append(protocols, "ALL")
-	return protocols
+	result := make([]string, 0)
+	for protocol := range protocols {
+		result = append(result, protocol)
+	}
+	result = append(result, "ALL")
+	return result
 }
