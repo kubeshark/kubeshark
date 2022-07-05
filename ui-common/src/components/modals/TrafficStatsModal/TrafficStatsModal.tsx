@@ -4,9 +4,9 @@ import styles from "./TrafficStatsModal.module.sass";
 import closeIcon from "assets/close.svg";
 import { TrafficPieChart } from "./TrafficPieChart/TrafficPieChart";
 import { TimelineBarChart } from "./TimelineBarChart/TimelineBarChart";
-import spinnerImg from "assets/spinner.svg";
 import refreshIcon from "assets/refresh.svg";
 import { useCommonStyles } from "../../../helpers/commonStyle";
+import { LoadingWrapper } from "../../UI/withLoading/withLoading";
 
 const modalStyle = {
   position: 'absolute',
@@ -33,9 +33,7 @@ interface TrafficStatsModalProps {
   getTrafficStatsDataApi: () => Promise<any>
 }
 
-
-export const PROTOCOLS = ["ALL", "gRPC", "REDIS", "HTTP", "GQL", "AMQP", "KAFKA"];
-export const ALL_PROTOCOLS = PROTOCOLS[0];
+export const ALL_PROTOCOLS = "ALL";
 
 export const TrafficStatsModal: React.FC<TrafficStatsModalProps> = ({ isOpen, onClose, getTrafficStatsDataApi }) => {
 
@@ -44,6 +42,7 @@ export const TrafficStatsModal: React.FC<TrafficStatsModalProps> = ({ isOpen, on
   const [selectedProtocol, setSelectedProtocol] = useState(ALL_PROTOCOLS);
   const [pieStatsData, setPieStatsData] = useState(null);
   const [timelineStatsData, setTimelineStatsData] = useState(null);
+  const [protocols, setProtocols] = useState([])
   const [isLoading, setIsLoading] = useState(false);
   const commonClasses = useCommonStyles();
 
@@ -55,6 +54,7 @@ export const TrafficStatsModal: React.FC<TrafficStatsModalProps> = ({ isOpen, on
           const statsData = await getTrafficStatsDataApi();
           setPieStatsData(statsData.pie);
           setTimelineStatsData(statsData.timeline);
+          setProtocols(statsData.protocols)
         } catch (e) {
           console.error(e)
         } finally {
@@ -109,18 +109,17 @@ export const TrafficStatsModal: React.FC<TrafficStatsModalProps> = ({ isOpen, on
               <div>
                 <span style={{ marginRight: 15 }}>Protocol</span>
                 <select className={styles.select} value={selectedProtocol} onChange={(e) => setSelectedProtocol(e.target.value)}>
-                  {PROTOCOLS.map(protocol => <option key={protocol} value={protocol}>{protocol}</option>)}
+                  {protocols.map(protocol => <option key={protocol} value={protocol}>{protocol}</option>)}
                 </select>
               </div>
             </div>
             <div>
-              {isLoading ? <div style={{ textAlign: "center", marginTop: 20 }}>
-                <img alt="spinner" src={spinnerImg} style={{ height: 50 }} />
-              </div> :
+              <LoadingWrapper isLoading={isLoading} loaderMargin={20} loaderHeight={50}>
                 <div>
-                  <TrafficPieChart pieChartMode={statsMode} data={pieStatsData} selectedProtocol={selectedProtocol}/>
-                  <TimelineBarChart timeLineBarChartMode={statsMode} data={timelineStatsData} selectedProtocol={selectedProtocol}/>
-                </div>}
+                  <TrafficPieChart pieChartMode={statsMode} data={pieStatsData} selectedProtocol={selectedProtocol} />
+                  <TimelineBarChart timeLineBarChartMode={statsMode} data={timelineStatsData} selectedProtocol={selectedProtocol} />
+                </div>
+              </LoadingWrapper>
             </div>
           </div>
         </Box>
