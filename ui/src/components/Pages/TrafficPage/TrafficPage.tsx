@@ -14,6 +14,7 @@ import trafficStatsIcon from "../../assets/trafficStats.svg";
 import trafficStatsModalOpenAtom from "../../../recoil/trafficStatsModalOpen";
 
 const api = Api.getInstance();
+const REPLAY_ENABLED = true;
 
 export const TrafficPage: React.FC = () => {
   const commonClasses = useCommonStyles();
@@ -40,39 +41,41 @@ export const TrafficPage: React.FC = () => {
   }, 500);
 
   const actionButtons = <div style={{ display: 'flex', height: "100%" }}>
-      {window["isOasEnabled"] && <Button
-        startIcon={<img className="custom" src={services} alt="services" />}
-        size="large"
-        variant="contained"
-        className={commonClasses.outlinedButton + " " + commonClasses.imagedButton}
-        style={{ marginRight: 25, textTransform: 'unset' }}
-        onClick={handleOpenOasModal}>
-        Service Catalog
-      </Button>}
-      {window["isServiceMapEnabled"] && <Button
-        startIcon={<img src={serviceMap} className="custom" alt="service-map" style={{ marginRight: "8%" }} />}
-        size="large"
-        variant="contained"
-        className={commonClasses.outlinedButton + " " + commonClasses.imagedButton}
-        onClick={openServiceMapModalDebounce}
-        style={{ marginRight: 25, textTransform: 'unset' }}>
-        Service Map
-      </Button>}
+    {window["isOasEnabled"] && <Button
+      startIcon={<img className="custom" src={services} alt="services" />}
+      size="large"
+      variant="contained"
+      className={commonClasses.outlinedButton + " " + commonClasses.imagedButton}
+      style={{ marginRight: 25, textTransform: 'unset' }}
+      onClick={handleOpenOasModal}>
+      Service Catalog
+    </Button>}
+    {window["isServiceMapEnabled"] && <Button
+      startIcon={<img src={serviceMap} className="custom" alt="service-map" style={{ marginRight: "8%" }} />}
+      size="large"
+      variant="contained"
+      className={commonClasses.outlinedButton + " " + commonClasses.imagedButton}
+      onClick={openServiceMapModalDebounce}
+      style={{ marginRight: 25, textTransform: 'unset' }}>
+      Service Map
+    </Button>}
     <Button
-        startIcon={<img className="custom" src={trafficStatsIcon} alt="services" />}
-        size="large"
-        variant="contained"
-        className={commonClasses.outlinedButton + " " + commonClasses.imagedButton}
-        style={{ textTransform: 'unset' }}
-        onClick={handleOpenStatsModal}>
+      startIcon={<img className="custom" src={trafficStatsIcon} alt="services" />}
+      size="large"
+      variant="contained"
+      className={commonClasses.outlinedButton + " " + commonClasses.imagedButton}
+      style={{ textTransform: 'unset' }}
+      onClick={handleOpenStatsModal}>
       Traffic Stats
     </Button>
-    </div>
+  </div>
 
   return (
     <>
       <TrafficViewer webSocketUrl={MizuWebsocketURL} shouldCloseWebSocket={shouldCloseWebSocket} setShouldCloseWebSocket={setShouldCloseWebSocket}
-        trafficViewerApiProp={trafficViewerApi} actionButtons={actionButtons} isShowStatusBar={!(openOasModal || serviceMapModalOpen || trafficStatsModalOpen)} isDemoBannerView={false} />
+        trafficViewerApiProp={trafficViewerApi} actionButtons={actionButtons} isShowStatusBar={!(openOasModal || serviceMapModalOpen || trafficStatsModalOpen)} isDemoBannerView={false} entryDetailedConfig={{
+          isReplayEnabled: REPLAY_ENABLED
+        }} />
     </>
   );
 };
