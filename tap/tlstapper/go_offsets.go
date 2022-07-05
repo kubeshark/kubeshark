@@ -2,8 +2,10 @@ package tlstapper
 
 import (
 	"bufio"
+	"debug/dwarf"
 	"debug/elf"
 	"fmt"
+	"io"
 	"os"
 	"runtime"
 
@@ -13,9 +15,22 @@ import (
 	"github.com/up9inc/mizu/logger"
 )
 
+type goAbi int
+
+const (
+	ABI0 goAbi = iota
+	ABIInternal
+)
+
+const PtrSize int = 8
+
 type goOffsets struct {
 	GoWriteOffset *goExtendedOffset
 	GoReadOffset  *goExtendedOffset
+	GoVersion     string
+	Abi           goAbi
+	GoidOffset    uint64
+	GStructOffset uint64
 }
 
 type goExtendedOffset struct {
@@ -24,30 +39,33 @@ type goExtendedOffset struct {
 }
 
 const (
-	minimumSupportedGoVersion = "1.17.0"
-	goVersionSymbol           = "runtime.buildVersion.str"
-	goWriteSymbol             = "crypto/tls.(*Conn).Write"
-	goReadSymbol              = "crypto/tls.(*Conn).Read"
+	minimumABIInternalGoVersion = "1.17.0"
+	goVersionSymbol             = "runtime.buildVersion.str" // symbol does not exist in Go (<=1.16)
+	goWriteSymbol               = "crypto/tls.(*Conn).Write"
+	goReadSymbol                = "crypto/tls.(*Conn).Read"
 )
 
 func findGoOffsets(filePath string) (goOffsets, error) {
-	offsets, err := getOffsets(filePath)
+	offsets, goidOffset, gStructOffset, err := getOffsets(filePath)
 	if err != nil {
 		return goOffsets{}, err
 	}
+
+	abi := ABI0
+	var passed bool
+	var goVersion string
 
 	goVersionOffset, err := getOffset(offsets, goVersionSymbol)
-	if err != nil {
-		return goOffsets{}, err
+	if err == nil {
+		// TODO: Replace this logic with https://pkg.go.dev/debug/buildinfo#ReadFile once we upgrade to 1.18
+		passed, goVersion, err = checkGoVersion(filePath, goVersionOffset)
+		if err != nil {
+			return goOffsets{}, fmt.Errorf("Checking Go version: %s", err)
+		}
 	}
 
-	passed, goVersion, err := checkGoVersion(filePath, goVersionOffset)
-	if err != nil {
-		return goOffsets{}, fmt.Errorf("Checking Go version: %s", err)
-	}
-
-	if !passed {
-		return goOffsets{}, fmt.Errorf("Unsupported Go version: %s", goVersion)
+	if passed {
+		abi = ABIInternal
 	}
 
 	writeOffset, err := getOffset(offsets, goWriteSymbol)
@@ -63,10 +81,139 @@ func findGoOffsets(filePath string) (goOffsets, error) {
 	return goOffsets{
 		GoWriteOffset: writeOffset,
 		GoReadOffset:  readOffset,
+		GoVersion:     goVersion,
+		Abi:           abi,
+		GoidOffset:    goidOffset,
+		GStructOffset: gStructOffset,
 	}, nil
 }
 
-func getOffsets(filePath string) (offsets map[string]*goExtendedOffset, err error) {
+func getSymbol(exe *elf.File, name string) *elf.Symbol {
+	symbols, err := exe.Symbols()
+	if err != nil {
+		return nil
+	}
+
+	for _, symbol := range symbols {
+		if symbol.Name == name {
+			s := symbol
+			return &s
+		}
+	}
+	return nil
+}
+
+func getGStructOffset(exe *elf.File) (gStructOffset uint64, err error) {
+	// This is a bit arcane. Essentially:
+	// - If the program is pure Go, it can do whatever it wants, and puts the G
+	//   pointer at %fs-8 on 64 bit.
+	// - %Gs is the index of private storage in GDT on 32 bit, and puts the G
+	//   pointer at -4(tls).
+	// - Otherwise, Go asks the external linker to place the G pointer by
+	//   emitting runtime.tlsg, a TLS symbol, which is relocated to the chosen
+	//   offset in libc's TLS block.
+	// - On ARM64 (but really, any architecture other than i386 and 86x64) the
+	//   offset is calculate using runtime.tls_g and the formula is different.
+
+	var tls *elf.Prog
+	for _, prog := range exe.Progs {
+		if prog.Type == elf.PT_TLS {
+			tls = prog
+			break
+		}
+	}
+
+	switch exe.Machine {
+	case elf.EM_X86_64, elf.EM_386:
+		tlsg := getSymbol(exe, "runtime.tlsg")
+		if tlsg == nil || tls == nil {
+			gStructOffset = ^uint64(PtrSize) + 1 //-ptrSize
+			return
+		}
+
+		// According to https://reviews.llvm.org/D61824, linkers must pad the actual
+		// size of the TLS segment to ensure that (tlsoffset%align) == (vaddr%align).
+		// This formula, copied from the lld code, matches that.
+		// https://github.com/llvm-mirror/lld/blob/9aef969544981d76bea8e4d1961d3a6980980ef9/ELF/InputSection.cpp#L643
+		memsz := tls.Memsz + (-tls.Vaddr-tls.Memsz)&(tls.Align-1)
+
+		// The TLS register points to the end of the TLS block, which is
+		// tls.Memsz long. runtime.tlsg is an offset from the beginning of that block.
+		gStructOffset = ^(memsz) + 1 + tlsg.Value // -tls.Memsz + tlsg.Value
+
+	case elf.EM_AARCH64:
+		tlsg := getSymbol(exe, "runtime.tls_g")
+		if tlsg == nil || tls == nil {
+			gStructOffset = 2 * uint64(PtrSize)
+			return
+		}
+
+		gStructOffset = tlsg.Value + uint64(PtrSize*2) + ((tls.Vaddr - uint64(PtrSize*2)) & (tls.Align - 1))
+
+	default:
+		// we should never get here
+		err = fmt.Errorf("architecture not supported")
+	}
+
+	return
+}
+
+func getGoidOffset(elfFile *elf.File) (goidOffset uint64, gStructOffset uint64, err error) {
+	var dwarfData *dwarf.Data
+	dwarfData, err = elfFile.DWARF()
+	if err != nil {
+		return
+	}
+
+	entryReader := dwarfData.Reader()
+
+	var runtimeGOffset uint64
+	var seenRuntimeG bool
+
+	for {
+		// Read all entries in sequence
+		var entry *dwarf.Entry
+		entry, err = entryReader.Next()
+		if err == io.EOF || entry == nil {
+			// We've reached the end of DWARF entries
+			break
+		}
+
+		// Check if this entry is a struct
+		if entry.Tag == dwarf.TagStructType {
+			// Go through fields
+			for _, field := range entry.Field {
+				if field.Attr == dwarf.AttrName {
+					val := field.Val.(string)
+					if val == "runtime.g" {
+						runtimeGOffset = uint64(entry.Offset)
+						seenRuntimeG = true
+					}
+				}
+			}
+		}
+
+		// Check if this entry is a struct member
+		if seenRuntimeG && entry.Tag == dwarf.TagMember {
+			// Go through fields
+			for _, field := range entry.Field {
+				if field.Attr == dwarf.AttrName {
+					val := field.Val.(string)
+					if val == "goid" {
+						goidOffset = uint64(entry.Offset) - runtimeGOffset - 0x4b
+						gStructOffset, err = getGStructOffset(elfFile)
+						return
+					}
+				}
+			}
+		}
+	}
+
+	err = fmt.Errorf("goid not found in DWARF")
+	return
+}
+
+func getOffsets(filePath string) (offsets map[string]*goExtendedOffset, goidOffset uint64, gStructOffset uint64, err error) {
 	var engine gapstone.Engine
 	switch runtime.GOARCH {
 	case "amd64":
@@ -104,13 +251,13 @@ func getOffsets(filePath string) (offsets map[string]*goExtendedOffset, err erro
 	}
 	defer fd.Close()
 
-	var se *elf.File
-	se, err = elf.NewFile(fd)
+	var elfFile *elf.File
+	elfFile, err = elf.NewFile(fd)
 	if err != nil {
 		return
 	}
 
-	textSection := se.Section(".text")
+	textSection := elfFile.Section(".text")
 	if textSection == nil {
 		err = fmt.Errorf("No text section")
 		return
@@ -124,7 +271,7 @@ func getOffsets(filePath string) (offsets map[string]*goExtendedOffset, err erro
 	}
 
 	var syms []elf.Symbol
-	syms, err = se.Symbols()
+	syms, err = elfFile.Symbols()
 	if err != nil {
 		return
 	}
@@ -132,7 +279,7 @@ func getOffsets(filePath string) (offsets map[string]*goExtendedOffset, err erro
 		offset := sym.Value
 
 		var lastProg *elf.Prog
-		for _, prog := range se.Progs {
+		for _, prog := range elfFile.Progs {
 			if prog.Vaddr <= sym.Value && sym.Value < (prog.Vaddr+prog.Memsz) {
 				offset = sym.Value - prog.Vaddr + prog.Off
 				lastProg = prog
@@ -189,6 +336,8 @@ func getOffsets(filePath string) (offsets map[string]*goExtendedOffset, err erro
 		offsets[sym.Name] = extendedOffset
 	}
 
+	goidOffset, gStructOffset, err = getGoidOffset(elfFile)
+
 	return
 }
 
@@ -229,7 +378,7 @@ func checkGoVersion(filePath string, offset *goExtendedOffset) (bool, string, er
 		return false, goVersionStr, err
 	}
 
-	goVersionConstraint, err := semver.NewConstraint(fmt.Sprintf(">= %s", minimumSupportedGoVersion))
+	goVersionConstraint, err := semver.NewConstraint(fmt.Sprintf(">= %s", minimumABIInternalGoVersion))
 	if err != nil {
 		return false, goVersionStr, err
 	}
