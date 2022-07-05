@@ -12,7 +12,6 @@ import { toast } from "react-toastify";
 import { TOAST_CONTAINER_ID } from "../../../configs/Consts";
 import styles from './ReplayRequestModal.module.sass'
 import closeIcon from "assets/close.svg"
-import spinnerImg from "assets/spinner.svg"
 import refreshImg from "assets/refresh.svg"
 import { formatRequestWithOutError } from "../../EntryDetailed/EntrySections/EntrySections";
 import entryDataAtom from "../../../recoil/entryData";
@@ -20,6 +19,7 @@ import { AutoRepresentation, TabsEnum } from "../../EntryDetailed/EntryViewer/Au
 import useDebounce from "../../../hooks/useDebounce"
 import replayRequestModalOpenAtom from "../../../recoil/replayRequestModalOpen";
 import { Utils } from "../../../helpers/Utils";
+import { LoadingWrapper } from "../../UI/withLoading/withLoading";
 
 const modalStyle = {
     position: 'absolute',
@@ -233,15 +233,16 @@ const ReplayRequestModal: React.FC<ReplayRequestModalProps> = ({ isOpen, onClose
                                 </div>
                             </AccordionDetails>
                         </Accordion>
-                        {isLoading && <img alt="spinner" src={spinnerImg} style={{ height: 50 }} />}
-                        {response && !isLoading && (<Accordion TransitionProps={{ unmountOnExit: true }} expanded={responseExpanded} onChange={() => setResponseExpanded(!responseExpanded)}>
-                            <AccordionSummary expandIcon={<ExpandMoreIcon />} aria-controls="response-content">
-                                <span className={styles.sectionHeader}>RESPONSE</span>
-                            </AccordionSummary>
-                            <AccordionDetails>
-                                <AutoRepresentation representation={response} color={entryData.protocol.backgroundColor} openedTab={TabsEnum.Response} />
-                            </AccordionDetails>
-                        </Accordion>)}
+                        <LoadingWrapper isLoading={isLoading} loaderMargin={10} loaderHeight={50}>
+                            {response && (<Accordion TransitionProps={{ unmountOnExit: true }} expanded={responseExpanded} onChange={() => setResponseExpanded(!responseExpanded)}>
+                                <AccordionSummary expandIcon={<ExpandMoreIcon />} aria-controls="response-content">
+                                    <span className={styles.sectionHeader}>RESPONSE</span>
+                                </AccordionSummary>
+                                <AccordionDetails>
+                                    <AutoRepresentation representation={response} color={entryData.protocol.backgroundColor} openedTab={TabsEnum.Response} />
+                                </AccordionDetails>
+                            </Accordion>)}
+                        </LoadingWrapper>
                     </div>
                 </Box>
             </Fade>
