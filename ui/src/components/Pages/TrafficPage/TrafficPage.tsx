@@ -12,9 +12,9 @@ import serviceMap from "../../assets/serviceMap.svg";
 import services from "../../assets/services.svg";
 import trafficStatsIcon from "../../assets/trafficStats.svg";
 import trafficStatsModalOpenAtom from "../../../recoil/trafficStatsModalOpen";
+import { REPLAY_ENABLED } from "../../../consts";
 
 const api = Api.getInstance();
-const REPLAY_ENABLED = true;
 
 export const TrafficPage: React.FC = () => {
   const commonClasses = useCommonStyles();
