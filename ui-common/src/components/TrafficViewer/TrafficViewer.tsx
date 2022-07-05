@@ -67,6 +67,7 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({
   const classes = useLayoutStyles();
   const setEntries = useSetRecoilState(entriesAtom);
   const setFocusedEntryId = useSetRecoilState(focusedEntryIdAtom);
+  const setEntryDetailedConfigAtom = useSetRecoilState(entryDetailedConfigAtom)
   const query = useRecoilValue(queryAtom);
   const setTrafficViewerApiState = useSetRecoilState(trafficViewerApiAtom as RecoilState<TrafficViewerApi>)
   const [tappingStatus, setTappingStatus] = useRecoilState(tappingStatusAtom);
