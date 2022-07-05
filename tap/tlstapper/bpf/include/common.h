@@ -9,18 +9,6 @@ Copyright (C) UP9 Inc.
 
 #define AF_INET	2	/* Internet IP Protocol */
 
-#ifndef memset
-# define memset(dest, chr, n)   __builtin_memset((dest), (chr), (n))
-#endif
-
-#ifndef memcpy
-# define memcpy(dest, src, n)   __builtin_memcpy((dest), (src), (n))
-#endif
-
-#ifndef memmove
-# define memmove(dest, src, n)  __builtin_memmove((dest), (src), (n))
-#endif
-
 const __s32 invalid_fd = -1;
 
 static int add_address_to_chunk(struct pt_regs *ctx, struct tls_chunk* chunk, __u64 id, __u32 fd, struct ssl_info* info);

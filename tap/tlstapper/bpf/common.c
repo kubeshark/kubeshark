@@ -40,7 +40,7 @@ static __always_inline int add_address_to_chunk(struct pt_regs *ctx, struct tls_
             }
             break;
         default:
-            (void)memcpy(&chunk->address_info, &info->address_info, sizeof(chunk->address_info));
+            bpf_probe_read(&chunk->address_info, sizeof(chunk->address_info), &info->address_info);
     }
 
     chunk->flags |= (fdinfo->flags & FLAGS_IS_CLIENT_BIT);
