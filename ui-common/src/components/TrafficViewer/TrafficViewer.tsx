@@ -258,7 +258,9 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({
           </div>
         </div>
         <div className={classes.details} id="rightSideContainer">
-          <EntryDetailed/>
+          <EntryDetailedProvider config={{ isReplayEnabled: false }}>
+            <EntryDetailed />
+          </EntryDetailedProvider>
         </div>
       </div>}
     </div>

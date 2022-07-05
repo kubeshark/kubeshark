@@ -31,12 +31,10 @@ export const AutoRepresentation: React.FC<any> = ({ representation, color, opene
             }]
 
         if (response) {
-            arr.push(
-                {
-                    tab: 'Response',
-                    badge: null
-                }
-            );
+            arr.push({
+                tab: 'Response',
+                badge: null
+            });
         }
 
         return arr
