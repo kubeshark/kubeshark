@@ -82,7 +82,8 @@ func GetGeneralStats() *GeneralStats {
 
 func InitProtocolToColor(protocolMap map[string]*api.Protocol) {
 	for item, value := range protocolMap {
-		protocolToColor[strings.Split(item, "/")[2]] = value.BackgroundColor
+		splitted := strings.SplitN(item, "/", 3)
+		protocolToColor[splitted[len(splitted)-1]] = value.BackgroundColor
 	}
 }
 
