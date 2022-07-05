@@ -8,54 +8,11 @@ Copyright (C) UP9 Inc.
 #define __GO_ABI_INTERNAL__
 
 /*
-Go internal ABI specification
+Go internal ABI (1.17/current) specification
 https://go.googlesource.com/go/+/refs/heads/master/src/cmd/compile/abi-internal.md
 */
 
-/* Scan the ARCH passed in from ARCH env variable */
-#if defined(__TARGET_ARCH_x86)
-    #define bpf_target_x86
-    #define bpf_target_defined
-#elif defined(__TARGET_ARCH_s390)
-    #define bpf_target_s390
-    #define bpf_target_defined
-#elif defined(__TARGET_ARCH_arm)
-    #define bpf_target_arm
-    #define bpf_target_defined
-#elif defined(__TARGET_ARCH_arm64)
-    #define bpf_target_arm64
-    #define bpf_target_defined
-#elif defined(__TARGET_ARCH_mips)
-    #define bpf_target_mips
-    #define bpf_target_defined
-#elif defined(__TARGET_ARCH_powerpc)
-    #define bpf_target_powerpc
-    #define bpf_target_defined
-#elif defined(__TARGET_ARCH_sparc)
-    #define bpf_target_sparc
-    #define bpf_target_defined
-#else
-    #undef bpf_target_defined
-#endif
-
-/* Fall back to what the compiler says */
-#ifndef bpf_target_defined
-#if defined(__x86_64__)
-    #define bpf_target_x86
-#elif defined(__s390__)
-    #define bpf_target_s390
-#elif defined(__arm__)
-    #define bpf_target_arm
-#elif defined(__aarch64__)
-    #define bpf_target_arm64
-#elif defined(__mips__)
-    #define bpf_target_mips
-#elif defined(__powerpc__)
-    #define bpf_target_powerpc
-#elif defined(__sparc__)
-    #define bpf_target_sparc
-#endif
-#endif
+#include "target_arch.h"
 
 #if defined(bpf_target_x86)
 
@@ -78,15 +35,15 @@ https://github.com/golang/go/blob/go1.17.6/src/cmd/compile/internal/ssa/gen/AMD6
 
 #else
 
-#define GO_ABI_INTERNAL_PT_REGS_R1(x) ((x)->rax)
-#define GO_ABI_INTERNAL_PT_REGS_R2(x) ((x)->rcx)
-#define GO_ABI_INTERNAL_PT_REGS_R3(x) ((x)->rdx)
-#define GO_ABI_INTERNAL_PT_REGS_R4(x) ((x)->rbx)
-#define GO_ABI_INTERNAL_PT_REGS_R5(x) ((x)->rbp)
-#define GO_ABI_INTERNAL_PT_REGS_R6(x) ((x)->rsi)
-#define GO_ABI_INTERNAL_PT_REGS_R7(x) ((x)->rdi)
-#define GO_ABI_INTERNAL_PT_REGS_SP(x) ((x)->rsp)
-#define GO_ABI_INTERNAL_PT_REGS_FP(x) ((x)->rbp)
+#define GO_ABI_INTERNAL_PT_REGS_R1(x) ((x)->ax)
+#define GO_ABI_INTERNAL_PT_REGS_R2(x) ((x)->cx)
+#define GO_ABI_INTERNAL_PT_REGS_R3(x) ((x)->dx)
+#define GO_ABI_INTERNAL_PT_REGS_R4(x) ((x)->bx)
+#define GO_ABI_INTERNAL_PT_REGS_R5(x) ((x)->bp)
+#define GO_ABI_INTERNAL_PT_REGS_R6(x) ((x)->si)
+#define GO_ABI_INTERNAL_PT_REGS_R7(x) ((x)->di)
+#define GO_ABI_INTERNAL_PT_REGS_SP(x) ((x)->sp)
+#define GO_ABI_INTERNAL_PT_REGS_FP(x) ((x)->bp)
 #define GO_ABI_INTERNAL_PT_REGS_GP(x) ((x)->r14)
 
 #endif
