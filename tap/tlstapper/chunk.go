@@ -16,18 +16,6 @@ const (
 	addressInfoModePair
 )
 
-func (c *tlsTapperTlsChunk) getFdAddress() (net.IP, uint16, error) {
-	sIP, sPort := c.getSrcAddress()
-	return sIP, sPort, nil
-}
-
-func (c *tlsTapperTlsChunk) getDstAddress() (net.IP, uint16) {
-	ip := intToIP(c.AddressInfo.Daddr)
-	port := ntohs(c.AddressInfo.Dport)
-
-	return ip, port
-}
-
 func (c *tlsTapperTlsChunk) getSrcAddress() (net.IP, uint16) {
 	ip := intToIP(c.AddressInfo.Saddr)
 	port := ntohs(c.AddressInfo.Sport)
@@ -35,12 +23,11 @@ func (c *tlsTapperTlsChunk) getSrcAddress() (net.IP, uint16) {
 	return ip, port
 }
 
-func (c *tlsTapperTlsChunk) getIsAddressPairValid() bool {
-	if c.AddressInfo.Mode == addressInfoModePair {
-		return true
-	}
+func (c *tlsTapperTlsChunk) getDstAddress() (net.IP, uint16) {
+	ip := intToIP(c.AddressInfo.Daddr)
+	port := ntohs(c.AddressInfo.Dport)
 
-	return false
+	return ip, port
 }
 
 func (c *tlsTapperTlsChunk) isClient() bool {
@@ -67,52 +54,44 @@ func (c *tlsTapperTlsChunk) isRequest() bool {
 	return (c.isClient() && c.isWrite()) || (c.isServer() && c.isRead())
 }
 
-func (c *tlsTapperTlsChunk) getFdPartialAddressPair() (addressPair, error) {
-	ip, port, err := c.getFdAddress()
+func (c *tlsTapperTlsChunk) getAddressPair() (addressPair, bool) {
+	var (
+		srcIp, dstIp     net.IP
+		srcPort, dstPort uint16
+		full             bool
+	)
 
-	if err != nil {
-		return addressPair{}, err
+	switch c.AddressInfo.Mode {
+	case addressInfoModeSingle:
+		if c.isRequest() {
+			srcIp, srcPort = api.UnknownIp, api.UnknownPort
+			dstIp, dstPort = c.getSrcAddress()
+		} else {
+			srcIp, srcPort = c.getSrcAddress()
+			dstIp, srcPort = api.UnknownIp, api.UnknownPort
+		}
+		full = false
+	case addressInfoModePair:
+		if c.isRequest() {
+			srcIp, srcPort = c.getSrcAddress()
+			dstIp, dstPort = c.getDstAddress()
+		} else {
+			srcIp, srcPort = c.getDstAddress()
+			dstIp, dstPort = c.getSrcAddress()
+		}
+		full = true
+	case addressInfoModeUndefined:
+		srcIp, srcPort = api.UnknownIp, api.UnknownPort
+		dstIp, dstPort = api.UnknownIp, api.UnknownPort
+		full = false
 	}
 
-	if c.isRequest() {
-		return addressPair{
-			srcIp:   api.UnknownIp,
-			srcPort: api.UnknownPort,
-			dstIp:   ip,
-			dstPort: port,
-		}, nil
-	} else {
-		return addressPair{
-			srcIp:   ip,
-			srcPort: port,
-			dstIp:   api.UnknownIp,
-			dstPort: api.UnknownPort,
-		}, nil
-	}
-}
-
-func (c *tlsTapperTlsChunk) getKprobeAddressPair() (addressPair, bool) {
-	dIP, dPort := c.getDstAddress()
-	sIP, sPort := c.getSrcAddress()
-	isAddressPairValid := c.getIsAddressPairValid()
-
-	if c.isRequest() {
-		return addressPair{
-				srcIp:   sIP,
-				srcPort: sPort,
-				dstIp:   dIP,
-				dstPort: dPort,
-			},
-			isAddressPairValid
-	} else {
-		return addressPair{
-				srcIp:   dIP,
-				srcPort: dPort,
-				dstIp:   sIP,
-				dstPort: sPort,
-			},
-			isAddressPairValid
-	}
+	return addressPair{
+		srcIp:   srcIp,
+		srcPort: srcPort,
+		dstIp:   dstIp,
+		dstPort: dstPort,
+	}, full
 }
 
 // intToIP converts IPv4 number to net.IP

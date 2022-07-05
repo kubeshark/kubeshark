@@ -157,25 +157,19 @@ func (p *tlsPoller) handleTlsChunk(chunk *tlsTapperTlsChunk, extension *api.Exte
 }
 
 func (p *tlsPoller) getAddressPair(chunk *tlsTapperTlsChunk) (addressPair, error) {
-	var addrPair addressPair
-	var err error
-
-	addrPair, isAddressPairValid := chunk.getKprobeAddressPair()
-	if isAddressPairValid {
-		return addrPair, nil
+	addrPairFromChunk, full := chunk.getAddressPair()
+	if full {
+		return addrPairFromChunk, nil
 	}
 
-	addrPair, err = p.getSockfdAddressPair(chunk)
+	addrPairFromSockfd, err := p.getSockfdAddressPair(chunk)
 	if err == nil {
-		return addrPair, nil
+		return addrPairFromSockfd, nil
+	} else {
+		logger.Log.Error("failed to get address from sock fd:", err)
 	}
 
-	addrPair, err = chunk.getFdPartialAddressPair()
-	if err == nil {
-		return addrPair, nil
-	}
-
-	return addressPair{}, err
+	return addrPairFromChunk, err
 }
 
 func (p *tlsPoller) startNewTlsReader(chunk *tlsTapperTlsChunk, address *addressPair, key string,
