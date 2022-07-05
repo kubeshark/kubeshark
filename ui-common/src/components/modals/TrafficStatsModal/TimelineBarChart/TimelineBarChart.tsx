@@ -19,21 +19,21 @@ interface TimelineBarChartProps {
 export const TimelineBarChart: React.FC<TimelineBarChartProps> = ({ timeLineBarChartMode, data, selectedProtocol }) => {
     const [protocolStats, setProtocolStats] = useState([]);
     const [protocolsNamesAndColors, setProtocolsNamesAndColors] = useState([]);
-    const [commandStats, setCommandStats] = useState(null);
-    const [commandNames, setcommandNames] = useState(null);
-
+    const [methodsStats, setMethodsStats] = useState(null);
+    const [methodsNamesAndColors, setMethodsNamesAndColors] = useState(null);
+    
     useEffect(() => {
         if (!data) return;
         const protocolsBarsData = [];
         const prtcNames = [];
         data.sort((a, b) => a.timestamp < b.timestamp ? -1 : 1).forEach(protocolObj => {
-            let newProtocolbj: { [k: string]: any } = {};
-            newProtocolbj.timestamp = Utils.getHoursAndMinutes(protocolObj.timestamp);
+            let newProtocolObj: { [k: string]: any } = {};
+            newProtocolObj.timestamp = Utils.getHoursAndMinutes(protocolObj.timestamp);
             protocolObj.protocols.forEach(protocol => {
-                newProtocolbj[`${protocol.name}`] = protocol[StatsMode[timeLineBarChartMode]];
+                newProtocolObj[`${protocol.name}`] = protocol[StatsMode[timeLineBarChartMode]];
                 prtcNames.push({ name: protocol.name, color: protocol.color });
             })
-            protocolsBarsData.push(newProtocolbj);
+            protocolsBarsData.push(newProtocolObj);
         })
         const uniqueObjArray = Utils.creatUniqueObjArrayByProp(prtcNames, "name")
         setProtocolStats(protocolsBarsData);
@@ -42,49 +42,52 @@ export const TimelineBarChart: React.FC<TimelineBarChartProps> = ({ timeLineBarC
 
     useEffect(() => {
         if (selectedProtocol === ALL_PROTOCOLS) {
-            setCommandStats(null);
-            setcommandNames(null);
+            setMethodsStats(null);
+            setMethodsNamesAndColors(null);
             return;
         }
-        const commandsNames = [];
-        const protocolsCommands = [];
+        const protocolsMethodsNamesAndColors = [];
+        const protocolsMethods = [];
         data.sort((a, b) => a.timestamp < b.timestamp ? -1 : 1).forEach(protocolObj => {
-            let newCommandlbj: { [k: string]: any } = {};
-            newCommandlbj.timestamp = Utils.getHoursAndMinutes(protocolObj.timestamp);
-            protocolObj.protocols.find(protocol => protocol.name === selectedProtocol)?.methods.forEach(command => {
-                newCommandlbj[`${command.name}`] = command[StatsMode[timeLineBarChartMode]]
-                if (commandsNames.indexOf(command.name) === -1)
-                    commandsNames.push(command.name);
+            let newMethodObj: { [k: string]: any } = {};
+            newMethodObj.timestamp = Utils.getHoursAndMinutes(protocolObj.timestamp);
+            protocolObj.protocols.find(protocol => protocol.name === selectedProtocol)?.methods.forEach(method => {
+                newMethodObj[`${method.name}`] = method[StatsMode[timeLineBarChartMode]]
+                protocolsMethodsNamesAndColors.push({name: method.name, color: method.color});
             })
-            protocolsCommands.push(newCommandlbj);
+            protocolsMethods.push(newMethodObj);
         })
-        setcommandNames(commandsNames);
-        setCommandStats(protocolsCommands);
+        const uniqueObjArray = Utils.creatUniqueObjArrayByProp(protocolsMethodsNamesAndColors, "name")
+        setMethodsNamesAndColors(uniqueObjArray);
+        setMethodsStats(protocolsMethods);
     }, [data, timeLineBarChartMode, selectedProtocol])
 
-    const bars = useMemo(() => (commandNames || protocolsNamesAndColors).map((entry) => {
-        return <Bar key={entry.name || entry} dataKey={entry.name || entry} stackId="a" fill={entry.color || Utils.stringToColor(entry)} barSize={30} />
-    }), [protocolsNamesAndColors, commandNames])
+    const bars = useMemo(() => (methodsNamesAndColors || protocolsNamesAndColors).map((entry) => {
+        return <Bar key={entry.name} dataKey={entry.name} stackId="a" fill={entry.color} />
+    }), [protocolsNamesAndColors, methodsNamesAndColors])
 
     const renderTick = (tickProps) => {
         const { x, y, payload } = tickProps;
         const { index, value } = payload;
 
-        if (index % 3 === 0) {
+        if (protocolStats.length > 5) {
+            if (index % 3 === 0) {
+                return <text x={x} y={y + 10} textAnchor="end">{`${value}`}</text>;
+            }
+            return null;
+        }
+        else {
             return <text x={x} y={y + 10} textAnchor="end">{`${value}`}</text>;
         }
-        return null;
     };
-
 
     return (
         <div className={styles.barChartContainer}>
             {protocolStats.length > 0 && <BarChart
                 width={750}
                 height={250}
-                data={commandStats || protocolStats}
-                barCategoryGap={0}
-                barSize={30}
+                data={methodsStats || protocolStats}
+                barCategoryGap={1}
                 margin={{
                     top: 20,
                     right: 30,
@@ -92,8 +95,8 @@ export const TimelineBarChart: React.FC<TimelineBarChartProps> = ({ timeLineBarC
                     bottom: 5
                 }}
             >
-                <XAxis dataKey="timestamp" tick={renderTick} tickLine={false} />
-                <YAxis tickFormatter={(value) => timeLineBarChartMode === "VOLUME" ? Utils.humanFileSize(value) : value} />
+                <XAxis dataKey="timestamp" tick={renderTick} tickLine={false} interval="preserveStart" />
+                <YAxis tickFormatter={(value) => timeLineBarChartMode === "VOLUME" ? Utils.humanFileSize(value) : value} interval="preserveEnd"/>
                 <Tooltip formatter={(value) => timeLineBarChartMode === "VOLUME" ? Utils.humanFileSize(value) : value + " Requests"} />
                 {bars}
             </BarChart>}
