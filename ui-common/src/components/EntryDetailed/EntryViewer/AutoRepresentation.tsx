@@ -6,7 +6,7 @@ import { ReactComponent as ReplayIcon } from './replay.svg';
 import styles from './EntryViewer.module.sass';
 import { Tabs } from "../../UI";
 import replayRequestModalOpenAtom from "../../../recoil/replayRequestModalOpen";
-import { EntryDetailedContext } from "../../context/EntryDetailedContext";
+import entryDetailedConfigAtom, { EntryDetailedConfig } from "../../../recoil/entryDetailedConfig";
 
 const enabledProtocolsForReplay = ["http"]
 
@@ -17,7 +17,7 @@ export enum TabsEnum {
 
 export const AutoRepresentation: React.FC<any> = ({ representation, color, openedTab = TabsEnum.Request, isDisplayReplay = false }) => {
     const entryData = useRecoilValue(entryDataAtom)
-    const { config: { isReplayEnabled } } = React.useContext(EntryDetailedContext)
+    const { isReplayEnabled } = useRecoilValue<EntryDetailedConfig>(entryDetailedConfigAtom)
     const setIsOpenRequestModal = useSetRecoilState(replayRequestModalOpenAtom)
     const isReplayDisplayed = useCallback(() => {
         return enabledProtocolsForReplay.find(x => x === entryData.protocol.name) && isDisplayReplay && isReplayEnabled

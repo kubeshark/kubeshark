@@ -22,7 +22,7 @@ import leftOffTopAtom from "../../recoil/leftOffTop";
 import { DEFAULT_LEFTOFF, DEFAULT_FETCH, DEFAULT_FETCH_TIMEOUT_MS } from '../../hooks/useWS';
 import ReplayRequestModalContainer from "../modals/ReplayRequestModal/ReplayRequestModal";
 import replayRequestModalOpenAtom from "../../recoil/replayRequestModalOpen";
-import EntryDetailedProvider, { EntryDetailedConfig } from "../context/EntryDetailedContext";
+import entryDetailedConfigAtom, { EntryDetailedConfig } from "../../recoil/entryDetailedConfig";
 
 const useLayoutStyles = makeStyles(() => ({
   details: {
@@ -62,8 +62,7 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({
   actionButtons,
   isShowStatusBar, isDemoBannerView,
   shouldCloseWebSocket, setShouldCloseWebSocket,
-  entryDetailedConfig
-}) => {
+  entryDetailedConfig }) => {
 
   const classes = useLayoutStyles();
   const setEntries = useSetRecoilState(entriesAtom);
@@ -181,6 +180,7 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({
   }, [webSocketUrl])
 
   useEffect(() => {
+    setEntryDetailedConfigAtom(entryDetailedConfig)
     return () => {
       if (ws?.current?.readyState === WebSocket.OPEN) {
         ws.current.close();
@@ -263,9 +263,7 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({
           </div>
         </div>
         <div className={classes.details} id="rightSideContainer">
-          <EntryDetailedProvider config={entryDetailedConfig}>
-            <EntryDetailed />
-          </EntryDetailedProvider>
+          <EntryDetailed />
         </div>
       </div>}
     </div>
