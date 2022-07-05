@@ -1,7 +1,6 @@
 package tlstapper
 
 import (
-	"fmt"
 	"strconv"
 	"sync"
 
@@ -44,8 +43,6 @@ func (t *TlsTapper) Init(chunksBufferSize int, logBufferSize int, procfs string,
 	if err != nil {
 		return err
 	}
-
-	fmt.Printf("kernelVersion: %v\n", kernelVersion)
 
 	t.bpfObjects = tlsTapperObjects{}
 	// TODO: cilium/ebpf does not support .kconfig Therefore; for now, we load object files according to kernel version.
