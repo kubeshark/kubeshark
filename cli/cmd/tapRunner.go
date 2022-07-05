@@ -12,7 +12,6 @@ import (
 	"github.com/up9inc/mizu/cli/telemetry"
 	"github.com/up9inc/mizu/cli/utils"
 
-	"gopkg.in/yaml.v3"
 	core "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -44,16 +43,6 @@ func RunMizuTap() {
 	state.startTime = time.Now()
 
 	apiProvider = apiserver.NewProvider(GetApiServerUrl(config.Config.Tap.GuiPort), apiserver.DefaultRetries, apiserver.DefaultTimeout)
-
-	var err error
-	var serializedValidationRules string
-	if config.Config.Tap.EnforcePolicyFile != "" {
-		serializedValidationRules, err = readValidationRules(config.Config.Tap.EnforcePolicyFile)
-		if err != nil {
-			logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error reading policy file: %v", errormessage.FormatError(err)))
-			return
-		}
-	}
 
 	kubernetesProvider, err := getKubernetesProviderForCli()
 	if err != nil {
@@ -98,7 +87,7 @@ func RunMizuTap() {
 	}
 
 	logger.Log.Infof("Waiting for Mizu Agent to start...")
-	if state.mizuServiceAccountExists, err = resources.CreateTapMizuResources(ctx, kubernetesProvider, serializedValidationRules, serializedMizuConfig, config.Config.IsNsRestrictedMode(), config.Config.MizuResourcesNamespace, config.Config.AgentImage, config.Config.Tap.MaxEntriesDBSizeBytes(), config.Config.Tap.ApiServerResources, config.Config.ImagePullPolicy(), config.Config.LogLevel(), config.Config.Tap.Profiler); err != nil {
+	if state.mizuServiceAccountExists, err = resources.CreateTapMizuResources(ctx, kubernetesProvider, serializedMizuConfig, config.Config.IsNsRestrictedMode(), config.Config.MizuResourcesNamespace, config.Config.AgentImage, config.Config.Tap.MaxEntriesDBSizeBytes(), config.Config.Tap.ApiServerResources, config.Config.ImagePullPolicy(), config.Config.LogLevel(), config.Config.Tap.Profiler); err != nil {
 		var statusError *k8serrors.StatusError
 		if errors.As(err, &statusError) && (statusError.ErrStatus.Reason == metav1.StatusReasonAlreadyExists) {
 			logger.Log.Info("Mizu is already running in this namespace, change the `mizu-resources-namespace` configuration or run `mizu clean` to remove the currently running Mizu instance")
@@ -238,15 +227,6 @@ func getErrorDisplayTextForK8sTapManagerError(err kubernetes.K8sTapManagerError)
 	default:
 		return fmt.Sprintf("Unknown error occured in k8s tap manager: %v", err.OriginalError)
 	}
-}
-
-func readValidationRules(file string) (string, error) {
-	rules, err := shared.DecodeEnforcePolicy(file)
-	if err != nil {
-		return "", err
-	}
-	newContent, _ := yaml.Marshal(&rules)
-	return string(newContent), nil
 }
 
 func getMizuApiFilteringOptions() (*api.TrafficFilteringOptions, error) {

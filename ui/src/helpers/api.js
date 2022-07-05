@@ -57,6 +57,11 @@ export default class Api {
         return response.data;
     }
 
+    replayRequest = async (requestData) => {
+        const response = await client.post(`/replay/`, requestData);
+        return response.data;
+    }
+
     getAuthStatus = async () => {
         const response = await client.get("/status/auth");
         return response.data;
@@ -111,13 +116,8 @@ export default class Api {
         });
     }
 
-    getPieStats = async () => {
-        const response = await client.get("/status/accumulative");
-        return response.data;
-    }
-
-    getTimelineStats = async () => {
-        const response = await client.get("/status/accumulativeTiming");
+    getTrafficStats = async () => {
+        const response = await client.get("/status/trafficStats");
         return response.data;
     }
 }

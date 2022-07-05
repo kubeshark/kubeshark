@@ -26,7 +26,7 @@ export const TimelineBarChart: React.FC<TimelineBarChartProps> = ({ timeLineBarC
         if (!data) return;
         const protocolsBarsData = [];
         const prtcNames = [];
-        data.forEach(protocolObj => {
+        data.sort((a, b) => a.timestamp < b.timestamp ? -1 : 1).forEach(protocolObj => {
             let newProtocolbj: { [k: string]: any } = {};
             newProtocolbj.timestamp = Utils.getHoursAndMinutes(protocolObj.timestamp);
             protocolObj.protocols.forEach(protocol => {
@@ -36,7 +36,6 @@ export const TimelineBarChart: React.FC<TimelineBarChartProps> = ({ timeLineBarC
             protocolsBarsData.push(newProtocolbj);
         })
         const uniqueObjArray = Utils.creatUniqueObjArrayByProp(prtcNames, "name")
-        protocolsBarsData.sort((a, b) => a.timestamp < b.timestamp ? -1 : 1);
         setProtocolStats(protocolsBarsData);
         setProtocolsNamesAndColors(uniqueObjArray);
     }, [data, timeLineBarChartMode])
@@ -49,7 +48,7 @@ export const TimelineBarChart: React.FC<TimelineBarChartProps> = ({ timeLineBarC
         }
         const commandsNames = [];
         const protocolsCommands = [];
-        data.forEach(protocolObj => {
+        data.sort((a, b) => a.timestamp < b.timestamp ? -1 : 1).forEach(protocolObj => {
             let newCommandlbj: { [k: string]: any } = {};
             newCommandlbj.timestamp = Utils.getHoursAndMinutes(protocolObj.timestamp);
             protocolObj.protocols.find(protocol => protocol.name === selectedProtocol)?.methods.forEach(command => {
@@ -59,21 +58,33 @@ export const TimelineBarChart: React.FC<TimelineBarChartProps> = ({ timeLineBarC
             })
             protocolsCommands.push(newCommandlbj);
         })
-        protocolsCommands.sort((a, b) => a.timestamp < b.timestamp ? -1 : 1);
         setcommandNames(commandsNames);
         setCommandStats(protocolsCommands);
     }, [data, timeLineBarChartMode, selectedProtocol])
 
     const bars = useMemo(() => (commandNames || protocolsNamesAndColors).map((entry) => {
-        return <Bar key={entry.name || entry} dataKey={entry.name || entry} stackId="a" fill={entry.color || Utils.stringToColor(entry)} />
+        return <Bar key={entry.name || entry} dataKey={entry.name || entry} stackId="a" fill={entry.color || Utils.stringToColor(entry)} barSize={30} />
     }), [protocolsNamesAndColors, commandNames])
+
+    const renderTick = (tickProps) => {
+        const { x, y, payload } = tickProps;
+        const { index, value } = payload;
+
+        if (index % 3 === 0) {
+            return <text x={x} y={y + 10} textAnchor="end">{`${value}`}</text>;
+        }
+        return null;
+    };
+
 
     return (
         <div className={styles.barChartContainer}>
             {protocolStats.length > 0 && <BarChart
-                width={730}
+                width={750}
                 height={250}
                 data={commandStats || protocolStats}
+                barCategoryGap={0}
+                barSize={30}
                 margin={{
                     top: 20,
                     right: 30,
@@ -81,7 +92,7 @@ export const TimelineBarChart: React.FC<TimelineBarChartProps> = ({ timeLineBarC
                     bottom: 5
                 }}
             >
-                <XAxis dataKey="timestamp" />
+                <XAxis dataKey="timestamp" tick={renderTick} tickLine={false} />
                 <YAxis tickFormatter={(value) => timeLineBarChartMode === "VOLUME" ? Utils.humanFileSize(value) : value} />
                 <Tooltip formatter={(value) => timeLineBarChartMode === "VOLUME" ? Utils.humanFileSize(value) : value + " Requests"} />
                 {bars}
