@@ -60,10 +60,11 @@ export const TrafficPieChart: React.FC<TrafficPieChartProps> = ({ pieChartMode, 
       setCommandStats(null);
       return;
     }
-    const commandsPieData = data.find(protocol => protocol.name === selectedProtocol)?.methods.map(command => {
+    const commandsPieData = data.find(protocol => protocol.name === selectedProtocol)?.methods.map(method => {
       return {
-        name: command.name,
-        value: command[PieChartMode[pieChartMode]]
+        name: method.name,
+        value: method[PieChartMode[pieChartMode]],
+        color: method.color
       }
     })
     setCommandStats(commandsPieData);
@@ -82,7 +83,7 @@ export const TrafficPieChart: React.FC<TrafficPieChartProps> = ({ pieChartMode, 
     } else {
       legend = data.find(protocol => protocol.name === selectedProtocol)?.methods.map((method) => <div
         style={{ marginBottom: 5, display: "flex" }}>
-        <div style={{ height: 15, width: 30, background: Utils.stringToColor(method.name)}} />
+        <div style={{ height: 15, width: 30, background: method.color}} />
         <span style={{ marginLeft: 5 }}>
           {method.name}
         </span>
@@ -105,7 +106,7 @@ export const TrafficPieChart: React.FC<TrafficPieChartProps> = ({ pieChartMode, 
             outerRadius={125}
             fill="#8884d8">
             {(commandStats || protocolsStats).map((entry, index) => (
-              <Cell key={`cell-${index}`} fill={entry.color || Utils.stringToColor(entry.name)} />)
+              <Cell key={`cell-${index}`} fill={entry.color} />)
             )}
           </Pie>
           <Legend wrapperStyle={{ position: "absolute", width: "auto", height: "auto", right: -150, top: 0 }} content={pieLegend} />
