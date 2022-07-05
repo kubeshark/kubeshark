@@ -41,7 +41,7 @@ interface TrafficPieChartProps {
 export const TrafficPieChart: React.FC<TrafficPieChartProps> = ({ pieChartMode, data, selectedProtocol }) => {
 
   const [protocolsStats, setProtocolsStats] = useState([]);
-  const [commandStats, setCommandStats] = useState(null);
+  const [methodsStats, setMethodsStats] = useState(null);
 
   useEffect(() => {
     if (!data) return;
@@ -57,17 +57,17 @@ export const TrafficPieChart: React.FC<TrafficPieChartProps> = ({ pieChartMode, 
 
   useEffect(() => {
     if (selectedProtocol === ALL_PROTOCOLS) {
-      setCommandStats(null);
+      setMethodsStats(null);
       return;
     }
-    const commandsPieData = data.find(protocol => protocol.name === selectedProtocol)?.methods.map(method => {
+    const methodsPieData = data.find(protocol => protocol.name === selectedProtocol)?.methods.map(method => {
       return {
         name: method.name,
         value: method[PieChartMode[pieChartMode]],
         color: method.color
       }
     })
-    setCommandStats(commandsPieData);
+    setMethodsStats(methodsPieData);
   }, [selectedProtocol, pieChartMode, data])
 
   const pieLegend = useMemo(() => {
@@ -97,7 +97,7 @@ export const TrafficPieChart: React.FC<TrafficPieChartProps> = ({ pieChartMode, 
       {protocolsStats?.length > 0 && <div style={{ width: "100%", display: "flex", justifyContent: "center" }}>
         <PieChart width={300} height={300}>
           <Pie
-            data={commandStats || protocolsStats}
+            data={methodsStats || protocolsStats}
             dataKey="value"
             cx={150}
             cy={125}
@@ -105,7 +105,7 @@ export const TrafficPieChart: React.FC<TrafficPieChartProps> = ({ pieChartMode, 
             label={renderCustomizedLabel}
             outerRadius={125}
             fill="#8884d8">
-            {(commandStats || protocolsStats).map((entry, index) => (
+            {(methodsStats || protocolsStats).map((entry, index) => (
               <Cell key={`cell-${index}`} fill={entry.color} />)
             )}
           </Pie>

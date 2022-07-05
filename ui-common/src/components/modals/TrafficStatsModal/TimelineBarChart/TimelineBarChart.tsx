@@ -27,13 +27,13 @@ export const TimelineBarChart: React.FC<TimelineBarChartProps> = ({ timeLineBarC
         const protocolsBarsData = [];
         const prtcNames = [];
         data.sort((a, b) => a.timestamp < b.timestamp ? -1 : 1).forEach(protocolObj => {
-            let newProtocolbj: { [k: string]: any } = {};
-            newProtocolbj.timestamp = Utils.getHoursAndMinutes(protocolObj.timestamp);
+            let newProtocolObj: { [k: string]: any } = {};
+            newProtocolObj.timestamp = Utils.getHoursAndMinutes(protocolObj.timestamp);
             protocolObj.protocols.forEach(protocol => {
-                newProtocolbj[`${protocol.name}`] = protocol[StatsMode[timeLineBarChartMode]];
+                newProtocolObj[`${protocol.name}`] = protocol[StatsMode[timeLineBarChartMode]];
                 prtcNames.push({ name: protocol.name, color: protocol.color });
             })
-            protocolsBarsData.push(newProtocolbj);
+            protocolsBarsData.push(newProtocolObj);
         })
         const uniqueObjArray = Utils.creatUniqueObjArrayByProp(prtcNames, "name")
         setProtocolStats(protocolsBarsData);
@@ -46,20 +46,20 @@ export const TimelineBarChart: React.FC<TimelineBarChartProps> = ({ timeLineBarC
             setMethodsNamesAndColors(null);
             return;
         }
-        const commandsNames = [];
-        const protocolsCommands = [];
+        const protocolsMethodsNamesAndColors = [];
+        const protocolsMethods = [];
         data.sort((a, b) => a.timestamp < b.timestamp ? -1 : 1).forEach(protocolObj => {
-            let newMethodobj: { [k: string]: any } = {};
-            newMethodobj.timestamp = Utils.getHoursAndMinutes(protocolObj.timestamp);
+            let newMethodObj: { [k: string]: any } = {};
+            newMethodObj.timestamp = Utils.getHoursAndMinutes(protocolObj.timestamp);
             protocolObj.protocols.find(protocol => protocol.name === selectedProtocol)?.methods.forEach(method => {
-                newMethodobj[`${method.name}`] = method[StatsMode[timeLineBarChartMode]]
-                commandsNames.push({name: method.name, color: method.color});
+                newMethodObj[`${method.name}`] = method[StatsMode[timeLineBarChartMode]]
+                protocolsMethodsNamesAndColors.push({name: method.name, color: method.color});
             })
-            protocolsCommands.push(newMethodobj);
+            protocolsMethods.push(newMethodObj);
         })
-        const uniqueObjArray = Utils.creatUniqueObjArrayByProp(commandsNames, "name")
+        const uniqueObjArray = Utils.creatUniqueObjArrayByProp(protocolsMethodsNamesAndColors, "name")
         setMethodsNamesAndColors(uniqueObjArray);
-        setMethodsStats(protocolsCommands);
+        setMethodsStats(protocolsMethods);
     }, [data, timeLineBarChartMode, selectedProtocol])
 
     const bars = useMemo(() => (methodsNamesAndColors || protocolsNamesAndColors).map((entry) => {
