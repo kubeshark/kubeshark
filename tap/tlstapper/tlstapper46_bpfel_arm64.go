@@ -19,15 +19,21 @@ type tlsTapper46GoidOffsets struct {
 }
 
 type tlsTapper46TlsChunk struct {
-	Pid      uint32
-	Tgid     uint32
-	Len      uint32
-	Start    uint32
-	Recorded uint32
-	Fd       uint32
-	Flags    uint32
-	Address  [16]uint8
-	Data     [4096]uint8
+	Pid         uint32
+	Tgid        uint32
+	Len         uint32
+	Start       uint32
+	Recorded    uint32
+	Fd          uint32
+	Flags       uint32
+	AddressInfo struct {
+		Mode  int32
+		Saddr uint32
+		Daddr uint32
+		Sport uint16
+		Dport uint16
+	}
+	Data [4096]uint8
 }
 
 // loadTlsTapper46 returns the embedded CollectionSpec for tlsTapper46.
@@ -93,6 +99,8 @@ type tlsTapper46ProgramSpecs struct {
 	SysEnterWrite                 *ebpf.ProgramSpec `ebpf:"sys_enter_write"`
 	SysExitAccept4                *ebpf.ProgramSpec `ebpf:"sys_exit_accept4"`
 	SysExitConnect                *ebpf.ProgramSpec `ebpf:"sys_exit_connect"`
+	TcpRecvmsg                    *ebpf.ProgramSpec `ebpf:"tcp_recvmsg"`
+	TcpSendmsg                    *ebpf.ProgramSpec `ebpf:"tcp_sendmsg"`
 }
 
 // tlsTapper46MapSpecs contains maps before they are loaded into the kernel.
@@ -189,6 +197,8 @@ type tlsTapper46Programs struct {
 	SysEnterWrite                 *ebpf.Program `ebpf:"sys_enter_write"`
 	SysExitAccept4                *ebpf.Program `ebpf:"sys_exit_accept4"`
 	SysExitConnect                *ebpf.Program `ebpf:"sys_exit_connect"`
+	TcpRecvmsg                    *ebpf.Program `ebpf:"tcp_recvmsg"`
+	TcpSendmsg                    *ebpf.Program `ebpf:"tcp_sendmsg"`
 }
 
 func (p *tlsTapper46Programs) Close() error {
@@ -215,6 +225,8 @@ func (p *tlsTapper46Programs) Close() error {
 		p.SysEnterWrite,
 		p.SysExitAccept4,
 		p.SysExitConnect,
+		p.TcpRecvmsg,
+		p.TcpSendmsg,
 	)
 }
 
