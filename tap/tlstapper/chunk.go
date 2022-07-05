@@ -10,6 +10,11 @@ import (
 
 const FLAGS_IS_CLIENT_BIT uint32 = (1 << 0)
 const FLAGS_IS_READ_BIT uint32 = (1 << 1)
+const (
+	addressInfoModeUndefined = iota
+	addressInfoModeSingle
+	addressInfoModePair
+)
 
 func (c *tlsTapperTlsChunk) getFdAddress() (net.IP, uint16, error) {
 	sIP, sPort := c.getSrcAddress()
@@ -31,7 +36,7 @@ func (c *tlsTapperTlsChunk) getSrcAddress() (net.IP, uint16) {
 }
 
 func (c *tlsTapperTlsChunk) getIsAddressPairValid() bool {
-	if c.AddressInfo.Mode == 2 {
+	if c.AddressInfo.Mode == addressInfoModePair {
 		return true
 	}
 
