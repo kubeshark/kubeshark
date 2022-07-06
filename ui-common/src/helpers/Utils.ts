@@ -45,7 +45,7 @@ export class Utils {
     return hoursAndMinutes;
   }
 
-  static creatUniqueObjArrayByProp = (objArray, prop) => {
+  static createUniqueObjArrayByProp = (objArray, prop) => {
     const map = new Map(objArray.map((item) => [item[prop], item])).values()
     return Array.from(map);
   }
@@ -75,5 +75,9 @@ export class Utils {
 
   static getTimeFormatted = (time: Moment.MomentInput) => {
     return Moment(time).utc().format('MM/DD/YYYY, h:mm:ss.SSS A')
+  }
+
+  static getNow = (format: string = 'MM/DD/YYYY, HH:mm:ss.SSS') => {
+    return Moment().format(format)
   }
 }

@@ -14,7 +14,7 @@ import { toast } from "react-toastify";
 import { MAX_ENTRIES, TOAST_CONTAINER_ID } from "../../configs/Consts";
 import tappingStatusAtom from "../../recoil/tappingStatus";
 import leftOffTopAtom from "../../recoil/leftOffTop";
-import { Utils } from "../../helpers/Utils";
+import Moment from "moment";
 
 interface EntriesListProps {
   listEntryREF: any;
@@ -212,7 +212,7 @@ export const EntriesList: React.FC<EntriesListProps> = ({
           marginRight: 5,
           fontWeight: 600,
           fontSize: 13
-        }}>{Utils.getTimeFormatted(truncatedTimestamp ? truncatedTimestamp : startTime)}</span>
+        }}>{Moment(truncatedTimestamp ? truncatedTimestamp : startTime).utc().format('MM/DD/YYYY, h:mm:ss.SSS A')}</span>
         </div>}
       </div>
     </div>
