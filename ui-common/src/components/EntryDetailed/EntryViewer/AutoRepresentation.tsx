@@ -6,6 +6,7 @@ import { ReactComponent as ReplayIcon } from './replay.svg';
 import styles from './EntryViewer.module.sass';
 import { Tabs } from "../../UI";
 import replayRequestModalOpenAtom from "../../../recoil/replayRequestModalOpen";
+import entryDetailedConfigAtom, { EntryDetailedConfig } from "../../../recoil/entryDetailedConfig";
 
 const enabledProtocolsForReplay = ["http"]
 
@@ -16,10 +17,11 @@ export enum TabsEnum {
 
 export const AutoRepresentation: React.FC<any> = ({ representation, color, openedTab = TabsEnum.Request, isDisplayReplay = false }) => {
     const entryData = useRecoilValue(entryDataAtom)
+    const { isReplayEnabled } = useRecoilValue<EntryDetailedConfig>(entryDetailedConfigAtom)
     const setIsOpenRequestModal = useSetRecoilState(replayRequestModalOpenAtom)
     const isReplayDisplayed = useCallback(() => {
-        return enabledProtocolsForReplay.find(x => x === entryData.protocol.name) && isDisplayReplay
-    }, [entryData.protocol.name, isDisplayReplay])
+        return enabledProtocolsForReplay.find(x => x === entryData.protocol.name) && isDisplayReplay && isReplayEnabled
+    }, [entryData.protocol.name, isDisplayReplay, isReplayEnabled])
 
     const { request, response } = JSON.parse(representation);
 
@@ -31,12 +33,10 @@ export const AutoRepresentation: React.FC<any> = ({ representation, color, opene
             }]
 
         if (response) {
-            arr.push(
-                {
-                    tab: 'Response',
-                    badge: null
-                }
-            );
+            arr.push({
+                tab: 'Response',
+                badge: null
+            });
         }
 
         return arr

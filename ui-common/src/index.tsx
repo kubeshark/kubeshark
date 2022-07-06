@@ -7,6 +7,5 @@ import { ServiceMapModal } from './components/modals/ServiceMapModal/ServiceMapM
 import { TrafficStatsModal } from './components/modals/TrafficStatsModal/TrafficStatsModal';
 
 export { CodeEditorWrap as QueryForm } from './components/Filters/Filters';
-export { UI, StatusBar, OasModal, ServiceMapModal, TrafficStatsModal }
+export { UI, StatusBar, OasModal, ServiceMapModal, TrafficStatsModal, TrafficViewer }
 export { useWS, DEFAULT_LEFTOFF }
-export default TrafficViewer;
