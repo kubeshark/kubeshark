@@ -7,6 +7,7 @@ import { TimelineBarChart } from "./TimelineBarChart/TimelineBarChart";
 import refreshIcon from "assets/refresh.svg";
 import { useCommonStyles } from "../../../helpers/commonStyle";
 import { LoadingWrapper } from "../../UI/withLoading/withLoading";
+import { ALL_PROTOCOLS, StatsMode } from "./consts";
 
 const modalStyle = {
   position: 'absolute',
@@ -22,18 +23,11 @@ const modalStyle = {
   color: '#000',
 };
 
-export enum StatsMode {
-  REQUESTS = "entriesCount",
-  VOLUME = "volumeSizeBytes"
-}
-
 interface TrafficStatsModalProps {
   isOpen: boolean;
   onClose: () => void;
   getTrafficStatsDataApi: () => Promise<any>
 }
-
-export const ALL_PROTOCOLS = "ALL";
 
 export const TrafficStatsModal: React.FC<TrafficStatsModalProps> = ({ isOpen, onClose, getTrafficStatsDataApi }) => {
 
