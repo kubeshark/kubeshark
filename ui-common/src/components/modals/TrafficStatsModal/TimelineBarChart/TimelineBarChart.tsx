@@ -1,5 +1,5 @@
 import styles from "./TimelineBarChart.module.sass";
-import { ALL_PROTOCOLS, StatsMode } from "../TrafficStatsModal"
+// import { StatsMode } from "../TrafficStatsModal"
 import React, { useEffect, useMemo, useState } from "react";
 import {
     BarChart,
@@ -9,6 +9,7 @@ import {
     Tooltip,
 } from "recharts";
 import { Utils } from "../../../../helpers/Utils";
+import { ALL_PROTOCOLS, StatsMode } from "../consts";
 
 interface TimelineBarChartProps {
     timeLineBarChartMode: string;

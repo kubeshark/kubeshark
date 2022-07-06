@@ -5,7 +5,7 @@ import debounce from 'lodash/debounce';
 import { useRecoilState } from "recoil";
 import { useCommonStyles } from "../../../helpers/commonStyle"
 import serviceMapModalOpenAtom from "../../../recoil/serviceMapModalOpen";
-import TrafficViewer from "@up9/mizu-common"
+import { TrafficViewer } from "@up9/mizu-common"
 import "@up9/mizu-common/dist/index.css"
 import oasModalOpenAtom from "../../../recoil/oasModalOpen/atom";
 import serviceMap from "../../assets/serviceMap.svg";

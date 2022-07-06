@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Cell, Legend, Pie, PieChart, Tooltip } from "recharts";
 import { Utils } from "../../../../helpers/Utils";
-import { ALL_PROTOCOLS, StatsMode as PieChartMode } from "../TrafficStatsModal"
+import { ALL_PROTOCOLS ,StatsMode as PieChartMode } from "../consts"
 
 const RADIAN = Math.PI / 180;
 const renderCustomizedLabel = ({
