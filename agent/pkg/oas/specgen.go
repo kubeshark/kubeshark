@@ -42,6 +42,8 @@ type reqResp struct { // hello, generics in Go
 }
 
 type SpecGen struct {
+	MaxExampleLen int // -1 unlimited, 0 and above sets limit
+
 	oas  *openapi.OpenAPI
 	tree *Node
 	lock sync.Mutex
@@ -59,7 +61,11 @@ func NewGen(server string) *SpecGen {
 	spec.Servers = make([]*openapi.Server, 0)
 	spec.Servers = append(spec.Servers, &openapi.Server{URL: server})
 
-	gen := SpecGen{oas: spec, tree: new(Node)}
+	gen := SpecGen{
+		oas:           spec,
+		tree:          new(Node),
+		MaxExampleLen: -1,
+	}
 	return &gen
 }
 
@@ -228,7 +234,7 @@ func (g *SpecGen) handlePathObj(entryWithSource *EntryWithSource) (string, error
 		split = strings.Split(urlParsed.Path, "/")
 	}
 	node := g.tree.getOrSet(split, new(openapi.PathObj), entryWithSource.Id)
-	opObj, err := handleOpObj(entryWithSource, node.pathObj)
+	opObj, err := handleOpObj(entryWithSource, node.pathObj, g.MaxExampleLen)
 
 	if opObj != nil {
 		return opObj.OperationID, err
@@ -237,7 +243,7 @@ func (g *SpecGen) handlePathObj(entryWithSource *EntryWithSource) (string, error
 	return "", err
 }
 
-func handleOpObj(entryWithSource *EntryWithSource, pathObj *openapi.PathObj) (*openapi.Operation, error) {
+func handleOpObj(entryWithSource *EntryWithSource, pathObj *openapi.PathObj, limit int) (*openapi.Operation, error) {
 	entry := entryWithSource.Entry
 	isSuccess := 100 <= entry.Response.Status && entry.Response.Status < 400
 	opObj, wasMissing, err := getOpObj(pathObj, entry.Request.Method, isSuccess)
@@ -250,12 +256,12 @@ func handleOpObj(entryWithSource *EntryWithSource, pathObj *openapi.PathObj) (*o
 		return nil, nil
 	}
 
-	err = handleRequest(&entry.Request, opObj, isSuccess, entryWithSource.Id)
+	err = handleRequest(&entry.Request, opObj, isSuccess, entryWithSource.Id, limit)
 	if err != nil {
 		return nil, err
 	}
 
-	err = handleResponse(&entry.Response, opObj, isSuccess, entryWithSource.Id)
+	err = handleResponse(&entry.Response, opObj, isSuccess, entryWithSource.Id, limit)
 	if err != nil {
 		return nil, err
 	}
@@ -342,7 +348,7 @@ func handleCounters(opObj *openapi.Operation, success bool, entryWithSource *Ent
 	return nil
 }
 
-func handleRequest(req *har.Request, opObj *openapi.Operation, isSuccess bool, sampleId string) error {
+func handleRequest(req *har.Request, opObj *openapi.Operation, isSuccess bool, sampleId string, limit int) error {
 	// TODO: we don't handle the situation when header/qstr param can be defined on pathObj level. Also the path param defined on opObj
 	urlParsed, err := url.Parse(req.URL)
 	if err != nil {
@@ -390,7 +396,7 @@ func handleRequest(req *har.Request, opObj *openapi.Operation, isSuccess bool, s
 			} else {
 
 				reqCtype, _ := getReqCtype(req)
-				reqMedia, err := fillContent(reqResp{Req: req}, reqBody.Content, reqCtype, sampleId)
+				reqMedia, err := fillContent(reqResp{Req: req}, reqBody.Content, reqCtype, sampleId, limit)
 				if err != nil {
 					return err
 				}
@@ -402,7 +408,7 @@ func handleRequest(req *har.Request, opObj *openapi.Operation, isSuccess bool, s
 	return nil
 }
 
-func handleResponse(resp *har.Response, opObj *openapi.Operation, isSuccess bool, sampleId string) error {
+func handleResponse(resp *har.Response, opObj *openapi.Operation, isSuccess bool, sampleId string, limit int) error {
 	// TODO: we don't support "default" response
 	respObj, err := getResponseObj(resp, opObj, isSuccess)
 	if err != nil {
@@ -415,7 +421,7 @@ func handleResponse(resp *har.Response, opObj *openapi.Operation, isSuccess bool
 
 	respCtype := getRespCtype(resp)
 	respContent := respObj.Content
-	respMedia, err := fillContent(reqResp{Resp: resp}, respContent, respCtype, sampleId)
+	respMedia, err := fillContent(reqResp{Resp: resp}, respContent, respCtype, sampleId, limit)
 	if err != nil {
 		return err
 	}
@@ -467,7 +473,7 @@ func handleRespHeaders(reqHeaders []har.Header, respObj *openapi.ResponseObj, sa
 	}
 }
 
-func fillContent(reqResp reqResp, respContent openapi.Content, ctype string, sampleId string) (*openapi.MediaType, error) {
+func fillContent(reqResp reqResp, respContent openapi.Content, ctype string, sampleId string, limit int) (*openapi.MediaType, error) {
 	content, found := respContent[ctype]
 	if !found {
 		respContent[ctype] = &openapi.MediaType{}
@@ -510,7 +516,7 @@ func fillContent(reqResp reqResp, respContent openapi.Content, ctype string, sam
 			handleFormDataMultipart(text, content, params)
 		}
 
-		if content.Example == nil && len(exampleMsg) > len(content.Example) {
+		if len(exampleMsg) > len(content.Example) && (limit < 0 || len(exampleMsg) <= limit) {
 			content.Example = exampleMsg
 		}
 	}

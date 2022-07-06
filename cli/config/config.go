@@ -85,27 +85,6 @@ func WriteConfig(config *ConfigStruct) error {
 	return nil
 }
 
-type updateConfigStruct func(*ConfigStruct)
-
-func UpdateConfig(updateConfigStruct updateConfigStruct) error {
-	configFile, err := GetConfigWithDefaults()
-	if err != nil {
-		return fmt.Errorf("failed getting config with defaults, err: %v", err)
-	}
-
-	if err := loadConfigFile(Config.ConfigFilePath, configFile); err != nil && !os.IsNotExist(err) {
-		return fmt.Errorf("failed getting config file, err: %v", err)
-	}
-
-	updateConfigStruct(configFile)
-
-	if err := WriteConfig(configFile); err != nil {
-		return fmt.Errorf("failed writing config, err: %v", err)
-	}
-
-	return nil
-}
-
 func loadConfigFile(configFilePath string, config *ConfigStruct) error {
 	reader, openErr := os.Open(configFilePath)
 	if openErr != nil {

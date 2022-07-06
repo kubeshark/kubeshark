@@ -11,11 +11,11 @@ import (
 )
 
 const (
-	EventAdded    watch.EventType = watch.Added
-	EventModified watch.EventType = watch.Modified
-	EventDeleted  watch.EventType = watch.Deleted
-	EventBookmark watch.EventType = watch.Bookmark
-	EventError    watch.EventType = watch.Error
+	EventAdded    = watch.Added
+	EventModified = watch.Modified
+	EventDeleted  = watch.Deleted
+	EventBookmark = watch.Bookmark
+	EventError    = watch.Error
 )
 
 type InvalidObjectType struct {

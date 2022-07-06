@@ -11,14 +11,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/up9inc/mizu/agent/pkg/models"
-
 	"github.com/up9inc/mizu/agent/pkg/dependency"
+	"github.com/up9inc/mizu/agent/pkg/oas"
+	"github.com/up9inc/mizu/agent/pkg/servicemap"
+
 	"github.com/up9inc/mizu/agent/pkg/har"
 	"github.com/up9inc/mizu/agent/pkg/holder"
 	"github.com/up9inc/mizu/agent/pkg/providers"
-
-	"github.com/up9inc/mizu/agent/pkg/servicemap"
 
 	"github.com/up9inc/mizu/agent/pkg/resolver"
 	"github.com/up9inc/mizu/agent/pkg/utils"
@@ -99,43 +98,15 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 		panic("Channel of captured messages is nil")
 	}
 
-	disableOASValidation := false
-	ctx := context.Background()
-	doc, contractContent, router, err := loadOAS(ctx)
-	if err != nil {
-		logger.Log.Infof("Disabled OAS validation: %s", err.Error())
-		disableOASValidation = true
-	}
-
 	for item := range outputItems {
 		extension := extensionsMap[item.Protocol.Name]
-		resolvedSource, resolvedDestionation, namespace := resolveIP(item.ConnectionInfo)
+		resolvedSource, resolvedDestination, namespace := resolveIP(item.ConnectionInfo)
 
-		if namespace == "" && item.Namespace != tapApi.UNKNOWN_NAMESPACE {
+		if namespace == "" && item.Namespace != tapApi.UnknownNamespace {
 			namespace = item.Namespace
 		}
 
-		mizuEntry := extension.Dissector.Analyze(item, resolvedSource, resolvedDestionation, namespace)
-		if extension.Protocol.Name == "http" {
-			if !disableOASValidation {
-				var httpPair tapApi.HTTPRequestResponsePair
-				if err := json.Unmarshal([]byte(mizuEntry.HTTPPair), &httpPair); err != nil {
-					logger.Log.Error(err)
-				} else {
-					contract := handleOAS(ctx, doc, router, httpPair.Request.Payload.RawRequest, httpPair.Response.Payload.RawResponse, contractContent)
-					mizuEntry.ContractStatus = contract.Status
-					mizuEntry.ContractRequestReason = contract.RequestReason
-					mizuEntry.ContractResponseReason = contract.ResponseReason
-					mizuEntry.ContractContent = contract.Content
-				}
-			}
-
-			harEntry, err := har.NewEntry(mizuEntry.Request, mizuEntry.Response, mizuEntry.StartTime, mizuEntry.ElapsedTime)
-			if err == nil {
-				rules, _, _ := models.RunValidationRulesState(*harEntry, mizuEntry.Destination.Name)
-				mizuEntry.Rules = rules
-			}
-		}
+		mizuEntry := extension.Dissector.Analyze(item, resolvedSource, resolvedDestination, namespace)
 
 		data, err := json.Marshal(mizuEntry)
 		if err != nil {
@@ -143,15 +114,19 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 			continue
 		}
 
-		providers.EntryAdded(len(data))
-
 		entryInserter := dependency.GetInstance(dependency.EntriesInserter).(EntryInserter)
 		if err := entryInserter.Insert(mizuEntry); err != nil {
 			logger.Log.Errorf("Error inserting entry, err: %v", err)
 		}
 
+		summary := extension.Dissector.Summarize(mizuEntry)
+		providers.EntryAdded(len(data), summary)
+
 		serviceMapGenerator := dependency.GetInstance(dependency.ServiceMapGeneratorDependency).(servicemap.ServiceMapSink)
 		serviceMapGenerator.NewTCPEntry(mizuEntry.Source, mizuEntry.Destination, &item.Protocol)
+
+		oasGenerator := dependency.GetInstance(dependency.OasGeneratorDependency).(oas.OasGeneratorSink)
+		oasGenerator.HandleEntry(mizuEntry, &item.Protocol)
 	}
 }
 

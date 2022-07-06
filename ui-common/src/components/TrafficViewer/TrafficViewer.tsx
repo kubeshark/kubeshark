@@ -1,26 +1,28 @@
-import React, {useEffect, useMemo, useRef, useState} from "react";
-import {Filters} from "./Filters";
-import {EntriesList} from "./EntriesList";
-import {makeStyles} from "@material-ui/core";
+import React, {useCallback, useEffect, useRef, useState} from "react";
+import { Filters } from "../Filters/Filters";
+import { EntriesList } from "../EntriesList/EntriesList";
+import makeStyles from '@mui/styles/makeStyles';
 import TrafficViewerStyles from "./TrafficViewer.module.sass";
-import styles from '../style/EntriesList.module.sass';
-import {EntryDetailed} from "./EntryDetailed";
+import styles from '../EntriesList/EntriesList.module.sass';
+import { EntryDetailed } from "../EntryDetailed/EntryDetailed";
 import playIcon from 'assets/run.svg';
 import pauseIcon from 'assets/pause.svg';
 import variables from '../../variables.module.scss';
-import {ToastContainer} from 'react-toastify';
-import debounce from 'lodash/debounce';
-import {RecoilRoot, RecoilState, useRecoilState, useRecoilValue, useSetRecoilState} from "recoil";
+import { ToastContainer } from 'react-toastify';
+import { RecoilRoot, RecoilState, useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
 import entriesAtom from "../../recoil/entries";
 import focusedEntryIdAtom from "../../recoil/focusedEntryId";
 import queryAtom from "../../recoil/query";
 import trafficViewerApiAtom from "../../recoil/TrafficViewerApi"
 import TrafficViewerApi from "./TrafficViewerApi";
-import {StatusBar} from "../UI/StatusBar";
+import { StatusBar } from "../UI/StatusBar/StatusBar";
 import tappingStatusAtom from "../../recoil/tappingStatus/atom";
-import {TOAST_CONTAINER_ID} from "../../configs/Consts";
+import { TOAST_CONTAINER_ID } from "../../configs/Consts";
 import leftOffTopAtom from "../../recoil/leftOffTop";
 import { DEFAULT_LEFTOFF, DEFAULT_FETCH, DEFAULT_FETCH_TIMEOUT_MS } from '../../hooks/useWS';
+import ReplayRequestModalContainer from "../modals/ReplayRequestModal/ReplayRequestModal";
+import replayRequestModalOpenAtom from "../../recoil/replayRequestModalOpen";
+import entryDetailedConfigAtom, { EntryDetailedConfig } from "../../recoil/entryDetailedConfig";
 
 const useLayoutStyles = makeStyles(() => ({
   details: {
@@ -43,7 +45,6 @@ const useLayoutStyles = makeStyles(() => ({
 }));
 
 interface TrafficViewerProps {
-  setAnalyzeStatus?: (status: any) => void;
   api?: any
   trafficViewerApiProp: TrafficViewerApi,
   actionButtons?: JSX.Element,
@@ -51,81 +52,71 @@ interface TrafficViewerProps {
   webSocketUrl: string,
   shouldCloseWebSocket: boolean,
   setShouldCloseWebSocket: (flag: boolean) => void,
-  isDemoBannerView: boolean
+  isDemoBannerView: boolean,
+  entryDetailedConfig: EntryDetailedConfig
 }
 
 export const TrafficViewer: React.FC<TrafficViewerProps> = ({
-                                                              setAnalyzeStatus, trafficViewerApiProp,
-                                                              actionButtons, isShowStatusBar, webSocketUrl,
-                                                              shouldCloseWebSocket, setShouldCloseWebSocket, isDemoBannerView
-                                                            }) => {
+  trafficViewerApiProp,
+  webSocketUrl,
+  actionButtons,
+  isShowStatusBar, isDemoBannerView,
+  shouldCloseWebSocket, setShouldCloseWebSocket,
+  entryDetailedConfig }) => {
 
   const classes = useLayoutStyles();
-
   const setEntries = useSetRecoilState(entriesAtom);
   const setFocusedEntryId = useSetRecoilState(focusedEntryIdAtom);
+  const setEntryDetailedConfigAtom = useSetRecoilState(entryDetailedConfigAtom)
   const query = useRecoilValue(queryAtom);
   const setTrafficViewerApiState = useSetRecoilState(trafficViewerApiAtom as RecoilState<TrafficViewerApi>)
   const [tappingStatus, setTappingStatus] = useRecoilState(tappingStatusAtom);
   const [noMoreDataTop, setNoMoreDataTop] = useState(false);
   const [isSnappedToBottom, setIsSnappedToBottom] = useState(true);
   const [wsReadyState, setWsReadyState] = useState(0);
-
-  const [queryBackgroundColor, setQueryBackgroundColor] = useState("#f5f5f5");
-
   const setLeftOffTop = useSetRecoilState(leftOffTopAtom);
   const scrollableRef = useRef(null);
+  const isOpenReplayModal = useRecoilValue(replayRequestModalOpenAtom)
 
-  const handleQueryChange = useMemo(
-    () =>
-      debounce(async (query: string) => {
-        if (!query) {
-          setQueryBackgroundColor("#f5f5f5");
-        } else {
-          const data = await trafficViewerApiProp.validateQuery(query);
-          if (!data) {
-            return;
-          }
-          if (data.valid) {
-            setQueryBackgroundColor("#d2fad2");
-          } else {
-            setQueryBackgroundColor("#fad6dc");
-          }
-        }
-      }, 500),
-    []
-  ) as (query: string) => void;
 
-  useEffect(() => {
-    handleQueryChange(query);
-  }, [query, handleQueryChange]);
+  const ws = useRef(null);
+
+  const closeWebSocket = useCallback(() => {
+    if (ws?.current?.readyState === WebSocket.OPEN) {
+      ws.current.close();
+      return true;
+    }
+  }, [])
 
   useEffect(() => {
     if(shouldCloseWebSocket){
       closeWebSocket()
       setShouldCloseWebSocket(false);
     }
-  }, [shouldCloseWebSocket])
+  }, [shouldCloseWebSocket, setShouldCloseWebSocket, closeWebSocket])
 
   useEffect(() => {
-    reopenConnection()
-  }, [webSocketUrl])
+    isOpenReplayModal && setShouldCloseWebSocket(true)
+  }, [isOpenReplayModal, setShouldCloseWebSocket])
 
-  const ws = useRef(null);
-
-  const openEmptyWebSocket = () => {
-    openWebSocket(DEFAULT_LEFTOFF, query, true, DEFAULT_FETCH, DEFAULT_FETCH_TIMEOUT_MS);
-  }
-
-  const closeWebSocket = () => {
-    if (ws?.current?.readyState === WebSocket.OPEN) {
-      ws.current.close();
-      return true;
-    }
-  }
+  const sendQueryWhenWsOpen = useCallback((leftOff: string, query: string, fetch: number, fetchTimeoutMs: number) => {
+    setTimeout(() => {
+      if (ws?.current?.readyState === WebSocket.OPEN) {
+        ws.current.send(JSON.stringify({
+          "leftOff": leftOff,
+          "query": query,
+          "enableFullEntries": false,
+          "fetch": fetch,
+          "timeoutMs": fetchTimeoutMs
+        }));
+      } else {
+        sendQueryWhenWsOpen(leftOff, query, fetch, fetchTimeoutMs);
+      }
+    }, 500)
+  }, [])
 
   const listEntry = useRef(null);
-  const openWebSocket = (leftOff: string, query: string, resetEntries: boolean, fetch: number, fetchTimeoutMs: number) => {
+  const openWebSocket = useCallback((leftOff: string, query: string, resetEntries: boolean, fetch: number, fetchTimeoutMs: number) => {
     if (resetEntries) {
       setFocusedEntryId(null);
       setEntries([]);
@@ -151,24 +142,11 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({
       }
     } catch (e) {
     }
-  }
+  }, [setFocusedEntryId, setEntries, setLeftOffTop, setNoMoreDataTop, ws, sendQueryWhenWsOpen, webSocketUrl])
 
-  const sendQueryWhenWsOpen = (leftOff: string, query: string, fetch: number, fetchTimeoutMs: number) => {
-    setTimeout(() => {
-      if (ws?.current?.readyState === WebSocket.OPEN) {
-        ws.current.send(JSON.stringify({
-          "leftOff": leftOff,
-          "query": query,
-          "enableFullEntries": false,
-          "fetch": fetch,
-          "timeoutMs": fetchTimeoutMs
-        }));
-      } else {
-        sendQueryWhenWsOpen(leftOff, query, fetch, fetchTimeoutMs);
-      }
-    }, 500)
-  }
-
+  const openEmptyWebSocket = useCallback(() => {
+    openWebSocket(DEFAULT_LEFTOFF, query, true, DEFAULT_FETCH, DEFAULT_FETCH_TIMEOUT_MS);
+  }, [openWebSocket, query])
 
   useEffect(() => {
     setTrafficViewerApiState({...trafficViewerApiProp, webSocket: {close: closeWebSocket}});
@@ -176,15 +154,11 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({
       try {
         const tapStatusResponse = await trafficViewerApiProp.tapStatus();
         setTappingStatus(tapStatusResponse);
-        if (setAnalyzeStatus) {
-          const analyzeStatusResponse = await trafficViewerApiProp.analyzeStatus();
-          setAnalyzeStatus(analyzeStatusResponse);
-        }
       } catch (error) {
         console.error(error);
       }
     })()
-  }, []);
+  }, [trafficViewerApiProp, closeWebSocket, setTappingStatus, setTrafficViewerApiState]);
 
   const toggleConnection = () => {
     if (!closeWebSocket()) {
@@ -194,12 +168,17 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({
     }
   }
 
-  const reopenConnection = async () => {
+  const reopenConnection = useCallback(async () => {
     closeWebSocket()
     openEmptyWebSocket();
     scrollableRef.current.jumpToBottom();
     setIsSnappedToBottom(true);
-  }
+  }, [scrollableRef, setIsSnappedToBottom, closeWebSocket, openEmptyWebSocket])
+
+  useEffect(() => {
+    reopenConnection()
+    // eslint-disable-next-line
+  }, [webSocketUrl])
 
   useEffect(() => {
     return () => {
@@ -208,6 +187,10 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({
       }
     };
   }, []);
+
+  useEffect(() => {
+    setEntryDetailedConfigAtom(entryDetailedConfig)
+  }, [entryDetailedConfig, setEntryDetailedConfigAtom])
 
   const getConnectionIndicator = () => {
     switch (wsReadyState) {
@@ -267,7 +250,6 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({
       {<div className={TrafficViewerStyles.TrafficPageContainer}>
         <div className={TrafficViewerStyles.TrafficPageListContainer}>
           <Filters
-            backgroundColor={queryBackgroundColor}
             reopenConnection={reopenConnection}
           />
           <div className={styles.container}>
@@ -285,33 +267,28 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({
           </div>
         </div>
         <div className={classes.details} id="rightSideContainer">
-          <EntryDetailed/>
+          <EntryDetailed />
         </div>
       </div>}
     </div>
   );
 };
 
-const MemoiedTrafficViewer = React.memo(TrafficViewer)
-const TrafficViewerContainer: React.FC<TrafficViewerProps> = ({
-                                                                setAnalyzeStatus, trafficViewerApiProp,
-                                                                actionButtons, isShowStatusBar = true,
-                                                                webSocketUrl, shouldCloseWebSocket, setShouldCloseWebSocket, isDemoBannerView
-                                                              }) => {
+const MemorizedTrafficViewer = React.memo(TrafficViewer)
+const TrafficViewerContainer: React.FC<TrafficViewerProps> = (props) => {
   return <RecoilRoot>
-    <MemoiedTrafficViewer actionButtons={actionButtons} isShowStatusBar={isShowStatusBar} webSocketUrl={webSocketUrl}
-                          shouldCloseWebSocket={shouldCloseWebSocket} setShouldCloseWebSocket={setShouldCloseWebSocket} trafficViewerApiProp={trafficViewerApiProp}
-                          setAnalyzeStatus={setAnalyzeStatus} isDemoBannerView={isDemoBannerView}/>
+    <MemorizedTrafficViewer  {...props} />
     <ToastContainer enableMultiContainer containerId={TOAST_CONTAINER_ID}
-                    position="bottom-right"
-                    autoClose={5000}
-                    hideProgressBar={false}
-                    newestOnTop={false}
-                    closeOnClick
-                    rtl={false}
-                    pauseOnFocusLoss
-                    draggable
-                    pauseOnHover/>
+      position="bottom-right"
+      autoClose={5000}
+      hideProgressBar={false}
+      newestOnTop={false}
+      closeOnClick
+      rtl={false}
+      pauseOnFocusLoss
+      draggable
+      pauseOnHover />
+    <ReplayRequestModalContainer />
   </RecoilRoot>
 }
 

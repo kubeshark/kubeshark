@@ -1,12 +1,12 @@
 package dependency
 
-type DependencyContainerType string
+type ContainerType string
 
 const (
-	ServiceMapGeneratorDependency = "ServiceMapGeneratorDependency"
-	OasGeneratorDependency        = "OasGeneratorDependency"
-	EntriesInserter               = "EntriesInserter"
-	EntriesProvider               = "EntriesProvider"
-	EntriesSocketStreamer         = "EntriesSocketStreamer"
-	EntryStreamerSocketConnector  = "EntryStreamerSocketConnector"
+	ServiceMapGeneratorDependency ContainerType = "ServiceMapGeneratorDependency"
+	OasGeneratorDependency        ContainerType = "OasGeneratorDependency"
+	EntriesInserter               ContainerType = "EntriesInserter"
+	EntriesProvider               ContainerType = "EntriesProvider"
+	EntriesSocketStreamer         ContainerType = "EntriesSocketStreamer"
+	EntryStreamerSocketConnector  ContainerType = "EntryStreamerSocketConnector"
 )

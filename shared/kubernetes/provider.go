@@ -10,6 +10,7 @@ import (
 	"net/url"
 	"path/filepath"
 	"regexp"
+	"strconv"
 
 	"github.com/op/go-logging"
 	"github.com/up9inc/mizu/logger"
@@ -32,7 +33,6 @@ import (
 	"k8s.io/client-go/kubernetes"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	"k8s.io/client-go/rest"
-	restclient "k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/clientcmd"
 	watchtools "k8s.io/client-go/tools/watch"
@@ -41,7 +41,7 @@ import (
 type Provider struct {
 	clientSet        *kubernetes.Clientset
 	kubernetesConfig clientcmd.ClientConfig
-	clientConfig     restclient.Config
+	clientConfig     rest.Config
 	managedBy        string
 	createdBy        string
 }
@@ -88,6 +88,7 @@ func NewProvider(kubeConfigPath string, contextName string) (*Provider, error) {
 	}, nil
 }
 
+//NewProviderInCluster Used in another repo that calls this function
 func NewProviderInCluster() (*Provider, error) {
 	restClientConfig, err := rest.InClusterConfig()
 	if err != nil {
@@ -176,22 +177,14 @@ type ApiServerOptions struct {
 	KetoImage             string
 	ServiceAccountName    string
 	IsNamespaceRestricted bool
-	SyncEntriesConfig     *shared.SyncEntriesConfig
 	MaxEntriesDBSizeBytes int64
 	Resources             shared.Resources
 	ImagePullPolicy       core.PullPolicy
 	LogLevel              logging.Level
+	Profiler              bool
 }
 
 func (provider *Provider) GetMizuApiServerPodObject(opts *ApiServerOptions, mountVolumeClaim bool, volumeClaimName string, createAuthContainer bool) (*core.Pod, error) {
-	var marshaledSyncEntriesConfig []byte
-	if opts.SyncEntriesConfig != nil {
-		var err error
-		if marshaledSyncEntriesConfig, err = json.Marshal(opts.SyncEntriesConfig); err != nil {
-			return nil, err
-		}
-	}
-
 	configMapVolume := &core.ConfigMapVolumeSource{}
 	configMapVolume.Name = ConfigMapName
 
@@ -212,7 +205,15 @@ func (provider *Provider) GetMizuApiServerPodObject(opts *ApiServerOptions, moun
 		return nil, fmt.Errorf("invalid memory request for %s container", opts.PodName)
 	}
 
-	command := []string{"./mizuagent", "--api-server"}
+	command := []string{
+		"./mizuagent",
+		"--api-server",
+	}
+
+	if opts.Profiler {
+		command = append(command, "--profiler")
+	}
+
 	if opts.IsNamespaceRestricted {
 		command = append(command, "--namespace", opts.Namespace)
 	}
@@ -255,10 +256,6 @@ func (provider *Provider) GetMizuApiServerPodObject(opts *ApiServerOptions, moun
 			VolumeMounts:    volumeMounts,
 			Command:         command,
 			Env: []core.EnvVar{
-				{
-					Name:  shared.SyncEntriesConfigEnvVar,
-					Value: string(marshaledSyncEntriesConfig),
-				},
 				{
 					Name:  shared.LogLevelEnvVar,
 					Value: opts.LogLevel.String(),
@@ -383,6 +380,16 @@ func (provider *Provider) GetMizuApiServerPodObject(opts *ApiServerOptions, moun
 			Volumes:                       volumes,
 			DNSPolicy:                     core.DNSClusterFirstWithHostNet,
 			TerminationGracePeriodSeconds: new(int64),
+			Tolerations: []core.Toleration{
+				{
+					Operator: core.TolerationOpExists,
+					Effect:   core.TaintEffectNoExecute,
+				},
+				{
+					Operator: core.TolerationOpExists,
+					Effect:   core.TaintEffectNoSchedule,
+				},
+			},
 		},
 	}
 
@@ -678,14 +685,8 @@ func (provider *Provider) handleRemovalError(err error) error {
 	return err
 }
 
-func (provider *Provider) CreateConfigMap(ctx context.Context, namespace string, configMapName string, serializedValidationRules string, serializedContract string, serializedMizuConfig string) error {
+func (provider *Provider) CreateConfigMap(ctx context.Context, namespace string, configMapName string, serializedMizuConfig string) error {
 	configMapData := make(map[string]string)
-	if serializedValidationRules != "" {
-		configMapData[shared.ValidationRulesFileName] = serializedValidationRules
-	}
-	if serializedContract != "" {
-		configMapData[shared.ContractFileName] = serializedContract
-	}
 	configMapData[shared.ConfigFileName] = serializedMizuConfig
 
 	configMap := &core.ConfigMap{
@@ -708,7 +709,7 @@ func (provider *Provider) CreateConfigMap(ctx context.Context, namespace string,
 	return nil
 }
 
-func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespace string, daemonSetName string, podImage string, tapperPodName string, apiServerPodIp string, nodeNames []string, serviceAccountName string, resources shared.Resources, imagePullPolicy core.PullPolicy, mizuApiFilteringOptions api.TrafficFilteringOptions, logLevel logging.Level, serviceMesh bool, tls bool) error {
+func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespace string, daemonSetName string, podImage string, tapperPodName string, apiServerPodIp string, nodeNames []string, serviceAccountName string, resources shared.Resources, imagePullPolicy core.PullPolicy, mizuApiFilteringOptions api.TrafficFilteringOptions, logLevel logging.Level, serviceMesh bool, tls bool, maxLiveStreams int) error {
 	logger.Log.Debugf("Applying %d tapper daemon sets, ns: %s, daemonSetName: %s, podImage: %s, tapperPodName: %s", len(nodeNames), namespace, daemonSetName, podImage, tapperPodName)
 
 	if len(nodeNames) == 0 {
@@ -726,6 +727,7 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 		"--tap",
 		"--api-server-address", fmt.Sprintf("ws://%s/wsTapper", apiServerPodIp),
 		"--nodefrag",
+		"--max-live-streams", strconv.Itoa(maxLiveStreams),
 	}
 
 	if serviceMesh {
@@ -1094,7 +1096,7 @@ func (provider *Provider) GetKubernetesVersion() (*semver.SemVersion, error) {
 	return &serverVersionSemVer, nil
 }
 
-func getClientSet(config *restclient.Config) (*kubernetes.Clientset, error) {
+func getClientSet(config *rest.Config) (*kubernetes.Clientset, error) {
 	clientSet, err := kubernetes.NewForConfig(config)
 	if err != nil {
 		return nil, err

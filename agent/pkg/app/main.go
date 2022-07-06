@@ -9,9 +9,11 @@ import (
 	"github.com/op/go-logging"
 	basenine "github.com/up9inc/basenine/client/go"
 	"github.com/up9inc/mizu/agent/pkg/api"
+	"github.com/up9inc/mizu/agent/pkg/providers"
 	"github.com/up9inc/mizu/agent/pkg/utils"
 	"github.com/up9inc/mizu/logger"
 	tapApi "github.com/up9inc/mizu/tap/api"
+	"github.com/up9inc/mizu/tap/dbgctl"
 	amqpExt "github.com/up9inc/mizu/tap/extensions/amqp"
 	httpExt "github.com/up9inc/mizu/tap/extensions/http"
 	kafkaExt "github.com/up9inc/mizu/tap/extensions/kafka"
@@ -21,45 +23,66 @@ import (
 var (
 	Extensions    []*tapApi.Extension          // global
 	ExtensionsMap map[string]*tapApi.Extension // global
+	ProtocolsMap  map[string]*tapApi.Protocol  //global
 )
 
 func LoadExtensions() {
-	Extensions = make([]*tapApi.Extension, 4)
+	Extensions = make([]*tapApi.Extension, 0)
 	ExtensionsMap = make(map[string]*tapApi.Extension)
-
-	extensionAmqp := &tapApi.Extension{}
-	dissectorAmqp := amqpExt.NewDissector()
-	dissectorAmqp.Register(extensionAmqp)
-	extensionAmqp.Dissector = dissectorAmqp
-	Extensions[0] = extensionAmqp
-	ExtensionsMap[extensionAmqp.Protocol.Name] = extensionAmqp
+	ProtocolsMap = make(map[string]*tapApi.Protocol)
 
 	extensionHttp := &tapApi.Extension{}
 	dissectorHttp := httpExt.NewDissector()
 	dissectorHttp.Register(extensionHttp)
 	extensionHttp.Dissector = dissectorHttp
-	Extensions[1] = extensionHttp
+	Extensions = append(Extensions, extensionHttp)
 	ExtensionsMap[extensionHttp.Protocol.Name] = extensionHttp
+	protocolsHttp := dissectorHttp.GetProtocols()
+	for k, v := range protocolsHttp {
+		ProtocolsMap[k] = v
+	}
 
-	extensionKafka := &tapApi.Extension{}
-	dissectorKafka := kafkaExt.NewDissector()
-	dissectorKafka.Register(extensionKafka)
-	extensionKafka.Dissector = dissectorKafka
-	Extensions[2] = extensionKafka
-	ExtensionsMap[extensionKafka.Protocol.Name] = extensionKafka
+	if !dbgctl.MizuTapperDisableNonHttpExtensions {
+		extensionAmqp := &tapApi.Extension{}
+		dissectorAmqp := amqpExt.NewDissector()
+		dissectorAmqp.Register(extensionAmqp)
+		extensionAmqp.Dissector = dissectorAmqp
+		Extensions = append(Extensions, extensionAmqp)
+		ExtensionsMap[extensionAmqp.Protocol.Name] = extensionAmqp
+		protocolsAmqp := dissectorAmqp.GetProtocols()
+		for k, v := range protocolsAmqp {
+			ProtocolsMap[k] = v
+		}
 
-	extensionRedis := &tapApi.Extension{}
-	dissectorRedis := redisExt.NewDissector()
-	dissectorRedis.Register(extensionRedis)
-	extensionRedis.Dissector = dissectorRedis
-	Extensions[3] = extensionRedis
-	ExtensionsMap[extensionRedis.Protocol.Name] = extensionRedis
+		extensionKafka := &tapApi.Extension{}
+		dissectorKafka := kafkaExt.NewDissector()
+		dissectorKafka.Register(extensionKafka)
+		extensionKafka.Dissector = dissectorKafka
+		Extensions = append(Extensions, extensionKafka)
+		ExtensionsMap[extensionKafka.Protocol.Name] = extensionKafka
+		protocolsKafka := dissectorKafka.GetProtocols()
+		for k, v := range protocolsKafka {
+			ProtocolsMap[k] = v
+		}
+
+		extensionRedis := &tapApi.Extension{}
+		dissectorRedis := redisExt.NewDissector()
+		dissectorRedis.Register(extensionRedis)
+		extensionRedis.Dissector = dissectorRedis
+		Extensions = append(Extensions, extensionRedis)
+		ExtensionsMap[extensionRedis.Protocol.Name] = extensionRedis
+		protocolsRedis := dissectorRedis.GetProtocols()
+		for k, v := range protocolsRedis {
+			ProtocolsMap[k] = v
+		}
+	}
 
 	sort.Slice(Extensions, func(i, j int) bool {
 		return Extensions[i].Protocol.Priority < Extensions[j].Protocol.Priority
 	})
 
-	api.InitExtensionsMap(ExtensionsMap)
+	api.InitMaps(ExtensionsMap, ProtocolsMap)
+	providers.InitProtocolToColor(ProtocolsMap)
 }
 
 func ConfigureBasenineServer(host string, port string, dbSize int64, logLevel logging.Level, insertionFilter string) {

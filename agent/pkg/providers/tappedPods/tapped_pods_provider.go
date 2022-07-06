@@ -44,9 +44,10 @@ func Set(tappedPodsToSet []*shared.PodInfo) {
 
 func GetTappedPodsStatus() []shared.TappedPodStatus {
 	tappedPodsStatus := make([]shared.TappedPodStatus, 0)
+	tapperStatus := tappers.GetStatus()
 	for _, pod := range Get() {
 		var status string
-		if tapperStatus, ok := tappers.GetStatus()[pod.NodeName]; ok {
+		if tapperStatus, ok := tapperStatus[pod.NodeName]; ok {
 			status = strings.ToLower(tapperStatus.Status)
 		}
 
@@ -59,7 +60,7 @@ func GetTappedPodsStatus() []shared.TappedPodStatus {
 
 func SetNodeToTappedPodMap(nodeToTappedPodsMap shared.NodeToPodsMap) {
 	summary := nodeToTappedPodsMap.Summary()
-	logger.Log.Infof("Setting node to tapped pods map to %v", summary)
+	logger.Log.Debugf("Setting node to tapped pods map to %v", summary)
 
 	nodeHostToTappedPodsMap = nodeToTappedPodsMap
 }

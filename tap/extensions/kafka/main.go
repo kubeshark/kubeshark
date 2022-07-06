@@ -3,7 +3,6 @@ package kafka
 import (
 	"bufio"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -11,7 +10,7 @@ import (
 	"github.com/up9inc/mizu/tap/api"
 )
 
-var _protocol api.Protocol = api.Protocol{
+var _protocol = api.Protocol{
 	Name:            "kafka",
 	LongName:        "Apache Kafka Protocol",
 	Abbreviation:    "KAFKA",
@@ -25,10 +24,18 @@ var _protocol api.Protocol = api.Protocol{
 	Priority:        2,
 }
 
+var protocolsMap = map[string]*api.Protocol{
+	fmt.Sprintf("%s/%s/%s", _protocol.Name, _protocol.Version, _protocol.Abbreviation): &_protocol,
+}
+
 type dissecting string
 
 func (d dissecting) Register(extension *api.Extension) {
 	extension.Protocol = &_protocol
+}
+
+func (d dissecting) GetProtocols() map[string]*api.Protocol {
+	return protocolsMap
 }
 
 func (d dissecting) Ping() {
@@ -38,10 +45,6 @@ func (d dissecting) Ping() {
 func (d dissecting) Dissect(b *bufio.Reader, reader api.TcpReader, options *api.TrafficFilteringOptions) error {
 	reqResMatcher := reader.GetReqResMatcher().(*requestResponseMatcher)
 	for {
-		if reader.GetParent().GetProtocol() != nil && reader.GetParent().GetProtocol() != &_protocol {
-			return errors.New("Identified by another protocol")
-		}
-
 		if reader.GetIsClient() {
 			_, _, err := ReadRequest(b, reader.GetTcpID(), reader.GetCounterPair(), reader.GetCaptureTime(), reqResMatcher)
 			if err != nil {
@@ -67,8 +70,8 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, 
 		elapsedTime = 0
 	}
 	return &api.Entry{
-		Protocol: _protocol,
-		Capture:  item.Capture,
+		ProtocolId: fmt.Sprintf("%s/%s/%s", _protocol.Name, _protocol.Version, _protocol.Abbreviation),
+		Capture:    item.Capture,
 		Source: &api.TCP{
 			Name: resolvedSource,
 			IP:   item.ConnectionInfo.ClientIP,
@@ -191,22 +194,20 @@ func (d dissecting) Summarize(entry *api.Entry) *api.BaseEntry {
 	}
 
 	return &api.BaseEntry{
-		Id:             entry.Id,
-		Protocol:       entry.Protocol,
-		Capture:        entry.Capture,
-		Summary:        summary,
-		SummaryQuery:   summaryQuery,
-		Status:         status,
-		StatusQuery:    statusQuery,
-		Method:         method,
-		MethodQuery:    methodQuery,
-		Timestamp:      entry.Timestamp,
-		Source:         entry.Source,
-		Destination:    entry.Destination,
-		IsOutgoing:     entry.Outgoing,
-		Latency:        entry.ElapsedTime,
-		Rules:          entry.Rules,
-		ContractStatus: entry.ContractStatus,
+		Id:           entry.Id,
+		Protocol:     *protocolsMap[entry.ProtocolId],
+		Capture:      entry.Capture,
+		Summary:      summary,
+		SummaryQuery: summaryQuery,
+		Status:       status,
+		StatusQuery:  statusQuery,
+		Method:       method,
+		MethodQuery:  methodQuery,
+		Timestamp:    entry.Timestamp,
+		Source:       entry.Source,
+		Destination:  entry.Destination,
+		IsOutgoing:   entry.Outgoing,
+		Latency:      entry.ElapsedTime,
 	}
 }
 
@@ -249,7 +250,7 @@ func (d dissecting) Represent(request map[string]interface{}, response map[strin
 
 func (d dissecting) Macros() map[string]string {
 	return map[string]string{
-		`kafka`: fmt.Sprintf(`proto.name == "%s"`, _protocol.Name),
+		`kafka`: fmt.Sprintf(`protocol == "%s/%s/%s"`, _protocol.Name, _protocol.Version, _protocol.Abbreviation),
 	}
 }
 

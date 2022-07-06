@@ -28,7 +28,7 @@ void sys_enter_read(struct sys_enter_read_ctx *ctx) {
 		return;
 	}
 	
-	struct ssl_info *infoPtr = bpf_map_lookup_elem(&ssl_read_context, &id);
+	struct ssl_info *infoPtr = bpf_map_lookup_elem(&openssl_read_context, &id);
 	
 	if (infoPtr == NULL) {
 		return;
@@ -44,7 +44,7 @@ void sys_enter_read(struct sys_enter_read_ctx *ctx) {
 	
 	info.fd = ctx->fd;
 	
-	err = bpf_map_update_elem(&ssl_read_context, &id, &info, BPF_ANY);
+	err = bpf_map_update_elem(&openssl_read_context, &id, &info, BPF_ANY);
 	
 	if (err != 0) {
 		log_error(ctx, LOG_ERROR_PUTTING_FILE_DESCRIPTOR, id, err, ORIGIN_SYS_ENTER_READ_CODE);
@@ -68,7 +68,7 @@ void sys_enter_write(struct sys_enter_write_ctx *ctx) {
 		return;
 	}
 	
-	struct ssl_info *infoPtr = bpf_map_lookup_elem(&ssl_write_context, &id);
+	struct ssl_info *infoPtr = bpf_map_lookup_elem(&openssl_write_context, &id);
 	
 	if (infoPtr == NULL) {
 		return;
@@ -84,7 +84,7 @@ void sys_enter_write(struct sys_enter_write_ctx *ctx) {
 	
 	info.fd = ctx->fd;
 	
-	err = bpf_map_update_elem(&ssl_write_context, &id, &info, BPF_ANY);
+	err = bpf_map_update_elem(&openssl_write_context, &id, &info, BPF_ANY);
 	
 	if (err != 0) {
 		log_error(ctx, LOG_ERROR_PUTTING_FILE_DESCRIPTOR, id, err, ORIGIN_SYS_ENTER_WRITE_CODE);

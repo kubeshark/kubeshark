@@ -14,10 +14,14 @@ import (
 	tapApi "github.com/up9inc/mizu/tap/api"
 )
 
-var extensionsMap map[string]*tapApi.Extension // global
+var (
+	extensionsMap map[string]*tapApi.Extension // global
+	protocolsMap  map[string]*tapApi.Protocol  //global
+)
 
-func InitExtensionsMap(ref map[string]*tapApi.Extension) {
-	extensionsMap = ref
+func InitMaps(extensions map[string]*tapApi.Extension, protocols map[string]*tapApi.Protocol) {
+	extensionsMap = extensions
+	protocolsMap = protocols
 }
 
 type EventHandlers interface {

@@ -18,7 +18,7 @@ func filterAndEmit(item *api.OutputChannelItem, emitter api.Emitter, options *ap
 		return
 	}
 
-	if !options.DisableRedaction {
+	if options.EnableRedaction {
 		FilterSensitiveData(item, options)
 	}
 
@@ -32,7 +32,7 @@ func replaceForwardedFor(item *api.OutputChannelItem) {
 		return
 	}
 
-	request := item.Pair.Request.Payload.(api.HTTPPayload).Data.(*http.Request)
+	request := item.Pair.Request.Payload.(HTTPPayload).Data.(*http.Request)
 
 	forwardedFor := request.Header.Get("X-Forwarded-For")
 	if forwardedFor == "" {
