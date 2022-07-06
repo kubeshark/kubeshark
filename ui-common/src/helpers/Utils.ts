@@ -2,6 +2,12 @@ import Moment from 'moment';
 
 const IP_ADDRESS_REGEX = /([0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3})(:([0-9]{1,5}))?/
 
+type JSONValue =
+  | string
+  | number
+  | boolean
+  | Object
+
 
 export class Utils {
   static isIpAddress = (address: string): boolean => IP_ADDRESS_REGEX.test(address)
@@ -63,8 +69,8 @@ export class Utils {
     a.remove();
   }
 
-  static exportToJson = (data: JSON, name) => {
-    Utils.downloadFile(JSON.stringify(data), name, 'text/json')
+  static exportToJson = (data: JSONValue, name) => {
+    Utils.downloadFile(JSON.stringify(data), `${name}.json`, 'text/json')
   }
 
   static getTimeFormatted = (time: Moment.MomentInput) => {
