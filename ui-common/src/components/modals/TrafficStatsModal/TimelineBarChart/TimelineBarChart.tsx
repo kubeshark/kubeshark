@@ -1,5 +1,4 @@
 import styles from "./TimelineBarChart.module.sass";
-// import { StatsMode } from "../TrafficStatsModal"
 import React, { useEffect, useMemo, useState } from "react";
 import {
     BarChart,
