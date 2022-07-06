@@ -1,29 +1,29 @@
-import { Accordion, AccordionDetails, AccordionSummary, Backdrop, Box, Button, Fade, Modal } from "@mui/material";
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import React, { Fragment, useCallback, useEffect, useState } from "react";
-import { useCommonStyles } from "../../../helpers/commonStyle";
-import { Tabs } from "../../UI";
-import KeyValueTable from "../../UI/KeyValueTable/KeyValueTable";
-import CodeEditor from "../../UI/CodeEditor/CodeEditor";
-import { useRecoilValue, RecoilState, useRecoilState } from "recoil";
-import TrafficViewerApiAtom from "../../../recoil/TrafficViewerApi/atom";
-import TrafficViewerApi from "../../TrafficViewer/TrafficViewerApi";
-import { toast } from "react-toastify";
-import { TOAST_CONTAINER_ID } from "../../../configs/Consts";
-import styles from './ReplayRequestModal.module.sass'
-import closeIcon from "assets/close.svg"
-import refreshImg from "assets/refresh.svg"
 import UploadIcon from '@mui/icons-material/UploadFile';
-import { ReactComponent as DownloadIcon } from './assets/download.svg'
-import { formatRequestWithOutError } from "../../EntryDetailed/EntrySections/EntrySections";
-import entryDataAtom from "../../../recoil/entryData";
-import { AutoRepresentation, TabsEnum } from "../../EntryDetailed/EntryViewer/AutoRepresentation";
-import useDebounce from "../../../hooks/useDebounce"
-import replayRequestModalOpenAtom from "../../../recoil/replayRequestModalOpen";
-import { Utils } from "../../../helpers/Utils";
-import { LoadingWrapper } from "../../UI/withLoading/withLoading";
+import DownloadIcon from '@mui/icons-material/FileDownloadOutlined';
+import { Accordion, AccordionDetails, AccordionSummary, Backdrop, Box, Button, Fade, Modal } from "@mui/material";
+import closeIcon from "assets/close.svg";
+import refreshImg from "assets/refresh.svg";
+import React, { Fragment, useCallback, useEffect, useState } from "react";
+import { toast } from "react-toastify";
+import { RecoilState, useRecoilState, useRecoilValue } from "recoil";
 import { useFilePicker } from 'use-file-picker';
 import { FileContent } from "use-file-picker/dist/interfaces";
+import { TOAST_CONTAINER_ID } from "../../../configs/Consts";
+import { useCommonStyles } from "../../../helpers/commonStyle";
+import { Utils } from "../../../helpers/Utils";
+import useDebounce from "../../../hooks/useDebounce";
+import entryDataAtom from "../../../recoil/entryData";
+import replayRequestModalOpenAtom from "../../../recoil/replayRequestModalOpen";
+import TrafficViewerApiAtom from "../../../recoil/TrafficViewerApi/atom";
+import { formatRequestWithOutError } from "../../EntryDetailed/EntrySections/EntrySections";
+import { AutoRepresentation, TabsEnum } from "../../EntryDetailed/EntryViewer/AutoRepresentation";
+import TrafficViewerApi from "../../TrafficViewer/TrafficViewerApi";
+import { Tabs } from "../../UI";
+import CodeEditor from "../../UI/CodeEditor/CodeEditor";
+import KeyValueTable from "../../UI/KeyValueTable/KeyValueTable";
+import { LoadingWrapper } from "../../UI/withLoading/withLoading";
+import styles from './ReplayRequestModal.module.sass';
 
 const modalStyle = {
     position: 'absolute',
@@ -276,16 +276,40 @@ const ReplayRequestModal: React.FC<ReplayRequestModalProps> = ({ isOpen, onClose
                     <div className={styles.headerContainer}>
                         <div className={styles.headerSection}>
                             <span className={styles.title}>Replay Request</span>
+                            <Button style={{ marginLeft: "2%", textTransform: 'unset' }}
+                                startIcon={<img src={refreshImg} className="custom" alt="Refresh Request"></img>}
+                                size="medium"
+                                variant="contained"
+                                className={commonClasses.outlinedButton + " " + commonClasses.imagedButton}
+                                onClick={onRefreshRequest}
+                            >
+                                Refresh
+                            </Button>
+                            <Button style={{ marginLeft: "2%", textTransform: 'unset' }}
+                                startIcon={<DownloadIcon className={`custom ${styles.icon}`} />}
+                                size="medium"
+                                variant="contained"
+                                className={commonClasses.outlinedButton + " " + commonClasses.imagedButton}
+                                onClick={onDownloadRequest}
+                            >
+                                Download
+                            </Button>
+                            {/* TODO: replace with variable */}
+                            <FilePicker onLoadingComplete={onLoadingComplete}
+                                elem={<Button style={{ marginLeft: "2%", textTransform: 'unset' }}
+                                    startIcon={<UploadIcon className={`custom ${styles.icon}`} />}
+                                    size="medium"
+                                    variant="contained"
+                                    className={commonClasses.outlinedButton + " " + commonClasses.imagedButton}>
+                                    Upload
+                                </Button>}
+                            />
                         </div>
                     </div>
                     <div className={styles.modalContainer}>
                         <Accordion TransitionProps={{ unmountOnExit: true }} expanded={requestExpanded} onChange={() => setRequestExpanded(!requestExpanded)}>
                             <AccordionSummary expandIcon={<ExpandMoreIcon />} aria-controls="response-content">
                                 <span className={styles.sectionHeader}>REQUEST</span>
-                                <img src={refreshImg} style={{ marginLeft: "10px" }} title="Refresh Request" alt="Refresh Request" onClick={onRefreshRequest} />
-                                <DownloadIcon onClick={onDownloadRequest} fill={"#205CF5"} stroke={"#205CF5"} style={{ marginLeft: "10px" }} />
-                                {/* TODO: replace with variable */}
-                                <FilePicker onLoadingComplete={onLoadingComplete} elem={<UploadIcon fill={"#205CF5"} stroke={"#205CF5"} style={{ marginLeft: "10px" }} />} />
                             </AccordionSummary>
                             <AccordionDetails>
                                 <div className={styles.path}>
@@ -321,7 +345,7 @@ const ReplayRequestModal: React.FC<ReplayRequestModalProps> = ({ isOpen, onClose
                     </div>
                 </Box>
             </Fade>
-        </Modal>
+        </Modal >
     );
 }
 
