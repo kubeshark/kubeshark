@@ -181,13 +181,16 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({
   }, [webSocketUrl])
 
   useEffect(() => {
-    setEntryDetailedConfigAtom(entryDetailedConfig)
     return () => {
       if (ws?.current?.readyState === WebSocket.OPEN) {
         ws.current.close();
       }
     };
   }, []);
+
+  useEffect(() => {
+    setEntryDetailedConfigAtom(entryDetailedConfig)
+  }, [entryDetailedConfig, setEntryDetailedConfigAtom])
 
   const getConnectionIndicator = () => {
     switch (wsReadyState) {
