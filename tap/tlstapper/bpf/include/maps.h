@@ -53,6 +53,13 @@ struct fd_info {
     __u8 flags;
 };
 
+struct goid_offsets {
+    __u64 g_addr_offset;
+    __u64 goid_offset;
+};
+
+const struct goid_offsets *unused __attribute__((unused));
+
 // Heap-like area for eBPF programs - stack size limited to 512 bytes, we must use maps for bigger (chunk) objects.
 //
 struct {
@@ -91,6 +98,7 @@ BPF_LRU_HASH(openssl_write_context, __u64, struct ssl_info);
 BPF_LRU_HASH(openssl_read_context, __u64, struct ssl_info);
 
 // Go specific
+BPF_HASH(goid_offsets_map, __u32, struct goid_offsets);
 BPF_LRU_HASH(go_write_context, __u64, struct ssl_info);
 BPF_LRU_HASH(go_read_context, __u64, struct ssl_info);
 

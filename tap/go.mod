@@ -4,11 +4,12 @@ go 1.17
 
 require (
 	github.com/Masterminds/semver v1.5.0
-	github.com/cilium/ebpf v0.8.1
+	github.com/cilium/ebpf v0.9.0
 	github.com/go-errors/errors v1.4.2
 	github.com/google/gopacket v1.1.19
 	github.com/hashicorp/golang-lru v0.5.4
 	github.com/knightsc/gapstone v0.0.0-20191231144527-6fa5afaf11a9
+	github.com/moby/moby v20.10.17+incompatible
 	github.com/shirou/gopsutil v3.21.11+incompatible
 	github.com/struCoder/pidusage v0.2.1
 	github.com/up9inc/mizu/logger v0.0.0
@@ -28,6 +29,7 @@ require (
 	github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd // indirect
 	github.com/modern-go/reflect2 v1.0.2 // indirect
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7 // indirect
+	github.com/sirupsen/logrus v1.8.1 // indirect
 	github.com/tklauser/go-sysconf v0.3.10 // indirect
 	github.com/tklauser/numcpus v0.4.0 // indirect
 	github.com/yusufpapurcu/wmi v1.2.2 // indirect
@@ -36,6 +38,7 @@ require (
 	golang.org/x/text v0.3.7 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
+	gotest.tools/v3 v3.3.0 // indirect
 	k8s.io/apimachinery v0.23.3 // indirect
 	k8s.io/klog/v2 v2.40.1 // indirect
 	k8s.io/utils v0.0.0-20220127004650-9b3446523e65 // indirect
