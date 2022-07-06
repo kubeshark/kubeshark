@@ -59,7 +59,6 @@ export class Utils {
     return true;
   }
 
-  // download file from url
   static downloadFile = (data: string, filename: string, fileType: string) => {
     const blob = new Blob([data], { type: fileType })
     const a = document.createElement('a');
