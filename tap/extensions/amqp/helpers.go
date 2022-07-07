@@ -690,6 +690,20 @@ func representConnectionClose(event map[string]interface{}) []interface{} {
 	return rep
 }
 
+func representConnectionCloseOk(event map[string]interface{}) []interface{} {
+	rep := make([]interface{}, 0)
+
+	details, _ := json.Marshal([]api.TableData{})
+
+	rep = append(rep, api.SectionData{
+		Type:  api.TABLE,
+		Title: "Details",
+		Data:  string(details),
+	})
+
+	return rep
+}
+
 func representQueueBind(event map[string]interface{}) []interface{} {
 	rep := make([]interface{}, 0)
 

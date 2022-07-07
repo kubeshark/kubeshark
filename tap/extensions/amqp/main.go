@@ -225,6 +225,9 @@ func (d dissecting) Dissect(b *bufio.Reader, reader api.TcpReader, options *api.
 					MethodId:  m.MethodId,
 				}
 				reqResMatcher.emitEvent(isClient, ident, connectionMethodMap[50], *eventConnectionClose, reader)
+
+			case *ConnectionCloseOk:
+				reqResMatcher.emitEvent(isClient, ident, connectionMethodMap[51], m, reader)
 			}
 
 		default:
@@ -360,6 +363,8 @@ func (d dissecting) Represent(request map[string]interface{}, response map[strin
 		repResponse = representQueueDeclareOk(response)
 	case exchangeMethodMap[11]:
 		repResponse = representExchangeDeclareOk(response)
+	case connectionMethodMap[51]:
+		repResponse = representConnectionCloseOk(response)
 	}
 
 	representation["request"] = repRequest
