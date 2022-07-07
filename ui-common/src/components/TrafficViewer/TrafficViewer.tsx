@@ -22,6 +22,7 @@ import leftOffTopAtom from "../../recoil/leftOffTop";
 import { DEFAULT_LEFTOFF, DEFAULT_FETCH, DEFAULT_FETCH_TIMEOUT_MS } from '../../hooks/useWS';
 import ReplayRequestModalContainer from "../modals/ReplayRequestModal/ReplayRequestModal";
 import replayRequestModalOpenAtom from "../../recoil/replayRequestModalOpen";
+import entryDetailedConfigAtom, { EntryDetailedConfig } from "../../recoil/entryDetailedConfig";
 
 const useLayoutStyles = makeStyles(() => ({
   details: {
@@ -51,18 +52,22 @@ interface TrafficViewerProps {
   webSocketUrl: string,
   shouldCloseWebSocket: boolean,
   setShouldCloseWebSocket: (flag: boolean) => void,
-  isDemoBannerView: boolean
+  isDemoBannerView: boolean,
+  entryDetailedConfig: EntryDetailedConfig
 }
 
 export const TrafficViewer: React.FC<TrafficViewerProps> = ({
-                                                              trafficViewerApiProp,
-                                                              actionButtons, isShowStatusBar, webSocketUrl,
-                                                              shouldCloseWebSocket, setShouldCloseWebSocket, isDemoBannerView
-                                                            }) => {
+  trafficViewerApiProp,
+  webSocketUrl,
+  actionButtons,
+  isShowStatusBar, isDemoBannerView,
+  shouldCloseWebSocket, setShouldCloseWebSocket,
+  entryDetailedConfig }) => {
 
   const classes = useLayoutStyles();
   const setEntries = useSetRecoilState(entriesAtom);
   const setFocusedEntryId = useSetRecoilState(focusedEntryIdAtom);
+  const setEntryDetailedConfigAtom = useSetRecoilState(entryDetailedConfigAtom)
   const query = useRecoilValue(queryAtom);
   const setTrafficViewerApiState = useSetRecoilState(trafficViewerApiAtom as RecoilState<TrafficViewerApi>)
   const [tappingStatus, setTappingStatus] = useRecoilState(tappingStatusAtom);
@@ -183,6 +188,10 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({
     };
   }, []);
 
+  useEffect(() => {
+    setEntryDetailedConfigAtom(entryDetailedConfig)
+  }, [entryDetailedConfig, setEntryDetailedConfigAtom])
+
   const getConnectionIndicator = () => {
     switch (wsReadyState) {
       case WebSocket.OPEN:
@@ -258,7 +267,7 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({
           </div>
         </div>
         <div className={classes.details} id="rightSideContainer">
-          <EntryDetailed/>
+          <EntryDetailed />
         </div>
       </div>}
     </div>
@@ -266,25 +275,19 @@ export const TrafficViewer: React.FC<TrafficViewerProps> = ({
 };
 
 const MemorizedTrafficViewer = React.memo(TrafficViewer)
-const TrafficViewerContainer: React.FC<TrafficViewerProps> = ({
-                                                                trafficViewerApiProp,
-                                                                actionButtons, isShowStatusBar = true,
-                                                                webSocketUrl, shouldCloseWebSocket, setShouldCloseWebSocket, isDemoBannerView
-                                                              }) => {
+const TrafficViewerContainer: React.FC<TrafficViewerProps> = (props) => {
   return <RecoilRoot>
-    <MemorizedTrafficViewer actionButtons={actionButtons} isShowStatusBar={isShowStatusBar} webSocketUrl={webSocketUrl}
-                          shouldCloseWebSocket={shouldCloseWebSocket} setShouldCloseWebSocket={setShouldCloseWebSocket} trafficViewerApiProp={trafficViewerApiProp}
-                          isDemoBannerView={isDemoBannerView}/>
+    <MemorizedTrafficViewer  {...props} />
     <ToastContainer enableMultiContainer containerId={TOAST_CONTAINER_ID}
-                    position="bottom-right"
-                    autoClose={5000}
-                    hideProgressBar={false}
-                    newestOnTop={false}
-                    closeOnClick
-                    rtl={false}
-                    pauseOnFocusLoss
-                    draggable
-                    pauseOnHover/>
+      position="bottom-right"
+      autoClose={5000}
+      hideProgressBar={false}
+      newestOnTop={false}
+      closeOnClick
+      rtl={false}
+      pauseOnFocusLoss
+      draggable
+      pauseOnHover />
     <ReplayRequestModalContainer />
   </RecoilRoot>
 }

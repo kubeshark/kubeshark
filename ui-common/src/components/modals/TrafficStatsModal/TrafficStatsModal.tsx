@@ -7,6 +7,7 @@ import { TimelineBarChart } from "./TimelineBarChart/TimelineBarChart";
 import refreshIcon from "assets/refresh.svg";
 import { useCommonStyles } from "../../../helpers/commonStyle";
 import { LoadingWrapper } from "../../UI/withLoading/withLoading";
+import { ALL_PROTOCOLS, StatsMode } from "./consts";
 
 const modalStyle = {
   position: 'absolute',
@@ -22,20 +23,11 @@ const modalStyle = {
   color: '#000',
 };
 
-export enum StatsMode {
-  REQUESTS = "entriesCount",
-  VOLUME = "volumeSizeBytes"
-}
-
 interface TrafficStatsModalProps {
   isOpen: boolean;
   onClose: () => void;
   getTrafficStatsDataApi: () => Promise<any>
 }
-
-
-export const PROTOCOLS = ["ALL", "gRPC", "REDIS", "HTTP", "GQL", "AMQP", "KAFKA"];
-export const ALL_PROTOCOLS = PROTOCOLS[0];
 
 export const TrafficStatsModal: React.FC<TrafficStatsModalProps> = ({ isOpen, onClose, getTrafficStatsDataApi }) => {
 
@@ -44,6 +36,7 @@ export const TrafficStatsModal: React.FC<TrafficStatsModalProps> = ({ isOpen, on
   const [selectedProtocol, setSelectedProtocol] = useState(ALL_PROTOCOLS);
   const [pieStatsData, setPieStatsData] = useState(null);
   const [timelineStatsData, setTimelineStatsData] = useState(null);
+  const [protocols, setProtocols] = useState([])
   const [isLoading, setIsLoading] = useState(false);
   const commonClasses = useCommonStyles();
 
@@ -55,6 +48,7 @@ export const TrafficStatsModal: React.FC<TrafficStatsModalProps> = ({ isOpen, on
           const statsData = await getTrafficStatsDataApi();
           setPieStatsData(statsData.pie);
           setTimelineStatsData(statsData.timeline);
+          setProtocols(statsData.protocols)
         } catch (e) {
           console.error(e)
         } finally {
@@ -109,7 +103,7 @@ export const TrafficStatsModal: React.FC<TrafficStatsModalProps> = ({ isOpen, on
               <div>
                 <span style={{ marginRight: 15 }}>Protocol</span>
                 <select className={styles.select} value={selectedProtocol} onChange={(e) => setSelectedProtocol(e.target.value)}>
-                  {PROTOCOLS.map(protocol => <option key={protocol} value={protocol}>{protocol}</option>)}
+                  {protocols.map(protocol => <option key={protocol} value={protocol}>{protocol}</option>)}
                 </select>
               </div>
             </div>
