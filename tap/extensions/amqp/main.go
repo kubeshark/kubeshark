@@ -201,6 +201,9 @@ func (d dissecting) Dissect(b *bufio.Reader, reader api.TcpReader, options *api.
 				}
 				reqResMatcher.emitEvent(isClient, ident, exchangeMethodMap[10], *eventExchangeDeclare, reader)
 
+			case *ExchangeDeclareOk:
+				reqResMatcher.emitEvent(isClient, ident, exchangeMethodMap[11], m, reader)
+
 			case *ConnectionStart:
 				eventConnectionStart := &ConnectionStart{
 					VersionMajor:     m.VersionMajor,
@@ -355,6 +358,8 @@ func (d dissecting) Represent(request map[string]interface{}, response map[strin
 	switch response["method"].(string) {
 	case queueMethodMap[11]:
 		repResponse = representQueueDeclareOk(response)
+	case exchangeMethodMap[11]:
+		repResponse = representExchangeDeclareOk(response)
 	}
 
 	representation["request"] = repRequest

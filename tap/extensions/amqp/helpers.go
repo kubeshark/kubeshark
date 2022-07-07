@@ -480,17 +480,17 @@ func representQueueDeclareOk(event map[string]interface{}) []interface{} {
 		{
 			Name:     "Queue",
 			Value:    event["queue"].(string),
-			Selector: `request.queue`,
+			Selector: `response.queue`,
 		},
 		{
 			Name:     "Message Count",
 			Value:    fmt.Sprintf("%g", event["messageCount"].(float64)),
-			Selector: `request.messageCount`,
+			Selector: `response.messageCount`,
 		},
 		{
 			Name:     "Consumer Count",
 			Value:    fmt.Sprintf("%g", event["consumerCount"].(float64)),
-			Selector: `request.consumerCount`,
+			Selector: `response.consumerCount`,
 		},
 	})
 
@@ -568,6 +568,20 @@ func representExchangeDeclare(event map[string]interface{}) []interface{} {
 			Data:  string(headersMarshaled),
 		})
 	}
+
+	return rep
+}
+
+func representExchangeDeclareOk(event map[string]interface{}) []interface{} {
+	rep := make([]interface{}, 0)
+
+	details, _ := json.Marshal([]api.TableData{})
+
+	rep = append(rep, api.SectionData{
+		Type:  api.TABLE,
+		Title: "Details",
+		Data:  string(details),
+	})
 
 	return rep
 }
