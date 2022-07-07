@@ -15,16 +15,17 @@ Copyright (C) UP9 Inc.
 static __always_inline int add_address_to_chunk(struct pt_regs *ctx, struct tls_chunk* chunk, __u64 id, __u32 fd, struct ssl_info* info) {
     __u32 pid = id >> 32;
     __u64 key = (__u64) pid << 32 | fd;
-    struct fd_info *fdinfo = NULL;
+
+    struct fd_info *fdinfo = bpf_map_lookup_elem(&file_descriptor_to_ipv4, &key);
+
+    if (fdinfo == NULL) {
+        return 0;
+    }
+
     int err;
 
     switch (info->address_info.mode) {
         case ADDRESS_INFO_MODE_UNDEFINED:
-            fdinfo = bpf_map_lookup_elem(&file_descriptor_to_ipv4, &key);
-            if (fdinfo == NULL) {
-                return 0;
-            }
-
             chunk->address_info.mode = ADDRESS_INFO_MODE_SINGLE;
             err = bpf_probe_read(&chunk->address_info.sport, sizeof(chunk->address_info.sport), &fdinfo->ipv4_addr[2]);
             if (err != 0) {
