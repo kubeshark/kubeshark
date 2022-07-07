@@ -16,7 +16,7 @@ var (
 )
 
 type OasGeneratorSink interface {
-	HandleEntry(mizuEntry *api.Entry, protocol *api.Protocol)
+	HandleEntry(mizuEntry *api.Entry)
 }
 
 type OasGenerator interface {
@@ -58,12 +58,12 @@ func (g *defaultOasGenerator) IsStarted() bool {
 	return g.started
 }
 
-func (g *defaultOasGenerator) HandleEntry(mizuEntry *api.Entry, protocol *api.Protocol) {
+func (g *defaultOasGenerator) HandleEntry(mizuEntry *api.Entry) {
 	if !g.started {
 		return
 	}
 
-	if protocol.Name == "http" {
+	if mizuEntry.Protocol.Name == "http" {
 		dest := mizuEntry.Destination.Name
 		if dest == "" {
 			logger.Log.Debugf("OAS: Unresolved entry %d", mizuEntry.Id)
@@ -85,7 +85,7 @@ func (g *defaultOasGenerator) HandleEntry(mizuEntry *api.Entry, protocol *api.Pr
 
 		g.handleHARWithSource(entryWSource)
 	} else {
-		logger.Log.Debugf("OAS: Unsupported protocol in entry %d: %s", mizuEntry.Id, protocol.Name)
+		logger.Log.Debugf("OAS: Unsupported protocol in entry %d: %s", mizuEntry.Id, mizuEntry.Protocol.Name)
 	}
 }
 

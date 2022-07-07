@@ -11,11 +11,13 @@ import (
 )
 
 var protocol = api.Protocol{
-	Name:            "redis",
+	ProtocolSummary: api.ProtocolSummary{
+		Name:         "redis",
+		Version:      "3.x",
+		Abbreviation: "REDIS",
+	},
 	LongName:        "Redis Serialization Protocol",
-	Abbreviation:    "REDIS",
 	Macro:           "redis",
-	Version:         "3.x",
 	BackgroundColor: "#a41e11",
 	ForegroundColor: "#ffffff",
 	FontSize:        11,
@@ -25,7 +27,7 @@ var protocol = api.Protocol{
 }
 
 var protocolsMap = map[string]*api.Protocol{
-	fmt.Sprintf("%s/%s/%s", protocol.Name, protocol.Version, protocol.Abbreviation): &protocol,
+	protocol.ToString(): &protocol,
 }
 
 type dissecting string
@@ -78,8 +80,8 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, 
 		elapsedTime = 0
 	}
 	return &api.Entry{
-		ProtocolId: fmt.Sprintf("%s/%s/%s", protocol.Name, protocol.Version, protocol.Abbreviation),
-		Capture:    item.Capture,
+		Protocol: protocol.ProtocolSummary,
+		Capture:  item.Capture,
 		Source: &api.TCP{
 			Name: resolvedSource,
 			IP:   item.ConnectionInfo.ClientIP,
@@ -123,7 +125,7 @@ func (d dissecting) Summarize(entry *api.Entry) *api.BaseEntry {
 
 	return &api.BaseEntry{
 		Id:           entry.Id,
-		Protocol:     *protocolsMap[entry.ProtocolId],
+		Protocol:     *protocolsMap[entry.Protocol.ToString()],
 		Capture:      entry.Capture,
 		Summary:      summary,
 		SummaryQuery: summaryQuery,
@@ -151,7 +153,7 @@ func (d dissecting) Represent(request map[string]interface{}, response map[strin
 
 func (d dissecting) Macros() map[string]string {
 	return map[string]string{
-		`redis`: fmt.Sprintf(`protocol == "%s/%s/%s"`, protocol.Name, protocol.Version, protocol.Abbreviation),
+		`redis`: fmt.Sprintf(`protocol.name == "%s"`, protocol.Name),
 	}
 }
 
