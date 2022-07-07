@@ -26,7 +26,7 @@ func TestEntryAddedCount(t *testing.T) {
 
 	entryBucketKey := time.Date(2021, 1, 1, 10, 0, 0, 0, time.UTC)
 	valueLessThanBucketThreshold := time.Second * 130
-	mockSummery := &api.BaseEntry{Protocol: api.Protocol{Name: "mock"}, Method: "mock-method", Timestamp: entryBucketKey.Add(valueLessThanBucketThreshold).UnixNano()}
+	mockSummery := &api.BaseEntry{Protocol: api.Protocol{ProtocolSummary: api.ProtocolSummary{Name: "mock"}}, Method: "mock-method", Timestamp: entryBucketKey.Add(valueLessThanBucketThreshold).UnixNano()}
 	for _, entriesCount := range tests {
 		t.Run(fmt.Sprintf("%d", entriesCount), func(t *testing.T) {
 			for i := 0; i < entriesCount; i++ {
@@ -61,7 +61,7 @@ func TestEntryAddedVolume(t *testing.T) {
 	var expectedEntriesCount int
 	var expectedVolumeInGB float64
 
-	mockSummery := &api.BaseEntry{Protocol: api.Protocol{Name: "mock"}, Method: "mock-method", Timestamp: time.Date(2021, 1, 1, 10, 0, 0, 0, time.UTC).UnixNano()}
+	mockSummery := &api.BaseEntry{Protocol: api.Protocol{ProtocolSummary: api.ProtocolSummary{Name: "mock"}}, Method: "mock-method", Timestamp: time.Date(2021, 1, 1, 10, 0, 0, 0, time.UTC).UnixNano()}
 
 	for _, data := range tests {
 		t.Run(fmt.Sprintf("%d", len(data)), func(t *testing.T) {

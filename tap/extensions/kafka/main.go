@@ -11,11 +11,13 @@ import (
 )
 
 var _protocol = api.Protocol{
-	Name:            "kafka",
+	ProtocolSummary: api.ProtocolSummary{
+		Name:         "kafka",
+		Version:      "12",
+		Abbreviation: "KAFKA",
+	},
 	LongName:        "Apache Kafka Protocol",
-	Abbreviation:    "KAFKA",
 	Macro:           "kafka",
-	Version:         "12",
 	BackgroundColor: "#000000",
 	ForegroundColor: "#ffffff",
 	FontSize:        11,
@@ -25,7 +27,7 @@ var _protocol = api.Protocol{
 }
 
 var protocolsMap = map[string]*api.Protocol{
-	fmt.Sprintf("%s/%s/%s", _protocol.Name, _protocol.Version, _protocol.Abbreviation): &_protocol,
+	_protocol.ToString(): &_protocol,
 }
 
 type dissecting string
@@ -70,8 +72,8 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, 
 		elapsedTime = 0
 	}
 	return &api.Entry{
-		ProtocolId: fmt.Sprintf("%s/%s/%s", _protocol.Name, _protocol.Version, _protocol.Abbreviation),
-		Capture:    item.Capture,
+		Protocol: _protocol.ProtocolSummary,
+		Capture:  item.Capture,
 		Source: &api.TCP{
 			Name: resolvedSource,
 			IP:   item.ConnectionInfo.ClientIP,
@@ -195,7 +197,7 @@ func (d dissecting) Summarize(entry *api.Entry) *api.BaseEntry {
 
 	return &api.BaseEntry{
 		Id:           entry.Id,
-		Protocol:     *protocolsMap[entry.ProtocolId],
+		Protocol:     *protocolsMap[entry.Protocol.ToString()],
 		Capture:      entry.Capture,
 		Summary:      summary,
 		SummaryQuery: summaryQuery,
@@ -250,7 +252,7 @@ func (d dissecting) Represent(request map[string]interface{}, response map[strin
 
 func (d dissecting) Macros() map[string]string {
 	return map[string]string{
-		`kafka`: fmt.Sprintf(`protocol == "%s/%s/%s"`, _protocol.Name, _protocol.Version, _protocol.Abbreviation),
+		`kafka`: fmt.Sprintf(`protocol.name == "%s"`, _protocol.Name),
 	}
 }
 

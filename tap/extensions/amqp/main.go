@@ -13,11 +13,13 @@ import (
 )
 
 var protocol = api.Protocol{
-	Name:            "amqp",
+	ProtocolSummary: api.ProtocolSummary{
+		Name:         "amqp",
+		Version:      "0-9-1",
+		Abbreviation: "AMQP",
+	},
 	LongName:        "Advanced Message Queuing Protocol 0-9-1",
-	Abbreviation:    "AMQP",
 	Macro:           "amqp",
-	Version:         "0-9-1",
 	BackgroundColor: "#ff6600",
 	ForegroundColor: "#ffffff",
 	FontSize:        12,
@@ -27,7 +29,7 @@ var protocol = api.Protocol{
 }
 
 var protocolsMap = map[string]*api.Protocol{
-	fmt.Sprintf("%s/%s/%s", protocol.Name, protocol.Version, protocol.Abbreviation): &protocol,
+	protocol.ToString(): &protocol,
 }
 
 type dissecting string
@@ -222,8 +224,8 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, 
 
 	reqDetails["method"] = request["method"]
 	return &api.Entry{
-		ProtocolId: fmt.Sprintf("%s/%s/%s", protocol.Name, protocol.Version, protocol.Abbreviation),
-		Capture:    item.Capture,
+		Protocol: protocol.ProtocolSummary,
+		Capture:  item.Capture,
 		Source: &api.TCP{
 			Name: resolvedSource,
 			IP:   item.ConnectionInfo.ClientIP,
@@ -285,7 +287,7 @@ func (d dissecting) Summarize(entry *api.Entry) *api.BaseEntry {
 
 	return &api.BaseEntry{
 		Id:           entry.Id,
-		Protocol:     *protocolsMap[entry.ProtocolId],
+		Protocol:     *protocolsMap[entry.Protocol.ToString()],
 		Capture:      entry.Capture,
 		Summary:      summary,
 		SummaryQuery: summaryQuery,
@@ -329,7 +331,7 @@ func (d dissecting) Represent(request map[string]interface{}, response map[strin
 
 func (d dissecting) Macros() map[string]string {
 	return map[string]string{
-		`amqp`: fmt.Sprintf(`protocol == "%s/%s/%s"`, protocol.Name, protocol.Version, protocol.Abbreviation),
+		`amqp`: fmt.Sprintf(`protocol.name == "%s"`, protocol.Name),
 	}
 }
 
