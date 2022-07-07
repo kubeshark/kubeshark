@@ -37,6 +37,20 @@ export class Utils {
     return hoursAndMinutes;
   }
 
+  static formatDate = (date) => {
+    let d = new Date(date),
+        month = '' + (d.getMonth() + 1),
+        day = '' + d.getDate(),
+        year = d.getFullYear();
+    const hoursAndMinutes = Utils.getHoursAndMinutes(date);
+    if (month.length < 2) 
+        month = '0' + month;
+    if (day.length < 2) 
+        day = '0' + day;
+    const newDate = [year, month, day].join('-');
+    return [hoursAndMinutes, newDate].join(' ');
+}
+
   static creatUniqueObjArrayByProp = (objArray, prop) => {
     const map = new Map(objArray.map((item) => [item[prop], item])).values()
     return Array.from(map);
