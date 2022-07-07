@@ -21,14 +21,14 @@ export const TimelineBarChart: React.FC<TimelineBarChartProps> = ({ timeLineBarC
     const [protocolsNamesAndColors, setProtocolsNamesAndColors] = useState([]);
     const [methodsStats, setMethodsStats] = useState(null);
     const [methodsNamesAndColors, setMethodsNamesAndColors] = useState(null);
-    
+
     useEffect(() => {
         if (!data) return;
         const protocolsBarsData = [];
         const prtcNames = [];
         data.sort((a, b) => a.timestamp < b.timestamp ? -1 : 1).forEach(protocolObj => {
             let newProtocolObj: { [k: string]: any } = {};
-            newProtocolObj.timestamp = Utils.getHoursAndMinutes(protocolObj.timestamp);
+            newProtocolObj.timestamp = Utils.formatDate(protocolObj.timestamp);
             protocolObj.protocols.forEach(protocol => {
                 newProtocolObj[`${protocol.name}`] = protocol[StatsMode[timeLineBarChartMode]];
                 prtcNames.push({ name: protocol.name, color: protocol.color });
@@ -50,10 +50,10 @@ export const TimelineBarChart: React.FC<TimelineBarChartProps> = ({ timeLineBarC
         const protocolsMethods = [];
         data.sort((a, b) => a.timestamp < b.timestamp ? -1 : 1).forEach(protocolObj => {
             let newMethodObj: { [k: string]: any } = {};
-            newMethodObj.timestamp = Utils.getHoursAndMinutes(protocolObj.timestamp);
+            newMethodObj.timestamp = Utils.formatDate(protocolObj.timestamp);
             protocolObj.protocols.find(protocol => protocol.name === selectedProtocol)?.methods.forEach(method => {
                 newMethodObj[`${method.name}`] = method[StatsMode[timeLineBarChartMode]]
-                protocolsMethodsNamesAndColors.push({name: method.name, color: method.color});
+                protocolsMethodsNamesAndColors.push({ name: method.name, color: method.color });
             })
             protocolsMethods.push(newMethodObj);
         })
@@ -68,17 +68,13 @@ export const TimelineBarChart: React.FC<TimelineBarChartProps> = ({ timeLineBarC
 
     const renderTick = (tickProps) => {
         const { x, y, payload } = tickProps;
-        const { index, value } = payload;
+        const { offset, value } = payload;
+        const pathX = Math.floor(x - offset) + 0.5;
 
-        if (protocolStats.length > 5) {
-            if (index % 3 === 0) {
-                return <text x={x} y={y + 10} textAnchor="end">{`${value}`}</text>;
-            }
-            return null;
-        }
-        else {
-            return <text x={x} y={y + 10} textAnchor="end">{`${value}`}</text>;
-        }
+        return <React.Fragment>
+            <text x={pathX} y={y + 10} textAnchor="middle" className={styles.axisText}>{`${value}`}</text>;
+            <path d={`M${pathX},${y - 4}v${-10}`} stroke="red" />;
+        </React.Fragment>
     };
 
     return (
@@ -95,8 +91,8 @@ export const TimelineBarChart: React.FC<TimelineBarChartProps> = ({ timeLineBarC
                     bottom: 5
                 }}
             >
-                <XAxis dataKey="timestamp" tick={renderTick} tickLine={false} interval="preserveStart" />
-                <YAxis tickFormatter={(value) => timeLineBarChartMode === "VOLUME" ? Utils.humanFileSize(value) : value} interval="preserveEnd"/>
+                <XAxis dataKey="timestamp" tickLine={false} tick={renderTick} interval="preserveStart"/>
+                <YAxis tickFormatter={(value) => timeLineBarChartMode === "VOLUME" ? Utils.humanFileSize(value) : value} interval="preserveEnd" />
                 <Tooltip formatter={(value) => timeLineBarChartMode === "VOLUME" ? Utils.humanFileSize(value) : value + " Requests"} />
                 {bars}
             </BarChart>}
