@@ -36,11 +36,13 @@ var (
 )
 
 var ProtocolHttp = &tapApi.Protocol{
-	Name:            "http",
+	ProtocolSummary: tapApi.ProtocolSummary{
+		Name:         "http",
+		Version:      "1.1",
+		Abbreviation: "HTTP",
+	},
 	LongName:        "Hypertext Transfer Protocol -- HTTP/1.1",
-	Abbreviation:    "HTTP",
 	Macro:           "http",
-	Version:         "1.1",
 	BackgroundColor: "#205cf5",
 	ForegroundColor: "#ffffff",
 	FontSize:        12,
