@@ -1,0 +1,4 @@
+run:
+  skip-files:
+    - "tap/tlstapper/.*_arm64.go"
+    - "tap/tlstapper/.*_x86.go"
