@@ -20,4 +20,9 @@ var bpfLogMessages = []string{
 	/*0014*/ "[%d] Unable to put connect info [err: %d]",
 	/*0015*/ "[%d] Unable to get connect info",
 	/*0016*/ "[%d] Unable to read connect info [err: %d]",
+	/*0017*/ "[%d] Unable to read socket family [err: %d]",
+	/*0018*/ "[%d] Unable to read socket daddr [err: %d]",
+	/*0019*/ "[%d] Unable to read socket saddr [err: %d]",
+	/*0019*/ "[%d] Unable to read socket dport [err: %d]",
+	/*0021*/ "[%d] Unable to read socket sport [err: %d]",
 }

@@ -12,7 +12,7 @@ Copyright (C) UP9 Inc.
 #include "include/common.h"
 
 
-static __always_inline int add_address_to_chunk(struct pt_regs *ctx, struct tls_chunk* chunk, __u64 id, __u32 fd) {
+static __always_inline int add_address_to_chunk(struct pt_regs *ctx, struct tls_chunk* chunk, __u64 id, __u32 fd, struct ssl_info* info) {
     __u32 pid = id >> 32;
     __u64 key = (__u64) pid << 32 | fd;
 
@@ -22,13 +22,28 @@ static __always_inline int add_address_to_chunk(struct pt_regs *ctx, struct tls_
         return 0;
     }
 
-    int err = bpf_probe_read(chunk->address, sizeof(chunk->address), fdinfo->ipv4_addr);
-    chunk->flags |= (fdinfo->flags & FLAGS_IS_CLIENT_BIT);
+    int err;
 
-    if (err != 0) {
-        log_error(ctx, LOG_ERROR_READING_FD_ADDRESS, id, err, 0l);
-        return 0;
+    switch (info->address_info.mode) {
+        case ADDRESS_INFO_MODE_UNDEFINED:
+            chunk->address_info.mode = ADDRESS_INFO_MODE_SINGLE;
+            err = bpf_probe_read(&chunk->address_info.sport, sizeof(chunk->address_info.sport), &fdinfo->ipv4_addr[2]);
+            if (err != 0) {
+                log_error(ctx, LOG_ERROR_READING_FD_ADDRESS, id, err, 0l);
+                return 0;
+            }
+
+            err = bpf_probe_read(&chunk->address_info.saddr, sizeof(chunk->address_info.saddr), &fdinfo->ipv4_addr[4]);
+            if (err != 0) {
+                log_error(ctx, LOG_ERROR_READING_FD_ADDRESS, id, err, 0l);
+                return 0;
+            }
+            break;
+        default:
+            bpf_probe_read(&chunk->address_info, sizeof(chunk->address_info), &info->address_info);
     }
+
+    chunk->flags |= (fdinfo->flags & FLAGS_IS_CLIENT_BIT);
 
     return 1;
 }
@@ -104,7 +119,7 @@ static __always_inline void output_ssl_chunk(struct pt_regs *ctx, struct ssl_inf
     chunk->len = count_bytes;
     chunk->fd = info->fd;
 
-    if (!add_address_to_chunk(ctx, chunk, id, chunk->fd)) {
+    if (!add_address_to_chunk(ctx, chunk, id, chunk->fd, info)) {
         // Without an address, we drop the chunk because there is not much to do with it in Go
         //
         return;
