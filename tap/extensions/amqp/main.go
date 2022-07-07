@@ -151,6 +151,9 @@ func (d dissecting) Dissect(b *bufio.Reader, reader api.TcpReader, options *api.
 				}
 				reqResMatcher.emitEvent(isClient, ident, queueMethodMap[20], *eventQueueBind, reader)
 
+			case *QueueBindOk:
+				reqResMatcher.emitEvent(isClient, ident, queueMethodMap[21], m, reader)
+
 			case *BasicConsume:
 				eventBasicConsume := &BasicConsume{
 					Queue:       m.Queue,
@@ -371,6 +374,8 @@ func (d dissecting) Represent(request map[string]interface{}, response map[strin
 		repResponse = representConnectionCloseOk(response)
 	case basicMethodMap[21]:
 		repResponse = representBasicConsumeOk(response)
+	case queueMethodMap[21]:
+		repResponse = representQueueBindOk(response)
 	}
 
 	representation["request"] = repRequest
