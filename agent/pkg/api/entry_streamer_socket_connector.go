@@ -22,7 +22,7 @@ func (e *DefaultEntryStreamerSocketConnector) SendEntry(socketId int, entry *tap
 	if params.EnableFullEntries {
 		message, _ = models.CreateFullEntryWebSocketMessage(entry)
 	} else {
-		protocol, ok := protocolsMap[entry.ProtocolId]
+		protocol, ok := protocolsMap[entry.Protocol.ToString()]
 		if !ok {
 			return fmt.Errorf("protocol not found, protocol: %v", protocol)
 		}

@@ -44,7 +44,7 @@ func TestRegister(t *testing.T) {
 
 func TestMacros(t *testing.T) {
 	expectedMacros := map[string]string{
-		"kafka": `protocol == "kafka/12/KAFKA"`,
+		"kafka": `protocol.name == "kafka"`,
 	}
 	dissector := NewDissector()
 	macros := dissector.Macros()
