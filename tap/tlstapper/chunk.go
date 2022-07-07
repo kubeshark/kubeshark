@@ -68,7 +68,7 @@ func (c *tlsTapperTlsChunk) getAddressPair() (addressPair, bool) {
 			dstIp, dstPort = c.getSrcAddress()
 		} else {
 			srcIp, srcPort = c.getSrcAddress()
-			dstIp, srcPort = api.UnknownIp, api.UnknownPort
+			dstIp, dstPort = api.UnknownIp, api.UnknownPort
 		}
 		full = false
 	case addressInfoModePair:
