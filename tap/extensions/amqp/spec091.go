@@ -81,10 +81,10 @@ func (msg *ConnectionStart) read(r io.Reader) (err error) {
 }
 
 type ConnectionStartOk struct {
-	ClientProperties Table
-	Mechanism        string
-	Response         string
-	Locale           string
+	ClientProperties Table  `json:"clientProperties"`
+	Mechanism        string `json:"mechanism"`
+	Response         string `json:"response"`
+	Locale           string `json:"locale"`
 }
 
 func (msg *ConnectionStartOk) read(r io.Reader) (err error) {

@@ -93,6 +93,11 @@ type AMQPWrapper struct {
 	Details interface{} `json:"details"`
 }
 
+type emptyResponse struct {
+}
+
+const emptyResponseMethod = "empty"
+
 func getIdent(reader api.TcpReader, methodFrame *MethodFrame) (ident string) {
 	tcpID := reader.GetTcpID()
 	// counterPair := reader.GetCounterPair()
@@ -572,20 +577,6 @@ func representExchangeDeclare(event map[string]interface{}) []interface{} {
 	return rep
 }
 
-func representExchangeDeclareOk(event map[string]interface{}) []interface{} {
-	rep := make([]interface{}, 0)
-
-	details, _ := json.Marshal([]api.TableData{})
-
-	rep = append(rep, api.SectionData{
-		Type:  api.TABLE,
-		Title: "Details",
-		Data:  string(details),
-	})
-
-	return rep
-}
-
 func representConnectionStart(event map[string]interface{}) []interface{} {
 	rep := make([]interface{}, 0)
 
@@ -650,6 +641,65 @@ func representConnectionStart(event map[string]interface{}) []interface{} {
 	return rep
 }
 
+func representConnectionStartOk(event map[string]interface{}) []interface{} {
+	rep := make([]interface{}, 0)
+
+	details, _ := json.Marshal([]api.TableData{
+		{
+			Name:     "Mechanism",
+			Value:    event["mechanism"].(string),
+			Selector: `response.mechanism`,
+		},
+		{
+			Name:     "Mechanism",
+			Value:    event["mechanism"].(string),
+			Selector: `response.response`,
+		},
+		{
+			Name:     "Locale",
+			Value:    event["locale"].(string),
+			Selector: `response.locale`,
+		},
+	})
+	rep = append(rep, api.SectionData{
+		Type:  api.TABLE,
+		Title: "Details",
+		Data:  string(details),
+	})
+
+	if event["clientProperties"] != nil {
+		headers := make([]api.TableData, 0)
+		for name, value := range event["clientProperties"].(map[string]interface{}) {
+			var outcome string
+			switch v := value.(type) {
+			case string:
+				outcome = v
+			case map[string]interface{}:
+				x, _ := json.Marshal(value)
+				outcome = string(x)
+			default:
+				panic("Unknown data type for the client property!")
+			}
+			headers = append(headers, api.TableData{
+				Name:     name,
+				Value:    outcome,
+				Selector: fmt.Sprintf(`response.clientProperties["%s"]`, name),
+			})
+		}
+		sort.Slice(headers, func(i, j int) bool {
+			return headers[i].Name < headers[j].Name
+		})
+		headersMarshaled, _ := json.Marshal(headers)
+		rep = append(rep, api.SectionData{
+			Type:  api.TABLE,
+			Title: "Client Properties",
+			Data:  string(headersMarshaled),
+		})
+	}
+
+	return rep
+}
+
 func representConnectionClose(event map[string]interface{}) []interface{} {
 	replyCode := ""
 
@@ -681,20 +731,6 @@ func representConnectionClose(event map[string]interface{}) []interface{} {
 			Selector: `request.methodId`,
 		},
 	})
-	rep = append(rep, api.SectionData{
-		Type:  api.TABLE,
-		Title: "Details",
-		Data:  string(details),
-	})
-
-	return rep
-}
-
-func representConnectionCloseOk(event map[string]interface{}) []interface{} {
-	rep := make([]interface{}, 0)
-
-	details, _ := json.Marshal([]api.TableData{})
-
 	rep = append(rep, api.SectionData{
 		Type:  api.TABLE,
 		Title: "Details",
@@ -754,20 +790,6 @@ func representQueueBind(event map[string]interface{}) []interface{} {
 			Data:  string(headersMarshaled),
 		})
 	}
-
-	return rep
-}
-
-func representQueueBindOk(event map[string]interface{}) []interface{} {
-	rep := make([]interface{}, 0)
-
-	details, _ := json.Marshal([]api.TableData{})
-
-	rep = append(rep, api.SectionData{
-		Type:  api.TABLE,
-		Title: "Details",
-		Data:  string(details),
-	})
 
 	return rep
 }
@@ -846,6 +868,20 @@ func representBasicConsumeOk(event map[string]interface{}) []interface{} {
 			Selector: `response.consumerTag`,
 		},
 	})
+
+	rep = append(rep, api.SectionData{
+		Type:  api.TABLE,
+		Title: "Details",
+		Data:  string(details),
+	})
+
+	return rep
+}
+
+func representEmptyResponse(event map[string]interface{}) []interface{} {
+	rep := make([]interface{}, 0)
+
+	details, _ := json.Marshal([]api.TableData{})
 
 	rep = append(rep, api.SectionData{
 		Type:  api.TABLE,

@@ -84,10 +84,6 @@ func (d dissecting) Dissect(b *bufio.Reader, reader api.TcpReader, options *api.
 			return err
 		}
 
-		// if !isClient {
-		// 	fmt.Printf("type: %T frame: %+v isClient: %v\n", frame, frame, isClient)
-		// }
-
 		switch f := frameVal.(type) {
 		case *HeartbeatFrame:
 			// drop
@@ -120,11 +116,12 @@ func (d dissecting) Dissect(b *bufio.Reader, reader api.TcpReader, options *api.
 			case *BasicPublish:
 				eventBasicPublish.Body = f.Body
 				reqResMatcher.emitEvent(isClient, ident, basicMethodMap[40], *eventBasicPublish, reader)
+				reqResMatcher.emitEvent(!isClient, ident, emptyResponseMethod, &emptyResponse{}, reader)
 
 			case *BasicDeliver:
 				eventBasicDeliver.Body = f.Body
-				// TODO: There is no response for BasicDeliver
-				reqResMatcher.emitEvent(isClient, ident, basicMethodMap[60], *eventBasicDeliver, reader)
+				reqResMatcher.emitEvent(!isClient, ident, basicMethodMap[60], *eventBasicDeliver, reader)
+				reqResMatcher.emitEvent(isClient, ident, emptyResponseMethod, &emptyResponse{}, reader)
 			}
 
 		case *MethodFrame:
@@ -188,12 +185,8 @@ func (d dissecting) Dissect(b *bufio.Reader, reader api.TcpReader, options *api.
 				}
 				reqResMatcher.emitEvent(isClient, ident, queueMethodMap[10], *eventQueueDeclare, reader)
 
-				fmt.Printf("QueueDeclare: %v\n", ident)
-
 			case *QueueDeclareOk:
 				reqResMatcher.emitEvent(isClient, ident, queueMethodMap[11], m, reader)
-
-				fmt.Printf("QueueDeclareOk: %v\n", ident)
 
 			case *ExchangeDeclare:
 				eventExchangeDeclare := &ExchangeDeclare{
@@ -369,13 +362,17 @@ func (d dissecting) Represent(request map[string]interface{}, response map[strin
 	case queueMethodMap[11]:
 		repResponse = representQueueDeclareOk(response)
 	case exchangeMethodMap[11]:
-		repResponse = representExchangeDeclareOk(response)
+		repResponse = representEmptyResponse(response)
+	case connectionMethodMap[11]:
+		repResponse = representConnectionStartOk(response)
 	case connectionMethodMap[51]:
-		repResponse = representConnectionCloseOk(response)
+		repResponse = representEmptyResponse(response)
 	case basicMethodMap[21]:
 		repResponse = representBasicConsumeOk(response)
 	case queueMethodMap[21]:
-		repResponse = representQueueBindOk(response)
+		repResponse = representEmptyResponse(response)
+	case emptyResponseMethod:
+		repResponse = representEmptyResponse(response)
 	}
 
 	representation["request"] = repRequest
