@@ -123,6 +123,7 @@ func (d dissecting) Dissect(b *bufio.Reader, reader api.TcpReader, options *api.
 
 			case *BasicDeliver:
 				eventBasicDeliver.Body = f.Body
+				// TODO: There is no response for BasicDeliver
 				reqResMatcher.emitEvent(isClient, ident, basicMethodMap[60], *eventBasicDeliver, reader)
 			}
 
@@ -161,6 +162,9 @@ func (d dissecting) Dissect(b *bufio.Reader, reader api.TcpReader, options *api.
 					Arguments:   m.Arguments,
 				}
 				reqResMatcher.emitEvent(isClient, ident, basicMethodMap[20], *eventBasicConsume, reader)
+
+			case *BasicConsumeOk:
+				reqResMatcher.emitEvent(isClient, ident, basicMethodMap[21], m, reader)
 
 			case *BasicDeliver:
 				eventBasicDeliver.ConsumerTag = m.ConsumerTag
@@ -365,6 +369,8 @@ func (d dissecting) Represent(request map[string]interface{}, response map[strin
 		repResponse = representExchangeDeclareOk(response)
 	case connectionMethodMap[51]:
 		repResponse = representConnectionCloseOk(response)
+	case basicMethodMap[21]:
+		repResponse = representBasicConsumeOk(response)
 	}
 
 	representation["request"] = repRequest

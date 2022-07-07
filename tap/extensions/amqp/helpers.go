@@ -821,3 +821,23 @@ func representBasicConsume(event map[string]interface{}) []interface{} {
 
 	return rep
 }
+
+func representBasicConsumeOk(event map[string]interface{}) []interface{} {
+	rep := make([]interface{}, 0)
+
+	details, _ := json.Marshal([]api.TableData{
+		{
+			Name:     "Consumer Tag",
+			Value:    event["consumerTag"].(string),
+			Selector: `response.consumerTag`,
+		},
+	})
+
+	rep = append(rep, api.SectionData{
+		Type:  api.TABLE,
+		Title: "Details",
+		Data:  string(details),
+	})
+
+	return rep
+}

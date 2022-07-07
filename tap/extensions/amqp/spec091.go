@@ -840,7 +840,7 @@ func (msg *BasicConsume) read(r io.Reader) (err error) {
 }
 
 type BasicConsumeOk struct {
-	ConsumerTag string
+	ConsumerTag string `json:"consumerTag"`
 }
 
 func (msg *BasicConsumeOk) read(r io.Reader) (err error) {
