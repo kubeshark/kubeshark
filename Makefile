@@ -20,6 +20,13 @@ TS_SUFFIX="$(shell date '+%s')"
 GIT_BRANCH="$(shell git branch | grep \* | cut -d ' ' -f2 | tr '[:upper:]' '[:lower:]' | tr '/' '_')"
 BUCKET_PATH=static.up9.io/mizu/$(GIT_BRANCH)
 export VER?=0.0
+ARCH=$(shell uname -m)
+ifeq ($(ARCH),$(filter $(ARCH),aarch64 arm64))
+	BPF_O_ARCH_LABEL=arm64
+else
+	BPF_O_ARCH_LABEL=x86
+endif
+BPF_O_FILES = tap/tlstapper/tlstapper46_bpfel_$(BPF_O_ARCH_LABEL).o tap/tlstapper/tlstapper_bpfel_$(BPF_O_ARCH_LABEL).o
 
 ui: ## Build UI.
 	@(cd ui; npm i ; npm run build; )
@@ -31,10 +38,14 @@ cli: ## Build CLI.
 cli-debug: ## Build CLI.
 	@echo "building cli"; cd cli && $(MAKE) build-debug
 
-agent: ## Build agent.
+agent: $(BPF_O_FILES) ## Build agent.
 	@(echo "building mizu agent .." )
 	@(cd agent; go build -o build/mizuagent main.go)
 	@ls -l agent/build
+
+$(BPF_O_FILES): $(wildcard tap/tlstapper/bpf/**/*.[ch])
+	@(echo "building tlstapper ebpf $@")
+	@(./tap/tlstapper/bpf-builder/build.sh)
 
 agent-debug: ## Build agent for debug.
 	@(echo "building mizu agent for debug.." )
