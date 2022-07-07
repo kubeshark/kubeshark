@@ -37,11 +37,6 @@ const CodeEditor: React.FC<CodeEditorProps> = ({
             theme="github"
             onChange={onChange}
             editorProps={{ $blockScrolling: true }}
-            setOptions={{
-                enableBasicAutocompletion: true,
-                enableLiveAutocompletion: true,
-                enableSnippets: true
-            }}
             showPrintMargin={false}
             value={code}
             width="100%"
