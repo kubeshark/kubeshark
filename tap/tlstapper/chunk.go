@@ -1,38 +1,33 @@
 package tlstapper
 
 import (
-	"bytes"
 	"encoding/binary"
 	"net"
+	"unsafe"
 
-	"github.com/go-errors/errors"
 	"github.com/up9inc/mizu/tap/api"
 )
 
 const FlagsIsClientBit uint32 = 1 << 0
 const FlagsIsReadBit uint32 = 1 << 1
+const (
+	addressInfoModeUndefined = iota
+	addressInfoModeSingle
+	addressInfoModePair
+)
 
-func (c *tlsTapperTlsChunk) getAddress() (net.IP, uint16, error) {
-	address := bytes.NewReader(c.Address[:])
-	var family uint16
-	var port uint16
-	var ip32 uint32
+func (c *tlsTapperTlsChunk) getSrcAddress() (net.IP, uint16) {
+	ip := intToIP(c.AddressInfo.Saddr)
+	port := ntohs(c.AddressInfo.Sport)
 
-	if err := binary.Read(address, binary.BigEndian, &family); err != nil {
-		return nil, 0, errors.Wrap(err, 0)
-	}
+	return ip, port
+}
 
-	if err := binary.Read(address, binary.BigEndian, &port); err != nil {
-		return nil, 0, errors.Wrap(err, 0)
-	}
+func (c *tlsTapperTlsChunk) getDstAddress() (net.IP, uint16) {
+	ip := intToIP(c.AddressInfo.Daddr)
+	port := ntohs(c.AddressInfo.Dport)
 
-	if err := binary.Read(address, binary.BigEndian, &ip32); err != nil {
-		return nil, 0, errors.Wrap(err, 0)
-	}
-
-	ip := net.IP{uint8(ip32 >> 24), uint8(ip32 >> 16), uint8(ip32 >> 8), uint8(ip32)}
-
-	return ip, port, nil
+	return ip, port
 }
 
 func (c *tlsTapperTlsChunk) isClient() bool {
@@ -59,26 +54,54 @@ func (c *tlsTapperTlsChunk) isRequest() bool {
 	return (c.isClient() && c.isWrite()) || (c.isServer() && c.isRead())
 }
 
-func (c *tlsTapperTlsChunk) getAddressPair() (addressPair, error) {
-	ip, port, err := c.getAddress()
+func (c *tlsTapperTlsChunk) getAddressPair() (addressPair, bool) {
+	var (
+		srcIp, dstIp     net.IP
+		srcPort, dstPort uint16
+		full             bool
+	)
 
-	if err != nil {
-		return addressPair{}, err
+	switch c.AddressInfo.Mode {
+	case addressInfoModeSingle:
+		if c.isRequest() {
+			srcIp, srcPort = api.UnknownIp, api.UnknownPort
+			dstIp, dstPort = c.getSrcAddress()
+		} else {
+			srcIp, srcPort = c.getSrcAddress()
+			dstIp, dstPort = api.UnknownIp, api.UnknownPort
+		}
+		full = false
+	case addressInfoModePair:
+		if c.isRequest() {
+			srcIp, srcPort = c.getSrcAddress()
+			dstIp, dstPort = c.getDstAddress()
+		} else {
+			srcIp, srcPort = c.getDstAddress()
+			dstIp, dstPort = c.getSrcAddress()
+		}
+		full = true
+	case addressInfoModeUndefined:
+		srcIp, srcPort = api.UnknownIp, api.UnknownPort
+		dstIp, dstPort = api.UnknownIp, api.UnknownPort
+		full = false
 	}
 
-	if c.isRequest() {
-		return addressPair{
-			srcIp:   api.UnknownIp,
-			srcPort: api.UnknownPort,
-			dstIp:   ip,
-			dstPort: port,
-		}, nil
-	} else {
-		return addressPair{
-			srcIp:   ip,
-			srcPort: port,
-			dstIp:   api.UnknownIp,
-			dstPort: api.UnknownPort,
-		}, nil
-	}
+	return addressPair{
+		srcIp:   srcIp,
+		srcPort: srcPort,
+		dstIp:   dstIp,
+		dstPort: dstPort,
+	}, full
+}
+
+// intToIP converts IPv4 number to net.IP
+func intToIP(ip32be uint32) net.IP {
+	return net.IPv4(uint8(ip32be), uint8(ip32be>>8), uint8(ip32be>>16), uint8(ip32be>>24))
+}
+
+// ntohs converts big endian (network byte order) to little endian (assuming that's the host byte order)
+func ntohs(i16be uint16) uint16 {
+	b := make([]byte, 2)
+	binary.BigEndian.PutUint16(b, i16be)
+	return *(*uint16)(unsafe.Pointer(&b[0]))
 }
