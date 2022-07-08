@@ -24,14 +24,14 @@ var connectionMethodMap = map[int]string{
 	61: "connection unblocked",
 }
 
-// var channelMethodMap = map[int]string{
-// 	10: "channel open",
-// 	11: "channel open-ok",
-// 	20: "channel flow",
-// 	21: "channel flow-ok",
-// 	40: "channel close",
-// 	41: "channel close-ok",
-// }
+var channelMethodMap = map[int]string{
+	10: "channel open",
+	11: "channel open-ok",
+	20: "channel flow",
+	21: "channel flow-ok",
+	40: "channel close",
+	41: "channel close-ok",
+}
 
 var exchangeMethodMap = map[int]string{
 	10: "exchange declare",
@@ -96,41 +96,34 @@ type AMQPWrapper struct {
 type emptyResponse struct {
 }
 
-const emptyResponseMethod = "empty"
+const emptyMethod = "empty"
 
 func getIdent(reader api.TcpReader, methodFrame *MethodFrame) (ident string) {
 	tcpID := reader.GetTcpID()
-	// counterPair := reader.GetCounterPair()
+	// To match methods to their Ok(s)
+	methodId := methodFrame.MethodId - methodFrame.MethodId%10
 
 	if reader.GetIsClient() {
-		// counterPair.Lock()
-		// counterPair.Request++
-		// requestCounter := counterPair.Request
-		// counterPair.Unlock()
-
 		ident = fmt.Sprintf(
-			"%s_%s_%s_%s_%d",
+			"%s_%s_%s_%s_%d_%d_%d",
 			tcpID.SrcIP,
 			tcpID.DstIP,
 			tcpID.SrcPort,
 			tcpID.DstPort,
 			methodFrame.ChannelId,
-			// requestCounter,
+			methodFrame.ClassId,
+			methodId,
 		)
 	} else {
-		// counterPair.Lock()
-		// counterPair.Request++
-		// responseCounter := counterPair.Response
-		// counterPair.Unlock()
-
 		ident = fmt.Sprintf(
-			"%s_%s_%s_%s_%d",
+			"%s_%s_%s_%s_%d_%d_%d",
 			tcpID.DstIP,
 			tcpID.SrcIP,
 			tcpID.DstPort,
 			tcpID.SrcPort,
 			methodFrame.ChannelId,
-			// responseCounter,
+			methodFrame.ClassId,
+			methodId,
 		)
 	}
 
@@ -878,7 +871,100 @@ func representBasicConsumeOk(event map[string]interface{}) []interface{} {
 	return rep
 }
 
-func representEmptyResponse(event map[string]interface{}) []interface{} {
+func representConnectionOpen(event map[string]interface{}) []interface{} {
+	rep := make([]interface{}, 0)
+
+	details, _ := json.Marshal([]api.TableData{
+		{
+			Name:     "Virtual Host",
+			Value:    event["virtualHost"].(string),
+			Selector: `request.virtualHost`,
+		},
+	})
+	rep = append(rep, api.SectionData{
+		Type:  api.TABLE,
+		Title: "Details",
+		Data:  string(details),
+	})
+
+	return rep
+}
+
+func representConnectionTune(event map[string]interface{}) []interface{} {
+	rep := make([]interface{}, 0)
+
+	details, _ := json.Marshal([]api.TableData{
+		{
+			Name:     "Channel Max",
+			Value:    fmt.Sprintf("%g", event["channelMax"].(float64)),
+			Selector: `request.channelMax`,
+		},
+		{
+			Name:     "Frame Max",
+			Value:    fmt.Sprintf("%g", event["frameMax"].(float64)),
+			Selector: `request.frameMax`,
+		},
+		{
+			Name:     "Heartbeat",
+			Value:    fmt.Sprintf("%g", event["heartbeat"].(float64)),
+			Selector: `request.heartbeat`,
+		},
+	})
+	rep = append(rep, api.SectionData{
+		Type:  api.TABLE,
+		Title: "Details",
+		Data:  string(details),
+	})
+
+	return rep
+}
+
+func representBasicCancel(event map[string]interface{}) []interface{} {
+	rep := make([]interface{}, 0)
+
+	details, _ := json.Marshal([]api.TableData{
+		{
+			Name:     "Consumer Tag",
+			Value:    event["consumerTag"].(string),
+			Selector: `response.consumerTag`,
+		},
+		{
+			Name:     "NoWait",
+			Value:    strconv.FormatBool(event["noWait"].(bool)),
+			Selector: `request.noWait`,
+		},
+	})
+
+	rep = append(rep, api.SectionData{
+		Type:  api.TABLE,
+		Title: "Details",
+		Data:  string(details),
+	})
+
+	return rep
+}
+
+func representBasicCancelOk(event map[string]interface{}) []interface{} {
+	rep := make([]interface{}, 0)
+
+	details, _ := json.Marshal([]api.TableData{
+		{
+			Name:     "Consumer Tag",
+			Value:    event["consumerTag"].(string),
+			Selector: `response.consumerTag`,
+		},
+	})
+
+	rep = append(rep, api.SectionData{
+		Type:  api.TABLE,
+		Title: "Details",
+		Data:  string(details),
+	})
+
+	return rep
+}
+
+func representEmpty(event map[string]interface{}) []interface{} {
 	rep := make([]interface{}, 0)
 
 	details, _ := json.Marshal([]api.TableData{})

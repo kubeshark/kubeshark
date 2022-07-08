@@ -1,15 +1,13 @@
 package amqp
 
 import (
-	"fmt"
 	"sync"
 	"time"
 
 	"github.com/up9inc/mizu/tap/api"
 )
 
-// Key is {client_addr}_{client_port}_{dest_addr}_{dest_port}_{channel_id}
-// TODO: But the key should be like {client_addr}_{client_port}_{dest_addr}_{dest_port}_{channel_id}_{incremental_counter}_...
+// Key is {client_addr}_{client_port}_{dest_addr}_{dest_port}_{channel_id}_{class_id}_{method_id}
 type requestResponseMatcher struct {
 	openMessagesMap *sync.Map
 }
@@ -34,8 +32,6 @@ func (matcher *requestResponseMatcher) emitEvent(isRequest bool, ident string, m
 	} else {
 		item = matcher.registerResponse(ident, method, event, reader.GetCaptureTime(), reader.GetReadProgress().Current())
 	}
-
-	fmt.Printf("item: %v\n", item)
 
 	if item != nil {
 		item.ConnectionInfo = &api.ConnectionInfo{

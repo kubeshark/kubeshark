@@ -135,9 +135,9 @@ func (msg *connectionSecureOk) read(r io.Reader) (err error) {
 }
 
 type connectionTune struct {
-	ChannelMax uint16
-	FrameMax   uint32
-	Heartbeat  uint16
+	ChannelMax uint16 `json:"channelMax"`
+	FrameMax   uint32 `json:"frameMax"`
+	Heartbeat  uint16 `json:"heartbeat"`
 }
 
 func (msg *connectionTune) read(r io.Reader) (err error) {
@@ -181,7 +181,7 @@ func (msg *connectionTuneOk) read(r io.Reader) (err error) {
 }
 
 type connectionOpen struct {
-	VirtualHost string
+	VirtualHost string `json:"virtualHost"`
 	reserved1   string
 	reserved2   bool
 }
@@ -853,8 +853,8 @@ func (msg *BasicConsumeOk) read(r io.Reader) (err error) {
 }
 
 type basicCancel struct {
-	ConsumerTag string
-	NoWait      bool
+	ConsumerTag string `json:"consumerTag"`
+	NoWait      bool   `json:"noWait"`
 }
 
 func (msg *basicCancel) read(r io.Reader) (err error) {
@@ -873,7 +873,7 @@ func (msg *basicCancel) read(r io.Reader) (err error) {
 }
 
 type basicCancelOk struct {
-	ConsumerTag string
+	ConsumerTag string `json:"consumerTag"`
 }
 
 func (msg *basicCancelOk) read(r io.Reader) (err error) {

@@ -116,12 +116,12 @@ func (d dissecting) Dissect(b *bufio.Reader, reader api.TcpReader, options *api.
 			case *BasicPublish:
 				eventBasicPublish.Body = f.Body
 				reqResMatcher.emitEvent(isClient, ident, basicMethodMap[40], *eventBasicPublish, reader)
-				reqResMatcher.emitEvent(!isClient, ident, emptyResponseMethod, &emptyResponse{}, reader)
+				reqResMatcher.emitEvent(!isClient, ident, emptyMethod, &emptyResponse{}, reader)
 
 			case *BasicDeliver:
 				eventBasicDeliver.Body = f.Body
 				reqResMatcher.emitEvent(!isClient, ident, basicMethodMap[60], *eventBasicDeliver, reader)
-				reqResMatcher.emitEvent(isClient, ident, emptyResponseMethod, &emptyResponse{}, reader)
+				reqResMatcher.emitEvent(isClient, ident, emptyMethod, &emptyResponse{}, reader)
 			}
 
 		case *MethodFrame:
@@ -205,16 +205,12 @@ func (d dissecting) Dissect(b *bufio.Reader, reader api.TcpReader, options *api.
 				reqResMatcher.emitEvent(isClient, ident, exchangeMethodMap[11], m, reader)
 
 			case *ConnectionStart:
-				eventConnectionStart := &ConnectionStart{
-					VersionMajor:     m.VersionMajor,
-					VersionMinor:     m.VersionMinor,
-					ServerProperties: m.ServerProperties,
-					Mechanisms:       m.Mechanisms,
-					Locales:          m.Locales,
-				}
-				reqResMatcher.emitEvent(isClient, ident, connectionMethodMap[10], *eventConnectionStart, reader)
+				// In our tests, *ConnectionStart does not result in *ConnectionStartOk
+				reqResMatcher.emitEvent(!isClient, ident, connectionMethodMap[10], m, reader)
+				reqResMatcher.emitEvent(isClient, ident, emptyMethod, &emptyResponse{}, reader)
 
 			case *ConnectionStartOk:
+				// In our tests, *ConnectionStart does not result in *ConnectionStartOk
 				reqResMatcher.emitEvent(isClient, ident, connectionMethodMap[11], m, reader)
 
 			case *ConnectionClose:
@@ -228,6 +224,36 @@ func (d dissecting) Dissect(b *bufio.Reader, reader api.TcpReader, options *api.
 
 			case *ConnectionCloseOk:
 				reqResMatcher.emitEvent(isClient, ident, connectionMethodMap[51], m, reader)
+
+			case *connectionOpen:
+				eventConnectionOpen := &connectionOpen{
+					VirtualHost: m.VirtualHost,
+				}
+				reqResMatcher.emitEvent(isClient, ident, connectionMethodMap[40], *eventConnectionOpen, reader)
+
+			case *connectionOpenOk:
+				reqResMatcher.emitEvent(isClient, ident, connectionMethodMap[41], m, reader)
+
+			case *channelOpen:
+				reqResMatcher.emitEvent(isClient, ident, channelMethodMap[10], m, reader)
+
+			case *channelOpenOk:
+				reqResMatcher.emitEvent(isClient, ident, channelMethodMap[11], m, reader)
+
+			case *connectionTune:
+				// In our tests, *connectionTune does not result in *connectionTuneOk
+				reqResMatcher.emitEvent(!isClient, ident, connectionMethodMap[30], m, reader)
+				reqResMatcher.emitEvent(isClient, ident, emptyMethod, &emptyResponse{}, reader)
+
+			case *connectionTuneOk:
+				// In our tests, *connectionTune does not result in *connectionTuneOk
+				reqResMatcher.emitEvent(isClient, ident, connectionMethodMap[31], m, reader)
+
+			case *basicCancel:
+				reqResMatcher.emitEvent(isClient, ident, basicMethodMap[30], m, reader)
+
+			case *basicCancelOk:
+				reqResMatcher.emitEvent(isClient, ident, basicMethodMap[31], m, reader)
 			}
 
 		default:
@@ -311,6 +337,21 @@ func (d dissecting) Summarize(entry *api.Entry) *api.BaseEntry {
 	case basicMethodMap[20]:
 		summary = entry.Request["queue"].(string)
 		summaryQuery = fmt.Sprintf(`request.queue == "%s"`, summary)
+	case connectionMethodMap[40]:
+		summary = entry.Request["virtualHost"].(string)
+		summaryQuery = fmt.Sprintf(`request.virtualHost == "%s"`, summary)
+	case connectionMethodMap[30]:
+		summary = fmt.Sprintf("%g", entry.Request["channelMax"].(float64))
+		summaryQuery = fmt.Sprintf(`request.channelMax == "%s"`, summary)
+	case connectionMethodMap[31]:
+		summary = fmt.Sprintf("%g", entry.Request["channelMax"].(float64))
+		summaryQuery = fmt.Sprintf(`request.channelMax == "%s"`, summary)
+	case basicMethodMap[30]:
+		summary = entry.Request["consumerTag"].(string)
+		summaryQuery = fmt.Sprintf(`request.consumerTag == "%s"`, summary)
+	case basicMethodMap[31]:
+		summary = entry.Request["consumerTag"].(string)
+		summaryQuery = fmt.Sprintf(`request.consumerTag == "%s"`, summary)
 	}
 
 	return &api.BaseEntry{
@@ -353,26 +394,39 @@ func (d dissecting) Represent(request map[string]interface{}, response map[strin
 		repRequest = representQueueBind(request)
 	case basicMethodMap[20]:
 		repRequest = representBasicConsume(request)
+	case connectionMethodMap[40]:
+		repRequest = representConnectionOpen(request)
+	case channelMethodMap[10]:
+		repRequest = representEmpty(request)
+	case connectionMethodMap[30]:
+		repRequest = representConnectionTune(request)
+	case basicMethodMap[30]:
+		repRequest = representBasicCancel(request)
 	}
-
-	fmt.Printf("request: %+v\n", request)
-	fmt.Printf("response: %+v\n", response)
 
 	switch response["method"].(string) {
 	case queueMethodMap[11]:
 		repResponse = representQueueDeclareOk(response)
 	case exchangeMethodMap[11]:
-		repResponse = representEmptyResponse(response)
+		repResponse = representEmpty(response)
 	case connectionMethodMap[11]:
 		repResponse = representConnectionStartOk(response)
 	case connectionMethodMap[51]:
-		repResponse = representEmptyResponse(response)
+		repResponse = representEmpty(response)
 	case basicMethodMap[21]:
 		repResponse = representBasicConsumeOk(response)
 	case queueMethodMap[21]:
-		repResponse = representEmptyResponse(response)
-	case emptyResponseMethod:
-		repResponse = representEmptyResponse(response)
+		repResponse = representEmpty(response)
+	case connectionMethodMap[41]:
+		repResponse = representEmpty(response)
+	case channelMethodMap[11]:
+		repResponse = representEmpty(request)
+	case connectionMethodMap[31]:
+		repResponse = representConnectionTune(request)
+	case basicMethodMap[31]:
+		repResponse = representBasicCancelOk(request)
+	case emptyMethod:
+		repResponse = representEmpty(response)
 	}
 
 	representation["request"] = repRequest
