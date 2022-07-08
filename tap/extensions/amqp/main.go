@@ -44,8 +44,6 @@ func (d dissecting) Ping() {
 	log.Printf("pong %s", protocol.Name)
 }
 
-const amqpRequest string = "amqp_request"
-
 func (d dissecting) Dissect(b *bufio.Reader, reader api.TcpReader, options *api.TrafficFilteringOptions) error {
 	r := AmqpReader{b}
 
