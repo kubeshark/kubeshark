@@ -133,10 +133,19 @@ func NewRequest(request map[string]interface{}) (harRequest *Request, err error)
 
 	queryString := make([]QueryString, 0)
 	for key, value := range request["queryString"].(map[string]interface{}) {
-		queryString = append(queryString, QueryString{
-			Name:  key,
-			Value: value.(string),
-		})
+		if valuesInterface, ok := value.([]interface{}); ok {
+			for _, valueInterface := range valuesInterface {
+				queryString = append(queryString, QueryString{
+					Name:  key,
+					Value: valueInterface.(string),
+				})
+			}
+		} else {
+			queryString = append(queryString, QueryString{
+				Name:  key,
+				Value: value.(string),
+			})
+		}
 	}
 
 	url := fmt.Sprintf("http://%s%s", host, request["url"].(string))

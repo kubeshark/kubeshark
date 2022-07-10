@@ -72,36 +72,11 @@ func mapSliceMergeRepeatedKeys(mapSlice []interface{}) (newMapSlice []interface{
 	return
 }
 
-func representMapAsTable(mapSlice map[string]interface{}, selectorPrefix string) (representation string) {
+func representMapAsTable(mapToTable map[string]interface{}, selectorPrefix string) (representation string) {
 	var table []api.TableData
-	for key, value := range mapSlice {
-		var reflectKind reflect.Kind
-		reflectType := reflect.TypeOf(value)
-		if reflectType == nil {
-			reflectKind = reflect.Interface
-		} else {
-			reflectKind = reflect.TypeOf(value).Kind()
-		}
-
-		switch reflectKind {
-		case reflect.Slice:
-			fallthrough
-		case reflect.Array:
-			for i, el := range value.([]interface{}) {
-				selector := fmt.Sprintf("%s.%s[%d]", selectorPrefix, key, i)
-				table = append(table, api.TableData{
-					Name:     fmt.Sprintf("%s [%d]", key, i),
-					Value:    el,
-					Selector: selector,
-				})
-			}
-		default:
-			selector := fmt.Sprintf("%s[\"%s\"]", selectorPrefix, key)
-			table = append(table, api.TableData{
-				Name:     key,
-				Value:    value,
-				Selector: selector,
-			})
+	for key, value := range mapToTable {
+		if tableData := createTableData(key, value, selectorPrefix); tableData != nil {
+			table = append(table, *tableData)
 		}
 	}
 
@@ -117,39 +92,47 @@ func representMapSliceAsTable(mapSlice []interface{}, selectorPrefix string) (re
 		key := h["name"].(string)
 		value := h["value"]
 
-		var reflectKind reflect.Kind
-		reflectType := reflect.TypeOf(value)
-		if reflectType == nil {
-			reflectKind = reflect.Interface
-		} else {
-			reflectKind = reflect.TypeOf(value).Kind()
-		}
-
-		switch reflectKind {
-		case reflect.Slice:
-			fallthrough
-		case reflect.Array:
-			for i, el := range value.([]interface{}) {
-				selector := fmt.Sprintf("%s.%s[%d]", selectorPrefix, key, i)
-				table = append(table, api.TableData{
-					Name:     fmt.Sprintf("%s [%d]", key, i),
-					Value:    el,
-					Selector: selector,
-				})
-			}
-		default:
-			selector := fmt.Sprintf("%s[\"%s\"]", selectorPrefix, key)
-			table = append(table, api.TableData{
-				Name:     key,
-				Value:    value,
-				Selector: selector,
-			})
+		if tableData := createTableData(key, value, selectorPrefix); tableData != nil {
+			table = append(table, *tableData)
 		}
 	}
 
 	obj, _ := json.Marshal(table)
 	representation = string(obj)
 	return
+}
+
+func createTableData(key string, value interface{}, selectorPrefix string) *api.TableData {
+	var reflectKind reflect.Kind
+	reflectType := reflect.TypeOf(value)
+	if reflectType == nil {
+		reflectKind = reflect.Interface
+	} else {
+		reflectKind = reflect.TypeOf(value).Kind()
+	}
+
+	switch reflectKind {
+	case reflect.Slice:
+		fallthrough
+	case reflect.Array:
+		for i, el := range value.([]interface{}) {
+			selector := fmt.Sprintf("%s.%s[%d]", selectorPrefix, key, i)
+			return &api.TableData{
+				Name:     fmt.Sprintf("%s [%d]", key, i),
+				Value:    el,
+				Selector: selector,
+			}
+		}
+	default:
+		selector := fmt.Sprintf("%s[\"%s\"]", selectorPrefix, key)
+		return &api.TableData{
+			Name:     key,
+			Value:    value,
+			Selector: selector,
+		}
+	}
+
+	return nil
 }
 
 func representSliceAsTable(slice []interface{}, selectorPrefix string) (representation string) {
