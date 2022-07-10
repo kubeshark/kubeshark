@@ -6,6 +6,7 @@ import (
 	"sort"
 	"strconv"
 
+	"github.com/up9inc/mizu/logger"
 	"github.com/up9inc/mizu/tap/api"
 )
 
@@ -612,7 +613,7 @@ func representConnectionStart(event map[string]interface{}) []interface{} {
 				x, _ := json.Marshal(value)
 				outcome = string(x)
 			default:
-				panic("Unknown data type for the server property!")
+				logger.Log.Info("Unknown data type for the server property!")
 			}
 			headers = append(headers, api.TableData{
 				Name:     name,
@@ -671,7 +672,7 @@ func representConnectionStartOk(event map[string]interface{}) []interface{} {
 				x, _ := json.Marshal(value)
 				outcome = string(x)
 			default:
-				panic("Unknown data type for the client property!")
+				logger.Log.Info("Unknown data type for the client property!")
 			}
 			headers = append(headers, api.TableData{
 				Name:     name,
