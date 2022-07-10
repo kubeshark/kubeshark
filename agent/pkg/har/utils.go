@@ -54,32 +54,30 @@ import (
 //	return cookies
 //}
 
-func BuildHeaders(rawHeaders []interface{}) ([]Header, string, string, string, string, string) {
+func BuildHeaders(rawHeaders map[string]interface{}) ([]Header, string, string, string, string, string) {
 	var host, scheme, authority, path, status string
 	headers := make([]Header, 0, len(rawHeaders))
 
-	for _, header := range rawHeaders {
-		h := header.(map[string]interface{})
-
+	for key, value := range rawHeaders {
 		headers = append(headers, Header{
-			Name:  h["name"].(string),
-			Value: h["value"].(string),
+			Name:  key,
+			Value: value.(string),
 		})
 
-		if h["name"] == "Host" {
-			host = h["value"].(string)
+		if key == "Host" {
+			host = value.(string)
 		}
-		if h["name"] == ":authority" {
-			authority = h["value"].(string)
+		if key == ":authority" {
+			authority = value.(string)
 		}
-		if h["name"] == ":scheme" {
-			scheme = h["value"].(string)
+		if key == ":scheme" {
+			scheme = value.(string)
 		}
-		if h["name"] == ":path" {
-			path = h["value"].(string)
+		if key == ":path" {
+			path = value.(string)
 		}
-		if h["name"] == ":status" {
-			status = h["value"].(string)
+		if key == ":status" {
+			status = value.(string)
 		}
 	}
 
@@ -119,8 +117,8 @@ func BuildPostParams(rawParams []interface{}) []Param {
 }
 
 func NewRequest(request map[string]interface{}) (harRequest *Request, err error) {
-	headers, host, scheme, authority, path, _ := BuildHeaders(request["_headers"].([]interface{}))
-	cookies := make([]Cookie, 0) // BuildCookies(request["_cookies"].([]interface{}))
+	headers, host, scheme, authority, path, _ := BuildHeaders(request["headers"].(map[string]interface{}))
+	cookies := make([]Cookie, 0) // BuildCookies(request["cookies"].(map[string]interface{}))
 
 	postData, _ := request["postData"].(map[string]interface{})
 	mimeType := postData["mimeType"]
@@ -134,11 +132,10 @@ func NewRequest(request map[string]interface{}) (harRequest *Request, err error)
 	}
 
 	queryString := make([]QueryString, 0)
-	for _, _qs := range request["_queryString"].([]interface{}) {
-		qs := _qs.(map[string]interface{})
+	for key, value := range request["queryString"].(map[string]interface{}) {
 		queryString = append(queryString, QueryString{
-			Name:  qs["name"].(string),
-			Value: qs["value"].(string),
+			Name:  key,
+			Value: value.(string),
 		})
 	}
 
@@ -172,8 +169,8 @@ func NewRequest(request map[string]interface{}) (harRequest *Request, err error)
 }
 
 func NewResponse(response map[string]interface{}) (harResponse *Response, err error) {
-	headers, _, _, _, _, _status := BuildHeaders(response["_headers"].([]interface{}))
-	cookies := make([]Cookie, 0) // BuildCookies(response["_cookies"].([]interface{}))
+	headers, _, _, _, _, _status := BuildHeaders(response["headers"].(map[string]interface{}))
+	cookies := make([]Cookie, 0) // BuildCookies(response["cookies"].(map[string]interface{}))
 
 	content, _ := response["content"].(map[string]interface{})
 	mimeType := content["mimeType"]

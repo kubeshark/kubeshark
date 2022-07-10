@@ -6,15 +6,28 @@ import (
 	"reflect"
 	"sort"
 	"strconv"
+	"strings"
 
 	"github.com/up9inc/mizu/tap/api"
 )
 
-func mapSliceRebuildAsMap(mapSlice []interface{}) (newMap map[string]interface{}) {
+func mapSliceRebuildAsMergedMap(mapSlice []interface{}) (newMap map[string]interface{}) {
 	newMap = make(map[string]interface{})
-	for _, item := range mapSlice {
+
+	mergedMapSlice := mapSliceMergeRepeatedKeys(mapSlice)
+	for _, item := range mergedMapSlice {
 		h := item.(map[string]interface{})
-		newMap[h["name"].(string)] = h["value"]
+
+		if valuesInterface, ok := h["value"].([]interface{}); ok {
+			var values []string
+			for _, valueInterface := range valuesInterface {
+				values = append(values, valueInterface.(string))
+			}
+
+			newMap[h["name"].(string)] = strings.Join(values, ",")
+		} else {
+			newMap[h["name"].(string)] = h["value"]
+		}
 	}
 
 	return
@@ -44,6 +57,44 @@ func mapSliceMergeRepeatedKeys(mapSlice []interface{}) (newMapSlice []interface{
 		return newMapSlice[i].(map[string]interface{})["name"].(string) < newMapSlice[j].(map[string]interface{})["name"].(string)
 	})
 
+	return
+}
+
+func representMapAsTable(mapSlice map[string]interface{}, selectorPrefix string) (representation string) {
+	var table []api.TableData
+	for key, value := range mapSlice {
+		var reflectKind reflect.Kind
+		reflectType := reflect.TypeOf(value)
+		if reflectType == nil {
+			reflectKind = reflect.Interface
+		} else {
+			reflectKind = reflect.TypeOf(value).Kind()
+		}
+
+		switch reflectKind {
+		case reflect.Slice:
+			fallthrough
+		case reflect.Array:
+			for i, el := range value.([]interface{}) {
+				selector := fmt.Sprintf("%s.%s[%d]", selectorPrefix, key, i)
+				table = append(table, api.TableData{
+					Name:     fmt.Sprintf("%s [%d]", key, i),
+					Value:    el,
+					Selector: selector,
+				})
+			}
+		default:
+			selector := fmt.Sprintf("%s[\"%s\"]", selectorPrefix, key)
+			table = append(table, api.TableData{
+				Name:     key,
+				Value:    value,
+				Selector: selector,
+			})
+		}
+	}
+
+	obj, _ := json.Marshal(table)
+	representation = string(obj)
 	return
 }
 
