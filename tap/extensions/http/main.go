@@ -292,7 +292,7 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, 
 	reqDetails["cookies"] = mapSliceRebuildAsMergedMap(reqDetails["cookies"].([]interface{}))
 	resDetails["cookies"] = mapSliceRebuildAsMergedMap(resDetails["cookies"].([]interface{}))
 
-	reqDetails["queryString"] = mapSliceRebuildAsMergedMap(reqDetails["queryString"].([]interface{}))
+	reqDetails["queryString"] = mapSliceRebuildAsMap(reqDetails["queryString"].([]interface{}))
 
 	elapsedTime := item.Pair.Response.CaptureTime.Sub(item.Pair.Request.CaptureTime).Round(time.Millisecond).Milliseconds()
 	if elapsedTime < 0 {

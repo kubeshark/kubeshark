@@ -11,6 +11,18 @@ import (
 	"github.com/up9inc/mizu/tap/api"
 )
 
+func mapSliceRebuildAsMap(mapSlice []interface{}) (newMap map[string]interface{}) {
+	newMap = make(map[string]interface{})
+
+	mergedMapSlice := mapSliceMergeRepeatedKeys(mapSlice)
+	for _, item := range mergedMapSlice {
+		h := item.(map[string]interface{})
+		newMap[h["name"].(string)] = h["value"]
+	}
+
+	return
+}
+
 func mapSliceRebuildAsMergedMap(mapSlice []interface{}) (newMap map[string]interface{}) {
 	newMap = make(map[string]interface{})
 
