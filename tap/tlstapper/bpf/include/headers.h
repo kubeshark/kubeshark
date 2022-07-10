@@ -15,6 +15,7 @@ Copyright (C) UP9 Inc.
 
 #include "legacy_kernel.h"
 
+#include <bpf/bpf_endian.h>
 #include <bpf/bpf_helpers.h>
 #include <bpf/bpf_tracing.h>
 #include <bpf/bpf_core_read.h>

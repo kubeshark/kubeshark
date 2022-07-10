@@ -134,14 +134,9 @@ func (p *tlsPoller) pollChunksPerfBuffer(chunks chan<- *tlsTapperTlsChunk) {
 
 func (p *tlsPoller) handleTlsChunk(chunk *tlsTapperTlsChunk, extension *api.Extension, emitter api.Emitter,
 	options *api.TrafficFilteringOptions, streamsMap api.TcpStreamMap) error {
-	address, err := p.getSockfdAddressPair(chunk)
-
+	address, err := p.getAddressPair(chunk)
 	if err != nil {
-		address, err = chunk.getAddressPair()
-
-		if err != nil {
-			return err
-		}
+		return err
 	}
 
 	key := buildTlsKey(address)
@@ -159,6 +154,22 @@ func (p *tlsPoller) handleTlsChunk(chunk *tlsTapperTlsChunk, extension *api.Exte
 	}
 
 	return nil
+}
+
+func (p *tlsPoller) getAddressPair(chunk *tlsTapperTlsChunk) (addressPair, error) {
+	addrPairFromChunk, full := chunk.getAddressPair()
+	if full {
+		return addrPairFromChunk, nil
+	}
+
+	addrPairFromSockfd, err := p.getSockfdAddressPair(chunk)
+	if err == nil {
+		return addrPairFromSockfd, nil
+	} else {
+		logger.Log.Error("failed to get address from sock fd:", err)
+	}
+
+	return addrPairFromChunk, err
 }
 
 func (p *tlsPoller) startNewTlsReader(chunk *tlsTapperTlsChunk, address *addressPair, key string,
