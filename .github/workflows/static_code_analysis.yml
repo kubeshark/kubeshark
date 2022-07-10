@@ -34,7 +34,7 @@ jobs:
 
       - name: Generate eBPF object files and go bindings
         id: generate_ebpf
-        run: tap/tlstapper/bpf-builder/build.sh
+        run: make bpf
 
       - name: Go lint - agent
         uses: golangci/golangci-lint-action@v2
