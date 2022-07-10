@@ -38,7 +38,7 @@ cli: ## Build CLI.
 cli-debug: ## Build CLI.
 	@echo "building cli"; cd cli && $(MAKE) build-debug
 
-agent: $(BPF_O_FILES) ## Build agent.
+agent: bpf ## Build agent.
 	@(echo "building mizu agent .." )
 	@(cd agent; go build -o build/mizuagent main.go)
 	@ls -l agent/build
