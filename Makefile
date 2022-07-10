@@ -8,7 +8,7 @@ SHELL=/bin/bash
 # HELP
 # This will output the help for each task
 # thanks to https://marmelab.com/blog/2016/02/29/auto-documented-makefile.html
-.PHONY: help ui agent agent-debug cli tap docker
+.PHONY: help ui agent agent-debug cli tap docker bpf clean-bpf
 
 help: ## This help.
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -43,8 +43,10 @@ agent: $(BPF_O_FILES) ## Build agent.
 	@(cd agent; go build -o build/mizuagent main.go)
 	@ls -l agent/build
 
+bpf: $(BPF_O_FILES)
+
 $(BPF_O_FILES): $(wildcard tap/tlstapper/bpf/**/*.[ch])
-	@(echo "building tlstapper ebpf $@")
+	@(echo "building tlstapper bpf")
 	@(./tap/tlstapper/bpf-builder/build.sh)
 
 agent-debug: ## Build agent for debug.
@@ -86,6 +88,9 @@ clean-cli:  ## Clean CLI.
 
 clean-docker:  ## Run clean docker
 	@(echo "DOCKER cleanup - NOT IMPLEMENTED YET " )
+
+clean-bpf:
+	@(rm $(BPF_O_FILES) ; echo "bpf cleanup done" )
 
 test-lint:  ## Run lint on all modules
 	cd agent && golangci-lint run
