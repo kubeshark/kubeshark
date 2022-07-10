@@ -23,7 +23,7 @@ import CodeEditor from "../../UI/CodeEditor/CodeEditor";
 import FilePicker from '../../UI/FilePicker/FilePicker';
 import KeyValueTable, { convertArrToKeyValueObject, convertParamsToArr } from "../../UI/KeyValueTable/KeyValueTable";
 import { LoadingWrapper } from "../../UI/withLoading/withLoading";
-import { IReplayRequestData } from './interfaces';
+import { IReplayRequestData, KeyValuePair } from './interfaces';
 import styles from './ReplayRequestModal.module.sass';
 
 const modalStyle = {
@@ -106,19 +106,17 @@ const ReplayRequestModal: React.FC<ReplayRequestModalProps> = ({ isOpen, onClose
 
     const debouncedPath = useDebounce(pathInput, 500);
 
+    const addParamsToUrl = useCallback((url: string, params: KeyValuePair[]) => {
+        const urlParams = new URLSearchParams("");
+        params.forEach(param => urlParams.append(param.key, param.value as string))
+        return `${url}?${urlParams.toString()}`
+    }, [])
+
     const onParamsChange = useCallback((newParams) => {
         let newUrl = `${debouncedPath ? debouncedPath.split('?')[0] : ""}`
-        newParams.forEach(({ key, value }, index) => {
-            newUrl += index > 0 ? '&' : '?'
-            newUrl += `${key}` + (value ? `=${value}` : "")
-        })
-
+        newUrl = addParamsToUrl(newUrl, newParams)
         setPathInput(newUrl)
-    }, [debouncedPath])
-
-    useEffect(() => {
-        onParamsChange(requestDataModel.params)
-    }, [onParamsChange, requestDataModel.params])
+    }, [addParamsToUrl, debouncedPath])
 
     useEffect(() => {
         const params = convertParamsToArr(getQueryStringParams(debouncedPath));
@@ -135,10 +133,10 @@ const ReplayRequestModal: React.FC<ReplayRequestModalProps> = ({ isOpen, onClose
     const resetModal = useCallback((requestDataModel: IReplayRequestData, hostPortInputVal, pathVal) => {
         setRequestData(requestDataModel)
         setHostPortInput(hostPortInputVal)
-        setPathInput(pathVal);
+        setPathInput(addParamsToUrl(pathVal, requestDataModel.params));
         setResponse(null);
         setRequestExpanded(true);
-    }, [])
+    }, [addParamsToUrl])
 
     const onRefreshRequest = useCallback((event) => {
         event.stopPropagation();
