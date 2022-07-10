@@ -5,6 +5,7 @@ import (
 	"net"
 	"unsafe"
 
+	"github.com/up9inc/mizu/logger"
 	"github.com/up9inc/mizu/tap/api"
 )
 
@@ -85,6 +86,14 @@ func (c *tlsTapperTlsChunk) getAddressPair() (addressPair, bool) {
 		dstIp, dstPort = api.UnknownIp, api.UnknownPort
 		full = false
 	}
+
+	mode := 0
+	if full {
+		mode = 1
+	} else {
+		mode = 0
+	}
+	logger.Log.Infof("getAddressPair %d %s:%d > %s:%d", mode, srcIp, srcPort, dstIp, dstPort)
 
 	return addressPair{
 		srcIp:   srcIp,

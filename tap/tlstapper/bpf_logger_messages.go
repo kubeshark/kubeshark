@@ -25,4 +25,5 @@ var bpfLogMessages = []string{
 	/*0019*/ "[%d] Unable to read socket saddr [err: %d]",
 	/*0019*/ "[%d] Unable to read socket dport [err: %d]",
 	/*0021*/ "[%d] Unable to read socket sport [err: %d]",
+	/*0022*/ "DEBUGBPF %d %d %d",
 }

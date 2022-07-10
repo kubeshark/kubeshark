@@ -31,6 +31,7 @@ Copyright (C) UP9 Inc.
 #define LOG_ERROR_READING_SOCKET_SADDR (19)
 #define LOG_ERROR_READING_SOCKET_DPORT (20)
 #define LOG_ERROR_READING_SOCKET_SPORT (21)
+#define LOG_DEBUG (22)
 
 // Sometimes we have the same error, happening from different locations.
 // 	in order to be able to distinct between them in the log, we add an 
