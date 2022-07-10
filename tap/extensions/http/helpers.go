@@ -75,9 +75,7 @@ func mapSliceMergeRepeatedKeys(mapSlice []interface{}) (newMapSlice []interface{
 func representMapAsTable(mapToTable map[string]interface{}, selectorPrefix string) (representation string) {
 	var table []api.TableData
 	for key, value := range mapToTable {
-		if tableData := createTableData(key, value, selectorPrefix); tableData != nil {
-			table = append(table, *tableData)
-		}
+		table = append(table, createTableForKey(key, value, selectorPrefix)...)
 	}
 
 	obj, _ := json.Marshal(table)
@@ -92,9 +90,7 @@ func representMapSliceAsTable(mapSlice []interface{}, selectorPrefix string) (re
 		key := h["name"].(string)
 		value := h["value"]
 
-		if tableData := createTableData(key, value, selectorPrefix); tableData != nil {
-			table = append(table, *tableData)
-		}
+		table = append(table, createTableForKey(key, value, selectorPrefix)...)
 	}
 
 	obj, _ := json.Marshal(table)
@@ -102,7 +98,9 @@ func representMapSliceAsTable(mapSlice []interface{}, selectorPrefix string) (re
 	return
 }
 
-func createTableData(key string, value interface{}, selectorPrefix string) *api.TableData {
+func createTableForKey(key string, value interface{}, selectorPrefix string) []api.TableData {
+	var table []api.TableData
+
 	var reflectKind reflect.Kind
 	reflectType := reflect.TypeOf(value)
 	if reflectType == nil {
@@ -117,22 +115,22 @@ func createTableData(key string, value interface{}, selectorPrefix string) *api.
 	case reflect.Array:
 		for i, el := range value.([]interface{}) {
 			selector := fmt.Sprintf("%s.%s[%d]", selectorPrefix, key, i)
-			return &api.TableData{
+			table = append(table, api.TableData{
 				Name:     fmt.Sprintf("%s [%d]", key, i),
 				Value:    el,
 				Selector: selector,
-			}
+			})
 		}
 	default:
 		selector := fmt.Sprintf("%s[\"%s\"]", selectorPrefix, key)
-		return &api.TableData{
+		table = append(table, api.TableData{
 			Name:     key,
 			Value:    value,
 			Selector: selector,
-		}
+		})
 	}
 
-	return nil
+	return table
 }
 
 func representSliceAsTable(slice []interface{}, selectorPrefix string) (representation string) {

@@ -11,49 +11,6 @@ import (
 	"github.com/up9inc/mizu/logger"
 )
 
-// Keep it because we might want cookies in the future
-//func BuildCookies(rawCookies []interface{}) []har.Cookie {
-//	cookies := make([]har.Cookie, 0, len(rawCookies))
-//
-//	for _, cookie := range rawCookies {
-//		c := cookie.(map[string]interface{})
-//		expiresStr := ""
-//		if c["expires"] != nil {
-//			expiresStr = c["expires"].(string)
-//		}
-//		expires, _ := time.Parse(time.RFC3339, expiresStr)
-//		httpOnly := false
-//		if c["httponly"] != nil {
-//			httpOnly, _ = strconv.ParseBool(c["httponly"].(string))
-//		}
-//		secure := false
-//		if c["secure"] != nil {
-//			secure, _ = strconv.ParseBool(c["secure"].(string))
-//		}
-//		path := ""
-//		if c["path"] != nil {
-//			path = c["path"].(string)
-//		}
-//		domain := ""
-//		if c["domain"] != nil {
-//			domain = c["domain"].(string)
-//		}
-//
-//		cookies = append(cookies, har.Cookie{
-//			Name:        c["name"].(string),
-//			Value:       c["value"].(string),
-//			Path:        path,
-//			Domain:      domain,
-//			HTTPOnly:    httpOnly,
-//			Secure:      secure,
-//			Expires:     expires,
-//			Expires8601: expiresStr,
-//		})
-//	}
-//
-//	return cookies
-//}
-
 func BuildHeaders(rawHeaders map[string]interface{}) ([]Header, string, string, string, string, string) {
 	var host, scheme, authority, path, status string
 	headers := make([]Header, 0, len(rawHeaders))
@@ -118,7 +75,7 @@ func BuildPostParams(rawParams []interface{}) []Param {
 
 func NewRequest(request map[string]interface{}) (harRequest *Request, err error) {
 	headers, host, scheme, authority, path, _ := BuildHeaders(request["headers"].(map[string]interface{}))
-	cookies := make([]Cookie, 0) // BuildCookies(request["cookies"].(map[string]interface{}))
+	cookies := make([]Cookie, 0)
 
 	postData, _ := request["postData"].(map[string]interface{})
 	mimeType := postData["mimeType"]
@@ -179,7 +136,7 @@ func NewRequest(request map[string]interface{}) (harRequest *Request, err error)
 
 func NewResponse(response map[string]interface{}) (harResponse *Response, err error) {
 	headers, _, _, _, _, _status := BuildHeaders(response["headers"].(map[string]interface{}))
-	cookies := make([]Cookie, 0) // BuildCookies(response["cookies"].(map[string]interface{}))
+	cookies := make([]Cookie, 0)
 
 	content, _ := response["content"].(map[string]interface{})
 	mimeType := content["mimeType"]
