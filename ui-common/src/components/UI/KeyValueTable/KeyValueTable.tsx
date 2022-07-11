@@ -75,5 +75,6 @@ const KeyValueTable: React.FC<KeyValueTableProps> = ({ data, onDataChange, keyPl
         })}
     </div>
 }
-
+export const convertParamsToArr = (paramsObj) => Object.entries(paramsObj).map(([key, value]) => { return { key, value } })
+export const convertArrToKeyValueObject = (arr) => arr.reduce((acc, curr) => { acc[curr.key] = curr.value; return acc }, {})
 export default KeyValueTable
