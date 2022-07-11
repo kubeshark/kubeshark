@@ -1,4 +1,12 @@
+import Moment from 'moment';
+
 const IP_ADDRESS_REGEX = /([0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3})(:([0-9]{1,5}))?/
+
+type JSONValue =
+  | string
+  | number
+  | boolean
+  | Object
 
 
 export class Utils {
@@ -51,7 +59,7 @@ export class Utils {
     return [hoursAndMinutes, newDate].join(' ');
 }
 
-  static creatUniqueObjArrayByProp = (objArray, prop) => {
+  static createUniqueObjArrayByProp = (objArray, prop) => {
     const map = new Map(objArray.map((item) => [item[prop], item])).values()
     return Array.from(map);
   }
@@ -65,4 +73,24 @@ export class Utils {
     return true;
   }
 
+  static downloadFile = (data: string, filename: string, fileType: string) => {
+    const blob = new Blob([data], { type: fileType })
+    const a = document.createElement('a');
+    a.href = window.URL.createObjectURL(blob);
+    a.download = filename;
+    a.click();
+    a.remove();
+  }
+
+  static exportToJson = (data: JSONValue, name) => {
+    Utils.downloadFile(JSON.stringify(data), `${name}.json`, 'text/json')
+  }
+
+  static getTimeFormatted = (time: Moment.MomentInput) => {
+    return Moment(time).utc().format('MM/DD/YYYY, h:mm:ss.SSS A')
+  }
+
+  static getNow = (format: string = 'MM/DD/YYYY, HH:mm:ss.SSS') => {
+    return Moment().format(format)
+  }
 }

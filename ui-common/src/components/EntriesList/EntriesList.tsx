@@ -1,20 +1,20 @@
-import React, {useCallback, useEffect, useMemo, useState} from "react";
+import React, { useCallback, useEffect, useMemo, useState } from "react";
 import styles from './EntriesList.module.sass';
 import ScrollableFeedVirtualized from "react-scrollable-feed-virtualized";
-import Moment from 'moment';
-import {EntryItem} from "../EntryListItem/EntryListItem";
+import { EntryItem } from "../EntryListItem/EntryListItem";
 import down from "assets/downImg.svg";
 import spinner from 'assets/spinner.svg';
-import {RecoilState, useRecoilState, useRecoilValue, useSetRecoilState} from "recoil";
+import { RecoilState, useRecoilState, useRecoilValue, useSetRecoilState } from "recoil";
 import entriesAtom from "../../recoil/entries";
 import queryAtom from "../../recoil/query";
 import TrafficViewerApiAtom from "../../recoil/TrafficViewerApi";
 import TrafficViewerApi from "../TrafficViewer/TrafficViewerApi";
 import focusedEntryIdAtom from "../../recoil/focusedEntryId";
-import {toast} from "react-toastify";
-import {MAX_ENTRIES, TOAST_CONTAINER_ID} from "../../configs/Consts";
+import { toast } from "react-toastify";
+import { MAX_ENTRIES, TOAST_CONTAINER_ID } from "../../configs/Consts";
 import tappingStatusAtom from "../../recoil/tappingStatus";
 import leftOffTopAtom from "../../recoil/leftOffTop";
+import Moment from "moment";
 
 interface EntriesListProps {
   listEntryREF: any;
