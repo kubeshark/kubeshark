@@ -11,7 +11,6 @@ module.exports = defineConfig({
     testUrl: 'http://localhost:8899/',
     redactHeaderContent: 'User-Header[REDACTED]',
     redactBodyContent: '{ "User": "[REDACTED]" }',
-    regexMaskingBodyContent: '[REDACTED]',
     greenFilterColor: 'rgb(210, 250, 210)',
     redFilterColor: 'rgb(250, 214, 220)',
     bodyJsonClass: '.hljs',
