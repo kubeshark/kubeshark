@@ -19,6 +19,7 @@ const (
 	GuiPortTapName               = "gui-port"
 	NamespacesTapName            = "namespaces"
 	AllNamespacesTapName         = "all-namespaces"
+	EnableRedactionTapName       = "redact"
 	HumanMaxEntriesDBSizeTapName = "max-entries-db-size"
 	InsertionFilterName          = "insertion-filter"
 	DryRunTapName                = "dry-run"
@@ -26,7 +27,6 @@ const (
 	TlsName                      = "tls"
 	ProfilerName                 = "profiler"
 	MaxLiveStreamsName           = "max-live-streams"
-	EnableRedactionTapName       = "redact"
 )
 
 type TapConfig struct {
@@ -95,10 +95,10 @@ func getRedactFilter(config *TapConfig) string {
 
 	var redactValues []string
 	for _, requestHeader := range config.RedactPatterns.RequestHeaders {
-		redactValues = append(redactValues, fmt.Sprintf("request.headers.%s", requestHeader))
+		redactValues = append(redactValues, fmt.Sprintf("request.headers['%s']", requestHeader))
 	}
 	for _, responseHeader := range config.RedactPatterns.ResponseHeaders {
-		redactValues = append(redactValues, fmt.Sprintf("response.headers.%s", responseHeader))
+		redactValues = append(redactValues, fmt.Sprintf("response.headers['%s']", responseHeader))
 	}
 
 	for _, requestBody := range config.RedactPatterns.RequestBody {
@@ -109,7 +109,7 @@ func getRedactFilter(config *TapConfig) string {
 	}
 
 	for _, requestQueryParams := range config.RedactPatterns.RequestQueryParams {
-		redactValues = append(redactValues, fmt.Sprintf("request.queryString.%s", requestQueryParams))
+		redactValues = append(redactValues, fmt.Sprintf("request.queryString['%s']", requestQueryParams))
 	}
 
 	if len(redactValues) == 0 {
