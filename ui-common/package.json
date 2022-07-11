@@ -65,6 +65,7 @@
     "recharts": "^2.1.10",
     "redoc": "^2.0.0-rc.71",
     "styled-components": "^5.3.5",
+    "use-file-picker": "^1.4.2",
     "web-vitals": "^2.1.4",
     "xml-formatter": "^2.6.1"
   },

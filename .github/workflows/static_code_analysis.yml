@@ -32,6 +32,10 @@ jobs:
         id: agent_modified_files
         run: devops/check_modified_files.sh agent/
 
+      - name: Generate eBPF object files and go bindings
+        id: generate_ebpf
+        run: make bpf
+
       - name: Go lint - agent
         uses: golangci/golangci-lint-action@v2
         if: steps.agent_modified_files.outputs.matched == 'true'

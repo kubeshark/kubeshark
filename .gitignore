@@ -56,3 +56,6 @@ tap/extensions/*/expect
 
 # Ignore *.log files
 *.log
+
+# Object files
+*.o

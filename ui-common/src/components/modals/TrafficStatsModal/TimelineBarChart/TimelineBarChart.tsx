@@ -35,7 +35,7 @@ export const TimelineBarChart: React.FC<TimelineBarChartProps> = ({ timeLineBarC
             })
             protocolsBarsData.push(newProtocolObj);
         })
-        const uniqueObjArray = Utils.creatUniqueObjArrayByProp(prtcNames, "name")
+        const uniqueObjArray = Utils.createUniqueObjArrayByProp(prtcNames, "name")
         setProtocolStats(protocolsBarsData);
         setProtocolsNamesAndColors(uniqueObjArray);
     }, [data, timeLineBarChartMode])
@@ -57,7 +57,7 @@ export const TimelineBarChart: React.FC<TimelineBarChartProps> = ({ timeLineBarC
             })
             protocolsMethods.push(newMethodObj);
         })
-        const uniqueObjArray = Utils.creatUniqueObjArrayByProp(protocolsMethodsNamesAndColors, "name")
+        const uniqueObjArray = Utils.createUniqueObjArrayByProp(protocolsMethodsNamesAndColors, "name")
         setMethodsNamesAndColors(uniqueObjArray);
         setMethodsStats(protocolsMethods);
     }, [data, timeLineBarChartMode, selectedProtocol])
