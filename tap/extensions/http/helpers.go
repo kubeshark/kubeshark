@@ -74,8 +74,15 @@ func mapSliceMergeRepeatedKeys(mapSlice []interface{}) (newMapSlice []interface{
 
 func representMapAsTable(mapToTable map[string]interface{}, selectorPrefix string) (representation string) {
 	var table []api.TableData
-	for key, value := range mapToTable {
-		table = append(table, createTableForKey(key, value, selectorPrefix)...)
+
+	keys := make([]string, 0, len(mapToTable))
+	for k := range mapToTable {
+		keys = append(keys, k)
+	}
+	sort.Strings(keys)
+
+	for _, key := range keys {
+		table = append(table, createTableForKey(key, mapToTable[key], selectorPrefix)...)
 	}
 
 	obj, _ := json.Marshal(table)
