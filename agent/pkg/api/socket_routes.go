@@ -97,7 +97,9 @@ func websocketHandler(c *gin.Context, eventHandlers EventHandlers, isTapper bool
 	websocketIdsLock.Unlock()
 
 	defer func() {
-		socketCleanup(socketId, connectedWebsockets[socketId])
+		if socketConnection := connectedWebsockets[socketId]; socketConnection != nil {
+			socketCleanup(socketId, socketConnection)
+		}
 	}()
 
 	eventHandlers.WebSocketConnect(c, socketId, isTapper)
