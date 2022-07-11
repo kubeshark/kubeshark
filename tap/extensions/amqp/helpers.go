@@ -968,13 +968,5 @@ func representBasicCancelOk(event map[string]interface{}) []interface{} {
 func representEmpty(event map[string]interface{}) []interface{} {
 	rep := make([]interface{}, 0)
 
-	details, _ := json.Marshal([]api.TableData{})
-
-	rep = append(rep, api.SectionData{
-		Type:  api.TABLE,
-		Title: "Details",
-		Data:  string(details),
-	})
-
 	return rep
 }
