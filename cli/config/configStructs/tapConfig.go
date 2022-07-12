@@ -80,7 +80,7 @@ func (config *TapConfig) GetInsertionFilter() string {
 
 	redactFilter := getRedactFilter(config)
 	if insertionFilter != "" && redactFilter != "" {
-		return fmt.Sprintf("(%s) and %s", insertionFilter, redactFilter)
+		return fmt.Sprintf("(%s) and (%s)", insertionFilter, redactFilter)
 	} else if insertionFilter == "" && redactFilter != "" {
 		return redactFilter
 	}
