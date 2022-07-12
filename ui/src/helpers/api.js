@@ -116,8 +116,8 @@ export default class Api {
         });
     }
 
-    getTrafficStats = async () => {
-        const response = await client.get("/status/trafficStats");
+    getTrafficStats = async (startTimeMs, endTimeMs) => {
+        const response = await client.get("/status/trafficStats", {params: {startTimeMs, endTimeMs}});
         return response.data;
     }
 }

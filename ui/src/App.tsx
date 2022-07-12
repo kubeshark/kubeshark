@@ -10,6 +10,8 @@ import { OasModal } from '@up9/mizu-common';
 import Api from './helpers/api';
 import {ThemeProvider, StyledEngineProvider, createTheme} from '@mui/material';
 import { TrafficStatsModal } from '@up9/mizu-common';
+import { EuiProvider } from '@elastic/eui';
+import '@elastic/eui/dist/eui_theme_light.css';
 
 const api = Api.getInstance()
 
@@ -20,6 +22,7 @@ const App = () => {
     const [trafficStatsModalOpen, setTrafficStatsModalOpen] = useRecoilState(trafficStatsModalOpenAtom);
 
     return (
+            <EuiProvider>
         <StyledEngineProvider injectFirst>
             <ThemeProvider theme={createTheme(({}))}>
                 <div className="mizuApp">
@@ -40,6 +43,7 @@ const App = () => {
                 </div>
             </ThemeProvider>
         </StyledEngineProvider>
+            </EuiProvider>
     );
 }
 
