@@ -59,11 +59,11 @@ export const TrafficStatsModal: React.FC<TrafficStatsModalProps> = ({ isOpen, on
   }, [isOpen, getTrafficStatsDataApi, setPieStatsData, setTimelineStatsData])
 
   useEffect(() => {
-    getTrafficStats(halfAnHourAgo,now);
+    getTrafficStats(halfAnHourAgo, now);
   }, [getTrafficStats])
 
   const refreshStats = debounce((newStartTime, newEndTime) => {
-    getTrafficStats(newStartTime,newEndTime);
+    getTrafficStats(newStartTime, newEndTime);
   }, 500);
 
   return (
@@ -85,7 +85,7 @@ export const TrafficStatsModal: React.FC<TrafficStatsModalProps> = ({ isOpen, on
           </div>
           <div className={styles.mainContainer}>
             <div className={styles.selectContainer}>
-               <div>
+              <div>
                 <TimeRangePicker refreshStats={refreshStats} />
               </div>
               <div>

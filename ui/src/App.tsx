@@ -8,7 +8,7 @@ import oasModalOpenAtom from './recoil/oasModalOpen/atom';
 import trafficStatsModalOpenAtom from "./recoil/trafficStatsModalOpen";
 import { OasModal } from '@up9/mizu-common';
 import Api from './helpers/api';
-import {ThemeProvider, StyledEngineProvider, createTheme} from '@mui/material';
+import { ThemeProvider, StyledEngineProvider, createTheme } from '@mui/material';
 import { TrafficStatsModal } from '@up9/mizu-common';
 import { EuiProvider } from '@elastic/eui';
 import '@elastic/eui/dist/eui_theme_light.css';
@@ -22,28 +22,28 @@ const App = () => {
     const [trafficStatsModalOpen, setTrafficStatsModalOpen] = useRecoilState(trafficStatsModalOpenAtom);
 
     return (
-            <EuiProvider>
-        <StyledEngineProvider injectFirst>
-            <ThemeProvider theme={createTheme(({}))}>
-                <div className="mizuApp">
-                    <Header />
-                    <TrafficPage />
-                    {window["isServiceMapEnabled"] && <ServiceMapModal
-                        isOpen={serviceMapModalOpen}
-                        onOpen={() => setServiceMapModalOpen(true)}
-                        onClose={() => setServiceMapModalOpen(false)}
-                        getServiceMapDataApi={api.serviceMapData} />}
-                    {window["isOasEnabled"] && <OasModal
-                        getOasServices={api.getOasServices}
-                        getOasByService={api.getOasByService}
-                        openModal={oasModalOpen}
-                        handleCloseModal={() => setOasModalOpen(false)}
-                    />}
-                    <TrafficStatsModal isOpen={trafficStatsModalOpen} onClose={() => setTrafficStatsModalOpen(false)} getTrafficStatsDataApi={api.getTrafficStats}/>
-                </div>
-            </ThemeProvider>
-        </StyledEngineProvider>
-            </EuiProvider>
+        <EuiProvider>
+            <StyledEngineProvider injectFirst>
+                <ThemeProvider theme={createTheme(({}))}>
+                    <div className="mizuApp">
+                        <Header />
+                        <TrafficPage />
+                        {window["isServiceMapEnabled"] && <ServiceMapModal
+                            isOpen={serviceMapModalOpen}
+                            onOpen={() => setServiceMapModalOpen(true)}
+                            onClose={() => setServiceMapModalOpen(false)}
+                            getServiceMapDataApi={api.serviceMapData} />}
+                        {window["isOasEnabled"] && <OasModal
+                            getOasServices={api.getOasServices}
+                            getOasByService={api.getOasByService}
+                            openModal={oasModalOpen}
+                            handleCloseModal={() => setOasModalOpen(false)}
+                        />}
+                        <TrafficStatsModal isOpen={trafficStatsModalOpen} onClose={() => setTrafficStatsModalOpen(false)} getTrafficStatsDataApi={api.getTrafficStats} />
+                    </div>
+                </ThemeProvider>
+            </StyledEngineProvider>
+        </EuiProvider>
     );
 }
 
