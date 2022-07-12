@@ -217,6 +217,8 @@ static __always_inline void go_crypto_tls_uprobe(struct pt_regs *ctx, struct bpf
         log_error(ctx, LOG_ERROR_PUTTING_SSL_CONTEXT, pid_tgid, err, 0l);
     }
 
+    log_error(ctx, LOG_DEBUG, 1, 1, pid_tgid);
+
     return;
 }
 

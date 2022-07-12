@@ -18,12 +18,9 @@ static __always_inline int add_address_to_chunk(struct pt_regs *ctx, struct tls_
 
     struct fd_info *fdinfo = bpf_map_lookup_elem(&file_descriptor_to_ipv4, &key);
 
-    log_error(ctx, LOG_DEBUG, 0, 0, 0);
     if (fdinfo == NULL) {
-    log_error(ctx, LOG_DEBUG, 1, 0, 0);
         return 0;
     }
-    log_error(ctx, LOG_DEBUG, 2, 0, 0);
 
     int err;
 

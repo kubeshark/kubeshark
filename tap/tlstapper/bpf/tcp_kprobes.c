@@ -70,10 +70,16 @@ static __always_inline void tcp_kprobe(struct pt_regs *ctx, struct bpf_map_def *
 
 SEC("kprobe/tcp_sendmsg")
 void BPF_KPROBE(tcp_sendmsg) {
+	__u64 id = bpf_get_current_pid_tgid();
+	log_error(ctx, LOG_DEBUG, 2, 1, id);
+
 	tcp_kprobe(ctx, &openssl_write_context, true);
 }
 
 SEC("kprobe/tcp_recvmsg")
 void BPF_KPROBE(tcp_recvmsg) {
+	__u64 id = bpf_get_current_pid_tgid();
+	log_error(ctx, LOG_DEBUG, 2, 2, id);
+
 	tcp_kprobe(ctx, &openssl_read_context, false);
 }
