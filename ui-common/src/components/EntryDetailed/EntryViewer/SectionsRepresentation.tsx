@@ -28,10 +28,6 @@ const SectionsRepresentation: React.FC<any> = ({ data, color }) => {
         }
     }
 
-    if (sections.length === 0) {
-        sections.push(<div>This request or response has no data.</div>);
-    }
-
     return <React.Fragment>{sections}</React.Fragment>;
 }
 
