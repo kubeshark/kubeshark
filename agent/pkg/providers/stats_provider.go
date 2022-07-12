@@ -5,7 +5,6 @@ import (
 	"encoding/hex"
 	"fmt"
 	"reflect"
-	"strings"
 	"sync"
 	"time"
 
@@ -82,8 +81,7 @@ func GetGeneralStats() *GeneralStats {
 
 func InitProtocolToColor(protocolMap map[string]*api.Protocol) {
 	for item, value := range protocolMap {
-		splitted := strings.SplitN(item, "/", 3)
-		protocolToColor[splitted[len(splitted)-1]] = value.BackgroundColor
+		protocolToColor[api.GetProtocolSummary(item).Abbreviation] = value.BackgroundColor
 	}
 }
 
