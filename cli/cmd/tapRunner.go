@@ -230,23 +230,8 @@ func getErrorDisplayTextForK8sTapManagerError(err kubernetes.K8sTapManagerError)
 }
 
 func getMizuApiFilteringOptions() (*api.TrafficFilteringOptions, error) {
-	var compiledRegexSlice []*api.SerializableRegexp
-
-	if config.Config.Tap.PlainTextFilterRegexes != nil && len(config.Config.Tap.PlainTextFilterRegexes) > 0 {
-		compiledRegexSlice = make([]*api.SerializableRegexp, 0)
-		for _, regexStr := range config.Config.Tap.PlainTextFilterRegexes {
-			compiledRegex, err := api.CompileRegexToSerializableRegexp(regexStr)
-			if err != nil {
-				return nil, err
-			}
-			compiledRegexSlice = append(compiledRegexSlice, compiledRegex)
-		}
-	}
-
 	return &api.TrafficFilteringOptions{
-		PlainTextMaskingRegexes: compiledRegexSlice,
-		IgnoredUserAgents:       config.Config.Tap.IgnoredUserAgents,
-		EnableRedaction:        config.Config.Tap.EnableRedaction,
+		IgnoredUserAgents: config.Config.Tap.IgnoredUserAgents,
 	}, nil
 }
 

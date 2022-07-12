@@ -26,11 +26,11 @@
     "@craco/craco": "^6.4.3",
     "@types/jest": "^26.0.24",
     "@types/node": "^12.20.54",
-    "sass": "^1.52.3",
     "react": "^17.0.2",
     "react-copy-to-clipboard": "^5.1.0",
     "react-dom": "^17.0.2",
-    "recoil": "^0.7.2"
+    "recoil": "^0.7.2",
+    "sass": "^1.52.3"
   },
   "dependencies": {
     "@craco/craco": "^6.4.3",
@@ -72,6 +72,7 @@
   "devDependencies": {
     "@rollup/plugin-node-resolve": "^13.3.0",
     "@svgr/rollup": "^6.2.1",
+    "@types/ace": "^0.0.48",
     "cross-env": "^7.0.3",
     "env-cmd": "^10.1.0",
     "gh-pages": "^4.0.0",

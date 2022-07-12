@@ -18,10 +18,6 @@ func filterAndEmit(item *api.OutputChannelItem, emitter api.Emitter, options *ap
 		return
 	}
 
-	if options.EnableRedaction {
-		FilterSensitiveData(item, options)
-	}
-
 	replaceForwardedFor(item)
 
 	emitter.Emit(item)
