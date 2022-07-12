@@ -94,6 +94,7 @@
     ]
   },
   "files": [
+    "src/*.scss",
     "dist"
   ]
 }
