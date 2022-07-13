@@ -60,7 +60,7 @@ export const TrafficStatsModal: React.FC<TrafficStatsModalProps> = ({ isOpen, on
 
   useEffect(() => {
     getTrafficStats(halfAnHourAgo, now);
-  }, [getTrafficStats])
+  }, [getTrafficStats, halfAnHourAgo, now])
 
   const refreshStats = debounce((newStartTime, newEndTime) => {
     getTrafficStats(newStartTime, newEndTime);
