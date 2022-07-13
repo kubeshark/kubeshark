@@ -34,6 +34,7 @@
   },
   "dependencies": {
     "@craco/craco": "^6.4.3",
+    "@elastic/eui": "^60.2.0",
     "@emotion/react": "^11.9.0",
     "@emotion/styled": "^11.8.1",
     "@mui/icons-material": "^5.8.2",
@@ -85,7 +86,7 @@
     "rollup-plugin-postcss": "^4.0.2",
     "rollup-plugin-sass": "^1.2.12",
     "rollup-plugin-scss": "^3.0.0",
-    "typescript": "^4.7.2"
+    "typescript": "^4.5.3"
   },
   "eslintConfig": {
     "extends": [
