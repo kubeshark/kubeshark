@@ -60,7 +60,8 @@ export const TrafficStatsModal: React.FC<TrafficStatsModalProps> = ({ isOpen, on
 
   useEffect(() => {
     getTrafficStats(halfAnHourAgo, now);
-  }, [getTrafficStats, halfAnHourAgo, now])
+    // eslint-disable-next-line
+  }, [getTrafficStats])
 
   const refreshStats = debounce((newStartTime, newEndTime) => {
     getTrafficStats(newStartTime, newEndTime);
