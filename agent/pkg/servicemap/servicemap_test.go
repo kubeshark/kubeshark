@@ -50,11 +50,13 @@ var (
 		IP:   fmt.Sprintf("%s.%s", Ip, UnresolvedNodeName),
 	}
 	ProtocolHttp = &tapApi.Protocol{
-		Name:            "http",
+		ProtocolSummary: tapApi.ProtocolSummary{
+			Name:         "http",
+			Version:      "1.1",
+			Abbreviation: "HTTP",
+		},
 		LongName:        "Hypertext Transfer Protocol -- HTTP/1.1",
-		Abbreviation:    "HTTP",
 		Macro:           "http",
-		Version:         "1.1",
 		BackgroundColor: "#205cf5",
 		ForegroundColor: "#ffffff",
 		FontSize:        12,
@@ -63,11 +65,13 @@ var (
 		Priority:        0,
 	}
 	ProtocolRedis = &tapApi.Protocol{
-		Name:            "redis",
+		ProtocolSummary: tapApi.ProtocolSummary{
+			Name:         "redis",
+			Version:      "3.x",
+			Abbreviation: "REDIS",
+		},
 		LongName:        "Redis Serialization Protocol",
-		Abbreviation:    "REDIS",
 		Macro:           "redis",
-		Version:         "3.x",
 		BackgroundColor: "#a41e11",
 		ForegroundColor: "#ffffff",
 		FontSize:        11,

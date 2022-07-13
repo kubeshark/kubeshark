@@ -44,11 +44,6 @@ export default class Api {
         return response.data;
     }
 
-    analyzeStatus = async () => {
-        const response = await client.get("/status/analyze");
-        return response.data;
-    }
-
     getEntry = async (id, query) => {
         const response = await client.get(`/entries/${id}?query=${encodeURIComponent(query)}`);
         return response.data;
@@ -59,6 +54,11 @@ export default class Api {
             console.error(thrown.message);
             return {};
         });
+        return response.data;
+    }
+
+    replayRequest = async (requestData) => {
+        const response = await client.post(`/replay/`, requestData);
         return response.data;
     }
 
@@ -114,5 +114,10 @@ export default class Api {
             timeout: 31000,
             headers
         });
+    }
+
+    getTrafficStats = async () => {
+        const response = await client.get("/status/trafficStats");
+        return response.data;
     }
 }

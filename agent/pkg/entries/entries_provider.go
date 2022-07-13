@@ -3,11 +3,11 @@ package entries
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"time"
 
 	basenine "github.com/up9inc/basenine/client/go"
 	"github.com/up9inc/mizu/agent/pkg/app"
-	"github.com/up9inc/mizu/agent/pkg/har"
 	"github.com/up9inc/mizu/agent/pkg/models"
 	"github.com/up9inc/mizu/logger"
 	"github.com/up9inc/mizu/shared"
@@ -38,11 +38,20 @@ func (e *BasenineEntriesProvider) GetEntries(entriesRequest *models.EntriesReque
 			return nil, nil, err
 		}
 
-		extension := app.ExtensionsMap[entry.Protocol.Name]
+		protocol, ok := app.ProtocolsMap[entry.Protocol.ToString()]
+		if !ok {
+			return nil, nil, fmt.Errorf("protocol not found, protocol: %v", protocol)
+		}
+
+		extension, ok := app.ExtensionsMap[protocol.Name]
+		if !ok {
+			return nil, nil, fmt.Errorf("extension not found, extension: %v", protocol.Name)
+		}
+
 		base := extension.Dissector.Summarize(entry)
 
 		dataSlice = append(dataSlice, &tapApi.EntryWrapper{
-			Protocol: entry.Protocol,
+			Protocol: *protocol,
 			Data:     entry,
 			Base:     base,
 		})
@@ -68,7 +77,16 @@ func (e *BasenineEntriesProvider) GetEntry(singleEntryRequest *models.SingleEntr
 		return nil, errors.New(string(bytes))
 	}
 
-	extension := app.ExtensionsMap[entry.Protocol.Name]
+	protocol, ok := app.ProtocolsMap[entry.Protocol.ToString()]
+	if !ok {
+		return nil, fmt.Errorf("protocol not found, protocol: %v", protocol)
+	}
+
+	extension, ok := app.ExtensionsMap[protocol.Name]
+	if !ok {
+		return nil, fmt.Errorf("extension not found, extension: %v", protocol.Name)
+	}
+
 	base := extension.Dissector.Summarize(entry)
 	var representation []byte
 	representation, err = extension.Dissector.Represent(entry.Request, entry.Response)
@@ -76,24 +94,10 @@ func (e *BasenineEntriesProvider) GetEntry(singleEntryRequest *models.SingleEntr
 		return nil, err
 	}
 
-	var rules []map[string]interface{}
-	var isRulesEnabled bool
-	if entry.Protocol.Name == "http" {
-		harEntry, _ := har.NewEntry(entry.Request, entry.Response, entry.StartTime, entry.ElapsedTime)
-		_, rulesMatched, _isRulesEnabled := models.RunValidationRulesState(*harEntry, entry.Destination.Name)
-		isRulesEnabled = _isRulesEnabled
-		inrec, _ := json.Marshal(rulesMatched)
-		if err := json.Unmarshal(inrec, &rules); err != nil {
-			logger.Log.Error(err)
-		}
-	}
-
 	return &tapApi.EntryWrapper{
-		Protocol:       entry.Protocol,
+		Protocol:       *protocol,
 		Representation: string(representation),
 		Data:           entry,
 		Base:           base,
-		Rules:          rules,
-		IsRulesEnabled: isRulesEnabled,
 	}, nil
 }

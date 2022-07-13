@@ -13,7 +13,10 @@ Copyright (C) UP9 Inc.
 
 // To avoid multiple .o files
 //
+#include "common.c"
 #include "openssl_uprobes.c"
+#include "tcp_kprobes.c"
+#include "go_uprobes.c"
 #include "fd_tracepoints.c"
 #include "fd_to_address_tracepoints.c"
 

@@ -2,10 +2,8 @@ package acceptanceTests
 
 import (
 	"archive/zip"
-	"bytes"
 	"fmt"
 	"io/ioutil"
-	"net/http"
 	"os/exec"
 	"path"
 	"strings"
@@ -78,7 +76,7 @@ func basicTapTest(t *testing.T, shouldCheckSrcAndDest bool, extraArgs... string)
 				expectedPodsStr += fmt.Sprintf("Name:%vNamespace:%v", expectedPods[i].Name, expectedPods[i].Namespace)
 			}
 
-			RunCypressTests(t, fmt.Sprintf("npx cypress run --spec  \"cypress/integration/tests/UiTest.js\" --env entriesCount=%d,arrayDict=%v,shouldCheckSrcAndDest=%v",
+			RunCypressTests(t, fmt.Sprintf("npx cypress run --spec  \"cypress/e2e/tests/UiTest.js\" --env entriesCount=%d,arrayDict=%v,shouldCheckSrcAndDest=%v",
 				entriesCount, expectedPodsStr, shouldCheckSrcAndDest))
 		})
 	}
@@ -135,7 +133,7 @@ func TestTapGuiPort(t *testing.T) {
 				}
 			}
 
-			RunCypressTests(t, fmt.Sprintf("npx cypress run --spec \"cypress/integration/tests/GuiPort.js\" --env name=%v,namespace=%v,port=%d",
+			RunCypressTests(t, fmt.Sprintf("npx cypress run --spec \"cypress/e2e/tests/GuiPort.js\" --env name=%v,namespace=%v,port=%d",
 				"httpbin", "mizu-tests", guiPort))
 		})
 	}
@@ -182,7 +180,7 @@ func TestTapAllNamespaces(t *testing.T) {
 		return
 	}
 
-	RunCypressTests(t, fmt.Sprintf("npx cypress run --spec  \"cypress/integration/tests/MultipleNamespaces.js\" --env name1=%v,name2=%v,name3=%v,namespace1=%v,namespace2=%v,namespace3=%v",
+	RunCypressTests(t, fmt.Sprintf("npx cypress run --spec  \"cypress/e2e/tests/MultipleNamespaces.js\" --env name1=%v,name2=%v,name3=%v,namespace1=%v,namespace2=%v,namespace3=%v",
 		expectedPods[0].Name, expectedPods[1].Name, expectedPods[2].Name, expectedPods[0].Namespace, expectedPods[1].Namespace, expectedPods[2].Namespace))
 }
 
@@ -231,7 +229,7 @@ func TestTapMultipleNamespaces(t *testing.T) {
 		return
 	}
 
-	RunCypressTests(t, fmt.Sprintf("npx cypress run --spec  \"cypress/integration/tests/MultipleNamespaces.js\" --env name1=%v,name2=%v,name3=%v,namespace1=%v,namespace2=%v,namespace3=%v",
+	RunCypressTests(t, fmt.Sprintf("npx cypress run --spec  \"cypress/e2e/tests/MultipleNamespaces.js\" --env name1=%v,name2=%v,name3=%v,namespace1=%v,namespace2=%v,namespace3=%v",
 		expectedPods[0].Name, expectedPods[1].Name, expectedPods[2].Name, expectedPods[0].Namespace, expectedPods[1].Namespace, expectedPods[2].Namespace))
 }
 
@@ -277,7 +275,7 @@ func TestTapRegex(t *testing.T) {
 		return
 	}
 
-	RunCypressTests(t, fmt.Sprintf("npx cypress run --spec  \"cypress/integration/tests/Regex.js\" --env name=%v,namespace=%v",
+	RunCypressTests(t, fmt.Sprintf("npx cypress run --spec  \"cypress/e2e/tests/Regex.js\" --env name=%v,namespace=%v",
 		expectedPods[0].Name, expectedPods[0].Namespace))
 }
 
@@ -343,6 +341,7 @@ func TestTapRedact(t *testing.T) {
 
 	tapNamespace := GetDefaultTapNamespace()
 	tapCmdArgs = append(tapCmdArgs, tapNamespace...)
+	tapCmdArgs = append(tapCmdArgs, "--redact", "--set", "tap.redact-patterns.request-headers=User-Header", "--set", "tap.redact-patterns.request-body=User")
 
 	tapCmd := exec.Command(cliPath, tapCmdArgs...)
 	t.Logf("running command: %v", tapCmd.String())
@@ -375,7 +374,7 @@ func TestTapRedact(t *testing.T) {
 		}
 	}
 
-	RunCypressTests(t, "npx cypress run --spec  \"cypress/integration/tests/Redact.js\"")
+	RunCypressTests(t, "npx cypress run --spec  \"cypress/e2e/tests/Redact.js\"")
 }
 
 func TestTapNoRedact(t *testing.T) {
@@ -394,8 +393,6 @@ func TestTapNoRedact(t *testing.T) {
 	tapNamespace := GetDefaultTapNamespace()
 	tapCmdArgs = append(tapCmdArgs, tapNamespace...)
 
-	tapCmdArgs = append(tapCmdArgs, "--no-redact")
-
 	tapCmd := exec.Command(cliPath, tapCmdArgs...)
 	t.Logf("running command: %v", tapCmd.String())
 
@@ -427,59 +424,7 @@ func TestTapNoRedact(t *testing.T) {
 		}
 	}
 
-	RunCypressTests(t, "npx cypress run --spec  \"cypress/integration/tests/NoRedact.js\"")
-}
-
-func TestTapRegexMasking(t *testing.T) {
-	if testing.Short() {
-		t.Skip("ignored acceptance test")
-	}
-
-	cliPath, cliPathErr := GetCliPath()
-	if cliPathErr != nil {
-		t.Errorf("failed to get cli path, err: %v", cliPathErr)
-		return
-	}
-
-	tapCmdArgs := GetDefaultTapCommandArgs()
-
-	tapNamespace := GetDefaultTapNamespace()
-	tapCmdArgs = append(tapCmdArgs, tapNamespace...)
-
-	tapCmdArgs = append(tapCmdArgs, "-r", "Mizu")
-
-	tapCmd := exec.Command(cliPath, tapCmdArgs...)
-	t.Logf("running command: %v", tapCmd.String())
-
-	t.Cleanup(func() {
-		if err := CleanupCommand(tapCmd); err != nil {
-			t.Logf("failed to cleanup tap command, err: %v", err)
-		}
-	})
-
-	if err := tapCmd.Start(); err != nil {
-		t.Errorf("failed to start tap command, err: %v", err)
-		return
-	}
-
-	apiServerUrl := GetApiServerUrl(DefaultApiServerPort)
-
-	if err := WaitTapPodsReady(apiServerUrl); err != nil {
-		t.Errorf("failed to start tap pods on time, err: %v", err)
-		return
-	}
-
-	proxyUrl := GetProxyUrl(DefaultNamespaceName, DefaultServiceName)
-	for i := 0; i < DefaultEntriesCount; i++ {
-		response, requestErr := http.Post(fmt.Sprintf("%v/post", proxyUrl), "text/plain", bytes.NewBufferString("Mizu"))
-		if _, requestErr = ExecuteHttpRequest(response, requestErr); requestErr != nil {
-			t.Errorf("failed to send proxy request, err: %v", requestErr)
-			return
-		}
-	}
-
-	RunCypressTests(t, "npx cypress run --spec \"cypress/integration/tests/RegexMasking.js\"")
-
+	RunCypressTests(t, "npx cypress run --spec  \"cypress/e2e/tests/NoRedact.js\"")
 }
 
 func TestTapIgnoredUserAgents(t *testing.T) {
@@ -540,7 +485,7 @@ func TestTapIgnoredUserAgents(t *testing.T) {
 		}
 	}
 
-	RunCypressTests(t, "npx cypress run --spec  \"cypress/integration/tests/IgnoredUserAgents.js\"")
+	RunCypressTests(t, "npx cypress run --spec  \"cypress/e2e/tests/IgnoredUserAgents.js\"")
 }
 
 func TestTapDumpLogs(t *testing.T) {

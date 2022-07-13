@@ -3,7 +3,6 @@ package tap
 import (
 	"fmt"
 	"sync"
-	"time"
 
 	"github.com/up9inc/mizu/logger"
 	"github.com/up9inc/mizu/tap/api"
@@ -20,14 +19,15 @@ import (
  * Generates a new tcp stream for each new tcp connection. Closes the stream when the connection closes.
  */
 type tcpStreamFactory struct {
-	wg         sync.WaitGroup
-	emitter    api.Emitter
-	streamsMap api.TcpStreamMap
-	ownIps     []string
-	opts       *TapOpts
+	wg               sync.WaitGroup
+	emitter          api.Emitter
+	streamsMap       api.TcpStreamMap
+	ownIps           []string
+	opts             *TapOpts
+	streamsCallbacks tcpStreamCallbacks
 }
 
-func NewTcpStreamFactory(emitter api.Emitter, streamsMap api.TcpStreamMap, opts *TapOpts) *tcpStreamFactory {
+func NewTcpStreamFactory(emitter api.Emitter, streamsMap api.TcpStreamMap, opts *TapOpts, streamsCallbacks tcpStreamCallbacks) *tcpStreamFactory {
 	var ownIps []string
 
 	if localhostIPs, err := getLocalhostIPs(); err != nil {
@@ -40,10 +40,11 @@ func NewTcpStreamFactory(emitter api.Emitter, streamsMap api.TcpStreamMap, opts 
 	}
 
 	return &tcpStreamFactory{
-		emitter:    emitter,
-		streamsMap: streamsMap,
-		ownIps:     ownIps,
-		opts:       opts,
+		emitter:          emitter,
+		streamsMap:       streamsMap,
+		ownIps:           ownIps,
+		opts:             opts,
+		streamsCallbacks: streamsCallbacks,
 	}
 }
 
@@ -58,66 +59,55 @@ func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcpLayer *lay
 
 	props := factory.getStreamProps(srcIp, srcPort, dstIp, dstPort)
 	isTapTarget := props.isTapTarget
-	stream := NewTcpStream(isTapTarget, factory.streamsMap, getPacketOrigin(ac))
+	connectionId := getConnectionId(srcIp, srcPort, dstIp, dstPort)
+	stream := NewTcpStream(isTapTarget, factory.streamsMap, getPacketOrigin(ac), connectionId, factory.streamsCallbacks)
 	reassemblyStream := NewTcpReassemblyStream(fmt.Sprintf("%s:%s", net, transport), tcpLayer, fsmOptions, stream)
 	if stream.GetIsTapTarget() {
 		stream.setId(factory.streamsMap.NextId())
-		for i, extension := range extensions {
-			reqResMatcher := extension.Dissector.NewResponseRequestMatcher()
-			stream.addReqResMatcher(reqResMatcher)
+		for _, extension := range extensions {
 			counterPair := &api.CounterPair{
 				Request:  0,
 				Response: 0,
 			}
-			stream.addClient(
-				NewTcpReader(
-					make(chan api.TcpReaderDataMsg),
-					&api.ReadProgress{},
-					fmt.Sprintf("%s %s", net, transport),
-					&api.TcpID{
-						SrcIP:   srcIp,
-						DstIP:   dstIp,
-						SrcPort: srcPort,
-						DstPort: dstPort,
-					},
-					time.Time{},
-					stream,
-					true,
-					props.isOutgoing,
-					extension,
-					factory.emitter,
-					counterPair,
-					reqResMatcher,
-				),
-			)
-			stream.addServer(
-				NewTcpReader(
-					make(chan api.TcpReaderDataMsg),
-					&api.ReadProgress{},
-					fmt.Sprintf("%s %s", net, transport),
-					&api.TcpID{
-						SrcIP:   net.Dst().String(),
-						DstIP:   net.Src().String(),
-						SrcPort: transport.Dst().String(),
-						DstPort: transport.Src().String(),
-					},
-					time.Time{},
-					stream,
-					false,
-					props.isOutgoing,
-					extension,
-					factory.emitter,
-					counterPair,
-					reqResMatcher,
-				),
-			)
+			stream.addCounterPair(counterPair)
 
-			factory.streamsMap.Store(stream.getId(), stream)
-
-			factory.wg.Add(2)
-			go stream.getClient(i).run(filteringOptions, &factory.wg)
-			go stream.getServer(i).run(filteringOptions, &factory.wg)
+			reqResMatcher := extension.Dissector.NewResponseRequestMatcher()
+			stream.addReqResMatcher(reqResMatcher)
 		}
+
+		stream.client = NewTcpReader(
+			fmt.Sprintf("%s %s", net, transport),
+			&api.TcpID{
+				SrcIP:   srcIp,
+				DstIP:   dstIp,
+				SrcPort: srcPort,
+				DstPort: dstPort,
+			},
+			stream,
+			true,
+			props.isOutgoing,
+			factory.emitter,
+		)
+
+		stream.server = NewTcpReader(
+			fmt.Sprintf("%s %s", net, transport),
+			&api.TcpID{
+				SrcIP:   net.Dst().String(),
+				DstIP:   net.Src().String(),
+				SrcPort: transport.Dst().String(),
+				DstPort: transport.Src().String(),
+			},
+			stream,
+			false,
+			props.isOutgoing,
+			factory.emitter,
+		)
+
+		factory.streamsMap.Store(stream.getId(), stream)
+
+		factory.wg.Add(2)
+		go stream.client.run(filteringOptions, &factory.wg)
+		go stream.server.run(filteringOptions, &factory.wg)
 	}
 	return reassemblyStream
 }

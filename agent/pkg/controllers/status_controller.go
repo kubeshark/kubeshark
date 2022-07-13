@@ -11,7 +11,6 @@ import (
 	"github.com/up9inc/mizu/agent/pkg/providers"
 	"github.com/up9inc/mizu/agent/pkg/providers/tappedPods"
 	"github.com/up9inc/mizu/agent/pkg/providers/tappers"
-	"github.com/up9inc/mizu/agent/pkg/up9"
 	"github.com/up9inc/mizu/agent/pkg/validation"
 	"github.com/up9inc/mizu/logger"
 	"github.com/up9inc/mizu/shared"
@@ -71,27 +70,17 @@ func GetConnectedTappersCount(c *gin.Context) {
 	c.JSON(http.StatusOK, tappers.GetConnectedCount())
 }
 
-func GetAuthStatus(c *gin.Context) {
-	authStatus, err := providers.GetAuthStatus()
-	if err != nil {
-		c.JSON(http.StatusInternalServerError, err)
-		return
-	}
-
-	c.JSON(http.StatusOK, authStatus)
-}
-
 func GetTappingStatus(c *gin.Context) {
 	tappedPodsStatus := tappedPods.GetTappedPodsStatus()
 	c.JSON(http.StatusOK, tappedPodsStatus)
 }
 
-func AnalyzeInformation(c *gin.Context) {
-	c.JSON(http.StatusOK, up9.GetAnalyzeInfo())
-}
-
 func GetGeneralStats(c *gin.Context) {
 	c.JSON(http.StatusOK, providers.GetGeneralStats())
+}
+
+func GetTrafficStats(c *gin.Context) {
+	c.JSON(http.StatusOK, providers.GetTrafficStats())
 }
 
 func GetCurrentResolvingInformation(c *gin.Context) {

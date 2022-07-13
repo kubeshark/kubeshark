@@ -14,6 +14,8 @@ type sslHooks struct {
 	sslWriteExRetProbe link.Link
 	sslReadExProbe     link.Link
 	sslReadExRetProbe  link.Link
+	tcpSendmsg         link.Link
+	tcpRecvmsg         link.Link
 }
 
 func (s *sslHooks) installUprobes(bpfObjects *tlsTapperObjects, sslLibraryPath string) error {
@@ -103,51 +105,73 @@ func (s *sslHooks) installSslHooks(bpfObjects *tlsTapperObjects, sslLibrary *lin
 		}
 	}
 
+	s.tcpSendmsg, err = link.Kprobe("tcp_sendmsg", bpfObjects.TcpSendmsg, nil)
+	if err != nil {
+		return errors.Wrap(err, 0)
+	}
+
+	s.tcpRecvmsg, err = link.Kprobe("tcp_recvmsg", bpfObjects.TcpRecvmsg, nil)
+	if err != nil {
+		return errors.Wrap(err, 0)
+	}
+
 	return nil
 }
 
 func (s *sslHooks) close() []error {
-	errors := make([]error, 0)
+	returnValue := make([]error, 0)
 
 	if err := s.sslWriteProbe.Close(); err != nil {
-		errors = append(errors, err)
+		returnValue = append(returnValue, err)
 	}
 
 	if err := s.sslWriteRetProbe.Close(); err != nil {
-		errors = append(errors, err)
+		returnValue = append(returnValue, err)
 	}
 
 	if err := s.sslReadProbe.Close(); err != nil {
-		errors = append(errors, err)
+		returnValue = append(returnValue, err)
 	}
 
 	if err := s.sslReadRetProbe.Close(); err != nil {
-		errors = append(errors, err)
+		returnValue = append(returnValue, err)
 	}
 
 	if s.sslWriteExProbe != nil {
 		if err := s.sslWriteExProbe.Close(); err != nil {
-			errors = append(errors, err)
+			returnValue = append(returnValue, err)
 		}
 	}
 
 	if s.sslWriteExRetProbe != nil {
 		if err := s.sslWriteExRetProbe.Close(); err != nil {
-			errors = append(errors, err)
+			returnValue = append(returnValue, err)
 		}
 	}
 
 	if s.sslReadExProbe != nil {
 		if err := s.sslReadExProbe.Close(); err != nil {
-			errors = append(errors, err)
+			returnValue = append(returnValue, err)
 		}
 	}
 
 	if s.sslReadExRetProbe != nil {
 		if err := s.sslReadExRetProbe.Close(); err != nil {
-			errors = append(errors, err)
+			returnValue = append(returnValue, err)
 		}
 	}
 
-	return errors
+	if s.tcpSendmsg != nil {
+		if err := s.tcpSendmsg.Close(); err != nil {
+			returnValue = append(returnValue, err)
+		}
+	}
+
+	if s.tcpRecvmsg != nil {
+		if err := s.tcpRecvmsg.Close(); err != nil {
+			returnValue = append(returnValue, err)
+		}
+	}
+
+	return returnValue
 }

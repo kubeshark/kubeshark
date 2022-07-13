@@ -45,7 +45,7 @@ func TestRegister(t *testing.T) {
 
 func TestMacros(t *testing.T) {
 	expectedMacros := map[string]string{
-		"redis": `proto.name == "redis"`,
+		"redis": `protocol.name == "redis"`,
 	}
 	dissector := NewDissector()
 	macros := dissector.Macros()

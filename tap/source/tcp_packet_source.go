@@ -9,6 +9,7 @@ import (
 	"github.com/google/gopacket/layers"
 	"github.com/up9inc/mizu/logger"
 	"github.com/up9inc/mizu/tap/api"
+	"github.com/up9inc/mizu/tap/dbgctl"
 	"github.com/up9inc/mizu/tap/diagnose"
 )
 
@@ -111,7 +112,14 @@ func (source *tcpPacketSource) close() {
 	}
 }
 
+func (source *tcpPacketSource) Stats() (stat *pcap.Stats, err error) {
+	return source.handle.Stats()
+}
+
 func (source *tcpPacketSource) readPackets(ipdefrag bool, packets chan<- TcpPacketInfo) {
+	if dbgctl.MizuTapperDisablePcap {
+		return
+	}
 	logger.Log.Infof("Start reading packets from %v", source.name)
 
 	for {

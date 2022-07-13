@@ -3,7 +3,6 @@ package http
 import (
 	"bufio"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"log"
@@ -15,12 +14,14 @@ import (
 	"github.com/up9inc/mizu/tap/api"
 )
 
-var http10protocol api.Protocol = api.Protocol{
-	Name:            "http",
+var http10protocol = api.Protocol{
+	ProtocolSummary: api.ProtocolSummary{
+		Name:         "http",
+		Version:      "1.0",
+		Abbreviation: "HTTP",
+	},
 	LongName:        "Hypertext Transfer Protocol -- HTTP/1.0",
-	Abbreviation:    "HTTP",
 	Macro:           "http",
-	Version:         "1.0",
 	BackgroundColor: "#205cf5",
 	ForegroundColor: "#ffffff",
 	FontSize:        12,
@@ -29,12 +30,14 @@ var http10protocol api.Protocol = api.Protocol{
 	Priority:        0,
 }
 
-var http11protocol api.Protocol = api.Protocol{
-	Name:            "http",
+var http11protocol = api.Protocol{
+	ProtocolSummary: api.ProtocolSummary{
+		Name:         "http",
+		Version:      "1.1",
+		Abbreviation: "HTTP",
+	},
 	LongName:        "Hypertext Transfer Protocol -- HTTP/1.1",
-	Abbreviation:    "HTTP",
 	Macro:           "http",
-	Version:         "1.1",
 	BackgroundColor: "#205cf5",
 	ForegroundColor: "#ffffff",
 	FontSize:        12,
@@ -43,12 +46,14 @@ var http11protocol api.Protocol = api.Protocol{
 	Priority:        0,
 }
 
-var http2Protocol api.Protocol = api.Protocol{
-	Name:            "http",
+var http2Protocol = api.Protocol{
+	ProtocolSummary: api.ProtocolSummary{
+		Name:         "http",
+		Version:      "2.0",
+		Abbreviation: "HTTP/2",
+	},
 	LongName:        "Hypertext Transfer Protocol Version 2 (HTTP/2)",
-	Abbreviation:    "HTTP/2",
 	Macro:           "http2",
-	Version:         "2.0",
 	BackgroundColor: "#244c5a",
 	ForegroundColor: "#ffffff",
 	FontSize:        11,
@@ -57,12 +62,14 @@ var http2Protocol api.Protocol = api.Protocol{
 	Priority:        0,
 }
 
-var grpcProtocol api.Protocol = api.Protocol{
-	Name:            "http",
+var grpcProtocol = api.Protocol{
+	ProtocolSummary: api.ProtocolSummary{
+		Name:         "http",
+		Version:      "2.0",
+		Abbreviation: "gRPC",
+	},
 	LongName:        "Hypertext Transfer Protocol Version 2 (HTTP/2) [ gRPC over HTTP/2 ]",
-	Abbreviation:    "gRPC",
 	Macro:           "grpc",
-	Version:         "2.0",
 	BackgroundColor: "#244c5a",
 	ForegroundColor: "#ffffff",
 	FontSize:        11,
@@ -71,12 +78,14 @@ var grpcProtocol api.Protocol = api.Protocol{
 	Priority:        0,
 }
 
-var graphQL1Protocol api.Protocol = api.Protocol{
-	Name:            "http",
+var graphQL1Protocol = api.Protocol{
+	ProtocolSummary: api.ProtocolSummary{
+		Name:         "http",
+		Version:      "1.1",
+		Abbreviation: "GQL",
+	},
 	LongName:        "Hypertext Transfer Protocol -- HTTP/1.1 [ GraphQL over HTTP/1.1 ]",
-	Abbreviation:    "GQL",
 	Macro:           "gql",
-	Version:         "1.1",
 	BackgroundColor: "#e10098",
 	ForegroundColor: "#ffffff",
 	FontSize:        12,
@@ -85,18 +94,29 @@ var graphQL1Protocol api.Protocol = api.Protocol{
 	Priority:        0,
 }
 
-var graphQL2Protocol api.Protocol = api.Protocol{
-	Name:            "http",
+var graphQL2Protocol = api.Protocol{
+	ProtocolSummary: api.ProtocolSummary{
+		Name:         "http",
+		Version:      "2.0",
+		Abbreviation: "GQL",
+	},
 	LongName:        "Hypertext Transfer Protocol Version 2 (HTTP/2) [ GraphQL over HTTP/2 ]",
-	Abbreviation:    "GQL",
 	Macro:           "gql",
-	Version:         "2.0",
 	BackgroundColor: "#e10098",
 	ForegroundColor: "#ffffff",
 	FontSize:        12,
 	ReferenceLink:   "https://graphql.org/learn/serving-over-http/",
 	Ports:           []string{"80", "443", "8080", "50051"},
 	Priority:        0,
+}
+
+var protocolsMap = map[string]*api.Protocol{
+	http10protocol.ToString():   &http10protocol,
+	http11protocol.ToString():   &http11protocol,
+	http2Protocol.ToString():    &http2Protocol,
+	grpcProtocol.ToString():     &grpcProtocol,
+	graphQL1Protocol.ToString(): &graphQL1Protocol,
+	graphQL2Protocol.ToString(): &graphQL2Protocol,
 }
 
 const (
@@ -108,6 +128,10 @@ type dissecting string
 
 func (d dissecting) Register(extension *api.Extension) {
 	extension.Protocol = &http11protocol
+}
+
+func (d dissecting) GetProtocols() map[string]*api.Protocol {
+	return protocolsMap
 }
 
 func (d dissecting) Ping() {
@@ -142,10 +166,6 @@ func (d dissecting) Dissect(b *bufio.Reader, reader api.TcpReader, options *api.
 				break
 			}
 			http2Assembler = createHTTP2Assembler(b)
-		}
-
-		if reader.GetParent().GetProtoIdentifier().Protocol != nil && reader.GetParent().GetProtoIdentifier().Protocol != &http11protocol {
-			return errors.New("Identified by another protocol")
 		}
 
 		if isHTTP2 {
@@ -198,10 +218,6 @@ func (d dissecting) Dissect(b *bufio.Reader, reader api.TcpReader, options *api.
 			}
 			reader.GetParent().SetProtocol(&http11protocol)
 		}
-	}
-
-	if reader.GetParent().GetProtoIdentifier().Protocol == nil {
-		return err
 	}
 
 	return nil
@@ -270,27 +286,21 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, 
 	reqDetails["pathSegments"] = strings.Split(path, "/")[1:]
 
 	// Rearrange the maps for the querying
-	reqDetails["_headers"] = reqDetails["headers"]
-	reqDetails["headers"] = mapSliceRebuildAsMap(reqDetails["_headers"].([]interface{}))
-	resDetails["_headers"] = resDetails["headers"]
-	resDetails["headers"] = mapSliceRebuildAsMap(resDetails["_headers"].([]interface{}))
+	reqDetails["headers"] = mapSliceRebuildAsMergedMap(reqDetails["headers"].([]interface{}))
+	resDetails["headers"] = mapSliceRebuildAsMergedMap(resDetails["headers"].([]interface{}))
 
-	reqDetails["_cookies"] = reqDetails["cookies"]
-	reqDetails["cookies"] = mapSliceRebuildAsMap(reqDetails["_cookies"].([]interface{}))
-	resDetails["_cookies"] = resDetails["cookies"]
-	resDetails["cookies"] = mapSliceRebuildAsMap(resDetails["_cookies"].([]interface{}))
+	reqDetails["cookies"] = mapSliceRebuildAsMergedMap(reqDetails["cookies"].([]interface{}))
+	resDetails["cookies"] = mapSliceRebuildAsMergedMap(resDetails["cookies"].([]interface{}))
 
-	reqDetails["_queryString"] = reqDetails["queryString"]
-	reqDetails["_queryStringMerged"] = mapSliceMergeRepeatedKeys(reqDetails["_queryString"].([]interface{}))
-	reqDetails["queryString"] = mapSliceRebuildAsMap(reqDetails["_queryStringMerged"].([]interface{}))
+	reqDetails["queryString"] = mapSliceRebuildAsMap(reqDetails["queryString"].([]interface{}))
 
 	elapsedTime := item.Pair.Response.CaptureTime.Sub(item.Pair.Request.CaptureTime).Round(time.Millisecond).Milliseconds()
 	if elapsedTime < 0 {
 		elapsedTime = 0
 	}
-	httpPair, _ := json.Marshal(item.Pair)
+
 	return &api.Entry{
-		Protocol: item.Protocol,
+		Protocol: item.Protocol.ProtocolSummary,
 		Capture:  item.Capture,
 		Source: &api.TCP{
 			Name: resolvedSource,
@@ -311,7 +321,6 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, 
 		Timestamp:    item.Timestamp,
 		StartTime:    item.Pair.Request.CaptureTime,
 		ElapsedTime:  elapsedTime,
-		HTTPPair:     string(httpPair),
 	}
 }
 
@@ -324,22 +333,20 @@ func (d dissecting) Summarize(entry *api.Entry) *api.BaseEntry {
 	statusQuery := fmt.Sprintf(`response.status == %d`, status)
 
 	return &api.BaseEntry{
-		Id:             entry.Id,
-		Protocol:       entry.Protocol,
-		Capture:        entry.Capture,
-		Summary:        summary,
-		SummaryQuery:   summaryQuery,
-		Status:         status,
-		StatusQuery:    statusQuery,
-		Method:         method,
-		MethodQuery:    methodQuery,
-		Timestamp:      entry.Timestamp,
-		Source:         entry.Source,
-		Destination:    entry.Destination,
-		IsOutgoing:     entry.Outgoing,
-		Latency:        entry.ElapsedTime,
-		Rules:          entry.Rules,
-		ContractStatus: entry.ContractStatus,
+		Id:           entry.Id,
+		Protocol:     *protocolsMap[entry.Protocol.ToString()],
+		Capture:      entry.Capture,
+		Summary:      summary,
+		SummaryQuery: summaryQuery,
+		Status:       status,
+		StatusQuery:  statusQuery,
+		Method:       method,
+		MethodQuery:  methodQuery,
+		Timestamp:    entry.Timestamp,
+		Source:       entry.Source,
+		Destination:  entry.Destination,
+		IsOutgoing:   entry.Outgoing,
+		Latency:      entry.ElapsedTime,
 	}
 }
 
@@ -384,19 +391,19 @@ func representRequest(request map[string]interface{}) (repRequest []interface{})
 	repRequest = append(repRequest, api.SectionData{
 		Type:  api.TABLE,
 		Title: "Headers",
-		Data:  representMapSliceAsTable(request["_headers"].([]interface{}), `request.headers`),
+		Data:  representMapAsTable(request["headers"].(map[string]interface{}), `request.headers`),
 	})
 
 	repRequest = append(repRequest, api.SectionData{
 		Type:  api.TABLE,
 		Title: "Cookies",
-		Data:  representMapSliceAsTable(request["_cookies"].([]interface{}), `request.cookies`),
+		Data:  representMapAsTable(request["cookies"].(map[string]interface{}), `request.cookies`),
 	})
 
 	repRequest = append(repRequest, api.SectionData{
 		Type:  api.TABLE,
 		Title: "Query String",
-		Data:  representMapSliceAsTable(request["_queryStringMerged"].([]interface{}), `request.queryString`),
+		Data:  representMapAsTable(request["queryString"].(map[string]interface{}), `request.queryString`),
 	})
 
 	postData, _ := request["postData"].(map[string]interface{})
@@ -472,13 +479,13 @@ func representResponse(response map[string]interface{}) (repResponse []interface
 	repResponse = append(repResponse, api.SectionData{
 		Type:  api.TABLE,
 		Title: "Headers",
-		Data:  representMapSliceAsTable(response["_headers"].([]interface{}), `response.headers`),
+		Data:  representMapAsTable(response["headers"].(map[string]interface{}), `response.headers`),
 	})
 
 	repResponse = append(repResponse, api.SectionData{
 		Type:  api.TABLE,
 		Title: "Cookies",
-		Data:  representMapSliceAsTable(response["_cookies"].([]interface{}), `response.cookies`),
+		Data:  representMapAsTable(response["cookies"].(map[string]interface{}), `response.cookies`),
 	})
 
 	content, _ := response["content"].(map[string]interface{})
@@ -514,10 +521,10 @@ func (d dissecting) Represent(request map[string]interface{}, response map[strin
 
 func (d dissecting) Macros() map[string]string {
 	return map[string]string{
-		`http`:  fmt.Sprintf(`proto.name == "%s" and proto.version.startsWith("%c")`, http11protocol.Name, http11protocol.Version[0]),
-		`http2`: fmt.Sprintf(`proto.name == "%s" and proto.version == "%s"`, http11protocol.Name, http2Protocol.Version),
-		`grpc`:  fmt.Sprintf(`proto.name == "%s" and proto.version == "%s" and proto.macro == "%s"`, http11protocol.Name, grpcProtocol.Version, grpcProtocol.Macro),
-		`gql`:   fmt.Sprintf(`proto.name == "%s" and proto.macro == "%s"`, graphQL1Protocol.Name, graphQL1Protocol.Macro),
+		`http`:  fmt.Sprintf(`protocol.abbr == "%s"`, http11protocol.Abbreviation),
+		`http2`: fmt.Sprintf(`protocol.abbr == "%s"`, http2Protocol.Abbreviation),
+		`grpc`:  fmt.Sprintf(`protocol.abbr == "%s"`, grpcProtocol.Abbreviation),
+		`gql`:   fmt.Sprintf(`protocol.abbr == "%s"`, graphQL1Protocol.Abbreviation),
 	}
 }
 

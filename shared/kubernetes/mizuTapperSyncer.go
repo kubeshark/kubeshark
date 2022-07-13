@@ -43,11 +43,11 @@ type TapperSyncerConfig struct {
 	TapperResources          shared.Resources
 	ImagePullPolicy          core.PullPolicy
 	LogLevel                 logging.Level
-	IgnoredUserAgents        []string
 	MizuApiFilteringOptions  api.TrafficFilteringOptions
 	MizuServiceAccountExists bool
 	ServiceMesh              bool
 	Tls                      bool
+	MaxLiveStreams           int
 }
 
 func CreateAndStartMizuTapperSyncer(ctx context.Context, kubernetesProvider *Provider, config TapperSyncerConfig, startTime time.Time) (*MizuTapperSyncer, error) {
@@ -337,7 +337,8 @@ func (tapperSyncer *MizuTapperSyncer) updateMizuTappers() error {
 			tapperSyncer.config.MizuApiFilteringOptions,
 			tapperSyncer.config.LogLevel,
 			tapperSyncer.config.ServiceMesh,
-			tapperSyncer.config.Tls); err != nil {
+			tapperSyncer.config.Tls,
+			tapperSyncer.config.MaxLiveStreams); err != nil {
 			return err
 		}
 

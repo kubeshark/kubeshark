@@ -290,3 +290,15 @@ jobs:
           tag: ${{ steps.versioning.outputs.version }}
           prerelease: ${{ github.ref != 'refs/heads/main' }}
           bodyFile: 'cli/bin/README.md'
+      
+      - name: Slack notification on failure
+        uses: ravsamhq/notify-slack-action@v1
+        if: always()
+        with:
+          status: ${{ job.status }}
+          notification_title: 'Mizu enterprise {workflow} has {status_message}'
+          message_format: '{emoji} *{workflow}* {status_message} during <{run_url}|run>, after commit <{commit_url}|{commit_sha}> by ${{ github.event.head_commit.author.name }} <${{ github.event.head_commit.author.email }}> ```${{ github.event.head_commit.message }}```'
+          footer: 'Linked Repo <{repo_url}|{repo}>'
+          notify_when: 'failure'
+        env:
+          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}
