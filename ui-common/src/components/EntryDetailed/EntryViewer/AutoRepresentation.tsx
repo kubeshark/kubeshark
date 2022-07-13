@@ -32,7 +32,7 @@ export const AutoRepresentation: React.FC<any> = ({ representation, color, opene
                 badge: null
             }]
 
-        if (response) {
+        if (response && response.length > 0) {
             arr.push({
                 tab: 'Response',
                 badge: null
@@ -71,7 +71,7 @@ export const AutoRepresentation: React.FC<any> = ({ representation, color, opene
             {getOpenedTabIndex() === TabsEnum.Request && <React.Fragment>
                 <SectionsRepresentation data={request} color={color} requestRepresentation={request} />
             </React.Fragment>}
-            {response && getOpenedTabIndex() === TabsEnum.Response && <React.Fragment>
+            {response && response.length > 0 && getOpenedTabIndex() === TabsEnum.Response && <React.Fragment>
                 <SectionsRepresentation data={response} color={color} />
             </React.Fragment>}
         </div>}

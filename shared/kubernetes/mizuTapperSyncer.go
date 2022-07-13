@@ -43,7 +43,6 @@ type TapperSyncerConfig struct {
 	TapperResources          shared.Resources
 	ImagePullPolicy          core.PullPolicy
 	LogLevel                 logging.Level
-	IgnoredUserAgents        []string
 	MizuApiFilteringOptions  api.TrafficFilteringOptions
 	MizuServiceAccountExists bool
 	ServiceMesh              bool
