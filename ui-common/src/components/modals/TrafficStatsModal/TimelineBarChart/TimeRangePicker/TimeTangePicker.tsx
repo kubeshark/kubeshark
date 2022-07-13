@@ -21,11 +21,11 @@ export const TimeRangePicker: React.FC<TimeRangePickerProps> = ({ refreshStats }
     const dateConvertor = (inputStart, inputEnd) => {
         const startMoment = dateMath.parse(inputStart);
         if (!startMoment || !startMoment.isValid()) {
-            throw new Error('Unable to parse start string');
+            console.error("Unable to parse start string");
         }
         const endMoment = dateMath.parse(inputEnd, { roundUp: true });
         if (!endMoment || !endMoment.isValid()) {
-            throw new Error('Unable to parse end string');
+            console.error("Unable to parse end string");
         }
         return { startMoment: startMoment.format("x"), endMoment: endMoment.format("x") }
     }

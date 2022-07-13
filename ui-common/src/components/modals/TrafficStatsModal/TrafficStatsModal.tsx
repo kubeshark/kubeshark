@@ -39,9 +39,6 @@ export const TrafficStatsModal: React.FC<TrafficStatsModalProps> = ({ isOpen, on
   const [protocols, setProtocols] = useState([])
   const [isLoading, setIsLoading] = useState(false);
 
-  const now = new Date().getTime();
-  const halfAnHourAgo = new Date().getTime() - (30 * 60 * 1000);
-
   const getTrafficStats = useCallback(async (startTime, endTime) => {
     if (isOpen && getTrafficStatsDataApi) {
       (async () => {
@@ -61,8 +58,9 @@ export const TrafficStatsModal: React.FC<TrafficStatsModalProps> = ({ isOpen, on
   }, [isOpen, getTrafficStatsDataApi, setPieStatsData, setTimelineStatsData])
 
   useEffect(() => {
+    const now = new Date().getTime();
+    const halfAnHourAgo = now - (30 * 60 * 1000);
     getTrafficStats(halfAnHourAgo, now);
-    // eslint-disable-next-line
   }, [getTrafficStats])
 
   const refreshStats = debounce((newStartTime, newEndTime) => {
