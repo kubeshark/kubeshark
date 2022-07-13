@@ -60,6 +60,14 @@ func (h *afPacketHandle) LinkType() layers.LinkType {
 	return layers.LinkTypeEthernet
 }
 
+func (h *afPacketHandle) Stats() (packetsReceived uint, packetsDropped uint, err error) {
+	var stats afpacket.SocketStatsV3
+	_, stats, err = h.capture.SocketStats()
+	packetsReceived = stats.Packets()
+	packetsDropped = stats.Drops()
+	return
+}
+
 func (h *afPacketHandle) Close() {
 	h.capture.Close()
 }

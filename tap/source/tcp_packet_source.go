@@ -18,6 +18,7 @@ type Handle interface {
 	SetDecoder(decoder gopacket.Decoder, lazy bool, noCopy bool)
 	SetBPF(expr string) (err error)
 	LinkType() layers.LinkType
+	Stats() (packetsReceived uint, packetsDropped uint, err error)
 	Close()
 }
 
@@ -112,8 +113,8 @@ func (source *tcpPacketSource) close() {
 	}
 }
 
-func (source *tcpPacketSource) Stats() (stat *pcap.Stats, err error) {
-	return source.handle.Stats()
+func (source *tcpPacketSource) Stats() (packetsReceived uint, packetsDropped uint, err error) {
+	return source.Handle.Stats()
 }
 
 func (source *tcpPacketSource) readPackets(ipdefrag bool, packets chan<- TcpPacketInfo) {

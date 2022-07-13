@@ -165,12 +165,12 @@ func (m *PacketSourceManager) Stats() string {
 	result := ""
 
 	for _, source := range m.sources {
-		stats, err := source.Stats()
+		packetsReceived, packetsDropped, err := source.Stats()
 
 		if err != nil {
 			result = result + fmt.Sprintf("[%s: err:%s]", source.String(), err)
 		} else {
-			result = result + fmt.Sprintf("[%s: rec: %d dropped: %d]", source.String(), stats.PacketsReceived, stats.PacketsDropped)
+			result = result + fmt.Sprintf("[%s: rec: %d dropped: %d]", source.String(), packetsReceived, packetsDropped)
 		}
 	}
 

@@ -31,6 +31,14 @@ func (h *pcapHandle) LinkType() layers.LinkType {
 	return h.capture.LinkType()
 }
 
+func (h *pcapHandle) Stats() (packetsReceived uint, packetsDropped uint, err error) {
+	var stats *pcap.Stats
+	stats, err = h.capture.Stats()
+	packetsReceived = uint(stats.PacketsReceived)
+	packetsDropped = uint(stats.PacketsDropped)
+	return
+}
+
 func (h *pcapHandle) Close() {
 	h.capture.Close()
 }
