@@ -54,7 +54,7 @@ export const TimeRangePicker: React.FC<TimeRangePickerProps> = ({ refreshStats }
         return new Promise(resolve => {
             setTimeout(resolve, 100);
         }).then(() => {
-            const { startMoment, endMoment } = dateConvertor(start,end)
+            const { startMoment, endMoment } = dateConvertor(start, end)
             refreshStats(startMoment, endMoment)
         });
     };
@@ -75,6 +75,7 @@ export const TimeRangePicker: React.FC<TimeRangePickerProps> = ({ refreshStats }
         <Fragment>
             <EuiSpacer />
             <EuiSuperDatePicker
+                width='auto'
                 isLoading={isLoading}
                 start={start}
                 end={end}
