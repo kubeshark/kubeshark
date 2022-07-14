@@ -11,7 +11,7 @@ Copyright (C) UP9 Inc.
 #include "include/logger_messages.h"
 #include "include/pids.h"
 
-struct sys_enter_read_ctx {
+struct sys_enter_read_write_ctx {
 	__u64 __unused_syscall_header;
 	__u32 __unused_syscall_nr;
 	
@@ -20,8 +20,26 @@ struct sys_enter_read_ctx {
 	__u64 count;
 };
 
+static __always_inline void sys_read_write_tracepoint(struct sys_enter_read_write_ctx *ctx, __u64 id, struct ssl_info *infoPtr, struct bpf_map_def *map_fd, __u64 origin_code) {
+	struct ssl_info info;
+	long err = bpf_probe_read(&info, sizeof(struct ssl_info), infoPtr);
+	
+	if (err != 0) {
+		log_error(ctx, LOG_ERROR_READING_SSL_CONTEXT, id, err, origin_code);
+		return;
+	}
+	
+	info.fd = ctx->fd;
+	
+	err = bpf_map_update_elem(&openssl_read_context, &id, &info, BPF_ANY);
+	
+	if (err != 0) {
+		log_error(ctx, LOG_ERROR_PUTTING_FILE_DESCRIPTOR, id, err, origin_code);
+	}
+}
+
 SEC("tracepoint/syscalls/sys_enter_read")
-void sys_enter_read(struct sys_enter_read_ctx *ctx) {
+void sys_enter_read(struct sys_enter_read_write_ctx *ctx) {
 	__u64 id = bpf_get_current_pid_tgid();
 	
 	if (!should_tap(id >> 32)) {
@@ -33,35 +51,12 @@ void sys_enter_read(struct sys_enter_read_ctx *ctx) {
 	if (infoPtr == NULL) {
 		return;
 	}
-	
-	struct ssl_info info;
-	long err = bpf_probe_read(&info, sizeof(struct ssl_info), infoPtr);
-	
-	if (err != 0) {
-		log_error(ctx, LOG_ERROR_READING_SSL_CONTEXT, id, err, ORIGIN_SYS_ENTER_READ_CODE);
-		return;
-	}
-	
-	info.fd = ctx->fd;
-	
-	err = bpf_map_update_elem(&openssl_read_context, &id, &info, BPF_ANY);
-	
-	if (err != 0) {
-		log_error(ctx, LOG_ERROR_PUTTING_FILE_DESCRIPTOR, id, err, ORIGIN_SYS_ENTER_READ_CODE);
-	}
+
+	sys_read_write_tracepoint(ctx, id, infoPtr, &openssl_read_context, ORIGIN_SYS_ENTER_READ_CODE);
 }
-
-struct sys_enter_write_ctx {
-	__u64 __unused_syscall_header;
-	__u32 __unused_syscall_nr;
 	
-	__u64 fd;
-	__u64* buf;
-	__u64 count;
-};
-
 SEC("tracepoint/syscalls/sys_enter_write")
-void sys_enter_write(struct sys_enter_write_ctx *ctx) {
+void sys_enter_write(struct sys_enter_read_write_ctx *ctx) {
 	__u64 id = bpf_get_current_pid_tgid();
 	
 	if (!should_tap(id >> 32)) {
@@ -73,20 +68,6 @@ void sys_enter_write(struct sys_enter_write_ctx *ctx) {
 	if (infoPtr == NULL) {
 		return;
 	}
-	
-	struct ssl_info info;
-	long err = bpf_probe_read(&info, sizeof(struct ssl_info), infoPtr);
-	
-	if (err != 0) {
-		log_error(ctx, LOG_ERROR_READING_SSL_CONTEXT, id, err, ORIGIN_SYS_ENTER_WRITE_CODE);
-		return;
-	}
-	
-	info.fd = ctx->fd;
-	
-	err = bpf_map_update_elem(&openssl_write_context, &id, &info, BPF_ANY);
-	
-	if (err != 0) {
-		log_error(ctx, LOG_ERROR_PUTTING_FILE_DESCRIPTOR, id, err, ORIGIN_SYS_ENTER_WRITE_CODE);
-	}
+
+	sys_read_write_tracepoint(ctx, id, infoPtr, &openssl_write_context, ORIGIN_SYS_ENTER_WRITE_CODE);
 }
