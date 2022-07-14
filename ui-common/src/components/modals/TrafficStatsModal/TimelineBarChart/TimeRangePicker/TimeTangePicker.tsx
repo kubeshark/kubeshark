@@ -1,10 +1,12 @@
 import React, { useState, Fragment } from 'react';
+import { EuiProvider } from '@elastic/eui';
 
 import {
     EuiSuperDatePicker,
     EuiSpacer,
 } from '@elastic/eui';
 import dateMath from '@elastic/datemath';
+import '@elastic/eui/dist/eui_theme_light.css';
 
 interface TimeRangePickerProps {
     refreshStats: (startTime, endTime) => void;
@@ -72,21 +74,23 @@ export const TimeRangePicker: React.FC<TimeRangePickerProps> = ({ refreshStats }
     };
 
     return (
-        <Fragment>
-            <EuiSpacer />
-            <EuiSuperDatePicker
-                width='auto'
-                isLoading={isLoading}
-                start={start}
-                end={end}
-                onTimeChange={onTimeChange}
-                onRefresh={onRefresh}
-                isPaused={isPaused}
-                refreshInterval={refreshInterval}
-                onRefreshChange={onRefreshChange}
-                recentlyUsedRanges={recentlyUsedRanges}
-            />
-            <EuiSpacer />
-        </Fragment>
+        <EuiProvider>
+            <Fragment>
+                <EuiSpacer />
+                <EuiSuperDatePicker
+                    width='auto'
+                    isLoading={isLoading}
+                    start={start}
+                    end={end}
+                    onTimeChange={onTimeChange}
+                    onRefresh={onRefresh}
+                    isPaused={isPaused}
+                    refreshInterval={refreshInterval}
+                    onRefreshChange={onRefreshChange}
+                    recentlyUsedRanges={recentlyUsedRanges}
+                />
+                <EuiSpacer />
+            </Fragment>
+        </EuiProvider>
     );
 };
