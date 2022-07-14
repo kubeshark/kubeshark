@@ -56,27 +56,33 @@ func newTcpPacketSource(name, filename string, interfaceName string,
 		Origin:    origin,
 	}
 
-	result.Handle, err = newAfpacketHandle(
-		interfaceName,
-		behaviour.TargetSizeMb,
-		behaviour.SnapLength,
-	)
+	// AF_XDP > AF_PACKET > libpcap
+	result.Handle, err = newAfXdpHandle(interfaceName)
 	if err != nil {
-		logger.Log.Warning(err)
-		result.Handle, err = newPcapHandle(
-			filename,
+		result.Handle, err = newAfpacketHandle(
 			interfaceName,
+			behaviour.TargetSizeMb,
 			behaviour.SnapLength,
-			behaviour.Promisc,
-			behaviour.Tstype,
 		)
 		if err != nil {
-			return nil, err
+			logger.Log.Warning(err)
+			result.Handle, err = newPcapHandle(
+				filename,
+				interfaceName,
+				behaviour.SnapLength,
+				behaviour.Promisc,
+				behaviour.Tstype,
+			)
+			if err != nil {
+				return nil, err
+			} else {
+				logger.Log.Infof("Using libpcap as the capture source")
+			}
 		} else {
-			logger.Log.Infof("Using libpcap as the capture source")
+			logger.Log.Infof("Using AF_PACKET socket as the capture source")
 		}
 	} else {
-		logger.Log.Infof("Using AF_PACKET socket as the capture source")
+		logger.Log.Infof("Using AF_XDP socket as the capture source")
 	}
 
 	var decoder gopacket.Decoder
