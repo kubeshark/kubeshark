@@ -31,7 +31,7 @@ static __always_inline void sys_read_write_tracepoint(struct sys_enter_read_writ
 	
 	info.fd = ctx->fd;
 	
-	err = bpf_map_update_elem(&openssl_read_context, &id, &info, BPF_ANY);
+	err = bpf_map_update_elem(map_fd, &id, &info, BPF_ANY);
 	
 	if (err != 0) {
 		log_error(ctx, LOG_ERROR_PUTTING_FILE_DESCRIPTOR, id, err, origin_code);
