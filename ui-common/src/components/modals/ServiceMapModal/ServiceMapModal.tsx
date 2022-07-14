@@ -228,7 +228,7 @@ export const ServiceMapModal: React.FC<ServiceMapModalProps> = ({ isOpen, onClos
                                 <div className={styles.filterWrapper}>
                                     <div className={styles.card}>
                                         <SelectList items={getProtocolsForFilter} checkBoxWidth="5%" tableName={"PROTOCOLS"} multiSelect={true}
-                                            checkedValues={checkedProtocols} setCheckedValues={onProtocolsChange} tableClassName={styles.filters}
+                                            checkedValues={checkedProtocols} setCheckedValues={onProtocolsChange} tableClassName={styles.filters + ` ${styles.protocolsFilterList}`}
                                             inputSearchClass={styles.servicesFilterSearch} isFilterable={false} />
                                     </div>
                                     <div className={styles.servicesFilterWrapper + ` ${styles.card}`}>
