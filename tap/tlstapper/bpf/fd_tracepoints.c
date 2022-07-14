@@ -10,6 +10,7 @@ Copyright (C) UP9 Inc.
 #include "include/log.h"
 #include "include/logger_messages.h"
 #include "include/pids.h"
+#include "include/common.h"
 
 struct sys_enter_read_write_ctx {
 	__u64 __unused_syscall_header;
@@ -48,11 +49,12 @@ void sys_enter_read(struct sys_enter_read_write_ctx *ctx) {
 	
 	struct ssl_info *infoPtr = bpf_map_lookup_elem(&openssl_read_context, &id);
 	
-	if (infoPtr == NULL) {
-		return;
+	if (infoPtr != NULL) {
+		sys_read_write_tracepoint(ctx, id, infoPtr, &openssl_read_context, ORIGIN_SYS_ENTER_READ_CODE);
 	}
 
-	sys_read_write_tracepoint(ctx, id, infoPtr, &openssl_read_context, ORIGIN_SYS_ENTER_READ_CODE);
+	struct ssl_info info = new_ssl_info();
+	sys_read_write_tracepoint(ctx, id, &info, &go_kernel_read_context, ORIGIN_SYS_ENTER_READ_CODE);
 }
 	
 SEC("tracepoint/syscalls/sys_enter_write")
@@ -65,9 +67,10 @@ void sys_enter_write(struct sys_enter_read_write_ctx *ctx) {
 	
 	struct ssl_info *infoPtr = bpf_map_lookup_elem(&openssl_write_context, &id);
 	
-	if (infoPtr == NULL) {
-		return;
+	if (infoPtr != NULL) {
+		sys_read_write_tracepoint(ctx, id, infoPtr, &openssl_write_context, ORIGIN_SYS_ENTER_WRITE_CODE);
 	}
 
-	sys_read_write_tracepoint(ctx, id, infoPtr, &openssl_write_context, ORIGIN_SYS_ENTER_WRITE_CODE);
+	struct ssl_info info = new_ssl_info();
+	sys_read_write_tracepoint(ctx, id, &info, &go_kernel_write_context, ORIGIN_SYS_ENTER_WRITE_CODE);
 }

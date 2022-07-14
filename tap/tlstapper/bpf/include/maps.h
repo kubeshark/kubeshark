@@ -67,6 +67,7 @@ struct ssl_info {
 struct fd_info {
     __u8 ipv4_addr[16]; // struct sockaddr (linux-src/include/linux/socket.h)
     __u8 flags;
+    struct address_info address_info;
 };
 
 struct goid_offsets {
@@ -117,5 +118,7 @@ BPF_LRU_HASH(openssl_read_context, __u64, struct ssl_info);
 BPF_HASH(goid_offsets_map, __u32, struct goid_offsets);
 BPF_LRU_HASH(go_write_context, __u64, struct ssl_info);
 BPF_LRU_HASH(go_read_context, __u64, struct ssl_info);
+BPF_LRU_HASH(go_kernel_write_context, __u64, struct ssl_info);
+BPF_LRU_HASH(go_kernel_read_context, __u64, struct ssl_info);
 
 #endif /* __MAPS__ */

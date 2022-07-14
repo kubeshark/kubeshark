@@ -5,7 +5,7 @@
 #include "include/pids.h"
 #include "include/common.h"
 
-static __always_inline void tcp_kprobe(struct pt_regs *ctx, struct bpf_map_def *map_fd, _Bool is_send) {
+static __always_inline void tcp_kprobe(struct pt_regs *ctx, struct bpf_map_def *map_fd1, struct bpf_map_def *map_fd2, _Bool is_send) {
 	long err;
 
 	__u64 id = bpf_get_current_pid_tgid();
@@ -15,10 +15,15 @@ static __always_inline void tcp_kprobe(struct pt_regs *ctx, struct bpf_map_def *
 		return;
 	}
 
-	struct ssl_info *info_ptr = bpf_map_lookup_elem(map_fd, &id);
+	_Bool should_forward_to_map = false;
+	struct ssl_info *info_ptr = bpf_map_lookup_elem(map_fd1, &id);
 	// Happens when the connection is not tls
 	if (info_ptr == NULL) {
-		return;
+		info_ptr = bpf_map_lookup_elem(map_fd2, &id);
+		if (info_ptr == NULL) {
+			return;
+		}
+		should_forward_to_map = true;
 	}
 
 	struct sock *sk = (struct sock *) PT_REGS_PARM1(ctx);
@@ -61,25 +66,37 @@ static __always_inline void tcp_kprobe(struct pt_regs *ctx, struct bpf_map_def *
 		return;
 	}
 
-	info_ptr->address_info.mode = ADDRESS_INFO_MODE_PAIR;
-	info_ptr->address_info.daddr = daddr;
-	info_ptr->address_info.saddr = saddr;
-	info_ptr->address_info.dport = dport;
-	info_ptr->address_info.sport = bpf_htons(sport);
+	if (should_forward_to_map) {
+		__u64 key = (__u64) pid << 32 | info_ptr->fd;
+
+    struct fd_info *fdinfo = bpf_map_lookup_elem(&file_descriptor_to_ipv4, &key);
+		// Happens when the connection is not tls (there was no connect / accept)
+    if (fdinfo == NULL) {
+        return;
+    }
+
+		fdinfo->address_info.mode = ADDRESS_INFO_MODE_PAIR;
+		fdinfo->address_info.daddr = daddr;
+		fdinfo->address_info.dport = dport;
+		fdinfo->address_info.saddr = saddr;
+		fdinfo->address_info.sport = bpf_htons(sport);
+	} else {
+		info_ptr->address_info.mode = ADDRESS_INFO_MODE_PAIR;
+		info_ptr->address_info.daddr = daddr;
+		info_ptr->address_info.saddr = saddr;
+		info_ptr->address_info.dport = dport;
+		info_ptr->address_info.sport = bpf_htons(sport);
+	}
 }
 
 SEC("kprobe/tcp_sendmsg")
 void BPF_KPROBE(tcp_sendmsg) {
 	__u64 id = bpf_get_current_pid_tgid();
-	log_error(ctx, LOG_DEBUG, 2, 1, id);
-
-	tcp_kprobe(ctx, &openssl_write_context, true);
+	tcp_kprobe(ctx, &openssl_write_context, &go_kernel_write_context, true);
 }
 
 SEC("kprobe/tcp_recvmsg")
 void BPF_KPROBE(tcp_recvmsg) {
 	__u64 id = bpf_get_current_pid_tgid();
-	log_error(ctx, LOG_DEBUG, 2, 2, id);
-
-	tcp_kprobe(ctx, &openssl_read_context, false);
+	tcp_kprobe(ctx, &openssl_read_context, &go_kernel_read_context, false);
 }

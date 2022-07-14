@@ -217,8 +217,6 @@ static __always_inline void go_crypto_tls_uprobe(struct pt_regs *ctx, struct bpf
         log_error(ctx, LOG_ERROR_PUTTING_SSL_CONTEXT, pid_tgid, err, 0l);
     }
 
-    log_error(ctx, LOG_DEBUG, 1, 1, pid_tgid);
-
     return;
 }
 
@@ -286,6 +284,19 @@ static __always_inline void go_crypto_tls_ex_uprobe(struct pt_regs *ctx, struct 
             return;
         }
     }
+
+    __u64 key = (__u64) pid << 32 | info_ptr->fd;
+    struct fd_info *fdinfo = bpf_map_lookup_elem(&file_descriptor_to_ipv4, &key);
+    if (fdinfo == NULL) {
+				log_error(ctx, LOG_ERROR_GETTING_FD_MAPPING, key, err, 0l);
+        return;
+    }
+
+    info.address_info.mode = fdinfo->address_info.mode;
+    info.address_info.daddr = fdinfo->address_info.daddr;
+    info.address_info.dport = fdinfo->address_info.dport;
+    info.address_info.saddr = fdinfo->address_info.saddr;
+    info.address_info.saddr = fdinfo->address_info.saddr;
 
     output_ssl_chunk(ctx, &info, info.buffer_len, pid_tgid, flags);
 
