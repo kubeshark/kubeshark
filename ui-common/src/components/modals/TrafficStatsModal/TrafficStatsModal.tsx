@@ -7,8 +7,6 @@ import { TimelineBarChart } from "./TimelineBarChart/TimelineBarChart";
 import { LoadingWrapper } from "../../UI/withLoading/withLoading";
 import { ALL_PROTOCOLS, StatsMode } from "./consts";
 import { TimeRangePicker } from "./TimelineBarChart/TimeRangePicker/TimeTangePicker";
-import { EuiProvider } from '@elastic/eui';
-import '@elastic/eui/dist/eui_theme_light.css';
 
 const modalStyle = {
   position: 'absolute',
@@ -68,53 +66,51 @@ export const TrafficStatsModal: React.FC<TrafficStatsModalProps> = ({ isOpen, on
   }, 500);
 
   return (
-    <EuiProvider>
-      <Modal
-        aria-labelledby="transition-modal-title"
-        aria-describedby="transition-modal-description"
-        open={isOpen}
-        onClose={onClose}
-        closeAfterTransition
-        BackdropComponent={Backdrop}
-        BackdropProps={{ timeout: 500 }}>
-        <Fade in={isOpen}>
-          <Box sx={modalStyle}>
-            <div className={styles.closeIcon}>
-              <img src={closeIcon} alt="close" onClick={() => onClose()} style={{ cursor: "pointer", userSelect: "none" }} />
-            </div>
-            <div className={styles.headlineContainer}>
-              <div className={styles.title}>Traffic Statistics</div>
-            </div>
-            <div className={styles.mainContainer}>
-              <div className={styles.selectContainer}>
-                <div>
-                  <TimeRangePicker refreshStats={refreshStats} />
-                </div>
-                <div>
-                  <span style={{ marginRight: 15 }}>Breakdown By</span>
-                  <select className={styles.select} value={statsMode} onChange={(e) => setStatsMode(e.target.value)}>
-                    {modes.map(mode => <option key={mode} value={mode}>{mode}</option>)}
-                  </select>
-                </div>
-                <div>
-                  <span style={{ marginRight: 15 }}>Protocol</span>
-                  <select className={styles.select} value={selectedProtocol} onChange={(e) => setSelectedProtocol(e.target.value)}>
-                    {protocols.map(protocol => <option key={protocol} value={protocol}>{protocol}</option>)}
-                  </select>
-                </div>
+    <Modal
+      aria-labelledby="transition-modal-title"
+      aria-describedby="transition-modal-description"
+      open={isOpen}
+      onClose={onClose}
+      closeAfterTransition
+      BackdropComponent={Backdrop}
+      BackdropProps={{ timeout: 500 }}>
+      <Fade in={isOpen}>
+        <Box sx={modalStyle}>
+          <div className={styles.closeIcon}>
+            <img src={closeIcon} alt="close" onClick={() => onClose()} style={{ cursor: "pointer", userSelect: "none" }} />
+          </div>
+          <div className={styles.headlineContainer}>
+            <div className={styles.title}>Traffic Statistics</div>
+          </div>
+          <div className={styles.mainContainer}>
+            <div className={styles.selectContainer}>
+              <div>
+                <TimeRangePicker refreshStats={refreshStats} />
               </div>
               <div>
-                <LoadingWrapper isLoading={isLoading} loaderMargin={20} loaderHeight={50}>
-                  <div>
-                    <TrafficPieChart pieChartMode={statsMode} data={pieStatsData} selectedProtocol={selectedProtocol} />
-                    <TimelineBarChart timeLineBarChartMode={statsMode} data={timelineStatsData} selectedProtocol={selectedProtocol} />
-                  </div>
-                </LoadingWrapper>
+                <span style={{ marginRight: 15 }}>Breakdown By</span>
+                <select className={styles.select} value={statsMode} onChange={(e) => setStatsMode(e.target.value)}>
+                  {modes.map(mode => <option key={mode} value={mode}>{mode}</option>)}
+                </select>
+              </div>
+              <div>
+                <span style={{ marginRight: 15 }}>Protocol</span>
+                <select className={styles.select} value={selectedProtocol} onChange={(e) => setSelectedProtocol(e.target.value)}>
+                  {protocols.map(protocol => <option key={protocol} value={protocol}>{protocol}</option>)}
+                </select>
               </div>
             </div>
-          </Box>
-        </Fade>
-      </Modal>
-    </EuiProvider>
+            <div>
+              <LoadingWrapper isLoading={isLoading} loaderMargin={20} loaderHeight={50}>
+                <div>
+                  <TrafficPieChart pieChartMode={statsMode} data={pieStatsData} selectedProtocol={selectedProtocol} />
+                  <TimelineBarChart timeLineBarChartMode={statsMode} data={timelineStatsData} selectedProtocol={selectedProtocol} />
+                </div>
+              </LoadingWrapper>
+            </div>
+          </div>
+        </Box>
+      </Fade>
+    </Modal>
   );
 }
