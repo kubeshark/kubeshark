@@ -5,7 +5,7 @@ package tlstapper
 var bpfLogMessages = []string{
 	/*0000*/ "[%d] Unable to read bytes count from _ex methods [err: %d]",
 	/*0001*/ "[%d] Unable to read ipv4 address [err: %d]",
-	/*0002*/ "[%d] Unable to read ssl buffer [err: %d]",
+	/*0002*/ "[%d] Unable to read ssl buffer [err: %d] [origin: %d]",
 	/*0003*/ "[%d] Buffer is too big [size: %d]",
 	/*0004*/ "[%d] Unable to allocate chunk in bpf heap",
 	/*0005*/ "[%d] Unable to read ssl context [err: %d] [origin: %d]",
