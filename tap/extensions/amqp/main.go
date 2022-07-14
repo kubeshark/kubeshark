@@ -264,9 +264,7 @@ func (d dissecting) Dissect(b *bufio.Reader, reader api.TcpReader, options *api.
 
 func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, resolvedDestination string, namespace string) *api.Entry {
 	request := item.Pair.Request.Payload.(map[string]interface{})
-	response := item.Pair.Response.Payload.(map[string]interface{})
 	reqDetails := request["details"].(map[string]interface{})
-	resDetails := response["details"].(map[string]interface{})
 
 	elapsedTime := item.Pair.Response.CaptureTime.Sub(item.Pair.Request.CaptureTime).Round(time.Millisecond).Milliseconds()
 	if elapsedTime < 0 {
@@ -274,7 +272,14 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, 
 	}
 
 	reqDetails["method"] = request["method"]
-	resDetails["method"] = response["method"]
+
+	var resDetails map[string]interface{}
+	if item.Pair.Response.Payload != nil {
+		response := item.Pair.Response.Payload.(map[string]interface{})
+		resDetails := response["details"].(map[string]interface{})
+		resDetails["method"] = response["method"]
+	}
+
 	return &api.Entry{
 		Protocol: protocol.ProtocolSummary,
 		Capture:  item.Capture,
