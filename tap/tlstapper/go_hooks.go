@@ -10,6 +10,8 @@ type goHooks struct {
 	goWriteExProbes []link.Link
 	goReadProbe     link.Link
 	goReadExProbes  []link.Link
+	tcpSendmsg         link.Link
+	tcpRecvmsg         link.Link
 }
 
 func (s *goHooks) installUprobes(bpfObjects *tlsTapperObjects, filePath string) error {
@@ -98,6 +100,16 @@ func (s *goHooks) installHooks(bpfObjects *tlsTapperObjects, ex *link.Executable
 		s.goReadExProbes = append(s.goReadExProbes, probe)
 	}
 
+	s.tcpSendmsg, err = link.Kprobe("tcp_sendmsg", bpfObjects.TcpSendmsg, nil)
+	if err != nil {
+		return errors.Wrap(err, 0)
+	}
+
+	s.tcpRecvmsg, err = link.Kprobe("tcp_recvmsg", bpfObjects.TcpRecvmsg, nil)
+	if err != nil {
+		return errors.Wrap(err, 0)
+	}
+
 	return nil
 }
 
@@ -120,6 +132,18 @@ func (s *goHooks) close() []error {
 
 	for _, probe := range s.goReadExProbes {
 		if err := probe.Close(); err != nil {
+			errors = append(errors, err)
+		}
+	}
+
+	if s.tcpSendmsg != nil {
+		if err := s.tcpSendmsg.Close(); err != nil {
+			errors = append(errors, err)
+		}
+	}
+
+	if s.tcpRecvmsg != nil {
+		if err := s.tcpRecvmsg.Close(); err != nil {
 			errors = append(errors, err)
 		}
 	}
