@@ -17,9 +17,10 @@ static __always_inline void tcp_kprobe(struct pt_regs *ctx, struct bpf_map_def *
 
 	_Bool should_forward_to_map = false;
 	struct ssl_info *info_ptr = bpf_map_lookup_elem(map_fd1, &id);
-	// Happens when the connection is not tls
+	// Happens when the connection is not using openssl lib
 	if (info_ptr == NULL) {
 		info_ptr = bpf_map_lookup_elem(map_fd2, &id);
+		// Happens when the connection is not from a Go program
 		if (info_ptr == NULL) {
 			return;
 		}
