@@ -296,7 +296,7 @@ static __always_inline void go_crypto_tls_ex_uprobe(struct pt_regs *ctx, struct 
     info.address_info.daddr = fdinfo->address_info.daddr;
     info.address_info.dport = fdinfo->address_info.dport;
     info.address_info.saddr = fdinfo->address_info.saddr;
-    info.address_info.saddr = fdinfo->address_info.saddr;
+    info.address_info.sport = fdinfo->address_info.sport;
 
     output_ssl_chunk(ctx, &info, info.buffer_len, pid_tgid, flags);
 
