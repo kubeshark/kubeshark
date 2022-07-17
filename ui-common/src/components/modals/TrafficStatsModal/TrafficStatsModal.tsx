@@ -85,19 +85,19 @@ export const TrafficStatsModal: React.FC<TrafficStatsModalProps> = ({ isOpen, on
           <div className={styles.mainContainer}>
             <div className={styles.selectContainer}>
               <div>
-                <TimeRangePicker refreshStats={refreshStats} />
-              </div>
-              <div>
-                <span style={{ marginRight: 15 }}>Breakdown By</span>
+                <span className={styles.selectTitle}>Breakdown By</span>
                 <select className={styles.select} value={statsMode} onChange={(e) => setStatsMode(e.target.value)}>
                   {modes.map(mode => <option key={mode} value={mode}>{mode}</option>)}
                 </select>
               </div>
               <div>
-                <span style={{ marginRight: 15 }}>Protocol</span>
+                <span className={styles.selectTitle}>Protocol</span>
                 <select className={styles.select} value={selectedProtocol} onChange={(e) => setSelectedProtocol(e.target.value)}>
                   {protocols.map(protocol => <option key={protocol} value={protocol}>{protocol}</option>)}
                 </select>
+              </div>
+              <div>
+                <TimeRangePicker refreshStats={refreshStats} />
               </div>
             </div>
             <div>

@@ -76,7 +76,7 @@ export const TrafficPieChart: React.FC<TrafficPieChartProps> = ({ pieChartMode, 
     if (selectedProtocol === ALL_PROTOCOLS) {
       legend = data.map(protocol => <div style={{ marginBottom: 5, display: "flex" }}>
         <div style={{ height: 15, width: 30, background: protocol?.color }} />
-        <span style={{ marginLeft: 5 }}>
+        <span style={{ marginLeft: 5, fontFamily:" Source Sans Pro, Lucida Grande, Tahoma, sans-serif" }}>
           {protocol.name}
         </span>
       </div>)
@@ -84,7 +84,7 @@ export const TrafficPieChart: React.FC<TrafficPieChartProps> = ({ pieChartMode, 
       legend = data.find(protocol => protocol.name === selectedProtocol)?.methods.map((method) => <div
         style={{ marginBottom: 5, display: "flex" }}>
         <div style={{ height: 15, width: 30, background: method.color}} />
-        <span style={{ marginLeft: 5 }}>
+        <span style={{ marginLeft: 5, fontFamily:" Source Sans Pro, Lucida Grande, Tahoma, sans-serif" }}>
           {method.name}
         </span>
       </div>)
