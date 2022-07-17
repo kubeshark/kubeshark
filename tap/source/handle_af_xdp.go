@@ -89,7 +89,7 @@ func newAfXdpHandle(device string) (handle Handle, err error) {
 	}
 
 	var queueId int = 0
-	var protocol int64 = 0
+	const protocol uint8 = 4 // IPv4 - https://www.iana.org/assignments/protocol-numbers/protocol-numbers.xhtml
 
 	interfaces, err := net.Interfaces()
 	if err != nil {
@@ -109,13 +109,8 @@ func newAfXdpHandle(device string) (handle Handle, err error) {
 	}
 
 	var program *xdp.Program
-
 	// Create a new XDP eBPF program and attach it to our chosen network link.
-	if protocol == 0 {
-		program, err = xdp.NewProgram(queueId + 1)
-	} else {
-		program, err = ebpf.NewIPProtoProgram(uint32(protocol), nil)
-	}
+	program, err = ebpf.NewIPProtoProgram(protocol, nil)
 	if err != nil {
 		return
 	}
