@@ -39,8 +39,9 @@ func (h *pcapHandle) Stats() (packetsReceived uint, packetsDropped uint, err err
 	return
 }
 
-func (h *pcapHandle) Close() {
+func (h *pcapHandle) Close() (err error) {
 	h.capture.Close()
+	return
 }
 
 func newPcapHandle(filename string, device string, snaplen int, promisc bool, tstype string) (handle Handle, err error) {

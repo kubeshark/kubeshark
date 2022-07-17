@@ -16,7 +16,7 @@ func NewIPProtoProgram(protocol uint32, options *ebpf.CollectionOptions) (*xdp.P
 		return nil, err
 	}
 
-	if protocol >= 0 && protocol <= 255 {
+	if protocol <= 255 {
 		if err := spec.RewriteConstants(map[string]interface{}{"PROTO": uint8(protocol)}); err != nil {
 			return nil, err
 		}

@@ -68,8 +68,9 @@ func (h *afPacketHandle) Stats() (packetsReceived uint, packetsDropped uint, err
 	return
 }
 
-func (h *afPacketHandle) Close() {
+func (h *afPacketHandle) Close() (err error) {
 	h.capture.Close()
+	return
 }
 
 func newAfpacketHandle(device string, targetSizeMb int, snaplen int) (handle Handle, err error) {

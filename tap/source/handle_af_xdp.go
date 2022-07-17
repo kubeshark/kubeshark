@@ -5,14 +5,17 @@ import (
 	"net"
 
 	"github.com/asavie/xdp"
-	"github.com/cilium/ebpf/rlimit"
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/layers"
+	"github.com/up9inc/mizu/tap/tlstapper"
 	ebpf "github.com/up9inc/mizu/tap/xdp"
 )
 
 type afXdpHandle struct {
-	xsk *xdp.Socket
+	ifindex int
+	queueId int
+	program *xdp.Program
+	xsk     *xdp.Socket
 }
 
 func (h *afXdpHandle) NextPacket() (packet gopacket.Packet, err error) {
@@ -69,14 +72,23 @@ func (h *afXdpHandle) Stats() (packetsReceived uint, packetsDropped uint, err er
 	return
 }
 
-func (h *afXdpHandle) Close() {
-	// TODO: Implement?
+func (h *afXdpHandle) Close() (err error) {
+	h.program.Close()
+	err = h.program.Detach(h.ifindex)
+	if err != nil {
+		return
+	}
+	err = h.program.Unregister(h.queueId)
+	return
 }
 
 func newAfXdpHandle(device string) (handle Handle, err error) {
-	rlimit.RemoveMemlock()
+	err = tlstapper.SetupRLimit()
+	if err != nil {
+		return
+	}
 
-	var queueID int = 0
+	var queueId int = 0
 	var protocol int64 = 0
 
 	interfaces, err := net.Interfaces()
@@ -84,14 +96,14 @@ func newAfXdpHandle(device string) (handle Handle, err error) {
 		return
 	}
 
-	Ifindex := -1
+	ifindex := -1
 	for _, iface := range interfaces {
 		if iface.Name == device {
-			Ifindex = iface.Index
+			ifindex = iface.Index
 			break
 		}
 	}
-	if Ifindex == -1 {
+	if ifindex == -1 {
 		err = fmt.Errorf("Interface index is -1")
 		return
 	}
@@ -100,35 +112,35 @@ func newAfXdpHandle(device string) (handle Handle, err error) {
 
 	// Create a new XDP eBPF program and attach it to our chosen network link.
 	if protocol == 0 {
-		program, err = xdp.NewProgram(queueID + 1)
+		program, err = xdp.NewProgram(queueId + 1)
 	} else {
 		program, err = ebpf.NewIPProtoProgram(uint32(protocol), nil)
 	}
 	if err != nil {
 		return
 	}
-	defer program.Close()
-	if err = program.Attach(Ifindex); err != nil {
+	if err = program.Attach(ifindex); err != nil {
 		return
 	}
-	defer program.Detach(Ifindex)
 
 	// Create and initialize an XDP socket attached to our chosen network
 	// link.
 	var xsk *xdp.Socket
-	xsk, err = xdp.NewSocket(Ifindex, queueID, nil)
+	xsk, err = xdp.NewSocket(ifindex, queueId, nil)
 	if err != nil {
 		return
 	}
 
 	// Register our XDP socket file descriptor with the eBPF program so it can be redirected packets
-	if err = program.Register(queueID, xsk.FD()); err != nil {
+	if err = program.Register(queueId, xsk.FD()); err != nil {
 		return
 	}
-	defer program.Unregister(queueID)
 
 	handle = &afXdpHandle{
-		xsk: xsk,
+		ifindex: ifindex,
+		queueId: queueId,
+		program: program,
+		xsk:     xsk,
 	}
 	return
 }

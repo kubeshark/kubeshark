@@ -19,7 +19,7 @@ type Handle interface {
 	SetBPF(expr string) (err error)
 	LinkType() layers.LinkType
 	Stats() (packetsReceived uint, packetsDropped uint, err error)
-	Close()
+	Close() (err error)
 }
 
 type tcpPacketSource struct {

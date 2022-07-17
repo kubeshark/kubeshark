@@ -33,7 +33,7 @@ func (t *TlsTapper) Init(chunksBufferSize int, logBufferSize int, procfs string,
 	logger.Log.Infof("Initializing tls tapper (chunksSize: %d) (logSize: %d)", chunksBufferSize, logBufferSize)
 
 	var err error
-	err = setupRLimit()
+	err = SetupRLimit()
 	if err != nil {
 		return err
 	}
@@ -171,7 +171,7 @@ func (t *TlsTapper) Close() []error {
 	return returnValue
 }
 
-func setupRLimit() error {
+func SetupRLimit() error {
 	err := rlimit.RemoveMemlock()
 
 	if err != nil {
