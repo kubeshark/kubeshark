@@ -69,11 +69,11 @@ static __always_inline void tcp_kprobe(struct pt_regs *ctx, struct bpf_map_def *
 	if (should_forward_to_map) {
 		__u64 key = (__u64) pid << 32 | info_ptr->fd;
 
-    struct fd_info *fdinfo = bpf_map_lookup_elem(&file_descriptor_to_ipv4, &key);
+		struct fd_info *fdinfo = bpf_map_lookup_elem(&file_descriptor_to_ipv4, &key);
 		// Happens when the connection is not tls (there was no connect / accept)
-    if (fdinfo == NULL) {
-        return;
-    }
+		if (fdinfo == NULL) {
+				return;
+		}
 
 		fdinfo->address_info.mode = ADDRESS_INFO_MODE_PAIR;
 		fdinfo->address_info.daddr = daddr;
