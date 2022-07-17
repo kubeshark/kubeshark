@@ -5,38 +5,19 @@
 #include "include/pids.h"
 #include "include/common.h"
 
-static __always_inline void tcp_kprobe(struct pt_regs *ctx, struct bpf_map_def *map_fd1, struct bpf_map_def *map_fd2, _Bool is_send) {
+
+static __always_inline int get_address_pair_from_tcp_kprobe_context(struct pt_regs *ctx, __u64 id, struct address_info *address_info_ptr) {
 	long err;
-
-	__u64 id = bpf_get_current_pid_tgid();
-	__u32 pid = id >> 32;
-
-	if (!should_tap(id >> 32)) {
-		return;
-	}
-
-	_Bool should_forward_to_map = false;
-	struct ssl_info *info_ptr = bpf_map_lookup_elem(map_fd1, &id);
-	// Happens when the connection is not using openssl lib
-	if (info_ptr == NULL) {
-		info_ptr = bpf_map_lookup_elem(map_fd2, &id);
-		// Happens when the connection is not from a Go program
-		if (info_ptr == NULL) {
-			return;
-		}
-		should_forward_to_map = true;
-	}
-
 	struct sock *sk = (struct sock *) PT_REGS_PARM1(ctx);
 
 	short unsigned int family;
 	err = bpf_probe_read(&family, sizeof(family), (void *)&sk->__sk_common.skc_family);
 	if (err != 0) {
 		log_error(ctx, LOG_ERROR_READING_SOCKET_FAMILY, id, err, 0l);
-		return;
+		return -1;
 	}
 	if (family != AF_INET) {
-		return;
+		return -1;
 	}
 
 	// daddr, saddr and dport are in network byte order (big endian)
@@ -49,25 +30,61 @@ static __always_inline void tcp_kprobe(struct pt_regs *ctx, struct bpf_map_def *
 	err = bpf_probe_read(&saddr, sizeof(saddr), (void *)&sk->__sk_common.skc_rcv_saddr);
 	if (err != 0) {
 		log_error(ctx, LOG_ERROR_READING_SOCKET_SADDR, id, err, 0l);
-		return;
+		return -1;
 	}
 	err = bpf_probe_read(&daddr, sizeof(daddr), (void *)&sk->__sk_common.skc_daddr);
 	if (err != 0) {
 		log_error(ctx, LOG_ERROR_READING_SOCKET_DADDR, id, err, 0l);
-		return;
+		return -1;
 	}
 	err = bpf_probe_read(&dport, sizeof(dport), (void *)&sk->__sk_common.skc_dport);
 	if (err != 0) {
 		log_error(ctx, LOG_ERROR_READING_SOCKET_DPORT, id, err, 0l);
-		return;
+		return -1;
 	}
 	err = bpf_probe_read(&sport, sizeof(sport), (void *)&sk->__sk_common.skc_num);
 	if (err != 0) {
 		log_error(ctx, LOG_ERROR_READING_SOCKET_SPORT, id, err, 0l);
+		return -1;
+	}
+
+	address_info_ptr->mode = ADDRESS_INFO_MODE_PAIR;
+	address_info_ptr->daddr = daddr;
+	address_info_ptr->saddr = saddr;
+	address_info_ptr->dport = dport;
+	address_info_ptr->sport = bpf_htons(sport);
+
+	return 0;
+}
+
+static __always_inline void tcp_kprobe(struct pt_regs *ctx, struct bpf_map_def *map_fd_openssl, struct bpf_map_def *map_fd_go, _Bool is_send) {
+	long err;
+
+	__u64 id = bpf_get_current_pid_tgid();
+	__u32 pid = id >> 32;
+
+	if (!should_tap(id >> 32)) {
 		return;
 	}
 
-	if (should_forward_to_map) {
+	_Bool is_go_context = false;
+	struct ssl_info *info_ptr = bpf_map_lookup_elem(map_fd_openssl, &id);
+	// Happens when the connection is not using openssl lib
+	if (info_ptr == NULL) {
+		info_ptr = bpf_map_lookup_elem(map_fd_go, &id);
+		// Happens when the connection is not from a Go program
+		if (info_ptr == NULL) {
+			return;
+		}
+		is_go_context = true;
+	}
+
+	struct address_info address_info;
+	if (0 != get_address_pair_from_tcp_kprobe_context(ctx, id, &address_info)) {
+		return;
+	}
+
+	if (is_go_context) {
 		__u64 key = (__u64) pid << 32 | info_ptr->fd;
 
 		struct fd_info *fdinfo = bpf_map_lookup_elem(&file_descriptor_to_ipv4, &key);
@@ -76,17 +93,17 @@ static __always_inline void tcp_kprobe(struct pt_regs *ctx, struct bpf_map_def *
 				return;
 		}
 
-		fdinfo->address_info.mode = ADDRESS_INFO_MODE_PAIR;
-		fdinfo->address_info.daddr = daddr;
-		fdinfo->address_info.dport = dport;
-		fdinfo->address_info.saddr = saddr;
-		fdinfo->address_info.sport = bpf_htons(sport);
+		fdinfo->address_info.mode = address_info.mode;
+		fdinfo->address_info.daddr = address_info.daddr;
+		fdinfo->address_info.dport = address_info.dport;
+		fdinfo->address_info.saddr = address_info.saddr;
+		fdinfo->address_info.sport = address_info.sport;
 	} else {
-		info_ptr->address_info.mode = ADDRESS_INFO_MODE_PAIR;
-		info_ptr->address_info.daddr = daddr;
-		info_ptr->address_info.saddr = saddr;
-		info_ptr->address_info.dport = dport;
-		info_ptr->address_info.sport = bpf_htons(sport);
+		info_ptr->address_info.mode = address_info.mode;
+		info_ptr->address_info.daddr = address_info.daddr;
+		info_ptr->address_info.saddr = address_info.saddr;
+		info_ptr->address_info.dport = address_info.dport;
+		info_ptr->address_info.sport = address_info.sport;
 	}
 }
 
