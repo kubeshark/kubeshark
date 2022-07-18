@@ -17,16 +17,17 @@ import (
 )
 
 type afXdpHandle struct {
-	ifindexes     []int
-	queueId       int
-	program       *xdp.Program
-	xsks          []*xdp.Socket
-	ngInterfaces  []pcapgo.NgInterface
-	ngReader      *pcapgo.NgReader
-	ngWriter      *pcapgo.NgWriter
-	decoder       gopacket.Decoder
-	decodeOptions gopacket.DecodeOptions
-	pipeReader    *io.PipeReader
+	ifindexes       []int
+	queueId         int
+	program         *xdp.Program
+	xsks            []*xdp.Socket
+	ngInterfaces    []pcapgo.NgInterface
+	ngReader        *pcapgo.NgReader
+	ngWriter        *pcapgo.NgWriter
+	decoder         gopacket.Decoder
+	decodeOptions   gopacket.DecodeOptions
+	pipeReader      *io.PipeReader
+	packetsReceived uint
 }
 
 func (h *afXdpHandle) NextPacket() (packet gopacket.Packet, err error) {
@@ -43,6 +44,7 @@ func (h *afXdpHandle) NextPacket() (packet gopacket.Packet, err error) {
 	if err != nil {
 		return
 	}
+	h.packetsReceived++
 
 	packet = gopacket.NewPacket(data, h.decoder, h.decodeOptions)
 	m := packet.Metadata()
@@ -68,7 +70,7 @@ func (h *afXdpHandle) LinkType() layers.LinkType {
 }
 
 func (h *afXdpHandle) Stats() (packetsReceived uint, packetsDropped uint, err error) {
-	// TODO: Implement?
+	packetsReceived = h.packetsReceived
 	return
 }
 
@@ -163,7 +165,6 @@ func newAfXdpHandle(device string) (handle Handle, err error) {
 	}
 
 	var queueId int = 0
-	// TODO: Maybe protocol = 0 or 1?
 	const protocol uint8 = 4 // IPv4 - https://www.iana.org/assignments/protocol-numbers/protocol-numbers.xhtml
 
 	interfaces, err := net.Interfaces()
