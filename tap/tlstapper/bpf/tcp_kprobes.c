@@ -88,7 +88,7 @@ static __always_inline void tcp_kprobe(struct pt_regs *ctx, struct bpf_map_def *
 		__u64 key = (__u64) pid << 32 | info_ptr->fd;
 
 		struct fd_info *fdinfo = bpf_map_lookup_elem(&file_descriptor_to_ipv4, &key);
-		// Happens when the connection is not tls (there was no connect / accept)
+		// Happens when we don't catch the connect / accept (if the connection is created before tapping is started)
 		if (fdinfo == NULL) {
 				return;
 		}
