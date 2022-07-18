@@ -97,14 +97,15 @@ static __always_inline void tcp_kprobe(struct pt_regs *ctx, struct bpf_map_def *
 	}
 
 	struct ssl_info *info_ptr = bpf_map_lookup_elem(map_fd_openssl, &id);
+	__u32 *fd_ptr;
 	if (info_ptr == NULL) {
-		info_ptr = bpf_map_lookup_elem(map_fd_go, &id);
+		fd_ptr = bpf_map_lookup_elem(map_fd_go, &id);
 		// Connection is used by a Go program
-		if (info_ptr == NULL) {
+		if (fd_ptr == NULL) {
 			// Connection was not created by a Go program or by openssl lib
 			return;
 		}
-		tcp_kprobes_forward_go(ctx, id, info_ptr->fd, address_info);
+		tcp_kprobes_forward_go(ctx, id, *fd_ptr, address_info);
 	} else {
 		// Connection is used by openssl lib
 		tcp_kprobes_forward_openssl(info_ptr, address_info);

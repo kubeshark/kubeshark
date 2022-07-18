@@ -118,7 +118,7 @@ BPF_LRU_HASH(openssl_read_context, __u64, struct ssl_info);
 BPF_HASH(goid_offsets_map, __u32, struct goid_offsets);
 BPF_LRU_HASH(go_write_context, __u64, struct ssl_info);
 BPF_LRU_HASH(go_read_context, __u64, struct ssl_info);
-BPF_LRU_HASH(go_kernel_write_context, __u64, struct ssl_info);
-BPF_LRU_HASH(go_kernel_read_context, __u64, struct ssl_info);
+BPF_LRU_HASH(go_kernel_write_context, __u64, __u32);
+BPF_LRU_HASH(go_kernel_read_context, __u64, __u32);
 
 #endif /* __MAPS__ */
