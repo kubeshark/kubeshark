@@ -6,7 +6,7 @@
 #include "include/common.h"
 
 
-static __always_inline int get_address_pair_from_tcp_kprobe_context(struct pt_regs *ctx, __u64 id, struct address_info *address_info_ptr) {
+static __always_inline int tcp_kprobes_get_address_pair_from_ctx(struct pt_regs *ctx, __u64 id, struct address_info *address_info_ptr) {
 	long err;
 	struct sock *sk = (struct sock *) PT_REGS_PARM1(ctx);
 
@@ -80,7 +80,7 @@ static __always_inline void tcp_kprobe(struct pt_regs *ctx, struct bpf_map_def *
 	}
 
 	struct address_info address_info;
-	if (0 != get_address_pair_from_tcp_kprobe_context(ctx, id, &address_info)) {
+	if (0 != tcp_kprobes_get_address_pair_from_ctx(ctx, id, &address_info)) {
 		return;
 	}
 
