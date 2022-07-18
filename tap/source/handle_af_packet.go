@@ -23,6 +23,9 @@ func (h *afPacketHandle) NextPacket() (packet gopacket.Packet, err error) {
 	var data []byte
 	var ci gopacket.CaptureInfo
 	data, ci, err = h.source.ZeroCopyReadPacketData()
+	if err != nil {
+		return
+	}
 
 	packet = gopacket.NewPacket(data, h.decoder, h.decodeOptions)
 	m := packet.Metadata()
