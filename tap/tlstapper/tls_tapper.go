@@ -22,6 +22,7 @@ const GlobalTapPid = 0
 type TlsTapper struct {
 	bpfObjects      tlsTapperObjects
 	syscallHooks    syscallHooks
+	tcpKprobeHooks  tcpKprobeHooks
 	sslHooksStructs []sslHooks
 	goHooksStructs  []goHooks
 	poller          *tlsPoller
@@ -60,6 +61,11 @@ func (t *TlsTapper) Init(chunksBufferSize int, logBufferSize int, procfs string,
 
 	t.syscallHooks = syscallHooks{}
 	if err := t.syscallHooks.installSyscallHooks(&t.bpfObjects); err != nil {
+		return err
+	}
+
+	t.tcpKprobeHooks = tcpKprobeHooks{}
+	if err := t.tcpKprobeHooks.installTcpKprobeHooks(&t.bpfObjects); err != nil {
 		return err
 	}
 
@@ -151,6 +157,8 @@ func (t *TlsTapper) Close() []error {
 	}
 
 	returnValue = append(returnValue, t.syscallHooks.close()...)
+
+	returnValue = append(returnValue, t.tcpKprobeHooks.close()...)
 
 	for _, sslHooks := range t.sslHooksStructs {
 		returnValue = append(returnValue, sslHooks.close()...)
