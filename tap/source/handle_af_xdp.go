@@ -26,9 +26,17 @@ type afXdpHandle struct {
 	ngWriter      *pcapgo.NgWriter
 	decoder       gopacket.Decoder
 	decodeOptions gopacket.DecodeOptions
+	pipeReader    *io.PipeReader
 }
 
 func (h *afXdpHandle) NextPacket() (packet gopacket.Packet, err error) {
+	if h.ngReader == nil {
+		h.ngReader, err = pcapgo.NewNgReader(h.pipeReader, pcapgo.NgReaderOptions{})
+		if err != nil {
+			return
+		}
+	}
+
 	var data []byte
 	var ci gopacket.CaptureInfo
 	data, ci, err = h.ngReader.ZeroCopyReadPacketData()
@@ -130,15 +138,13 @@ func (h *afXdpHandle) pollSocket(xsk *xdp.Socket, ifindex int) {
 }
 
 func (h *afXdpHandle) initPcapPipe() (err error) {
-	pipeReader, pipeWriter := io.Pipe()
+	var pipeWriter *io.PipeWriter
+	h.pipeReader, pipeWriter = io.Pipe()
 
 	h.ngWriter, err = pcapgo.NewNgWriterInterface(pipeWriter, h.ngInterfaces[0], pcapgo.NgWriterOptions{})
 	if err != nil {
 		return
 	}
-
-	// FIXME: NewNgReader blocks? What?
-	h.ngReader, err = pcapgo.NewNgReader(pipeReader, pcapgo.NgReaderOptions{})
 
 	for _, ifc := range h.ngInterfaces[1:] {
 		_, err = h.ngWriter.AddInterface(ifc)
