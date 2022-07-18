@@ -18,6 +18,7 @@ static __always_inline int add_address_to_chunk(struct pt_regs *ctx, struct tls_
 
     struct fd_info *fdinfo = bpf_map_lookup_elem(&file_descriptor_to_ipv4, &key);
 
+    // Happens when we don't catch the connect / accept (if the connection is created before tapping is started)
     if (fdinfo == NULL) {
         return 0;
     }

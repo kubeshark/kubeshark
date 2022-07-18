@@ -287,8 +287,8 @@ static __always_inline void go_crypto_tls_ex_uprobe(struct pt_regs *ctx, struct 
 
     __u64 key = (__u64) pid << 32 | info_ptr->fd;
     struct fd_info *fdinfo = bpf_map_lookup_elem(&file_descriptor_to_ipv4, &key);
+    // Happens when we don't catch the connect / accept (if the connection is created before tapping is started)
     if (fdinfo == NULL) {
-				log_error(ctx, LOG_ERROR_GETTING_FD_MAPPING, key, err, 0l);
         return;
     }
 
