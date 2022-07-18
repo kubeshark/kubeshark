@@ -21,7 +21,7 @@ struct sys_enter_read_write_ctx {
 	__u64 count;
 };
 
-static __always_inline void sys_read_write_tracepoint(struct sys_enter_read_write_ctx *ctx, __u64 id, struct ssl_info *infoPtr, struct bpf_map_def *map_fd, __u64 origin_code) {
+static __always_inline void fd_tracepoints_handle_openssl(struct sys_enter_read_write_ctx *ctx, __u64 id, struct ssl_info *infoPtr, struct bpf_map_def *map_fd, __u64 origin_code) {
 	struct ssl_info info;
 	long err = bpf_probe_read(&info, sizeof(struct ssl_info), infoPtr);
 	
@@ -39,6 +39,16 @@ static __always_inline void sys_read_write_tracepoint(struct sys_enter_read_writ
 	}
 }
 
+static __always_inline void fd_tracepoints_handle_go(struct sys_enter_read_write_ctx *ctx, __u64 id, struct bpf_map_def *map_fd, __u64 origin_code) {
+	__u32 fd = ctx->fd;
+
+	long err = bpf_map_update_elem(map_fd, &id, &fd, BPF_ANY);
+	
+	if (err != 0) {
+		log_error(ctx, LOG_ERROR_PUTTING_FILE_DESCRIPTOR, id, err, origin_code);
+	}
+}
+
 SEC("tracepoint/syscalls/sys_enter_read")
 void sys_enter_read(struct sys_enter_read_write_ctx *ctx) {
 	__u64 id = bpf_get_current_pid_tgid();
@@ -50,11 +60,10 @@ void sys_enter_read(struct sys_enter_read_write_ctx *ctx) {
 	struct ssl_info *infoPtr = bpf_map_lookup_elem(&openssl_read_context, &id);
 	
 	if (infoPtr != NULL) {
-		sys_read_write_tracepoint(ctx, id, infoPtr, &openssl_read_context, ORIGIN_SYS_ENTER_READ_CODE);
+		fd_tracepoints_handle_openssl(ctx, id, infoPtr, &openssl_read_context, ORIGIN_SYS_ENTER_READ_CODE);
 	}
 
-	struct ssl_info info = new_ssl_info();
-	sys_read_write_tracepoint(ctx, id, &info, &go_kernel_read_context, ORIGIN_SYS_ENTER_READ_CODE);
+	fd_tracepoints_handle_go(ctx, id, &go_kernel_read_context, ORIGIN_SYS_ENTER_READ_CODE);
 }
 	
 SEC("tracepoint/syscalls/sys_enter_write")
@@ -68,9 +77,8 @@ void sys_enter_write(struct sys_enter_read_write_ctx *ctx) {
 	struct ssl_info *infoPtr = bpf_map_lookup_elem(&openssl_write_context, &id);
 	
 	if (infoPtr != NULL) {
-		sys_read_write_tracepoint(ctx, id, infoPtr, &openssl_write_context, ORIGIN_SYS_ENTER_WRITE_CODE);
+		fd_tracepoints_handle_openssl(ctx, id, infoPtr, &openssl_write_context, ORIGIN_SYS_ENTER_WRITE_CODE);
 	}
 
-	struct ssl_info info = new_ssl_info();
-	sys_read_write_tracepoint(ctx, id, &info, &go_kernel_write_context, ORIGIN_SYS_ENTER_WRITE_CODE);
+	fd_tracepoints_handle_go(ctx, id, &go_kernel_write_context, ORIGIN_SYS_ENTER_WRITE_CODE);
 }
