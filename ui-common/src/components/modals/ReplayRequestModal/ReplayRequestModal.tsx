@@ -1,25 +1,30 @@
-import { Accordion, AccordionDetails, AccordionSummary, Backdrop, Box, Button, Fade, Modal } from "@mui/material";
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import DownloadIcon from '@mui/icons-material/FileDownloadOutlined';
+import UploadIcon from '@mui/icons-material/UploadFile';
+import closeIcon from "assets/close.svg";
+import refreshImg from "assets/refresh.svg";
+import { Accordion, AccordionDetails, AccordionSummary, Backdrop, Box, Button, Fade, Modal } from "@mui/material";
 import React, { Fragment, useCallback, useEffect, useState } from "react";
-import { useCommonStyles } from "../../../helpers/commonStyle";
-import { Tabs } from "../../UI";
-import KeyValueTable from "../../UI/KeyValueTable/KeyValueTable";
-import CodeEditor from "../../UI/CodeEditor/CodeEditor";
-import { useRecoilValue, RecoilState, useRecoilState } from "recoil";
-import TrafficViewerApiAtom from "../../../recoil/TrafficViewerApi/atom";
-import TrafficViewerApi from "../../TrafficViewer/TrafficViewerApi";
 import { toast } from "react-toastify";
+import { RecoilState, useRecoilState, useRecoilValue } from "recoil";
+import { FileContent } from "use-file-picker/dist/interfaces";
 import { TOAST_CONTAINER_ID } from "../../../configs/Consts";
-import styles from './ReplayRequestModal.module.sass'
-import closeIcon from "assets/close.svg"
-import refreshImg from "assets/refresh.svg"
-import { formatRequestWithOutError } from "../../EntryDetailed/EntrySections/EntrySections";
-import entryDataAtom from "../../../recoil/entryData";
-import { AutoRepresentation, TabsEnum } from "../../EntryDetailed/EntryViewer/AutoRepresentation";
-import useDebounce from "../../../hooks/useDebounce"
-import replayRequestModalOpenAtom from "../../../recoil/replayRequestModalOpen";
+import { useCommonStyles } from "../../../helpers/commonStyle";
 import { Utils } from "../../../helpers/Utils";
+import useDebounce from "../../../hooks/useDebounce";
+import entryDataAtom from "../../../recoil/entryData";
+import replayRequestModalOpenAtom from "../../../recoil/replayRequestModalOpen";
+import TrafficViewerApiAtom from "../../../recoil/TrafficViewerApi/atom";
+import { formatRequestWithOutError } from "../../EntryDetailed/EntrySections/EntrySections";
+import { AutoRepresentation, TabsEnum } from "../../EntryDetailed/EntryViewer/AutoRepresentation";
+import TrafficViewerApi from "../../TrafficViewer/TrafficViewerApi";
+import { Tabs } from "../../UI";
+import CodeEditor from "../../UI/CodeEditor/CodeEditor";
+import FilePicker from '../../UI/FilePicker/FilePicker';
+import KeyValueTable, { convertArrToKeyValueObject, convertParamsToArr } from "../../UI/KeyValueTable/KeyValueTable";
 import { LoadingWrapper } from "../../UI/withLoading/withLoading";
+import { IReplayRequestData, KeyValuePair } from './interfaces';
+import styles from './ReplayRequestModal.module.sass';
 
 const modalStyle = {
     position: 'absolute',
@@ -37,11 +42,6 @@ const modalStyle = {
     paddingBottom: "15px"
 };
 
-interface ReplayRequestModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-}
-
 enum RequestTabs {
     Params = "params",
     Headers = "headers",
@@ -50,8 +50,6 @@ enum RequestTabs {
 
 const HTTP_METHODS = ["get", "post", "put", "head", "options", "delete"]
 const TABS = [{ tab: RequestTabs.Headers }, { tab: RequestTabs.Params }, { tab: RequestTabs.Body }];
-
-const convertParamsToArr = (paramsObj) => Object.entries(paramsObj).map(([key, value]) => { return { key, value } })
 
 const getQueryStringParams = (link: String) => {
 
@@ -69,43 +67,61 @@ const decodeQueryParam = (p) => {
     return decodeURIComponent(p.replace(/\+/g, ' '));
 }
 
+interface ReplayRequestModalProps {
+    isOpen: boolean;
+    onClose: () => void;
+}
+
 const ReplayRequestModal: React.FC<ReplayRequestModalProps> = ({ isOpen, onClose }) => {
     const entryData = useRecoilValue(entryDataAtom)
     const request = entryData.data.request
-    const [method, setMethod] = useState(request?.method?.toLowerCase() as string)
     const getHostUrl = useCallback(() => {
         return entryData.data.dst.name ? entryData.data?.dst?.name : entryData.data.dst.ip
     }, [entryData.data.dst.ip, entryData.data.dst.name])
-    const [hostPortInput, setHostPortInput] = useState(`${entryData.base.proto.name}://${getHostUrl()}:${entryData.data.dst.port}`)
+    const getHostPortVal = useCallback(() => {
+        return `${entryData.base.proto.name}://${getHostUrl()}:${entryData.data.dst.port}`
+    }, [entryData.base.proto.name, entryData.data.dst.port, getHostUrl])
+    const [hostPortInput, setHostPortInput] = useState(getHostPortVal())
     const [pathInput, setPathInput] = useState(request.path);
     const commonClasses = useCommonStyles();
     const [currentTab, setCurrentTab] = useState(TABS[0].tab);
     const [response, setResponse] = useState(null);
-    const [postData, setPostData] = useState(request?.postData?.text || JSON.stringify(request?.postData?.params));
-    const [params, setParams] = useState(convertParamsToArr(request?.queryString || {}))
-    const [headers, setHeaders] = useState(convertParamsToArr(request?.headers || {}))
     const trafficViewerApi = useRecoilValue(TrafficViewerApiAtom as RecoilState<TrafficViewerApi>)
     const [isLoading, setIsLoading] = useState(false)
     const [requestExpanded, setRequestExpanded] = useState(true)
     const [responseExpanded, setResponseExpanded] = useState(false)
 
+    const getInitialRequestData = useCallback((): IReplayRequestData => {
+        return {
+            method: request?.method?.toLowerCase() as string,
+            hostPort: `${entryData.base.proto.name}://${getHostUrl()}:${entryData.data.dst.port}`,
+            path: request.path,
+            postData: request.postData?.text || JSON.stringify(request.postData?.params),
+            headers: convertParamsToArr(request.headers || {}),
+            params: convertParamsToArr(request.queryString || {})
+        }
+    }, [entryData.base.proto.name, entryData.data.dst.port, getHostUrl, request.headers, request?.method, request.path, request.postData?.params, request.postData?.text, request.queryString])
+
+    const [requestDataModel, setRequestData] = useState<IReplayRequestData>(getInitialRequestData())
+
     const debouncedPath = useDebounce(pathInput, 500);
 
+    const addParamsToUrl = useCallback((url: string, params: KeyValuePair[]) => {
+        const urlParams = new URLSearchParams("");
+        params.forEach(param => urlParams.append(param.key, param.value as string))
+        return `${url}?${urlParams.toString()}`
+    }, [])
+
     const onParamsChange = useCallback((newParams) => {
-        setParams(newParams);
         let newUrl = `${debouncedPath ? debouncedPath.split('?')[0] : ""}`
-        newParams.forEach(({ key, value }, index) => {
-            newUrl += index > 0 ? '&' : '?'
-            newUrl += `${key}` + (value ? `=${value}` : "")
-        })
-
+        newUrl = addParamsToUrl(newUrl, newParams)
         setPathInput(newUrl)
-
-    }, [debouncedPath])
+    }, [addParamsToUrl, debouncedPath])
 
     useEffect(() => {
-        const newParams = getQueryStringParams(debouncedPath);
-        setParams(convertParamsToArr(newParams))
+        const params = convertParamsToArr(getQueryStringParams(debouncedPath));
+        setRequestData({ ...requestDataModel, params })
+        // eslint-disable-next-line react-hooks/exhaustive-deps
     }, [debouncedPath])
 
     const onModalClose = () => {
@@ -114,33 +130,28 @@ const ReplayRequestModal: React.FC<ReplayRequestModalProps> = ({ isOpen, onClose
         onClose()
     }
 
-    const resetModel = useCallback(() => {
-        setMethod(request?.method?.toLowerCase() as string)
-        setHostPortInput(`${entryData.base.proto.name}://${getHostUrl()}:${entryData.data.dst.port}`)
-        setPathInput(request.path);
+    const resetModal = useCallback((requestDataModel: IReplayRequestData, hostPortInputVal, pathVal) => {
+        setRequestData(requestDataModel)
+        setHostPortInput(hostPortInputVal)
+        setPathInput(addParamsToUrl(pathVal, requestDataModel.params));
         setResponse(null);
-        setPostData(request?.postData?.text || JSON.stringify(request?.postData?.params));
-        setParams(convertParamsToArr(request?.queryString || {}))
-        setHeaders(convertParamsToArr(request?.headers || {}))
-        setRequestExpanded(true)
-    }, [entryData.base.proto.name, entryData.data.dst.port, getHostUrl, request?.headers, request?.method, request.path, request?.postData?.params, request?.postData?.text, request?.queryString])
+        setRequestExpanded(true);
+    }, [addParamsToUrl])
 
     const onRefreshRequest = useCallback((event) => {
-        event.stopPropagation()
-        resetModel()
-    }, [resetModel])
+        event.stopPropagation();
+        const hostPortInputVal = getHostPortVal();
+        resetModal(getInitialRequestData(), hostPortInputVal, request.path);
+    }, [getHostPortVal, getInitialRequestData, request.path, resetModal])
 
 
     const sendRequest = useCallback(async () => {
         setResponse(null)
-        const headersData = headers.reduce((prev, corrent) => {
-            prev[corrent.key] = corrent.value
-            return prev
-        }, {})
-        const buildUrl = `${hostPortInput}${pathInput}`
-        const requestData = { url: buildUrl, headers: headersData, data: postData, method }
+        const headersData = convertArrToKeyValueObject(requestDataModel.headers)
+
         try {
             setIsLoading(true)
+            const requestData = { url: `${hostPortInput}${pathInput}`, headers: headersData, data: requestDataModel.postData, method: requestDataModel.method }
             const response = await trafficViewerApi.replayRequest(requestData)
             setResponse(response?.data?.representation)
             if (response.errorMessage) {
@@ -150,7 +161,6 @@ const ReplayRequestModal: React.FC<ReplayRequestModalProps> = ({ isOpen, onClose
                 setRequestExpanded(false)
                 setResponseExpanded(true)
             }
-
         } catch (error) {
             setRequestExpanded(true)
             toast.error("Error occurred while fetching response", { containerId: TOAST_CONTAINER_ID });
@@ -159,27 +169,37 @@ const ReplayRequestModal: React.FC<ReplayRequestModalProps> = ({ isOpen, onClose
         finally {
             setIsLoading(false)
         }
+    }, [hostPortInput, pathInput, requestDataModel.headers, requestDataModel.method, requestDataModel.postData, trafficViewerApi])
 
-    }, [headers, hostPortInput, method, pathInput, postData, trafficViewerApi])
+    const onDownloadRequest = useCallback((e) => {
+        e.stopPropagation()
+        const date = Utils.getNow()
+        Utils.exportToJson(requestDataModel, `${getHostUrl()} - ${date}`)
+    }, [getHostUrl, requestDataModel])
+
+    const onLoadingComplete = useCallback((fileContent: FileContent) => {
+        const requestData = JSON.parse(fileContent.content) as IReplayRequestData
+        resetModal(requestData, requestData.hostPort, requestData.path)
+    }, [resetModal])
 
     let innerComponent
     switch (currentTab) {
         case RequestTabs.Params:
-            innerComponent = <div className={styles.keyValueContainer}><KeyValueTable data={params} onDataChange={onParamsChange} key={"params"} valuePlaceholder="New Param Value" keyPlaceholder="New param Key" /></div>
+            innerComponent = <div className={styles.keyValueContainer}><KeyValueTable data={requestDataModel.params} onDataChange={onParamsChange} key={"params"} valuePlaceholder="New Param Value" keyPlaceholder="New param Key" /></div>
             break;
         case RequestTabs.Headers:
             innerComponent = <Fragment>
-                <div className={styles.keyValueContainer}><KeyValueTable data={headers} onDataChange={(heaedrs) => setHeaders(heaedrs)} key={"Header"} valuePlaceholder="New Headers Value" keyPlaceholder="New Headers Key" />
+                <div className={styles.keyValueContainer}><KeyValueTable data={requestDataModel.headers} onDataChange={(headers) => setRequestData({ ...requestDataModel, headers: headers })} key={"Header"} valuePlaceholder="New Headers Value" keyPlaceholder="New Headers Key" />
                 </div>
-                <span className={styles.note}><b>* </b> X-Mizu Header added to reuqests</span>
+                <span className={styles.note}><b>* </b> X-Mizu Header added to requests</span>
             </Fragment>
             break;
         case RequestTabs.Body:
-            const formatedCode = formatRequestWithOutError(postData || "", request?.postData?.mimeType)
+            const formattedCode = formatRequestWithOutError(requestDataModel.postData || "", request?.postData?.mimeType)
             innerComponent = <div className={styles.codeEditor}>
                 <CodeEditor language={request?.postData?.mimeType.split("/")[1]}
-                    code={Utils.isJson(formatedCode) ? JSON.stringify(JSON.parse(formatedCode || "{}"), null, 2) : formatedCode}
-                    onChange={setPostData} />
+                    code={Utils.isJson(formattedCode) ? JSON.stringify(JSON.parse(formattedCode || "{}"), null, 2) : formattedCode}
+                    onChange={(postData) => setRequestData({ ...requestDataModel, postData })} />
             </div>
             break;
         default:
@@ -204,17 +224,43 @@ const ReplayRequestModal: React.FC<ReplayRequestModalProps> = ({ isOpen, onClose
                     <div className={styles.headerContainer}>
                         <div className={styles.headerSection}>
                             <span className={styles.title}>Replay Request</span>
+                            <Button style={{ marginLeft: "2%", textTransform: 'unset' }}
+                                startIcon={<img src={refreshImg} className="custom" alt="Refresh Request"></img>}
+                                size="medium"
+                                variant="contained"
+                                className={commonClasses.outlinedButton + " " + commonClasses.imagedButton}
+                                onClick={onRefreshRequest}
+                            >
+                                Refresh
+                            </Button>
+                            <Button style={{ marginLeft: "2%", textTransform: 'unset' }}
+                                startIcon={<DownloadIcon className={`custom ${styles.icon}`} />}
+                                size="medium"
+                                variant="contained"
+                                className={commonClasses.outlinedButton + " " + commonClasses.imagedButton}
+                                onClick={onDownloadRequest}
+                            >
+                                Download
+                            </Button>
+                            <FilePicker onLoadingComplete={onLoadingComplete}
+                                elem={<Button style={{ marginLeft: "2%", textTransform: 'unset' }}
+                                    startIcon={<UploadIcon className={`custom ${styles.icon}`} />}
+                                    size="medium"
+                                    variant="contained"
+                                    className={commonClasses.outlinedButton + " " + commonClasses.imagedButton}>
+                                    Upload
+                                </Button>}
+                            />
                         </div>
                     </div>
                     <div className={styles.modalContainer}>
                         <Accordion TransitionProps={{ unmountOnExit: true }} expanded={requestExpanded} onChange={() => setRequestExpanded(!requestExpanded)}>
                             <AccordionSummary expandIcon={<ExpandMoreIcon />} aria-controls="response-content">
                                 <span className={styles.sectionHeader}>REQUEST</span>
-                                <img src={refreshImg} style={{ marginLeft: "10px" }} title="Refresh Reuqest" alt="Refresh Reuqest" onClick={onRefreshRequest} />
                             </AccordionSummary>
                             <AccordionDetails>
                                 <div className={styles.path}>
-                                    <select className={styles.select} value={method} onChange={(e) => setMethod(e.target.value)}>
+                                    <select className={styles.select} value={requestDataModel.method} onChange={(e) => setRequestData({ ...requestDataModel, method: e.target.value })}>
                                         {HTTP_METHODS.map(method => <option value={method} key={method}>{method}</option>)}
                                     </select>
                                     <input placeholder="Host:Port" value={hostPortInput} onChange={(event) => setHostPortInput(event.target.value)} className={`${commonClasses.textField} ${styles.hostPort}`} />
@@ -246,7 +292,7 @@ const ReplayRequestModal: React.FC<ReplayRequestModalProps> = ({ isOpen, onClose
                     </div>
                 </Box>
             </Fade>
-        </Modal>
+        </Modal >
     );
 }
 

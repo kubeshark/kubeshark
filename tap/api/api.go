@@ -4,6 +4,7 @@ import (
 	"bufio"
 	"fmt"
 	"net"
+	"strings"
 	"sync"
 	"time"
 
@@ -23,6 +24,15 @@ type ProtocolSummary struct {
 
 func (protocol *ProtocolSummary) ToString() string {
 	return fmt.Sprintf("%s?%s?%s", protocol.Name, protocol.Version, protocol.Abbreviation)
+}
+
+func GetProtocolSummary(inputString string) *ProtocolSummary {
+	splitted := strings.SplitN(inputString, "?", 3)
+	return &ProtocolSummary{
+		Name:         splitted[0],
+		Version:      splitted[1],
+		Abbreviation: splitted[2],
+	}
 }
 
 type Protocol struct {

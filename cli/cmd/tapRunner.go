@@ -151,17 +151,18 @@ func printTappedPodsPreview(ctx context.Context, kubernetesProvider *kubernetes.
 	}
 }
 
-func startTapperSyncer(ctx context.Context, cancel context.CancelFunc, provider *kubernetes.Provider, targetNamespaces []string, mizuApiFilteringOptions api.TrafficFilteringOptions, startTime time.Time) error {
+func startTapperSyncer(ctx context.Context, cancel context.CancelFunc, provider *kubernetes.Provider, targetNamespaces []string, startTime time.Time) error {
 	tapperSyncer, err := kubernetes.CreateAndStartMizuTapperSyncer(ctx, provider, kubernetes.TapperSyncerConfig{
-		TargetNamespaces:         targetNamespaces,
-		PodFilterRegex:           *config.Config.Tap.PodRegex(),
-		MizuResourcesNamespace:   config.Config.MizuResourcesNamespace,
-		AgentImage:               config.Config.AgentImage,
-		TapperResources:          config.Config.Tap.TapperResources,
-		ImagePullPolicy:          config.Config.ImagePullPolicy(),
-		LogLevel:                 config.Config.LogLevel(),
-		IgnoredUserAgents:        config.Config.Tap.IgnoredUserAgents,
-		MizuApiFilteringOptions:  mizuApiFilteringOptions,
+		TargetNamespaces:       targetNamespaces,
+		PodFilterRegex:         *config.Config.Tap.PodRegex(),
+		MizuResourcesNamespace: config.Config.MizuResourcesNamespace,
+		AgentImage:             config.Config.AgentImage,
+		TapperResources:        config.Config.Tap.TapperResources,
+		ImagePullPolicy:        config.Config.ImagePullPolicy(),
+		LogLevel:               config.Config.LogLevel(),
+		MizuApiFilteringOptions: api.TrafficFilteringOptions{
+			IgnoredUserAgents: config.Config.Tap.IgnoredUserAgents,
+		},
 		MizuServiceAccountExists: state.mizuServiceAccountExists,
 		ServiceMesh:              config.Config.Tap.ServiceMesh,
 		Tls:                      config.Config.Tap.Tls,
@@ -227,27 +228,6 @@ func getErrorDisplayTextForK8sTapManagerError(err kubernetes.K8sTapManagerError)
 	default:
 		return fmt.Sprintf("Unknown error occured in k8s tap manager: %v", err.OriginalError)
 	}
-}
-
-func getMizuApiFilteringOptions() (*api.TrafficFilteringOptions, error) {
-	var compiledRegexSlice []*api.SerializableRegexp
-
-	if config.Config.Tap.PlainTextFilterRegexes != nil && len(config.Config.Tap.PlainTextFilterRegexes) > 0 {
-		compiledRegexSlice = make([]*api.SerializableRegexp, 0)
-		for _, regexStr := range config.Config.Tap.PlainTextFilterRegexes {
-			compiledRegex, err := api.CompileRegexToSerializableRegexp(regexStr)
-			if err != nil {
-				return nil, err
-			}
-			compiledRegexSlice = append(compiledRegexSlice, compiledRegex)
-		}
-	}
-
-	return &api.TrafficFilteringOptions{
-		PlainTextMaskingRegexes: compiledRegexSlice,
-		IgnoredUserAgents:       config.Config.Tap.IgnoredUserAgents,
-		EnableRedaction:        config.Config.Tap.EnableRedaction,
-	}, nil
 }
 
 func watchApiServerPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc) {
@@ -367,8 +347,7 @@ func watchApiServerEvents(ctx context.Context, kubernetesProvider *kubernetes.Pr
 func postApiServerStarted(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc) {
 	startProxyReportErrorIfAny(kubernetesProvider, ctx, cancel, config.Config.Tap.GuiPort)
 
-	options, _ := getMizuApiFilteringOptions()
-	if err := startTapperSyncer(ctx, cancel, kubernetesProvider, state.targetNamespaces, *options, state.startTime); err != nil {
+	if err := startTapperSyncer(ctx, cancel, kubernetesProvider, state.targetNamespaces, state.startTime); err != nil {
 		logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error starting mizu tapper syncer: %v", errormessage.FormatError(err)))
 		cancel()
 	}

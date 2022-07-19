@@ -2,10 +2,8 @@ package acceptanceTests
 
 import (
 	"archive/zip"
-	"bytes"
 	"fmt"
 	"io/ioutil"
-	"net/http"
 	"os/exec"
 	"path"
 	"strings"
@@ -343,7 +341,7 @@ func TestTapRedact(t *testing.T) {
 
 	tapNamespace := GetDefaultTapNamespace()
 	tapCmdArgs = append(tapCmdArgs, tapNamespace...)
-	tapCmdArgs = append(tapCmdArgs, "--redact")
+	tapCmdArgs = append(tapCmdArgs, "--redact", "--set", "tap.redact-patterns.request-headers=User-Header", "--set", "tap.redact-patterns.request-body=User")
 
 	tapCmd := exec.Command(cliPath, tapCmdArgs...)
 	t.Logf("running command: %v", tapCmd.String())
@@ -427,60 +425,6 @@ func TestTapNoRedact(t *testing.T) {
 	}
 
 	RunCypressTests(t, "npx cypress run --spec  \"cypress/e2e/tests/NoRedact.js\"")
-}
-
-func TestTapRegexMasking(t *testing.T) {
-	if testing.Short() {
-		t.Skip("ignored acceptance test")
-	}
-
-	cliPath, cliPathErr := GetCliPath()
-	if cliPathErr != nil {
-		t.Errorf("failed to get cli path, err: %v", cliPathErr)
-		return
-	}
-
-	tapCmdArgs := GetDefaultTapCommandArgs()
-
-	tapNamespace := GetDefaultTapNamespace()
-	tapCmdArgs = append(tapCmdArgs, tapNamespace...)
-
-	tapCmdArgs = append(tapCmdArgs, "--redact")
-
-	tapCmdArgs = append(tapCmdArgs, "-r", "Mizu")
-
-	tapCmd := exec.Command(cliPath, tapCmdArgs...)
-	t.Logf("running command: %v", tapCmd.String())
-
-	t.Cleanup(func() {
-		if err := CleanupCommand(tapCmd); err != nil {
-			t.Logf("failed to cleanup tap command, err: %v", err)
-		}
-	})
-
-	if err := tapCmd.Start(); err != nil {
-		t.Errorf("failed to start tap command, err: %v", err)
-		return
-	}
-
-	apiServerUrl := GetApiServerUrl(DefaultApiServerPort)
-
-	if err := WaitTapPodsReady(apiServerUrl); err != nil {
-		t.Errorf("failed to start tap pods on time, err: %v", err)
-		return
-	}
-
-	proxyUrl := GetProxyUrl(DefaultNamespaceName, DefaultServiceName)
-	for i := 0; i < DefaultEntriesCount; i++ {
-		response, requestErr := http.Post(fmt.Sprintf("%v/post", proxyUrl), "text/plain", bytes.NewBufferString("Mizu"))
-		if _, requestErr = ExecuteHttpRequest(response, requestErr); requestErr != nil {
-			t.Errorf("failed to send proxy request, err: %v", requestErr)
-			return
-		}
-	}
-
-	RunCypressTests(t, "npx cypress run --spec \"cypress/e2e/tests/RegexMasking.js\"")
-
 }
 
 func TestTapIgnoredUserAgents(t *testing.T) {
