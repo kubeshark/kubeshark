@@ -38,7 +38,7 @@ func (e *BasenineEntriesProvider) GetEntries(entriesRequest *models.EntriesReque
 			return nil, nil, err
 		}
 
-		protocol, ok := app.ProtocolsMap[entry.ProtocolId]
+		protocol, ok := app.ProtocolsMap[entry.Protocol.ToString()]
 		if !ok {
 			return nil, nil, fmt.Errorf("protocol not found, protocol: %v", protocol)
 		}
@@ -77,7 +77,7 @@ func (e *BasenineEntriesProvider) GetEntry(singleEntryRequest *models.SingleEntr
 		return nil, errors.New(string(bytes))
 	}
 
-	protocol, ok := app.ProtocolsMap[entry.ProtocolId]
+	protocol, ok := app.ProtocolsMap[entry.Protocol.ToString()]
 	if !ok {
 		return nil, fmt.Errorf("protocol not found, protocol: %v", protocol)
 	}

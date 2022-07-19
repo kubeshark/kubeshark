@@ -31,7 +31,6 @@ type ConfigStruct struct {
 	AgentImage             string                      `yaml:"agent-image,omitempty" readonly:""`
 	ImagePullPolicyStr     string                      `yaml:"image-pull-policy" default:"Always"`
 	MizuResourcesNamespace string                      `yaml:"mizu-resources-namespace" default:"mizu"`
-	Telemetry              bool                        `yaml:"telemetry" default:"true"`
 	DumpLogs               bool                        `yaml:"dump-logs" default:"false"`
 	KubeConfigPathStr      string                      `yaml:"kube-config-path"`
 	KubeContext            string                      `yaml:"kube-context"`

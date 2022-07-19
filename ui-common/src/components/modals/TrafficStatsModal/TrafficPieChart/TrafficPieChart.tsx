@@ -1,7 +1,8 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { Cell, Legend, Pie, PieChart, Tooltip } from "recharts";
 import { Utils } from "../../../../helpers/Utils";
-import { ALL_PROTOCOLS, StatsMode as PieChartMode } from "../TrafficStatsModal"
+import { ALL_PROTOCOLS ,StatsMode as PieChartMode } from "../consts"
+import styles from "./TrafficPieChart.module.sass";
 
 const RADIAN = Math.PI / 180;
 const renderCustomizedLabel = ({
@@ -41,7 +42,7 @@ interface TrafficPieChartProps {
 export const TrafficPieChart: React.FC<TrafficPieChartProps> = ({ pieChartMode, data, selectedProtocol }) => {
 
   const [protocolsStats, setProtocolsStats] = useState([]);
-  const [commandStats, setCommandStats] = useState(null);
+  const [methodsStats, setMethodsStats] = useState(null);
 
   useEffect(() => {
     if (!data) return;
@@ -57,16 +58,17 @@ export const TrafficPieChart: React.FC<TrafficPieChartProps> = ({ pieChartMode, 
 
   useEffect(() => {
     if (selectedProtocol === ALL_PROTOCOLS) {
-      setCommandStats(null);
+      setMethodsStats(null);
       return;
     }
-    const commandsPieData = data.find(protocol => protocol.name === selectedProtocol)?.methods.map(command => {
+    const methodsPieData = data.find(protocol => protocol.name === selectedProtocol)?.methods.map(method => {
       return {
-        name: command.name,
-        value: command[PieChartMode[pieChartMode]]
+        name: method.name,
+        value: method[PieChartMode[pieChartMode]],
+        color: method.color
       }
     })
-    setCommandStats(commandsPieData);
+    setMethodsStats(methodsPieData);
   }, [selectedProtocol, pieChartMode, data])
 
   const pieLegend = useMemo(() => {
@@ -75,15 +77,15 @@ export const TrafficPieChart: React.FC<TrafficPieChartProps> = ({ pieChartMode, 
     if (selectedProtocol === ALL_PROTOCOLS) {
       legend = data.map(protocol => <div style={{ marginBottom: 5, display: "flex" }}>
         <div style={{ height: 15, width: 30, background: protocol?.color }} />
-        <span style={{ marginLeft: 5 }}>
+        <span className={styles.entryName}>
           {protocol.name}
         </span>
       </div>)
     } else {
       legend = data.find(protocol => protocol.name === selectedProtocol)?.methods.map((method) => <div
         style={{ marginBottom: 5, display: "flex" }}>
-        <div style={{ height: 15, width: 30, background: Utils.stringToColor(method.name)}} />
-        <span style={{ marginLeft: 5 }}>
+        <div style={{ height: 15, width: 30, background: method.color}} />
+        <span className={styles.entryName}>
           {method.name}
         </span>
       </div>)
@@ -96,7 +98,7 @@ export const TrafficPieChart: React.FC<TrafficPieChartProps> = ({ pieChartMode, 
       {protocolsStats?.length > 0 && <div style={{ width: "100%", display: "flex", justifyContent: "center" }}>
         <PieChart width={300} height={300}>
           <Pie
-            data={commandStats || protocolsStats}
+            data={methodsStats || protocolsStats}
             dataKey="value"
             cx={150}
             cy={125}
@@ -104,8 +106,8 @@ export const TrafficPieChart: React.FC<TrafficPieChartProps> = ({ pieChartMode, 
             label={renderCustomizedLabel}
             outerRadius={125}
             fill="#8884d8">
-            {(commandStats || protocolsStats).map((entry, index) => (
-              <Cell key={`cell-${index}`} fill={entry.color || Utils.stringToColor(entry.name)} />)
+            {(methodsStats || protocolsStats).map((entry, index) => (
+              <Cell key={`cell-${index}`} fill={entry.color} />)
             )}
           </Pie>
           <Legend wrapperStyle={{ position: "absolute", width: "auto", height: "auto", right: -150, top: 0 }} content={pieLegend} />

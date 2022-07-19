@@ -1,4 +1,12 @@
+import Moment from 'moment';
+
 const IP_ADDRESS_REGEX = /([0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3}.[0-9]{1,3})(:([0-9]{1,5}))?/
+
+type JSONValue =
+  | string
+  | number
+  | boolean
+  | Object
 
 
 export class Utils {
@@ -37,7 +45,21 @@ export class Utils {
     return hoursAndMinutes;
   }
 
-  static creatUniqueObjArrayByProp = (objArray, prop) => {
+  static formatDate = (date) => {
+    let d = new Date(date),
+        month = '' + (d.getMonth() + 1),
+        day = '' + d.getDate(),
+        year = d.getFullYear();
+    const hoursAndMinutes = Utils.getHoursAndMinutes(date);
+    if (month.length < 2) 
+        month = '0' + month;
+    if (day.length < 2) 
+        day = '0' + day;
+    const newDate = [year, month, day].join('-');
+    return [hoursAndMinutes, newDate].join(' ');
+}
+
+  static createUniqueObjArrayByProp = (objArray, prop) => {
     const map = new Map(objArray.map((item) => [item[prop], item])).values()
     return Array.from(map);
   }
@@ -51,17 +73,24 @@ export class Utils {
     return true;
   }
 
-  static stringToColor = (str) => {
-    let colors = ["#e51c23", "#e91e63", "#9c27b0", "#673ab7", "#3f51b5", "#5677fc", "#03a9f4", "#00bcd4", "#009688", "#259b24", "#8bc34a", "#afb42b", "#ff9800", "#ff5722", "#795548", "#607d8b"]
-
-    let hash = 0;
-    if (str.length === 0) return hash;
-    for (let i = 0; i < str.length; i++) {
-      hash = str.charCodeAt(i) + ((hash << 5) - hash);
-      hash = hash & hash;
-    }
-    hash = ((hash % colors.length) + colors.length) % colors.length;
-    return colors[hash];
+  static downloadFile = (data: string, filename: string, fileType: string) => {
+    const blob = new Blob([data], { type: fileType })
+    const a = document.createElement('a');
+    a.href = window.URL.createObjectURL(blob);
+    a.download = filename;
+    a.click();
+    a.remove();
   }
 
+  static exportToJson = (data: JSONValue, name) => {
+    Utils.downloadFile(JSON.stringify(data), `${name}.json`, 'text/json')
+  }
+
+  static getTimeFormatted = (time: Moment.MomentInput) => {
+    return Moment(time).utc().format('MM/DD/YYYY, h:mm:ss.SSS A')
+  }
+
+  static getNow = (format: string = 'MM/DD/YYYY, HH:mm:ss.SSS') => {
+    return Moment().format(format)
+  }
 }

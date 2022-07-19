@@ -8,6 +8,8 @@ import (
 type syscallHooks struct {
 	sysEnterRead    link.Link
 	sysEnterWrite   link.Link
+	sysExitRead     link.Link
+	sysExitWrite    link.Link
 	sysEnterAccept4 link.Link
 	sysExitAccept4  link.Link
 	sysEnterConnect link.Link
@@ -17,37 +19,49 @@ type syscallHooks struct {
 func (s *syscallHooks) installSyscallHooks(bpfObjects *tlsTapperObjects) error {
 	var err error
 
-	s.sysEnterRead, err = link.Tracepoint("syscalls", "sys_enter_read", bpfObjects.SysEnterRead)
+	s.sysEnterRead, err = link.Tracepoint("syscalls", "sys_enter_read", bpfObjects.SysEnterRead, nil)
 
 	if err != nil {
 		return errors.Wrap(err, 0)
 	}
 
-	s.sysEnterWrite, err = link.Tracepoint("syscalls", "sys_enter_write", bpfObjects.SysEnterWrite)
+	s.sysEnterWrite, err = link.Tracepoint("syscalls", "sys_enter_write", bpfObjects.SysEnterWrite, nil)
 
 	if err != nil {
 		return errors.Wrap(err, 0)
 	}
 
-	s.sysEnterAccept4, err = link.Tracepoint("syscalls", "sys_enter_accept4", bpfObjects.SysEnterAccept4)
+	s.sysExitRead, err = link.Tracepoint("syscalls", "sys_exit_read", bpfObjects.SysExitRead, nil)
 
 	if err != nil {
 		return errors.Wrap(err, 0)
 	}
 
-	s.sysExitAccept4, err = link.Tracepoint("syscalls", "sys_exit_accept4", bpfObjects.SysExitAccept4)
+	s.sysExitWrite, err = link.Tracepoint("syscalls", "sys_exit_write", bpfObjects.SysExitWrite, nil)
 
 	if err != nil {
 		return errors.Wrap(err, 0)
 	}
 
-	s.sysEnterConnect, err = link.Tracepoint("syscalls", "sys_enter_connect", bpfObjects.SysEnterConnect)
+	s.sysEnterAccept4, err = link.Tracepoint("syscalls", "sys_enter_accept4", bpfObjects.SysEnterAccept4, nil)
 
 	if err != nil {
 		return errors.Wrap(err, 0)
 	}
 
-	s.sysExitConnect, err = link.Tracepoint("syscalls", "sys_exit_connect", bpfObjects.SysExitConnect)
+	s.sysExitAccept4, err = link.Tracepoint("syscalls", "sys_exit_accept4", bpfObjects.SysExitAccept4, nil)
+
+	if err != nil {
+		return errors.Wrap(err, 0)
+	}
+
+	s.sysEnterConnect, err = link.Tracepoint("syscalls", "sys_enter_connect", bpfObjects.SysEnterConnect, nil)
+
+	if err != nil {
+		return errors.Wrap(err, 0)
+	}
+
+	s.sysExitConnect, err = link.Tracepoint("syscalls", "sys_exit_connect", bpfObjects.SysExitConnect, nil)
 
 	if err != nil {
 		return errors.Wrap(err, 0)
@@ -64,6 +78,14 @@ func (s *syscallHooks) close() []error {
 	}
 
 	if err := s.sysEnterWrite.Close(); err != nil {
+		returnValue = append(returnValue, err)
+	}
+
+	if err := s.sysExitRead.Close(); err != nil {
+		returnValue = append(returnValue, err)
+	}
+
+	if err := s.sysExitWrite.Close(); err != nil {
 		returnValue = append(returnValue, err)
 	}
 

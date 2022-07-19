@@ -12,23 +12,20 @@ Copyright (C) UP9 Inc.
 #include "include/common.h"
 
 
-static __always_inline int add_address_to_chunk(struct pt_regs *ctx, struct tls_chunk* chunk, __u64 id, __u32 fd) {
+static __always_inline int add_address_to_chunk(struct pt_regs *ctx, struct tls_chunk* chunk, __u64 id, __u32 fd, struct ssl_info* info) {
     __u32 pid = id >> 32;
     __u64 key = (__u64) pid << 32 | fd;
 
-    struct fd_info *fdinfo = bpf_map_lookup_elem(&file_descriptor_to_ipv4, &key);
+    conn_flags *flags = bpf_map_lookup_elem(&connection_context, &key);
 
-    if (fdinfo == NULL) {
+    // Happens when we don't catch the connect / accept (if the connection is created before tapping is started)
+    if (flags == NULL) {
         return 0;
     }
 
-    int err = bpf_probe_read(chunk->address, sizeof(chunk->address), fdinfo->ipv4_addr);
-    chunk->flags |= (fdinfo->flags & FLAGS_IS_CLIENT_BIT);
+    chunk->flags |= (*flags & FLAGS_IS_CLIENT_BIT);
 
-    if (err != 0) {
-        log_error(ctx, LOG_ERROR_READING_FD_ADDRESS, id, err, 0l);
-        return 0;
-    }
+    bpf_probe_read(&chunk->address_info, sizeof(chunk->address_info), &info->address_info);
 
     return 1;
 }
@@ -104,7 +101,7 @@ static __always_inline void output_ssl_chunk(struct pt_regs *ctx, struct ssl_inf
     chunk->len = count_bytes;
     chunk->fd = info->fd;
 
-    if (!add_address_to_chunk(ctx, chunk, id, chunk->fd)) {
+    if (!add_address_to_chunk(ctx, chunk, id, chunk->fd, info)) {
         // Without an address, we drop the chunk because there is not much to do with it in Go
         //
         return;

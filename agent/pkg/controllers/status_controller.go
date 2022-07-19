@@ -1,7 +1,10 @@
 package controllers
 
 import (
+	"fmt"
 	"net/http"
+	"strconv"
+	"time"
 
 	core "k8s.io/api/core/v1"
 
@@ -80,7 +83,24 @@ func GetGeneralStats(c *gin.Context) {
 }
 
 func GetTrafficStats(c *gin.Context) {
-	c.JSON(http.StatusOK, providers.GetTrafficStats())
+	startTime, endTime, err := getStartEndTime(c)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, providers.GetTrafficStats(startTime, endTime))
+}
+
+func getStartEndTime(c *gin.Context) (time.Time, time.Time, error) {
+	startTimeValue, err := strconv.Atoi(c.Query("startTimeMs"))
+	if err != nil {
+		return time.UnixMilli(0), time.UnixMilli(0), fmt.Errorf("invalid start time: %v", err)
+	}
+	endTimeValue, err := strconv.Atoi(c.Query("endTimeMs"))
+	if err != nil {
+		return time.UnixMilli(0), time.UnixMilli(0), fmt.Errorf("invalid end time: %v", err)
+	}
+	return time.UnixMilli(int64(startTimeValue)), time.UnixMilli(int64(endTimeValue)), nil
 }
 
 func GetCurrentResolvingInformation(c *gin.Context) {

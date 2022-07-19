@@ -81,10 +81,10 @@ func (msg *ConnectionStart) read(r io.Reader) (err error) {
 }
 
 type ConnectionStartOk struct {
-	ClientProperties Table
-	Mechanism        string
-	Response         string
-	Locale           string
+	ClientProperties Table  `json:"clientProperties"`
+	Mechanism        string `json:"mechanism"`
+	Response         string `json:"response"`
+	Locale           string `json:"locale"`
 }
 
 func (msg *ConnectionStartOk) read(r io.Reader) (err error) {
@@ -135,9 +135,9 @@ func (msg *connectionSecureOk) read(r io.Reader) (err error) {
 }
 
 type connectionTune struct {
-	ChannelMax uint16
-	FrameMax   uint32
-	Heartbeat  uint16
+	ChannelMax uint16 `json:"channelMax"`
+	FrameMax   uint32 `json:"frameMax"`
+	Heartbeat  uint16 `json:"heartbeat"`
 }
 
 func (msg *connectionTune) read(r io.Reader) (err error) {
@@ -181,7 +181,7 @@ func (msg *connectionTuneOk) read(r io.Reader) (err error) {
 }
 
 type connectionOpen struct {
-	VirtualHost string
+	VirtualHost string `json:"virtualHost"`
 	reserved1   string
 	reserved2   bool
 }
@@ -580,9 +580,9 @@ func (msg *QueueDeclare) read(r io.Reader) (err error) {
 }
 
 type QueueDeclareOk struct {
-	Queue         string
-	MessageCount  uint32
-	ConsumerCount uint32
+	Queue         string `json:"queue"`
+	MessageCount  uint32 `json:"messageCount"`
+	ConsumerCount uint32 `json:"consumerCount"`
 }
 
 func (msg *QueueDeclareOk) read(r io.Reader) (err error) {
@@ -840,7 +840,7 @@ func (msg *BasicConsume) read(r io.Reader) (err error) {
 }
 
 type BasicConsumeOk struct {
-	ConsumerTag string
+	ConsumerTag string `json:"consumerTag"`
 }
 
 func (msg *BasicConsumeOk) read(r io.Reader) (err error) {
@@ -853,8 +853,8 @@ func (msg *BasicConsumeOk) read(r io.Reader) (err error) {
 }
 
 type basicCancel struct {
-	ConsumerTag string
-	NoWait      bool
+	ConsumerTag string `json:"consumerTag"`
+	NoWait      bool   `json:"noWait"`
 }
 
 func (msg *basicCancel) read(r io.Reader) (err error) {
@@ -873,7 +873,7 @@ func (msg *basicCancel) read(r io.Reader) (err error) {
 }
 
 type basicCancelOk struct {
-	ConsumerTag string
+	ConsumerTag string `json:"consumerTag"`
 }
 
 func (msg *basicCancelOk) read(r io.Reader) (err error) {

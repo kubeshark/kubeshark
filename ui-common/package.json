@@ -26,14 +26,15 @@
     "@craco/craco": "^6.4.3",
     "@types/jest": "^26.0.24",
     "@types/node": "^12.20.54",
-    "sass": "^1.52.3",
     "react": "^17.0.2",
     "react-copy-to-clipboard": "^5.1.0",
     "react-dom": "^17.0.2",
-    "recoil": "^0.7.2"
+    "recoil": "^0.7.2",
+    "sass": "^1.52.3"
   },
   "dependencies": {
     "@craco/craco": "^6.4.3",
+    "@elastic/eui": "^60.2.0",
     "@emotion/react": "^11.9.0",
     "@emotion/styled": "^11.8.1",
     "@mui/icons-material": "^5.8.2",
@@ -65,12 +66,14 @@
     "recharts": "^2.1.10",
     "redoc": "^2.0.0-rc.71",
     "styled-components": "^5.3.5",
+    "use-file-picker": "^1.4.2",
     "web-vitals": "^2.1.4",
     "xml-formatter": "^2.6.1"
   },
   "devDependencies": {
     "@rollup/plugin-node-resolve": "^13.3.0",
     "@svgr/rollup": "^6.2.1",
+    "@types/ace": "^0.0.48",
     "cross-env": "^7.0.3",
     "env-cmd": "^10.1.0",
     "gh-pages": "^4.0.0",
@@ -83,7 +86,7 @@
     "rollup-plugin-postcss": "^4.0.2",
     "rollup-plugin-sass": "^1.2.12",
     "rollup-plugin-scss": "^3.0.0",
-    "typescript": "^4.7.2"
+    "typescript": "^4.5.3"
   },
   "eslintConfig": {
     "extends": [
@@ -92,6 +95,7 @@
     ]
   },
   "files": [
+    "src/*.scss",
     "dist"
   ]
 }

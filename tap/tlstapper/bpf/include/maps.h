@@ -24,6 +24,14 @@ Copyright (C) UP9 Inc.
 //  
 //  Be careful when editing, alignment and padding should be exactly the same in go/c.
 //
+
+struct address_info {
+    __be32 saddr;
+    __be32 daddr;
+    __be16 sport;
+    __be16 dport;
+};
+
 struct tls_chunk {
     __u32 pid;
     __u32 tgid;
@@ -32,7 +40,7 @@ struct tls_chunk {
     __u32 recorded;
     __u32 fd;
     __u32 flags;
-    __u8 address[16];
+    struct address_info address_info;
     __u8 data[CHUNK_SIZE]; // Must be N^2
 };
 
@@ -41,6 +49,7 @@ struct ssl_info {
     __u32 buffer_len;
     __u32 fd;
     __u64 created_at_nano;
+    struct address_info address_info;
     
     // for ssl_write and ssl_read must be zero
     // for ssl_write_ex and ssl_read_ex save the *written/*readbytes pointer. 
@@ -48,10 +57,14 @@ struct ssl_info {
     size_t *count_ptr;
 };
 
-struct fd_info {
-    __u8 ipv4_addr[16]; // struct sockaddr (linux-src/include/linux/socket.h)
-    __u8 flags;
+typedef __u8 conn_flags;
+
+struct goid_offsets {
+    __u64 g_addr_offset;
+    __u64 goid_offset;
 };
+
+const struct goid_offsets *unused __attribute__((unused));
 
 // Heap-like area for eBPF programs - stack size limited to 512 bytes, we must use maps for bigger (chunk) objects.
 //
@@ -82,7 +95,7 @@ struct {
 
 // Generic
 BPF_HASH(pids_map, __u32, __u32);
-BPF_LRU_HASH(file_descriptor_to_ipv4, __u64, struct fd_info);
+BPF_LRU_HASH(connection_context, __u64, conn_flags);
 BPF_PERF_OUTPUT(chunks_buffer);
 BPF_PERF_OUTPUT(log_buffer);
 
@@ -91,7 +104,12 @@ BPF_LRU_HASH(openssl_write_context, __u64, struct ssl_info);
 BPF_LRU_HASH(openssl_read_context, __u64, struct ssl_info);
 
 // Go specific
+BPF_HASH(goid_offsets_map, __u32, struct goid_offsets);
 BPF_LRU_HASH(go_write_context, __u64, struct ssl_info);
 BPF_LRU_HASH(go_read_context, __u64, struct ssl_info);
+BPF_LRU_HASH(go_kernel_write_context, __u64, __u32);
+BPF_LRU_HASH(go_kernel_read_context, __u64, __u32);
+BPF_LRU_HASH(go_user_kernel_write_context, __u64, struct address_info);
+BPF_LRU_HASH(go_user_kernel_read_context, __u64, struct address_info);
 
 #endif /* __MAPS__ */

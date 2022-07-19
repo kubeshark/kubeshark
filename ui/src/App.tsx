@@ -8,7 +8,7 @@ import oasModalOpenAtom from './recoil/oasModalOpen/atom';
 import trafficStatsModalOpenAtom from "./recoil/trafficStatsModalOpen";
 import { OasModal } from '@up9/mizu-common';
 import Api from './helpers/api';
-import {ThemeProvider, StyledEngineProvider, createTheme} from '@mui/material';
+import { ThemeProvider, StyledEngineProvider, createTheme } from '@mui/material';
 import { TrafficStatsModal } from '@up9/mizu-common';
 
 const api = Api.getInstance()
@@ -36,7 +36,7 @@ const App = () => {
                         openModal={oasModalOpen}
                         handleCloseModal={() => setOasModalOpen(false)}
                     />}
-                    <TrafficStatsModal isOpen={trafficStatsModalOpen} onClose={() => setTrafficStatsModalOpen(false)} getTrafficStatsDataApi={api.getTrafficStats}/>
+                    <TrafficStatsModal isOpen={trafficStatsModalOpen} onClose={() => setTrafficStatsModalOpen(false)} getTrafficStatsDataApi={api.getTrafficStats} />
                 </div>
             </ThemeProvider>
         </StyledEngineProvider>

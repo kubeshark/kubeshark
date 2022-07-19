@@ -134,15 +134,7 @@ func (p *tlsPoller) pollChunksPerfBuffer(chunks chan<- *tlsTapperTlsChunk) {
 
 func (p *tlsPoller) handleTlsChunk(chunk *tlsTapperTlsChunk, extension *api.Extension, emitter api.Emitter,
 	options *api.TrafficFilteringOptions, streamsMap api.TcpStreamMap) error {
-	address, err := p.getSockfdAddressPair(chunk)
-
-	if err != nil {
-		address, err = chunk.getAddressPair()
-
-		if err != nil {
-			return err
-		}
-	}
+	address := chunk.getAddressPair()
 
 	key := buildTlsKey(address)
 	reader, exists := p.readers[key]
@@ -214,41 +206,6 @@ func dissect(extension *api.Extension, reader api.TcpReader, options *api.Traffi
 func (p *tlsPoller) closeReader(key string, r *tlsReader) {
 	close(r.chunks)
 	p.closedReaders <- key
-}
-
-func (p *tlsPoller) getSockfdAddressPair(chunk *tlsTapperTlsChunk) (addressPair, error) {
-	address, err := getAddressBySockfd(p.procfs, chunk.Pid, chunk.Fd)
-	fdCacheKey := fmt.Sprintf("%d:%d", chunk.Pid, chunk.Fd)
-
-	if err == nil {
-		if !chunk.isRequest() {
-			switchedAddress := addressPair{
-				srcIp:   address.dstIp,
-				srcPort: address.dstPort,
-				dstIp:   address.srcIp,
-				dstPort: address.srcPort,
-			}
-			p.fdCache.Add(fdCacheKey, switchedAddress)
-			return switchedAddress, nil
-		} else {
-			p.fdCache.Add(fdCacheKey, address)
-			return address, nil
-		}
-	}
-
-	fromCacheIfc, ok := p.fdCache.Get(fdCacheKey)
-
-	if !ok {
-		return addressPair{}, err
-	}
-
-	fromCache, ok := fromCacheIfc.(addressPair)
-
-	if !ok {
-		return address, errors.Errorf("Unable to cast %T to addressPair", fromCacheIfc)
-	}
-
-	return fromCache, nil
 }
 
 func buildTlsKey(address addressPair) string {

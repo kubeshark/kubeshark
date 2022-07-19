@@ -6,17 +6,23 @@ import (
 
 	"github.com/cilium/ebpf/rlimit"
 	"github.com/go-errors/errors"
+	"github.com/moby/moby/pkg/parsers/kernel"
 	"github.com/up9inc/mizu/logger"
 	"github.com/up9inc/mizu/tap/api"
 )
 
 const GlobalTapPid = 0
 
-//go:generate go run github.com/cilium/ebpf/cmd/bpf2go@0d0727ef53e2f53b1731c73f4c61e0f58693083a -target $BPF_TARGET -cflags $BPF_CFLAGS -type tls_chunk tlsTapper bpf/tls_tapper.c
+// TODO: cilium/ebpf does not support .kconfig Therefore; for now, we build object files per kernel version.
+
+//go:generate go run github.com/cilium/ebpf/cmd/bpf2go@v0.9.0 -target $BPF_TARGET -cflags $BPF_CFLAGS -type tls_chunk -type goid_offsets tlsTapper bpf/tls_tapper.c
+
+//go:generate go run github.com/cilium/ebpf/cmd/bpf2go@v0.9.0 -target $BPF_TARGET -cflags "${BPF_CFLAGS} -DKERNEL_BEFORE_4_6" -type tls_chunk -type goid_offsets tlsTapper46 bpf/tls_tapper.c
 
 type TlsTapper struct {
 	bpfObjects      tlsTapperObjects
 	syscallHooks    syscallHooks
+	tcpKprobeHooks  tcpKprobeHooks
 	sslHooksStructs []sslHooks
 	goHooksStructs  []goHooks
 	poller          *tlsPoller
@@ -27,17 +33,39 @@ type TlsTapper struct {
 func (t *TlsTapper) Init(chunksBufferSize int, logBufferSize int, procfs string, extension *api.Extension) error {
 	logger.Log.Infof("Initializing tls tapper (chunksSize: %d) (logSize: %d)", chunksBufferSize, logBufferSize)
 
-	if err := setupRLimit(); err != nil {
+	var err error
+	err = setupRLimit()
+	if err != nil {
 		return err
 	}
 
+	var kernelVersion *kernel.VersionInfo
+	kernelVersion, err = kernel.GetKernelVersion()
+	if err != nil {
+		return err
+	}
+
+	logger.Log.Infof("Detected Linux kernel version: %s", kernelVersion)
+
 	t.bpfObjects = tlsTapperObjects{}
-	if err := loadTlsTapperObjects(&t.bpfObjects, nil); err != nil {
-		return errors.Wrap(err, 0)
+	// TODO: cilium/ebpf does not support .kconfig Therefore; for now, we load object files according to kernel version.
+	if kernel.CompareKernelVersion(*kernelVersion, kernel.VersionInfo{Kernel: 4, Major: 6, Minor: 0}) < 1 {
+		if err := loadTlsTapper46Objects(&t.bpfObjects, nil); err != nil {
+			return errors.Wrap(err, 0)
+		}
+	} else {
+		if err := loadTlsTapperObjects(&t.bpfObjects, nil); err != nil {
+			return errors.Wrap(err, 0)
+		}
 	}
 
 	t.syscallHooks = syscallHooks{}
 	if err := t.syscallHooks.installSyscallHooks(&t.bpfObjects); err != nil {
+		return err
+	}
+
+	t.tcpKprobeHooks = tcpKprobeHooks{}
+	if err := t.tcpKprobeHooks.installTcpKprobeHooks(&t.bpfObjects); err != nil {
 		return err
 	}
 
@@ -48,7 +76,6 @@ func (t *TlsTapper) Init(chunksBufferSize int, logBufferSize int, procfs string,
 		return err
 	}
 
-	var err error
 	t.poller, err = newTlsPoller(t, extension, procfs)
 
 	if err != nil {
@@ -130,6 +157,8 @@ func (t *TlsTapper) Close() []error {
 	}
 
 	returnValue = append(returnValue, t.syscallHooks.close()...)
+
+	returnValue = append(returnValue, t.tcpKprobeHooks.close()...)
 
 	for _, sslHooks := range t.sslHooksStructs {
 		returnValue = append(returnValue, sslHooks.close()...)

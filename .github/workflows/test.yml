@@ -40,6 +40,10 @@ jobs:
         run: |
           ./devops/install-capstone.sh
 
+      - name: Generate eBPF object files and go bindings
+        id: generate_ebpf
+        run: make bpf
+
       - name: Check CLI modified files
         id: cli_modified_files
         run: devops/check_modified_files.sh cli/

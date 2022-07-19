@@ -2,7 +2,9 @@ package api
 
 import (
 	"bufio"
+	"fmt"
 	"net"
+	"strings"
 	"sync"
 	"time"
 
@@ -14,12 +16,29 @@ const UnknownNamespace = ""
 var UnknownIp = net.IP{0, 0, 0, 0}
 var UnknownPort uint16 = 0
 
+type ProtocolSummary struct {
+	Name         string `json:"name"`
+	Version      string `json:"version"`
+	Abbreviation string `json:"abbr"`
+}
+
+func (protocol *ProtocolSummary) ToString() string {
+	return fmt.Sprintf("%s?%s?%s", protocol.Name, protocol.Version, protocol.Abbreviation)
+}
+
+func GetProtocolSummary(inputString string) *ProtocolSummary {
+	splitted := strings.SplitN(inputString, "?", 3)
+	return &ProtocolSummary{
+		Name:         splitted[0],
+		Version:      splitted[1],
+		Abbreviation: splitted[2],
+	}
+}
+
 type Protocol struct {
-	Name            string   `json:"name"`
+	ProtocolSummary
 	LongName        string   `json:"longName"`
-	Abbreviation    string   `json:"abbr"`
 	Macro           string   `json:"macro"`
-	Version         string   `json:"version"`
 	BackgroundColor string   `json:"backgroundColor"`
 	ForegroundColor string   `json:"foregroundColor"`
 	FontSize        int8     `json:"fontSize"`
@@ -151,7 +170,7 @@ func (e *Emitting) Emit(item *OutputChannelItem) {
 
 type Entry struct {
 	Id           string                 `json:"id"`
-	ProtocolId   string                 `json:"protocol"`
+	Protocol     ProtocolSummary        `json:"protocol"`
 	Capture      Capture                `json:"capture"`
 	Source       *TCP                   `json:"src"`
 	Destination  *TCP                   `json:"dst"`

@@ -44,7 +44,7 @@ func TestRegister(t *testing.T) {
 
 func TestMacros(t *testing.T) {
 	expectedMacros := map[string]string{
-		"amqp": `protocol == "amqp/0-9-1/AMQP"`,
+		"amqp": `protocol.name == "amqp"`,
 	}
 	dissector := NewDissector()
 	macros := dissector.Macros()

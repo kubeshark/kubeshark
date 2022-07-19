@@ -44,10 +44,10 @@ func TestRegister(t *testing.T) {
 
 func TestMacros(t *testing.T) {
 	expectedMacros := map[string]string{
-		"http":  `protocol == "http/1.0/HTTP" or protocol == "http/1.1/HTTP"`,
-		"http2": `protocol == "http/2.0/HTTP/2"`,
-		"grpc":  `protocol == "http/2.0/gRPC"`,
-		"gql":   `protocol == "http/1.1/GQL" or protocol == "http/2.0/GQL"`,
+		"http":  `protocol.abbr == "HTTP"`,
+		"http2": `protocol.abbr == "HTTP/2"`,
+		"grpc":  `protocol.abbr == "gRPC"`,
+		"gql":   `protocol.abbr == "GQL"`,
 	}
 	dissector := NewDissector()
 	macros := dissector.Macros()
