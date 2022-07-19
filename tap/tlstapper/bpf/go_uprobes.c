@@ -220,7 +220,7 @@ static __always_inline void go_crypto_tls_uprobe(struct pt_regs *ctx, struct bpf
     return;
 }
 
-static __always_inline void go_crypto_tls_ex_uprobe(struct pt_regs *ctx, struct bpf_map_def* go_context, __u32 flags, enum ABI abi) {
+static __always_inline void go_crypto_tls_ex_uprobe(struct pt_regs *ctx, struct bpf_map_def* go_context, struct bpf_map_def* go_user_kernel_context, __u32 flags, enum ABI abi) {
     __u64 pid_tgid = bpf_get_current_pid_tgid();
     __u64 pid = pid_tgid >> 32;
     if (!should_tap(pid)) {
@@ -285,6 +285,21 @@ static __always_inline void go_crypto_tls_ex_uprobe(struct pt_regs *ctx, struct 
         }
     }
 
+    __u64 key = (__u64) pid << 32 | info_ptr->fd;
+    struct address_info *address_info = bpf_map_lookup_elem(go_user_kernel_context, &key);
+    // Ideally we would delete the entry from the map after reading it,
+    // but sometimes the uprobe is called twice in a row without the tcp kprobes in between to fill in
+    // the entry again. Keeping it in the map and rely on LRU logic.
+    if (address_info == NULL) {
+        log_error(ctx, LOG_ERROR_GETTING_GO_USER_KERNEL_CONTEXT, pid_tgid, info_ptr->fd, err);
+        return;
+    }
+
+    info.address_info.daddr = address_info->daddr;
+    info.address_info.dport = address_info->dport;
+    info.address_info.saddr = address_info->saddr;
+    info.address_info.sport = address_info->sport;
+
     output_ssl_chunk(ctx, &info, info.buffer_len, pid_tgid, flags);
 
     return;
@@ -298,7 +313,7 @@ int BPF_KPROBE(go_crypto_tls_abi0_write) {
 
 SEC("uprobe/go_crypto_tls_abi0_write_ex")
 int BPF_KPROBE(go_crypto_tls_abi0_write_ex) {
-    go_crypto_tls_ex_uprobe(ctx, &go_write_context, 0, ABI0);
+    go_crypto_tls_ex_uprobe(ctx, &go_write_context, &go_user_kernel_write_context, 0, ABI0);
     return 1;
 }
 
@@ -310,7 +325,7 @@ int BPF_KPROBE(go_crypto_tls_abi0_read) {
 
 SEC("uprobe/go_crypto_tls_abi0_read_ex")
 int BPF_KPROBE(go_crypto_tls_abi0_read_ex) {
-    go_crypto_tls_ex_uprobe(ctx, &go_read_context, FLAGS_IS_READ_BIT, ABI0);
+    go_crypto_tls_ex_uprobe(ctx, &go_read_context, &go_user_kernel_read_context, FLAGS_IS_READ_BIT, ABI0);
     return 1;
 }
 
@@ -322,7 +337,7 @@ int BPF_KPROBE(go_crypto_tls_abi_internal_write) {
 
 SEC("uprobe/go_crypto_tls_abi_internal_write_ex")
 int BPF_KPROBE(go_crypto_tls_abi_internal_write_ex) {
-    go_crypto_tls_ex_uprobe(ctx, &go_write_context, 0, ABIInternal);
+    go_crypto_tls_ex_uprobe(ctx, &go_write_context, &go_user_kernel_write_context, 0, ABIInternal);
     return 1;
 }
 
@@ -334,6 +349,6 @@ int BPF_KPROBE(go_crypto_tls_abi_internal_read) {
 
 SEC("uprobe/go_crypto_tls_abi_internal_read_ex")
 int BPF_KPROBE(go_crypto_tls_abi_internal_read_ex) {
-    go_crypto_tls_ex_uprobe(ctx, &go_read_context, FLAGS_IS_READ_BIT, ABIInternal);
+    go_crypto_tls_ex_uprobe(ctx, &go_read_context, &go_user_kernel_read_context, FLAGS_IS_READ_BIT, ABIInternal);
     return 1;
 }

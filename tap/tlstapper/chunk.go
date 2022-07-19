@@ -4,17 +4,17 @@ import (
 	"encoding/binary"
 	"net"
 	"unsafe"
-
-	"github.com/up9inc/mizu/tap/api"
 )
 
 const FlagsIsClientBit uint32 = 1 << 0
 const FlagsIsReadBit uint32 = 1 << 1
-const (
-	addressInfoModeUndefined = iota
-	addressInfoModeSingle
-	addressInfoModePair
-)
+
+type addressPair struct {
+	srcIp   net.IP
+	srcPort uint16
+	dstIp   net.IP
+	dstPort uint16
+}
 
 func (c *tlsTapperTlsChunk) getSrcAddress() (net.IP, uint16) {
 	ip := intToIP(c.AddressInfo.Saddr)
@@ -54,36 +54,18 @@ func (c *tlsTapperTlsChunk) isRequest() bool {
 	return (c.isClient() && c.isWrite()) || (c.isServer() && c.isRead())
 }
 
-func (c *tlsTapperTlsChunk) getAddressPair() (addressPair, bool) {
+func (c *tlsTapperTlsChunk) getAddressPair() addressPair {
 	var (
 		srcIp, dstIp     net.IP
 		srcPort, dstPort uint16
-		full             bool
 	)
 
-	switch c.AddressInfo.Mode {
-	case addressInfoModeSingle:
-		if c.isRequest() {
-			srcIp, srcPort = api.UnknownIp, api.UnknownPort
-			dstIp, dstPort = c.getSrcAddress()
-		} else {
-			srcIp, srcPort = c.getSrcAddress()
-			dstIp, dstPort = api.UnknownIp, api.UnknownPort
-		}
-		full = false
-	case addressInfoModePair:
-		if c.isRequest() {
-			srcIp, srcPort = c.getSrcAddress()
-			dstIp, dstPort = c.getDstAddress()
-		} else {
-			srcIp, srcPort = c.getDstAddress()
-			dstIp, dstPort = c.getSrcAddress()
-		}
-		full = true
-	case addressInfoModeUndefined:
-		srcIp, srcPort = api.UnknownIp, api.UnknownPort
-		dstIp, dstPort = api.UnknownIp, api.UnknownPort
-		full = false
+	if c.isRequest() {
+		srcIp, srcPort = c.getSrcAddress()
+		dstIp, dstPort = c.getDstAddress()
+	} else {
+		srcIp, srcPort = c.getDstAddress()
+		dstIp, dstPort = c.getSrcAddress()
 	}
 
 	return addressPair{
@@ -91,7 +73,7 @@ func (c *tlsTapperTlsChunk) getAddressPair() (addressPair, bool) {
 		srcPort: srcPort,
 		dstIp:   dstIp,
 		dstPort: dstPort,
-	}, full
+	}
 }
 
 // intToIP converts IPv4 number to net.IP

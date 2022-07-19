@@ -27,7 +27,6 @@ type tlsTapper46TlsChunk struct {
 	Fd          uint32
 	Flags       uint32
 	AddressInfo struct {
-		Mode  int32
 		Saddr uint32
 		Daddr uint32
 		Sport uint16
@@ -99,6 +98,8 @@ type tlsTapper46ProgramSpecs struct {
 	SysEnterWrite                 *ebpf.ProgramSpec `ebpf:"sys_enter_write"`
 	SysExitAccept4                *ebpf.ProgramSpec `ebpf:"sys_exit_accept4"`
 	SysExitConnect                *ebpf.ProgramSpec `ebpf:"sys_exit_connect"`
+	SysExitRead                   *ebpf.ProgramSpec `ebpf:"sys_exit_read"`
+	SysExitWrite                  *ebpf.ProgramSpec `ebpf:"sys_exit_write"`
 	TcpRecvmsg                    *ebpf.ProgramSpec `ebpf:"tcp_recvmsg"`
 	TcpSendmsg                    *ebpf.ProgramSpec `ebpf:"tcp_sendmsg"`
 }
@@ -107,18 +108,22 @@ type tlsTapper46ProgramSpecs struct {
 //
 // It can be passed ebpf.CollectionSpec.Assign.
 type tlsTapper46MapSpecs struct {
-	AcceptSyscallContext *ebpf.MapSpec `ebpf:"accept_syscall_context"`
-	ChunksBuffer         *ebpf.MapSpec `ebpf:"chunks_buffer"`
-	ConnectSyscallInfo   *ebpf.MapSpec `ebpf:"connect_syscall_info"`
-	FileDescriptorToIpv4 *ebpf.MapSpec `ebpf:"file_descriptor_to_ipv4"`
-	GoReadContext        *ebpf.MapSpec `ebpf:"go_read_context"`
-	GoWriteContext       *ebpf.MapSpec `ebpf:"go_write_context"`
-	GoidOffsetsMap       *ebpf.MapSpec `ebpf:"goid_offsets_map"`
-	Heap                 *ebpf.MapSpec `ebpf:"heap"`
-	LogBuffer            *ebpf.MapSpec `ebpf:"log_buffer"`
-	OpensslReadContext   *ebpf.MapSpec `ebpf:"openssl_read_context"`
-	OpensslWriteContext  *ebpf.MapSpec `ebpf:"openssl_write_context"`
-	PidsMap              *ebpf.MapSpec `ebpf:"pids_map"`
+	AcceptSyscallContext     *ebpf.MapSpec `ebpf:"accept_syscall_context"`
+	ChunksBuffer             *ebpf.MapSpec `ebpf:"chunks_buffer"`
+	ConnectSyscallInfo       *ebpf.MapSpec `ebpf:"connect_syscall_info"`
+	ConnectionContext        *ebpf.MapSpec `ebpf:"connection_context"`
+	GoKernelReadContext      *ebpf.MapSpec `ebpf:"go_kernel_read_context"`
+	GoKernelWriteContext     *ebpf.MapSpec `ebpf:"go_kernel_write_context"`
+	GoReadContext            *ebpf.MapSpec `ebpf:"go_read_context"`
+	GoUserKernelReadContext  *ebpf.MapSpec `ebpf:"go_user_kernel_read_context"`
+	GoUserKernelWriteContext *ebpf.MapSpec `ebpf:"go_user_kernel_write_context"`
+	GoWriteContext           *ebpf.MapSpec `ebpf:"go_write_context"`
+	GoidOffsetsMap           *ebpf.MapSpec `ebpf:"goid_offsets_map"`
+	Heap                     *ebpf.MapSpec `ebpf:"heap"`
+	LogBuffer                *ebpf.MapSpec `ebpf:"log_buffer"`
+	OpensslReadContext       *ebpf.MapSpec `ebpf:"openssl_read_context"`
+	OpensslWriteContext      *ebpf.MapSpec `ebpf:"openssl_write_context"`
+	PidsMap                  *ebpf.MapSpec `ebpf:"pids_map"`
 }
 
 // tlsTapper46Objects contains all objects after they have been loaded into the kernel.
@@ -140,18 +145,22 @@ func (o *tlsTapper46Objects) Close() error {
 //
 // It can be passed to loadTlsTapper46Objects or ebpf.CollectionSpec.LoadAndAssign.
 type tlsTapper46Maps struct {
-	AcceptSyscallContext *ebpf.Map `ebpf:"accept_syscall_context"`
-	ChunksBuffer         *ebpf.Map `ebpf:"chunks_buffer"`
-	ConnectSyscallInfo   *ebpf.Map `ebpf:"connect_syscall_info"`
-	FileDescriptorToIpv4 *ebpf.Map `ebpf:"file_descriptor_to_ipv4"`
-	GoReadContext        *ebpf.Map `ebpf:"go_read_context"`
-	GoWriteContext       *ebpf.Map `ebpf:"go_write_context"`
-	GoidOffsetsMap       *ebpf.Map `ebpf:"goid_offsets_map"`
-	Heap                 *ebpf.Map `ebpf:"heap"`
-	LogBuffer            *ebpf.Map `ebpf:"log_buffer"`
-	OpensslReadContext   *ebpf.Map `ebpf:"openssl_read_context"`
-	OpensslWriteContext  *ebpf.Map `ebpf:"openssl_write_context"`
-	PidsMap              *ebpf.Map `ebpf:"pids_map"`
+	AcceptSyscallContext     *ebpf.Map `ebpf:"accept_syscall_context"`
+	ChunksBuffer             *ebpf.Map `ebpf:"chunks_buffer"`
+	ConnectSyscallInfo       *ebpf.Map `ebpf:"connect_syscall_info"`
+	ConnectionContext        *ebpf.Map `ebpf:"connection_context"`
+	GoKernelReadContext      *ebpf.Map `ebpf:"go_kernel_read_context"`
+	GoKernelWriteContext     *ebpf.Map `ebpf:"go_kernel_write_context"`
+	GoReadContext            *ebpf.Map `ebpf:"go_read_context"`
+	GoUserKernelReadContext  *ebpf.Map `ebpf:"go_user_kernel_read_context"`
+	GoUserKernelWriteContext *ebpf.Map `ebpf:"go_user_kernel_write_context"`
+	GoWriteContext           *ebpf.Map `ebpf:"go_write_context"`
+	GoidOffsetsMap           *ebpf.Map `ebpf:"goid_offsets_map"`
+	Heap                     *ebpf.Map `ebpf:"heap"`
+	LogBuffer                *ebpf.Map `ebpf:"log_buffer"`
+	OpensslReadContext       *ebpf.Map `ebpf:"openssl_read_context"`
+	OpensslWriteContext      *ebpf.Map `ebpf:"openssl_write_context"`
+	PidsMap                  *ebpf.Map `ebpf:"pids_map"`
 }
 
 func (m *tlsTapper46Maps) Close() error {
@@ -159,8 +168,12 @@ func (m *tlsTapper46Maps) Close() error {
 		m.AcceptSyscallContext,
 		m.ChunksBuffer,
 		m.ConnectSyscallInfo,
-		m.FileDescriptorToIpv4,
+		m.ConnectionContext,
+		m.GoKernelReadContext,
+		m.GoKernelWriteContext,
 		m.GoReadContext,
+		m.GoUserKernelReadContext,
+		m.GoUserKernelWriteContext,
 		m.GoWriteContext,
 		m.GoidOffsetsMap,
 		m.Heap,
@@ -197,6 +210,8 @@ type tlsTapper46Programs struct {
 	SysEnterWrite                 *ebpf.Program `ebpf:"sys_enter_write"`
 	SysExitAccept4                *ebpf.Program `ebpf:"sys_exit_accept4"`
 	SysExitConnect                *ebpf.Program `ebpf:"sys_exit_connect"`
+	SysExitRead                   *ebpf.Program `ebpf:"sys_exit_read"`
+	SysExitWrite                  *ebpf.Program `ebpf:"sys_exit_write"`
 	TcpRecvmsg                    *ebpf.Program `ebpf:"tcp_recvmsg"`
 	TcpSendmsg                    *ebpf.Program `ebpf:"tcp_sendmsg"`
 }
@@ -225,6 +240,8 @@ func (p *tlsTapper46Programs) Close() error {
 		p.SysEnterWrite,
 		p.SysExitAccept4,
 		p.SysExitConnect,
+		p.SysExitRead,
+		p.SysExitWrite,
 		p.TcpRecvmsg,
 		p.TcpSendmsg,
 	)
