@@ -292,7 +292,6 @@ static __always_inline void go_crypto_tls_ex_uprobe(struct pt_regs *ctx, struct 
         return;
     }
 
-    info.address_info.mode = fdinfo->address_info.mode;
     info.address_info.daddr = fdinfo->address_info.daddr;
     info.address_info.dport = fdinfo->address_info.dport;
     info.address_info.saddr = fdinfo->address_info.saddr;

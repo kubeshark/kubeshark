@@ -48,7 +48,6 @@ static __always_inline int tcp_kprobes_get_address_pair_from_ctx(struct pt_regs 
 		return -1;
 	}
 
-	address_info_ptr->mode = ADDRESS_INFO_MODE_PAIR;
 	address_info_ptr->daddr = daddr;
 	address_info_ptr->saddr = saddr;
 	address_info_ptr->dport = dport;
@@ -67,7 +66,6 @@ static __always_inline void tcp_kprobes_forward_go(struct pt_regs *ctx, __u64 id
 				return;
 		}
 
-		fdinfo->address_info.mode = address_info.mode;
 		fdinfo->address_info.daddr = address_info.daddr;
 		fdinfo->address_info.dport = address_info.dport;
 		fdinfo->address_info.saddr = address_info.saddr;
@@ -75,7 +73,6 @@ static __always_inline void tcp_kprobes_forward_go(struct pt_regs *ctx, __u64 id
 }
 
 static void __always_inline tcp_kprobes_forward_openssl(struct ssl_info *info_ptr, struct address_info address_info) {
-		info_ptr->address_info.mode = address_info.mode;
 		info_ptr->address_info.daddr = address_info.daddr;
 		info_ptr->address_info.saddr = address_info.saddr;
 		info_ptr->address_info.dport = address_info.dport;

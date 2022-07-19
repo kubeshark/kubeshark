@@ -25,14 +25,7 @@ Copyright (C) UP9 Inc.
 //  Be careful when editing, alignment and padding should be exactly the same in go/c.
 //
 
-typedef enum {
-    ADDRESS_INFO_MODE_UNDEFINED,
-    ADDRESS_INFO_MODE_SINGLE,
-    ADDRESS_INFO_MODE_PAIR,
-} address_info_mode;
-
 struct address_info {
-    address_info_mode mode;
     __be32 saddr;
     __be32 daddr;
     __be16 sport;
@@ -65,7 +58,6 @@ struct ssl_info {
 };
 
 struct fd_info {
-    __u8 ipv4_addr[16]; // struct sockaddr (linux-src/include/linux/socket.h)
     __u8 flags;
     struct address_info address_info;
 };

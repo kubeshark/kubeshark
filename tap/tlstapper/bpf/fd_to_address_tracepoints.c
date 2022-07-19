@@ -14,7 +14,6 @@ Copyright (C) UP9 Inc.
 #define IPV4_ADDR_LEN (16)
 
 struct accept_info {
-	__u64* sockaddr;
 	__u32* addrlen;
 };
 
@@ -39,7 +38,6 @@ void sys_enter_accept4(struct sys_enter_accept4_ctx *ctx) {
 	
 	struct accept_info info = {};
 	
-	info.sockaddr = ctx->sockaddr;
 	info.addrlen = ctx->addrlen;
 	
 	long err = bpf_map_update_elem(&accept_syscall_context, &id, &info, BPF_ANY);
@@ -98,8 +96,6 @@ void sys_exit_accept4(struct sys_exit_accept4_ctx *ctx) {
 		.flags = 0
 	};
 	
-	bpf_probe_read(fdinfo.ipv4_addr, sizeof(fdinfo.ipv4_addr), info.sockaddr);
-	
 	__u32 pid = id >> 32;
 	__u32 fd = (__u32) ctx->ret;
 	
@@ -113,7 +109,6 @@ void sys_exit_accept4(struct sys_exit_accept4_ctx *ctx) {
 
 struct connect_info {
 	__u64 fd;
-	__u64* sockaddr;
 	__u32 addrlen;
 };
 
@@ -138,7 +133,6 @@ void sys_enter_connect(struct sys_enter_connect_ctx *ctx) {
 	
 	struct connect_info info = {};
 	
-	info.sockaddr = ctx->sockaddr;
 	info.addrlen = ctx->addrlen;
 	info.fd = ctx->fd;
 	
@@ -196,8 +190,6 @@ void sys_exit_connect(struct sys_exit_connect_ctx *ctx) {
 	struct fd_info fdinfo = {
 		.flags = FLAGS_IS_CLIENT_BIT
 	};
-	
-	bpf_probe_read(fdinfo.ipv4_addr, sizeof(fdinfo.ipv4_addr), info.sockaddr);
 	
 	__u32 pid = id >> 32;
 	__u32 fd = (__u32) info.fd;

@@ -25,24 +25,7 @@ static __always_inline int add_address_to_chunk(struct pt_regs *ctx, struct tls_
 
     int err;
 
-    switch (info->address_info.mode) {
-        case ADDRESS_INFO_MODE_UNDEFINED:
-            chunk->address_info.mode = ADDRESS_INFO_MODE_SINGLE;
-            err = bpf_probe_read(&chunk->address_info.sport, sizeof(chunk->address_info.sport), &fdinfo->ipv4_addr[2]);
-            if (err != 0) {
-                log_error(ctx, LOG_ERROR_READING_FD_ADDRESS, id, err, 0l);
-                return 0;
-            }
-
-            err = bpf_probe_read(&chunk->address_info.saddr, sizeof(chunk->address_info.saddr), &fdinfo->ipv4_addr[4]);
-            if (err != 0) {
-                log_error(ctx, LOG_ERROR_READING_FD_ADDRESS, id, err, 0l);
-                return 0;
-            }
-            break;
-        default:
-            bpf_probe_read(&chunk->address_info, sizeof(chunk->address_info), &info->address_info);
-    }
+    bpf_probe_read(&chunk->address_info, sizeof(chunk->address_info), &info->address_info);
 
     chunk->flags |= (fdinfo->flags & FLAGS_IS_CLIENT_BIT);
 
