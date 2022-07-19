@@ -52,7 +52,7 @@ static __always_inline void send_chunk_part(struct pt_regs *ctx, __u8* buffer, _
     }
 
     if (err != 0) {
-        log_error(ctx, LOG_ERROR_READING_FROM_SSL_BUFFER, id, err, ORIGIN_SEND_CHUNK_PART_CODE);
+        log_error(ctx, LOG_ERROR_READING_FROM_SSL_BUFFER, id, err, 0l);
         return;
     }
 

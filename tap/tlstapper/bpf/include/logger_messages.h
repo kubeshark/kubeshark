@@ -44,6 +44,5 @@ Copyright (C) UP9 Inc.
 #define ORIGIN_SYS_ENTER_WRITE_CODE (3l)
 #define ORIGIN_SYS_EXIT_ACCEPT4_CODE (4l)
 #define ORIGIN_SYS_EXIT_CONNECT_CODE (5l)
-#define ORIGIN_SEND_CHUNK_PART_CODE (6l)
 
 #endif /* __LOG_MESSAGES__ */
