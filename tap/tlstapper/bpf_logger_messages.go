@@ -25,6 +25,6 @@ var bpfLogMessages = []string{
 	/*0018*/ "[%d] Unable to read socket dport [err: %d]",
 	/*0020*/ "[%d] Unable to read socket sport [err: %d]",
 	/*0021*/ "[%d] Unable to put go user-kernel context [fd: %d] [err: %d]",
-	/*0022*/ "[%d] Unable to get go user-kernel context [fd: %d] [err: %d]",
+	/*0022*/ "[%d] Unable to get go user-kernel context [fd: %d]]",
 	/*0021*/ "DEBUGBPF %d %d %d",
 }
