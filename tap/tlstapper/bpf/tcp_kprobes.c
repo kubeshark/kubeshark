@@ -56,20 +56,15 @@ static __always_inline int tcp_kprobes_get_address_pair_from_ctx(struct pt_regs 
 	return 0;
 }
 
-static __always_inline void tcp_kprobes_forward_go(struct pt_regs *ctx, __u64 id, __u32 fd, struct address_info address_info) {
+static __always_inline void tcp_kprobes_forward_go(struct pt_regs *ctx, __u64 id, __u32 fd, struct address_info address_info, struct bpf_map_def *map_fd_go_user_kernel) {
 		__u32 pid = id >> 32;
 		__u64 key = (__u64) pid << 32 | fd;
 
-		struct fd_info *fdinfo = bpf_map_lookup_elem(&file_descriptor_to_ipv4, &key);
-		// Happens when we don't catch the connect / accept (if the connection is created before tapping is started)
-		if (fdinfo == NULL) {
+		long err = bpf_map_update_elem(map_fd_go_user_kernel, &key, &address_info, BPF_ANY);
+    if (err != 0) {
+        log_error(ctx, LOG_ERROR_PUTTING_GO_USER_KERNEL_CONTEXT, id, fd, err);
 				return;
-		}
-
-		fdinfo->address_info.daddr = address_info.daddr;
-		fdinfo->address_info.dport = address_info.dport;
-		fdinfo->address_info.saddr = address_info.saddr;
-		fdinfo->address_info.sport = address_info.sport;
+    }
 }
 
 static void __always_inline tcp_kprobes_forward_openssl(struct ssl_info *info_ptr, struct address_info address_info) {
@@ -79,7 +74,7 @@ static void __always_inline tcp_kprobes_forward_openssl(struct ssl_info *info_pt
 		info_ptr->address_info.sport = address_info.sport;
 }
 
-static __always_inline void tcp_kprobe(struct pt_regs *ctx, struct bpf_map_def *map_fd_openssl, struct bpf_map_def *map_fd_go) {
+static __always_inline void tcp_kprobe(struct pt_regs *ctx, struct bpf_map_def *map_fd_openssl, struct bpf_map_def *map_fd_go_kernel, struct bpf_map_def *map_fd_go_user_kernel) {
 	long err;
 
 	__u64 id = bpf_get_current_pid_tgid();
@@ -96,13 +91,13 @@ static __always_inline void tcp_kprobe(struct pt_regs *ctx, struct bpf_map_def *
 	struct ssl_info *info_ptr = bpf_map_lookup_elem(map_fd_openssl, &id);
 	__u32 *fd_ptr;
 	if (info_ptr == NULL) {
-		fd_ptr = bpf_map_lookup_elem(map_fd_go, &id);
+		fd_ptr = bpf_map_lookup_elem(map_fd_go_kernel, &id);
 		// Connection is used by a Go program
 		if (fd_ptr == NULL) {
 			// Connection was not created by a Go program or by openssl lib
 			return;
 		}
-		tcp_kprobes_forward_go(ctx, id, *fd_ptr, address_info);
+		tcp_kprobes_forward_go(ctx, id, *fd_ptr, address_info, map_fd_go_user_kernel);
 	} else {
 		// Connection is used by openssl lib
 		tcp_kprobes_forward_openssl(info_ptr, address_info);
@@ -113,11 +108,11 @@ static __always_inline void tcp_kprobe(struct pt_regs *ctx, struct bpf_map_def *
 SEC("kprobe/tcp_sendmsg")
 void BPF_KPROBE(tcp_sendmsg) {
 	__u64 id = bpf_get_current_pid_tgid();
-	tcp_kprobe(ctx, &openssl_write_context, &go_kernel_write_context);
+	tcp_kprobe(ctx, &openssl_write_context, &go_kernel_write_context, &go_user_kernel_write_context);
 }
 
 SEC("kprobe/tcp_recvmsg")
 void BPF_KPROBE(tcp_recvmsg) {
 	__u64 id = bpf_get_current_pid_tgid();
-	tcp_kprobe(ctx, &openssl_read_context, &go_kernel_read_context);
+	tcp_kprobe(ctx, &openssl_read_context, &go_kernel_read_context, &go_user_kernel_read_context);
 }

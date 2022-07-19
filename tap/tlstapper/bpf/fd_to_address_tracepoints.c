@@ -92,18 +92,16 @@ void sys_exit_accept4(struct sys_exit_accept4_ctx *ctx) {
 		return;
 	}
 	
-	struct fd_info fdinfo = {
-		.flags = 0
-	};
+	conn_flags flags = 0;
 	
 	__u32 pid = id >> 32;
 	__u32 fd = (__u32) ctx->ret;
 	
 	__u64 key = (__u64) pid << 32 | fd;
-	err = bpf_map_update_elem(&file_descriptor_to_ipv4, &key, &fdinfo, BPF_ANY);
+	err = bpf_map_update_elem(&connection_context, &key, &flags, BPF_ANY);
 	
 	if (err != 0) {
-		log_error(ctx, LOG_ERROR_PUTTING_FD_MAPPING, id, err, ORIGIN_SYS_EXIT_ACCEPT4_CODE);
+		log_error(ctx, LOG_ERROR_PUTTING_CONNECTION_CONTEXT, id, err, ORIGIN_SYS_EXIT_ACCEPT4_CODE);
 	}
 }
 
@@ -187,17 +185,15 @@ void sys_exit_connect(struct sys_exit_connect_ctx *ctx) {
 		return;
 	}
 	
-	struct fd_info fdinfo = {
-		.flags = FLAGS_IS_CLIENT_BIT
-	};
+	conn_flags flags = FLAGS_IS_CLIENT_BIT;
 	
 	__u32 pid = id >> 32;
 	__u32 fd = (__u32) info.fd;
 	
 	__u64 key = (__u64) pid << 32 | fd;
-	err = bpf_map_update_elem(&file_descriptor_to_ipv4, &key, &fdinfo, BPF_ANY);
+	err = bpf_map_update_elem(&connection_context, &key, &flags, BPF_ANY);
 	
 	if (err != 0) {
-		log_error(ctx, LOG_ERROR_PUTTING_FD_MAPPING, id, err, ORIGIN_SYS_EXIT_CONNECT_CODE);
+		log_error(ctx, LOG_ERROR_PUTTING_CONNECTION_CONTEXT, id, err, ORIGIN_SYS_EXIT_CONNECT_CODE);
 	}
 }
