@@ -7,7 +7,7 @@ MIZU_HOME=$(realpath ../../../)
 docker build -t mizu-ebpf-builder . || exit 1
 
 BPF_TARGET=amd64
-BPF_CFLAGS="-O2 -g -D__TARGET_ARCH_x86 -Wno-deprecated-declarations"
+BPF_CFLAGS="-O2 -g -D__TARGET_ARCH_x86"
 ARCH=$(uname -m)
 if [[ $ARCH == "aarch64" || $ARCH == "arm64" ]]; then
     BPF_TARGET=arm64
