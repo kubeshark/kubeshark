@@ -44,6 +44,7 @@ static __always_inline void fd_tracepoints_handle_openssl(struct sys_enter_read_
 	
 	if (err != 0) {
 		log_error(ctx, LOG_ERROR_PUTTING_FILE_DESCRIPTOR, id, err, origin_code);
+		return;
 	}
 }
 
@@ -54,6 +55,7 @@ static __always_inline void fd_tracepoints_handle_go(struct sys_enter_read_write
 	
 	if (err != 0) {
 		log_error(ctx, LOG_ERROR_PUTTING_FILE_DESCRIPTOR, id, err, origin_code);
+		return;
 	}
 }
 
