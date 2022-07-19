@@ -4,8 +4,6 @@ import (
 	"encoding/binary"
 	"net"
 	"unsafe"
-
-	"github.com/up9inc/mizu/logger"
 )
 
 const FlagsIsClientBit uint32 = 1 << 0
@@ -69,8 +67,6 @@ func (c *tlsTapperTlsChunk) getAddressPair() addressPair {
 		srcIp, srcPort = c.getDstAddress()
 		dstIp, dstPort = c.getSrcAddress()
 	}
-
-	logger.Log.Infof("getAddressPair %s:%d > %s:%d", srcIp, srcPort, dstIp, dstPort) //DEBUG
 
 	return addressPair{
 		srcIp:   srcIp,
