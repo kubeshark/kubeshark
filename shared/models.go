@@ -43,7 +43,6 @@ type MizuAgentConfig struct {
 	AgentDatabasePath      string        `json:"agentDatabasePath"`
 	ServiceMap             bool          `json:"serviceMap"`
 	OAS                    OASConfig     `json:"oas"`
-	Telemetry              bool          `json:"telemetry"`
 }
 
 type WebSocketMessageMetadata struct {

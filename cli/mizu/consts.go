@@ -14,8 +14,6 @@ var (
 	Platform                                   = ""
 )
 
-const DEVENVVAR = "MIZU_DISABLE_TELEMTRY"
-
 func GetMizuFolderPath() string {
 	home, homeDirErr := os.UserHomeDir()
 	if homeDirErr != nil {
