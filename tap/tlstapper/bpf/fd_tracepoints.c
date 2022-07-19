@@ -24,7 +24,8 @@ struct sys_enter_read_write_ctx {
 struct sys_exit_read_write_ctx {
 	__u64 __unused_syscall_header;
 	__u32 __unused_syscall_nr;
-	__u64 __unused_ret;
+
+	__u64 ret;
 };
 
 
