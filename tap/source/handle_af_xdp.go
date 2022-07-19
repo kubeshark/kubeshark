@@ -13,7 +13,6 @@ import (
 	"github.com/google/gopacket/pcapgo"
 	"github.com/up9inc/mizu/logger"
 	"github.com/up9inc/mizu/tap/tlstapper"
-	ebpf "github.com/up9inc/mizu/tap/xdp"
 )
 
 type afXdpHandle struct {
@@ -136,6 +135,9 @@ func (h *afXdpHandle) pollSocket(xsk *xdp.Socket, ifindex int) {
 			}
 			h.ngWriter.Flush()
 		}
+
+		// Rebroadcast to the XDP socket
+		xsk.Transmit(rxDescs)
 	}
 }
 
@@ -165,7 +167,6 @@ func newAfXdpHandle(device string) (handle Handle, err error) {
 	}
 
 	var queueId int = 0
-	const protocol uint8 = 4 // IPv4 - https://www.iana.org/assignments/protocol-numbers/protocol-numbers.xhtml
 
 	interfaces, err := net.Interfaces()
 	if err != nil {
@@ -196,24 +197,21 @@ func newAfXdpHandle(device string) (handle Handle, err error) {
 	}
 
 	var program *xdp.Program
-	// Create a new XDP eBPF program and attach it to our chosen network link.
-	if protocol == 0 {
-		program, err = xdp.NewProgram(queueId + 1)
-	} else {
-		program, err = ebpf.NewIPProtoProgram(protocol, nil)
-	}
+	// Create a new XDP eBPF program
+	program, err = xdp.NewProgram(queueId + 1)
+	// TODO: program, err = ebpf.NewIPProtoProgram(protocol, nil) Internet protocol filtering, should we remove?
 	if err != nil {
 		return
 	}
 
 	var xsks []*xdp.Socket
 	for _, ifindex := range ifindexes {
+		// Attach the eBPF program to all network links.
 		if err = program.Attach(ifindex); err != nil {
 			return
 		}
 
-		// Create and initialize an XDP socket attached to our chosen network
-		// link.
+		// Create and initialize an XDP socket attached to curent network link.
 		var xsk *xdp.Socket
 		xsk, err = xdp.NewSocket(ifindex, queueId, nil)
 		if err != nil {
