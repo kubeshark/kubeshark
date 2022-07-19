@@ -287,6 +287,9 @@ static __always_inline void go_crypto_tls_ex_uprobe(struct pt_regs *ctx, struct 
 
     __u64 key = (__u64) pid << 32 | info_ptr->fd;
     struct address_info *address_info = bpf_map_lookup_elem(go_user_kernel_context, &key);
+    // Ideally we would delete the entry from the map after reading it,
+    // but sometimes the uprobe is called twice in a row without the tcp kprobes in between to fill in
+    // the entry again. Keeping it in the map and rely on LRU logic.
     if (address_info == NULL) {
         log_error(ctx, LOG_ERROR_GETTING_GO_USER_KERNEL_CONTEXT, pid_tgid, info_ptr->fd, err);
         return;
