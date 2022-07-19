@@ -8,6 +8,8 @@ import (
 type syscallHooks struct {
 	sysEnterRead    link.Link
 	sysEnterWrite   link.Link
+	sysExitRead     link.Link
+	sysExitWrite    link.Link
 	sysEnterAccept4 link.Link
 	sysExitAccept4  link.Link
 	sysEnterConnect link.Link
@@ -24,6 +26,18 @@ func (s *syscallHooks) installSyscallHooks(bpfObjects *tlsTapperObjects) error {
 	}
 
 	s.sysEnterWrite, err = link.Tracepoint("syscalls", "sys_enter_write", bpfObjects.SysEnterWrite, nil)
+
+	if err != nil {
+		return errors.Wrap(err, 0)
+	}
+
+	s.sysExitRead, err = link.Tracepoint("syscalls", "sys_exit_read", bpfObjects.SysExitRead, nil)
+
+	if err != nil {
+		return errors.Wrap(err, 0)
+	}
+
+	s.sysExitWrite, err = link.Tracepoint("syscalls", "sys_exit_write", bpfObjects.SysExitWrite, nil)
 
 	if err != nil {
 		return errors.Wrap(err, 0)
@@ -64,6 +78,14 @@ func (s *syscallHooks) close() []error {
 	}
 
 	if err := s.sysEnterWrite.Close(); err != nil {
+		returnValue = append(returnValue, err)
+	}
+
+	if err := s.sysExitRead.Close(); err != nil {
+		returnValue = append(returnValue, err)
+	}
+
+	if err := s.sysExitWrite.Close(); err != nil {
 		returnValue = append(returnValue, err)
 	}
 
