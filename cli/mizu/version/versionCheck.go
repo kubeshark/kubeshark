@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"os"
 	"runtime"
 	"strings"
 	"time"
@@ -18,10 +17,6 @@ import (
 )
 
 func CheckNewerVersion(versionChan chan string) {
-	if _, present := os.LookupEnv(mizu.DEVENVVAR); present {
-		versionChan <- ""
-		return
-	}
 	logger.Log.Debugf("Checking for newer version...")
 	start := time.Now()
 	client := github.NewClient(nil)
