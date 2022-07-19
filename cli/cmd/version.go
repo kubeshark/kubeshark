@@ -6,7 +6,6 @@ import (
 
 	"github.com/up9inc/mizu/cli/config"
 	"github.com/up9inc/mizu/cli/config/configStructs"
-	"github.com/up9inc/mizu/cli/telemetry"
 	"github.com/up9inc/mizu/logger"
 
 	"github.com/creasty/defaults"
@@ -18,8 +17,6 @@ var versionCmd = &cobra.Command{
 	Use:   "version",
 	Short: "Print version info",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		go telemetry.ReportRun("version", config.Config.Version)
-
 		if config.Config.Version.DebugInfo {
 			timeStampInt, _ := strconv.ParseInt(mizu.BuildTimestamp, 10, 0)
 			logger.Log.Infof("Version: %s \nBranch: %s (%s)", mizu.Ver, mizu.Branch, mizu.GitCommitHash)

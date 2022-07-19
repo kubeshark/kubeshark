@@ -48,7 +48,6 @@ require (
 	github.com/Masterminds/semver v1.5.0 // indirect
 	github.com/PuerkitoBio/purell v1.1.1 // indirect
 	github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 // indirect
-	github.com/beevik/etree v1.1.0 // indirect
 	github.com/chai2010/gettext-go v0.0.0-20160711120539-c6fed771bfd5 // indirect
 	github.com/chanced/dynamic v0.0.0-20211210164248-f8fadb1d735b // indirect
 	github.com/cilium/ebpf v0.9.0 // indirect

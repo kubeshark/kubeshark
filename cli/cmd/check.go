@@ -4,7 +4,6 @@ import (
 	"github.com/creasty/defaults"
 	"github.com/spf13/cobra"
 	"github.com/up9inc/mizu/cli/config/configStructs"
-	"github.com/up9inc/mizu/cli/telemetry"
 	"github.com/up9inc/mizu/logger"
 )
 
@@ -12,7 +11,6 @@ var checkCmd = &cobra.Command{
 	Use:   "check",
 	Short: "Check the Mizu installation for potential problems",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		go telemetry.ReportRun("check", nil)
 		runMizuCheck()
 		return nil
 	},

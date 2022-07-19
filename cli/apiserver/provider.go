@@ -4,9 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"net/http"
-	"net/url"
 	"time"
 
 	"github.com/up9inc/mizu/cli/utils"
@@ -92,46 +90,4 @@ func (provider *Provider) ReportTappedPods(pods []core.Pod) error {
 			return nil
 		}
 	}
-}
-
-func (provider *Provider) GetGeneralStats() (map[string]interface{}, error) {
-	generalStatsUrl := fmt.Sprintf("%s/status/general", provider.url)
-
-	response, requestErr := utils.Get(generalStatsUrl, provider.client)
-	if requestErr != nil {
-		return nil, fmt.Errorf("failed to get general stats for telemetry, err: %w", requestErr)
-	}
-
-	defer response.Body.Close()
-
-	data, readErr := ioutil.ReadAll(response.Body)
-	if readErr != nil {
-		return nil, fmt.Errorf("failed to read general stats for telemetry, err: %v", readErr)
-	}
-
-	var generalStats map[string]interface{}
-	if parseErr := json.Unmarshal(data, &generalStats); parseErr != nil {
-		return nil, fmt.Errorf("failed to parse general stats for telemetry, err: %v", parseErr)
-	}
-	return generalStats, nil
-}
-
-func (provider *Provider) GetVersion() (string, error) {
-	versionUrl, _ := url.Parse(fmt.Sprintf("%s/metadata/version", provider.url))
-	req := &http.Request{
-		Method: http.MethodGet,
-		URL:    versionUrl,
-	}
-	statusResp, err := utils.Do(req, provider.client)
-	if err != nil {
-		return "", err
-	}
-	defer statusResp.Body.Close()
-
-	versionResponse := &shared.VersionResponse{}
-	if err := json.NewDecoder(statusResp.Body).Decode(&versionResponse); err != nil {
-		return "", err
-	}
-
-	return versionResponse.Ver, nil
 }

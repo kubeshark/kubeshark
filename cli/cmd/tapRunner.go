@@ -9,7 +9,6 @@ import (
 	"time"
 
 	"github.com/up9inc/mizu/cli/resources"
-	"github.com/up9inc/mizu/cli/telemetry"
 	"github.com/up9inc/mizu/cli/utils"
 
 	core "k8s.io/api/core/v1"
@@ -109,8 +108,6 @@ func RunMizuTap() {
 }
 
 func finishTapExecution(kubernetesProvider *kubernetes.Provider) {
-	telemetry.ReportTapTelemetry(apiProvider, config.Config.Tap, state.startTime)
-
 	finishMizuExecution(kubernetesProvider, config.Config.IsNsRestrictedMode(), config.Config.MizuResourcesNamespace)
 }
 
@@ -126,7 +123,6 @@ func getTapMizuAgentConfig() *shared.MizuAgentConfig {
 		AgentDatabasePath:      shared.DataDirPath,
 		ServiceMap:             config.Config.ServiceMap,
 		OAS:                    config.Config.OAS,
-		Telemetry:              config.Config.Telemetry,
 	}
 
 	return &mizuAgentConfig
