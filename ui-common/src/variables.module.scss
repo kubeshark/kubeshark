@@ -14,6 +14,8 @@ $content-section-color: #f8f9fc;
 $blue-gray: #494677;
 $light-gray: #8F9BB2;
 
+$text-font-family: Source Sans Pro, Lucida Grande, Tahoma, sans-serif;
+
 :export {
   mainBackgroundColor: $main-background-color;
   headerBackgroundColor: $header-background-color;
@@ -26,4 +28,5 @@ $light-gray: #8F9BB2;
   blueGray: $blue-gray;
   lightGray: $light-gray;
   contentSectionColor: $content-section-color;
+  textFontFamily: $text-font-family
 }

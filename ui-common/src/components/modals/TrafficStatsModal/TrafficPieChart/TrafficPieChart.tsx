@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import { Cell, Legend, Pie, PieChart, Tooltip } from "recharts";
 import { Utils } from "../../../../helpers/Utils";
 import { ALL_PROTOCOLS ,StatsMode as PieChartMode } from "../consts"
+import styles from "./TrafficPieChart.module.sass";
 
 const RADIAN = Math.PI / 180;
 const renderCustomizedLabel = ({
@@ -76,7 +77,7 @@ export const TrafficPieChart: React.FC<TrafficPieChartProps> = ({ pieChartMode, 
     if (selectedProtocol === ALL_PROTOCOLS) {
       legend = data.map(protocol => <div style={{ marginBottom: 5, display: "flex" }}>
         <div style={{ height: 15, width: 30, background: protocol?.color }} />
-        <span style={{ marginLeft: 5 }}>
+        <span className={styles.entryName}>
           {protocol.name}
         </span>
       </div>)
@@ -84,7 +85,7 @@ export const TrafficPieChart: React.FC<TrafficPieChartProps> = ({ pieChartMode, 
       legend = data.find(protocol => protocol.name === selectedProtocol)?.methods.map((method) => <div
         style={{ marginBottom: 5, display: "flex" }}>
         <div style={{ height: 15, width: 30, background: method.color}} />
-        <span style={{ marginLeft: 5 }}>
+        <span className={styles.entryName}>
           {method.name}
         </span>
       </div>)

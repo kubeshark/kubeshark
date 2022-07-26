@@ -85,8 +85,8 @@ func InitProtocolToColor(protocolMap map[string]*api.Protocol) {
 	}
 }
 
-func GetTrafficStats() *TrafficStatsResponse {
-	bucketsStatsCopy := getBucketStatsCopy()
+func GetTrafficStats(startTime time.Time, endTime time.Time) *TrafficStatsResponse {
+	bucketsStatsCopy := getFilteredBucketStatsCopy(startTime, endTime)
 
 	return &TrafficStatsResponse{
 		Protocols:     getAvailableProtocols(bucketsStatsCopy),
@@ -262,7 +262,7 @@ func convertAccumulativeStatsDictToArray(methodsPerProtocolAggregated map[string
 	return protocolsData
 }
 
-func getBucketStatsCopy() BucketStats {
+func getFilteredBucketStatsCopy(startTime time.Time, endTime time.Time) BucketStats {
 	bucketStatsCopy := BucketStats{}
 	bucketStatsLocker.Lock()
 	if err := copier.Copy(&bucketStatsCopy, bucketsStats); err != nil {
@@ -270,7 +270,18 @@ func getBucketStatsCopy() BucketStats {
 		return nil
 	}
 	bucketStatsLocker.Unlock()
-	return bucketStatsCopy
+
+	filteredBucketStatsCopy := BucketStats{}
+	interval := InternalBucketThreshold
+
+	for _, bucket := range bucketStatsCopy {
+		if (bucket.BucketTime.After(startTime.Add(-1*interval/2).Round(interval)) && bucket.BucketTime.Before(endTime.Add(-1*interval/2).Round(interval))) ||
+			bucket.BucketTime.Equal(startTime.Add(-1*interval/2).Round(interval)) ||
+			bucket.BucketTime.Equal(endTime.Add(-1*interval/2).Round(interval)) {
+			filteredBucketStatsCopy = append(filteredBucketStatsCopy, bucket)
+		}
+	}
+	return filteredBucketStatsCopy
 }
 
 func getAggregatedResultTiming(stats BucketStats, interval time.Duration) map[time.Time]map[string]map[string]*AccumulativeStatsCounter {

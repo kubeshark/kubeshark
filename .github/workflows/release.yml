@@ -85,94 +85,6 @@ jobs:
             GIT_BRANCH=${{ steps.version_parameters.outputs.branch }}
             COMMIT_HASH=${{ github.sha }}
 
-  gcp-registry:
-    name: Push Docker image to GCR
-    runs-on: ubuntu-latest
-
-    strategy:
-      max-parallel: 2
-      fail-fast: false
-      matrix:
-        target:
-          - amd64
-          - arm64v8
-
-    steps:
-      - name: Check out the repo
-        uses: actions/checkout@v2
-
-      - id: 'auth'
-        uses: 'google-github-actions/auth@v0'
-        with:
-          credentials_json: '${{ secrets.GCR_JSON_KEY }}'
-
-      - name: 'Set up Cloud SDK'
-        uses: 'google-github-actions/setup-gcloud@v0'
-
-      - name: Determine versioning strategy
-        uses: haya14busa/action-cond@v1
-        id: condval
-        with:
-          cond: ${{ github.ref == 'refs/heads/main' }}
-          if_true: "stable"
-          if_false: "dev"
-
-      - name: Auto Increment Ver Action
-        uses: docker://igorgov/auto-inc-ver:v2.0.0
-        id: versioning
-        with:
-          mode: ${{ steps.condval.outputs.value }}
-          suffix: 'dev'
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Get version parameters
-        shell: bash
-        run: |
-          echo "##[set-output name=build_timestamp;]$(echo $(date +%s))"
-          echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
-        id: version_parameters
-
-      - name: Get base image name
-        shell: bash
-        run: echo "##[set-output name=image;]$(echo gcr.io/up9-docker-hub/mizu/${GITHUB_REF#refs/heads/})"
-        id: base_image_step
-
-      - name: Docker meta
-        id: meta
-        uses: docker/metadata-action@v3
-        with:
-          images: |
-            ${{ steps.base_image_step.outputs.image }}
-          tags: |
-            type=raw,${{ steps.versioning.outputs.version }}
-            type=raw,value=latest,enable=${{ steps.condval.outputs.value == 'stable' }}
-            type=raw,value=dev-latest,enable=${{ steps.condval.outputs.value == 'dev' }}
-          flavor: |
-            latest=auto
-            prefix=
-            suffix=-${{ matrix.target }},onlatest=true
-
-      - name: Login to GCR
-        uses: docker/login-action@v1
-        with:
-          registry: gcr.io
-          username: _json_key
-          password: ${{ secrets.GCR_JSON_KEY }}
-
-      - name: Build and push
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          build-args: |
-            TARGETARCH=${{ matrix.target }}
-            VER=${{ steps.versioning.outputs.version }}
-            BUILD_TIMESTAMP=${{ steps.version_parameters.outputs.build_timestamp }}
-            GIT_BRANCH=${{ steps.version_parameters.outputs.branch }}
-            COMMIT_HASH=${{ github.sha }}
-
   docker-manifest:
     name: Create and Push a Docker Manifest
     runs-on: ubuntu-latest
@@ -232,7 +144,7 @@ jobs:
   cli:
     name: Build the CLI and publish
     runs-on: ubuntu-latest
-    needs: [docker-manifest, gcp-registry]
+    needs: [docker-manifest]
     steps:
       - name: Set up Go 1.17
         uses: actions/setup-go@v2
@@ -290,15 +202,3 @@ jobs:
           tag: ${{ steps.versioning.outputs.version }}
           prerelease: ${{ github.ref != 'refs/heads/main' }}
           bodyFile: 'cli/bin/README.md'
-      
-      - name: Slack notification on failure
-        uses: ravsamhq/notify-slack-action@v1
-        if: always()
-        with:
-          status: ${{ job.status }}
-          notification_title: 'Mizu enterprise {workflow} has {status_message}'
-          message_format: '{emoji} *{workflow}* {status_message} during <{run_url}|run>, after commit <{commit_url}|{commit_sha}> by ${{ github.event.head_commit.author.name }} <${{ github.event.head_commit.author.email }}> ```${{ github.event.head_commit.message }}```'
-          footer: 'Linked Repo <{repo_url}|{repo}>'
-          notify_when: 'failure'
-        env:
-          SLACK_WEBHOOK_URL: ${{ secrets.SLACK_WEBHOOK_URL }}

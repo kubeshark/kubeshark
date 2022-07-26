@@ -25,14 +25,7 @@ Copyright (C) UP9 Inc.
 //  Be careful when editing, alignment and padding should be exactly the same in go/c.
 //
 
-typedef enum {
-    ADDRESS_INFO_MODE_UNDEFINED,
-    ADDRESS_INFO_MODE_SINGLE,
-    ADDRESS_INFO_MODE_PAIR,
-} address_info_mode;
-
 struct address_info {
-    address_info_mode mode;
     __be32 saddr;
     __be32 daddr;
     __be16 sport;
@@ -64,10 +57,7 @@ struct ssl_info {
     size_t *count_ptr;
 };
 
-struct fd_info {
-    __u8 ipv4_addr[16]; // struct sockaddr (linux-src/include/linux/socket.h)
-    __u8 flags;
-};
+typedef __u8 conn_flags;
 
 struct goid_offsets {
     __u64 g_addr_offset;
@@ -105,7 +95,7 @@ struct {
 
 // Generic
 BPF_HASH(pids_map, __u32, __u32);
-BPF_LRU_HASH(file_descriptor_to_ipv4, __u64, struct fd_info);
+BPF_LRU_HASH(connection_context, __u64, conn_flags);
 BPF_PERF_OUTPUT(chunks_buffer);
 BPF_PERF_OUTPUT(log_buffer);
 
@@ -117,5 +107,9 @@ BPF_LRU_HASH(openssl_read_context, __u64, struct ssl_info);
 BPF_HASH(goid_offsets_map, __u32, struct goid_offsets);
 BPF_LRU_HASH(go_write_context, __u64, struct ssl_info);
 BPF_LRU_HASH(go_read_context, __u64, struct ssl_info);
+BPF_LRU_HASH(go_kernel_write_context, __u64, __u32);
+BPF_LRU_HASH(go_kernel_read_context, __u64, __u32);
+BPF_LRU_HASH(go_user_kernel_write_context, __u64, struct address_info);
+BPF_LRU_HASH(go_user_kernel_read_context, __u64, struct address_info);
 
 #endif /* __MAPS__ */

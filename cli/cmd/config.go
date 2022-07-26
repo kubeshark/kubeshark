@@ -7,7 +7,6 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/up9inc/mizu/cli/config"
 	"github.com/up9inc/mizu/cli/config/configStructs"
-	"github.com/up9inc/mizu/cli/telemetry"
 	"github.com/up9inc/mizu/cli/uiUtils"
 	"github.com/up9inc/mizu/logger"
 )
@@ -16,8 +15,6 @@ var configCmd = &cobra.Command{
 	Use:   "config",
 	Short: "Generate config with default values",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		go telemetry.ReportRun("config", config.Config.Config)
-
 		configWithDefaults, err := config.GetConfigWithDefaults()
 		if err != nil {
 			logger.Log.Errorf("Failed generating config with defaults, err: %v", err)

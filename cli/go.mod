@@ -4,7 +4,6 @@ go 1.17
 
 require (
 	github.com/creasty/defaults v1.5.2
-	github.com/denisbrodbeck/machineid v1.0.1
 	github.com/google/go-github/v37 v37.0.0
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
 	github.com/spf13/cobra v1.3.0

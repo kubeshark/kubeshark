@@ -27,7 +27,7 @@ else
 fi
 
 echo "Starting minikube..."
-minikube start --cpus 2 --memory 6946
+minikube start --cpus 2 --memory 6000
 
 echo "Creating mizu tests namespaces"
 kubectl create namespace mizu-tests --dry-run=client -o yaml | kubectl apply -f -
