@@ -8,9 +8,7 @@ test-update: test-pull-bin
 	@MIZU_TEST=1 TEST_UPDATE=1 go test -v ./... -coverpkg=./... -coverprofile=coverage.out -covermode=atomic
 
 test-pull-bin:
-	@mkdir -p bin
 	@[ "${skipbin}" ] && echo "Skipping downloading BINs" || ../get-folder-of-tests.sh bin/redis bin
 
 test-pull-expect:
-	@mkdir -p expect
 	@[ "${skipexpect}" ] && echo "Skipping downloading expected JSONs" || ../get-folder-of-tests.sh expect/redis expect
