@@ -9,7 +9,7 @@ import (
 	"github.com/vishvananda/netns"
 )
 
-func newNetnsPacketSource(procfs string, pid string, interfaceName string,
+func newNetnsPacketSource(procfs string, pid string, interfaceName string, packetCapture string,
 	behaviour TcpPacketSourceBehaviour, origin api.Capture) (*tcpPacketSource, error) {
 	nsh, err := netns.GetFromPath(fmt.Sprintf("%s/%s/ns/net", procfs, pid))
 
@@ -18,7 +18,7 @@ func newNetnsPacketSource(procfs string, pid string, interfaceName string,
 		return nil, err
 	}
 
-	src, err := newPacketSourceFromNetnsHandle(pid, nsh, interfaceName, behaviour, origin)
+	src, err := newPacketSourceFromNetnsHandle(pid, nsh, interfaceName, packetCapture, behaviour, origin)
 
 	if err != nil {
 		logger.Log.Errorf("Error starting netns packet source for %s - %w", pid, err)
@@ -28,7 +28,7 @@ func newNetnsPacketSource(procfs string, pid string, interfaceName string,
 	return src, nil
 }
 
-func newPacketSourceFromNetnsHandle(pid string, nsh netns.NsHandle, interfaceName string,
+func newPacketSourceFromNetnsHandle(pid string, nsh netns.NsHandle, interfaceName string, packetCapture string,
 	behaviour TcpPacketSourceBehaviour, origin api.Capture) (*tcpPacketSource, error) {
 
 	done := make(chan *tcpPacketSource)
@@ -58,7 +58,7 @@ func newPacketSourceFromNetnsHandle(pid string, nsh netns.NsHandle, interfaceNam
 		}
 
 		name := fmt.Sprintf("netns-%s-%s", pid, interfaceName)
-		src, err := newTcpPacketSource(name, "", interfaceName, behaviour, origin)
+		src, err := newTcpPacketSource(name, "", interfaceName, packetCapture, behaviour, origin)
 
 		if err != nil {
 			logger.Log.Errorf("Error listening to PID %s - %w", pid, err)

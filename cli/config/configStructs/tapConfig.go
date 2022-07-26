@@ -51,6 +51,7 @@ type TapConfig struct {
 	TapperResources       shared.Resources `yaml:"tapper-resources"`
 	ServiceMesh           bool             `yaml:"service-mesh" default:"false"`
 	Tls                   bool             `yaml:"tls" default:"false"`
+	PacketCapture         string           `yaml:"packet-capture" default:"libpcap"`
 	Profiler              bool             `yaml:"profiler" default:"false"`
 	MaxLiveStreams        int              `yaml:"max-live-streams" default:"500"`
 }
