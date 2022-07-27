@@ -2,33 +2,37 @@ package acceptanceTests
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
 	"os/exec"
 	"path"
+	"path/filepath"
 	"strings"
-	"sync"
 	"syscall"
 	"testing"
 	"time"
 
-	"github.com/gorilla/websocket"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/client-go/util/homedir"
+
 	"github.com/up9inc/mizu/shared"
 )
 
 const (
-	longRetriesCount      = 100
-	shortRetriesCount     = 10
-	defaultApiServerPort  = shared.DefaultApiServerPort
-	defaultNamespaceName  = "mizu-tests"
-	defaultServiceName    = "httpbin"
-	defaultEntriesCount   = 50
-	waitAfterTapPodsReady = 3 * time.Second
-	cleanCommandTimeout   = 1 * time.Minute
+	LongRetriesCount      = 100
+	ShortRetriesCount     = 10
+	DefaultApiServerPort  = shared.DefaultApiServerPort
+	DefaultNamespaceName  = "mizu-tests"
+	DefaultServiceName    = "httpbin"
+	DefaultEntriesCount   = 50
+	WaitAfterTapPodsReady = 3 * time.Second
+	AllNamespaces         = ""
 )
 
 type PodDescriptor struct {
@@ -36,19 +40,7 @@ type PodDescriptor struct {
 	Namespace string
 }
 
-func isPodDescriptorInPodArray(pods []map[string]interface{}, podDescriptor PodDescriptor) bool {
-	for _, pod := range pods {
-		podNamespace := pod["namespace"].(string)
-		podName := pod["name"].(string)
-
-		if podDescriptor.Namespace == podNamespace && strings.Contains(podName, podDescriptor.Name) {
-			return true
-		}
-	}
-	return false
-}
-
-func getCliPath() (string, error) {
+func GetCliPath() (string, error) {
 	dir, filePathErr := os.Getwd()
 	if filePathErr != nil {
 		return "", filePathErr
@@ -58,7 +50,7 @@ func getCliPath() (string, error) {
 	return cliPath, nil
 }
 
-func getMizuFolderPath() (string, error) {
+func GetMizuFolderPath() (string, error) {
 	home, homeDirErr := os.UserHomeDir()
 	if homeDirErr != nil {
 		return "", homeDirErr
@@ -67,8 +59,8 @@ func getMizuFolderPath() (string, error) {
 	return path.Join(home, ".mizu"), nil
 }
 
-func getConfigPath() (string, error) {
-	mizuFolderPath, mizuPathError := getMizuFolderPath()
+func GetConfigPath() (string, error) {
+	mizuFolderPath, mizuPathError := GetMizuFolderPath()
 	if mizuPathError != nil {
 		return "", mizuPathError
 	}
@@ -76,90 +68,209 @@ func getConfigPath() (string, error) {
 	return path.Join(mizuFolderPath, "config.yaml"), nil
 }
 
-func getProxyUrl(namespace string, service string) string {
+func GetProxyUrl(namespace string, service string) string {
 	return fmt.Sprintf("http://localhost:8080/api/v1/namespaces/%v/services/%v/proxy", namespace, service)
 }
 
-func getApiServerUrl(port uint16) string {
+func GetApiServerUrl(port uint16) string {
 	return fmt.Sprintf("http://localhost:%v", port)
 }
 
-func getWebSocketUrl(port uint16) string {
-	return fmt.Sprintf("ws://localhost:%v/ws", port)
+func NewKubernetesProvider() (*KubernetesProvider, error) {
+	home := homedir.HomeDir()
+	configLoadingRules := &clientcmd.ClientConfigLoadingRules{ExplicitPath: filepath.Join(home, ".kube", "config")}
+	clientConfig := clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
+		configLoadingRules,
+		&clientcmd.ConfigOverrides{
+			CurrentContext: "",
+		},
+	)
+
+	restClientConfig, err := clientConfig.ClientConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	clientSet, err := kubernetes.NewForConfig(restClientConfig)
+	if err != nil {
+		return nil, err
+	}
+
+	return &KubernetesProvider{clientSet}, nil
+}
+
+type KubernetesProvider struct {
+	clientSet *kubernetes.Clientset
+}
+
+func (kp *KubernetesProvider) GetServiceExternalIp(ctx context.Context, namespace string, service string) (string, error) {
+	serviceObj, err := kp.clientSet.CoreV1().Services(namespace).Get(ctx, service, metav1.GetOptions{})
+	if err != nil {
+		return "", err
+	}
+
+	externalIp := serviceObj.Status.LoadBalancer.Ingress[0].IP
+	return externalIp, nil
+}
+
+func SwitchKubeContextForTest(t *testing.T, newContextName string) error {
+	prevKubeContextName, err := GetKubeCurrentContextName()
+	if err != nil {
+		return err
+	}
+
+	if err := SetKubeCurrentContext(newContextName); err != nil {
+		return err
+	}
+
+	t.Cleanup(func() {
+		if err := SetKubeCurrentContext(prevKubeContextName); err != nil {
+			t.Errorf("failed to set Kubernetes context to %s, err: %v", prevKubeContextName, err)
+			t.Errorf("cleanup failed, subsequent tests may be affected")
+		}
+	})
+
+	return nil
+}
+
+func GetKubeCurrentContextName() (string, error) {
+	cmd := exec.Command("kubectl", "config", "current-context")
+
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return "", fmt.Errorf("%v, %s", err, string(output))
+	}
+
+	return string(bytes.TrimSpace(output)), nil
+}
+
+func SetKubeCurrentContext(contextName string) error {
+	cmd := exec.Command("kubectl", "config", "use-context", contextName)
+
+	if output, err := cmd.CombinedOutput(); err != nil {
+		return fmt.Errorf("%v, %s", err, string(output))
+	}
+
+	return nil
+}
+
+func ApplyKubeFilesForTest(t *testing.T, kubeContext string, namespace string, filename ...string) error {
+	for i := range filename {
+		fname := filename[i]
+		if err := ApplyKubeFile(kubeContext, namespace, fname); err != nil {
+			return err
+		}
+
+		t.Cleanup(func() {
+			if err := DeleteKubeFile(kubeContext, namespace, fname); err != nil {
+				t.Errorf(
+					"failed to delete Kubernetes resources in namespace %s from filename %s, err: %v",
+					namespace,
+					fname,
+					err,
+				)
+			}
+		})
+	}
+
+	return nil
+}
+
+func ApplyKubeFile(kubeContext string, namespace string, filename string) error {
+	cmdArgs := []string{
+		"apply",
+		"--context", kubeContext,
+		"-f", filename,
+	}
+	if namespace != AllNamespaces {
+		cmdArgs = append(cmdArgs, "-n", namespace)
+	}
+	cmd := exec.Command("kubectl", cmdArgs...)
+
+	if output, err := cmd.CombinedOutput(); err != nil {
+		return fmt.Errorf("%v, %s", err, string(output))
+	}
+
+	return nil
+}
+
+func DeleteKubeFile(kubeContext string, namespace string, filename string) error {
+	cmdArgs := []string{
+		"delete",
+		"--context", kubeContext,
+		"-f", filename,
+	}
+	if namespace != AllNamespaces {
+		cmdArgs = append(cmdArgs, "-n", namespace)
+	}
+	cmd := exec.Command("kubectl", cmdArgs...)
+
+	if output, err := cmd.CombinedOutput(); err != nil {
+		return fmt.Errorf("%v, %s", err, string(output))
+	}
+
+	return nil
 }
 
 func getDefaultCommandArgs() []string {
+	agentImageValue := os.Getenv("MIZU_CI_IMAGE")
 	setFlag := "--set"
-	telemetry := "telemetry=false"
-	agentImage := "agent-image=gcr.io/up9-docker-hub/mizu/ci:0.0.0"
+	agentImage := fmt.Sprintf("agent-image=%s", agentImageValue)
 	imagePullPolicy := "image-pull-policy=IfNotPresent"
 	headless := "headless=true"
 
-	return []string{setFlag, telemetry, setFlag, agentImage, setFlag, imagePullPolicy, setFlag, headless}
+	return []string{setFlag, agentImage, setFlag, imagePullPolicy, setFlag, headless}
 }
 
-func getDefaultTapCommandArgs() []string {
+func GetDefaultTapCommandArgs() []string {
 	tapCommand := "tap"
 	defaultCmdArgs := getDefaultCommandArgs()
 
 	return append([]string{tapCommand}, defaultCmdArgs...)
 }
 
-func getDefaultTapCommandArgsWithRegex(regex string) []string {
+func GetDefaultTapCommandArgsWithRegex(regex string) []string {
 	tapCommand := "tap"
 	defaultCmdArgs := getDefaultCommandArgs()
 
 	return append([]string{tapCommand, regex}, defaultCmdArgs...)
 }
 
-func getDefaultLogsCommandArgs() []string {
+func GetDefaultLogsCommandArgs() []string {
 	logsCommand := "logs"
 	defaultCmdArgs := getDefaultCommandArgs()
 
 	return append([]string{logsCommand}, defaultCmdArgs...)
 }
 
-func getDefaultTapNamespace() []string {
+func GetDefaultTapNamespace() []string {
 	return []string{"-n", "mizu-tests"}
 }
 
-func getDefaultConfigCommandArgs() []string {
+func GetDefaultConfigCommandArgs() []string {
 	configCommand := "config"
 	defaultCmdArgs := getDefaultCommandArgs()
 
 	return append([]string{configCommand}, defaultCmdArgs...)
 }
 
-func getDefaultCleanCommandArgs() []string {
-	cleanCommand := "clean"
-	defaultCmdArgs := getDefaultCommandArgs()
-
-	return append([]string{cleanCommand}, defaultCmdArgs...)
-}
-
-func getDefaultViewCommandArgs() []string {
-	viewCommand := "view"
-	defaultCmdArgs := getDefaultCommandArgs()
-
-	return append([]string{viewCommand}, defaultCmdArgs...)
-}
-
-func runCypressTests(t *testing.T, cypressRunCmd string) {
+func RunCypressTests(t *testing.T, cypressRunCmd string) {
 	cypressCmd := exec.Command("bash", "-c", cypressRunCmd)
 	t.Logf("running command: %v", cypressCmd.String())
-	out, err := cypressCmd.Output()
+	out, err := cypressCmd.CombinedOutput()
 	if err != nil {
-		t.Errorf("%s", out)
+		t.Errorf("error running cypress, error: %v, output: %v", err, string(out))
 		return
 	}
+
 	t.Logf("%s", out)
 }
 
-func retriesExecute(retriesCount int, executeFunc func() error) error {
+func RetriesExecute(retriesCount int, executeFunc func() error) error {
 	var lastError interface{}
 
 	for i := 0; i < retriesCount; i++ {
-		if err := tryExecuteFunc(executeFunc); err != nil {
+		if err := TryExecuteFunc(executeFunc); err != nil {
 			lastError = err
 
 			time.Sleep(1 * time.Second)
@@ -172,7 +283,7 @@ func retriesExecute(retriesCount int, executeFunc func() error) error {
 	return fmt.Errorf("reached max retries count, retries count: %v, last err: %v", retriesCount, lastError)
 }
 
-func tryExecuteFunc(executeFunc func() error) (err interface{}) {
+func TryExecuteFunc(executeFunc func() error) (err interface{}) {
 	defer func() {
 		if panicErr := recover(); panicErr != nil {
 			err = panicErr
@@ -182,26 +293,26 @@ func tryExecuteFunc(executeFunc func() error) (err interface{}) {
 	return executeFunc()
 }
 
-func waitTapPodsReady(apiServerUrl string) error {
-	resolvingUrl := fmt.Sprintf("%v/status/tappersCount", apiServerUrl)
+func WaitTapPodsReady(apiServerUrl string) error {
+	resolvingUrl := fmt.Sprintf("%v/status/connectedTappersCount", apiServerUrl)
 	tapPodsReadyFunc := func() error {
-		requestResult, requestErr := executeHttpGetRequest(resolvingUrl)
+		requestResult, requestErr := ExecuteHttpGetRequest(resolvingUrl)
 		if requestErr != nil {
 			return requestErr
 		}
 
-		tappersCount := requestResult.(float64)
-		if tappersCount == 0 {
-			return fmt.Errorf("no tappers running")
+		connectedTappersCount := requestResult.(float64)
+		if connectedTappersCount == 0 {
+			return fmt.Errorf("no connected tappers running")
 		}
-		time.Sleep(waitAfterTapPodsReady)
+		time.Sleep(WaitAfterTapPodsReady)
 		return nil
 	}
 
-	return retriesExecute(longRetriesCount, tapPodsReadyFunc)
+	return RetriesExecute(LongRetriesCount, tapPodsReadyFunc)
 }
 
-func jsonBytesToInterface(jsonBytes []byte) (interface{}, error) {
+func JsonBytesToInterface(jsonBytes []byte) (interface{}, error) {
 	var result interface{}
 	if parseErr := json.Unmarshal(jsonBytes, &result); parseErr != nil {
 		return nil, parseErr
@@ -210,7 +321,7 @@ func jsonBytesToInterface(jsonBytes []byte) (interface{}, error) {
 	return result, nil
 }
 
-func executeHttpRequest(response *http.Response, requestErr error) (interface{}, error) {
+func ExecuteHttpRequest(response *http.Response, requestErr error) (interface{}, error) {
 	if requestErr != nil {
 		return nil, requestErr
 	} else if response.StatusCode != 200 {
@@ -224,10 +335,10 @@ func executeHttpRequest(response *http.Response, requestErr error) (interface{},
 		return nil, readErr
 	}
 
-	return jsonBytesToInterface(data)
+	return JsonBytesToInterface(data)
 }
 
-func executeHttpGetRequestWithHeaders(url string, headers map[string]string) (interface{}, error) {
+func ExecuteHttpGetRequestWithHeaders(url string, headers map[string]string) (interface{}, error) {
 	request, err := http.NewRequest(http.MethodGet, url, nil)
 	if err != nil {
 		return nil, err
@@ -239,15 +350,15 @@ func executeHttpGetRequestWithHeaders(url string, headers map[string]string) (in
 
 	client := &http.Client{}
 	response, requestErr := client.Do(request)
-	return executeHttpRequest(response, requestErr)
+	return ExecuteHttpRequest(response, requestErr)
 }
 
-func executeHttpGetRequest(url string) (interface{}, error) {
+func ExecuteHttpGetRequest(url string) (interface{}, error) {
 	response, requestErr := http.Get(url)
-	return executeHttpRequest(response, requestErr)
+	return ExecuteHttpRequest(response, requestErr)
 }
 
-func executeHttpPostRequestWithHeaders(url string, headers map[string]string, body interface{}) (interface{}, error) {
+func ExecuteHttpPostRequestWithHeaders(url string, headers map[string]string, body interface{}) (interface{}, error) {
 	requestBody, jsonErr := json.Marshal(body)
 	if jsonErr != nil {
 		return nil, jsonErr
@@ -265,40 +376,10 @@ func executeHttpPostRequestWithHeaders(url string, headers map[string]string, bo
 
 	client := &http.Client{}
 	response, requestErr := client.Do(request)
-	return executeHttpRequest(response, requestErr)
+	return ExecuteHttpRequest(response, requestErr)
 }
 
-func runMizuClean() error {
-	cliPath, err := getCliPath()
-	if err != nil {
-		return err
-	}
-
-	cleanCmdArgs := getDefaultCleanCommandArgs()
-
-	cleanCmd := exec.Command(cliPath, cleanCmdArgs...)
-
-	commandDone := make(chan error)
-	go func() {
-		if err := cleanCmd.Run(); err != nil {
-			commandDone <- err
-		}
-		commandDone <- nil
-	}()
-
-	select {
-	case err = <-commandDone:
-		if err != nil {
-			return err
-		}
-	case <-time.After(cleanCommandTimeout):
-		return errors.New("clean command timed out")
-	}
-
-	return nil
-}
-
-func cleanupCommand(cmd *exec.Cmd) error {
+func CleanupCommand(cmd *exec.Cmd) error {
 	if err := cmd.Process.Signal(syscall.SIGQUIT); err != nil {
 		return err
 	}
@@ -310,18 +391,7 @@ func cleanupCommand(cmd *exec.Cmd) error {
 	return nil
 }
 
-func getPods(tapStatusInterface interface{}) ([]map[string]interface{}, error) {
-	tapPodsInterface := tapStatusInterface.([]interface{})
-
-	var pods []map[string]interface{}
-	for _, podInterface := range tapPodsInterface {
-		pods = append(pods, podInterface.(map[string]interface{}))
-	}
-
-	return pods, nil
-}
-
-func getLogsPath() (string, error) {
+func GetLogsPath() (string, error) {
 	dir, filePathErr := os.Getwd()
 	if filePathErr != nil {
 		return "", filePathErr
@@ -329,77 +399,6 @@ func getLogsPath() (string, error) {
 
 	logsPath := path.Join(dir, "mizu_logs.zip")
 	return logsPath, nil
-}
-
-// waitTimeout waits for the waitgroup for the specified max timeout.
-// Returns true if waiting timed out.
-func waitTimeout(wg *sync.WaitGroup, timeout time.Duration) bool {
-	channel := make(chan struct{})
-	go func() {
-		defer close(channel)
-		wg.Wait()
-	}()
-	select {
-	case <-channel:
-		return false // completed normally
-	case <-time.After(timeout):
-		return true // timed out
-	}
-}
-
-// checkEntriesAtLeast checks whether the number of entries greater than or equal to n
-func checkEntriesAtLeast(entries []map[string]interface{}, n int) error {
-	if len(entries) < n {
-		return fmt.Errorf("Unexpected entries result - Expected more than %d entries", n-1)
-	}
-	return nil
-}
-
-// getDBEntries retrieves the entries from the database before the given timestamp.
-// Also limits the results according to the limit parameter.
-// Timeout for the WebSocket connection is defined by the timeout parameter.
-func getDBEntries(timestamp int64, limit int, timeout time.Duration) (entries []map[string]interface{}, err error) {
-	query := fmt.Sprintf("timestamp < %d and limit(%d)", timestamp, limit)
-	webSocketUrl := getWebSocketUrl(defaultApiServerPort)
-
-	var connection *websocket.Conn
-	connection, _, err = websocket.DefaultDialer.Dial(webSocketUrl, nil)
-	if err != nil {
-		return
-	}
-	defer connection.Close()
-
-	handleWSConnection := func(wg *sync.WaitGroup) {
-		defer wg.Done()
-		for {
-			_, message, err := connection.ReadMessage()
-			if err != nil {
-				return
-			}
-
-			var data map[string]interface{}
-			if err = json.Unmarshal([]byte(message), &data); err != nil {
-				return
-			}
-
-			if data["messageType"] == "entry" {
-				entries = append(entries, data)
-			}
-		}
-	}
-
-	err = connection.WriteMessage(websocket.TextMessage, []byte(query))
-	if err != nil {
-		return
-	}
-
-	var wg sync.WaitGroup
-	go handleWSConnection(&wg)
-	wg.Add(1)
-
-	waitTimeout(&wg, timeout)
-
-	return
 }
 
 func Contains(slice []string, containsValue string) bool {

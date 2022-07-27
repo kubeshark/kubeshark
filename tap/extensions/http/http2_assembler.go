@@ -1,4 +1,4 @@
-package main
+package http
 
 import (
 	"bufio"
@@ -27,26 +27,6 @@ const protoMajorHTTP2 = 2
 const protoMinorHTTP2 = 0
 
 var maxHTTP2DataLen = 1 * 1024 * 1024 // 1MB
-
-var grpcStatusCodes = []string{
-	"OK",
-	"CANCELLED",
-	"UNKNOWN",
-	"INVALID_ARGUMENT",
-	"DEADLINE_EXCEEDED",
-	"NOT_FOUND",
-	"ALREADY_EXISTS",
-	"PERMISSION_DENIED",
-	"RESOURCE_EXHAUSTED",
-	"FAILED_PRECONDITION",
-	"ABORTED",
-	"OUT_OF_RANGE",
-	"UNIMPLEMENTED",
-	"INTERNAL",
-	"UNAVAILABLE",
-	"DATA_LOSS",
-	"UNAUTHENTICATED",
-}
 
 type messageFragment struct {
 	headers []hpack.HeaderField
@@ -111,7 +91,7 @@ func (ga *Http2Assembler) readMessage() (streamID uint32, messageHTTP1 interface
 	// Exactly one Framer is used for each half connection.
 	// (Instead of creating a new Framer for each ReadFrame operation)
 	// This is needed in order to decompress the headers,
-	// because the compression context is updated with each requests/response.
+	// because the compression context is updated with each request/response.
 	frame, err := ga.framer.ReadFrame()
 	if err != nil {
 		return
@@ -142,18 +122,8 @@ func (ga *Http2Assembler) readMessage() (streamID uint32, messageHTTP1 interface
 
 	// gRPC detection
 	grpcStatus := headersHTTP1.Get("Grpc-Status")
-	if grpcStatus != "" {
+	if grpcStatus != "" || strings.Contains(headersHTTP1.Get("Content-Type"), "application/grpc") {
 		isGrpc = true
-		status = grpcStatus
-	}
-
-	if strings.Contains(headersHTTP1.Get("Content-Type"), "application/grpc") {
-		isGrpc = true
-		grpcPath := headersHTTP1.Get(":path")
-		pathSegments := strings.Split(grpcPath, "/")
-		if len(pathSegments) > 0 {
-			method = pathSegments[len(pathSegments)-1]
-		}
 	}
 
 	if method != "" {
@@ -235,8 +205,8 @@ func checkIsHTTP2ServerStream(b *bufio.Reader) (bool, error) {
 		return false, err
 	}
 
-	// If response starts with this text, it is HTTP/1.x
-	if bytes.Compare(buf, []byte("HTTP/1.0 ")) == 0 || bytes.Compare(buf, []byte("HTTP/1.1 ")) == 0 {
+	// If response starts with HTTP/1. then it's not HTTP/2
+	if bytes.HasPrefix(buf, []byte("HTTP/1.")) {
 		return false, nil
 	}
 

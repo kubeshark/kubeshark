@@ -1,80 +1,82 @@
-package main
+package http
 
 import (
-	"fmt"
 	"net/http"
-	"strings"
 	"sync"
 	"time"
 
 	"github.com/up9inc/mizu/tap/api"
 )
 
-var reqResMatcher = createResponseRequestMatcher() // global
-
-// Key is {client_addr}:{client_port}->{dest_addr}:{dest_port}_{incremental_counter}
+// Key is {client_addr}_{client_port}_{dest_addr}_{dest_port}_{incremental_counter}_{proto_ident}
 type requestResponseMatcher struct {
 	openMessagesMap *sync.Map
 }
 
-func createResponseRequestMatcher() requestResponseMatcher {
-	newMatcher := &requestResponseMatcher{openMessagesMap: &sync.Map{}}
-	return *newMatcher
+func createResponseRequestMatcher() api.RequestResponseMatcher {
+	return &requestResponseMatcher{openMessagesMap: &sync.Map{}}
 }
 
-func (matcher *requestResponseMatcher) registerRequest(ident string, request *http.Request, captureTime time.Time) *api.OutputChannelItem {
-	split := splitIdent(ident)
-	key := genKey(split)
+func (matcher *requestResponseMatcher) GetMap() *sync.Map {
+	return matcher.openMessagesMap
+}
 
+func (matcher *requestResponseMatcher) SetMaxTry(value int) {
+}
+
+func (matcher *requestResponseMatcher) registerRequest(ident string, request *http.Request, captureTime time.Time, captureSize int, protoMinor int) *api.OutputChannelItem {
 	requestHTTPMessage := api.GenericMessage{
 		IsRequest:   true,
 		CaptureTime: captureTime,
-		Payload: api.HTTPPayload{
+		CaptureSize: captureSize,
+		Payload: HTTPPayload{
 			Type: TypeHttpRequest,
 			Data: request,
 		},
 	}
 
-	if response, found := matcher.openMessagesMap.LoadAndDelete(key); found {
+	if response, found := matcher.openMessagesMap.LoadAndDelete(ident); found {
 		// Type assertion always succeeds because all of the map's values are of api.GenericMessage type
 		responseHTTPMessage := response.(*api.GenericMessage)
 		if responseHTTPMessage.IsRequest {
 			return nil
 		}
-		return matcher.preparePair(&requestHTTPMessage, responseHTTPMessage)
+		return matcher.preparePair(&requestHTTPMessage, responseHTTPMessage, protoMinor)
 	}
 
-	matcher.openMessagesMap.Store(key, &requestHTTPMessage)
+	matcher.openMessagesMap.Store(ident, &requestHTTPMessage)
 	return nil
 }
 
-func (matcher *requestResponseMatcher) registerResponse(ident string, response *http.Response, captureTime time.Time) *api.OutputChannelItem {
-	split := splitIdent(ident)
-	key := genKey(split)
-
+func (matcher *requestResponseMatcher) registerResponse(ident string, response *http.Response, captureTime time.Time, captureSize int, protoMinor int) *api.OutputChannelItem {
 	responseHTTPMessage := api.GenericMessage{
 		IsRequest:   false,
 		CaptureTime: captureTime,
-		Payload: api.HTTPPayload{
+		CaptureSize: captureSize,
+		Payload: HTTPPayload{
 			Type: TypeHttpResponse,
 			Data: response,
 		},
 	}
 
-	if request, found := matcher.openMessagesMap.LoadAndDelete(key); found {
+	if request, found := matcher.openMessagesMap.LoadAndDelete(ident); found {
 		// Type assertion always succeeds because all of the map's values are of api.GenericMessage type
 		requestHTTPMessage := request.(*api.GenericMessage)
 		if !requestHTTPMessage.IsRequest {
 			return nil
 		}
-		return matcher.preparePair(requestHTTPMessage, &responseHTTPMessage)
+		return matcher.preparePair(requestHTTPMessage, &responseHTTPMessage, protoMinor)
 	}
 
-	matcher.openMessagesMap.Store(key, &responseHTTPMessage)
+	matcher.openMessagesMap.Store(ident, &responseHTTPMessage)
 	return nil
 }
 
-func (matcher *requestResponseMatcher) preparePair(requestHTTPMessage *api.GenericMessage, responseHTTPMessage *api.GenericMessage) *api.OutputChannelItem {
+func (matcher *requestResponseMatcher) preparePair(requestHTTPMessage *api.GenericMessage, responseHTTPMessage *api.GenericMessage, protoMinor int) *api.OutputChannelItem {
+	protocol := http11protocol
+	if protoMinor == 0 {
+		protocol = http10protocol
+	}
 	return &api.OutputChannelItem{
 		Protocol:       protocol,
 		Timestamp:      requestHTTPMessage.CaptureTime.UnixNano() / int64(time.Millisecond),
@@ -84,14 +86,4 @@ func (matcher *requestResponseMatcher) preparePair(requestHTTPMessage *api.Gener
 			Response: *responseHTTPMessage,
 		},
 	}
-}
-
-func splitIdent(ident string) []string {
-	ident = strings.Replace(ident, "->", " ", -1)
-	return strings.Split(ident, " ")
-}
-
-func genKey(split []string) string {
-	key := fmt.Sprintf("%s:%s->%s:%s,%s%s", split[0], split[2], split[1], split[3], split[4], split[5])
-	return key
 }

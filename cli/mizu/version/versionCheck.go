@@ -5,45 +5,18 @@ import (
 	"fmt"
 	"io/ioutil"
 	"net/http"
-	"os"
 	"runtime"
 	"strings"
 	"time"
 
-	"github.com/up9inc/mizu/cli/apiserver"
 	"github.com/up9inc/mizu/cli/mizu"
-	"github.com/up9inc/mizu/shared/logger"
+	"github.com/up9inc/mizu/cli/pkg/version"
+	"github.com/up9inc/mizu/logger"
 
 	"github.com/google/go-github/v37/github"
-	"github.com/up9inc/mizu/cli/uiUtils"
-	"github.com/up9inc/mizu/shared/semver"
 )
 
-func CheckVersionCompatibility(apiServerProvider *apiserver.Provider) (bool, error) {
-	apiSemVer, err := apiServerProvider.GetVersion()
-	if err != nil {
-		return false, err
-	}
-
-	if !semver.SemVersion(apiSemVer).IsValid() {
-		logger.Log.Errorf(uiUtils.Red, fmt.Sprintf("api version (%s) is not a valid SemVer", apiSemVer))
-		return false, nil
-	}
-
-	if semver.SemVersion(apiSemVer).Major() == semver.SemVersion(mizu.SemVer).Major() &&
-		semver.SemVersion(apiSemVer).Minor() == semver.SemVersion(mizu.SemVer).Minor() {
-		return true, nil
-	}
-
-	logger.Log.Errorf(uiUtils.Red, fmt.Sprintf("cli version (%s) is not compatible with api version (%s)", mizu.SemVer, apiSemVer))
-	return false, nil
-}
-
 func CheckNewerVersion(versionChan chan string) {
-	if _, present := os.LookupEnv(mizu.DEVENVVAR); present {
-		versionChan <- ""
-		return
-	}
 	logger.Log.Debugf("Checking for newer version...")
 	start := time.Now()
 	client := github.NewClient(nil)
@@ -84,24 +57,23 @@ func CheckNewerVersion(versionChan chan string) {
 	gitHubVersion := string(data)
 	gitHubVersion = gitHubVersion[:len(gitHubVersion)-1]
 
-	gitHubVersionSemVer := semver.SemVersion(gitHubVersion)
-	currentSemVer := semver.SemVersion(mizu.SemVer)
-	if !gitHubVersionSemVer.IsValid() || !currentSemVer.IsValid() {
-		logger.Log.Debugf("[ERROR] Semver version is not valid, github version %v, current version %v", gitHubVersion, currentSemVer)
+	greater, err := version.GreaterThen(gitHubVersion, mizu.Ver)
+	if err != nil {
+		logger.Log.Debugf("[ERROR] Ver version is not valid, github version %v, current version %v", gitHubVersion, mizu.Ver)
 		versionChan <- ""
 		return
 	}
 
-	logger.Log.Debugf("Finished version validation, github version %v, current version %v, took %v", gitHubVersion, currentSemVer, time.Since(start))
+	logger.Log.Debugf("Finished version validation, github version %v, current version %v, took %v", gitHubVersion, mizu.Ver, time.Since(start))
 
-	if gitHubVersionSemVer.GreaterThan(currentSemVer) {
+	if greater {
 		var downloadMessage string
 		if runtime.GOOS == "windows" {
 			downloadMessage = fmt.Sprintf("curl -LO %v/mizu.exe", strings.Replace(*latestRelease.HTMLURL, "tag", "download", 1))
 		} else {
 			downloadMessage = fmt.Sprintf("curl -Lo mizu %v/mizu_%s_%s && chmod 755 mizu", strings.Replace(*latestRelease.HTMLURL, "tag", "download", 1), runtime.GOOS, runtime.GOARCH)
 		}
-		versionChan <- fmt.Sprintf("Update available! %v -> %v (%s)", mizu.SemVer, gitHubVersion, downloadMessage)
+		versionChan <- fmt.Sprintf("Update available! %v -> %v (%s)", mizu.Ver, gitHubVersion, downloadMessage)
 	} else {
 		versionChan <- ""
 	}

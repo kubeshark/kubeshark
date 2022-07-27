@@ -1,9 +1,8 @@
-package main
+package kafka
 
 import (
 	"fmt"
 	"io"
-	"net"
 	"reflect"
 	"strconv"
 	"strings"
@@ -27,29 +26,20 @@ func (k ApiKey) String() string {
 	return strconv.Itoa(int(k))
 }
 
-func (k ApiKey) MinVersion() int16 { return k.apiType().minVersion() }
-
-func (k ApiKey) MaxVersion() int16 { return k.apiType().maxVersion() }
-
-func (k ApiKey) SelectVersion(minVersion, maxVersion int16) int16 {
-	min := k.MinVersion()
-	max := k.MaxVersion()
-	switch {
-	case min > maxVersion:
-		return min
-	case max < maxVersion:
-		return max
-	default:
-		return maxVersion
-	}
-}
-
-func (k ApiKey) apiType() apiType {
-	if i := int(k); i >= 0 && i < len(apiTypes) {
-		return apiTypes[i]
-	}
-	return apiType{}
-}
+const (
+	// v0  = 0
+	v1  = 1
+	v2  = 2
+	v3  = 3
+	v4  = 4
+	v5  = 5
+	v6  = 6
+	v7  = 7
+	v8  = 8
+	v9  = 9
+	v10 = 10
+	v11 = 11
+)
 
 const (
 	Produce                     ApiKey = 0
@@ -164,52 +154,6 @@ type messageType struct {
 	flexible bool
 	gotype   reflect.Type
 	decode   decodeFunc
-	encode   encodeFunc
-}
-
-func (t *messageType) new() Message {
-	return reflect.New(t.gotype).Interface().(Message)
-}
-
-type apiType struct {
-	requests  []messageType
-	responses []messageType
-}
-
-func (t apiType) minVersion() int16 {
-	if len(t.requests) == 0 {
-		return 0
-	}
-	return t.requests[0].version
-}
-
-func (t apiType) maxVersion() int16 {
-	if len(t.requests) == 0 {
-		return 0
-	}
-	return t.requests[len(t.requests)-1].version
-}
-
-var apiTypes [numApis]apiType
-
-// Register is automatically called by sub-packages are imported to install a
-// new pair of request/response message types.
-func Register(req, res Message) {
-	k1 := req.ApiKey()
-	k2 := res.ApiKey()
-
-	if k1 != k2 {
-		panic(fmt.Sprintf("[%T/%T]: request and response API keys mismatch: %d != %d", req, res, k1, k2))
-	}
-
-	apiTypes[k1] = apiType{
-		requests:  typesOf(req),
-		responses: typesOf(res),
-	}
-}
-
-func typesOf(v interface{}) []messageType {
-	return makeTypes(reflect.TypeOf(v).Elem())
 }
 
 func makeTypes(t reflect.Type) []messageType {
@@ -245,7 +189,6 @@ func makeTypes(t reflect.Type) []messageType {
 			gotype:   t,
 			flexible: flexible,
 			decode:   decodeFuncOf(t, v, flexible, structTag{}),
-			encode:   encodeFuncOf(t, v, flexible, structTag{}),
 		})
 	}
 
@@ -382,31 +325,6 @@ type Broker struct {
 	Rack string
 }
 
-func (b Broker) String() string {
-	return net.JoinHostPort(b.Host, itoa(b.Port))
-}
-
-func (b Broker) Format(w fmt.State, v rune) {
-	switch v {
-	case 'd':
-		io.WriteString(w, itoa(b.ID))
-	case 's':
-		io.WriteString(w, b.String())
-	case 'v':
-		io.WriteString(w, itoa(b.ID))
-		io.WriteString(w, " ")
-		io.WriteString(w, b.String())
-		if b.Rack != "" {
-			io.WriteString(w, " ")
-			io.WriteString(w, b.Rack)
-		}
-	}
-}
-
-func itoa(i int32) string {
-	return strconv.Itoa(int(i))
-}
-
 type Topic struct {
 	Name       string
 	Error      int16
@@ -420,14 +338,6 @@ type Partition struct {
 	Replicas []int32
 	ISR      []int32
 	Offline  []int32
-}
-
-// BrokerMessage is an extension of the Message interface implemented by some
-// request types to customize the broker assignment logic.
-type BrokerMessage interface {
-	// Given a representation of the kafka cluster state as argument, returns
-	// the broker that the message should be routed to.
-	Broker(Cluster) (Broker, error)
 }
 
 // GroupMessage is an extension of the Message interface implemented by some
@@ -447,16 +357,6 @@ type PreparedMessage interface {
 	Prepare(apiVersion int16)
 }
 
-// Splitter is an interface implemented by messages that can be split into
-// multiple requests and have their results merged back by a Merger.
-type Splitter interface {
-	// For a given cluster layout, returns the list of messages constructed
-	// from the receiver for each requests that should be sent to the cluster.
-	// The second return value is a Merger which can be used to merge back the
-	// results of each request into a single message (or an error).
-	Split(Cluster) ([]Message, Merger, error)
-}
-
 // Merger is an interface implemented by messages which can merge multiple
 // results into one response.
 type Merger interface {
@@ -464,17 +364,4 @@ type Merger interface {
 	// response (or an error). The results must be either Message or error
 	// values, other types should trigger a panic.
 	Merge(messages []Message, results []interface{}) (Message, error)
-}
-
-// Result converts r to a Message or and error, or panics if r could be be
-// converted to these types.
-func Result(r interface{}) (Message, error) {
-	switch v := r.(type) {
-	case Message:
-		return v, nil
-	case error:
-		return nil, v
-	default:
-		panic(fmt.Errorf("BUG: result must be a message or an error but not %T", v))
-	}
 }

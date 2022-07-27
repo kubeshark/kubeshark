@@ -2,25 +2,43 @@ package api
 
 import (
 	"bufio"
-	"bytes"
-	"encoding/json"
-	"errors"
 	"fmt"
-	"io/ioutil"
-	"net/http"
-	"plugin"
+	"net"
+	"strings"
 	"sync"
 	"time"
 
-	"github.com/google/martian/har"
+	"github.com/up9inc/mizu/tap/dbgctl"
 )
 
+const UnknownNamespace = ""
+
+var UnknownIp = net.IP{0, 0, 0, 0}
+var UnknownPort uint16 = 0
+
+type ProtocolSummary struct {
+	Name         string `json:"name"`
+	Version      string `json:"version"`
+	Abbreviation string `json:"abbr"`
+}
+
+func (protocol *ProtocolSummary) ToString() string {
+	return fmt.Sprintf("%s?%s?%s", protocol.Name, protocol.Version, protocol.Abbreviation)
+}
+
+func GetProtocolSummary(inputString string) *ProtocolSummary {
+	splitted := strings.SplitN(inputString, "?", 3)
+	return &ProtocolSummary{
+		Name:         splitted[0],
+		Version:      splitted[1],
+		Abbreviation: splitted[2],
+	}
+}
+
 type Protocol struct {
-	Name            string   `json:"name"`
+	ProtocolSummary
 	LongName        string   `json:"longName"`
-	Abbreviation    string   `json:"abbr"`
 	Macro           string   `json:"macro"`
-	Version         string   `json:"version"`
 	BackgroundColor string   `json:"backgroundColor"`
 	ForegroundColor string   `json:"foregroundColor"`
 	FontSize        int8     `json:"fontSize"`
@@ -36,12 +54,20 @@ type TCP struct {
 }
 
 type Extension struct {
-	Protocol   *Protocol
-	Path       string
-	Plug       *plugin.Plugin
-	Dissector  Dissector
-	MatcherMap *sync.Map
+	Protocol  *Protocol
+	Path      string
+	Dissector Dissector
 }
+
+type Capture string
+
+const (
+	UndefinedCapture Capture = ""
+	Pcap             Capture = "pcap"
+	Envoy            Capture = "envoy"
+	Linkerd          Capture = "linkerd"
+	Ebpf             Capture = "ebpf"
+)
 
 type ConnectionInfo struct {
 	ClientIP   string
@@ -62,11 +88,13 @@ type TcpID struct {
 type CounterPair struct {
 	Request  uint
 	Response uint
+	sync.Mutex
 }
 
 type GenericMessage struct {
 	IsRequest   bool        `json:"isRequest"`
 	CaptureTime time.Time   `json:"captureTime"`
+	CaptureSize int         `json:"captureSize"`
 	Payload     interface{} `json:"payload"`
 }
 
@@ -75,31 +103,50 @@ type RequestResponsePair struct {
 	Response GenericMessage `json:"response"`
 }
 
-// `Protocol` is modified in the later stages of data propagation. Therefore it's not a pointer.
 type OutputChannelItem struct {
+	// `Protocol` is modified in later stages of data propagation. Therefore, it's not a pointer.
 	Protocol       Protocol
+	Capture        Capture
 	Timestamp      int64
 	ConnectionInfo *ConnectionInfo
 	Pair           *RequestResponsePair
-	Summary        *BaseEntry
+	Namespace      string
 }
 
-type SuperTimer struct {
-	CaptureTime time.Time
+type ReadProgress struct {
+	readBytes   int
+	lastCurrent int
 }
 
-type SuperIdentifier struct {
-	Protocol       *Protocol
-	IsClosedOthers bool
+func (p *ReadProgress) Feed(n int) {
+	p.readBytes += n
+}
+
+func (p *ReadProgress) Current() (n int) {
+	p.lastCurrent = p.readBytes - p.lastCurrent
+	return p.lastCurrent
+}
+
+func (p *ReadProgress) Reset() {
+	p.readBytes = 0
+	p.lastCurrent = 0
 }
 
 type Dissector interface {
 	Register(*Extension)
+	GetProtocols() map[string]*Protocol
 	Ping()
-	Dissect(b *bufio.Reader, isClient bool, tcpID *TcpID, counterPair *CounterPair, superTimer *SuperTimer, superIdentifier *SuperIdentifier, emitter Emitter, options *TrafficFilteringOptions) error
-	Analyze(item *OutputChannelItem, resolvedSource string, resolvedDestination string) *Entry
-	Represent(request map[string]interface{}, response map[string]interface{}) (object []byte, bodySize int64, err error)
+	Dissect(b *bufio.Reader, reader TcpReader, options *TrafficFilteringOptions) error
+	Analyze(item *OutputChannelItem, resolvedSource string, resolvedDestination string, namespace string) *Entry
+	Summarize(entry *Entry) *BaseEntry
+	Represent(request map[string]interface{}, response map[string]interface{}) (object []byte, err error)
 	Macros() map[string]string
+	NewResponseRequestMatcher() RequestResponseMatcher
+}
+
+type RequestResponseMatcher interface {
+	GetMap() *sync.Map
+	SetMaxTry(value int)
 }
 
 type Emitting struct {
@@ -112,111 +159,54 @@ type Emitter interface {
 }
 
 func (e *Emitting) Emit(item *OutputChannelItem) {
-	e.OutputChannel <- item
 	e.AppStats.IncMatchedPairs()
+
+	if dbgctl.MizuTapperDisableEmitting {
+		return
+	}
+
+	e.OutputChannel <- item
 }
 
 type Entry struct {
-	Id                     uint                   `json:"id"`
-	Protocol               Protocol               `json:"proto"`
-	Source                 *TCP                   `json:"src"`
-	Destination            *TCP                   `json:"dst"`
-	Outgoing               bool                   `json:"outgoing"`
-	Timestamp              int64                  `json:"timestamp"`
-	StartTime              time.Time              `json:"startTime"`
-	Request                map[string]interface{} `json:"request"`
-	Response               map[string]interface{} `json:"response"`
-	Summary                string                 `json:"summary"`
-	Method                 string                 `json:"method"`
-	Status                 int                    `json:"status"`
-	ElapsedTime            int64                  `json:"elapsedTime"`
-	Path                   string                 `json:"path"`
-	IsOutgoing             bool                   `json:"isOutgoing,omitempty"`
-	Rules                  ApplicableRules        `json:"rules,omitempty"`
-	ContractStatus         ContractStatus         `json:"contractStatus,omitempty"`
-	ContractRequestReason  string                 `json:"contractRequestReason,omitempty"`
-	ContractResponseReason string                 `json:"contractResponseReason,omitempty"`
-	ContractContent        string                 `json:"contractContent,omitempty"`
-	HTTPPair               string                 `json:"httpPair,omitempty"`
+	Id           string                 `json:"id"`
+	Protocol     ProtocolSummary        `json:"protocol"`
+	Capture      Capture                `json:"capture"`
+	Source       *TCP                   `json:"src"`
+	Destination  *TCP                   `json:"dst"`
+	Namespace    string                 `json:"namespace"`
+	Outgoing     bool                   `json:"outgoing"`
+	Timestamp    int64                  `json:"timestamp"`
+	StartTime    time.Time              `json:"startTime"`
+	Request      map[string]interface{} `json:"request"`
+	Response     map[string]interface{} `json:"response"`
+	RequestSize  int                    `json:"requestSize"`
+	ResponseSize int                    `json:"responseSize"`
+	ElapsedTime  int64                  `json:"elapsedTime"`
 }
 
 type EntryWrapper struct {
-	Protocol       Protocol                 `json:"protocol"`
-	Representation string                   `json:"representation"`
-	BodySize       int64                    `json:"bodySize"`
-	Data           *Entry                   `json:"data"`
-	Rules          []map[string]interface{} `json:"rulesMatched,omitempty"`
-	IsRulesEnabled bool                     `json:"isRulesEnabled"`
+	Protocol       Protocol   `json:"protocol"`
+	Representation string     `json:"representation"`
+	Data           *Entry     `json:"data"`
+	Base           *BaseEntry `json:"base"`
 }
 
 type BaseEntry struct {
-	Id             uint            `json:"id"`
-	Protocol       Protocol        `json:"proto,omitempty"`
-	Url            string          `json:"url,omitempty"`
-	Path           string          `json:"path,omitempty"`
-	Summary        string          `json:"summary,omitempty"`
-	StatusCode     int             `json:"status"`
-	Method         string          `json:"method,omitempty"`
-	Timestamp      int64           `json:"timestamp,omitempty"`
-	Source         *TCP            `json:"src"`
-	Destination    *TCP            `json:"dst"`
-	IsOutgoing     bool            `json:"isOutgoing,omitempty"`
-	Latency        int64           `json:"latency"`
-	Rules          ApplicableRules `json:"rules,omitempty"`
-	ContractStatus ContractStatus  `json:"contractStatus"`
-}
-
-type ApplicableRules struct {
-	Latency       int64 `json:"latency,omitempty"`
-	Status        bool  `json:"status,omitempty"`
-	NumberOfRules int   `json:"numberOfRules,omitempty"`
-}
-
-type ContractStatus int
-
-type Contract struct {
-	Status         ContractStatus `json:"status"`
-	RequestReason  string         `json:"requestReason"`
-	ResponseReason string         `json:"responseReason"`
-	Content        string         `json:"content"`
-}
-
-func Summarize(entry *Entry) *BaseEntry {
-	return &BaseEntry{
-		Id:             entry.Id,
-		Protocol:       entry.Protocol,
-		Path:           entry.Path,
-		Summary:        entry.Summary,
-		StatusCode:     entry.Status,
-		Method:         entry.Method,
-		Timestamp:      entry.Timestamp,
-		Source:         entry.Source,
-		Destination:    entry.Destination,
-		IsOutgoing:     entry.IsOutgoing,
-		Latency:        entry.ElapsedTime,
-		Rules:          entry.Rules,
-		ContractStatus: entry.ContractStatus,
-	}
-}
-
-type DataUnmarshaler interface {
-	UnmarshalData(*Entry) error
-}
-
-func (bed *BaseEntry) UnmarshalData(entry *Entry) error {
-	bed.Protocol = entry.Protocol
-	bed.Id = entry.Id
-	bed.Path = entry.Path
-	bed.Summary = entry.Summary
-	bed.StatusCode = entry.Status
-	bed.Method = entry.Method
-	bed.Timestamp = entry.Timestamp
-	bed.Source = entry.Source
-	bed.Destination = entry.Destination
-	bed.IsOutgoing = entry.IsOutgoing
-	bed.Latency = entry.ElapsedTime
-	bed.ContractStatus = entry.ContractStatus
-	return nil
+	Id           string   `json:"id"`
+	Protocol     Protocol `json:"proto,omitempty"`
+	Capture      Capture  `json:"capture"`
+	Summary      string   `json:"summary,omitempty"`
+	SummaryQuery string   `json:"summaryQuery,omitempty"`
+	Status       int      `json:"status"`
+	StatusQuery  string   `json:"statusQuery"`
+	Method       string   `json:"method,omitempty"`
+	MethodQuery  string   `json:"methodQuery,omitempty"`
+	Timestamp    int64    `json:"timestamp,omitempty"`
+	Source       *TCP     `json:"src"`
+	Destination  *TCP     `json:"dst"`
+	IsOutgoing   bool     `json:"isOutgoing,omitempty"`
+	Latency      int64    `json:"latency"`
 }
 
 const (
@@ -239,107 +229,36 @@ type TableData struct {
 	Selector string      `json:"selector"`
 }
 
-const (
-	TypeHttpRequest = iota
-	TypeHttpResponse
-)
-
-type HTTPPayload struct {
-	Type uint8
-	Data interface{}
+type TcpReaderDataMsg interface {
+	GetBytes() []byte
+	GetTimestamp() time.Time
 }
 
-type HTTPPayloader interface {
-	MarshalJSON() ([]byte, error)
+type TcpReader interface {
+	Read(p []byte) (int, error)
+	GetReqResMatcher() RequestResponseMatcher
+	GetIsClient() bool
+	GetReadProgress() *ReadProgress
+	GetParent() TcpStream
+	GetTcpID() *TcpID
+	GetCounterPair() *CounterPair
+	GetCaptureTime() time.Time
+	GetEmitter() Emitter
+	GetIsClosed() bool
 }
 
-type HTTPWrapper struct {
-	Method      string               `json:"method"`
-	Url         string               `json:"url"`
-	Details     interface{}          `json:"details"`
-	RawRequest  *HTTPRequestWrapper  `json:"rawRequest"`
-	RawResponse *HTTPResponseWrapper `json:"rawResponse"`
+type TcpStream interface {
+	SetProtocol(protocol *Protocol)
+	GetOrigin() Capture
+	GetReqResMatchers() []RequestResponseMatcher
+	GetIsTapTarget() bool
+	GetIsClosed() bool
 }
 
-func (h HTTPPayload) MarshalJSON() ([]byte, error) {
-	switch h.Type {
-	case TypeHttpRequest:
-		harRequest, err := har.NewRequest(h.Data.(*http.Request), true)
-		if err != nil {
-			return nil, errors.New("Failed converting request to HAR")
-		}
-		return json.Marshal(&HTTPWrapper{
-			Method:     harRequest.Method,
-			Details:    harRequest,
-			RawRequest: &HTTPRequestWrapper{Request: h.Data.(*http.Request)},
-		})
-	case TypeHttpResponse:
-		harResponse, err := har.NewResponse(h.Data.(*http.Response), true)
-		if err != nil {
-			return nil, errors.New("Failed converting response to HAR")
-		}
-		return json.Marshal(&HTTPWrapper{
-			Method:      "",
-			Url:         "",
-			Details:     harResponse,
-			RawResponse: &HTTPResponseWrapper{Response: h.Data.(*http.Response)},
-		})
-	default:
-		panic(fmt.Sprintf("HTTP payload cannot be marshaled: %s", h.Type))
-	}
-}
-
-type HTTPWrapperTricky struct {
-	Method      string         `json:"method"`
-	Url         string         `json:"url"`
-	Details     interface{}    `json:"details"`
-	RawRequest  *http.Request  `json:"rawRequest"`
-	RawResponse *http.Response `json:"rawResponse"`
-}
-
-type HTTPMessage struct {
-	IsRequest   bool              `json:"isRequest"`
-	CaptureTime time.Time         `json:"captureTime"`
-	Payload     HTTPWrapperTricky `json:"payload"`
-}
-
-type HTTPRequestResponsePair struct {
-	Request  HTTPMessage `json:"request"`
-	Response HTTPMessage `json:"response"`
-}
-
-type HTTPRequestWrapper struct {
-	*http.Request
-}
-
-func (r *HTTPRequestWrapper) MarshalJSON() ([]byte, error) {
-	body, _ := ioutil.ReadAll(r.Request.Body)
-	r.Request.Body = ioutil.NopCloser(bytes.NewBuffer(body))
-	return json.Marshal(&struct {
-		Body    string `json:"Body,omitempty"`
-		GetBody string `json:"GetBody,omitempty"`
-		Cancel  string `json:"Cancel,omitempty"`
-		*http.Request
-	}{
-		Body:    string(body),
-		Request: r.Request,
-	})
-}
-
-type HTTPResponseWrapper struct {
-	*http.Response
-}
-
-func (r *HTTPResponseWrapper) MarshalJSON() ([]byte, error) {
-	body, _ := ioutil.ReadAll(r.Response.Body)
-	r.Response.Body = ioutil.NopCloser(bytes.NewBuffer(body))
-	return json.Marshal(&struct {
-		Body    string `json:"Body,omitempty"`
-		GetBody string `json:"GetBody,omitempty"`
-		Cancel  string `json:"Cancel,omitempty"`
-		*http.Response
-	}{
-		Body:     string(body),
-		Response: r.Response,
-	})
+type TcpStreamMap interface {
+	Range(f func(key, value interface{}) bool)
+	Store(key, value interface{})
+	Delete(key interface{})
+	NextId() int64
+	CloseTimedoutTcpStreamChannels()
 }

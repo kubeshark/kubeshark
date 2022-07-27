@@ -44,7 +44,7 @@ func (d *Debouncer) SetOn() error {
 	if d.canceled {
 		return fmt.Errorf("debouncer cancelled")
 	}
-	if d.running == true {
+	if d.running {
 		return nil
 	}
 

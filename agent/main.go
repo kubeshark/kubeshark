@@ -6,38 +6,37 @@ import (
 	"flag"
 	"fmt"
 	"io/ioutil"
-	"mizuserver/pkg/api"
-	"mizuserver/pkg/config"
-	"mizuserver/pkg/controllers"
-	"mizuserver/pkg/middlewares"
-	"mizuserver/pkg/models"
-	"mizuserver/pkg/routes"
-	"mizuserver/pkg/up9"
-	"mizuserver/pkg/utils"
 	"net/http"
 	"os"
 	"os/signal"
-	"path"
-	"path/filepath"
-	"plugin"
-	"sort"
 	"strconv"
 	"strings"
 	"syscall"
 	"time"
 
-	v1 "k8s.io/api/core/v1"
-
-	"github.com/antelman107/net-wait-go/wait"
+	"github.com/gin-contrib/pprof"
 	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/gin"
+	"github.com/up9inc/mizu/agent/pkg/dependency"
+	"github.com/up9inc/mizu/agent/pkg/entries"
+	"github.com/up9inc/mizu/agent/pkg/middlewares"
+	"github.com/up9inc/mizu/agent/pkg/models"
+	"github.com/up9inc/mizu/agent/pkg/oas"
+	"github.com/up9inc/mizu/agent/pkg/routes"
+	"github.com/up9inc/mizu/agent/pkg/servicemap"
+	"github.com/up9inc/mizu/agent/pkg/utils"
+
+	"github.com/up9inc/mizu/agent/pkg/api"
+	"github.com/up9inc/mizu/agent/pkg/app"
+	"github.com/up9inc/mizu/agent/pkg/config"
+
 	"github.com/gorilla/websocket"
 	"github.com/op/go-logging"
-	basenine "github.com/up9inc/basenine/client/go"
+	"github.com/up9inc/mizu/logger"
 	"github.com/up9inc/mizu/shared"
-	"github.com/up9inc/mizu/shared/logger"
 	"github.com/up9inc/mizu/tap"
 	tapApi "github.com/up9inc/mizu/tap/api"
+	"github.com/up9inc/mizu/tap/dbgctl"
 )
 
 var tapperMode = flag.Bool("tap", false, "Run in tapper mode without API")
@@ -47,98 +46,41 @@ var apiServerAddress = flag.String("api-server-address", "", "Address of mizu AP
 var namespace = flag.String("namespace", "", "Resolve IPs if they belong to resources in this namespace (default is all)")
 var harsReaderMode = flag.Bool("hars-read", false, "Run in hars-read mode")
 var harsDir = flag.String("hars-dir", "", "Directory to read hars from")
-
-var extensions []*tapApi.Extension             // global
-var extensionsMap map[string]*tapApi.Extension // global
-
-var startTime int64
+var profiler = flag.Bool("profiler", false, "Run pprof server")
 
 const (
 	socketConnectionRetries    = 30
 	socketConnectionRetryDelay = time.Second * 2
 	socketHandshakeTimeout     = time.Second * 2
-	uiIndexPath                = "./site/index.html"
 )
 
 func main() {
+	initializeDependencies()
 	logLevel := determineLogLevel()
-	logger.InitLoggerStderrOnly(logLevel)
+	logger.InitLoggerStd(logLevel)
 	flag.Parse()
-	if err := config.LoadConfig(); err != nil {
-		logger.Log.Fatalf("Error loading config file %v", err)
-	}
-	loadExtensions()
+
+	app.LoadExtensions()
 
 	if !*tapperMode && !*apiServerMode && !*standaloneMode && !*harsReaderMode {
-		panic("One of the flags --tap, --api or --standalone or --hars-read must be provided")
+		panic("One of the flags --tap, --api-server, --standalone or --hars-read must be provided")
 	}
 
 	if *standaloneMode {
-		api.StartResolving(*namespace)
-
-		outputItemsChannel := make(chan *tapApi.OutputChannelItem)
-		filteredOutputItemsChannel := make(chan *tapApi.OutputChannelItem)
-
-		filteringOptions := getTrafficFilteringOptions()
-		hostMode := os.Getenv(shared.HostModeEnvVar) == "1"
-		tapOpts := &tap.TapOpts{HostMode: hostMode}
-		tap.StartPassiveTapper(tapOpts, outputItemsChannel, extensions, filteringOptions)
-
-		go filterItems(outputItemsChannel, filteredOutputItemsChannel)
-		go api.StartReadingEntries(filteredOutputItemsChannel, nil, extensionsMap)
-
-		hostApi(nil)
+		runInStandaloneMode()
 	} else if *tapperMode {
-		logger.Log.Infof("Starting tapper, websocket address: %s", *apiServerAddress)
-		if *apiServerAddress == "" {
-			panic("API server address must be provided with --api-server-address when using --tap")
-		}
-
-		hostMode := os.Getenv(shared.HostModeEnvVar) == "1"
-		tapOpts := &tap.TapOpts{HostMode: hostMode}
-		tapTargets := getTapTargets()
-		if tapTargets != nil {
-			tapOpts.FilterAuthorities = tapTargets
-			logger.Log.Infof("Filtering for the following authorities: %v", tapOpts.FilterAuthorities)
-		}
-
-		filteredOutputItemsChannel := make(chan *tapApi.OutputChannelItem)
-
-		filteringOptions := getTrafficFilteringOptions()
-		tap.StartPassiveTapper(tapOpts, filteredOutputItemsChannel, extensions, filteringOptions)
-		socketConnection, err := dialSocketWithRetry(*apiServerAddress, socketConnectionRetries, socketConnectionRetryDelay)
-		if err != nil {
-			panic(fmt.Sprintf("Error connecting to socket server at %s %v", *apiServerAddress, err))
-		}
-		logger.Log.Infof("Connected successfully to websocket %s", *apiServerAddress)
-
-		go pipeTapChannelToSocket(socketConnection, filteredOutputItemsChannel)
+		runInTapperMode()
 	} else if *apiServerMode {
-		configureBasenineServer(shared.BasenineHost, shared.BaseninePort)
-		startTime = time.Now().UnixNano() / int64(time.Millisecond)
-		api.StartResolving(*namespace)
+		ginApp := runInApiServerMode(*namespace)
 
-		outputItemsChannel := make(chan *tapApi.OutputChannelItem)
-		filteredOutputItemsChannel := make(chan *tapApi.OutputChannelItem)
-
-		go filterItems(outputItemsChannel, filteredOutputItemsChannel)
-		go api.StartReadingEntries(filteredOutputItemsChannel, nil, extensionsMap)
-
-		syncEntriesConfig := getSyncEntriesConfig()
-		if syncEntriesConfig != nil {
-			if err := up9.SyncEntries(syncEntriesConfig); err != nil {
-				panic(fmt.Sprintf("Error syncing entries, err: %v", err))
-			}
+		if *profiler {
+			pprof.Register(ginApp)
 		}
 
-		hostApi(outputItemsChannel)
-	} else if *harsReaderMode {
-		outputItemsChannel := make(chan *tapApi.OutputChannelItem, 1000)
-		filteredHarChannel := make(chan *tapApi.OutputChannelItem)
+		utils.StartServer(ginApp)
 
-		go filterItems(outputItemsChannel, filteredHarChannel)
-		go api.StartReadingEntries(filteredHarChannel, harsDir, extensionsMap)
-		hostApi(nil)
+	} else if *harsReaderMode {
+		runInHarReaderMode()
 	}
 
 	signalChan := make(chan os.Signal, 1)
@@ -148,116 +90,128 @@ func main() {
 	logger.Log.Info("Exiting")
 }
 
-func configureBasenineServer(host string, port string) {
-	if !wait.New(
-		wait.WithProto("tcp"),
-		wait.WithWait(200*time.Millisecond),
-		wait.WithBreak(50*time.Millisecond),
-		wait.WithDeadline(5*time.Second),
-		wait.WithDebug(true),
-	).Do([]string{fmt.Sprintf("%s:%s", host, port)}) {
-		logger.Log.Panicf("Basenine is not available!")
-	}
+func hostApi(socketHarOutputChannel chan<- *tapApi.OutputChannelItem) *gin.Engine {
+	ginApp := gin.Default()
 
-	// Limit the database size to default 200MB
-	err := basenine.Limit(host, port, config.Config.MaxDBSizeBytes)
-	if err != nil {
-		logger.Log.Panicf("Error while limiting database size: %v", err)
-	}
-
-	// Define the macros
-	for _, extension := range extensions {
-		macros := extension.Dissector.Macros()
-		for macro, expanded := range macros {
-			err = basenine.Macro(host, port, macro, expanded)
-			if err != nil {
-				logger.Log.Panicf("Error while adding a macro: %v", err)
-			}
-		}
-	}
-}
-
-func loadExtensions() {
-	dir, _ := filepath.Abs(filepath.Dir(os.Args[0]))
-	extensionsDir := path.Join(dir, "./extensions/")
-
-	files, err := ioutil.ReadDir(extensionsDir)
-	if err != nil {
-		logger.Log.Fatal(err)
-	}
-	extensions = make([]*tapApi.Extension, len(files))
-	extensionsMap = make(map[string]*tapApi.Extension)
-	for i, file := range files {
-		filename := file.Name()
-		logger.Log.Infof("Loading extension: %s", filename)
-		extension := &tapApi.Extension{
-			Path: path.Join(extensionsDir, filename),
-		}
-		plug, _ := plugin.Open(extension.Path)
-		extension.Plug = plug
-		symDissector, err := plug.Lookup("Dissector")
-
-		var dissector tapApi.Dissector
-		var ok bool
-		dissector, ok = symDissector.(tapApi.Dissector)
-		if err != nil || !ok {
-			panic(fmt.Sprintf("Failed to load the extension: %s", extension.Path))
-		}
-		dissector.Register(extension)
-		extension.Dissector = dissector
-		extensions[i] = extension
-		extensionsMap[extension.Protocol.Name] = extension
-	}
-
-	sort.Slice(extensions, func(i, j int) bool {
-		return extensions[i].Protocol.Priority < extensions[j].Protocol.Priority
-	})
-
-	for _, extension := range extensions {
-		logger.Log.Infof("Extension Properties: %+v", extension)
-	}
-
-	controllers.InitExtensionsMap(extensionsMap)
-}
-
-func hostApi(socketHarOutputChannel chan<- *tapApi.OutputChannelItem) {
-	app := gin.Default()
-
-	app.GET("/echo", func(c *gin.Context) {
-		c.String(http.StatusOK, "Here is Mizu agent")
+	ginApp.GET("/echo", func(c *gin.Context) {
+		c.JSON(http.StatusOK, "Here is Mizu agent")
 	})
 
 	eventHandlers := api.RoutesEventHandlers{
 		SocketOutChannel: socketHarOutputChannel,
 	}
 
-	app.Use(DisableRootStaticCache())
+	ginApp.Use(disableRootStaticCache())
 
-	if err := setUIMode(); err != nil {
-		logger.Log.Errorf("Error setting ui mode, err: %v", err)
-	}
-	app.Use(static.ServeRoot("/", "./site"))
-
-	app.Use(middlewares.CORSMiddleware()) // This has to be called after the static middleware, does not work if its called before
-
-	api.WebSocketRoutes(app, &eventHandlers, startTime)
-
-	if config.Config.StandaloneMode {
-		routes.ConfigRoutes(app)
-		routes.UserRoutes(app)
-		routes.InstallRoutes(app)
+	staticFolder := "./site"
+	indexStaticFile := staticFolder + "/index.html"
+	if err := setUIFlags(indexStaticFile); err != nil {
+		logger.Log.Errorf("Error setting ui flags, err: %v", err)
 	}
 
-	routes.QueryRoutes(app)
-	routes.EntriesRoutes(app)
-	routes.MetadataRoutes(app)
-	routes.StatusRoutes(app)
-	routes.NotFoundRoute(app)
+	ginApp.Use(static.ServeRoot("/", staticFolder))
+	ginApp.NoRoute(func(c *gin.Context) {
+		c.File(indexStaticFile)
+	})
 
-	utils.StartServer(app)
+	ginApp.Use(middlewares.CORSMiddleware()) // This has to be called after the static middleware, does not work if it's called before
+
+	api.WebSocketRoutes(ginApp, &eventHandlers)
+
+	if config.Config.OAS.Enable {
+		routes.OASRoutes(ginApp)
+	}
+
+	if config.Config.ServiceMap {
+		routes.ServiceMapRoutes(ginApp)
+	}
+
+	routes.QueryRoutes(ginApp)
+	routes.EntriesRoutes(ginApp)
+	routes.MetadataRoutes(ginApp)
+	routes.StatusRoutes(ginApp)
+	routes.DbRoutes(ginApp)
+	routes.ReplayRoutes(ginApp)
+
+	return ginApp
 }
 
-func DisableRootStaticCache() gin.HandlerFunc {
+func runInApiServerMode(namespace string) *gin.Engine {
+	if err := config.LoadConfig(); err != nil {
+		logger.Log.Fatalf("Error loading config file %v", err)
+	}
+	app.ConfigureBasenineServer(shared.BasenineHost, shared.BaseninePort, config.Config.MaxDBSizeBytes, config.Config.LogLevel, config.Config.InsertionFilter)
+	api.StartResolving(namespace)
+
+	enableExpFeatureIfNeeded()
+
+	return hostApi(app.GetEntryInputChannel())
+}
+
+func runInTapperMode() {
+	logger.Log.Infof("Starting tapper, websocket address: %s", *apiServerAddress)
+	if *apiServerAddress == "" {
+		panic("API server address must be provided with --api-server-address when using --tap")
+	}
+
+	hostMode := os.Getenv(shared.HostModeEnvVar) == "1"
+	tapOpts := &tap.TapOpts{
+		HostMode: hostMode,
+	}
+
+	filteredOutputItemsChannel := make(chan *tapApi.OutputChannelItem)
+
+	filteringOptions := getTrafficFilteringOptions()
+	tap.StartPassiveTapper(tapOpts, filteredOutputItemsChannel, app.Extensions, filteringOptions)
+	socketConnection, err := dialSocketWithRetry(*apiServerAddress, socketConnectionRetries, socketConnectionRetryDelay)
+	if err != nil {
+		panic(fmt.Sprintf("Error connecting to socket server at %s %v", *apiServerAddress, err))
+	}
+	logger.Log.Infof("Connected successfully to websocket %s", *apiServerAddress)
+
+	go pipeTapChannelToSocket(socketConnection, filteredOutputItemsChannel)
+}
+
+func runInStandaloneMode() {
+	api.StartResolving(*namespace)
+
+	outputItemsChannel := make(chan *tapApi.OutputChannelItem)
+	filteredOutputItemsChannel := make(chan *tapApi.OutputChannelItem)
+
+	filteringOptions := getTrafficFilteringOptions()
+	hostMode := os.Getenv(shared.HostModeEnvVar) == "1"
+	tapOpts := &tap.TapOpts{HostMode: hostMode}
+	tap.StartPassiveTapper(tapOpts, outputItemsChannel, app.Extensions, filteringOptions)
+
+	go app.FilterItems(outputItemsChannel, filteredOutputItemsChannel)
+	go api.StartReadingEntries(filteredOutputItemsChannel, nil, app.ExtensionsMap)
+
+	ginApp := hostApi(nil)
+	utils.StartServer(ginApp)
+}
+
+func runInHarReaderMode() {
+	outputItemsChannel := make(chan *tapApi.OutputChannelItem, 1000)
+	filteredHarChannel := make(chan *tapApi.OutputChannelItem)
+
+	go app.FilterItems(outputItemsChannel, filteredHarChannel)
+	go api.StartReadingEntries(filteredHarChannel, harsDir, app.ExtensionsMap)
+	ginApp := hostApi(nil)
+	utils.StartServer(ginApp)
+}
+
+func enableExpFeatureIfNeeded() {
+	if config.Config.OAS.Enable {
+		oasGenerator := dependency.GetInstance(dependency.OasGeneratorDependency).(oas.OasGenerator)
+		oasGenerator.Start()
+	}
+	if config.Config.ServiceMap {
+		serviceMapGenerator := dependency.GetInstance(dependency.ServiceMapGeneratorDependency).(servicemap.ServiceMap)
+		serviceMapGenerator.Enable()
+	}
+}
+
+func disableRootStaticCache() gin.HandlerFunc {
 	return func(c *gin.Context) {
 		if c.Request.RequestURI == "/" {
 			// Disable cache only for the main static route
@@ -268,13 +222,14 @@ func DisableRootStaticCache() gin.HandlerFunc {
 	}
 }
 
-func setUIMode() error {
+func setUIFlags(uiIndexPath string) error {
 	read, err := ioutil.ReadFile(uiIndexPath)
 	if err != nil {
 		return err
 	}
 
-	replacedContent := strings.Replace(string(read), "__IS_STANDALONE__", strconv.FormatBool(config.Config.StandaloneMode), 1)
+	replacedContent := strings.Replace(string(read), "__IS_OAS_ENABLED__", strconv.FormatBool(config.Config.OAS.Enable), 1)
+	replacedContent = strings.Replace(replacedContent, "__IS_SERVICE_MAP_ENABLED__", strconv.FormatBool(config.Config.ServiceMap), 1)
 
 	err = ioutil.WriteFile(uiIndexPath, []byte(replacedContent), 0)
 	if err != nil {
@@ -282,28 +237,6 @@ func setUIMode() error {
 	}
 
 	return nil
-}
-
-func parseEnvVar(env string) map[string][]v1.Pod {
-	var mapOfList map[string][]v1.Pod
-
-	val, present := os.LookupEnv(env)
-
-	if !present {
-		return mapOfList
-	}
-
-	err := json.Unmarshal([]byte(val), &mapOfList)
-	if err != nil {
-		panic(fmt.Sprintf("env var %s's value of %v is invalid! must be map[string][]v1.Pod %v", env, mapOfList, err))
-	}
-	return mapOfList
-}
-
-func getTapTargets() []v1.Pod {
-	nodeName := os.Getenv(shared.NodeNameEnvVar)
-	tappedAddressesPerNodeDict := parseEnvVar(shared.TappedAddressesPerNodeDictEnvVar)
-	return tappedAddressesPerNodeDict[nodeName]
 }
 
 func getTrafficFilteringOptions() *tapApi.TrafficFilteringOptions {
@@ -322,16 +255,6 @@ func getTrafficFilteringOptions() *tapApi.TrafficFilteringOptions {
 	return &filteringOptions
 }
 
-func filterItems(inChannel <-chan *tapApi.OutputChannelItem, outChannel chan *tapApi.OutputChannelItem) {
-	for message := range inChannel {
-		if message.ConnectionInfo.IsOutgoing && api.CheckIsServiceIP(message.ConnectionInfo.ServerIP) {
-			continue
-		}
-
-		outChannel <- message
-	}
-}
-
 func pipeTapChannelToSocket(connection *websocket.Conn, messageDataChannel <-chan *tapApi.OutputChannelItem) {
 	if connection == nil {
 		panic("Websocket connection is nil")
@@ -345,6 +268,10 @@ func pipeTapChannelToSocket(connection *websocket.Conn, messageDataChannel <-cha
 		marshaledData, err := models.CreateWebsocketTappedEntryMessage(messageData)
 		if err != nil {
 			logger.Log.Errorf("error converting message to json %v, err: %s, (%v,%+v)", messageData, err, err, err)
+			continue
+		}
+
+		if dbgctl.MizuTapperDisableSending {
 			continue
 		}
 
@@ -367,21 +294,6 @@ func pipeTapChannelToSocket(connection *websocket.Conn, messageDataChannel <-cha
 	}
 }
 
-func getSyncEntriesConfig() *shared.SyncEntriesConfig {
-	syncEntriesConfigJson := os.Getenv(shared.SyncEntriesConfigEnvVar)
-	if syncEntriesConfigJson == "" {
-		return nil
-	}
-
-	var syncEntriesConfig = &shared.SyncEntriesConfig{}
-	err := json.Unmarshal([]byte(syncEntriesConfigJson), syncEntriesConfig)
-	if err != nil {
-		panic(fmt.Sprintf("env var %s's value of %s is invalid! json must match the shared.SyncEntriesConfig struct, err: %v", shared.SyncEntriesConfigEnvVar, syncEntriesConfigJson, err))
-	}
-
-	return syncEntriesConfig
-}
-
 func determineLogLevel() (logLevel logging.Level) {
 	logLevel, err := logging.LogLevel(os.Getenv(shared.LogLevelEnvVar))
 	if err != nil {
@@ -400,6 +312,7 @@ func dialSocketWithRetry(socketAddress string, retryAmount int, retryDelay time.
 	for i := 1; i < retryAmount; i++ {
 		socketConnection, _, err := dialer.Dial(socketAddress, nil)
 		if err != nil {
+			lastErr = err
 			if i < retryAmount {
 				logger.Log.Infof("socket connection to %s failed: %v, retrying %d out of %d in %d seconds...", socketAddress, err, i, retryAmount, retryDelay/time.Second)
 				time.Sleep(retryDelay)
@@ -433,10 +346,27 @@ func handleIncomingMessageAsTapper(socketConnection *websocket.Conn) {
 					} else {
 						tap.UpdateTapTargets(tapConfigMessage.TapTargets)
 					}
+				case shared.WebSocketMessageTypeUpdateTappedPods:
+					var tappedPodsMessage shared.WebSocketTappedPodsMessage
+					if err := json.Unmarshal(message, &tappedPodsMessage); err != nil {
+						logger.Log.Infof("Could not unmarshal message of message type %s %v", socketMessageBase.MessageType, err)
+						return
+					}
+					nodeName := os.Getenv(shared.NodeNameEnvVar)
+					tap.UpdateTapTargets(tappedPodsMessage.NodeToTappedPodMap[nodeName])
 				default:
 					logger.Log.Warningf("Received socket message of type %s for which no handlers are defined", socketMessageBase.MessageType)
 				}
 			}
 		}
 	}
+}
+
+func initializeDependencies() {
+	dependency.RegisterGenerator(dependency.ServiceMapGeneratorDependency, func() interface{} { return servicemap.GetDefaultServiceMapInstance() })
+	dependency.RegisterGenerator(dependency.OasGeneratorDependency, func() interface{} { return oas.GetDefaultOasGeneratorInstance(config.Config.OAS.MaxExampleLen) })
+	dependency.RegisterGenerator(dependency.EntriesInserter, func() interface{} { return api.GetBasenineEntryInserterInstance() })
+	dependency.RegisterGenerator(dependency.EntriesProvider, func() interface{} { return &entries.BasenineEntriesProvider{} })
+	dependency.RegisterGenerator(dependency.EntriesSocketStreamer, func() interface{} { return &api.BasenineEntryStreamer{} })
+	dependency.RegisterGenerator(dependency.EntryStreamerSocketConnector, func() interface{} { return &api.DefaultEntryStreamerSocketConnector{} })
 }

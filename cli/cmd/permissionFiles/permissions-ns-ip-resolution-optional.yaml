@@ -1,0 +1,37 @@
+# This example shows permissions that are required for Mizu to resolve IPs to service names in namespace-restricted mode
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: mizu-resolver-role
+rules:
+- apiGroups: [""]
+  resources: ["serviceaccounts"]
+  verbs: ["get", "list", "create", "delete"]
+- apiGroups: ["rbac.authorization.k8s.io"]
+  resources: ["roles"]
+  verbs: ["get", "list", "create", "delete"]
+- apiGroups: ["rbac.authorization.k8s.io"]
+  resources: ["rolebindings"]
+  verbs: ["get", "list", "create", "delete"]
+- apiGroups: ["", "apps", "extensions"]
+  resources: ["pods"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["", "apps", "extensions"]
+  resources: ["services"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["", "apps", "extensions"]
+  resources: ["endpoints"]
+  verbs: ["get", "list", "watch"]
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: mizu-resolver-rolebindings
+subjects:
+- kind: User
+  name: user-with-restricted-access
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: Role
+  name: mizu-resolver-role
+  apiGroup: rbac.authorization.k8s.io

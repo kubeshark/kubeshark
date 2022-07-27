@@ -1,9 +1,8 @@
-package main
+package kafka
 
 import (
 	"bufio"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"log"
 	"time"
@@ -11,12 +10,14 @@ import (
 	"github.com/up9inc/mizu/tap/api"
 )
 
-var _protocol api.Protocol = api.Protocol{
-	Name:            "kafka",
+var _protocol = api.Protocol{
+	ProtocolSummary: api.ProtocolSummary{
+		Name:         "kafka",
+		Version:      "12",
+		Abbreviation: "KAFKA",
+	},
 	LongName:        "Apache Kafka Protocol",
-	Abbreviation:    "KAFKA",
 	Macro:           "kafka",
-	Version:         "12",
 	BackgroundColor: "#000000",
 	ForegroundColor: "#ffffff",
 	FontSize:        11,
@@ -25,129 +26,54 @@ var _protocol api.Protocol = api.Protocol{
 	Priority:        2,
 }
 
-func init() {
-	log.Println("Initializing Kafka extension...")
+var protocolsMap = map[string]*api.Protocol{
+	_protocol.ToString(): &_protocol,
 }
 
 type dissecting string
 
 func (d dissecting) Register(extension *api.Extension) {
 	extension.Protocol = &_protocol
-	extension.MatcherMap = reqResMatcher.openMessagesMap
+}
+
+func (d dissecting) GetProtocols() map[string]*api.Protocol {
+	return protocolsMap
 }
 
 func (d dissecting) Ping() {
 	log.Printf("pong %s", _protocol.Name)
 }
 
-func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, counterPair *api.CounterPair, superTimer *api.SuperTimer, superIdentifier *api.SuperIdentifier, emitter api.Emitter, options *api.TrafficFilteringOptions) error {
+func (d dissecting) Dissect(b *bufio.Reader, reader api.TcpReader, options *api.TrafficFilteringOptions) error {
+	reqResMatcher := reader.GetReqResMatcher().(*requestResponseMatcher)
 	for {
-		if superIdentifier.Protocol != nil && superIdentifier.Protocol != &_protocol {
-			return errors.New("Identified by another protocol")
-		}
-
-		if isClient {
-			_, _, err := ReadRequest(b, tcpID, superTimer)
+		if reader.GetIsClient() {
+			_, _, err := ReadRequest(b, reader.GetTcpID(), reader.GetCounterPair(), reader.GetCaptureTime(), reqResMatcher)
 			if err != nil {
 				return err
 			}
-			superIdentifier.Protocol = &_protocol
+			reader.GetParent().SetProtocol(&_protocol)
 		} else {
-			err := ReadResponse(b, tcpID, superTimer, emitter)
+			err := ReadResponse(b, reader.GetParent().GetOrigin(), reader.GetTcpID(), reader.GetCounterPair(), reader.GetCaptureTime(), reader.GetEmitter(), reqResMatcher)
 			if err != nil {
 				return err
 			}
-			superIdentifier.Protocol = &_protocol
+			reader.GetParent().SetProtocol(&_protocol)
 		}
 	}
 }
 
-func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, resolvedDestination string) *api.Entry {
+func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, resolvedDestination string, namespace string) *api.Entry {
 	request := item.Pair.Request.Payload.(map[string]interface{})
 	reqDetails := request["details"].(map[string]interface{})
-	apiKey := ApiKey(reqDetails["apiKey"].(float64))
 
-	summary := ""
-	switch apiKey {
-	case Metadata:
-		_topics := reqDetails["payload"].(map[string]interface{})["topics"]
-		if _topics == nil {
-			break
-		}
-		topics := _topics.([]interface{})
-		for _, topic := range topics {
-			summary += fmt.Sprintf("%s, ", topic.(map[string]interface{})["name"].(string))
-		}
-		if len(summary) > 0 {
-			summary = summary[:len(summary)-2]
-		}
-		break
-	case ApiVersions:
-		summary = reqDetails["clientID"].(string)
-		break
-	case Produce:
-		_topics := reqDetails["payload"].(map[string]interface{})["topicData"]
-		if _topics == nil {
-			break
-		}
-		topics := _topics.([]interface{})
-		for _, topic := range topics {
-			summary += fmt.Sprintf("%s, ", topic.(map[string]interface{})["topic"].(string))
-		}
-		if len(summary) > 0 {
-			summary = summary[:len(summary)-2]
-		}
-		break
-	case Fetch:
-		_topics := reqDetails["payload"].(map[string]interface{})["topics"]
-		if _topics == nil {
-			break
-		}
-		topics := _topics.([]interface{})
-		for _, topic := range topics {
-			summary += fmt.Sprintf("%s, ", topic.(map[string]interface{})["topic"].(string))
-		}
-		if len(summary) > 0 {
-			summary = summary[:len(summary)-2]
-		}
-		break
-	case ListOffsets:
-		_topics := reqDetails["payload"].(map[string]interface{})["topics"]
-		if _topics == nil {
-			break
-		}
-		topics := _topics.([]interface{})
-		for _, topic := range topics {
-			summary += fmt.Sprintf("%s, ", topic.(map[string]interface{})["name"].(string))
-		}
-		if len(summary) > 0 {
-			summary = summary[:len(summary)-2]
-		}
-		break
-	case CreateTopics:
-		topics := reqDetails["payload"].(map[string]interface{})["topics"].([]interface{})
-		for _, topic := range topics {
-			summary += fmt.Sprintf("%s, ", topic.(map[string]interface{})["name"].(string))
-		}
-		if len(summary) > 0 {
-			summary = summary[:len(summary)-2]
-		}
-		break
-	case DeleteTopics:
-		topicNames := reqDetails["topicNames"].([]string)
-		for _, name := range topicNames {
-			summary += fmt.Sprintf("%s, ", name)
-		}
-		break
-	}
-
-	request["url"] = summary
 	elapsedTime := item.Pair.Response.CaptureTime.Sub(item.Pair.Request.CaptureTime).Round(time.Millisecond).Milliseconds()
 	if elapsedTime < 0 {
 		elapsedTime = 0
 	}
 	return &api.Entry{
-		Protocol: _protocol,
+		Protocol: _protocol.ProtocolSummary,
+		Capture:  item.Capture,
 		Source: &api.TCP{
 			Name: resolvedSource,
 			IP:   item.ConnectionInfo.ClientIP,
@@ -158,22 +84,137 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, 
 			IP:   item.ConnectionInfo.ServerIP,
 			Port: item.ConnectionInfo.ServerPort,
 		},
-		Outgoing:    item.ConnectionInfo.IsOutgoing,
-		Request:     reqDetails,
-		Response:    item.Pair.Response.Payload.(map[string]interface{})["details"].(map[string]interface{}),
-		Method:      apiNames[apiKey],
-		Status:      0,
-		Timestamp:   item.Timestamp,
-		StartTime:   item.Pair.Request.CaptureTime,
-		ElapsedTime: elapsedTime,
-		Summary:     summary,
-		IsOutgoing:  item.ConnectionInfo.IsOutgoing,
+		Namespace:    namespace,
+		Outgoing:     item.ConnectionInfo.IsOutgoing,
+		Request:      reqDetails,
+		Response:     item.Pair.Response.Payload.(map[string]interface{})["details"].(map[string]interface{}),
+		RequestSize:  item.Pair.Request.CaptureSize,
+		ResponseSize: item.Pair.Response.CaptureSize,
+		Timestamp:    item.Timestamp,
+		StartTime:    item.Pair.Request.CaptureTime,
+		ElapsedTime:  elapsedTime,
 	}
 }
 
-func (d dissecting) Represent(request map[string]interface{}, response map[string]interface{}) (object []byte, bodySize int64, err error) {
-	bodySize = 0
-	representation := make(map[string]interface{}, 0)
+func (d dissecting) Summarize(entry *api.Entry) *api.BaseEntry {
+	status := 0
+	statusQuery := ""
+
+	apiKey := ApiKey(entry.Request["apiKey"].(float64))
+	method := entry.Request["apiKeyName"].(string)
+	methodQuery := fmt.Sprintf(`request.apiKeyName == "%s"`, method)
+
+	summary := ""
+	summaryQuery := ""
+	switch apiKey {
+	case Metadata:
+		_topics := entry.Request["payload"].(map[string]interface{})["topics"]
+		if _topics == nil {
+			break
+		}
+		topics := _topics.([]interface{})
+		for i, topic := range topics {
+			summary += fmt.Sprintf("%s, ", topic.(map[string]interface{})["name"].(string))
+			summaryQuery += fmt.Sprintf(`request.payload.topics[%d].name == "%s" and`, i, summary)
+		}
+		if len(summary) > 0 {
+			summary = summary[:len(summary)-2]
+			summaryQuery = summaryQuery[:len(summaryQuery)-4]
+		}
+	case ApiVersions:
+		summary = entry.Request["clientID"].(string)
+		summaryQuery = fmt.Sprintf(`request.clientID == "%s"`, summary)
+	case Produce:
+		_topics := entry.Request["payload"].(map[string]interface{})["topicData"]
+		if _topics == nil {
+			break
+		}
+		topics := _topics.([]interface{})
+		for i, topic := range topics {
+			summary += fmt.Sprintf("%s, ", topic.(map[string]interface{})["topic"].(string))
+			summaryQuery += fmt.Sprintf(`request.payload.topicData[%d].topic == "%s" and`, i, summary)
+		}
+		if len(summary) > 0 {
+			summary = summary[:len(summary)-2]
+			summaryQuery = summaryQuery[:len(summaryQuery)-4]
+		}
+	case Fetch:
+		_topics := entry.Request["payload"].(map[string]interface{})["topics"]
+		if _topics == nil {
+			break
+		}
+		topics := _topics.([]interface{})
+		for i, topic := range topics {
+			summary += fmt.Sprintf("%s, ", topic.(map[string]interface{})["topic"].(string))
+			summaryQuery += fmt.Sprintf(`request.payload.topics[%d].topic == "%s" and`, i, summary)
+		}
+		if len(summary) > 0 {
+			summary = summary[:len(summary)-2]
+			summaryQuery = summaryQuery[:len(summaryQuery)-4]
+		}
+	case ListOffsets:
+		_topics := entry.Request["payload"].(map[string]interface{})["topics"]
+		if _topics == nil {
+			break
+		}
+		topics := _topics.([]interface{})
+		for i, topic := range topics {
+			summary += fmt.Sprintf("%s, ", topic.(map[string]interface{})["name"].(string))
+			summaryQuery += fmt.Sprintf(`request.payload.topics[%d].name == "%s" and`, i, summary)
+		}
+		if len(summary) > 0 {
+			summary = summary[:len(summary)-2]
+			summaryQuery = summaryQuery[:len(summaryQuery)-4]
+		}
+	case CreateTopics:
+		_topics := entry.Request["payload"].(map[string]interface{})["topics"]
+		if _topics == nil {
+			break
+		}
+		topics := _topics.([]interface{})
+		for i, topic := range topics {
+			summary += fmt.Sprintf("%s, ", topic.(map[string]interface{})["name"].(string))
+			summaryQuery += fmt.Sprintf(`request.payload.topics[%d].name == "%s" and`, i, summary)
+		}
+		if len(summary) > 0 {
+			summary = summary[:len(summary)-2]
+			summaryQuery = summaryQuery[:len(summaryQuery)-4]
+		}
+	case DeleteTopics:
+		if entry.Request["topicNames"] == nil {
+			break
+		}
+		topicNames := entry.Request["topicNames"].([]string)
+		for i, name := range topicNames {
+			summary += fmt.Sprintf("%s, ", name)
+			summaryQuery += fmt.Sprintf(`request.topicNames[%d] == "%s" and`, i, summary)
+		}
+		if len(summary) > 0 {
+			summary = summary[:len(summary)-2]
+			summaryQuery = summaryQuery[:len(summaryQuery)-4]
+		}
+	}
+
+	return &api.BaseEntry{
+		Id:           entry.Id,
+		Protocol:     *protocolsMap[entry.Protocol.ToString()],
+		Capture:      entry.Capture,
+		Summary:      summary,
+		SummaryQuery: summaryQuery,
+		Status:       status,
+		StatusQuery:  statusQuery,
+		Method:       method,
+		MethodQuery:  methodQuery,
+		Timestamp:    entry.Timestamp,
+		Source:       entry.Source,
+		Destination:  entry.Destination,
+		IsOutgoing:   entry.Outgoing,
+		Latency:      entry.ElapsedTime,
+	}
+}
+
+func (d dissecting) Represent(request map[string]interface{}, response map[string]interface{}) (object []byte, err error) {
+	representation := make(map[string]interface{})
 
 	apiKey := ApiKey(request["apiKey"].(float64))
 
@@ -183,31 +224,24 @@ func (d dissecting) Represent(request map[string]interface{}, response map[strin
 	case Metadata:
 		repRequest = representMetadataRequest(request)
 		repResponse = representMetadataResponse(response)
-		break
 	case ApiVersions:
 		repRequest = representApiVersionsRequest(request)
 		repResponse = representApiVersionsResponse(response)
-		break
 	case Produce:
 		repRequest = representProduceRequest(request)
 		repResponse = representProduceResponse(response)
-		break
 	case Fetch:
 		repRequest = representFetchRequest(request)
 		repResponse = representFetchResponse(response)
-		break
 	case ListOffsets:
 		repRequest = representListOffsetsRequest(request)
 		repResponse = representListOffsetsResponse(response)
-		break
 	case CreateTopics:
 		repRequest = representCreateTopicsRequest(request)
 		repResponse = representCreateTopicsResponse(response)
-		break
 	case DeleteTopics:
 		repRequest = representDeleteTopicsRequest(request)
 		repResponse = representDeleteTopicsResponse(response)
-		break
 	}
 
 	representation["request"] = repRequest
@@ -218,8 +252,16 @@ func (d dissecting) Represent(request map[string]interface{}, response map[strin
 
 func (d dissecting) Macros() map[string]string {
 	return map[string]string{
-		`kafka`: fmt.Sprintf(`proto.name == "%s"`, _protocol.Name),
+		`kafka`: fmt.Sprintf(`protocol.name == "%s"`, _protocol.Name),
 	}
 }
 
+func (d dissecting) NewResponseRequestMatcher() api.RequestResponseMatcher {
+	return createResponseRequestMatcher()
+}
+
 var Dissector dissecting
+
+func NewDissector() api.Dissector {
+	return Dissector
+}

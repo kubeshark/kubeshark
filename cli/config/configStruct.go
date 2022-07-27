@@ -2,14 +2,16 @@ package config
 
 import (
 	"fmt"
-	"github.com/op/go-logging"
-	"github.com/up9inc/mizu/cli/config/configStructs"
-	"github.com/up9inc/mizu/cli/mizu"
-	v1 "k8s.io/api/core/v1"
-	"k8s.io/client-go/util/homedir"
 	"os"
 	"path"
 	"path/filepath"
+
+	"github.com/op/go-logging"
+	"github.com/up9inc/mizu/cli/config/configStructs"
+	"github.com/up9inc/mizu/cli/mizu"
+	"github.com/up9inc/mizu/shared"
+	v1 "k8s.io/api/core/v1"
+	"k8s.io/client-go/util/homedir"
 )
 
 const (
@@ -20,22 +22,23 @@ const (
 
 type ConfigStruct struct {
 	Tap                    configStructs.TapConfig     `yaml:"tap"`
+	Check                  configStructs.CheckConfig   `yaml:"check"`
+	Install                configStructs.InstallConfig `yaml:"install"`
 	Version                configStructs.VersionConfig `yaml:"version"`
 	View                   configStructs.ViewConfig    `yaml:"view"`
 	Logs                   configStructs.LogsConfig    `yaml:"logs"`
-	Auth                   configStructs.AuthConfig    `yaml:"auth"`
 	Config                 configStructs.ConfigConfig  `yaml:"config,omitempty"`
 	AgentImage             string                      `yaml:"agent-image,omitempty" readonly:""`
 	ImagePullPolicyStr     string                      `yaml:"image-pull-policy" default:"Always"`
 	MizuResourcesNamespace string                      `yaml:"mizu-resources-namespace" default:"mizu"`
-	Telemetry              bool                        `yaml:"telemetry" default:"true"`
 	DumpLogs               bool                        `yaml:"dump-logs" default:"false"`
 	KubeConfigPathStr      string                      `yaml:"kube-config-path"`
+	KubeContext            string                      `yaml:"kube-context"`
 	ConfigFilePath         string                      `yaml:"config-path,omitempty" readonly:""`
 	HeadlessMode           bool                        `yaml:"headless" default:"false"`
 	LogLevelStr            string                      `yaml:"log-level,omitempty" default:"INFO" readonly:""`
-	ServiceMap             bool                        `yaml:"service-map" default:"false" readonly:""`
-	OAS                    bool                        `yaml:"oas" default:"false" readonly:""`
+	ServiceMap             bool                        `yaml:"service-map" default:"true"`
+	OAS                    shared.OASConfig            `yaml:"oas"`
 }
 
 func (config *ConfigStruct) validate() error {
@@ -47,7 +50,7 @@ func (config *ConfigStruct) validate() error {
 }
 
 func (config *ConfigStruct) SetDefaults() {
-	config.AgentImage = fmt.Sprintf("gcr.io/up9-docker-hub/mizu/%s:%s", mizu.Branch, mizu.SemVer)
+	config.AgentImage = fmt.Sprintf("%s:%s", shared.MizuAgentImageRepo, mizu.Ver)
 	config.ConfigFilePath = path.Join(mizu.GetMizuFolderPath(), "config.yaml")
 }
 

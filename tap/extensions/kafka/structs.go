@@ -1,4 +1,4 @@
-package main
+package kafka
 
 import (
 	"time"
@@ -11,19 +11,6 @@ const (
 	RequireOne  RequiredAcks = 1
 	RequireAll  RequiredAcks = -1
 )
-
-func (acks RequiredAcks) String() string {
-	switch acks {
-	case RequireNone:
-		return "none"
-	case RequireOne:
-		return "one"
-	case RequireAll:
-		return "all"
-	default:
-		return "unknown"
-	}
-}
 
 type UUID struct {
 	TimeLow          int32 `json:"timeLow"`
@@ -296,8 +283,6 @@ type MessageV0 struct {
 	Set              *MessageSet `json:"set"`              // the message set a message might wrap
 	Version          int8        `json:"version"`          // v1 requires Kafka 0.10
 	Timestamp        time.Time   `json:"timestamp"`        // the timestamp of the message (version 1+ only)
-
-	compressedSize int // used for computing the compression ratio metrics
 }
 
 // MessageBlock represents a part of request with message

@@ -1,7 +1,7 @@
 package routes
 
 import (
-	"mizuserver/pkg/controllers"
+	"github.com/up9inc/mizu/agent/pkg/controllers"
 
 	"github.com/gin-gonic/gin"
 )

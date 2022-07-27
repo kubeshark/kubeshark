@@ -11,22 +11,22 @@ func TestLogs(t *testing.T) {
 		t.Skip("ignored acceptance test")
 	}
 
-	cliPath, cliPathErr := getCliPath()
+	cliPath, cliPathErr := GetCliPath()
 	if cliPathErr != nil {
 		t.Errorf("failed to get cli path, err: %v", cliPathErr)
 		return
 	}
 
-	tapCmdArgs := getDefaultTapCommandArgs()
+	tapCmdArgs := GetDefaultTapCommandArgs()
 
-	tapNamespace := getDefaultTapNamespace()
+	tapNamespace := GetDefaultTapNamespace()
 	tapCmdArgs = append(tapCmdArgs, tapNamespace...)
 
 	tapCmd := exec.Command(cliPath, tapCmdArgs...)
 	t.Logf("running command: %v", tapCmd.String())
 
 	t.Cleanup(func() {
-		if err := cleanupCommand(tapCmd); err != nil {
+		if err := CleanupCommand(tapCmd); err != nil {
 			t.Logf("failed to cleanup tap command, err: %v", err)
 		}
 	})
@@ -36,14 +36,14 @@ func TestLogs(t *testing.T) {
 		return
 	}
 
-	apiServerUrl := getApiServerUrl(defaultApiServerPort)
+	apiServerUrl := GetApiServerUrl(DefaultApiServerPort)
 
-	if err := waitTapPodsReady(apiServerUrl); err != nil {
+	if err := WaitTapPodsReady(apiServerUrl); err != nil {
 		t.Errorf("failed to start tap pods on time, err: %v", err)
 		return
 	}
 
-	logsCmdArgs := getDefaultLogsCommandArgs()
+	logsCmdArgs := GetDefaultLogsCommandArgs()
 
 	logsCmd := exec.Command(cliPath, logsCmdArgs...)
 	t.Logf("running command: %v", logsCmd.String())
@@ -58,7 +58,7 @@ func TestLogs(t *testing.T) {
 		return
 	}
 
-	logsPath, logsPathErr := getLogsPath()
+	logsPath, logsPathErr := GetLogsPath()
 	if logsPathErr != nil {
 		t.Errorf("failed to get logs path, err: %v", logsPathErr)
 		return
@@ -112,22 +112,22 @@ func TestLogsPath(t *testing.T) {
 		t.Skip("ignored acceptance test")
 	}
 
-	cliPath, cliPathErr := getCliPath()
+	cliPath, cliPathErr := GetCliPath()
 	if cliPathErr != nil {
 		t.Errorf("failed to get cli path, err: %v", cliPathErr)
 		return
 	}
 
-	tapCmdArgs := getDefaultTapCommandArgs()
+	tapCmdArgs := GetDefaultTapCommandArgs()
 
-	tapNamespace := getDefaultTapNamespace()
+	tapNamespace := GetDefaultTapNamespace()
 	tapCmdArgs = append(tapCmdArgs, tapNamespace...)
 
 	tapCmd := exec.Command(cliPath, tapCmdArgs...)
 	t.Logf("running command: %v", tapCmd.String())
 
 	t.Cleanup(func() {
-		if err := cleanupCommand(tapCmd); err != nil {
+		if err := CleanupCommand(tapCmd); err != nil {
 			t.Logf("failed to cleanup tap command, err: %v", err)
 		}
 	})
@@ -137,14 +137,14 @@ func TestLogsPath(t *testing.T) {
 		return
 	}
 
-	apiServerUrl := getApiServerUrl(defaultApiServerPort)
+	apiServerUrl := GetApiServerUrl(DefaultApiServerPort)
 
-	if err := waitTapPodsReady(apiServerUrl); err != nil {
+	if err := WaitTapPodsReady(apiServerUrl); err != nil {
 		t.Errorf("failed to start tap pods on time, err: %v", err)
 		return
 	}
 
-	logsCmdArgs := getDefaultLogsCommandArgs()
+	logsCmdArgs := GetDefaultLogsCommandArgs()
 
 	logsPath := "../logs.zip"
 	logsCmdArgs = append(logsCmdArgs, "-f", logsPath)

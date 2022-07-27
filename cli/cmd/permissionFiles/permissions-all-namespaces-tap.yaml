@@ -1,0 +1,40 @@
+# This example shows the permissions that are required in order to run the `mizu tap` command
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: mizu-runner-clusterrole
+rules:
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["list", "watch", "create"]
+- apiGroups: [""]
+  resources: ["services"]
+  verbs: ["get", "create"]
+- apiGroups: ["apps"]
+  resources: ["daemonsets"]
+  verbs: ["create", "patch"]
+- apiGroups: [""]
+  resources: ["namespaces"]
+  verbs: ["list", "watch", "create", "delete"]
+- apiGroups: [""]
+  resources: ["services/proxy"]
+  verbs: ["get", "create"]
+- apiGroups: [""]
+  resources: ["configmaps"]
+  verbs: ["create"]
+- apiGroups: [""]
+  resources: ["pods/log"]
+  verbs: ["get"]
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: mizu-runner-clusterrolebindings
+subjects:
+- kind: User
+  name: user-with-clusterwide-access
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: ClusterRole
+  name: mizu-runner-clusterrole
+  apiGroup: rbac.authorization.k8s.io

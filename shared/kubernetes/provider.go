@@ -10,13 +10,14 @@ import (
 	"net/url"
 	"path/filepath"
 	"regexp"
+	"strconv"
 
 	"github.com/op/go-logging"
+	"github.com/up9inc/mizu/logger"
 	"github.com/up9inc/mizu/shared"
-	"github.com/up9inc/mizu/shared/logger"
 	"github.com/up9inc/mizu/shared/semver"
 	"github.com/up9inc/mizu/tap/api"
-	v1 "k8s.io/api/apps/v1"
+	auth "k8s.io/api/authorization/v1"
 	core "k8s.io/api/core/v1"
 	rbac "k8s.io/api/rbac/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
@@ -32,7 +33,6 @@ import (
 	"k8s.io/client-go/kubernetes"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	"k8s.io/client-go/rest"
-	restclient "k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/cache"
 	"k8s.io/client-go/tools/clientcmd"
 	watchtools "k8s.io/client-go/tools/watch"
@@ -41,8 +41,7 @@ import (
 type Provider struct {
 	clientSet        *kubernetes.Clientset
 	kubernetesConfig clientcmd.ClientConfig
-	clientConfig     restclient.Config
-	Namespace        string
+	clientConfig     rest.Config
 	managedBy        string
 	createdBy        string
 }
@@ -51,10 +50,12 @@ const (
 	fieldManagerName = "mizu-manager"
 	procfsVolumeName = "proc"
 	procfsMountPath  = "/hostproc"
+	sysfsVolumeName  = "sys"
+	sysfsMountPath   = "/sys"
 )
 
-func NewProvider(kubeConfigPath string) (*Provider, error) {
-	kubernetesConfig := loadKubernetesConfiguration(kubeConfigPath)
+func NewProvider(kubeConfigPath string, contextName string) (*Provider, error) {
+	kubernetesConfig := loadKubernetesConfiguration(kubeConfigPath, contextName)
 	restClientConfig, err := kubernetesConfig.ClientConfig()
 	if err != nil {
 		if clientcmd.IsEmptyConfig(err) {
@@ -76,13 +77,7 @@ func NewProvider(kubeConfigPath string) (*Provider, error) {
 			"you can set alternative kube config file path by adding the kube-config-path field to the mizu config file, err:  %w", kubeConfigPath, err)
 	}
 
-	if err := validateNotProxy(kubernetesConfig, restClientConfig); err != nil {
-		return nil, err
-	}
-
-	if err := validateKubernetesVersion(clientSet); err != nil {
-		return nil, err
-	}
+	logger.Log.Debugf("K8s client config, host: %s, api path: %s, user agent: %s", restClientConfig.Host, restClientConfig.APIPath, restClientConfig.UserAgent)
 
 	return &Provider{
 		clientSet:        clientSet,
@@ -93,6 +88,7 @@ func NewProvider(kubeConfigPath string) (*Provider, error) {
 	}, nil
 }
 
+//NewProviderInCluster Used in another repo that calls this function
 func NewProviderInCluster() (*Provider, error) {
 	restClientConfig, err := rest.InClusterConfig()
 	if err != nil {
@@ -177,45 +173,47 @@ type ApiServerOptions struct {
 	Namespace             string
 	PodName               string
 	PodImage              string
+	KratosImage           string
+	KetoImage             string
 	ServiceAccountName    string
 	IsNamespaceRestricted bool
-	SyncEntriesConfig     *shared.SyncEntriesConfig
 	MaxEntriesDBSizeBytes int64
 	Resources             shared.Resources
 	ImagePullPolicy       core.PullPolicy
 	LogLevel              logging.Level
+	Profiler              bool
 }
 
 func (provider *Provider) GetMizuApiServerPodObject(opts *ApiServerOptions, mountVolumeClaim bool, volumeClaimName string, createAuthContainer bool) (*core.Pod, error) {
-	var marshaledSyncEntriesConfig []byte
-	if opts.SyncEntriesConfig != nil {
-		var err error
-		if marshaledSyncEntriesConfig, err = json.Marshal(opts.SyncEntriesConfig); err != nil {
-			return nil, err
-		}
-	}
-
 	configMapVolume := &core.ConfigMapVolumeSource{}
 	configMapVolume.Name = ConfigMapName
 
 	cpuLimit, err := resource.ParseQuantity(opts.Resources.CpuLimit)
 	if err != nil {
-		return nil, errors.New(fmt.Sprintf("invalid cpu limit for %s container", opts.PodName))
+		return nil, fmt.Errorf("invalid cpu limit for %s container", opts.PodName)
 	}
 	memLimit, err := resource.ParseQuantity(opts.Resources.MemoryLimit)
 	if err != nil {
-		return nil, errors.New(fmt.Sprintf("invalid memory limit for %s container", opts.PodName))
+		return nil, fmt.Errorf("invalid memory limit for %s container", opts.PodName)
 	}
 	cpuRequests, err := resource.ParseQuantity(opts.Resources.CpuRequests)
 	if err != nil {
-		return nil, errors.New(fmt.Sprintf("invalid cpu request for %s container", opts.PodName))
+		return nil, fmt.Errorf("invalid cpu request for %s container", opts.PodName)
 	}
 	memRequests, err := resource.ParseQuantity(opts.Resources.MemoryRequests)
 	if err != nil {
-		return nil, errors.New(fmt.Sprintf("invalid memory request for %s container", opts.PodName))
+		return nil, fmt.Errorf("invalid memory request for %s container", opts.PodName)
 	}
 
-	command := []string{"./mizuagent", "--api-server"}
+	command := []string{
+		"./mizuagent",
+		"--api-server",
+	}
+
+	if opts.Profiler {
+		command = append(command, "--profiler")
+	}
+
 	if opts.IsNamespaceRestricted {
 		command = append(command, "--namespace", opts.Namespace)
 	}
@@ -259,10 +257,6 @@ func (provider *Provider) GetMizuApiServerPodObject(opts *ApiServerOptions, moun
 			Command:         command,
 			Env: []core.EnvVar{
 				{
-					Name:  shared.SyncEntriesConfigEnvVar,
-					Value: string(marshaledSyncEntriesConfig),
-				},
-				{
 					Name:  shared.LogLevelEnvVar,
 					Value: opts.LogLevel.String(),
 				},
@@ -280,12 +274,12 @@ func (provider *Provider) GetMizuApiServerPodObject(opts *ApiServerOptions, moun
 		},
 		{
 			Name:            "basenine",
-			Image:           fmt.Sprintf("%s:%s", shared.BasenineImageRepo, shared.BasenineImageTag),
+			Image:           opts.PodImage,
 			ImagePullPolicy: opts.ImagePullPolicy,
 			VolumeMounts:    volumeMounts,
 			ReadinessProbe: &core.Probe{
 				FailureThreshold: 3,
-				Handler: core.Handler{
+				ProbeHandler: core.ProbeHandler{
 					TCPSocket: &core.TCPSocketAction{
 						Port: intstr.Parse(shared.BaseninePort),
 					},
@@ -304,7 +298,7 @@ func (provider *Provider) GetMizuApiServerPodObject(opts *ApiServerOptions, moun
 					"memory": memRequests,
 				},
 			},
-			Command:    []string{"/basenine"},
+			Command:    []string{"basenine"},
 			Args:       []string{"-addr", "0.0.0.0", "-port", shared.BaseninePort, "-persistent"},
 			WorkingDir: shared.DataDirPath,
 		},
@@ -313,12 +307,12 @@ func (provider *Provider) GetMizuApiServerPodObject(opts *ApiServerOptions, moun
 	if createAuthContainer {
 		containers = append(containers, core.Container{
 			Name:            "kratos",
-			Image:           "gcr.io/up9-docker-hub/mizu-kratos/stable:0.0.0",
+			Image:           opts.KratosImage,
 			ImagePullPolicy: opts.ImagePullPolicy,
 			VolumeMounts:    volumeMounts,
 			ReadinessProbe: &core.Probe{
 				FailureThreshold: 3,
-				Handler: core.Handler{
+				ProbeHandler: core.ProbeHandler{
 					HTTPGet: &core.HTTPGetAction{
 						Path:   "/health/ready",
 						Port:   intstr.FromInt(4433),
@@ -341,6 +335,35 @@ func (provider *Provider) GetMizuApiServerPodObject(opts *ApiServerOptions, moun
 			},
 		})
 
+		containers = append(containers, core.Container{
+			Name:            "keto",
+			Image:           opts.KetoImage,
+			ImagePullPolicy: opts.ImagePullPolicy,
+			VolumeMounts:    volumeMounts,
+			ReadinessProbe: &core.Probe{
+				FailureThreshold: 3,
+				ProbeHandler: core.ProbeHandler{
+					HTTPGet: &core.HTTPGetAction{
+						Path:   "/health/ready",
+						Port:   intstr.FromInt(4466),
+						Scheme: core.URISchemeHTTP,
+					},
+				},
+				PeriodSeconds:    1,
+				SuccessThreshold: 1,
+				TimeoutSeconds:   1,
+			},
+			Resources: core.ResourceRequirements{
+				Limits: core.ResourceList{
+					"cpu":    cpuLimit,
+					"memory": memLimit,
+				},
+				Requests: core.ResourceList{
+					"cpu":    cpuRequests,
+					"memory": memRequests,
+				},
+			},
+		})
 	}
 
 	pod := &core.Pod{
@@ -357,6 +380,16 @@ func (provider *Provider) GetMizuApiServerPodObject(opts *ApiServerOptions, moun
 			Volumes:                       volumes,
 			DNSPolicy:                     core.DNSClusterFirstWithHostNet,
 			TerminationGracePeriodSeconds: new(int64),
+			Tolerations: []core.Toleration{
+				{
+					Operator: core.TolerationOpExists,
+					Effect:   core.TaintEffectNoExecute,
+				},
+				{
+					Operator: core.TolerationOpExists,
+					Effect:   core.TaintEffectNoSchedule,
+				},
+			},
 		},
 	}
 
@@ -369,33 +402,6 @@ func (provider *Provider) GetMizuApiServerPodObject(opts *ApiServerOptions, moun
 
 func (provider *Provider) CreatePod(ctx context.Context, namespace string, podSpec *core.Pod) (*core.Pod, error) {
 	return provider.clientSet.CoreV1().Pods(namespace).Create(ctx, podSpec, metav1.CreateOptions{})
-}
-
-func (provider *Provider) CreateDeployment(ctx context.Context, namespace string, deploymentName string, podSpec *core.Pod) (*v1.Deployment, error) {
-	if _, keyExists := podSpec.ObjectMeta.Labels["app"]; keyExists == false {
-		return nil, errors.New("pod spec must contain 'app' label")
-	}
-	podTemplate := &core.PodTemplateSpec{
-		ObjectMeta: podSpec.ObjectMeta,
-		Spec:       podSpec.Spec,
-	}
-	deployment := &v1.Deployment{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: deploymentName,
-			Labels: map[string]string{
-				LabelManagedBy: provider.managedBy,
-				LabelCreatedBy: provider.createdBy,
-			},
-		},
-		Spec: v1.DeploymentSpec{
-			Selector: &metav1.LabelSelector{
-				MatchLabels: map[string]string{"app": podSpec.ObjectMeta.Labels["app"]},
-			},
-			Template: *podTemplate,
-			Strategy: v1.DeploymentStrategy{},
-		},
-	}
-	return provider.clientSet.AppsV1().Deployments(namespace).Create(ctx, deployment, metav1.CreateOptions{})
 }
 
 func (provider *Provider) CreateService(ctx context.Context, namespace string, serviceName string, appLabelValue string) (*core.Service, error) {
@@ -416,9 +422,64 @@ func (provider *Provider) CreateService(ctx context.Context, namespace string, s
 	return provider.clientSet.CoreV1().Services(namespace).Create(ctx, &service, metav1.CreateOptions{})
 }
 
-func (provider *Provider) DoesServicesExist(ctx context.Context, namespace string, name string) (bool, error) {
+func (provider *Provider) CanI(ctx context.Context, namespace string, resource string, verb string, group string) (bool, error) {
+	selfSubjectAccessReview := &auth.SelfSubjectAccessReview{
+		Spec: auth.SelfSubjectAccessReviewSpec{
+			ResourceAttributes: &auth.ResourceAttributes{
+				Namespace: namespace,
+				Resource:  resource,
+				Verb:      verb,
+				Group:     group,
+			},
+		},
+	}
+
+	response, err := provider.clientSet.AuthorizationV1().SelfSubjectAccessReviews().Create(ctx, selfSubjectAccessReview, metav1.CreateOptions{})
+	if err != nil {
+		return false, err
+	}
+
+	return response.Status.Allowed, nil
+}
+
+func (provider *Provider) DoesNamespaceExist(ctx context.Context, name string) (bool, error) {
+	namespaceResource, err := provider.clientSet.CoreV1().Namespaces().Get(ctx, name, metav1.GetOptions{})
+	return provider.doesResourceExist(namespaceResource, err)
+}
+
+func (provider *Provider) DoesConfigMapExist(ctx context.Context, namespace string, name string) (bool, error) {
+	configMapResource, err := provider.clientSet.CoreV1().ConfigMaps(namespace).Get(ctx, name, metav1.GetOptions{})
+	return provider.doesResourceExist(configMapResource, err)
+}
+
+func (provider *Provider) DoesServiceAccountExist(ctx context.Context, namespace string, name string) (bool, error) {
+	serviceAccountResource, err := provider.clientSet.CoreV1().ServiceAccounts(namespace).Get(ctx, name, metav1.GetOptions{})
+	return provider.doesResourceExist(serviceAccountResource, err)
+}
+
+func (provider *Provider) DoesServiceExist(ctx context.Context, namespace string, name string) (bool, error) {
 	serviceResource, err := provider.clientSet.CoreV1().Services(namespace).Get(ctx, name, metav1.GetOptions{})
 	return provider.doesResourceExist(serviceResource, err)
+}
+
+func (provider *Provider) DoesClusterRoleExist(ctx context.Context, name string) (bool, error) {
+	clusterRoleResource, err := provider.clientSet.RbacV1().ClusterRoles().Get(ctx, name, metav1.GetOptions{})
+	return provider.doesResourceExist(clusterRoleResource, err)
+}
+
+func (provider *Provider) DoesClusterRoleBindingExist(ctx context.Context, name string) (bool, error) {
+	clusterRoleBindingResource, err := provider.clientSet.RbacV1().ClusterRoleBindings().Get(ctx, name, metav1.GetOptions{})
+	return provider.doesResourceExist(clusterRoleBindingResource, err)
+}
+
+func (provider *Provider) DoesRoleExist(ctx context.Context, namespace string, name string) (bool, error) {
+	roleResource, err := provider.clientSet.RbacV1().Roles(namespace).Get(ctx, name, metav1.GetOptions{})
+	return provider.doesResourceExist(roleResource, err)
+}
+
+func (provider *Provider) DoesRoleBindingExist(ctx context.Context, namespace string, name string) (bool, error) {
+	roleBindingResource, err := provider.clientSet.RbacV1().RoleBindings(namespace).Get(ctx, name, metav1.GetOptions{})
+	return provider.doesResourceExist(roleBindingResource, err)
 }
 
 func (provider *Provider) doesResourceExist(resource interface{}, err error) (bool, error) {
@@ -564,62 +625,6 @@ func (provider *Provider) CreateMizuRBACNamespaceRestricted(ctx context.Context,
 	return nil
 }
 
-func (provider *Provider) CreateDaemonsetRBAC(ctx context.Context, namespace string, serviceAccountName string, roleName string, roleBindingName string, version string) error {
-	role := &rbac.Role{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: roleName,
-			Labels: map[string]string{
-				"mizu-cli-version": version,
-				LabelManagedBy:     provider.managedBy,
-				LabelCreatedBy:     provider.createdBy,
-			},
-		},
-		Rules: []rbac.PolicyRule{
-			{
-				APIGroups: []string{"apps"},
-				Resources: []string{"daemonsets"},
-				Verbs:     []string{"patch", "get", "list", "create", "delete"},
-			},
-			{
-				APIGroups: []string{"events.k8s.io"},
-				Resources: []string{"events"},
-				Verbs:     []string{"list", "watch"},
-			},
-		},
-	}
-	roleBinding := &rbac.RoleBinding{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: roleBindingName,
-			Labels: map[string]string{
-				"mizu-cli-version": version,
-				LabelManagedBy:     provider.managedBy,
-				LabelCreatedBy:     provider.createdBy,
-			},
-		},
-		RoleRef: rbac.RoleRef{
-			Name:     roleName,
-			Kind:     "Role",
-			APIGroup: "rbac.authorization.k8s.io",
-		},
-		Subjects: []rbac.Subject{
-			{
-				Kind:      "ServiceAccount",
-				Name:      serviceAccountName,
-				Namespace: namespace,
-			},
-		},
-	}
-	_, err := provider.clientSet.RbacV1().Roles(namespace).Create(ctx, role, metav1.CreateOptions{})
-	if err != nil && !k8serrors.IsAlreadyExists(err) {
-		return err
-	}
-	_, err = provider.clientSet.RbacV1().RoleBindings(namespace).Create(ctx, roleBinding, metav1.CreateOptions{})
-	if err != nil && !k8serrors.IsAlreadyExists(err) {
-		return err
-	}
-	return nil
-}
-
 func (provider *Provider) RemoveNamespace(ctx context.Context, name string) error {
 	err := provider.clientSet.CoreV1().Namespaces().Delete(ctx, name, metav1.DeleteOptions{})
 	return provider.handleRemovalError(err)
@@ -645,18 +650,13 @@ func (provider *Provider) RemoveRole(ctx context.Context, namespace string, name
 	return provider.handleRemovalError(err)
 }
 
-func (provider *Provider) RemoveServicAccount(ctx context.Context, namespace string, name string) error {
+func (provider *Provider) RemoveServiceAccount(ctx context.Context, namespace string, name string) error {
 	err := provider.clientSet.CoreV1().ServiceAccounts(namespace).Delete(ctx, name, metav1.DeleteOptions{})
 	return provider.handleRemovalError(err)
 }
 
 func (provider *Provider) RemovePod(ctx context.Context, namespace string, podName string) error {
 	err := provider.clientSet.CoreV1().Pods(namespace).Delete(ctx, podName, metav1.DeleteOptions{})
-	return provider.handleRemovalError(err)
-}
-
-func (provider *Provider) RemoveDeployment(ctx context.Context, namespace string, deploymentName string) error {
-	err := provider.clientSet.AppsV1().Deployments(namespace).Delete(ctx, deploymentName, metav1.DeleteOptions{})
 	return provider.handleRemovalError(err)
 }
 
@@ -675,11 +675,6 @@ func (provider *Provider) RemoveDaemonSet(ctx context.Context, namespace string,
 	return provider.handleRemovalError(err)
 }
 
-func (provider *Provider) RemovePersistentVolumeClaim(ctx context.Context, namespace string, volumeClaimName string) error {
-	err := provider.clientSet.CoreV1().PersistentVolumeClaims(namespace).Delete(ctx, volumeClaimName, metav1.DeleteOptions{})
-	return provider.handleRemovalError(err)
-}
-
 func (provider *Provider) handleRemovalError(err error) error {
 	// Ignore NotFound - There is nothing to delete.
 	// Ignore Forbidden - Assume that a user could not have created the resource in the first place.
@@ -690,14 +685,8 @@ func (provider *Provider) handleRemovalError(err error) error {
 	return err
 }
 
-func (provider *Provider) CreateConfigMap(ctx context.Context, namespace string, configMapName string, serializedValidationRules string, serializedContract string, serializedMizuConfig string) error {
-	configMapData := make(map[string]string, 0)
-	if serializedValidationRules != "" {
-		configMapData[shared.ValidationRulesFileName] = serializedValidationRules
-	}
-	if serializedContract != "" {
-		configMapData[shared.ContractFileName] = serializedContract
-	}
+func (provider *Provider) CreateConfigMap(ctx context.Context, namespace string, configMapName string, serializedMizuConfig string) error {
+	configMapData := make(map[string]string)
 	configMapData[shared.ConfigFileName] = serializedMizuConfig
 
 	configMap := &core.ConfigMap{
@@ -720,16 +709,11 @@ func (provider *Provider) CreateConfigMap(ctx context.Context, namespace string,
 	return nil
 }
 
-func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespace string, daemonSetName string, podImage string, tapperPodName string, apiServerPodIp string, nodeToTappedPodMap map[string][]core.Pod, serviceAccountName string, resources shared.Resources, imagePullPolicy core.PullPolicy, mizuApiFilteringOptions api.TrafficFilteringOptions, logLevel logging.Level, serviceMesh bool) error {
-	logger.Log.Debugf("Applying %d tapper daemon sets, ns: %s, daemonSetName: %s, podImage: %s, tapperPodName: %s", len(nodeToTappedPodMap), namespace, daemonSetName, podImage, tapperPodName)
+func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespace string, daemonSetName string, podImage string, tapperPodName string, apiServerPodIp string, nodeNames []string, serviceAccountName string, resources shared.Resources, imagePullPolicy core.PullPolicy, mizuApiFilteringOptions api.TrafficFilteringOptions, logLevel logging.Level, serviceMesh bool, tls bool, maxLiveStreams int) error {
+	logger.Log.Debugf("Applying %d tapper daemon sets, ns: %s, daemonSetName: %s, podImage: %s, tapperPodName: %s", len(nodeNames), namespace, daemonSetName, podImage, tapperPodName)
 
-	if len(nodeToTappedPodMap) == 0 {
+	if len(nodeNames) == 0 {
 		return fmt.Errorf("daemon set %s must tap at least 1 pod", daemonSetName)
-	}
-
-	nodeToTappedPodMapJsonStr, err := json.Marshal(nodeToTappedPodMap)
-	if err != nil {
-		return err
 	}
 
 	mizuApiFilteringOptionsJsonStr, err := json.Marshal(mizuApiFilteringOptions)
@@ -743,10 +727,19 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 		"--tap",
 		"--api-server-address", fmt.Sprintf("ws://%s/wsTapper", apiServerPodIp),
 		"--nodefrag",
+		"--max-live-streams", strconv.Itoa(maxLiveStreams),
 	}
 
 	if serviceMesh {
-		mizuCmd = append(mizuCmd, "--procfs", procfsMountPath, "--servicemesh")
+		mizuCmd = append(mizuCmd, "--servicemesh")
+	}
+
+	if tls {
+		mizuCmd = append(mizuCmd, "--tls")
+	}
+
+	if serviceMesh || tls {
+		mizuCmd = append(mizuCmd, "--procfs", procfsMountPath)
 	}
 
 	agentContainer := applyconfcore.Container()
@@ -754,12 +747,21 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 	agentContainer.WithImage(podImage)
 	agentContainer.WithImagePullPolicy(imagePullPolicy)
 
-	caps := applyconfcore.Capabilities().WithDrop("ALL").WithAdd("NET_RAW").WithAdd("NET_ADMIN")
+	caps := applyconfcore.Capabilities().WithDrop("ALL")
 
-	if serviceMesh {
-		caps = caps.WithAdd("SYS_ADMIN")    // for reading /proc/PID/net/ns
-		caps = caps.WithAdd("SYS_PTRACE")   // for setting netns to other process
-		caps = caps.WithAdd("DAC_OVERRIDE") // for reading /proc/PID/environ
+	caps = caps.WithAdd("NET_RAW").WithAdd("NET_ADMIN") // to listen to traffic using libpcap
+
+	if serviceMesh || tls {
+		caps = caps.WithAdd("SYS_ADMIN")  // to read /proc/PID/net/ns + to install eBPF programs (kernel < 5.8)
+		caps = caps.WithAdd("SYS_PTRACE") // to set netns to other process + to open libssl.so of other process
+
+		if serviceMesh {
+			caps = caps.WithAdd("DAC_OVERRIDE") // to read /proc/PID/environ
+		}
+
+		if tls {
+			caps = caps.WithAdd("SYS_RESOURCE") // to change rlimits for eBPF
+		}
 	}
 
 	agentContainer.WithSecurityContext(applyconfcore.SecurityContext().WithCapabilities(caps))
@@ -768,8 +770,6 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 	agentContainer.WithEnv(
 		applyconfcore.EnvVar().WithName(shared.LogLevelEnvVar).WithValue(logLevel.String()),
 		applyconfcore.EnvVar().WithName(shared.HostModeEnvVar).WithValue("1"),
-		applyconfcore.EnvVar().WithName(shared.TappedAddressesPerNodeDictEnvVar).WithValue(string(nodeToTappedPodMapJsonStr)),
-		applyconfcore.EnvVar().WithName(shared.GoGCEnvVar).WithValue("12800"),
 		applyconfcore.EnvVar().WithName(shared.MizuFilteringOptionsEnvVar).WithValue(string(mizuApiFilteringOptionsJsonStr)),
 	)
 	agentContainer.WithEnv(
@@ -781,19 +781,19 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 	)
 	cpuLimit, err := resource.ParseQuantity(resources.CpuLimit)
 	if err != nil {
-		return errors.New(fmt.Sprintf("invalid cpu limit for %s container", tapperPodName))
+		return fmt.Errorf("invalid cpu limit for %s container", tapperPodName)
 	}
 	memLimit, err := resource.ParseQuantity(resources.MemoryLimit)
 	if err != nil {
-		return errors.New(fmt.Sprintf("invalid memory limit for %s container", tapperPodName))
+		return fmt.Errorf("invalid memory limit for %s container", tapperPodName)
 	}
 	cpuRequests, err := resource.ParseQuantity(resources.CpuRequests)
 	if err != nil {
-		return errors.New(fmt.Sprintf("invalid cpu request for %s container", tapperPodName))
+		return fmt.Errorf("invalid cpu request for %s container", tapperPodName)
 	}
 	memRequests, err := resource.ParseQuantity(resources.MemoryRequests)
 	if err != nil {
-		return errors.New(fmt.Sprintf("invalid memory request for %s container", tapperPodName))
+		return fmt.Errorf("invalid memory request for %s container", tapperPodName)
 	}
 	agentResourceLimits := core.ResourceList{
 		"cpu":    cpuLimit,
@@ -806,18 +806,20 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 	agentResources := applyconfcore.ResourceRequirements().WithRequests(agentResourceRequests).WithLimits(agentResourceLimits)
 	agentContainer.WithResources(agentResources)
 
-	nodeNames := make([]string, 0, len(nodeToTappedPodMap))
-	for nodeName := range nodeToTappedPodMap {
-		nodeNames = append(nodeNames, nodeName)
+	matchFields := make([]*applyconfcore.NodeSelectorTermApplyConfiguration, 0)
+	for _, nodeName := range nodeNames {
+		nodeSelectorRequirement := applyconfcore.NodeSelectorRequirement()
+		nodeSelectorRequirement.WithKey("metadata.name")
+		nodeSelectorRequirement.WithOperator(core.NodeSelectorOpIn)
+		nodeSelectorRequirement.WithValues(nodeName)
+
+		nodeSelectorTerm := applyconfcore.NodeSelectorTerm()
+		nodeSelectorTerm.WithMatchFields(nodeSelectorRequirement)
+		matchFields = append(matchFields, nodeSelectorTerm)
 	}
-	nodeSelectorRequirement := applyconfcore.NodeSelectorRequirement()
-	nodeSelectorRequirement.WithKey("kubernetes.io/hostname")
-	nodeSelectorRequirement.WithOperator(core.NodeSelectorOpIn)
-	nodeSelectorRequirement.WithValues(nodeNames...)
-	nodeSelectorTerm := applyconfcore.NodeSelectorTerm()
-	nodeSelectorTerm.WithMatchExpressions(nodeSelectorRequirement)
+
 	nodeSelector := applyconfcore.NodeSelector()
-	nodeSelector.WithNodeSelectorTerms(nodeSelectorTerm)
+	nodeSelector.WithNodeSelectorTerms(matchFields...)
 	nodeAffinity := applyconfcore.NodeAffinity()
 	nodeAffinity.WithRequiredDuringSchedulingIgnoredDuringExecution(nodeSelector)
 	affinity := applyconfcore.Affinity()
@@ -835,26 +837,15 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 	//
 	procfsVolume := applyconfcore.Volume()
 	procfsVolume.WithName(procfsVolumeName).WithHostPath(applyconfcore.HostPathVolumeSource().WithPath("/proc"))
-	volumeMount := applyconfcore.VolumeMount().WithName(procfsVolumeName).WithMountPath(procfsMountPath).WithReadOnly(true)
-	agentContainer.WithVolumeMounts(volumeMount)
+	procfsVolumeMount := applyconfcore.VolumeMount().WithName(procfsVolumeName).WithMountPath(procfsMountPath).WithReadOnly(true)
+	agentContainer.WithVolumeMounts(procfsVolumeMount)
 
-	volumeName := ConfigMapName
-	configMapVolume := applyconfcore.VolumeApplyConfiguration{
-		Name: &volumeName,
-		VolumeSourceApplyConfiguration: applyconfcore.VolumeSourceApplyConfiguration{
-			ConfigMap: &applyconfcore.ConfigMapVolumeSourceApplyConfiguration{
-				LocalObjectReferenceApplyConfiguration: applyconfcore.LocalObjectReferenceApplyConfiguration{
-					Name: &volumeName,
-				},
-			},
-		},
-	}
-	mountPath := shared.ConfigDirPath
-	configMapVolumeMount := applyconfcore.VolumeMountApplyConfiguration{
-		Name:      &volumeName,
-		MountPath: &mountPath,
-	}
-	agentContainer.WithVolumeMounts(&configMapVolumeMount)
+	// We need access to /sys in order to install certain eBPF tracepoints
+	//
+	sysfsVolume := applyconfcore.Volume()
+	sysfsVolume.WithName(sysfsVolumeName).WithHostPath(applyconfcore.HostPathVolumeSource().WithPath("/sys"))
+	sysfsVolumeMount := applyconfcore.VolumeMount().WithName(sysfsVolumeName).WithMountPath(sysfsMountPath).WithReadOnly(true)
+	agentContainer.WithVolumeMounts(sysfsVolumeMount)
 
 	podSpec := applyconfcore.PodSpec()
 	podSpec.WithHostNetwork(true)
@@ -866,7 +857,7 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 	podSpec.WithContainers(agentContainer)
 	podSpec.WithAffinity(affinity)
 	podSpec.WithTolerations(noExecuteToleration, noScheduleToleration)
-	podSpec.WithVolumes(&configMapVolume, procfsVolume)
+	podSpec.WithVolumes(procfsVolume, sysfsVolume)
 
 	podTemplate := applyconfcore.PodTemplateSpec()
 	podTemplate.WithLabels(map[string]string{
@@ -879,6 +870,11 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 	labelSelector := applyconfmeta.LabelSelector()
 	labelSelector.WithMatchLabels(map[string]string{"app": tapperPodName})
 
+	applyOptions := metav1.ApplyOptions{
+		Force:        true,
+		FieldManager: fieldManagerName,
+	}
+
 	daemonSet := applyconfapp.DaemonSet(daemonSetName, namespace)
 	daemonSet.
 		WithLabels(map[string]string{
@@ -887,7 +883,56 @@ func (provider *Provider) ApplyMizuTapperDaemonSet(ctx context.Context, namespac
 		}).
 		WithSpec(applyconfapp.DaemonSetSpec().WithSelector(labelSelector).WithTemplate(podTemplate))
 
-	_, err = provider.clientSet.AppsV1().DaemonSets(namespace).Apply(ctx, daemonSet, metav1.ApplyOptions{FieldManager: fieldManagerName})
+	_, err = provider.clientSet.AppsV1().DaemonSets(namespace).Apply(ctx, daemonSet, applyOptions)
+	return err
+}
+
+func (provider *Provider) ResetMizuTapperDaemonSet(ctx context.Context, namespace string, daemonSetName string, podImage string, tapperPodName string) error {
+	agentContainer := applyconfcore.Container()
+	agentContainer.WithName(tapperPodName)
+	agentContainer.WithImage(podImage)
+
+	nodeSelectorRequirement := applyconfcore.NodeSelectorRequirement()
+	nodeSelectorRequirement.WithKey("mizu-non-existing-label")
+	nodeSelectorRequirement.WithOperator(core.NodeSelectorOpExists)
+	nodeSelectorTerm := applyconfcore.NodeSelectorTerm()
+	nodeSelectorTerm.WithMatchExpressions(nodeSelectorRequirement)
+	nodeSelector := applyconfcore.NodeSelector()
+	nodeSelector.WithNodeSelectorTerms(nodeSelectorTerm)
+	nodeAffinity := applyconfcore.NodeAffinity()
+	nodeAffinity.WithRequiredDuringSchedulingIgnoredDuringExecution(nodeSelector)
+	affinity := applyconfcore.Affinity()
+	affinity.WithNodeAffinity(nodeAffinity)
+
+	podSpec := applyconfcore.PodSpec()
+	podSpec.WithContainers(agentContainer)
+	podSpec.WithAffinity(affinity)
+
+	podTemplate := applyconfcore.PodTemplateSpec()
+	podTemplate.WithLabels(map[string]string{
+		"app":          tapperPodName,
+		LabelManagedBy: provider.managedBy,
+		LabelCreatedBy: provider.createdBy,
+	})
+	podTemplate.WithSpec(podSpec)
+
+	labelSelector := applyconfmeta.LabelSelector()
+	labelSelector.WithMatchLabels(map[string]string{"app": tapperPodName})
+
+	applyOptions := metav1.ApplyOptions{
+		Force:        true,
+		FieldManager: fieldManagerName,
+	}
+
+	daemonSet := applyconfapp.DaemonSet(daemonSetName, namespace)
+	daemonSet.
+		WithLabels(map[string]string{
+			LabelManagedBy: provider.managedBy,
+			LabelCreatedBy: provider.createdBy,
+		}).
+		WithSpec(applyconfapp.DaemonSetSpec().WithSelector(labelSelector).WithTemplate(podTemplate))
+
+	_, err := provider.clientSet.AppsV1().DaemonSets(namespace).Apply(ctx, daemonSet, applyOptions)
 	return err
 }
 
@@ -927,11 +972,20 @@ func (provider *Provider) ListAllRunningPodsMatchingRegex(ctx context.Context, r
 
 	matchingPods := make([]core.Pod, 0)
 	for _, pod := range pods {
-		if isPodRunning(&pod) {
+		if IsPodRunning(&pod) {
 			matchingPods = append(matchingPods, pod)
 		}
 	}
 	return matchingPods, nil
+}
+
+func (provider *Provider) ListPodsByAppLabel(ctx context.Context, namespaces string, labelName string) ([]core.Pod, error) {
+	pods, err := provider.clientSet.CoreV1().Pods(namespaces).List(ctx, metav1.ListOptions{LabelSelector: fmt.Sprintf("app=%s", labelName)})
+	if err != nil {
+		return nil, err
+	}
+
+	return pods.Items, err
 }
 
 func (provider *Provider) ListAllNamespaces(ctx context.Context) ([]core.Namespace, error) {
@@ -1003,87 +1057,17 @@ func (provider *Provider) ListManagedRoleBindings(ctx context.Context, namespace
 	return provider.clientSet.RbacV1().RoleBindings(namespace).List(ctx, listOptions)
 }
 
-func (provider *Provider) IsDefaultStorageProviderAvailable(ctx context.Context) (bool, error) {
-	storageClassList, err := provider.clientSet.StorageV1().StorageClasses().List(ctx, metav1.ListOptions{})
-	if err != nil {
-		return false, err
-	}
-	for _, storageClass := range storageClassList.Items {
-		if storageClass.Annotations["storageclass.kubernetes.io/is-default-class"] == "true" {
-			return true, nil
-		}
-	}
-	return false, nil
-}
-
-func (provider *Provider) CreatePersistentVolumeClaim(ctx context.Context, namespace string, volumeClaimName string, sizeLimitBytes int64) (*core.PersistentVolumeClaim, error) {
-	sizeLimitQuantity := resource.NewQuantity(sizeLimitBytes, resource.DecimalSI)
-	volumeClaim := &core.PersistentVolumeClaim{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: volumeClaimName,
-			Labels: map[string]string{
-				LabelManagedBy: provider.managedBy,
-				LabelCreatedBy: provider.createdBy,
-			},
-		},
-		Spec: core.PersistentVolumeClaimSpec{
-			AccessModes: []core.PersistentVolumeAccessMode{core.ReadWriteOnce},
-			Resources: core.ResourceRequirements{
-				Limits: core.ResourceList{
-					core.ResourceStorage: *sizeLimitQuantity,
-				},
-				Requests: core.ResourceList{
-					core.ResourceStorage: *sizeLimitQuantity,
-				},
-			},
-		},
-	}
-
-	return provider.clientSet.CoreV1().PersistentVolumeClaims(namespace).Create(ctx, volumeClaim, metav1.CreateOptions{})
-}
-
-func getClientSet(config *restclient.Config) (*kubernetes.Clientset, error) {
-	clientSet, err := kubernetes.NewForConfig(config)
-	if err != nil {
-		return nil, err
-	}
-
-	return clientSet, nil
-}
-
-func loadKubernetesConfiguration(kubeConfigPath string) clientcmd.ClientConfig {
-	logger.Log.Debugf("Using kube config %s", kubeConfigPath)
-	configPathList := filepath.SplitList(kubeConfigPath)
-	configLoadingRules := &clientcmd.ClientConfigLoadingRules{}
-	if len(configPathList) <= 1 {
-		configLoadingRules.ExplicitPath = kubeConfigPath
-	} else {
-		configLoadingRules.Precedence = configPathList
-	}
-	contextName := ""
-	return clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
-		configLoadingRules,
-		&clientcmd.ConfigOverrides{
-			CurrentContext: contextName,
-		},
-	)
-}
-
-func isPodRunning(pod *core.Pod) bool {
-	return pod.Status.Phase == core.PodRunning
-}
-
-// We added this after a customer tried to run mizu from lens, which used len's kube config, which have cluster server configuration, which points to len's local proxy.
+// ValidateNotProxy We added this after a customer tried to run mizu from lens, which used len's kube config, which have cluster server configuration, which points to len's local proxy.
 // The workaround was to use the user's local default kube config.
 // For now - we are blocking the option to run mizu through a proxy to k8s server
-func validateNotProxy(kubernetesConfig clientcmd.ClientConfig, restClientConfig *restclient.Config) error {
-	kubernetesUrl, err := url.Parse(restClientConfig.Host)
+func (provider *Provider) ValidateNotProxy() error {
+	kubernetesUrl, err := url.Parse(provider.clientConfig.Host)
 	if err != nil {
-		logger.Log.Debugf("validateNotProxy - error while parsing kubernetes host, err: %v", err)
+		logger.Log.Debugf("ValidateNotProxy - error while parsing kubernetes host, err: %v", err)
 		return nil
 	}
 
-	restProxyClientConfig, _ := kubernetesConfig.ClientConfig()
+	restProxyClientConfig, _ := provider.kubernetesConfig.ClientConfig()
 	restProxyClientConfig.Host = kubernetesUrl.Host
 
 	clientProxySet, err := getClientSet(restProxyClientConfig)
@@ -1101,18 +1085,53 @@ func validateNotProxy(kubernetesConfig clientcmd.ClientConfig, restClientConfig 
 	return nil
 }
 
-func validateKubernetesVersion(clientSet *kubernetes.Clientset) error {
-	serverVersion, err := clientSet.ServerVersion()
+func (provider *Provider) GetKubernetesVersion() (*semver.SemVersion, error) {
+	serverVersion, err := provider.clientSet.ServerVersion()
 	if err != nil {
 		logger.Log.Debugf("error while getting kubernetes server version, err: %v", err)
-		return nil
+		return nil, err
 	}
 
 	serverVersionSemVer := semver.SemVersion(serverVersion.GitVersion)
+	return &serverVersionSemVer, nil
+}
+
+func getClientSet(config *rest.Config) (*kubernetes.Clientset, error) {
+	clientSet, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		return nil, err
+	}
+
+	return clientSet, nil
+}
+
+func ValidateKubernetesVersion(serverVersionSemVer *semver.SemVersion) error {
 	minKubernetesServerVersionSemVer := semver.SemVersion(MinKubernetesServerVersion)
-	if minKubernetesServerVersionSemVer.GreaterThan(serverVersionSemVer) {
-		return fmt.Errorf("kubernetes server version %v is not supported, supporting only kubernetes server version of %v or higher", serverVersion.GitVersion, MinKubernetesServerVersion)
+	if minKubernetesServerVersionSemVer.GreaterThan(*serverVersionSemVer) {
+		return fmt.Errorf("kubernetes server version %v is not supported, supporting only kubernetes server version of %v or higher", serverVersionSemVer, MinKubernetesServerVersion)
 	}
 
 	return nil
+}
+
+func loadKubernetesConfiguration(kubeConfigPath string, context string) clientcmd.ClientConfig {
+	logger.Log.Debugf("Using kube config %s", kubeConfigPath)
+	configPathList := filepath.SplitList(kubeConfigPath)
+	configLoadingRules := &clientcmd.ClientConfigLoadingRules{}
+	if len(configPathList) <= 1 {
+		configLoadingRules.ExplicitPath = kubeConfigPath
+	} else {
+		configLoadingRules.Precedence = configPathList
+	}
+	contextName := context
+	return clientcmd.NewNonInteractiveDeferredLoadingClientConfig(
+		configLoadingRules,
+		&clientcmd.ConfigOverrides{
+			CurrentContext: contextName,
+		},
+	)
+}
+
+func IsPodRunning(pod *core.Pod) bool {
+	return pod.Status.Phase == core.PodRunning
 }

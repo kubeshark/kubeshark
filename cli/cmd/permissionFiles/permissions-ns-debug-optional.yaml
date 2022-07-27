@@ -1,0 +1,25 @@
+# This example shows permissions that enrich the logs with additional info in namespace-restricted mode
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: mizu-runner-debug-role
+rules:
+- apiGroups: ["events.k8s.io"]
+  resources: ["events"]
+  verbs: ["watch"]
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get"]
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: mizu-runner-debug-rolebindings
+subjects:
+- kind: User
+  name: user-with-restricted-access
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: Role
+  name: mizu-runner-debug-role
+  apiGroup: rbac.authorization.k8s.io

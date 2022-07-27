@@ -1,4 +1,4 @@
-import {makeStyles} from "@material-ui/core";
+import makeStyles from '@mui/styles/makeStyles';
 
 // @ts-ignore
 export const useCommonStyles = makeStyles(() => ({
@@ -36,4 +36,7 @@ export const useCommonStyles = makeStyles(() => ({
         fontSize: "14px",
         color: "#494677"
     },
+    imagedButton: {
+        padding: "0px 14px"
+    }
 }));

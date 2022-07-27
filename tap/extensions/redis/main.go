@@ -1,4 +1,4 @@
-package main
+package redis
 
 import (
 	"bufio"
@@ -10,12 +10,14 @@ import (
 	"github.com/up9inc/mizu/tap/api"
 )
 
-var protocol api.Protocol = api.Protocol{
-	Name:            "redis",
+var protocol = api.Protocol{
+	ProtocolSummary: api.ProtocolSummary{
+		Name:         "redis",
+		Version:      "3.x",
+		Abbreviation: "REDIS",
+	},
 	LongName:        "Redis Serialization Protocol",
-	Abbreviation:    "REDIS",
 	Macro:           "redis",
-	Version:         "3.x",
 	BackgroundColor: "#a41e11",
 	ForegroundColor: "#ffffff",
 	FontSize:        11,
@@ -24,22 +26,26 @@ var protocol api.Protocol = api.Protocol{
 	Priority:        3,
 }
 
-func init() {
-	log.Println("Initializing Redis extension...")
+var protocolsMap = map[string]*api.Protocol{
+	protocol.ToString(): &protocol,
 }
 
 type dissecting string
 
 func (d dissecting) Register(extension *api.Extension) {
 	extension.Protocol = &protocol
-	extension.MatcherMap = reqResMatcher.openMessagesMap
+}
+
+func (d dissecting) GetProtocols() map[string]*api.Protocol {
+	return protocolsMap
 }
 
 func (d dissecting) Ping() {
 	log.Printf("pong %s", protocol.Name)
 }
 
-func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, counterPair *api.CounterPair, superTimer *api.SuperTimer, superIdentifier *api.SuperIdentifier, emitter api.Emitter, options *api.TrafficFilteringOptions) error {
+func (d dissecting) Dissect(b *bufio.Reader, reader api.TcpReader, options *api.TrafficFilteringOptions) error {
+	reqResMatcher := reader.GetReqResMatcher().(*requestResponseMatcher)
 	is := &RedisInputStream{
 		Reader: b,
 		Buf:    make([]byte, 8192),
@@ -51,37 +57,31 @@ func (d dissecting) Dissect(b *bufio.Reader, isClient bool, tcpID *api.TcpID, co
 			return err
 		}
 
-		if isClient {
-			handleClientStream(tcpID, counterPair, superTimer, emitter, redisPacket)
+		if reader.GetIsClient() {
+			err = handleClientStream(reader.GetReadProgress(), reader.GetParent().GetOrigin(), reader.GetTcpID(), reader.GetCounterPair(), reader.GetCaptureTime(), reader.GetEmitter(), redisPacket, reqResMatcher)
 		} else {
-			handleServerStream(tcpID, counterPair, superTimer, emitter, redisPacket)
+			err = handleServerStream(reader.GetReadProgress(), reader.GetParent().GetOrigin(), reader.GetTcpID(), reader.GetCounterPair(), reader.GetCaptureTime(), reader.GetEmitter(), redisPacket, reqResMatcher)
+		}
+
+		if err != nil {
+			return err
 		}
 	}
 }
 
-func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, resolvedDestination string) *api.Entry {
+func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, resolvedDestination string, namespace string) *api.Entry {
 	request := item.Pair.Request.Payload.(map[string]interface{})
 	response := item.Pair.Response.Payload.(map[string]interface{})
 	reqDetails := request["details"].(map[string]interface{})
 	resDetails := response["details"].(map[string]interface{})
 
-	method := ""
-	if reqDetails["command"] != nil {
-		method = reqDetails["command"].(string)
-	}
-
-	summary := ""
-	if reqDetails["key"] != nil {
-		summary = reqDetails["key"].(string)
-	}
-
-	request["url"] = summary
 	elapsedTime := item.Pair.Response.CaptureTime.Sub(item.Pair.Request.CaptureTime).Round(time.Millisecond).Milliseconds()
 	if elapsedTime < 0 {
 		elapsedTime = 0
 	}
 	return &api.Entry{
-		Protocol: protocol,
+		Protocol: protocol.ProtocolSummary,
+		Capture:  item.Capture,
 		Source: &api.TCP{
 			Name: resolvedSource,
 			IP:   item.ConnectionInfo.ClientIP,
@@ -92,23 +92,57 @@ func (d dissecting) Analyze(item *api.OutputChannelItem, resolvedSource string, 
 			IP:   item.ConnectionInfo.ServerIP,
 			Port: item.ConnectionInfo.ServerPort,
 		},
-		Outgoing:    item.ConnectionInfo.IsOutgoing,
-		Request:     reqDetails,
-		Response:    resDetails,
-		Method:      method,
-		Status:      0,
-		Timestamp:   item.Timestamp,
-		StartTime:   item.Pair.Request.CaptureTime,
-		ElapsedTime: elapsedTime,
-		Summary:     summary,
-		IsOutgoing:  item.ConnectionInfo.IsOutgoing,
+		Namespace:    namespace,
+		Outgoing:     item.ConnectionInfo.IsOutgoing,
+		Request:      reqDetails,
+		Response:     resDetails,
+		RequestSize:  item.Pair.Request.CaptureSize,
+		ResponseSize: item.Pair.Response.CaptureSize,
+		Timestamp:    item.Timestamp,
+		StartTime:    item.Pair.Request.CaptureTime,
+		ElapsedTime:  elapsedTime,
 	}
 
 }
 
-func (d dissecting) Represent(request map[string]interface{}, response map[string]interface{}) (object []byte, bodySize int64, err error) {
-	bodySize = 0
-	representation := make(map[string]interface{}, 0)
+func (d dissecting) Summarize(entry *api.Entry) *api.BaseEntry {
+	status := 0
+	statusQuery := ""
+
+	method := ""
+	methodQuery := ""
+	if entry.Request["command"] != nil {
+		method = entry.Request["command"].(string)
+		methodQuery = fmt.Sprintf(`request.command == "%s"`, method)
+	}
+
+	summary := ""
+	summaryQuery := ""
+	if entry.Request["key"] != nil {
+		summary = entry.Request["key"].(string)
+		summaryQuery = fmt.Sprintf(`request.key == "%s"`, summary)
+	}
+
+	return &api.BaseEntry{
+		Id:           entry.Id,
+		Protocol:     *protocolsMap[entry.Protocol.ToString()],
+		Capture:      entry.Capture,
+		Summary:      summary,
+		SummaryQuery: summaryQuery,
+		Status:       status,
+		StatusQuery:  statusQuery,
+		Method:       method,
+		MethodQuery:  methodQuery,
+		Timestamp:    entry.Timestamp,
+		Source:       entry.Source,
+		Destination:  entry.Destination,
+		IsOutgoing:   entry.Outgoing,
+		Latency:      entry.ElapsedTime,
+	}
+}
+
+func (d dissecting) Represent(request map[string]interface{}, response map[string]interface{}) (object []byte, err error) {
+	representation := make(map[string]interface{})
 	repRequest := representGeneric(request, `request.`)
 	repResponse := representGeneric(response, `response.`)
 	representation["request"] = repRequest
@@ -119,8 +153,16 @@ func (d dissecting) Represent(request map[string]interface{}, response map[strin
 
 func (d dissecting) Macros() map[string]string {
 	return map[string]string{
-		`redis`: fmt.Sprintf(`proto.name == "%s"`, protocol.Name),
+		`redis`: fmt.Sprintf(`protocol.name == "%s"`, protocol.Name),
 	}
 }
 
+func (d dissecting) NewResponseRequestMatcher() api.RequestResponseMatcher {
+	return createResponseRequestMatcher()
+}
+
 var Dissector dissecting
+
+func NewDissector() api.Dissector {
+	return Dissector
+}

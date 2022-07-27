@@ -1,25 +1,31 @@
-# Mizu release _SEM_VER_
+# Mizu release _VER_
+Mizu CHANGELOG is now part of [Mizu wiki](https://github.com/up9inc/mizu/wiki/CHANGELOG)
 
-Download Mizu for your platform
+## Download Mizu for your platform
 
-**Mac** (Intel)
+**Mac** (x86-64/Intel)
 ```
-curl -Lo mizu https://github.com/up9inc/mizu/releases/download/_SEM_VER_/mizu_darwin_amd64 && chmod 755 mizu
-```
-
-**Mac** (Apple M1 silicon)
-```
-curl -Lo mizu https://github.com/up9inc/mizu/releases/download/_SEM_VER_/mizu_darwin_arm64 && chmod 755 mizu
+curl -Lo mizu https://github.com/up9inc/mizu/releases/download/_VER_/mizu_darwin_amd64 && chmod 755 mizu
 ```
 
-**Linux** 
+**Mac** (AArch64/Apple M1 silicon)
 ```
-curl -Lo mizu https://github.com/up9inc/mizu/releases/download/_SEM_VER_/mizu_linux_amd64 && chmod 755 mizu
+rm -f mizu && curl -Lo mizu https://github.com/up9inc/mizu/releases/download/_VER_/mizu_darwin_arm64 && chmod 755 mizu
 ```
 
-**Windows** (Intel 64bit)
+**Linux** (x86-64)
 ```
-curl -LO https://github.com/up9inc/mizu/releases/download/_SEM_VER_/mizu.exe
+curl -Lo mizu https://github.com/up9inc/mizu/releases/download/_VER_/mizu_linux_amd64 && chmod 755 mizu
+```
+
+**Linux** (AArch64)
+```
+curl -Lo mizu https://github.com/up9inc/mizu/releases/download/_VER_/mizu_linux_arm64 && chmod 755 mizu
+```
+
+**Windows** (x86-64)
+```
+curl -LO https://github.com/up9inc/mizu/releases/download/_VER_/mizu.exe
 ```
 
 ### Checksums

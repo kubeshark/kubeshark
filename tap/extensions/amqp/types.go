@@ -3,7 +3,7 @@
 // license that can be found in the LICENSE file.
 // Source code and contact info at http://github.com/streadway/amqp
 
-package main
+package amqp
 
 import (
 	"fmt"
@@ -76,15 +76,6 @@ type Error struct {
 	Reason  string // description of the error
 	Server  bool   // true when initiated from the server, false when from this library
 	Recover bool   // true when this error can be recovered by retrying later or with different parameters
-}
-
-func newError(code uint16, text string) *Error {
-	return &Error{
-		Code:    int(code),
-		Reason:  text,
-		Recover: isSoftExceptionCode(int(code)),
-		Server:  true,
-	}
 }
 
 func (e Error) Error() string {
@@ -232,60 +223,8 @@ type Decimal struct {
 //
 type Table map[string]interface{}
 
-func validateField(f interface{}) error {
-	switch fv := f.(type) {
-	case nil, bool, byte, int, int16, int32, int64, float32, float64, string, []byte, Decimal, time.Time:
-		return nil
-
-	case []interface{}:
-		for _, v := range fv {
-			if err := validateField(v); err != nil {
-				return fmt.Errorf("in array %s", err)
-			}
-		}
-		return nil
-
-	case Table:
-		for k, v := range fv {
-			if err := validateField(v); err != nil {
-				return fmt.Errorf("table field %q %s", k, err)
-			}
-		}
-		return nil
-	}
-
-	return fmt.Errorf("value %T not supported", f)
-}
-
-// Validate returns and error if any Go types in the table are incompatible with AMQP types.
-func (t Table) Validate() error {
-	return validateField(t)
-}
-
-// Heap interface for maintaining delivery tags
-type tagSet []uint64
-
-func (set tagSet) Len() int              { return len(set) }
-func (set tagSet) Less(i, j int) bool    { return (set)[i] < (set)[j] }
-func (set tagSet) Swap(i, j int)         { (set)[i], (set)[j] = (set)[j], (set)[i] }
-func (set *tagSet) Push(tag interface{}) { *set = append(*set, tag.(uint64)) }
-func (set *tagSet) Pop() interface{} {
-	val := (*set)[len(*set)-1]
-	*set = (*set)[:len(*set)-1]
-	return val
-}
-
 type Message interface {
-	id() (uint16, uint16)
-	wait() bool
 	read(io.Reader) error
-	write(io.Writer) error
-}
-
-type messageWithContent interface {
-	Message
-	getContent() (Properties, []byte)
-	setContent(Properties, []byte)
 }
 
 /*
@@ -314,28 +253,10 @@ system calls to read a frame.
 
 */
 type frame interface {
-	write(io.Writer) error
-	channel() uint16
 }
 
 type AmqpReader struct {
 	R io.Reader
-}
-
-type writer struct {
-	w io.Writer
-}
-
-// Implements the frame interface for Connection RPC
-type protocolHeader struct{}
-
-func (protocolHeader) write(w io.Writer) error {
-	_, err := w.Write([]byte{'A', 'M', 'Q', 'P', 0, 0, 9, 1})
-	return err
-}
-
-func (protocolHeader) channel() uint16 {
-	panic("only valid as initial handshake")
 }
 
 /*
@@ -367,8 +288,6 @@ type MethodFrame struct {
 	Method    Message
 }
 
-func (f *MethodFrame) channel() uint16 { return f.ChannelId }
-
 /*
 Heartbeating is a technique designed to undo one of TCP/IP's features, namely
 its ability to recover from a broken physical connection by closing only after
@@ -381,8 +300,6 @@ class method.
 type HeartbeatFrame struct {
 	ChannelId uint16
 }
-
-func (f *HeartbeatFrame) channel() uint16 { return f.ChannelId }
 
 /*
 Certain methods (such as Basic.Publish, Basic.Deliver, etc.) are formally
@@ -411,8 +328,6 @@ type HeaderFrame struct {
 	Properties Properties
 }
 
-func (f *HeaderFrame) channel() uint16 { return f.ChannelId }
-
 /*
 Content is the application data we carry from client-to-client via the AMQP
 server.  Content is, roughly speaking, a set of properties plus a binary data
@@ -432,5 +347,3 @@ type BodyFrame struct {
 	ChannelId uint16
 	Body      []byte
 }
-
-func (f *BodyFrame) channel() uint16 { return f.ChannelId }

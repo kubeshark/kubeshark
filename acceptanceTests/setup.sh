@@ -1,7 +1,10 @@
 #!/bin/bash
+set -e
 
 PREFIX=$HOME/local/bin
 VERSION=v1.22.0
+TUNNEL_LOG="tunnel.log"
+PROXY_LOG="proxy.log"
 
 echo "Attempting to install minikube and assorted tools to $PREFIX"
 
@@ -11,7 +14,7 @@ if ! [ -x "$(command -v kubectl)" ]; then
   chmod +x kubectl
   mv kubectl "$PREFIX"
 else
-  echo "kubetcl is already installed"
+  echo "kubectl is already installed"
 fi
 
 if ! [ -x "$(command -v minikube)" ]; then
@@ -24,32 +27,58 @@ else
 fi
 
 echo "Starting minikube..."
-minikube start
+minikube start --cpus 2 --memory 6000
 
 echo "Creating mizu tests namespaces"
-kubectl create namespace mizu-tests
-kubectl create namespace mizu-tests2
+kubectl create namespace mizu-tests --dry-run=client -o yaml | kubectl apply -f -
+kubectl create namespace mizu-tests2 --dry-run=client -o yaml | kubectl apply -f -
 
 echo "Creating httpbin deployments"
-kubectl create deployment httpbin --image=kennethreitz/httpbin -n mizu-tests
-kubectl create deployment httpbin2 --image=kennethreitz/httpbin -n mizu-tests
+kubectl create deployment httpbin --image=kennethreitz/httpbin -n mizu-tests --dry-run=client -o yaml | kubectl apply -f -
+kubectl create deployment httpbin2 --image=kennethreitz/httpbin -n mizu-tests --dry-run=client -o yaml | kubectl apply -f -
 
-kubectl create deployment httpbin --image=kennethreitz/httpbin -n mizu-tests2
+kubectl create deployment httpbin --image=kennethreitz/httpbin -n mizu-tests2 --dry-run=client -o yaml | kubectl apply -f -
+
+echo "Creating redis deployment"
+kubectl create deployment redis --image=redis -n mizu-tests --dry-run=client -o yaml | kubectl apply -f -
+
+echo "Creating rabbitmq deployment"
+kubectl create deployment rabbitmq --image=rabbitmq -n mizu-tests --dry-run=client -o yaml | kubectl apply -f -
 
 echo "Creating httpbin services"
-kubectl expose deployment httpbin --type=NodePort --port=80 -n mizu-tests
-kubectl expose deployment httpbin2 --type=NodePort --port=80 -n mizu-tests
+kubectl expose deployment httpbin --type=NodePort --port=80 -n mizu-tests --dry-run=client -o yaml | kubectl apply -f -
+kubectl expose deployment httpbin2 --type=NodePort --port=80 -n mizu-tests --dry-run=client -o yaml | kubectl apply -f -
 
-kubectl expose deployment httpbin --type=NodePort --port=80 -n mizu-tests2
+kubectl expose deployment httpbin --type=NodePort --port=80 -n mizu-tests2 --dry-run=client -o yaml | kubectl apply -f -
+
+echo "Creating redis service"
+kubectl expose deployment redis --type=LoadBalancer --port=6379 -n mizu-tests --dry-run=client -o yaml | kubectl apply -f -
+
+echo "Creating rabbitmq service"
+kubectl expose deployment rabbitmq --type=LoadBalancer --port=5672 -n mizu-tests --dry-run=client -o yaml | kubectl apply -f -
 
 echo "Starting proxy"
-kubectl proxy --port=8080 &
+rm -f ${PROXY_LOG}
+kubectl proxy --port=8080 > ${PROXY_LOG} &
+PID1=$!
+echo "kubectl proxy process id is ${PID1} and log of proxy in ${PROXY_LOG}"
 
-echo "Setting minikube docker env"
-eval $(minikube docker-env)
+if [[ -z "${CI}" ]]; then
+  echo "Setting env var of mizu ci image"
+  export MIZU_CI_IMAGE="mizu/ci:0.0"
+  echo "Build agent image"
+  docker build -t "${MIZU_CI_IMAGE}" .
+else
+  echo "not building docker image in CI because it is created as separate step"
+fi
 
-echo "Build agent image"
-make build-docker-ci
+minikube image load "${MIZU_CI_IMAGE}"
 
 echo "Build cli"
-make build-cli-ci
+cd cli && make build GIT_BRANCH=ci SUFFIX=ci
+
+echo "Starting tunnel"
+rm -f ${TUNNEL_LOG}
+minikube tunnel > ${TUNNEL_LOG} &
+PID2=$!
+echo "Minikube tunnel process id is ${PID2} and log of tunnel in ${TUNNEL_LOG}"

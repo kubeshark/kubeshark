@@ -1,7 +1,6 @@
-package main
+package kafka
 
 import (
-	"bytes"
 	"encoding/binary"
 	"fmt"
 	"hash/crc32"
@@ -9,8 +8,6 @@ import (
 	"io/ioutil"
 	"reflect"
 	"strings"
-	"sync"
-	"sync/atomic"
 )
 
 type discarder interface {
@@ -24,15 +21,6 @@ type decoder struct {
 	err    error
 	table  *crc32.Table
 	crc32  uint32
-}
-
-func (d *decoder) Reset(r io.Reader, n int) {
-	d.reader = r
-	d.remain = n
-	d.buffer = [8]byte{}
-	d.err = nil
-	d.table = nil
-	d.crc32 = 0
 }
 
 func (d *decoder) Read(b []byte) (int, error) {
@@ -56,14 +44,6 @@ func (d *decoder) Read(b []byte) (int, error) {
 func (d *decoder) ReadByte() (byte, error) {
 	c := d.readByte()
 	return c, d.err
-}
-
-func (d *decoder) done() bool {
-	return d.remain == 0 || d.err != nil
-}
-
-func (d *decoder) setCRC(table *crc32.Table) {
-	d.table, d.crc32 = table, 0
 }
 
 func (d *decoder) decodeBool(v value) {
@@ -199,19 +179,6 @@ func (d *decoder) read(n int) []byte {
 	return b
 }
 
-func (d *decoder) writeTo(w io.Writer, n int) {
-	limit := d.remain
-	if n < limit {
-		d.remain = n
-	}
-	c, err := io.Copy(w, d)
-	if int(c) < n && err == nil {
-		err = io.ErrUnexpectedEOF
-	}
-	d.remain = limit - int(c)
-	d.setError(err)
-}
-
 func (d *decoder) setError(err error) {
 	if d.err == nil && err != nil {
 		d.err = err
@@ -272,14 +239,6 @@ func (d *decoder) readString() string {
 	}
 }
 
-func (d *decoder) readVarString() string {
-	if n := d.readVarInt(); n < 0 {
-		return ""
-	} else {
-		return bytesToString(d.read(int(n)))
-	}
-}
-
 func (d *decoder) readCompactString() string {
 	if n := d.readUnsignedVarInt(); n < 1 {
 		return ""
@@ -296,46 +255,11 @@ func (d *decoder) readBytes() []byte {
 	}
 }
 
-func (d *decoder) readBytesTo(w io.Writer) bool {
-	if n := d.readInt32(); n < 0 {
-		return false
-	} else {
-		d.writeTo(w, int(n))
-		return d.err == nil
-	}
-}
-
-func (d *decoder) readVarBytes() []byte {
-	if n := d.readVarInt(); n < 0 {
-		return nil
-	} else {
-		return d.read(int(n))
-	}
-}
-
-func (d *decoder) readVarBytesTo(w io.Writer) bool {
-	if n := d.readVarInt(); n < 0 {
-		return false
-	} else {
-		d.writeTo(w, int(n))
-		return d.err == nil
-	}
-}
-
 func (d *decoder) readCompactBytes() []byte {
 	if n := d.readUnsignedVarInt(); n < 1 {
 		return nil
 	} else {
 		return d.read(int(n - 1))
-	}
-}
-
-func (d *decoder) readCompactBytesTo(w io.Writer) bool {
-	if n := d.readUnsignedVarInt(); n < 1 {
-		return false
-	} else {
-		d.writeTo(w, int(n-1))
-		return d.err == nil
 	}
 }
 
@@ -547,52 +471,3 @@ func decodeReadInt32(b []byte) int32 {
 func decodeReadInt64(b []byte) int64 {
 	return int64(binary.BigEndian.Uint64(b))
 }
-
-func Unmarshal(data []byte, version int16, value interface{}) error {
-	typ := elemTypeOf(value)
-	cache, _ := unmarshalers.Load().(map[versionedType]decodeFunc)
-	key := versionedType{typ: typ, version: version}
-	decode := cache[key]
-
-	if decode == nil {
-		decode = decodeFuncOf(reflect.TypeOf(value).Elem(), version, false, structTag{
-			MinVersion: -1,
-			MaxVersion: -1,
-			TagID:      -2,
-			Compact:    true,
-			Nullable:   true,
-		})
-
-		newCache := make(map[versionedType]decodeFunc, len(cache)+1)
-		newCache[key] = decode
-
-		for typ, fun := range cache {
-			newCache[typ] = fun
-		}
-
-		unmarshalers.Store(newCache)
-	}
-
-	d, _ := decoders.Get().(*decoder)
-	if d == nil {
-		d = &decoder{reader: bytes.NewReader(nil)}
-	}
-
-	d.remain = len(data)
-	r, _ := d.reader.(*bytes.Reader)
-	r.Reset(data)
-
-	defer func() {
-		r.Reset(nil)
-		d.Reset(r, 0)
-		decoders.Put(d)
-	}()
-
-	decode(d, valueOf(value))
-	return dontExpectEOF(d.err)
-}
-
-var (
-	decoders     sync.Pool    // *decoder
-	unmarshalers atomic.Value // map[versionedType]decodeFunc
-)

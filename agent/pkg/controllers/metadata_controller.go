@@ -1,13 +1,14 @@
 package controllers
 
 import (
-	"github.com/gin-gonic/gin"
-	"github.com/up9inc/mizu/shared"
-	"mizuserver/pkg/version"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
+	"github.com/up9inc/mizu/agent/pkg/version"
+	"github.com/up9inc/mizu/shared"
 )
 
 func GetVersion(c *gin.Context) {
-	resp := shared.VersionResponse{SemVer: version.SemVer}
+	resp := shared.VersionResponse{Ver: version.Ver}
 	c.JSON(http.StatusOK, resp)
 }

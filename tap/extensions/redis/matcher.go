@@ -1,33 +1,32 @@
-package main
+package redis
 
 import (
-	"fmt"
-	"strings"
 	"sync"
 	"time"
 
 	"github.com/up9inc/mizu/tap/api"
 )
 
-var reqResMatcher = createResponseRequestMatcher() // global
-
-// Key is {client_addr}:{client_port}->{dest_addr}:{dest_port}_{incremental_counter}
+// Key is `{src_ip}_{dst_ip}_{src_ip}_{src_port}_{incremental_counter}`
 type requestResponseMatcher struct {
 	openMessagesMap *sync.Map
 }
 
-func createResponseRequestMatcher() requestResponseMatcher {
-	newMatcher := &requestResponseMatcher{openMessagesMap: &sync.Map{}}
-	return *newMatcher
+func createResponseRequestMatcher() api.RequestResponseMatcher {
+	return &requestResponseMatcher{openMessagesMap: &sync.Map{}}
 }
 
-func (matcher *requestResponseMatcher) registerRequest(ident string, request *RedisPacket, captureTime time.Time) *api.OutputChannelItem {
-	split := splitIdent(ident)
-	key := genKey(split)
+func (matcher *requestResponseMatcher) GetMap() *sync.Map {
+	return matcher.openMessagesMap
+}
+func (matcher *requestResponseMatcher) SetMaxTry(value int) {
+}
 
+func (matcher *requestResponseMatcher) registerRequest(ident string, request *RedisPacket, captureTime time.Time, captureSize int) *api.OutputChannelItem {
 	requestRedisMessage := api.GenericMessage{
 		IsRequest:   true,
 		CaptureTime: captureTime,
+		CaptureSize: captureSize,
 		Payload: RedisPayload{
 			Data: &RedisWrapper{
 				Method:  string(request.Command),
@@ -37,7 +36,7 @@ func (matcher *requestResponseMatcher) registerRequest(ident string, request *Re
 		},
 	}
 
-	if response, found := matcher.openMessagesMap.LoadAndDelete(key); found {
+	if response, found := matcher.openMessagesMap.LoadAndDelete(ident); found {
 		// Type assertion always succeeds because all of the map's values are of api.GenericMessage type
 		responseRedisMessage := response.(*api.GenericMessage)
 		if responseRedisMessage.IsRequest {
@@ -46,17 +45,15 @@ func (matcher *requestResponseMatcher) registerRequest(ident string, request *Re
 		return matcher.preparePair(&requestRedisMessage, responseRedisMessage)
 	}
 
-	matcher.openMessagesMap.Store(key, &requestRedisMessage)
+	matcher.openMessagesMap.Store(ident, &requestRedisMessage)
 	return nil
 }
 
-func (matcher *requestResponseMatcher) registerResponse(ident string, response *RedisPacket, captureTime time.Time) *api.OutputChannelItem {
-	split := splitIdent(ident)
-	key := genKey(split)
-
+func (matcher *requestResponseMatcher) registerResponse(ident string, response *RedisPacket, captureTime time.Time, captureSize int) *api.OutputChannelItem {
 	responseRedisMessage := api.GenericMessage{
 		IsRequest:   false,
 		CaptureTime: captureTime,
+		CaptureSize: captureSize,
 		Payload: RedisPayload{
 			Data: &RedisWrapper{
 				Method:  string(response.Command),
@@ -66,7 +63,7 @@ func (matcher *requestResponseMatcher) registerResponse(ident string, response *
 		},
 	}
 
-	if request, found := matcher.openMessagesMap.LoadAndDelete(key); found {
+	if request, found := matcher.openMessagesMap.LoadAndDelete(ident); found {
 		// Type assertion always succeeds because all of the map's values are of api.GenericMessage type
 		requestRedisMessage := request.(*api.GenericMessage)
 		if !requestRedisMessage.IsRequest {
@@ -75,7 +72,7 @@ func (matcher *requestResponseMatcher) registerResponse(ident string, response *
 		return matcher.preparePair(requestRedisMessage, &responseRedisMessage)
 	}
 
-	matcher.openMessagesMap.Store(key, &responseRedisMessage)
+	matcher.openMessagesMap.Store(ident, &responseRedisMessage)
 	return nil
 }
 
@@ -89,14 +86,4 @@ func (matcher *requestResponseMatcher) preparePair(requestRedisMessage *api.Gene
 			Response: *responseRedisMessage,
 		},
 	}
-}
-
-func splitIdent(ident string) []string {
-	ident = strings.Replace(ident, "->", " ", -1)
-	return strings.Split(ident, " ")
-}
-
-func genKey(split []string) string {
-	key := fmt.Sprintf("%s:%s->%s:%s,%s", split[0], split[2], split[1], split[3], split[4])
-	return key
 }

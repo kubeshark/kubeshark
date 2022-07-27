@@ -4,10 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"github.com/up9inc/mizu/shared/debounce"
-	"github.com/up9inc/mizu/shared/logger"
 	"sync"
 	"time"
+
+	"github.com/up9inc/mizu/logger"
+	"github.com/up9inc/mizu/shared/debounce"
 
 	"k8s.io/apimachinery/pkg/watch"
 )
@@ -31,7 +32,7 @@ func FilteredWatch(ctx context.Context, watcherCreator WatchCreator, targetNames
 
 		go func(targetNamespace string) {
 			defer wg.Done()
-			watchRestartDebouncer := debounce.NewDebouncer(1 * time.Minute, func() {})
+			watchRestartDebouncer := debounce.NewDebouncer(1*time.Minute, func() {})
 
 			for {
 				watcher, err := watcherCreator.NewWatcher(ctx, targetNamespace)
@@ -44,7 +45,7 @@ func FilteredWatch(ctx context.Context, watcherCreator WatchCreator, targetNames
 				watcher.Stop()
 
 				select {
-				case <- ctx.Done():
+				case <-ctx.Done():
 					return
 				default:
 					break
@@ -55,7 +56,9 @@ func FilteredWatch(ctx context.Context, watcherCreator WatchCreator, targetNames
 					break
 				} else {
 					if !watchRestartDebouncer.IsOn() {
-						watchRestartDebouncer.SetOn()
+						if err := watchRestartDebouncer.SetOn(); err != nil {
+							logger.Log.Error(err)
+						}
 						logger.Log.Debug("k8s watch channel closed, restarting watcher")
 						time.Sleep(time.Second * 5)
 						continue

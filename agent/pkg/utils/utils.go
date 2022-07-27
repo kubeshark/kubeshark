@@ -2,17 +2,22 @@ package utils
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
+	"io/ioutil"
 	"net/http"
-	"net/url"
 	"os"
 	"os/signal"
 	"syscall"
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/up9inc/mizu/logger"
 	"github.com/up9inc/mizu/shared"
-	"github.com/up9inc/mizu/shared/logger"
+)
+
+var (
+	StartTime int64 // global
 )
 
 // StartServer starts the server with a graceful shutdown
@@ -29,10 +34,14 @@ func StartServer(app *gin.Engine) {
 	}
 
 	go func() {
-		_ = <-signals
+		<-signals
 		logger.Log.Infof("Shutting down...")
-		ctx, _ := context.WithTimeout(context.Background(), 5*time.Second)
-		_ = srv.Shutdown(ctx)
+		ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+		defer cancel()
+		err := srv.Shutdown(ctx)
+		if err != nil {
+			logger.Log.Errorf("%v", err)
+		}
 		os.Exit(0)
 	}()
 
@@ -49,13 +58,41 @@ func CheckErr(e error) {
 	}
 }
 
-func SetHostname(address, newHostname string) string {
-	replacedUrl, err := url.Parse(address)
-	if err != nil {
-		logger.Log.Errorf("error replacing hostname to %s in address %s, returning original %v", newHostname, address, err)
-		return address
+func ReadJsonFile(filePath string, value interface{}) error {
+	if content, err := ioutil.ReadFile(filePath); err != nil {
+		return err
+	} else {
+		if err = json.Unmarshal(content, value); err != nil {
+			return err
+		}
 	}
-	replacedUrl.Host = newHostname
-	return replacedUrl.String()
 
+	return nil
+}
+
+func SaveJsonFile(filePath string, value interface{}) error {
+	if data, err := json.Marshal(value); err != nil {
+		return err
+	} else {
+		if err = ioutil.WriteFile(filePath, data, 0644); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func UniqueStringSlice(s []string) []string {
+	uniqueSlice := make([]string, 0)
+	uniqueMap := map[string]bool{}
+
+	for _, val := range s {
+		if uniqueMap[val] {
+			continue
+		}
+		uniqueMap[val] = true
+		uniqueSlice = append(uniqueSlice, val)
+	}
+
+	return uniqueSlice
 }

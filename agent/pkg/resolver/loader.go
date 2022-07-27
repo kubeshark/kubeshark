@@ -10,14 +10,14 @@ import (
 	restclient "k8s.io/client-go/rest"
 )
 
-func NewFromInCluster(errOut chan error, namesapce string) (*Resolver, error) {
+func NewFromInCluster(errOut chan error, namespace string) (*Resolver, error) {
 	config, err := restclient.InClusterConfig()
 	if err != nil {
 		return nil, err
 	}
-	clientset, err := kubernetes.NewForConfig(config)
+	clientSet, err := kubernetes.NewForConfig(config)
 	if err != nil {
 		return nil, err
 	}
-	return &Resolver{clientConfig: config, clientSet: clientset, nameMap: cmap.New(), serviceMap: cmap.New(), errOut: errOut, namespace: namesapce}, nil
+	return &Resolver{clientConfig: config, clientSet: clientSet, nameMap: cmap.New(), serviceMap: cmap.New(), errOut: errOut, namespace: namespace}, nil
 }

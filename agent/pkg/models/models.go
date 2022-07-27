@@ -2,26 +2,16 @@ package models
 
 import (
 	"encoding/json"
-	"mizuserver/pkg/rules"
 
+	"github.com/up9inc/mizu/agent/pkg/har"
 	tapApi "github.com/up9inc/mizu/tap/api"
 
-	"github.com/google/martian/har"
 	basenine "github.com/up9inc/basenine/client/go"
 	"github.com/up9inc/mizu/shared"
-	"github.com/up9inc/mizu/tap"
 )
 
-func GetEntry(r *tapApi.Entry, v tapApi.DataUnmarshaler) error {
-	return v.UnmarshalData(r)
-}
-
-type TapConfig struct {
-	TappedNamespaces map[string]bool `json:"tappedNamespaces"`
-}
-
 type EntriesRequest struct {
-	LeftOff   int    `form:"leftOff" validate:"required,min=-1"`
+	LeftOff   string `form:"leftOff" validate:"required"`
 	Direction int    `form:"direction" validate:"required,oneof='1' '-1'"`
 	Query     string `form:"query"`
 	Limit     int    `form:"limit" validate:"required,min=1"`
@@ -42,19 +32,14 @@ type WebSocketEntryMessage struct {
 	Data *tapApi.BaseEntry `json:"data,omitempty"`
 }
 
+type WebSocketFullEntryMessage struct {
+	*shared.WebSocketMessageMetadata
+	Data *tapApi.Entry `json:"data,omitempty"`
+}
+
 type WebSocketTappedEntryMessage struct {
 	*shared.WebSocketMessageMetadata
 	Data *tapApi.OutputChannelItem
-}
-
-type WebsocketOutboundLinkMessage struct {
-	*shared.WebSocketMessageMetadata
-	Data *tap.OutboundLink
-}
-
-type AuthStatus struct {
-	Email string `json:"email"`
-	Model string `json:"model"`
 }
 
 type ToastMessage struct {
@@ -88,20 +73,20 @@ func CreateBaseEntryWebSocketMessage(base *tapApi.BaseEntry) ([]byte, error) {
 	return json.Marshal(message)
 }
 
-func CreateWebsocketTappedEntryMessage(base *tapApi.OutputChannelItem) ([]byte, error) {
-	message := &WebSocketTappedEntryMessage{
+func CreateFullEntryWebSocketMessage(entry *tapApi.Entry) ([]byte, error) {
+	message := &WebSocketFullEntryMessage{
 		WebSocketMessageMetadata: &shared.WebSocketMessageMetadata{
-			MessageType: shared.WebSocketMessageTypeTappedEntry,
+			MessageType: shared.WebSocketMessageTypeFullEntry,
 		},
-		Data: base,
+		Data: entry,
 	}
 	return json.Marshal(message)
 }
 
-func CreateWebsocketOutboundLinkMessage(base *tap.OutboundLink) ([]byte, error) {
-	message := &WebsocketOutboundLinkMessage{
+func CreateWebsocketTappedEntryMessage(base *tapApi.OutputChannelItem) ([]byte, error) {
+	message := &WebSocketTappedEntryMessage{
 		WebSocketMessageMetadata: &shared.WebSocketMessageMetadata{
-			MessageType: shared.WebsocketMessageTypeOutboundLink,
+			MessageType: shared.WebSocketMessageTypeTappedEntry,
 		},
 		Data: base,
 	}
@@ -156,14 +141,4 @@ type ExtendedLog struct {
 type ExtendedCreator struct {
 	*har.Creator
 	Source *string `json:"_source"`
-}
-
-func RunValidationRulesState(harEntry har.Entry, service string) (tapApi.ApplicableRules, []rules.RulesMatched, bool) {
-	resultPolicyToSend, isEnabled := rules.MatchRequestPolicy(harEntry, service)
-	statusPolicyToSend, latency, numberOfRules := rules.PassedValidationRules(resultPolicyToSend)
-	return tapApi.ApplicableRules{Status: statusPolicyToSend, Latency: latency, NumberOfRules: numberOfRules}, resultPolicyToSend, isEnabled
-}
-
-type InstallState struct {
-	Completed bool `json:"completed"`
 }

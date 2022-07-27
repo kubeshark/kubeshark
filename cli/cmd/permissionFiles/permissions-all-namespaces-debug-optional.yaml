@@ -1,0 +1,25 @@
+# This example shows permissions that enrich the logs with additional info
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: mizu-runner-debug-clusterrole
+rules:
+- apiGroups: ["events.k8s.io"]
+  resources: ["events"]
+  verbs: ["watch"]
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["get"]
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: mizu-runner-debug-clusterrolebindings
+subjects:
+- kind: User
+  name: user-with-clusterwide-access
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: ClusterRole
+  name: mizu-runner-debug-clusterrole
+  apiGroup: rbac.authorization.k8s.io

@@ -23,19 +23,19 @@ func TestConfigRegenerate(t *testing.T) {
 		t.Skip("ignored acceptance test")
 	}
 
-	cliPath, cliPathErr := getCliPath()
+	cliPath, cliPathErr := GetCliPath()
 	if cliPathErr != nil {
 		t.Errorf("failed to get cli path, err: %v", cliPathErr)
 		return
 	}
 
-	configPath, configPathErr := getConfigPath()
+	configPath, configPathErr := GetConfigPath()
 	if configPathErr != nil {
 		t.Errorf("failed to get config path, err: %v", cliPathErr)
 		return
 	}
 
-	configCmdArgs := getDefaultConfigCommandArgs()
+	configCmdArgs := GetDefaultConfigCommandArgs()
 
 	configCmdArgs = append(configCmdArgs, "-r")
 
@@ -74,13 +74,13 @@ func TestConfigGuiPort(t *testing.T) {
 
 	for _, guiPort := range tests {
 		t.Run(fmt.Sprintf("%d", guiPort), func(t *testing.T) {
-			cliPath, cliPathErr := getCliPath()
+			cliPath, cliPathErr := GetCliPath()
 			if cliPathErr != nil {
 				t.Errorf("failed to get cli path, err: %v", cliPathErr)
 				return
 			}
 
-			configPath, configPathErr := getConfigPath()
+			configPath, configPathErr := GetConfigPath()
 			if configPathErr != nil {
 				t.Errorf("failed to get config path, err: %v", cliPathErr)
 				return
@@ -100,16 +100,16 @@ func TestConfigGuiPort(t *testing.T) {
 				return
 			}
 
-			tapCmdArgs := getDefaultTapCommandArgs()
+			tapCmdArgs := GetDefaultTapCommandArgs()
 
-			tapNamespace := getDefaultTapNamespace()
+			tapNamespace := GetDefaultTapNamespace()
 			tapCmdArgs = append(tapCmdArgs, tapNamespace...)
 
 			tapCmd := exec.Command(cliPath, tapCmdArgs...)
 			t.Logf("running command: %v", tapCmd.String())
 
 			t.Cleanup(func() {
-				if err := cleanupCommand(tapCmd); err != nil {
+				if err := CleanupCommand(tapCmd); err != nil {
 					t.Logf("failed to cleanup tap command, err: %v", err)
 				}
 
@@ -123,9 +123,9 @@ func TestConfigGuiPort(t *testing.T) {
 				return
 			}
 
-			apiServerUrl := getApiServerUrl(guiPort)
+			apiServerUrl := GetApiServerUrl(guiPort)
 
-			if err := waitTapPodsReady(apiServerUrl); err != nil {
+			if err := WaitTapPodsReady(apiServerUrl); err != nil {
 				t.Errorf("failed to start tap pods on time, err: %v", err)
 				return
 			}
@@ -147,13 +147,13 @@ func TestConfigSetGuiPort(t *testing.T) {
 
 	for _, guiPortStruct := range tests {
 		t.Run(fmt.Sprintf("%d", guiPortStruct.SetGuiPort), func(t *testing.T) {
-			cliPath, cliPathErr := getCliPath()
+			cliPath, cliPathErr := GetCliPath()
 			if cliPathErr != nil {
 				t.Errorf("failed to get cli path, err: %v", cliPathErr)
 				return
 			}
 
-			configPath, configPathErr := getConfigPath()
+			configPath, configPathErr := GetConfigPath()
 			if configPathErr != nil {
 				t.Errorf("failed to get config path, err: %v", cliPathErr)
 				return
@@ -173,9 +173,9 @@ func TestConfigSetGuiPort(t *testing.T) {
 				return
 			}
 
-			tapCmdArgs := getDefaultTapCommandArgs()
+			tapCmdArgs := GetDefaultTapCommandArgs()
 
-			tapNamespace := getDefaultTapNamespace()
+			tapNamespace := GetDefaultTapNamespace()
 			tapCmdArgs = append(tapCmdArgs, tapNamespace...)
 
 			tapCmdArgs = append(tapCmdArgs, "--set", fmt.Sprintf("tap.gui-port=%v", guiPortStruct.SetGuiPort))
@@ -184,7 +184,7 @@ func TestConfigSetGuiPort(t *testing.T) {
 			t.Logf("running command: %v", tapCmd.String())
 
 			t.Cleanup(func() {
-				if err := cleanupCommand(tapCmd); err != nil {
+				if err := CleanupCommand(tapCmd); err != nil {
 					t.Logf("failed to cleanup tap command, err: %v", err)
 				}
 
@@ -198,9 +198,9 @@ func TestConfigSetGuiPort(t *testing.T) {
 				return
 			}
 
-			apiServerUrl := getApiServerUrl(guiPortStruct.SetGuiPort)
+			apiServerUrl := GetApiServerUrl(guiPortStruct.SetGuiPort)
 
-			if err := waitTapPodsReady(apiServerUrl); err != nil {
+			if err := WaitTapPodsReady(apiServerUrl); err != nil {
 				t.Errorf("failed to start tap pods on time, err: %v", err)
 				return
 			}
@@ -222,13 +222,13 @@ func TestConfigFlagGuiPort(t *testing.T) {
 
 	for _, guiPortStruct := range tests {
 		t.Run(fmt.Sprintf("%d", guiPortStruct.FlagGuiPort), func(t *testing.T) {
-			cliPath, cliPathErr := getCliPath()
+			cliPath, cliPathErr := GetCliPath()
 			if cliPathErr != nil {
 				t.Errorf("failed to get cli path, err: %v", cliPathErr)
 				return
 			}
 
-			configPath, configPathErr := getConfigPath()
+			configPath, configPathErr := GetConfigPath()
 			if configPathErr != nil {
 				t.Errorf("failed to get config path, err: %v", cliPathErr)
 				return
@@ -248,9 +248,9 @@ func TestConfigFlagGuiPort(t *testing.T) {
 				return
 			}
 
-			tapCmdArgs := getDefaultTapCommandArgs()
+			tapCmdArgs := GetDefaultTapCommandArgs()
 
-			tapNamespace := getDefaultTapNamespace()
+			tapNamespace := GetDefaultTapNamespace()
 			tapCmdArgs = append(tapCmdArgs, tapNamespace...)
 
 			tapCmdArgs = append(tapCmdArgs, "-p", fmt.Sprintf("%v", guiPortStruct.FlagGuiPort))
@@ -259,7 +259,7 @@ func TestConfigFlagGuiPort(t *testing.T) {
 			t.Logf("running command: %v", tapCmd.String())
 
 			t.Cleanup(func() {
-				if err := cleanupCommand(tapCmd); err != nil {
+				if err := CleanupCommand(tapCmd); err != nil {
 					t.Logf("failed to cleanup tap command, err: %v", err)
 				}
 
@@ -273,9 +273,9 @@ func TestConfigFlagGuiPort(t *testing.T) {
 				return
 			}
 
-			apiServerUrl := getApiServerUrl(guiPortStruct.FlagGuiPort)
+			apiServerUrl := GetApiServerUrl(guiPortStruct.FlagGuiPort)
 
-			if err := waitTapPodsReady(apiServerUrl); err != nil {
+			if err := WaitTapPodsReady(apiServerUrl); err != nil {
 				t.Errorf("failed to start tap pods on time, err: %v", err)
 				return
 			}

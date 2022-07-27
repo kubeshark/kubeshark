@@ -1,0 +1,28 @@
+@import "../../../variables.module"
+
+.resizable
+    position: relative
+    align-items: center
+    display: flex
+    overflow: hidden
+    height: 100%
+    width: 100%
+    padding-right: 3px
+
+.resizer
+    position: absolute
+
+    &Right
+        cursor: col-resize
+        height: 100%
+        right: 0
+        top: 0
+        width: 5px
+
+    // FutureUse
+    &Bottom
+        bottom: 0
+        cursor: row-resize
+        height: 5px
+        left: 0
+        width: 100%

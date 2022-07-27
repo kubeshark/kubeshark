@@ -1,0 +1,37 @@
+# This example shows permissions that are required for Mizu to resolve IPs to service names
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: mizu-resolver-clusterrole
+rules:
+- apiGroups: [""]
+  resources: ["serviceaccounts"]
+  verbs: ["get", "create"]
+- apiGroups: ["rbac.authorization.k8s.io"]
+  resources: ["clusterroles"]
+  verbs: ["get", "list", "create", "delete"]
+- apiGroups: ["rbac.authorization.k8s.io"]
+  resources: ["clusterrolebindings"]
+  verbs: ["get", "list", "create", "delete"]
+- apiGroups: ["", "apps", "extensions"]
+  resources: ["pods"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["", "apps", "extensions"]
+  resources: ["services"]
+  verbs: ["get", "list", "watch"]
+- apiGroups: ["", "apps", "extensions"]
+  resources: ["endpoints"]
+  verbs: ["get", "list", "watch"]
+---
+kind: ClusterRoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: mizu-resolver-clusterrolebindings
+subjects:
+- kind: User
+  name: user-with-clusterwide-access
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: ClusterRole
+  name: mizu-resolver-clusterrole
+  apiGroup: rbac.authorization.k8s.io

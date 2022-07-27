@@ -14,20 +14,21 @@ import (
 	"fmt"
 	"os"
 	"runtime"
+	"strconv"
 	"strings"
 	"time"
 
-	"github.com/up9inc/mizu/shared/logger"
+	"github.com/shirou/gopsutil/cpu"
+	"github.com/struCoder/pidusage"
+	"github.com/up9inc/mizu/logger"
 	"github.com/up9inc/mizu/tap/api"
 	"github.com/up9inc/mizu/tap/diagnose"
 	"github.com/up9inc/mizu/tap/source"
+	"github.com/up9inc/mizu/tap/tlstapper"
 	v1 "k8s.io/api/core/v1"
 )
 
 const cleanPeriod = time.Second * 10
-
-//lint:ignore U1000 will be used in the future
-var remoteOnlyOutboundPorts = []int{80, 443}
 
 var maxcount = flag.Int64("c", -1, "Only grab this many packets, then exit")
 var decoder = flag.String("decoder", "", "Name of the decoder to use (default: guess from capture)")
@@ -43,6 +44,8 @@ var debug = flag.Bool("debug", false, "Display debug information")
 var quiet = flag.Bool("quiet", false, "Be quiet regarding errors")
 var hexdumppkt = flag.Bool("dumppkt", false, "Dump packet as hex")
 var procfs = flag.String("procfs", "/proc", "The procfs directory, used when mapping host volumes into a container")
+var ignoredPorts = flag.String("ignore-ports", "", "A comma separated list of ports to ignore")
+var maxLiveStreams = flag.Int("max-live-streams", 500, "Maximum live streams to handle concurrently")
 
 // capture
 var iface = flag.String("i", "en0", "Interface to read packets from")
@@ -51,14 +54,16 @@ var snaplen = flag.Int("s", 65536, "Snap length (number of bytes max to read per
 var tstype = flag.String("timestamp_type", "", "Type of timestamps to use")
 var promisc = flag.Bool("promisc", true, "Set promiscuous mode")
 var staleTimeoutSeconds = flag.Int("staletimout", 120, "Max time in seconds to keep connections which don't transmit data")
-var pids = flag.String("pids", "", "A comma separated list of PIDs to capture their network namespaces")
 var servicemesh = flag.Bool("servicemesh", false, "Record decrypted traffic if the cluster is configured with a service mesh and with mtls")
+var tls = flag.Bool("tls", false, "Enable TLS tapper")
 
 var memprofile = flag.String("memprofile", "", "Write memory profile")
 
 type TapOpts struct {
-	HostMode          bool
-	FilterAuthorities []v1.Pod
+	HostMode               bool
+	IgnoredPorts           []uint16
+	maxLiveStreams         int
+	staleConnectionTimeout time.Duration
 }
 
 var extensions []*api.Extension                     // global
@@ -66,62 +71,81 @@ var filteringOptions *api.TrafficFilteringOptions   // global
 var tapTargets []v1.Pod                             // global
 var packetSourceManager *source.PacketSourceManager // global
 var mainPacketInputChan chan source.TcpPacketInfo   // global
-
-func inArrayInt(arr []int, valueToCheck int) bool {
-	for _, value := range arr {
-		if value == valueToCheck {
-			return true
-		}
-	}
-	return false
-}
-
-func inArrayString(arr []string, valueToCheck string) bool {
-	for _, value := range arr {
-		if value == valueToCheck {
-			return true
-		}
-	}
-	return false
-}
+var tlsTapperInstance *tlstapper.TlsTapper          // global
 
 func StartPassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem, extensionsRef []*api.Extension, options *api.TrafficFilteringOptions) {
 	extensions = extensionsRef
 	filteringOptions = options
 
-	if opts.FilterAuthorities == nil {
-		tapTargets = []v1.Pod{}
-	} else {
-		tapTargets = opts.FilterAuthorities
+	streamsMap := NewTcpStreamMap()
+
+	if *tls {
+		for _, e := range extensions {
+			if e.Protocol.Name == "http" {
+				tlsTapperInstance = startTlsTapper(e, outputItems, options, streamsMap)
+				break
+			}
+		}
 	}
 
 	if GetMemoryProfilingEnabled() {
 		diagnose.StartMemoryProfiler(os.Getenv(MemoryProfilingDumpPath), os.Getenv(MemoryProfilingTimeIntervalSeconds))
 	}
 
-	go startPassiveTapper(opts, outputItems)
+	assembler, err := initializePassiveTapper(opts, outputItems, streamsMap)
+
+	if err != nil {
+		logger.Log.Errorf("Error initializing tapper %w", err)
+		return
+	}
+
+	go startPassiveTapper(streamsMap, assembler)
 }
 
 func UpdateTapTargets(newTapTargets []v1.Pod) {
+	success := true
+
 	tapTargets = newTapTargets
-	if err := initializePacketSources(); err != nil {
-		logger.Log.Fatal(err)
+
+	packetSourceManager.UpdatePods(tapTargets, !*nodefrag, mainPacketInputChan)
+
+	if tlsTapperInstance != nil && os.Getenv("MIZU_GLOBAL_GOLANG_PID") == "" {
+		if err := tlstapper.UpdateTapTargets(tlsTapperInstance, &tapTargets, *procfs); err != nil {
+			tlstapper.LogError(err)
+			success = false
+		}
 	}
-	printNewTapTargets()
+
+	printNewTapTargets(success)
 }
 
-func printNewTapTargets() {
+func printNewTapTargets(success bool) {
 	printStr := ""
 	for _, tapTarget := range tapTargets {
 		printStr += fmt.Sprintf("%s (%s), ", tapTarget.Status.PodIP, tapTarget.Name)
 	}
 	printStr = strings.TrimRight(printStr, ", ")
-	logger.Log.Infof("Now tapping: %s", printStr)
+
+	if success {
+		logger.Log.Infof("Now tapping: %s", printStr)
+	} else {
+		logger.Log.Errorf("Failed to start tapping: %s", printStr)
+	}
 }
 
-func printPeriodicStats(cleaner *Cleaner) {
+func printPeriodicStats(cleaner *Cleaner, assembler *tcpAssembler) {
 	statsPeriod := time.Second * time.Duration(*statsevery)
 	ticker := time.NewTicker(statsPeriod)
+
+	logicalCoreCount, err := cpu.Counts(true)
+	if err != nil {
+		logicalCoreCount = -1
+	}
+
+	physicalCoreCount, err := cpu.Counts(false)
+	if err != nil {
+		physicalCoreCount = -1
+	}
 
 	for {
 		<-ticker.C
@@ -139,23 +163,39 @@ func printPeriodicStats(cleaner *Cleaner) {
 		// At this moment
 		memStats := runtime.MemStats{}
 		runtime.ReadMemStats(&memStats)
+		sysInfo, err := pidusage.GetStat(os.Getpid())
+		if err != nil {
+			sysInfo = &pidusage.SysInfo{
+				CPU:    -1,
+				Memory: -1,
+			}
+		}
 		logger.Log.Infof(
-			"mem: %d, goroutines: %d",
+			"heap-alloc: %d, heap-idle: %d, heap-objects: %d, goroutines: %d, cpu: %f, cores: %d/%d, rss: %f",
 			memStats.HeapAlloc,
+			memStats.HeapIdle,
+			memStats.HeapObjects,
 			runtime.NumGoroutine(),
-		)
+			sysInfo.CPU,
+			logicalCoreCount,
+			physicalCoreCount,
+			sysInfo.Memory)
 
 		// Since the last print
 		cleanStats := cleaner.dumpStats()
+		assemblerStats := assembler.DumpStats()
 		logger.Log.Infof(
 			"cleaner - flushed connections: %d, closed connections: %d, deleted messages: %d",
-			cleanStats.flushed,
-			cleanStats.closed,
+			assemblerStats.flushedConnections,
+			assemblerStats.closedConnections,
 			cleanStats.deleted,
 		)
 		currentAppStats := diagnose.AppStats.DumpStats()
 		appStatsJSON, _ := json.Marshal(currentAppStats)
 		logger.Log.Infof("app stats - %v", string(appStatsJSON))
+
+		// At the moment
+		logger.Log.Infof("assembler-stats: %s, packet-source-stats: %s", assembler.Dump(), packetSourceManager.Stats())
 	}
 }
 
@@ -179,18 +219,11 @@ func initializePacketSources() error {
 	}
 
 	var err error
-	if packetSourceManager, err = source.NewPacketSourceManager(*procfs, *pids, *fname, *iface, *servicemesh, tapTargets, behaviour); err != nil {
-		return err
-	} else {
-		packetSourceManager.ReadPackets(!*nodefrag, mainPacketInputChan)
-		return nil
-	}
+	packetSourceManager, err = source.NewPacketSourceManager(*procfs, *fname, *iface, *servicemesh, tapTargets, behaviour, !*nodefrag, mainPacketInputChan)
+	return err
 }
 
-func startPassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem) {
-	streamsMap := NewTcpStreamMap()
-	go streamsMap.closeTimedoutTcpStreamChannels()
-
+func initializePassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem, streamsMap api.TcpStreamMap) (*tcpAssembler, error) {
 	diagnose.InitializeErrorsMap(*debug, *verbose, *quiet)
 	diagnose.InitializeTapperInternalStats()
 
@@ -200,20 +233,28 @@ func startPassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem) 
 		logger.Log.Fatal(err)
 	}
 
-	assembler := NewTcpAssembler(outputItems, streamsMap, opts)
+	opts.IgnoredPorts = append(opts.IgnoredPorts, buildIgnoredPortsList(*ignoredPorts)...)
+	opts.maxLiveStreams = *maxLiveStreams
+	opts.staleConnectionTimeout = time.Duration(*staleTimeoutSeconds) * time.Second
+
+	return NewTcpAssembler(outputItems, streamsMap, opts)
+}
+
+func startPassiveTapper(streamsMap api.TcpStreamMap, assembler *tcpAssembler) {
+	go streamsMap.CloseTimedoutTcpStreamChannels()
 
 	diagnose.AppStats.SetStartTime(time.Now())
 
 	staleConnectionTimeout := time.Second * time.Duration(*staleTimeoutSeconds)
 	cleaner := Cleaner{
 		assembler:         assembler.Assembler,
-		assemblerMutex:    &assembler.assemblerMutex,
 		cleanPeriod:       cleanPeriod,
 		connectionTimeout: staleConnectionTimeout,
+		streamsMap:        streamsMap,
 	}
 	cleaner.start()
 
-	go printPeriodicStats(&cleaner)
+	go printPeriodicStats(&cleaner, assembler)
 
 	assembler.processPackets(*hexdumppkt, mainPacketInputChan)
 
@@ -230,4 +271,65 @@ func startPassiveTapper(opts *TapOpts, outputItems chan *api.OutputChannelItem) 
 	diagnose.InternalStats.PrintStatsSummary()
 	diagnose.TapErrors.PrintSummary()
 	logger.Log.Infof("AppStats: %v", diagnose.AppStats)
+}
+
+func startTlsTapper(extension *api.Extension, outputItems chan *api.OutputChannelItem,
+	options *api.TrafficFilteringOptions, streamsMap api.TcpStreamMap) *tlstapper.TlsTapper {
+	tls := tlstapper.TlsTapper{}
+	chunksBufferSize := os.Getpagesize() * 100
+	logBufferSize := os.Getpagesize()
+
+	if err := tls.Init(chunksBufferSize, logBufferSize, *procfs, extension); err != nil {
+		tlstapper.LogError(err)
+		return nil
+	}
+
+	if err := tlstapper.UpdateTapTargets(&tls, &tapTargets, *procfs); err != nil {
+		tlstapper.LogError(err)
+		return nil
+	}
+
+	// A quick way to instrument libssl.so without PID filtering - used for debuging and troubleshooting
+	//
+	if os.Getenv("MIZU_GLOBAL_SSL_LIBRARY") != "" {
+		if err := tls.GlobalSSLLibTap(os.Getenv("MIZU_GLOBAL_SSL_LIBRARY")); err != nil {
+			tlstapper.LogError(err)
+			return nil
+		}
+	}
+
+	// A quick way to instrument Go `crypto/tls` without PID filtering - used for debuging and troubleshooting
+	//
+	if os.Getenv("MIZU_GLOBAL_GOLANG_PID") != "" {
+		if err := tls.GlobalGoTap(*procfs, os.Getenv("MIZU_GLOBAL_GOLANG_PID")); err != nil {
+			tlstapper.LogError(err)
+			return nil
+		}
+	}
+
+	var emitter api.Emitter = &api.Emitting{
+		AppStats:      &diagnose.AppStats,
+		OutputChannel: outputItems,
+	}
+
+	go tls.PollForLogging()
+	go tls.Poll(emitter, options, streamsMap)
+
+	return &tls
+}
+
+func buildIgnoredPortsList(ignoredPorts string) []uint16 {
+	tmp := strings.Split(ignoredPorts, ",")
+	result := make([]uint16, len(tmp))
+
+	for i, raw := range tmp {
+		v, err := strconv.Atoi(raw)
+		if err != nil {
+			continue
+		}
+
+		result[i] = uint16(v)
+	}
+
+	return result
 }

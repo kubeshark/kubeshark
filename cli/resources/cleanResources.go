@@ -3,12 +3,13 @@ package resources
 import (
 	"context"
 	"fmt"
+
 	"github.com/up9inc/mizu/cli/errormessage"
 	"github.com/up9inc/mizu/cli/mizu/fsUtils"
 	"github.com/up9inc/mizu/cli/uiUtils"
 	"github.com/up9inc/mizu/cli/utils"
+	"github.com/up9inc/mizu/logger"
 	"github.com/up9inc/mizu/shared/kubernetes"
-	"github.com/up9inc/mizu/shared/logger"
 	"k8s.io/apimachinery/pkg/util/wait"
 )
 
@@ -53,7 +54,6 @@ func cleanUpNonRestrictedMode(ctx context.Context, cancel context.CancelFunc, ku
 			}
 		}
 	}
-
 
 	if resources, err := kubernetesProvider.ListManagedClusterRoleBindings(ctx); err != nil {
 		resourceDesc := "ClusterRoleBindings"
@@ -111,7 +111,7 @@ func cleanUpRestrictedMode(ctx context.Context, kubernetesProvider *kubernetes.P
 		handleDeletionError(err, resourceDesc, &leftoverResources)
 	} else {
 		for _, resource := range resources.Items {
-			if err := kubernetesProvider.RemoveServicAccount(ctx, mizuResourcesNamespace, resource.Name); err != nil {
+			if err := kubernetesProvider.RemoveServiceAccount(ctx, mizuResourcesNamespace, resource.Name); err != nil {
 				resourceDesc := fmt.Sprintf("ServiceAccount %s in namespace %s", resource.Name, mizuResourcesNamespace)
 				handleDeletionError(err, resourceDesc, &leftoverResources)
 			}
@@ -144,18 +144,6 @@ func cleanUpRestrictedMode(ctx context.Context, kubernetesProvider *kubernetes.P
 
 	if err := kubernetesProvider.RemovePod(ctx, mizuResourcesNamespace, kubernetes.ApiServerPodName); err != nil {
 		resourceDesc := fmt.Sprintf("Pod %s in namespace %s", kubernetes.ApiServerPodName, mizuResourcesNamespace)
-		handleDeletionError(err, resourceDesc, &leftoverResources)
-	}
-
-	//install mode resources
-
-	if err := kubernetesProvider.RemoveDeployment(ctx, mizuResourcesNamespace, kubernetes.ApiServerPodName); err != nil {
-		resourceDesc := fmt.Sprintf("Deployment %s in namespace %s", kubernetes.ApiServerPodName, mizuResourcesNamespace)
-		handleDeletionError(err, resourceDesc, &leftoverResources)
-	}
-
-	if err := kubernetesProvider.RemovePersistentVolumeClaim(ctx, mizuResourcesNamespace, kubernetes.PersistentVolumeClaimName); err != nil {
-		resourceDesc := fmt.Sprintf("PersistentVolumeClaim %s in namespace %s", kubernetes.PersistentVolumeClaimName, mizuResourcesNamespace)
 		handleDeletionError(err, resourceDesc, &leftoverResources)
 	}
 

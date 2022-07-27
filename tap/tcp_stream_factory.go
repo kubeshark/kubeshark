@@ -3,9 +3,8 @@ package tap
 import (
 	"fmt"
 	"sync"
-	"time"
 
-	"github.com/up9inc/mizu/shared/logger"
+	"github.com/up9inc/mizu/logger"
 	"github.com/up9inc/mizu/tap/api"
 	v1 "k8s.io/api/core/v1"
 
@@ -20,20 +19,15 @@ import (
  * Generates a new tcp stream for each new tcp connection. Closes the stream when the connection closes.
  */
 type tcpStreamFactory struct {
-	wg                 sync.WaitGroup
-	outboundLinkWriter *OutboundLinkWriter
-	Emitter            api.Emitter
-	streamsMap         *tcpStreamMap
-	ownIps             []string
-	opts               *TapOpts
+	wg               sync.WaitGroup
+	emitter          api.Emitter
+	streamsMap       api.TcpStreamMap
+	ownIps           []string
+	opts             *TapOpts
+	streamsCallbacks tcpStreamCallbacks
 }
 
-type tcpStreamWrapper struct {
-	stream    *tcpStream
-	createdAt time.Time
-}
-
-func NewTcpStreamFactory(emitter api.Emitter, streamsMap *tcpStreamMap, opts *TapOpts) *tcpStreamFactory {
+func NewTcpStreamFactory(emitter api.Emitter, streamsMap api.TcpStreamMap, opts *TapOpts, streamsCallbacks tcpStreamCallbacks) *tcpStreamFactory {
 	var ownIps []string
 
 	if localhostIPs, err := getLocalhostIPs(); err != nil {
@@ -46,14 +40,15 @@ func NewTcpStreamFactory(emitter api.Emitter, streamsMap *tcpStreamMap, opts *Ta
 	}
 
 	return &tcpStreamFactory{
-		Emitter:    emitter,
-		streamsMap: streamsMap,
-		ownIps:     ownIps,
-		opts:       opts,
+		emitter:          emitter,
+		streamsMap:       streamsMap,
+		ownIps:           ownIps,
+		opts:             opts,
+		streamsCallbacks: streamsCallbacks,
 	}
 }
 
-func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcp *layers.TCP, ac reassembly.AssemblerContext) reassembly.Stream {
+func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcpLayer *layers.TCP, ac reassembly.AssemblerContext) reassembly.Stream {
 	fsmOptions := reassembly.TCPSimpleFSMOptions{
 		SupportMissingEstablishment: *allowmissinginit,
 	}
@@ -62,78 +57,59 @@ func (factory *tcpStreamFactory) New(net, transport gopacket.Flow, tcp *layers.T
 	srcPort := transport.Src().String()
 	dstPort := transport.Dst().String()
 
-	// if factory.shouldNotifyOnOutboundLink(dstIp, dstPort) {
-	// 	factory.outboundLinkWriter.WriteOutboundLink(net.Src().String(), dstIp, dstPort, "", "")
-	// }
 	props := factory.getStreamProps(srcIp, srcPort, dstIp, dstPort)
 	isTapTarget := props.isTapTarget
-	stream := &tcpStream{
-		net:             net,
-		transport:       transport,
-		isDNS:           tcp.SrcPort == 53 || tcp.DstPort == 53,
-		isTapTarget:     isTapTarget,
-		tcpstate:        reassembly.NewTCPSimpleFSM(fsmOptions),
-		ident:           fmt.Sprintf("%s:%s", net, transport),
-		optchecker:      reassembly.NewTCPOptionCheck(),
-		superIdentifier: &api.SuperIdentifier{},
-		streamsMap:      factory.streamsMap,
-	}
-	if stream.isTapTarget {
-		stream.id = factory.streamsMap.nextId()
-		for i, extension := range extensions {
+	connectionId := getConnectionId(srcIp, srcPort, dstIp, dstPort)
+	stream := NewTcpStream(isTapTarget, factory.streamsMap, getPacketOrigin(ac), connectionId, factory.streamsCallbacks)
+	reassemblyStream := NewTcpReassemblyStream(fmt.Sprintf("%s:%s", net, transport), tcpLayer, fsmOptions, stream)
+	if stream.GetIsTapTarget() {
+		stream.setId(factory.streamsMap.NextId())
+		for _, extension := range extensions {
 			counterPair := &api.CounterPair{
 				Request:  0,
 				Response: 0,
 			}
-			stream.clients = append(stream.clients, tcpReader{
-				msgQueue:   make(chan tcpReaderDataMsg),
-				superTimer: &api.SuperTimer{},
-				ident:      fmt.Sprintf("%s %s", net, transport),
-				tcpID: &api.TcpID{
-					SrcIP:   srcIp,
-					DstIP:   dstIp,
-					SrcPort: srcPort,
-					DstPort: dstPort,
-				},
-				parent:             stream,
-				isClient:           true,
-				isOutgoing:         props.isOutgoing,
-				outboundLinkWriter: factory.outboundLinkWriter,
-				extension:          extension,
-				emitter:            factory.Emitter,
-				counterPair:        counterPair,
-			})
-			stream.servers = append(stream.servers, tcpReader{
-				msgQueue:   make(chan tcpReaderDataMsg),
-				superTimer: &api.SuperTimer{},
-				ident:      fmt.Sprintf("%s %s", net, transport),
-				tcpID: &api.TcpID{
-					SrcIP:   net.Dst().String(),
-					DstIP:   net.Src().String(),
-					SrcPort: transport.Dst().String(),
-					DstPort: transport.Src().String(),
-				},
-				parent:             stream,
-				isClient:           false,
-				isOutgoing:         props.isOutgoing,
-				outboundLinkWriter: factory.outboundLinkWriter,
-				extension:          extension,
-				emitter:            factory.Emitter,
-				counterPair:        counterPair,
-			})
+			stream.addCounterPair(counterPair)
 
-			factory.streamsMap.Store(stream.id, &tcpStreamWrapper{
-				stream:    stream,
-				createdAt: time.Now(),
-			})
-
-			factory.wg.Add(2)
-			// Start reading from channel stream.reader.bytes
-			go stream.clients[i].run(&factory.wg)
-			go stream.servers[i].run(&factory.wg)
+			reqResMatcher := extension.Dissector.NewResponseRequestMatcher()
+			stream.addReqResMatcher(reqResMatcher)
 		}
+
+		stream.client = NewTcpReader(
+			fmt.Sprintf("%s %s", net, transport),
+			&api.TcpID{
+				SrcIP:   srcIp,
+				DstIP:   dstIp,
+				SrcPort: srcPort,
+				DstPort: dstPort,
+			},
+			stream,
+			true,
+			props.isOutgoing,
+			factory.emitter,
+		)
+
+		stream.server = NewTcpReader(
+			fmt.Sprintf("%s %s", net, transport),
+			&api.TcpID{
+				SrcIP:   net.Dst().String(),
+				DstIP:   net.Src().String(),
+				SrcPort: transport.Dst().String(),
+				DstPort: transport.Src().String(),
+			},
+			stream,
+			false,
+			props.isOutgoing,
+			factory.emitter,
+		)
+
+		factory.streamsMap.Store(stream.getId(), stream)
+
+		factory.wg.Add(2)
+		go stream.client.run(filteringOptions, &factory.wg)
+		go stream.server.run(filteringOptions, &factory.wg)
 	}
-	return stream
+	return reassemblyStream
 }
 
 func (factory *tcpStreamFactory) WaitGoRoutines() {
@@ -166,13 +142,15 @@ func (factory *tcpStreamFactory) getStreamProps(srcIP string, srcPort string, ds
 	}
 }
 
-//lint:ignore U1000 will be used in the future
-func (factory *tcpStreamFactory) shouldNotifyOnOutboundLink(dstIP string, dstPort int) bool {
-	if inArrayInt(remoteOnlyOutboundPorts, dstPort) {
-		isDirectedHere := inArrayString(factory.ownIps, dstIP)
-		return !isDirectedHere && !isPrivateIP(dstIP)
+func getPacketOrigin(ac reassembly.AssemblerContext) api.Capture {
+	c, ok := ac.(*context)
+
+	if !ok {
+		// If ac is not our context, fallback to Pcap
+		return api.Pcap
 	}
-	return true
+
+	return c.Origin
 }
 
 type streamProps struct {

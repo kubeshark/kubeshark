@@ -1,0 +1,37 @@
+# This example shows the permissions that are required in order to run the `mizu tap` command in namespace-restricted mode
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: mizu-runner-role
+rules:
+- apiGroups: [""]
+  resources: ["pods"]
+  verbs: ["list", "watch", "create"]
+- apiGroups: [""]
+  resources: ["services"]
+  verbs: ["get", "create", "delete"]
+- apiGroups: ["apps"]
+  resources: ["daemonsets"]
+  verbs: ["create", "patch", "delete"]
+- apiGroups: [""]
+  resources: ["services/proxy"]
+  verbs: ["get", "create", "delete"]
+- apiGroups: [""]
+  resources: ["configmaps"]
+  verbs: ["create", "delete"]
+- apiGroups: [""]
+  resources: ["pods/log"]
+  verbs: ["get"]
+---
+kind: RoleBinding
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: mizu-runner-rolebindings
+subjects:
+- kind: User
+  name: user-with-restricted-access
+  apiGroup: rbac.authorization.k8s.io
+roleRef:
+  kind: Role
+  name: mizu-runner-role
+  apiGroup: rbac.authorization.k8s.io

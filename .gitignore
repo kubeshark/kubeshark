@@ -30,7 +30,7 @@ build
 pprof/*
 
 # Database Files
-*.bin
+*.db
 *.gob
 
 # Nohup Files - https://man7.org/linux/man-pages/man1/nohup.1p.html
@@ -44,3 +44,18 @@ cypress.env.json
 */cypress/screenshots
 */cypress/videos
 */cypress/support
+
+# Ignore test data in extensions
+tap/extensions/*/bin
+tap/extensions/*/expect
+
+# UI folders to ignore
+**/node_modules/**
+**/dist/**
+*.editorconfig
+
+# Ignore *.log files
+*.log
+
+# Object files
+*.o

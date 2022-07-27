@@ -1,0 +1,51 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Preloaded",
+    "version": "0.1",
+    "description": "Test file for loading pre-existing OAS"
+  },
+  "paths": {
+    "/catalogue/{id}": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "required": true,
+          "style": "simple",
+          "schema": {
+            "type": "string"
+          },
+          "example": "some-uuid-maybe"
+        }
+      ],
+      "get": {
+        "parameters": [        {
+          "name": "non-required-header",
+          "in": "header",
+          "required": true,
+          "style": "simple",
+          "schema": {
+            "type": "string"
+          },
+          "example": "some-uuid-maybe"
+        }
+        ]
+      }
+    },
+    "/catalogue/{id}/details": {
+      "parameters": [
+        {
+          "name": "id",
+          "in": "path",
+          "style": "simple",
+          "required": true,
+          "schema": {
+            "type": "string"
+          },
+          "example": "some-uuid-maybe"
+        }
+      ]
+    }
+  }
+}

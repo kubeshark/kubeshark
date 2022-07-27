@@ -11,7 +11,7 @@ import (
 	"github.com/up9inc/mizu/cli/mizu/fsUtils"
 	"github.com/up9inc/mizu/cli/mizu/version"
 	"github.com/up9inc/mizu/cli/uiUtils"
-	"github.com/up9inc/mizu/shared/logger"
+	"github.com/up9inc/mizu/logger"
 )
 
 var rootCmd = &cobra.Command{
@@ -30,7 +30,9 @@ Further info is available at https://github.com/up9inc/mizu`,
 
 func init() {
 	defaultConfig := config.ConfigStruct{}
-	defaults.Set(&defaultConfig)
+	if err := defaults.Set(&defaultConfig); err != nil {
+		logger.Log.Debug(err)
+	}
 
 	rootCmd.PersistentFlags().StringSlice(config.SetCommandName, []string{}, fmt.Sprintf("Override values using --%s", config.SetCommandName))
 	rootCmd.PersistentFlags().String(config.ConfigFilePathCommandName, defaultConfig.ConfigFilePath, fmt.Sprintf("Override config file path using --%s", config.ConfigFilePathCommandName))

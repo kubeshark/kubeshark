@@ -1,0 +1,62 @@
+@import '../../../variables.module'
+
+.statusBar
+    position: absolute
+    transform: translate(-50%, -3px)
+    left: 50%
+    z-index: 100
+    min-width: 200px
+    background: $blue-color
+    color: rgba(255,255,255,0.75)
+    border-bottom-left-radius: 8px
+    border-bottom-right-radius: 8px
+    top: 0
+    padding: 10px
+    font-size: 14px
+    transition: max-height 2s ease-out
+    width: auto
+    max-height: 32px
+    overflow: hidden
+    max-width: clamp(150px,50%,600px)
+
+    &.banner
+        top: 53px
+
+    .podsCount
+        display: flex
+        justify-content: center
+        font-weight: 600
+
+        .podsCountText
+            width: 100%
+            max-width: 100%
+            white-space: nowrap
+            overflow: hidden
+            text-overflow: ellipsis
+
+        img
+            margin-right: 10px
+            height: 22px
+
+    table
+        width: 100%
+        margin-top: 20px
+
+        tbody
+            max-height: 70vh
+            overflow-y: auto
+            display: block
+        tr
+            display: table
+            table-layout: fixed
+            width: 100%
+        th
+            text-align: left
+            padding-right: 5%
+        td
+            text-align: left
+            padding-right: 5%
+
+.expandedStatusBar
+    max-height: 100vh
+    padding-bottom: 15px

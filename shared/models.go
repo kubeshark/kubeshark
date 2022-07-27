@@ -1,28 +1,23 @@
 package shared
 
 import (
-	"io/ioutil"
-	"strings"
-
 	"github.com/op/go-logging"
-	"github.com/up9inc/mizu/shared/logger"
-	v1 "k8s.io/api/core/v1"
 
-	"gopkg.in/yaml.v3"
+	v1 "k8s.io/api/core/v1"
 )
 
 type WebSocketMessageType string
 
 const (
-	WebSocketMessageTypeEntry         WebSocketMessageType = "entry"
-	WebSocketMessageTypeTappedEntry   WebSocketMessageType = "tappedEntry"
-	WebSocketMessageTypeUpdateStatus  WebSocketMessageType = "status"
-	WebSocketMessageTypeAnalyzeStatus WebSocketMessageType = "analyzeStatus"
-	WebsocketMessageTypeOutboundLink  WebSocketMessageType = "outboundLink"
-	WebSocketMessageTypeToast         WebSocketMessageType = "toast"
-	WebSocketMessageTypeQueryMetadata WebSocketMessageType = "queryMetadata"
-	WebSocketMessageTypeStartTime     WebSocketMessageType = "startTime"
-	WebSocketMessageTypeTapConfig     WebSocketMessageType = "tapConfig"
+	WebSocketMessageTypeEntry            WebSocketMessageType = "entry"
+	WebSocketMessageTypeFullEntry        WebSocketMessageType = "fullEntry"
+	WebSocketMessageTypeTappedEntry      WebSocketMessageType = "tappedEntry"
+	WebSocketMessageTypeUpdateStatus     WebSocketMessageType = "status"
+	WebSocketMessageTypeUpdateTappedPods WebSocketMessageType = "tappedPods"
+	WebSocketMessageTypeToast            WebSocketMessageType = "toast"
+	WebSocketMessageTypeQueryMetadata    WebSocketMessageType = "queryMetadata"
+	WebSocketMessageTypeStartTime        WebSocketMessageType = "startTime"
+	WebSocketMessageTypeTapConfig        WebSocketMessageType = "tapConfig"
 )
 
 type Resources struct {
@@ -32,33 +27,26 @@ type Resources struct {
 	MemoryRequests string `yaml:"memory-requests" default:"50Mi"`
 }
 
+type OASConfig struct {
+	Enable        bool `yaml:"enabled" default:"true"`
+	MaxExampleLen int  `yaml:"max-example-len" default:"10240"`
+}
+
 type MizuAgentConfig struct {
 	MaxDBSizeBytes         int64         `json:"maxDBSizeBytes"`
+	InsertionFilter        string        `json:"insertionFilter"`
 	AgentImage             string        `json:"agentImage"`
 	PullPolicy             string        `json:"pullPolicy"`
 	LogLevel               logging.Level `json:"logLevel"`
 	TapperResources        Resources     `json:"tapperResources"`
 	MizuResourcesNamespace string        `json:"mizuResourceNamespace"`
 	AgentDatabasePath      string        `json:"agentDatabasePath"`
-	StandaloneMode         bool          `json:"standaloneMode"`
 	ServiceMap             bool          `json:"serviceMap"`
-	OAS                    bool          `json:"oas"`
+	OAS                    OASConfig     `json:"oas"`
 }
 
 type WebSocketMessageMetadata struct {
 	MessageType WebSocketMessageType `json:"messageType,omitempty"`
-}
-
-type WebSocketAnalyzeStatusMessage struct {
-	*WebSocketMessageMetadata
-	AnalyzeStatus AnalyzeStatus `json:"analyzeStatus"`
-}
-
-type AnalyzeStatus struct {
-	IsAnalyzing   bool   `json:"isAnalyzing"`
-	RemoteUrl     string `json:"remoteUrl"`
-	IsRemoteReady bool   `json:"isRemoteReady"`
-	SentCount     int    `json:"sentCount"`
 }
 
 type WebSocketStatusMessage struct {
@@ -66,9 +54,27 @@ type WebSocketStatusMessage struct {
 	TappingStatus []TappedPodStatus `json:"tappingStatus"`
 }
 
+type WebSocketTappedPodsMessage struct {
+	*WebSocketMessageMetadata
+	NodeToTappedPodMap NodeToPodsMap `json:"nodeToTappedPodMap"`
+}
+
 type WebSocketTapConfigMessage struct {
 	*WebSocketMessageMetadata
 	TapTargets []v1.Pod `json:"pods"`
+}
+
+type NodeToPodsMap map[string][]v1.Pod
+
+func (np NodeToPodsMap) Summary() map[string][]string {
+	summary := make(map[string][]string)
+	for node, pods := range np {
+		for _, pod := range pods {
+			summary[node] = append(summary[node], pod.Namespace+"/"+pod.Name)
+		}
+	}
+
+	return summary
 }
 
 type TapperStatus struct {
@@ -96,13 +102,6 @@ type TLSLinkInfo struct {
 	ResolvedSourceName      string `json:"resolvedSourceName"`
 }
 
-type SyncEntriesConfig struct {
-	Token             string `json:"token"`
-	Env               string `json:"env"`
-	Workspace         string `json:"workspace"`
-	UploadIntervalSec int    `json:"interval"`
-}
-
 func CreateWebSocketStatusMessage(tappedPodsStatus []TappedPodStatus) WebSocketStatusMessage {
 	return WebSocketStatusMessage{
 		WebSocketMessageMetadata: &WebSocketMessageMetadata{
@@ -112,101 +111,21 @@ func CreateWebSocketStatusMessage(tappedPodsStatus []TappedPodStatus) WebSocketS
 	}
 }
 
-func CreateWebSocketMessageTypeAnalyzeStatus(analyzeStatus AnalyzeStatus) WebSocketAnalyzeStatusMessage {
-	return WebSocketAnalyzeStatusMessage{
+func CreateWebSocketTappedPodsMessage(nodeToTappedPodMap NodeToPodsMap) WebSocketTappedPodsMessage {
+	return WebSocketTappedPodsMessage{
 		WebSocketMessageMetadata: &WebSocketMessageMetadata{
-			MessageType: WebSocketMessageTypeAnalyzeStatus,
+			MessageType: WebSocketMessageTypeUpdateTappedPods,
 		},
-		AnalyzeStatus: analyzeStatus,
+		NodeToTappedPodMap: nodeToTappedPodMap,
 	}
 }
 
 type HealthResponse struct {
-	TappedPods    []*PodInfo      `json:"tappedPods"`
-	TappersCount  int             `json:"tappersCount"`
-	TappersStatus []*TapperStatus `json:"tappersStatus"`
+	TappedPods            []*PodInfo      `json:"tappedPods"`
+	ConnectedTappersCount int             `json:"connectedTappersCount"`
+	TappersStatus         []*TapperStatus `json:"tappersStatus"`
 }
 
 type VersionResponse struct {
-	SemVer string `json:"semver"`
-}
-
-type RulesPolicy struct {
-	Rules []RulePolicy `yaml:"rules"`
-}
-
-type RulePolicy struct {
-	Type         string `yaml:"type"`
-	Service      string `yaml:"service"`
-	Path         string `yaml:"path"`
-	Method       string `yaml:"method"`
-	Key          string `yaml:"key"`
-	Value        string `yaml:"value"`
-	ResponseTime int64  `yaml:"response-time"`
-	Name         string `yaml:"name"`
-}
-
-type RulesMatched struct {
-	Matched bool       `json:"matched"`
-	Rule    RulePolicy `json:"rule"`
-}
-
-func (r *RulePolicy) validateType() bool {
-	permitedTypes := []string{"json", "header", "slo"}
-	_, found := Find(permitedTypes, r.Type)
-	if !found {
-		logger.Log.Errorf("Only json, header and slo types are supported on rule definition. This rule will be ignored. rule name: %s", r.Name)
-		found = false
-	}
-	if strings.ToLower(r.Type) == "slo" {
-		if r.ResponseTime <= 0 {
-			logger.Log.Errorf("When rule type is slo, the field response-time should be specified and have a value >= 1. rule name: %s", r.Name)
-			found = false
-		}
-	}
-	return found
-}
-
-func (rules *RulesPolicy) ValidateRulesPolicy() []int {
-	invalidIndex := make([]int, 0)
-	for i := range rules.Rules {
-		validated := rules.Rules[i].validateType()
-		if !validated {
-			invalidIndex = append(invalidIndex, i)
-		}
-	}
-	return invalidIndex
-}
-
-func Find(slice []string, val string) (int, bool) {
-	for i, item := range slice {
-		if item == val {
-			return i, true
-		}
-	}
-	return -1, false
-}
-
-func DecodeEnforcePolicy(path string) (RulesPolicy, error) {
-	content, err := ioutil.ReadFile(path)
-	enforcePolicy := RulesPolicy{}
-	if err != nil {
-		return enforcePolicy, err
-	}
-	err = yaml.Unmarshal([]byte(content), &enforcePolicy)
-	if err != nil {
-		return enforcePolicy, err
-	}
-	invalidIndex := enforcePolicy.ValidateRulesPolicy()
-	var k = 0
-	if len(invalidIndex) != 0 {
-		for i, rule := range enforcePolicy.Rules {
-			if !ContainsInt(invalidIndex, i) {
-				enforcePolicy.Rules[k] = rule
-				k++
-			}
-		}
-		enforcePolicy.Rules = enforcePolicy.Rules[:k]
-	}
-	return enforcePolicy, nil
+	Ver string `json:"ver"`
 }

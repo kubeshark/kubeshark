@@ -9,7 +9,9 @@ import (
 	"github.com/google/gopacket/ip4defrag"
 	"github.com/google/gopacket/layers"
 	"github.com/google/gopacket/pcap"
-	"github.com/up9inc/mizu/shared/logger"
+	"github.com/up9inc/mizu/logger"
+	"github.com/up9inc/mizu/tap/api"
+	"github.com/up9inc/mizu/tap/dbgctl"
 	"github.com/up9inc/mizu/tap/diagnose"
 )
 
@@ -19,6 +21,7 @@ type tcpPacketSource struct {
 	defragger *ip4defrag.IPv4Defragmenter
 	Behaviour *TcpPacketSourceBehaviour
 	name      string
+	Origin    api.Capture
 }
 
 type TcpPacketSourceBehaviour struct {
@@ -36,13 +39,14 @@ type TcpPacketInfo struct {
 }
 
 func newTcpPacketSource(name, filename string, interfaceName string,
-	behaviour TcpPacketSourceBehaviour) (*tcpPacketSource, error) {
+	behaviour TcpPacketSourceBehaviour, origin api.Capture) (*tcpPacketSource, error) {
 	var err error
 
 	result := &tcpPacketSource{
 		name:      name,
 		defragger: ip4defrag.NewIPv4Defragmenter(),
 		Behaviour: &behaviour,
+		Origin:    origin,
 	}
 
 	if filename != "" {
@@ -98,13 +102,28 @@ func newTcpPacketSource(name, filename string, interfaceName string,
 	return result, nil
 }
 
+func (source *tcpPacketSource) String() string {
+	return source.name
+}
+
+func (source *tcpPacketSource) setBPFFilter(expr string) (err error) {
+	return source.handle.SetBPFFilter(expr)
+}
+
 func (source *tcpPacketSource) close() {
 	if source.handle != nil {
 		source.handle.Close()
 	}
 }
 
+func (source *tcpPacketSource) Stats() (stat *pcap.Stats, err error) {
+	return source.handle.Stats()
+}
+
 func (source *tcpPacketSource) readPackets(ipdefrag bool, packets chan<- TcpPacketInfo) {
+	if dbgctl.MizuTapperDisablePcap {
+		return
+	}
 	logger.Log.Infof("Start reading packets from %v", source.name)
 
 	for {

@@ -9,8 +9,8 @@ import (
 	"strconv"
 	"strings"
 
+	"github.com/up9inc/mizu/logger"
 	"github.com/up9inc/mizu/shared"
-	"github.com/up9inc/mizu/shared/logger"
 
 	"github.com/creasty/defaults"
 	"github.com/spf13/cobra"
@@ -79,27 +79,6 @@ func WriteConfig(config *ConfigStruct) error {
 
 	data := []byte(template)
 	if err := ioutil.WriteFile(Config.ConfigFilePath, data, 0644); err != nil {
-		return fmt.Errorf("failed writing config, err: %v", err)
-	}
-
-	return nil
-}
-
-type updateConfigStruct func(*ConfigStruct)
-
-func UpdateConfig(updateConfigStruct updateConfigStruct) error {
-	configFile, err := GetConfigWithDefaults()
-	if err != nil {
-		return fmt.Errorf("failed getting config with defaults, err: %v", err)
-	}
-
-	if err := loadConfigFile(Config.ConfigFilePath, configFile); err != nil && !os.IsNotExist(err) {
-		return fmt.Errorf("failed getting config file, err: %v", err)
-	}
-
-	updateConfigStruct(configFile)
-
-	if err := WriteConfig(configFile); err != nil {
 		return fmt.Errorf("failed writing config, err: %v", err)
 	}
 

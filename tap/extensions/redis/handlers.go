@@ -1,23 +1,30 @@
-package main
+package redis
 
 import (
 	"fmt"
+	"time"
 
 	"github.com/up9inc/mizu/tap/api"
 )
 
-func handleClientStream(tcpID *api.TcpID, counterPair *api.CounterPair, superTimer *api.SuperTimer, emitter api.Emitter, request *RedisPacket) error {
+func handleClientStream(progress *api.ReadProgress, capture api.Capture, tcpID *api.TcpID, counterPair *api.CounterPair, captureTime time.Time, emitter api.Emitter, request *RedisPacket, reqResMatcher *requestResponseMatcher) error {
+	counterPair.Lock()
 	counterPair.Request++
+	requestCounter := counterPair.Request
+	counterPair.Unlock()
+
 	ident := fmt.Sprintf(
-		"%s->%s %s->%s %d",
+		"%s_%s_%s_%s_%d",
 		tcpID.SrcIP,
 		tcpID.DstIP,
 		tcpID.SrcPort,
 		tcpID.DstPort,
-		counterPair.Request,
+		requestCounter,
 	)
-	item := reqResMatcher.registerRequest(ident, request, superTimer.CaptureTime)
+
+	item := reqResMatcher.registerRequest(ident, request, captureTime, progress.Current())
 	if item != nil {
+		item.Capture = capture
 		item.ConnectionInfo = &api.ConnectionInfo{
 			ClientIP:   tcpID.SrcIP,
 			ClientPort: tcpID.SrcPort,
@@ -30,18 +37,24 @@ func handleClientStream(tcpID *api.TcpID, counterPair *api.CounterPair, superTim
 	return nil
 }
 
-func handleServerStream(tcpID *api.TcpID, counterPair *api.CounterPair, superTimer *api.SuperTimer, emitter api.Emitter, response *RedisPacket) error {
+func handleServerStream(progress *api.ReadProgress, capture api.Capture, tcpID *api.TcpID, counterPair *api.CounterPair, captureTime time.Time, emitter api.Emitter, response *RedisPacket, reqResMatcher *requestResponseMatcher) error {
+	counterPair.Lock()
 	counterPair.Response++
+	responseCounter := counterPair.Response
+	counterPair.Unlock()
+
 	ident := fmt.Sprintf(
-		"%s->%s %s->%s %d",
+		"%s_%s_%s_%s_%d",
 		tcpID.DstIP,
 		tcpID.SrcIP,
 		tcpID.DstPort,
 		tcpID.SrcPort,
-		counterPair.Response,
+		responseCounter,
 	)
-	item := reqResMatcher.registerResponse(ident, response, superTimer.CaptureTime)
+
+	item := reqResMatcher.registerResponse(ident, response, captureTime, progress.Current())
 	if item != nil {
+		item.Capture = capture
 		item.ConnectionInfo = &api.ConnectionInfo{
 			ClientIP:   tcpID.DstIP,
 			ClientPort: tcpID.DstPort,

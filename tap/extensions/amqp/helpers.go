@@ -1,11 +1,12 @@
-package main
+package amqp
 
 import (
 	"encoding/json"
 	"fmt"
+	"sort"
 	"strconv"
-	"time"
 
+	"github.com/up9inc/mizu/logger"
 	"github.com/up9inc/mizu/tap/api"
 )
 
@@ -78,14 +79,14 @@ var basicMethodMap = map[int]string{
 	120: "basic nack",
 }
 
-var txMethodMap = map[int]string{
-	10: "tx select",
-	11: "tx select-ok",
-	20: "tx commit",
-	21: "tx commit-ok",
-	30: "tx rollback",
-	31: "tx rollback-ok",
-}
+// var txMethodMap = map[int]string{
+// 	10: "tx select",
+// 	11: "tx select-ok",
+// 	20: "tx commit",
+// 	21: "tx commit-ok",
+// 	30: "tx rollback",
+// 	31: "tx rollback-ok",
+// }
 
 type AMQPWrapper struct {
 	Method  string      `json:"method"`
@@ -93,28 +94,41 @@ type AMQPWrapper struct {
 	Details interface{} `json:"details"`
 }
 
-func emitAMQP(event interface{}, _type string, method string, connectionInfo *api.ConnectionInfo, captureTime time.Time, emitter api.Emitter) {
-	request := &api.GenericMessage{
-		IsRequest:   true,
-		CaptureTime: captureTime,
-		Payload: AMQPPayload{
-			Data: &AMQPWrapper{
-				Method:  method,
-				Url:     "",
-				Details: event,
-			},
-		},
+type emptyResponse struct {
+}
+
+const emptyMethod = "empty"
+
+func getIdent(reader api.TcpReader, methodFrame *MethodFrame) (ident string) {
+	tcpID := reader.GetTcpID()
+	// To match methods to their Ok(s)
+	methodId := methodFrame.MethodId - methodFrame.MethodId%10
+
+	if reader.GetIsClient() {
+		ident = fmt.Sprintf(
+			"%s_%s_%s_%s_%d_%d_%d",
+			tcpID.SrcIP,
+			tcpID.DstIP,
+			tcpID.SrcPort,
+			tcpID.DstPort,
+			methodFrame.ChannelId,
+			methodFrame.ClassId,
+			methodId,
+		)
+	} else {
+		ident = fmt.Sprintf(
+			"%s_%s_%s_%s_%d_%d_%d",
+			tcpID.DstIP,
+			tcpID.SrcIP,
+			tcpID.DstPort,
+			tcpID.SrcPort,
+			methodFrame.ChannelId,
+			methodFrame.ClassId,
+			methodId,
+		)
 	}
-	item := &api.OutputChannelItem{
-		Protocol:       protocol,
-		Timestamp:      captureTime.UnixNano() / int64(time.Millisecond),
-		ConnectionInfo: connectionInfo,
-		Pair: &api.RequestResponsePair{
-			Request:  *request,
-			Response: api.GenericMessage{},
-		},
-	}
-	emitter.Emit(item)
+
+	return
 }
 
 func representProperties(properties map[string]interface{}, rep []interface{}) ([]interface{}, string, string) {
@@ -282,6 +296,9 @@ func representBasicPublish(event map[string]interface{}) []interface{} {
 				Selector: fmt.Sprintf(`request.properties.headers["%s"]`, name),
 			})
 		}
+		sort.Slice(headers, func(i, j int) bool {
+			return headers[i].Name < headers[j].Name
+		})
 		headersMarshaled, _ := json.Marshal(headers)
 		rep = append(rep, api.SectionData{
 			Type:  api.TABLE,
@@ -362,10 +379,13 @@ func representBasicDeliver(event map[string]interface{}) []interface{} {
 		for name, value := range properties["headers"].(map[string]interface{}) {
 			headers = append(headers, api.TableData{
 				Name:     name,
-				Value:    value.(string),
+				Value:    value,
 				Selector: fmt.Sprintf(`request.properties.headers["%s"]`, name),
 			})
 		}
+		sort.Slice(headers, func(i, j int) bool {
+			return headers[i].Name < headers[j].Name
+		})
 		headersMarshaled, _ := json.Marshal(headers)
 		rep = append(rep, api.SectionData{
 			Type:  api.TABLE,
@@ -438,6 +458,9 @@ func representQueueDeclare(event map[string]interface{}) []interface{} {
 				Selector: fmt.Sprintf(`request.arguments["%s"]`, name),
 			})
 		}
+		sort.Slice(headers, func(i, j int) bool {
+			return headers[i].Name < headers[j].Name
+		})
 		headersMarshaled, _ := json.Marshal(headers)
 		rep = append(rep, api.SectionData{
 			Type:  api.TABLE,
@@ -445,6 +468,36 @@ func representQueueDeclare(event map[string]interface{}) []interface{} {
 			Data:  string(headersMarshaled),
 		})
 	}
+
+	return rep
+}
+
+func representQueueDeclareOk(event map[string]interface{}) []interface{} {
+	rep := make([]interface{}, 0)
+
+	details, _ := json.Marshal([]api.TableData{
+		{
+			Name:     "Queue",
+			Value:    event["queue"].(string),
+			Selector: `response.queue`,
+		},
+		{
+			Name:     "Message Count",
+			Value:    fmt.Sprintf("%g", event["messageCount"].(float64)),
+			Selector: `response.messageCount`,
+		},
+		{
+			Name:     "Consumer Count",
+			Value:    fmt.Sprintf("%g", event["consumerCount"].(float64)),
+			Selector: `response.consumerCount`,
+		},
+	})
+
+	rep = append(rep, api.SectionData{
+		Type:  api.TABLE,
+		Title: "Details",
+		Data:  string(details),
+	})
 
 	return rep
 }
@@ -504,6 +557,9 @@ func representExchangeDeclare(event map[string]interface{}) []interface{} {
 				Selector: fmt.Sprintf(`request.arguments["%s"]`, name),
 			})
 		}
+		sort.Slice(headers, func(i, j int) bool {
+			return headers[i].Name < headers[j].Name
+		})
 		headersMarshaled, _ := json.Marshal(headers)
 		rep = append(rep, api.SectionData{
 			Type:  api.TABLE,
@@ -550,16 +606,14 @@ func representConnectionStart(event map[string]interface{}) []interface{} {
 		headers := make([]api.TableData, 0)
 		for name, value := range event["serverProperties"].(map[string]interface{}) {
 			var outcome string
-			switch value.(type) {
+			switch v := value.(type) {
 			case string:
-				outcome = value.(string)
-				break
+				outcome = v
 			case map[string]interface{}:
 				x, _ := json.Marshal(value)
 				outcome = string(x)
-				break
 			default:
-				panic("Unknown data type for the server property!")
+				logger.Log.Info("Unknown data type for the server property!")
 			}
 			headers = append(headers, api.TableData{
 				Name:     name,
@@ -567,10 +621,72 @@ func representConnectionStart(event map[string]interface{}) []interface{} {
 				Selector: fmt.Sprintf(`request.serverProperties["%s"]`, name),
 			})
 		}
+		sort.Slice(headers, func(i, j int) bool {
+			return headers[i].Name < headers[j].Name
+		})
 		headersMarshaled, _ := json.Marshal(headers)
 		rep = append(rep, api.SectionData{
 			Type:  api.TABLE,
 			Title: "Server Properties",
+			Data:  string(headersMarshaled),
+		})
+	}
+
+	return rep
+}
+
+func representConnectionStartOk(event map[string]interface{}) []interface{} {
+	rep := make([]interface{}, 0)
+
+	details, _ := json.Marshal([]api.TableData{
+		{
+			Name:     "Mechanism",
+			Value:    event["mechanism"].(string),
+			Selector: `response.mechanism`,
+		},
+		{
+			Name:     "Mechanism",
+			Value:    event["mechanism"].(string),
+			Selector: `response.response`,
+		},
+		{
+			Name:     "Locale",
+			Value:    event["locale"].(string),
+			Selector: `response.locale`,
+		},
+	})
+	rep = append(rep, api.SectionData{
+		Type:  api.TABLE,
+		Title: "Details",
+		Data:  string(details),
+	})
+
+	if event["clientProperties"] != nil {
+		headers := make([]api.TableData, 0)
+		for name, value := range event["clientProperties"].(map[string]interface{}) {
+			var outcome string
+			switch v := value.(type) {
+			case string:
+				outcome = v
+			case map[string]interface{}:
+				x, _ := json.Marshal(value)
+				outcome = string(x)
+			default:
+				logger.Log.Info("Unknown data type for the client property!")
+			}
+			headers = append(headers, api.TableData{
+				Name:     name,
+				Value:    outcome,
+				Selector: fmt.Sprintf(`response.clientProperties["%s"]`, name),
+			})
+		}
+		sort.Slice(headers, func(i, j int) bool {
+			return headers[i].Name < headers[j].Name
+		})
+		headersMarshaled, _ := json.Marshal(headers)
+		rep = append(rep, api.SectionData{
+			Type:  api.TABLE,
+			Title: "Client Properties",
 			Data:  string(headersMarshaled),
 		})
 	}
@@ -658,6 +774,9 @@ func representQueueBind(event map[string]interface{}) []interface{} {
 				Selector: fmt.Sprintf(`request.arguments["%s"]`, name),
 			})
 		}
+		sort.Slice(headers, func(i, j int) bool {
+			return headers[i].Name < headers[j].Name
+		})
 		headersMarshaled, _ := json.Marshal(headers)
 		rep = append(rep, api.SectionData{
 			Type:  api.TABLE,
@@ -719,6 +838,9 @@ func representBasicConsume(event map[string]interface{}) []interface{} {
 				Selector: fmt.Sprintf(`request.arguments["%s"]`, name),
 			})
 		}
+		sort.Slice(headers, func(i, j int) bool {
+			return headers[i].Name < headers[j].Name
+		})
 		headersMarshaled, _ := json.Marshal(headers)
 		rep = append(rep, api.SectionData{
 			Type:  api.TABLE,
@@ -726,6 +848,125 @@ func representBasicConsume(event map[string]interface{}) []interface{} {
 			Data:  string(headersMarshaled),
 		})
 	}
+
+	return rep
+}
+
+func representBasicConsumeOk(event map[string]interface{}) []interface{} {
+	rep := make([]interface{}, 0)
+
+	details, _ := json.Marshal([]api.TableData{
+		{
+			Name:     "Consumer Tag",
+			Value:    event["consumerTag"].(string),
+			Selector: `response.consumerTag`,
+		},
+	})
+
+	rep = append(rep, api.SectionData{
+		Type:  api.TABLE,
+		Title: "Details",
+		Data:  string(details),
+	})
+
+	return rep
+}
+
+func representConnectionOpen(event map[string]interface{}) []interface{} {
+	rep := make([]interface{}, 0)
+
+	details, _ := json.Marshal([]api.TableData{
+		{
+			Name:     "Virtual Host",
+			Value:    event["virtualHost"].(string),
+			Selector: `request.virtualHost`,
+		},
+	})
+	rep = append(rep, api.SectionData{
+		Type:  api.TABLE,
+		Title: "Details",
+		Data:  string(details),
+	})
+
+	return rep
+}
+
+func representConnectionTune(event map[string]interface{}) []interface{} {
+	rep := make([]interface{}, 0)
+
+	details, _ := json.Marshal([]api.TableData{
+		{
+			Name:     "Channel Max",
+			Value:    fmt.Sprintf("%g", event["channelMax"].(float64)),
+			Selector: `request.channelMax`,
+		},
+		{
+			Name:     "Frame Max",
+			Value:    fmt.Sprintf("%g", event["frameMax"].(float64)),
+			Selector: `request.frameMax`,
+		},
+		{
+			Name:     "Heartbeat",
+			Value:    fmt.Sprintf("%g", event["heartbeat"].(float64)),
+			Selector: `request.heartbeat`,
+		},
+	})
+	rep = append(rep, api.SectionData{
+		Type:  api.TABLE,
+		Title: "Details",
+		Data:  string(details),
+	})
+
+	return rep
+}
+
+func representBasicCancel(event map[string]interface{}) []interface{} {
+	rep := make([]interface{}, 0)
+
+	details, _ := json.Marshal([]api.TableData{
+		{
+			Name:     "Consumer Tag",
+			Value:    event["consumerTag"].(string),
+			Selector: `response.consumerTag`,
+		},
+		{
+			Name:     "NoWait",
+			Value:    strconv.FormatBool(event["noWait"].(bool)),
+			Selector: `request.noWait`,
+		},
+	})
+
+	rep = append(rep, api.SectionData{
+		Type:  api.TABLE,
+		Title: "Details",
+		Data:  string(details),
+	})
+
+	return rep
+}
+
+func representBasicCancelOk(event map[string]interface{}) []interface{} {
+	rep := make([]interface{}, 0)
+
+	details, _ := json.Marshal([]api.TableData{
+		{
+			Name:     "Consumer Tag",
+			Value:    event["consumerTag"].(string),
+			Selector: `response.consumerTag`,
+		},
+	})
+
+	rep = append(rep, api.SectionData{
+		Type:  api.TABLE,
+		Title: "Details",
+		Data:  string(details),
+	})
+
+	return rep
+}
+
+func representEmpty(event map[string]interface{}) []interface{} {
+	rep := make([]interface{}, 0)
 
 	return rep
 }
