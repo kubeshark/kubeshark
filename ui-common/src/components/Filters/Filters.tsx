@@ -12,7 +12,7 @@ import queryAtom from "../../recoil/query";
 import useKeyPress from "../../hooks/useKeyPress"
 import shortcutsKeyboard from "../../configs/shortcutsKeyboard"
 import TrafficViewerApiAtom from "../../recoil/TrafficViewerApi/atom";
-import bfl from '../helpers/bfl.js'
+import bfl from '../../helpers/bfl.js'
 
 
 interface FiltersProps {
