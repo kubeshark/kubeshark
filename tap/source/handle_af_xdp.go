@@ -13,6 +13,7 @@ import (
 	"github.com/google/gopacket/pcapgo"
 	"github.com/up9inc/mizu/logger"
 	"github.com/up9inc/mizu/tap/tlstapper"
+	ebpf "github.com/up9inc/mizu/tap/xdp"
 )
 
 type afXdpHandle struct {
@@ -160,7 +161,7 @@ func (h *afXdpHandle) initPcapPipe() (err error) {
 	return
 }
 
-func newAfXdpHandle(device string) (handle Handle, err error) {
+func newAfXdpHandle(device string, protocol uint8) (handle Handle, err error) {
 	err = tlstapper.SetupRLimit()
 	if err != nil {
 		return
@@ -198,8 +199,11 @@ func newAfXdpHandle(device string) (handle Handle, err error) {
 
 	var program *xdp.Program
 	// Create a new XDP eBPF program
-	program, err = xdp.NewProgram(queueId + 1)
-	// TODO: program, err = ebpf.NewIPProtoProgram(protocol, nil) Internet protocol filtering, should we remove?
+	if protocol == 0 {
+		program, err = xdp.NewProgram(queueId + 1)
+	} else {
+		program, err = ebpf.NewIPProtoProgram(protocol, nil)
+	}
 	if err != nil {
 		return
 	}

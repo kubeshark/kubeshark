@@ -58,7 +58,7 @@ func newTcpPacketSource(name, filename string, interfaceName string, packetCaptu
 
 	switch packetCapture {
 	case "af_xdp":
-		result.Handle, err = newAfXdpHandle(interfaceName)
+		result.Handle, err = newAfXdpHandle(interfaceName, 0)
 		if err != nil {
 			return nil, err
 		}
