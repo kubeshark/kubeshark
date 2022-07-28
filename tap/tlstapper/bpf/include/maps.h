@@ -93,6 +93,12 @@ struct {
 #define BPF_LRU_HASH(_name, _key_type, _value_type) \
     BPF_MAP(_name, BPF_MAP_TYPE_LRU_HASH, _key_type, _value_type, MAX_ENTRIES_LRU_HASH)
 
+#define BPF_ARRAY(_name, _key_type, _value_type, _max_entries) \
+    BPF_MAP(_name, BPF_MAP_TYPE_ARRAY, _key_type, _value_type, _max_entries)
+
+#define BPF_XSK(_name, _key_type, _value_type, _max_entries) \
+    BPF_MAP(_name, BPF_MAP_TYPE_XSKMAP, _key_type, _value_type, _max_entries)
+
 // Generic
 BPF_HASH(pids_map, __u32, __u32);
 BPF_LRU_HASH(connection_context, __u64, conn_flags);

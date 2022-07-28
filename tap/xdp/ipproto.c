@@ -8,12 +8,12 @@
 #include <linux/ipv6.h>
 #include <bpf/bpf_helpers.h>
 #include <bpf/bpf_endian.h>
+#include "../tlstapper/bpf/include/maps.h"
 
 
 #define MAX_SOCKS 64
 
-static volatile unsigned const char PROTO;
-static volatile const unsigned char PROTO = IPPROTO_ICMP;
+static const unsigned char PROTO = IPPROTO_ICMP;
 
 //Ensure map references are available.
 /*
@@ -21,20 +21,9 @@ static volatile const unsigned char PROTO = IPPROTO_ICMP;
         referenced in the end BPF opcodes by file descriptor
 */
 
-struct bpf_map_def SEC("maps") xsks_map = {
-	.type = BPF_MAP_TYPE_XSKMAP,
-	.key_size = sizeof(int),
-	.value_size = sizeof(int),
-	.max_entries = MAX_SOCKS,
-};
+BPF_ARRAY(xsks_map, int, int, MAX_SOCKS);
 
-struct bpf_map_def SEC("maps") qidconf_map = {
-	.type = BPF_MAP_TYPE_ARRAY,
-	.key_size = sizeof(int),
-	.value_size = sizeof(int),
-	.max_entries = MAX_SOCKS,
-};
-
+BPF_XSK(qidconf_map, int, int, MAX_SOCKS);
 
 SEC("xdp_sock") int xdp_sock_prog(struct xdp_md *ctx)
 {
