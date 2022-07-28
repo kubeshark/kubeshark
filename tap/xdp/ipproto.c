@@ -13,7 +13,7 @@
 #define MAX_SOCKS 64
 
 static volatile unsigned const char PROTO;
-static volatile unsigned const char PROTO = IPPROTO_ICMP;
+static volatile const unsigned char PROTO = IPPROTO_ICMP;
 
 //Ensure map references are available.
 /*
