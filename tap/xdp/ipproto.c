@@ -44,8 +44,10 @@ SEC("xdp_sock") int xdp_sock_prog(struct xdp_md *ctx)
 	// A set entry here means that the correspnding queue_id
 	// has an active AF_XDP socket bound to it.
 	qidconf = bpf_map_lookup_elem(&qidconf_map, &index);
-	if (!qidconf)
+	if (qidconf == NULL)
+	{
 		return XDP_PASS;
+	}
 
 	// redirect packets to an xdp socket that match the given IPv4 or IPv6 protocol; pass all other packets to the kernel
 	void *data = (void*)(long)ctx->data;
