@@ -59,7 +59,7 @@ SEC("xdp_sock") int xdp_sock_prog(struct xdp_md *ctx)
 			struct iphdr *ip = data + sizeof(*eth);
 			if ((void*)ip + sizeof(*ip) <= data_end) {
 				if (ip->protocol == PROTO) {
-					if (*qidconf)
+					if (*qidconf != 0)
 						return bpf_redirect_map(&xsks_map, index, 0);
 				}
 			}
