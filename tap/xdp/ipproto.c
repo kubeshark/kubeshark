@@ -43,7 +43,9 @@ SEC("xdp_sock") int xdp_sock_prog(struct xdp_md *ctx)
 	void *data_end = (void*)(long)ctx->data_end;
 	struct ethhdr *eth = data;
 	__u16 h_proto = eth->h_proto;
-	if ((void*)eth + sizeof(*eth) <= data_end) {
+	if ((void*)eth + sizeof(*eth) > data_end) {
+		return XDP_PASS;
+	}    
 		if (bpf_htons(h_proto) == ETH_P_IP) {
 			struct iphdr *ip = data + sizeof(*eth);
 			if ((void*)ip + sizeof(*ip) <= data_end) {
