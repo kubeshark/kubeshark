@@ -54,7 +54,7 @@ struct ssl_info {
     // for ssl_write and ssl_read must be zero
     // for ssl_write_ex and ssl_read_ex save the *written/*readbytes pointer. 
     //
-    size_t *count_ptr;
+    __u32 *count_ptr;
 };
 
 typedef __u8 conn_flags;

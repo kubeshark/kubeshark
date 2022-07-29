@@ -13,6 +13,23 @@ import (
 	"github.com/cilium/ebpf"
 )
 
+type ipprotoTlsChunk struct {
+	Pid         uint32
+	Tgid        uint32
+	Len         uint32
+	Start       uint32
+	Recorded    uint32
+	Fd          uint32
+	Flags       uint32
+	AddressInfo struct {
+		Saddr uint32
+		Daddr uint32
+		Sport uint16
+		Dport uint16
+	}
+	Data [4096]uint8
+}
+
 // loadIpproto returns the embedded CollectionSpec for ipproto.
 func loadIpproto() (*ebpf.CollectionSpec, error) {
 	reader := bytes.NewReader(_IpprotoBytes)
@@ -61,8 +78,22 @@ type ipprotoProgramSpecs struct {
 //
 // It can be passed ebpf.CollectionSpec.Assign.
 type ipprotoMapSpecs struct {
-	QidconfMap *ebpf.MapSpec `ebpf:"qidconf_map"`
-	XsksMap    *ebpf.MapSpec `ebpf:"xsks_map"`
+	ChunksBuffer             *ebpf.MapSpec `ebpf:"chunks_buffer"`
+	ConnectionContext        *ebpf.MapSpec `ebpf:"connection_context"`
+	GoKernelReadContext      *ebpf.MapSpec `ebpf:"go_kernel_read_context"`
+	GoKernelWriteContext     *ebpf.MapSpec `ebpf:"go_kernel_write_context"`
+	GoReadContext            *ebpf.MapSpec `ebpf:"go_read_context"`
+	GoUserKernelReadContext  *ebpf.MapSpec `ebpf:"go_user_kernel_read_context"`
+	GoUserKernelWriteContext *ebpf.MapSpec `ebpf:"go_user_kernel_write_context"`
+	GoWriteContext           *ebpf.MapSpec `ebpf:"go_write_context"`
+	GoidOffsetsMap           *ebpf.MapSpec `ebpf:"goid_offsets_map"`
+	Heap                     *ebpf.MapSpec `ebpf:"heap"`
+	LogBuffer                *ebpf.MapSpec `ebpf:"log_buffer"`
+	OpensslReadContext       *ebpf.MapSpec `ebpf:"openssl_read_context"`
+	OpensslWriteContext      *ebpf.MapSpec `ebpf:"openssl_write_context"`
+	PidsMap                  *ebpf.MapSpec `ebpf:"pids_map"`
+	QidconfMap               *ebpf.MapSpec `ebpf:"qidconf_map"`
+	XsksMap                  *ebpf.MapSpec `ebpf:"xsks_map"`
 }
 
 // ipprotoObjects contains all objects after they have been loaded into the kernel.
@@ -84,12 +115,40 @@ func (o *ipprotoObjects) Close() error {
 //
 // It can be passed to loadIpprotoObjects or ebpf.CollectionSpec.LoadAndAssign.
 type ipprotoMaps struct {
-	QidconfMap *ebpf.Map `ebpf:"qidconf_map"`
-	XsksMap    *ebpf.Map `ebpf:"xsks_map"`
+	ChunksBuffer             *ebpf.Map `ebpf:"chunks_buffer"`
+	ConnectionContext        *ebpf.Map `ebpf:"connection_context"`
+	GoKernelReadContext      *ebpf.Map `ebpf:"go_kernel_read_context"`
+	GoKernelWriteContext     *ebpf.Map `ebpf:"go_kernel_write_context"`
+	GoReadContext            *ebpf.Map `ebpf:"go_read_context"`
+	GoUserKernelReadContext  *ebpf.Map `ebpf:"go_user_kernel_read_context"`
+	GoUserKernelWriteContext *ebpf.Map `ebpf:"go_user_kernel_write_context"`
+	GoWriteContext           *ebpf.Map `ebpf:"go_write_context"`
+	GoidOffsetsMap           *ebpf.Map `ebpf:"goid_offsets_map"`
+	Heap                     *ebpf.Map `ebpf:"heap"`
+	LogBuffer                *ebpf.Map `ebpf:"log_buffer"`
+	OpensslReadContext       *ebpf.Map `ebpf:"openssl_read_context"`
+	OpensslWriteContext      *ebpf.Map `ebpf:"openssl_write_context"`
+	PidsMap                  *ebpf.Map `ebpf:"pids_map"`
+	QidconfMap               *ebpf.Map `ebpf:"qidconf_map"`
+	XsksMap                  *ebpf.Map `ebpf:"xsks_map"`
 }
 
 func (m *ipprotoMaps) Close() error {
 	return _IpprotoClose(
+		m.ChunksBuffer,
+		m.ConnectionContext,
+		m.GoKernelReadContext,
+		m.GoKernelWriteContext,
+		m.GoReadContext,
+		m.GoUserKernelReadContext,
+		m.GoUserKernelWriteContext,
+		m.GoWriteContext,
+		m.GoidOffsetsMap,
+		m.Heap,
+		m.LogBuffer,
+		m.OpensslReadContext,
+		m.OpensslWriteContext,
+		m.PidsMap,
 		m.QidconfMap,
 		m.XsksMap,
 	)

@@ -5,7 +5,7 @@ import (
 	"github.com/cilium/ebpf"
 )
 
-//go:generate go run github.com/cilium/ebpf/cmd/bpf2go@v0.9.0 -target $BPF_TARGET ipproto ipproto.c -- -I/usr/include/ -I./include -nostdinc -O3
+//go:generate go run github.com/cilium/ebpf/cmd/bpf2go@v0.9.0 -target $BPF_TARGET -cflags "${BPF_CFLAGS}" ipproto ipproto.c -- -I/usr/include/ -I./include -nostdinc -O3
 
 // NewIPProtoProgram returns an new eBPF that directs packets of the given ip protocol to to XDP sockets
 func NewIPProtoProgram(protocol uint8, options *ebpf.CollectionOptions) (*xdp.Program, error) {

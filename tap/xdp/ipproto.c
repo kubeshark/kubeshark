@@ -33,8 +33,7 @@ SEC("xdp_sock") int xdp_sock_prog(struct xdp_md *ctx)
 	// A set entry here means that the correspnding queue_id
 	// has an active AF_XDP socket bound to it.
 	qidconf = bpf_map_lookup_elem(&qidconf_map, &index);
-	if (qidconf == NULL)
-	{
+	if (qidconf == NULL) {
 		return XDP_PASS;
 	}
 
@@ -44,8 +43,6 @@ SEC("xdp_sock") int xdp_sock_prog(struct xdp_md *ctx)
 	struct ethhdr *eth = data;
 	__u16 h_proto = eth->h_proto;
 	if ((void*)eth + sizeof(*eth) > data_end) {
-		return XDP_PASS;
-	}    
 		if (bpf_htons(h_proto) == ETH_P_IP) {
 			struct iphdr *ip = data + sizeof(*eth);
 			if ((void*)ip + sizeof(*ip) <= data_end) {
