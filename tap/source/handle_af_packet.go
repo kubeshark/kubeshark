@@ -133,6 +133,7 @@ func newAfpacket(device string, snaplen int, block_size int, num_blocks int,
 func afpacketComputeSize(targetSizeMb int, snaplen int, pageSize int) (
 	frameSize int, blockSize int, numBlocks int, err error) {
 
+	// frameSize calculation was taken from gopacket's afpacket.go
 	if snaplen < pageSize {
 		frameSize = pageSize / (pageSize / snaplen)
 	} else {
