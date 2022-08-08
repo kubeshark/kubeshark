@@ -103,10 +103,6 @@ ARG GIT_BRANCH
 ARG BUILD_TIMESTAMP
 ARG VER=0.0
 
-WORKDIR /app/tap/xdp
-RUN rm *_bpfel_*
-RUN GOARCH=${BUILDARCH} go generate ipproto.go
-
 WORKDIR /app/tap/tlstapper
 RUN rm *_bpfel_*
 RUN GOARCH=${BUILDARCH} go generate tls_tapper.go

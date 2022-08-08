@@ -54,7 +54,7 @@ struct ssl_info {
     // for ssl_write and ssl_read must be zero
     // for ssl_write_ex and ssl_read_ex save the *written/*readbytes pointer. 
     //
-    __u32 *count_ptr;
+    size_t *count_ptr;
 };
 
 typedef __u8 conn_flags;
@@ -92,12 +92,6 @@ struct {
 
 #define BPF_LRU_HASH(_name, _key_type, _value_type) \
     BPF_MAP(_name, BPF_MAP_TYPE_LRU_HASH, _key_type, _value_type, MAX_ENTRIES_LRU_HASH)
-
-#define BPF_ARRAY(_name, _key_type, _value_type, _max_entries) \
-    BPF_MAP(_name, BPF_MAP_TYPE_ARRAY, _key_type, _value_type, _max_entries)
-
-#define BPF_XSK(_name, _key_type, _value_type, _max_entries) \
-    BPF_MAP(_name, BPF_MAP_TYPE_XSKMAP, _key_type, _value_type, _max_entries)
 
 // Generic
 BPF_HASH(pids_map, __u32, __u32);
