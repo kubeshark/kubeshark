@@ -16,6 +16,7 @@ type PacketSourceManagerConfig struct {
 	mtls          bool
 	procfs        string
 	interfaceName string
+	packetCapture string
 	behaviour     TcpPacketSourceBehaviour
 }
 
@@ -25,8 +26,9 @@ type PacketSourceManager struct {
 }
 
 func NewPacketSourceManager(procfs string, filename string, interfaceName string,
-	mtls bool, pods []v1.Pod, behaviour TcpPacketSourceBehaviour, ipdefrag bool, packets chan<- TcpPacketInfo) (*PacketSourceManager, error) {
-	hostSource, err := newHostPacketSource(filename, interfaceName, behaviour)
+	mtls bool, pods []v1.Pod, behaviour TcpPacketSourceBehaviour, ipdefrag bool,
+	packetCapture string, packets chan<- TcpPacketInfo) (*PacketSourceManager, error) {
+	hostSource, err := newHostPacketSource(filename, interfaceName, packetCapture, behaviour)
 	if err != nil {
 		return nil, err
 	}
@@ -41,6 +43,7 @@ func NewPacketSourceManager(procfs string, filename string, interfaceName string
 		mtls:          mtls,
 		procfs:        procfs,
 		interfaceName: interfaceName,
+		packetCapture: packetCapture,
 		behaviour:     behaviour,
 	}
 
@@ -48,7 +51,7 @@ func NewPacketSourceManager(procfs string, filename string, interfaceName string
 	return sourceManager, nil
 }
 
-func newHostPacketSource(filename string, interfaceName string,
+func newHostPacketSource(filename string, interfaceName string, packetCapture string,
 	behaviour TcpPacketSourceBehaviour) (*tcpPacketSource, error) {
 	var name string
 	if filename == "" {
@@ -57,7 +60,7 @@ func newHostPacketSource(filename string, interfaceName string,
 		name = fmt.Sprintf("file-%s", filename)
 	}
 
-	source, err := newTcpPacketSource(name, filename, interfaceName, behaviour, api.Pcap)
+	source, err := newTcpPacketSource(name, filename, interfaceName, packetCapture, behaviour, api.Pcap)
 	if err != nil {
 		return nil, err
 	}
@@ -67,14 +70,14 @@ func newHostPacketSource(filename string, interfaceName string,
 
 func (m *PacketSourceManager) UpdatePods(pods []v1.Pod, ipdefrag bool, packets chan<- TcpPacketInfo) {
 	if m.config.mtls {
-		m.updateMtlsPods(m.config.procfs, pods, m.config.interfaceName, m.config.behaviour, ipdefrag, packets)
+		m.updateMtlsPods(m.config.procfs, pods, m.config.interfaceName, m.config.packetCapture, m.config.behaviour, ipdefrag, packets)
 	}
 
 	m.setBPFFilter(pods)
 }
 
 func (m *PacketSourceManager) updateMtlsPods(procfs string, pods []v1.Pod,
-	interfaceName string, behaviour TcpPacketSourceBehaviour, ipdefrag bool, packets chan<- TcpPacketInfo) {
+	interfaceName string, packetCapture string, behaviour TcpPacketSourceBehaviour, ipdefrag bool, packets chan<- TcpPacketInfo) {
 
 	relevantPids := m.getRelevantPids(procfs, pods)
 	logger.Log.Infof("Updating mtls pods (new: %v) (current: %v)", relevantPids, m.sources)
@@ -88,7 +91,7 @@ func (m *PacketSourceManager) updateMtlsPods(procfs string, pods []v1.Pod,
 
 	for pid, origin := range relevantPids {
 		if _, ok := m.sources[pid]; !ok {
-			source, err := newNetnsPacketSource(procfs, pid, interfaceName, behaviour, origin)
+			source, err := newNetnsPacketSource(procfs, pid, interfaceName, packetCapture, behaviour, origin)
 
 			if err == nil {
 				go source.readPackets(ipdefrag, packets)
@@ -165,12 +168,12 @@ func (m *PacketSourceManager) Stats() string {
 	result := ""
 
 	for _, source := range m.sources {
-		stats, err := source.Stats()
+		packetsReceived, packetsDropped, err := source.Stats()
 
 		if err != nil {
 			result = result + fmt.Sprintf("[%s: err:%s]", source.String(), err)
 		} else {
-			result = result + fmt.Sprintf("[%s: rec: %d dropped: %d]", source.String(), stats.PacketsReceived, stats.PacketsDropped)
+			result = result + fmt.Sprintf("[%s: rec: %d dropped: %d]", source.String(), packetsReceived, packetsDropped)
 		}
 	}
 

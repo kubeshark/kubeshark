@@ -3,21 +3,27 @@ package source
 import (
 	"fmt"
 	"io"
-	"time"
 
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/ip4defrag"
 	"github.com/google/gopacket/layers"
-	"github.com/google/gopacket/pcap"
 	"github.com/up9inc/mizu/logger"
 	"github.com/up9inc/mizu/tap/api"
 	"github.com/up9inc/mizu/tap/dbgctl"
 	"github.com/up9inc/mizu/tap/diagnose"
 )
 
+type Handle interface {
+	NextPacket() (packet gopacket.Packet, err error)
+	SetDecoder(decoder gopacket.Decoder, lazy bool, noCopy bool)
+	SetBPF(expr string) (err error)
+	LinkType() layers.LinkType
+	Stats() (packetsReceived uint, packetsDropped uint, err error)
+	Close() (err error)
+}
+
 type tcpPacketSource struct {
-	source    *gopacket.PacketSource
-	handle    *pcap.Handle
+	Handle    Handle
 	defragger *ip4defrag.IPv4Defragmenter
 	Behaviour *TcpPacketSourceBehaviour
 	name      string
@@ -25,12 +31,13 @@ type tcpPacketSource struct {
 }
 
 type TcpPacketSourceBehaviour struct {
-	SnapLength  int
-	Promisc     bool
-	Tstype      string
-	DecoderName string
-	Lazy        bool
-	BpfFilter   string
+	SnapLength   int
+	TargetSizeMb int
+	Promisc      bool
+	Tstype       string
+	DecoderName  string
+	Lazy         bool
+	BpfFilter    string
 }
 
 type TcpPacketInfo struct {
@@ -38,7 +45,7 @@ type TcpPacketInfo struct {
 	Source *tcpPacketSource
 }
 
-func newTcpPacketSource(name, filename string, interfaceName string,
+func newTcpPacketSource(name, filename string, interfaceName string, packetCapture string,
 	behaviour TcpPacketSourceBehaviour, origin api.Capture) (*tcpPacketSource, error) {
 	var err error
 
@@ -49,55 +56,47 @@ func newTcpPacketSource(name, filename string, interfaceName string,
 		Origin:    origin,
 	}
 
-	if filename != "" {
-		if result.handle, err = pcap.OpenOffline(filename); err != nil {
-			return result, fmt.Errorf("PCAP OpenOffline error: %v", err)
-		}
-	} else {
-		// This is a little complicated because we want to allow all possible options
-		// for creating the packet capture handle... instead of all this you can
-		// just call pcap.OpenLive if you want a simple handle.
-		inactive, err := pcap.NewInactiveHandle(interfaceName)
+	switch packetCapture {
+	case "af_packet":
+		result.Handle, err = newAfpacketHandle(
+			interfaceName,
+			behaviour.TargetSizeMb,
+			behaviour.SnapLength,
+		)
 		if err != nil {
-			return result, fmt.Errorf("could not create: %v", err)
+			return nil, err
 		}
-		defer inactive.CleanUp()
-		if err = inactive.SetSnapLen(behaviour.SnapLength); err != nil {
-			return result, fmt.Errorf("could not set snap length: %v", err)
-		} else if err = inactive.SetPromisc(behaviour.Promisc); err != nil {
-			return result, fmt.Errorf("could not set promisc mode: %v", err)
-		} else if err = inactive.SetTimeout(time.Second); err != nil {
-			return result, fmt.Errorf("could not set timeout: %v", err)
+		logger.Log.Infof("Using AF_PACKET socket as the capture source")
+	default:
+		result.Handle, err = newPcapHandle(
+			filename,
+			interfaceName,
+			behaviour.SnapLength,
+			behaviour.Promisc,
+			behaviour.Tstype,
+		)
+		if err != nil {
+			return nil, err
 		}
-		if behaviour.Tstype != "" {
-			if t, err := pcap.TimestampSourceFromString(behaviour.Tstype); err != nil {
-				return result, fmt.Errorf("supported timestamp types: %v", inactive.SupportedTimestamps())
-			} else if err := inactive.SetTimestampSource(t); err != nil {
-				return result, fmt.Errorf("supported timestamp types: %v", inactive.SupportedTimestamps())
-			}
-		}
-		if result.handle, err = inactive.Activate(); err != nil {
-			return result, fmt.Errorf("PCAP Activate error: %v", err)
-		}
+		logger.Log.Infof("Using libpcap as the capture source")
 	}
+
+	var decoder gopacket.Decoder
+	var ok bool
+	if behaviour.DecoderName == "" {
+		behaviour.DecoderName = result.Handle.LinkType().String()
+	}
+	if decoder, ok = gopacket.DecodersByLayerName[behaviour.DecoderName]; !ok {
+		return nil, fmt.Errorf("no decoder named %v", behaviour.DecoderName)
+	}
+	result.Handle.SetDecoder(decoder, behaviour.Lazy, true)
+
 	if behaviour.BpfFilter != "" {
 		logger.Log.Infof("Using BPF filter %q", behaviour.BpfFilter)
-		if err = result.handle.SetBPFFilter(behaviour.BpfFilter); err != nil {
+		if err = result.setBPFFilter(behaviour.BpfFilter); err != nil {
 			return nil, fmt.Errorf("BPF filter error: %v", err)
 		}
 	}
-
-	var dec gopacket.Decoder
-	var ok bool
-	if behaviour.DecoderName == "" {
-		behaviour.DecoderName = result.handle.LinkType().String()
-	}
-	if dec, ok = gopacket.DecodersByLayerName[behaviour.DecoderName]; !ok {
-		return nil, fmt.Errorf("no decoder named %v", behaviour.DecoderName)
-	}
-	result.source = gopacket.NewPacketSource(result.handle, dec)
-	result.source.Lazy = behaviour.Lazy
-	result.source.NoCopy = true
 
 	return result, nil
 }
@@ -107,17 +106,17 @@ func (source *tcpPacketSource) String() string {
 }
 
 func (source *tcpPacketSource) setBPFFilter(expr string) (err error) {
-	return source.handle.SetBPFFilter(expr)
+	return source.Handle.SetBPF(expr)
 }
 
 func (source *tcpPacketSource) close() {
-	if source.handle != nil {
-		source.handle.Close()
+	if source.Handle != nil {
+		source.Handle.Close()
 	}
 }
 
-func (source *tcpPacketSource) Stats() (stat *pcap.Stats, err error) {
-	return source.handle.Stats()
+func (source *tcpPacketSource) Stats() (packetsReceived uint, packetsDropped uint, err error) {
+	return source.Handle.Stats()
 }
 
 func (source *tcpPacketSource) readPackets(ipdefrag bool, packets chan<- TcpPacketInfo) {
@@ -127,7 +126,7 @@ func (source *tcpPacketSource) readPackets(ipdefrag bool, packets chan<- TcpPack
 	logger.Log.Infof("Start reading packets from %v", source.name)
 
 	for {
-		packet, err := source.source.NextPacket()
+		packet, err := source.Handle.NextPacket()
 
 		if err == io.EOF {
 			logger.Log.Infof("Got EOF while reading packets from %v", source.name)

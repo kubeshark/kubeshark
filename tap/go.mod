@@ -16,6 +16,7 @@ require (
 	github.com/up9inc/mizu/tap/api v0.0.0
 	github.com/up9inc/mizu/tap/dbgctl v0.0.0
 	github.com/vishvananda/netns v0.0.0-20211101163701-50045581ed74
+	golang.org/x/net v0.0.0-20220127200216-cd36cc0744dd
 	k8s.io/api v0.23.3
 )
 
@@ -33,7 +34,6 @@ require (
 	github.com/tklauser/go-sysconf v0.3.10 // indirect
 	github.com/tklauser/numcpus v0.4.0 // indirect
 	github.com/yusufpapurcu/wmi v1.2.2 // indirect
-	golang.org/x/net v0.0.0-20220127200216-cd36cc0744dd // indirect
 	golang.org/x/sys v0.0.0-20220207234003-57398862261d // indirect
 	golang.org/x/text v0.3.7 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect

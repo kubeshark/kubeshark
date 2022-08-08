@@ -104,8 +104,7 @@ ARG BUILD_TIMESTAMP
 ARG VER=0.0
 
 WORKDIR /app/tap/tlstapper
-
-RUN rm tlstapper_bpf*
+RUN rm *_bpfel_*
 RUN GOARCH=${BUILDARCH} go generate tls_tapper.go
 
 WORKDIR /app/agent-build
