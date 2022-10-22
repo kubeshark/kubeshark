@@ -1,3 +1,3 @@
-module github.com/up9inc/mizu/tap/dbgctl
+module github.com/up9inc/kubeshark/tap/dbgctl
 
 go 1.18

@@ -8,7 +8,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/up9inc/mizu/logger"
+	"github.com/up9inc/kubeshark/logger"
 )
 
 func BuildHeaders(rawHeaders map[string]interface{}) ([]Header, string, string, string, string, string) {

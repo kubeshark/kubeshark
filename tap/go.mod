@@ -1,4 +1,4 @@
-module github.com/up9inc/mizu/tap
+module github.com/up9inc/kubeshark/tap
 
 go 1.17
 
@@ -12,9 +12,9 @@ require (
 	github.com/moby/moby v20.10.17+incompatible
 	github.com/shirou/gopsutil v3.21.11+incompatible
 	github.com/struCoder/pidusage v0.2.1
-	github.com/up9inc/mizu/logger v0.0.0
-	github.com/up9inc/mizu/tap/api v0.0.0
-	github.com/up9inc/mizu/tap/dbgctl v0.0.0
+	github.com/up9inc/kubeshark/logger v0.0.0
+	github.com/up9inc/kubeshark/tap/api v0.0.0
+	github.com/up9inc/kubeshark/tap/dbgctl v0.0.0
 	github.com/vishvananda/netns v0.0.0-20211101163701-50045581ed74
 	golang.org/x/net v0.0.0-20220127200216-cd36cc0744dd
 	k8s.io/api v0.23.3
@@ -47,8 +47,8 @@ require (
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
 
-replace github.com/up9inc/mizu/logger v0.0.0 => ../logger
+replace github.com/up9inc/kubeshark/logger v0.0.0 => ../logger
 
-replace github.com/up9inc/mizu/tap/api v0.0.0 => ./api
+replace github.com/up9inc/kubeshark/tap/api v0.0.0 => ./api
 
-replace github.com/up9inc/mizu/tap/dbgctl v0.0.0 => ./dbgctl
+replace github.com/up9inc/kubeshark/tap/dbgctl v0.0.0 => ./dbgctl

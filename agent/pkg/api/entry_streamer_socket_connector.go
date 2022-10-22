@@ -4,8 +4,8 @@ import (
 	"fmt"
 
 	basenine "github.com/up9inc/basenine/client/go"
-	"github.com/up9inc/mizu/agent/pkg/models"
-	tapApi "github.com/up9inc/mizu/tap/api"
+	"github.com/up9inc/kubeshark/agent/pkg/models"
+	tapApi "github.com/up9inc/kubeshark/tap/api"
 )
 
 type EntryStreamerSocketConnector interface {

@@ -14,9 +14,9 @@ module.exports = defineConfig({
     greenFilterColor: 'rgb(210, 250, 210)',
     redFilterColor: 'rgb(250, 214, 220)',
     bodyJsonClass: '.hljs',
-    mizuWidth: 1920,
-    normalMizuHeight: 1080,
-    hugeMizuHeight: 3500,
+    kubesharkWidth: 1920,
+    normalKubesharkHeight: 1080,
+    hugeKubesharkHeight: 3500,
   },
   e2e: {
     // We've imported your old cypress plugins here.

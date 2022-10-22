@@ -6,7 +6,7 @@ import (
 	"testing"
 
 	"github.com/stretchr/testify/suite"
-	tapApi "github.com/up9inc/mizu/tap/api"
+	tapApi "github.com/up9inc/kubeshark/tap/api"
 )
 
 const (

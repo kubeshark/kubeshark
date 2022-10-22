@@ -15,7 +15,7 @@ import (
 	"time"
 
 	"github.com/stretchr/testify/assert"
-	"github.com/up9inc/mizu/tap/api"
+	"github.com/up9inc/kubeshark/tap/api"
 )
 
 const (

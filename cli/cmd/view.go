@@ -3,15 +3,15 @@ package cmd
 import (
 	"github.com/creasty/defaults"
 	"github.com/spf13/cobra"
-	"github.com/up9inc/mizu/cli/config/configStructs"
-	"github.com/up9inc/mizu/logger"
+	"github.com/up9inc/kubeshark/cli/config/configStructs"
+	"github.com/up9inc/kubeshark/logger"
 )
 
 var viewCmd = &cobra.Command{
 	Use:   "view",
 	Short: "Open GUI in browser",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		runMizuView()
+		runKubesharkView()
 		return nil
 	},
 }

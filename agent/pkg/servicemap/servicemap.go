@@ -5,8 +5,8 @@ import (
 
 	"github.com/jinzhu/copier"
 
-	"github.com/up9inc/mizu/logger"
-	tapApi "github.com/up9inc/mizu/tap/api"
+	"github.com/up9inc/kubeshark/logger"
+	tapApi "github.com/up9inc/kubeshark/tap/api"
 )
 
 const (

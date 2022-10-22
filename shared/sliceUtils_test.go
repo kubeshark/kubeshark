@@ -2,7 +2,7 @@ package shared_test
 
 import (
 	"fmt"
-	"github.com/up9inc/mizu/shared"
+	"github.com/up9inc/kubeshark/shared"
 	"reflect"
 	"testing"
 )

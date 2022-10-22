@@ -1,5 +1,5 @@
 {
-  "name": "mizu-ui",
+  "name": "kubeshark-ui",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
@@ -13,7 +13,7 @@
     "@types/jest": "^26.0.24",
     "@types/node": "^12.20.54",
     "@uiw/react-textarea-code-editor": "^1.6.0",
-    "@up9/mizu-common": "file:up9-mizu-common-0.0.0.tgz",
+    "@up9/kubeshark-common": "file:up9-kubeshark-common-0.0.0.tgz",
     "axios": "^0.27.2",
     "core-js": "^3.22.7",
     "craco-babel-loader": "^1.0.3",

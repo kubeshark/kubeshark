@@ -5,11 +5,11 @@ import (
 
 	"github.com/creasty/defaults"
 	"github.com/spf13/cobra"
-	"github.com/up9inc/mizu/cli/config"
-	"github.com/up9inc/mizu/cli/config/configStructs"
-	"github.com/up9inc/mizu/cli/errormessage"
-	"github.com/up9inc/mizu/cli/mizu/fsUtils"
-	"github.com/up9inc/mizu/logger"
+	"github.com/up9inc/kubeshark/cli/config"
+	"github.com/up9inc/kubeshark/cli/config/configStructs"
+	"github.com/up9inc/kubeshark/cli/errormessage"
+	"github.com/up9inc/kubeshark/cli/kubeshark/fsUtils"
+	"github.com/up9inc/kubeshark/logger"
 )
 
 var logsCmd = &cobra.Command{
@@ -44,5 +44,5 @@ func init() {
 		logger.Log.Debug(err)
 	}
 
-	logsCmd.Flags().StringP(configStructs.FileLogsName, "f", defaultLogsConfig.FileStr, "Path for zip file (default current <pwd>\\mizu_logs.zip)")
+	logsCmd.Flags().StringP(configStructs.FileLogsName, "f", defaultLogsConfig.FileStr, "Path for zip file (default current <pwd>\\kubeshark_logs.zip)")
 }

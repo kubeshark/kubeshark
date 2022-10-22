@@ -12,8 +12,8 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
-	"github.com/up9inc/mizu/logger"
-	"github.com/up9inc/mizu/shared"
+	"github.com/up9inc/kubeshark/logger"
+	"github.com/up9inc/kubeshark/shared"
 )
 
 var (

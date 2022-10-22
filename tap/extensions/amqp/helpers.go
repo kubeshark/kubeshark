@@ -6,8 +6,8 @@ import (
 	"sort"
 	"strconv"
 
-	"github.com/up9inc/mizu/logger"
-	"github.com/up9inc/mizu/tap/api"
+	"github.com/up9inc/kubeshark/logger"
+	"github.com/up9inc/kubeshark/tap/api"
 )
 
 var connectionMethodMap = map[int]string{

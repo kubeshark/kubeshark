@@ -4,9 +4,9 @@ import (
 	"encoding/json"
 	"fmt"
 	basenine "github.com/up9inc/basenine/client/go"
-	"github.com/up9inc/mizu/logger"
-	"github.com/up9inc/mizu/shared"
-	"github.com/up9inc/mizu/tap/api"
+	"github.com/up9inc/kubeshark/logger"
+	"github.com/up9inc/kubeshark/shared"
+	"github.com/up9inc/kubeshark/tap/api"
 	"sync"
 	"time"
 )
@@ -50,7 +50,7 @@ func (e *BasenineEntryInserter) Insert(entry *api.Entry) error {
 	return nil
 }
 
-func initializeConnection() *basenine.Connection{
+func initializeConnection() *basenine.Connection {
 	for {
 		connection, err := basenine.NewConnection(shared.BasenineHost, shared.BaseninePort)
 		if err != nil {

@@ -8,11 +8,11 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/up9inc/mizu/cli/uiUtils"
-	"github.com/up9inc/mizu/shared"
+	"github.com/up9inc/kubeshark/cli/uiUtils"
+	"github.com/up9inc/kubeshark/shared"
 
-	"github.com/up9inc/mizu/logger"
-	"github.com/up9inc/mizu/shared/units"
+	"github.com/up9inc/kubeshark/logger"
+	"github.com/up9inc/kubeshark/shared/units"
 )
 
 const (

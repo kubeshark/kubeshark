@@ -17,7 +17,7 @@ FROM node:16 AS front-end
 WORKDIR /app/ui-build
 
 COPY ui/package.json ui/package-lock.json ./
-COPY --from=front-end-common ["/app/ui-build/up9-mizu-common-0.0.0.tgz", "."]
+COPY --from=front-end-common ["/app/ui-build/up9-kubeshark-common-0.0.0.tgz", "."]
 RUN npm i
 COPY ui .
 RUN npm run build
@@ -110,10 +110,10 @@ RUN GOARCH=${BUILDARCH} go generate tls_tapper.go
 WORKDIR /app/agent-build
 
 RUN go build -ldflags="-extldflags=-static -s -w \
-    -X 'github.com/up9inc/mizu/agent/pkg/version.GitCommitHash=${COMMIT_HASH}' \
-    -X 'github.com/up9inc/mizu/agent/pkg/version.Branch=${GIT_BRANCH}' \
-    -X 'github.com/up9inc/mizu/agent/pkg/version.BuildTimestamp=${BUILD_TIMESTAMP}' \
-    -X 'github.com/up9inc/mizu/agent/pkg/version.Ver=${VER}'" -o mizuagent .
+    -X 'github.com/up9inc/kubeshark/agent/pkg/version.GitCommitHash=${COMMIT_HASH}' \
+    -X 'github.com/up9inc/kubeshark/agent/pkg/version.Branch=${GIT_BRANCH}' \
+    -X 'github.com/up9inc/kubeshark/agent/pkg/version.BuildTimestamp=${BUILD_TIMESTAMP}' \
+    -X 'github.com/up9inc/kubeshark/agent/pkg/version.Ver=${VER}'" -o kubesharkagent .
 
 # Download Basenine executable, verify the sha1sum
 ADD https://github.com/up9inc/basenine/releases/download/v0.8.3/basenine_linux_${GOARCH} ./basenine_linux_${GOARCH}
@@ -133,9 +133,9 @@ WORKDIR /app/data/
 WORKDIR /app
 
 # Copy binary and config files from /build to root folder of scratch container.
-COPY --from=builder ["/app/agent-build/mizuagent", "."]
+COPY --from=builder ["/app/agent-build/kubesharkagent", "."]
 COPY --from=builder ["/app/agent-build/basenine", "/usr/local/bin/basenine"]
 COPY --from=front-end ["/app/ui-build/build", "site"]
 
 # this script runs both apiserver and passivetapper and exits either if one of them exits, preventing a scenario where the container runs without one process
-ENTRYPOINT ["/app/mizuagent"]
+ENTRYPOINT ["/app/kubesharkagent"]

@@ -6,7 +6,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/up9inc/mizu/logger"
+	"github.com/up9inc/kubeshark/logger"
 )
 
 func WaitForFinish(ctx context.Context, cancel context.CancelFunc) {

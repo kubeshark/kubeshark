@@ -7,11 +7,11 @@ import (
 	"time"
 
 	basenine "github.com/up9inc/basenine/client/go"
-	"github.com/up9inc/mizu/agent/pkg/app"
-	"github.com/up9inc/mizu/agent/pkg/models"
-	"github.com/up9inc/mizu/logger"
-	"github.com/up9inc/mizu/shared"
-	tapApi "github.com/up9inc/mizu/tap/api"
+	"github.com/up9inc/kubeshark/agent/pkg/app"
+	"github.com/up9inc/kubeshark/agent/pkg/models"
+	"github.com/up9inc/kubeshark/logger"
+	"github.com/up9inc/kubeshark/shared"
+	tapApi "github.com/up9inc/kubeshark/tap/api"
 )
 
 type EntriesProvider interface {

@@ -9,7 +9,7 @@
     "/hc": {
       "get": {
         "summary": "/hc",
-        "description": "Mizu observed 1 entries (0 failed), at 0.000 hits/s, average response time is 0.001 seconds",
+        "description": "Kubeshark observed 1 entries (0 failed), at 0.000 hits/s, average response time is 0.001 seconds",
         "operationId": "c9fdb168-cd8a-48d2-ac37-887ddadb810c",
         "responses": {
           "200": {
@@ -51,7 +51,7 @@
           "models"
         ],
         "summary": "/models/aaa/blacklist",
-        "description": "Mizu observed 2 entries (0 failed), at 0.420 hits/s, average response time is 0.002 seconds",
+        "description": "Kubeshark observed 2 entries (0 failed), at 0.420 hits/s, average response time is 0.002 seconds",
         "operationId": "aa04b7c2-11fc-49bd-86b5-fec0a336216d",
         "responses": {
           "200": {
@@ -93,7 +93,7 @@
           "models"
         ],
         "summary": "/models/andrey2/blacklist",
-        "description": "Mizu observed 1 entries (0 failed), at 0.000 hits/s, average response time is 0.001 seconds",
+        "description": "Kubeshark observed 1 entries (0 failed), at 0.000 hits/s, average response time is 0.001 seconds",
         "operationId": "a61a1b56-7205-4246-99de-baec013a53d9",
         "responses": {
           "200": {
@@ -135,7 +135,7 @@
           "models"
         ],
         "summary": "/models/default/blacklist",
-        "description": "Mizu observed 1 entries (0 failed), at 0.000 hits/s, average response time is 0.001 seconds",
+        "description": "Kubeshark observed 1 entries (0 failed), at 0.000 hits/s, average response time is 0.001 seconds",
         "operationId": "371ca033-3863-4546-bc7e-03b291a7a188",
         "responses": {
           "200": {
@@ -177,7 +177,7 @@
           "models"
         ],
         "summary": "/models/roee/blacklist",
-        "description": "Mizu observed 2 entries (0 failed), at 0.211 hits/s, average response time is 0.001 seconds",
+        "description": "Kubeshark observed 2 entries (0 failed), at 0.211 hits/s, average response time is 0.001 seconds",
         "operationId": "fba33b70-58d1-43e4-9223-38e854e78a77",
         "responses": {
           "200": {
@@ -219,7 +219,7 @@
           "models"
         ],
         "summary": "/models/roee/status",
-        "description": "Mizu observed 1 entries (0 failed), at 0.000 hits/s, average response time is 0.001 seconds",
+        "description": "Kubeshark observed 1 entries (0 failed), at 0.000 hits/s, average response time is 0.001 seconds",
         "operationId": "0653c2af-ef3f-43cd-b7e1-48f951d34fa2",
         "responses": {
           "200": {
@@ -298,7 +298,7 @@
           "models"
         ],
         "summary": "/models/{id}/blacklist",
-        "description": "Mizu observed 39 entries (0 failed), at 0.078 hits/s, average response time is 0.001 seconds",
+        "description": "Kubeshark observed 39 entries (0 failed), at 0.078 hits/s, average response time is 0.001 seconds",
         "operationId": "ce1b76bc-9bff-4438-a21d-0a7a6e5be503",
         "responses": {
           "200": {
@@ -371,7 +371,7 @@
           "models"
         ],
         "summary": "/models/{id}/status",
-        "description": "Mizu observed 7 entries (0 failed), at 0.543 hits/s, average response time is 0.193 seconds",
+        "description": "Kubeshark observed 7 entries (0 failed), at 0.543 hits/s, average response time is 0.193 seconds",
         "operationId": "2c46cc41-1ec7-4636-b97e-13e4a7296c65",
         "responses": {
           "200": {
@@ -444,7 +444,7 @@
           "models"
         ],
         "summary": "/models/{id}/suites/all/runs",
-        "description": "Mizu observed 69 entries (0 failed), at 0.093 hits/s, average response time is 0.029 seconds",
+        "description": "Kubeshark observed 69 entries (0 failed), at 0.093 hits/s, average response time is 0.029 seconds",
         "operationId": "6776caf3-87e7-4515-899d-4d4d6cfc0bb8",
         "responses": {
           "200": {
@@ -520,7 +520,7 @@
           "models"
         ],
         "summary": "/models/{id}/suites/all/runs/state",
-        "description": "Mizu observed 2 entries (0 failed), at 0.997 hits/s, average response time is 0.514 seconds",
+        "description": "Kubeshark observed 2 entries (0 failed), at 0.997 hits/s, average response time is 0.514 seconds",
         "operationId": "fe8186fa-b221-46e1-8130-9be1f00a7c2d",
         "responses": {
           "200": {
@@ -622,7 +622,7 @@
           "proxies"
         ],
         "summary": "/proxies",
-        "description": "Mizu observed 2 entries (0 failed), at 1.587 hits/s, average response time is 0.386 seconds",
+        "description": "Kubeshark observed 2 entries (0 failed), at 1.587 hits/s, average response time is 0.386 seconds",
         "operationId": "bff7bf3e-effa-43ad-8fce-bab2847a77aa",
         "responses": {
           "200": {
@@ -674,7 +674,7 @@
           "proxies"
         ],
         "summary": "/proxies/",
-        "description": "Mizu observed 1 entries (0 failed), at 0.000 hits/s, average response time is 1.022 seconds",
+        "description": "Kubeshark observed 1 entries (0 failed), at 0.000 hits/s, average response time is 1.022 seconds",
         "operationId": "9c12fbeb-b4cd-40a7-8962-5b9b01619a8e",
         "parameters": [
           {
@@ -748,7 +748,7 @@
           "proxies"
         ],
         "summary": "/proxies/local",
-        "description": "Mizu observed 1 entries (0 failed), at 0.000 hits/s, average response time is 0.610 seconds",
+        "description": "Kubeshark observed 1 entries (0 failed), at 0.000 hits/s, average response time is 0.610 seconds",
         "operationId": "0f676cec-87ba-4a03-ac72-f48c3e90d5b8",
         "responses": {
           "200": {
@@ -1568,7 +1568,7 @@
     "/tapping/state": {
       "get": {
         "summary": "/tapping/state",
-        "description": "Mizu observed 8 entries (0 failed), at 0.760 hits/s, average response time is 0.258 seconds",
+        "description": "Kubeshark observed 8 entries (0 failed), at 0.760 hits/s, average response time is 0.258 seconds",
         "operationId": "b0c1e867-43ee-4f94-bcf8-58cd0ba0f5c8",
         "responses": {
           "200": {
@@ -1630,7 +1630,7 @@
       },
       "post": {
         "summary": "/tapping/state",
-        "description": "Mizu observed 6 entries (1 failed), at 0.570 hits/s, average response time is 0.431 seconds",
+        "description": "Kubeshark observed 6 entries (1 failed), at 0.570 hits/s, average response time is 0.431 seconds",
         "operationId": "4245a3e5-ebff-4a5b-a7d7-a7fbae4b0fce",
         "responses": {
           "200": {

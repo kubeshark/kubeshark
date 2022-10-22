@@ -3,14 +3,14 @@ package controllers
 import (
 	"net/http"
 
-	"github.com/up9inc/mizu/agent/pkg/dependency"
-	"github.com/up9inc/mizu/agent/pkg/entries"
-	"github.com/up9inc/mizu/agent/pkg/models"
-	"github.com/up9inc/mizu/agent/pkg/validation"
+	"github.com/up9inc/kubeshark/agent/pkg/dependency"
+	"github.com/up9inc/kubeshark/agent/pkg/entries"
+	"github.com/up9inc/kubeshark/agent/pkg/models"
+	"github.com/up9inc/kubeshark/agent/pkg/validation"
 
 	"github.com/gin-gonic/gin"
 
-	"github.com/up9inc/mizu/logger"
+	"github.com/up9inc/kubeshark/logger"
 )
 
 func HandleEntriesError(c *gin.Context, err error) bool {

@@ -1,15 +1,15 @@
 import './App.sass';
 import { Header } from "./components/Header/Header";
 import { TrafficPage } from "./components/Pages/TrafficPage/TrafficPage";
-import { ServiceMapModal } from '@up9/mizu-common';
+import { ServiceMapModal } from '@up9/kubeshark-common';
 import { useRecoilState } from "recoil";
 import serviceMapModalOpenAtom from "./recoil/serviceMapModalOpen";
 import oasModalOpenAtom from './recoil/oasModalOpen/atom';
 import trafficStatsModalOpenAtom from "./recoil/trafficStatsModalOpen";
-import { OasModal } from '@up9/mizu-common';
+import { OasModal } from '@up9/kubeshark-common';
 import Api from './helpers/api';
 import { ThemeProvider, StyledEngineProvider, createTheme } from '@mui/material';
-import { TrafficStatsModal } from '@up9/mizu-common';
+import { TrafficStatsModal } from '@up9/kubeshark-common';
 
 const api = Api.getInstance()
 
@@ -22,7 +22,7 @@ const App = () => {
     return (
         <StyledEngineProvider injectFirst>
             <ThemeProvider theme={createTheme(({}))}>
-                <div className="mizuApp">
+                <div className="kubesharkApp">
                     <Header />
                     <TrafficPage />
                     {window["isServiceMapEnabled"] && <ServiceMapModal

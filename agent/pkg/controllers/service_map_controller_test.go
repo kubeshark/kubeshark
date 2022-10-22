@@ -7,12 +7,12 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/up9inc/mizu/agent/pkg/dependency"
-	"github.com/up9inc/mizu/agent/pkg/servicemap"
+	"github.com/up9inc/kubeshark/agent/pkg/dependency"
+	"github.com/up9inc/kubeshark/agent/pkg/servicemap"
 
 	"github.com/gin-gonic/gin"
 	"github.com/stretchr/testify/suite"
-	tapApi "github.com/up9inc/mizu/tap/api"
+	tapApi "github.com/up9inc/kubeshark/tap/api"
 )
 
 const (

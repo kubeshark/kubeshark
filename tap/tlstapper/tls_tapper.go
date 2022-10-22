@@ -7,8 +7,8 @@ import (
 	"github.com/cilium/ebpf/rlimit"
 	"github.com/go-errors/errors"
 	"github.com/moby/moby/pkg/parsers/kernel"
-	"github.com/up9inc/mizu/logger"
-	"github.com/up9inc/mizu/tap/api"
+	"github.com/up9inc/kubeshark/logger"
+	"github.com/up9inc/kubeshark/tap/api"
 )
 
 const GlobalTapPid = 0

@@ -5,9 +5,9 @@ import (
 
 	"github.com/gin-gonic/gin"
 	basenine "github.com/up9inc/basenine/client/go"
-	"github.com/up9inc/mizu/agent/pkg/app"
-	"github.com/up9inc/mizu/agent/pkg/config"
-	"github.com/up9inc/mizu/shared"
+	"github.com/up9inc/kubeshark/agent/pkg/app"
+	"github.com/up9inc/kubeshark/agent/pkg/config"
+	"github.com/up9inc/kubeshark/shared"
 )
 
 func Flush(c *gin.Context) {

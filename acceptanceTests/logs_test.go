@@ -81,27 +81,27 @@ func TestLogs(t *testing.T) {
 		logsFileNames = append(logsFileNames, file.Name)
 	}
 
-	if !Contains(logsFileNames, "mizu.mizu-api-server.mizu-api-server.log") {
+	if !Contains(logsFileNames, "kubeshark.kubeshark-api-server.kubeshark-api-server.log") {
 		t.Errorf("api server logs not found")
 		return
 	}
 
-	if !Contains(logsFileNames, "mizu.mizu-api-server.basenine.log") {
+	if !Contains(logsFileNames, "kubeshark.kubeshark-api-server.basenine.log") {
 		t.Errorf("basenine logs not found")
 		return
 	}
 
-	if !Contains(logsFileNames, "mizu_cli.log") {
+	if !Contains(logsFileNames, "kubeshark_cli.log") {
 		t.Errorf("cli logs not found")
 		return
 	}
 
-	if !Contains(logsFileNames, "mizu_events.log") {
+	if !Contains(logsFileNames, "kubeshark_events.log") {
 		t.Errorf("events logs not found")
 		return
 	}
 
-	if !ContainsPartOfValue(logsFileNames, "mizu.mizu-tapper-daemon-set") {
+	if !ContainsPartOfValue(logsFileNames, "kubeshark.kubeshark-tapper-daemon-set") {
 		t.Errorf("tapper logs not found")
 		return
 	}
@@ -179,27 +179,27 @@ func TestLogsPath(t *testing.T) {
 		logsFileNames = append(logsFileNames, file.Name)
 	}
 
-	if !Contains(logsFileNames, "mizu.mizu-api-server.mizu-api-server.log") {
+	if !Contains(logsFileNames, "kubeshark.kubeshark-api-server.kubeshark-api-server.log") {
 		t.Errorf("api server logs not found")
 		return
 	}
 
-	if !Contains(logsFileNames, "mizu.mizu-api-server.basenine.log") {
+	if !Contains(logsFileNames, "kubeshark.kubeshark-api-server.basenine.log") {
 		t.Errorf("basenine logs not found")
 		return
 	}
 
-	if !Contains(logsFileNames, "mizu_cli.log") {
+	if !Contains(logsFileNames, "kubeshark_cli.log") {
 		t.Errorf("cli logs not found")
 		return
 	}
 
-	if !Contains(logsFileNames, "mizu_events.log") {
+	if !Contains(logsFileNames, "kubeshark_events.log") {
 		t.Errorf("events logs not found")
 		return
 	}
 
-	if !ContainsPartOfValue(logsFileNames, "mizu.mizu-tapper-daemon-set") {
+	if !ContainsPartOfValue(logsFileNames, "kubeshark.kubeshark-tapper-daemon-set") {
 		t.Errorf("tapper logs not found")
 		return
 	}

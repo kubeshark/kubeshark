@@ -4,7 +4,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/up9inc/mizu/tap/api"
+	"github.com/up9inc/kubeshark/tap/api"
 )
 
 const userAgent = "user-agent"

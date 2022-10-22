@@ -14,7 +14,7 @@ import (
 	"github.com/fatih/camelcase"
 	"github.com/ohler55/ojg/jp"
 	"github.com/ohler55/ojg/oj"
-	"github.com/up9inc/mizu/tap/api"
+	"github.com/up9inc/kubeshark/tap/api"
 )
 
 type KafkaPayload struct {

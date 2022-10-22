@@ -1,7 +1,7 @@
 import React from "react";
 import styles from "./InformationIcon.module.sass"
 
-const DEFUALT_LINK = "https://getmizu.io/docs"
+const DEFUALT_LINK = "https://getkubeshark.io/docs"
 
 interface LinkProps {
     link?: string,

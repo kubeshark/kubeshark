@@ -11,7 +11,7 @@ on:
       - 'main'
 
 concurrency:
-  group: mizu-tests-validation-${{ github.ref }}
+  group: kubeshark-tests-validation-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:

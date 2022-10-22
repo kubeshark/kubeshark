@@ -3,10 +3,10 @@ package check
 import (
 	"fmt"
 
-	"github.com/up9inc/mizu/cli/uiUtils"
-	"github.com/up9inc/mizu/logger"
-	"github.com/up9inc/mizu/shared/kubernetes"
-	"github.com/up9inc/mizu/shared/semver"
+	"github.com/up9inc/kubeshark/cli/uiUtils"
+	"github.com/up9inc/kubeshark/logger"
+	"github.com/up9inc/kubeshark/shared/kubernetes"
+	"github.com/up9inc/kubeshark/shared/semver"
 )
 
 func KubernetesVersion(kubernetesVersion *semver.SemVersion) bool {

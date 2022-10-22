@@ -6,9 +6,9 @@ import (
 	"sync"
 	"time"
 
-	"github.com/up9inc/mizu/logger"
-	"github.com/up9inc/mizu/tap/api"
-	"github.com/up9inc/mizu/tap/diagnose"
+	"github.com/up9inc/kubeshark/logger"
+	"github.com/up9inc/kubeshark/tap/api"
+	"github.com/up9inc/kubeshark/tap/diagnose"
 )
 
 type tcpStreamMap struct {

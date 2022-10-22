@@ -5,7 +5,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 	basenine "github.com/up9inc/basenine/client/go"
-	"github.com/up9inc/mizu/shared"
+	"github.com/up9inc/kubeshark/shared"
 )
 
 type ValidateResponse struct {

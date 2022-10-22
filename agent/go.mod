@@ -1,4 +1,4 @@
-module github.com/up9inc/mizu/agent
+module github.com/up9inc/kubeshark/agent
 
 go 1.17
 
@@ -20,15 +20,15 @@ require (
 	github.com/orcaman/concurrent-map v1.0.0
 	github.com/stretchr/testify v1.7.0
 	github.com/up9inc/basenine/client/go v0.0.0-20220612112747-3b28eeac9c51
-	github.com/up9inc/mizu/logger v0.0.0
-	github.com/up9inc/mizu/shared v0.0.0
-	github.com/up9inc/mizu/tap v0.0.0
-	github.com/up9inc/mizu/tap/api v0.0.0
-	github.com/up9inc/mizu/tap/dbgctl v0.0.0
-	github.com/up9inc/mizu/tap/extensions/amqp v0.0.0
-	github.com/up9inc/mizu/tap/extensions/http v0.0.0
-	github.com/up9inc/mizu/tap/extensions/kafka v0.0.0
-	github.com/up9inc/mizu/tap/extensions/redis v0.0.0
+	github.com/up9inc/kubeshark/logger v0.0.0
+	github.com/up9inc/kubeshark/shared v0.0.0
+	github.com/up9inc/kubeshark/tap v0.0.0
+	github.com/up9inc/kubeshark/tap/api v0.0.0
+	github.com/up9inc/kubeshark/tap/dbgctl v0.0.0
+	github.com/up9inc/kubeshark/tap/extensions/amqp v0.0.0
+	github.com/up9inc/kubeshark/tap/extensions/http v0.0.0
+	github.com/up9inc/kubeshark/tap/extensions/kafka v0.0.0
+	github.com/up9inc/kubeshark/tap/extensions/redis v0.0.0
 	github.com/wI2L/jsondiff v0.1.1
 	k8s.io/api v0.23.3
 	k8s.io/apimachinery v0.23.3
@@ -144,20 +144,20 @@ require (
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
 
-replace github.com/up9inc/mizu/logger v0.0.0 => ../logger
+replace github.com/up9inc/kubeshark/logger v0.0.0 => ../logger
 
-replace github.com/up9inc/mizu/shared v0.0.0 => ../shared
+replace github.com/up9inc/kubeshark/shared v0.0.0 => ../shared
 
-replace github.com/up9inc/mizu/tap v0.0.0 => ../tap
+replace github.com/up9inc/kubeshark/tap v0.0.0 => ../tap
 
-replace github.com/up9inc/mizu/tap/api v0.0.0 => ../tap/api
+replace github.com/up9inc/kubeshark/tap/api v0.0.0 => ../tap/api
 
-replace github.com/up9inc/mizu/tap/extensions/amqp v0.0.0 => ../tap/extensions/amqp
+replace github.com/up9inc/kubeshark/tap/extensions/amqp v0.0.0 => ../tap/extensions/amqp
 
-replace github.com/up9inc/mizu/tap/extensions/http v0.0.0 => ../tap/extensions/http
+replace github.com/up9inc/kubeshark/tap/extensions/http v0.0.0 => ../tap/extensions/http
 
-replace github.com/up9inc/mizu/tap/extensions/kafka v0.0.0 => ../tap/extensions/kafka
+replace github.com/up9inc/kubeshark/tap/extensions/kafka v0.0.0 => ../tap/extensions/kafka
 
-replace github.com/up9inc/mizu/tap/extensions/redis v0.0.0 => ../tap/extensions/redis
+replace github.com/up9inc/kubeshark/tap/extensions/redis v0.0.0 => ../tap/extensions/redis
 
-replace github.com/up9inc/mizu/tap/dbgctl v0.0.0 => ../tap/dbgctl
+replace github.com/up9inc/kubeshark/tap/dbgctl v0.0.0 => ../tap/dbgctl

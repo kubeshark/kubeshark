@@ -85,7 +85,7 @@ export const CodeEditorWrap: FC<QueryFormProps> = ({ query, onQueryChange, valid
     return <CodeEditor
         value={query}
         language="py"
-        placeholder="Mizu Filter Syntax"
+        placeholder="Kubeshark Filter Syntax"
         onChange={(event) => onQueryChange(event.target.value)}
         padding={8}
         style={{
@@ -187,7 +187,7 @@ export const QueryForm: React.FC<QueryFormProps> = ({ validateQuery, reopenConne
                         Filtering Guide (Cheatsheet)
                     </Typography>
                     <Typography component={'span'} id="modal-modal-description">
-                        <p>Mizu has a rich filtering syntax that let's you query the results both flexibly and efficiently.</p>
+                        <p>Kubeshark has a rich filtering syntax that let's you query the results both flexibly and efficiently.</p>
                         <p>Here are some examples that you can try;</p>
                     </Typography>
                     <Grid container>
@@ -244,7 +244,7 @@ export const QueryForm: React.FC<QueryFormProps> = ({ validateQuery, reopenConne
                         <Divider className={styles.divider1} orientation="vertical" flexItem />
                         <Grid item xs style={{margin: "10px"}}>
                             <Typography id="modal-modal-description">
-                                Since Mizu supports various protocols like gRPC, AMQP, Kafka and Redis. It's possible to write complex queries that match multiple protocols like this:
+                                Since Kubeshark supports various protocols like gRPC, AMQP, Kafka and Redis. It's possible to write complex queries that match multiple protocols like this:
                             </Typography>
                             <SyntaxHighlighter
                                 showLineNumbers={false}

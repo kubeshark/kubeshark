@@ -5,8 +5,8 @@ import (
 	"testing"
 	"time"
 
-	"github.com/up9inc/mizu/agent/pkg/providers"
-	"github.com/up9inc/mizu/tap/api"
+	"github.com/up9inc/kubeshark/agent/pkg/providers"
+	"github.com/up9inc/kubeshark/tap/api"
 )
 
 func TestNoEntryAddedCount(t *testing.T) {

@@ -5,7 +5,7 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/up9inc/mizu/logger"
+	"github.com/up9inc/kubeshark/logger"
 )
 
 var numberRegex = regexp.MustCompile("[0-9]+")

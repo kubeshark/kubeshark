@@ -7,11 +7,11 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/up9inc/mizu/cli/utils"
+	"github.com/up9inc/kubeshark/cli/utils"
 
-	"github.com/up9inc/mizu/cli/config"
-	"github.com/up9inc/mizu/logger"
-	"github.com/up9inc/mizu/shared"
+	"github.com/up9inc/kubeshark/cli/config"
+	"github.com/up9inc/kubeshark/logger"
+	"github.com/up9inc/kubeshark/shared"
 	core "k8s.io/api/core/v1"
 )
 
