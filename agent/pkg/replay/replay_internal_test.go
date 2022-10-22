@@ -11,8 +11,8 @@ import (
 	"encoding/json"
 
 	"github.com/google/uuid"
-	tapApi "github.com/up9inc/kubeshark/tap/api"
-	kubesharkhttp "github.com/up9inc/kubeshark/tap/extensions/http"
+	tapApi "github.com/kubeshark/kubeshark/tap/api"
+	kubesharkhttp "github.com/kubeshark/kubeshark/tap/extensions/http"
 )
 
 func TestValid(t *testing.T) {

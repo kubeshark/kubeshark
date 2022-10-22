@@ -5,11 +5,11 @@ import (
 	"fmt"
 	"regexp"
 
-	"github.com/up9inc/kubeshark/cli/apiserver"
-	"github.com/up9inc/kubeshark/cli/config"
-	"github.com/up9inc/kubeshark/cli/uiUtils"
-	"github.com/up9inc/kubeshark/logger"
-	"github.com/up9inc/kubeshark/shared/kubernetes"
+	"github.com/kubeshark/kubeshark/cli/apiserver"
+	"github.com/kubeshark/kubeshark/cli/config"
+	"github.com/kubeshark/kubeshark/cli/uiUtils"
+	"github.com/kubeshark/kubeshark/logger"
+	"github.com/kubeshark/kubeshark/shared/kubernetes"
 )
 
 func ServerConnection(kubernetesProvider *kubernetes.Provider) bool {

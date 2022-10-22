@@ -9,8 +9,8 @@ import (
 	"time"
 
 	"github.com/jinzhu/copier"
-	"github.com/up9inc/kubeshark/logger"
-	"github.com/up9inc/kubeshark/tap/api"
+	"github.com/kubeshark/kubeshark/logger"
+	"github.com/kubeshark/kubeshark/tap/api"
 )
 
 type GeneralStats struct {

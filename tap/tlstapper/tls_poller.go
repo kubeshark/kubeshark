@@ -16,8 +16,8 @@ import (
 	"github.com/cilium/ebpf/perf"
 	"github.com/go-errors/errors"
 	"github.com/hashicorp/golang-lru/simplelru"
-	"github.com/up9inc/kubeshark/logger"
-	"github.com/up9inc/kubeshark/tap/api"
+	"github.com/kubeshark/kubeshark/logger"
+	"github.com/kubeshark/kubeshark/tap/api"
 )
 
 const (

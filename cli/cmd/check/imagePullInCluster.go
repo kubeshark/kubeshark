@@ -6,9 +6,9 @@ import (
 	"regexp"
 	"time"
 
-	"github.com/up9inc/kubeshark/cli/uiUtils"
-	"github.com/up9inc/kubeshark/logger"
-	"github.com/up9inc/kubeshark/shared/kubernetes"
+	"github.com/kubeshark/kubeshark/cli/uiUtils"
+	"github.com/kubeshark/kubeshark/logger"
+	"github.com/kubeshark/kubeshark/shared/kubernetes"
 	core "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -85,7 +85,7 @@ func createImagePullInClusterPod(ctx context.Context, kubernetesProvider *kubern
 			Containers: []core.Container{
 				{
 					Name:            "probe",
-					Image:           "up9inc/busybox",
+					Image:           "kubeshark/busybox",
 					ImagePullPolicy: "Always",
 					Command:         []string{"cat"},
 					Stdin:           true,

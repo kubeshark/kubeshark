@@ -4,12 +4,12 @@ import (
 	"context"
 
 	"github.com/creasty/defaults"
+	"github.com/kubeshark/kubeshark/cli/config"
+	"github.com/kubeshark/kubeshark/cli/config/configStructs"
+	"github.com/kubeshark/kubeshark/cli/errormessage"
+	"github.com/kubeshark/kubeshark/cli/kubeshark/fsUtils"
+	"github.com/kubeshark/kubeshark/logger"
 	"github.com/spf13/cobra"
-	"github.com/up9inc/kubeshark/cli/config"
-	"github.com/up9inc/kubeshark/cli/config/configStructs"
-	"github.com/up9inc/kubeshark/cli/errormessage"
-	"github.com/up9inc/kubeshark/cli/kubeshark/fsUtils"
-	"github.com/up9inc/kubeshark/logger"
 )
 
 var logsCmd = &cobra.Command{

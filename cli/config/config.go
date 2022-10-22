@@ -9,13 +9,13 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/up9inc/kubeshark/logger"
-	"github.com/up9inc/kubeshark/shared"
+	"github.com/kubeshark/kubeshark/logger"
+	"github.com/kubeshark/kubeshark/shared"
 
 	"github.com/creasty/defaults"
+	"github.com/kubeshark/kubeshark/cli/uiUtils"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
-	"github.com/up9inc/kubeshark/cli/uiUtils"
 	"gopkg.in/yaml.v3"
 )
 

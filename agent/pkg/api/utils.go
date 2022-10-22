@@ -3,9 +3,9 @@ package api
 import (
 	"encoding/json"
 
-	"github.com/up9inc/kubeshark/agent/pkg/providers/tappedPods"
-	"github.com/up9inc/kubeshark/logger"
-	"github.com/up9inc/kubeshark/shared"
+	"github.com/kubeshark/kubeshark/agent/pkg/providers/tappedPods"
+	"github.com/kubeshark/kubeshark/logger"
+	"github.com/kubeshark/kubeshark/shared"
 )
 
 func BroadcastTappedPodsStatus() {

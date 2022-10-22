@@ -1,7 +1,7 @@
 package servicemap
 
 import (
-	tapApi "github.com/up9inc/kubeshark/tap/api"
+	tapApi "github.com/kubeshark/kubeshark/tap/api"
 )
 
 type ServiceMapStatus struct {

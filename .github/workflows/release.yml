@@ -55,7 +55,7 @@ jobs:
         uses: docker/metadata-action@v3
         with:
           images: |
-            up9inc/kubeshark
+            kubeshark/kubeshark
           tags: |
             type=raw,${{ steps.versioning.outputs.version }}
             type=raw,value=latest,enable=${{ steps.condval.outputs.value == 'stable' }}
@@ -118,7 +118,7 @@ jobs:
         uses: docker/metadata-action@v3
         with:
           images: |
-            up9inc/kubeshark
+            kubeshark/kubeshark
           tags: |
             type=raw,${{ steps.versioning.outputs.version }}
             type=raw,value=latest,enable=${{ steps.condval.outputs.value == 'stable' }}

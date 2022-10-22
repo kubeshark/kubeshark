@@ -1,6 +1,6 @@
 package diagnose
 
-import "github.com/up9inc/kubeshark/logger"
+import "github.com/kubeshark/kubeshark/logger"
 
 type tapperInternalStats struct {
 	Ipdefrag            int

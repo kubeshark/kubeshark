@@ -1,7 +1,7 @@
 package routes
 
 import (
-	"github.com/up9inc/kubeshark/agent/pkg/controllers"
+	"github.com/kubeshark/kubeshark/agent/pkg/controllers"
 
 	"github.com/gin-gonic/gin"
 )

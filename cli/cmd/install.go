@@ -2,9 +2,9 @@ package cmd
 
 import (
 	"github.com/creasty/defaults"
+	"github.com/kubeshark/kubeshark/cli/config/configStructs"
+	"github.com/kubeshark/kubeshark/logger"
 	"github.com/spf13/cobra"
-	"github.com/up9inc/kubeshark/cli/config/configStructs"
-	"github.com/up9inc/kubeshark/logger"
 )
 
 var installCmd = &cobra.Command{

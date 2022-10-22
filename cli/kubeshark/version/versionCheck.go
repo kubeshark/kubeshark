@@ -9,9 +9,9 @@ import (
 	"strings"
 	"time"
 
-	"github.com/up9inc/kubeshark/cli/kubeshark"
-	"github.com/up9inc/kubeshark/cli/pkg/version"
-	"github.com/up9inc/kubeshark/logger"
+	"github.com/kubeshark/kubeshark/cli/kubeshark"
+	"github.com/kubeshark/kubeshark/cli/pkg/version"
+	"github.com/kubeshark/kubeshark/logger"
 
 	"github.com/google/go-github/v37/github"
 )
@@ -20,7 +20,7 @@ func CheckNewerVersion(versionChan chan string) {
 	logger.Log.Debugf("Checking for newer version...")
 	start := time.Now()
 	client := github.NewClient(nil)
-	latestRelease, _, err := client.Repositories.GetLatestRelease(context.Background(), "up9inc", "kubeshark")
+	latestRelease, _, err := client.Repositories.GetLatestRelease(context.Background(), "kubeshark", "kubeshark")
 	if err != nil {
 		logger.Log.Debugf("[ERROR] Failed to get latest release")
 		versionChan <- ""

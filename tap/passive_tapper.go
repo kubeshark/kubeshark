@@ -18,13 +18,13 @@ import (
 	"strings"
 	"time"
 
+	"github.com/kubeshark/kubeshark/logger"
+	"github.com/kubeshark/kubeshark/tap/api"
+	"github.com/kubeshark/kubeshark/tap/diagnose"
+	"github.com/kubeshark/kubeshark/tap/source"
+	"github.com/kubeshark/kubeshark/tap/tlstapper"
 	"github.com/shirou/gopsutil/cpu"
 	"github.com/struCoder/pidusage"
-	"github.com/up9inc/kubeshark/logger"
-	"github.com/up9inc/kubeshark/tap/api"
-	"github.com/up9inc/kubeshark/tap/diagnose"
-	"github.com/up9inc/kubeshark/tap/source"
-	"github.com/up9inc/kubeshark/tap/tlstapper"
 	v1 "k8s.io/api/core/v1"
 )
 

@@ -8,7 +8,7 @@ import (
 	"strings"
 
 	"github.com/chanced/openapi"
-	"github.com/up9inc/kubeshark/logger"
+	"github.com/kubeshark/kubeshark/logger"
 )
 
 type NodePath = []string

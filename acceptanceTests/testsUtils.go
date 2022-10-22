@@ -21,7 +21,7 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/homedir"
 
-	"github.com/up9inc/kubeshark/shared"
+	"github.com/kubeshark/kubeshark/shared"
 )
 
 const (

@@ -11,12 +11,12 @@ import (
 	"strings"
 	"time"
 
-	"github.com/up9inc/kubeshark/shared"
+	"github.com/kubeshark/kubeshark/shared"
 	"k8s.io/apimachinery/pkg/util/httpstream"
 	"k8s.io/client-go/tools/portforward"
 	"k8s.io/client-go/transport/spdy"
 
-	"github.com/up9inc/kubeshark/logger"
+	"github.com/kubeshark/kubeshark/logger"
 	"k8s.io/kubectl/pkg/proxy"
 )
 

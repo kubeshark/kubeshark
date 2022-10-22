@@ -5,14 +5,14 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/up9inc/kubeshark/cli/utils"
+	"github.com/kubeshark/kubeshark/cli/utils"
 
-	"github.com/up9inc/kubeshark/cli/apiserver"
-	"github.com/up9inc/kubeshark/cli/config"
-	"github.com/up9inc/kubeshark/cli/kubeshark/fsUtils"
-	"github.com/up9inc/kubeshark/cli/uiUtils"
-	"github.com/up9inc/kubeshark/logger"
-	"github.com/up9inc/kubeshark/shared/kubernetes"
+	"github.com/kubeshark/kubeshark/cli/apiserver"
+	"github.com/kubeshark/kubeshark/cli/config"
+	"github.com/kubeshark/kubeshark/cli/kubeshark/fsUtils"
+	"github.com/kubeshark/kubeshark/cli/uiUtils"
+	"github.com/kubeshark/kubeshark/logger"
+	"github.com/kubeshark/kubeshark/shared/kubernetes"
 )
 
 func runKubesharkView() {

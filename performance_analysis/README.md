@@ -64,7 +64,7 @@ Tapper can be run with various debug modes:
 * No Send - Emit the request response pair, but don't send them to the Api Server.
 * Regular mode
 
-![Tapper Modes](https://github.com/up9inc/kubeshark/blob/debug/profile-tapper-benchmark/performance_analysis/tapper-modes.png)
+![Tapper Modes](https://github.com/kubeshark/kubeshark/blob/debug/profile-tapper-benchmark/performance_analysis/tapper-modes.png)
 
 # Run benchmark with various tapper modes
 
@@ -103,5 +103,5 @@ export=KUBESHARK_BENCHMARK_CLIENTS_COUNT=5 # How many clients should run in para
 
 An example output graph from a 15 min run with 15K payload and 1000 QPS looks like
 
-![Example Graph](https://github.com/up9inc/kubeshark/blob/debug/profile-tapper-benchmark/performance_analysis/example-graph.png)
+![Example Graph](https://github.com/kubeshark/kubeshark/blob/debug/profile-tapper-benchmark/performance_analysis/example-graph.png)
 

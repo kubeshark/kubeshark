@@ -9,15 +9,15 @@ import (
 	core "k8s.io/api/core/v1"
 
 	"github.com/gin-gonic/gin"
-	"github.com/up9inc/kubeshark/agent/pkg/api"
-	"github.com/up9inc/kubeshark/agent/pkg/holder"
-	"github.com/up9inc/kubeshark/agent/pkg/providers"
-	"github.com/up9inc/kubeshark/agent/pkg/providers/tappedPods"
-	"github.com/up9inc/kubeshark/agent/pkg/providers/tappers"
-	"github.com/up9inc/kubeshark/agent/pkg/validation"
-	"github.com/up9inc/kubeshark/logger"
-	"github.com/up9inc/kubeshark/shared"
-	"github.com/up9inc/kubeshark/shared/kubernetes"
+	"github.com/kubeshark/kubeshark/agent/pkg/api"
+	"github.com/kubeshark/kubeshark/agent/pkg/holder"
+	"github.com/kubeshark/kubeshark/agent/pkg/providers"
+	"github.com/kubeshark/kubeshark/agent/pkg/providers/tappedPods"
+	"github.com/kubeshark/kubeshark/agent/pkg/providers/tappers"
+	"github.com/kubeshark/kubeshark/agent/pkg/validation"
+	"github.com/kubeshark/kubeshark/logger"
+	"github.com/kubeshark/kubeshark/shared"
+	"github.com/kubeshark/kubeshark/shared/kubernetes"
 )
 
 func HealthCheck(c *gin.Context) {

@@ -4,7 +4,7 @@ import (
 	"reflect"
 	"runtime/debug"
 
-	"github.com/up9inc/kubeshark/logger"
+	"github.com/kubeshark/kubeshark/logger"
 )
 
 func HandleExcWrapper(fn interface{}, params ...interface{}) (result []reflect.Value) {

@@ -5,8 +5,8 @@ import (
 	"strings"
 	"testing"
 
+	tapApi "github.com/kubeshark/kubeshark/tap/api"
 	"github.com/stretchr/testify/suite"
-	tapApi "github.com/up9inc/kubeshark/tap/api"
 )
 
 const (

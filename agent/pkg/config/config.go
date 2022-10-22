@@ -6,7 +6,7 @@ import (
 	"io/ioutil"
 	"os"
 
-	"github.com/up9inc/kubeshark/shared"
+	"github.com/kubeshark/kubeshark/shared"
 )
 
 // these values are used when the config.json file is not present

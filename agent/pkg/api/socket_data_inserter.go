@@ -3,12 +3,13 @@ package api
 import (
 	"encoding/json"
 	"fmt"
-	basenine "github.com/up9inc/basenine/client/go"
-	"github.com/up9inc/kubeshark/logger"
-	"github.com/up9inc/kubeshark/shared"
-	"github.com/up9inc/kubeshark/tap/api"
 	"sync"
 	"time"
+
+	"github.com/kubeshark/kubeshark/logger"
+	"github.com/kubeshark/kubeshark/shared"
+	"github.com/kubeshark/kubeshark/tap/api"
+	basenine "github.com/up9inc/basenine/client/go"
 )
 
 type EntryInserter interface {

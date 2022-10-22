@@ -11,19 +11,19 @@ import (
 	"strings"
 	"time"
 
-	"github.com/up9inc/kubeshark/agent/pkg/dependency"
-	"github.com/up9inc/kubeshark/agent/pkg/oas"
-	"github.com/up9inc/kubeshark/agent/pkg/servicemap"
+	"github.com/kubeshark/kubeshark/agent/pkg/dependency"
+	"github.com/kubeshark/kubeshark/agent/pkg/oas"
+	"github.com/kubeshark/kubeshark/agent/pkg/servicemap"
 
-	"github.com/up9inc/kubeshark/agent/pkg/har"
-	"github.com/up9inc/kubeshark/agent/pkg/holder"
-	"github.com/up9inc/kubeshark/agent/pkg/providers"
+	"github.com/kubeshark/kubeshark/agent/pkg/har"
+	"github.com/kubeshark/kubeshark/agent/pkg/holder"
+	"github.com/kubeshark/kubeshark/agent/pkg/providers"
 
-	"github.com/up9inc/kubeshark/agent/pkg/resolver"
-	"github.com/up9inc/kubeshark/agent/pkg/utils"
+	"github.com/kubeshark/kubeshark/agent/pkg/resolver"
+	"github.com/kubeshark/kubeshark/agent/pkg/utils"
 
-	"github.com/up9inc/kubeshark/logger"
-	tapApi "github.com/up9inc/kubeshark/tap/api"
+	"github.com/kubeshark/kubeshark/logger"
+	tapApi "github.com/kubeshark/kubeshark/tap/api"
 )
 
 var k8sResolver *resolver.Resolver

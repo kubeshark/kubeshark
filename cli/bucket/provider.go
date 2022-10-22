@@ -2,7 +2,7 @@ package bucket
 
 import (
 	"fmt"
-	"github.com/up9inc/kubeshark/cli/utils"
+	"github.com/kubeshark/kubeshark/cli/utils"
 	"io/ioutil"
 	"net/http"
 	"time"

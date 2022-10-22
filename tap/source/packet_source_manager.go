@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/up9inc/kubeshark/logger"
-	"github.com/up9inc/kubeshark/tap/api"
+	"github.com/kubeshark/kubeshark/logger"
+	"github.com/kubeshark/kubeshark/tap/api"
 	v1 "k8s.io/api/core/v1"
 )
 

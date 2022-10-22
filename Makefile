@@ -59,7 +59,7 @@ docker: ## Build and publish agent docker image.
 
 agent-docker: ## Build agent docker image.
 	@echo "Building agent docker image"
-	@docker build -t up9inc/kubeshark:devlatest .
+	@docker build -t kubeshark/kubeshark:devlatest .
 
 push: push-docker push-cli ## Build and publish agent docker image & CLI.
 

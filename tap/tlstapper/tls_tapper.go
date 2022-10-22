@@ -6,9 +6,9 @@ import (
 
 	"github.com/cilium/ebpf/rlimit"
 	"github.com/go-errors/errors"
+	"github.com/kubeshark/kubeshark/logger"
+	"github.com/kubeshark/kubeshark/tap/api"
 	"github.com/moby/moby/pkg/parsers/kernel"
-	"github.com/up9inc/kubeshark/logger"
-	"github.com/up9inc/kubeshark/tap/api"
 )
 
 const GlobalTapPid = 0

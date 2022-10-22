@@ -4,11 +4,11 @@ import (
 	"fmt"
 
 	"github.com/creasty/defaults"
+	"github.com/kubeshark/kubeshark/cli/config"
+	"github.com/kubeshark/kubeshark/cli/config/configStructs"
+	"github.com/kubeshark/kubeshark/cli/uiUtils"
+	"github.com/kubeshark/kubeshark/logger"
 	"github.com/spf13/cobra"
-	"github.com/up9inc/kubeshark/cli/config"
-	"github.com/up9inc/kubeshark/cli/config/configStructs"
-	"github.com/up9inc/kubeshark/cli/uiUtils"
-	"github.com/up9inc/kubeshark/logger"
 )
 
 var configCmd = &cobra.Command{

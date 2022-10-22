@@ -5,7 +5,7 @@ import (
 	"fmt"
 	regexpsyntax "regexp/syntax"
 
-	"github.com/up9inc/kubeshark/cli/config"
+	"github.com/kubeshark/kubeshark/cli/config"
 
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 )

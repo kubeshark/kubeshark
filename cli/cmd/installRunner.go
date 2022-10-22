@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/up9inc/kubeshark/cli/bucket"
-	"github.com/up9inc/kubeshark/cli/config"
-	"github.com/up9inc/kubeshark/logger"
+	"github.com/kubeshark/kubeshark/cli/bucket"
+	"github.com/kubeshark/kubeshark/cli/config"
+	"github.com/kubeshark/kubeshark/logger"
 )
 
 func runKubesharkInstall() {

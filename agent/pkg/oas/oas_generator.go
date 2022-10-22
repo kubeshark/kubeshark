@@ -5,9 +5,9 @@ import (
 	"net/url"
 	"sync"
 
-	"github.com/up9inc/kubeshark/agent/pkg/har"
-	"github.com/up9inc/kubeshark/logger"
-	"github.com/up9inc/kubeshark/tap/api"
+	"github.com/kubeshark/kubeshark/agent/pkg/har"
+	"github.com/kubeshark/kubeshark/logger"
+	"github.com/kubeshark/kubeshark/tap/api"
 )
 
 var (

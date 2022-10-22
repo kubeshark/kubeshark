@@ -10,9 +10,9 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/up9inc/kubeshark/agent/pkg/app"
-	tapApi "github.com/up9inc/kubeshark/tap/api"
-	kubesharkhttp "github.com/up9inc/kubeshark/tap/extensions/http"
+	"github.com/kubeshark/kubeshark/agent/pkg/app"
+	tapApi "github.com/kubeshark/kubeshark/tap/api"
+	kubesharkhttp "github.com/kubeshark/kubeshark/tap/extensions/http"
 )
 
 var (

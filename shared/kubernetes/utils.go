@@ -3,7 +3,7 @@ package kubernetes
 import (
 	"regexp"
 
-	"github.com/up9inc/kubeshark/shared"
+	"github.com/kubeshark/kubeshark/shared"
 	core "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )

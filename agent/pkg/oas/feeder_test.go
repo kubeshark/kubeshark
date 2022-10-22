@@ -14,9 +14,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/up9inc/kubeshark/agent/pkg/har"
+	"github.com/kubeshark/kubeshark/agent/pkg/har"
 
-	"github.com/up9inc/kubeshark/logger"
+	"github.com/kubeshark/kubeshark/logger"
 )
 
 func getFiles(baseDir string) (result []string, err error) {

@@ -2,7 +2,7 @@ package routes
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/up9inc/kubeshark/agent/pkg/controllers"
+	"github.com/kubeshark/kubeshark/agent/pkg/controllers"
 )
 
 func StatusRoutes(ginApp *gin.Engine) {

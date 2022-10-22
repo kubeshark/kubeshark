@@ -57,6 +57,6 @@ jobs:
         with:
           context: .
           push: false
-          tags: up9inc/kubeshark:devlatest
+          tags: kubeshark/kubeshark:devlatest
           cache-from: type=gha
           cache-to: type=gha,mode=max

@@ -1,4 +1,4 @@
-kubeshark_test_files_repo=https://github.com/up9inc/kubeshark-tests-data
+kubeshark_test_files_repo=https://github.com/kubeshark/kubeshark-tests-data
 kubeshark_test_files_tmp_folder="kubeshark-test-files-tmp"
 
 requested_folder=$1

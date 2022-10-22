@@ -1,17 +1,17 @@
 ![Kubeshark: The API Traffic Viewer for Kubernetes](assets/kubeshark-logo.svg)
 
 <p align="center">
-    <a href="https://github.com/up9inc/kubeshark/blob/main/LICENSE">
-        <img alt="GitHub License" src="https://img.shields.io/github/license/up9inc/kubeshark?logo=GitHub&style=flat-square">
+    <a href="https://github.com/kubeshark/kubeshark/blob/main/LICENSE">
+        <img alt="GitHub License" src="https://img.shields.io/github/license/kubeshark/kubeshark?logo=GitHub&style=flat-square">
     </a>
-    <a href="https://github.com/up9inc/kubeshark/releases/latest">
-        <img alt="GitHub Latest Release" src="https://img.shields.io/github/v/release/up9inc/kubeshark?logo=GitHub&style=flat-square">
+    <a href="https://github.com/kubeshark/kubeshark/releases/latest">
+        <img alt="GitHub Latest Release" src="https://img.shields.io/github/v/release/kubeshark/kubeshark?logo=GitHub&style=flat-square">
     </a>
-    <a href="https://hub.docker.com/r/up9inc/kubeshark">
-      <img alt="Docker pulls" src="https://img.shields.io/docker/pulls/up9inc/kubeshark?color=%23099cec&logo=Docker&style=flat-square">
+    <a href="https://hub.docker.com/r/kubeshark/kubeshark">
+      <img alt="Docker pulls" src="https://img.shields.io/docker/pulls/kubeshark/kubeshark?color=%23099cec&logo=Docker&style=flat-square">
     </a>
-    <a href="https://hub.docker.com/r/up9inc/kubeshark">
-      <img alt="Image size" src="https://img.shields.io/docker/image-size/up9inc/kubeshark/latest?logo=Docker&style=flat-square">
+    <a href="https://hub.docker.com/r/kubeshark/kubeshark">
+      <img alt="Image size" src="https://img.shields.io/docker/image-size/kubeshark/kubeshark/latest?logo=Docker&style=flat-square">
     </a>
     <a href="https://join.slack.com/t/up9/shared_invite/zt-tfjnduli-QzlR8VV4Z1w3YnPIAJfhlQ">
       <img alt="Slack" src="https://img.shields.io/badge/slack-join_chat-white.svg?logo=slack&style=social">
@@ -35,7 +35,7 @@ For more comprehensive documentation, start with the [docs](https://getkubeshark
 ## Working in this repo
 
 We ❤️ pull requests! See [CONTRIBUTING.md](docs/CONTRIBUTING.md) for info on contributing changes. <br />
-In the wiki you can find an intorduction to [kubeshark components](https://github.com/up9inc/kubeshark/wiki/Introduction-to-Kubeshark), and [development workflows](https://github.com/up9inc/kubeshark/wiki/Development-Workflows).
+In the wiki you can find an intorduction to [kubeshark components](https://github.com/kubeshark/kubeshark/wiki/Introduction-to-Kubeshark), and [development workflows](https://github.com/kubeshark/kubeshark/wiki/Development-Workflows).
 
 ## Code of Conduct
 

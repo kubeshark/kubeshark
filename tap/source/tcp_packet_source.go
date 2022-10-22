@@ -7,10 +7,10 @@ import (
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/ip4defrag"
 	"github.com/google/gopacket/layers"
-	"github.com/up9inc/kubeshark/logger"
-	"github.com/up9inc/kubeshark/tap/api"
-	"github.com/up9inc/kubeshark/tap/dbgctl"
-	"github.com/up9inc/kubeshark/tap/diagnose"
+	"github.com/kubeshark/kubeshark/logger"
+	"github.com/kubeshark/kubeshark/tap/api"
+	"github.com/kubeshark/kubeshark/tap/dbgctl"
+	"github.com/kubeshark/kubeshark/tap/diagnose"
 )
 
 type Handle interface {

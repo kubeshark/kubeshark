@@ -110,10 +110,10 @@ RUN GOARCH=${BUILDARCH} go generate tls_tapper.go
 WORKDIR /app/agent-build
 
 RUN go build -ldflags="-extldflags=-static -s -w \
-    -X 'github.com/up9inc/kubeshark/agent/pkg/version.GitCommitHash=${COMMIT_HASH}' \
-    -X 'github.com/up9inc/kubeshark/agent/pkg/version.Branch=${GIT_BRANCH}' \
-    -X 'github.com/up9inc/kubeshark/agent/pkg/version.BuildTimestamp=${BUILD_TIMESTAMP}' \
-    -X 'github.com/up9inc/kubeshark/agent/pkg/version.Ver=${VER}'" -o kubesharkagent .
+    -X 'github.com/kubeshark/kubeshark/agent/pkg/version.GitCommitHash=${COMMIT_HASH}' \
+    -X 'github.com/kubeshark/kubeshark/agent/pkg/version.Branch=${GIT_BRANCH}' \
+    -X 'github.com/kubeshark/kubeshark/agent/pkg/version.BuildTimestamp=${BUILD_TIMESTAMP}' \
+    -X 'github.com/kubeshark/kubeshark/agent/pkg/version.Ver=${VER}'" -o kubesharkagent .
 
 # Download Basenine executable, verify the sha1sum
 ADD https://github.com/up9inc/basenine/releases/download/v0.8.3/basenine_linux_${GOARCH} ./basenine_linux_${GOARCH}

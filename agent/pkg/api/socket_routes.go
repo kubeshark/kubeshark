@@ -8,10 +8,10 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/gorilla/websocket"
-	"github.com/up9inc/kubeshark/agent/pkg/models"
-	"github.com/up9inc/kubeshark/agent/pkg/utils"
-	"github.com/up9inc/kubeshark/logger"
-	tapApi "github.com/up9inc/kubeshark/tap/api"
+	"github.com/kubeshark/kubeshark/agent/pkg/models"
+	"github.com/kubeshark/kubeshark/agent/pkg/utils"
+	"github.com/kubeshark/kubeshark/logger"
+	tapApi "github.com/kubeshark/kubeshark/tap/api"
 )
 
 var (

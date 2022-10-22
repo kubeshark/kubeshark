@@ -5,10 +5,10 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/up9inc/kubeshark/agent/pkg/providers/tappers"
-	"github.com/up9inc/kubeshark/agent/pkg/utils"
-	"github.com/up9inc/kubeshark/logger"
-	"github.com/up9inc/kubeshark/shared"
+	"github.com/kubeshark/kubeshark/agent/pkg/providers/tappers"
+	"github.com/kubeshark/kubeshark/agent/pkg/utils"
+	"github.com/kubeshark/kubeshark/logger"
+	"github.com/kubeshark/kubeshark/shared"
 )
 
 const FilePath = shared.DataDirPath + "tapped-pods.json"
