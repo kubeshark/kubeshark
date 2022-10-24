@@ -3,14 +3,14 @@ import makeStyles from '@mui/styles/makeStyles';
 // @ts-ignore
 export const useCommonStyles = makeStyles(() => ({
     button: {
-        backgroundColor: "#205cf5",
+        backgroundColor: "#326de6",
         color: "white",
         fontWeight: "600 !important",
         fontSize: 12,
         padding: "9px 12px",
         borderRadius: "6px ! important",
         "&:hover": {
-            backgroundColor: "#205cf5",
+            backgroundColor: "#326de6",
         },
         "&:disabled": {
             backgroundColor: "rgba(0, 0, 0, 0.26)"
@@ -18,11 +18,11 @@ export const useCommonStyles = makeStyles(() => ({
     },
     outlinedButton: {
         backgroundColor: "transparent",
-        color: "#205cf5",
+        color: "#326de6",
         fontWeight: "600 !important",
         fontSize: 12,
         padding: "8px 12px",
-        border: "1px #205cf5 solid",
+        border: "1px #326de6 solid",
         borderRadius: "6px ! important",
         "&:hover": {
             backgroundColor: "transparent",
@@ -30,9 +30,9 @@ export const useCommonStyles = makeStyles(() => ({
     },
     clickedButton: {
         color: "white",
-        backgroundColor: "#205cf5",
+        backgroundColor: "#326de6",
         "&:hover": {
-            backgroundColor: "#205cf5",
+            backgroundColor: "#326de6",
         },
     },
     imagedButton: {

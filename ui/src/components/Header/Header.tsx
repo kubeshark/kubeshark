@@ -8,8 +8,9 @@ import {UI} from "@up9/kubeshark-common"
 export const Header: React.FC = () => {
     return <div className="header">
         <div style={{display: "flex", alignItems: "center"}}>
-            <div className="title"><img src={logo} alt="logo"/></div>
-            <div className="description">Traffic viewer for Kubernetes</div>
+          <img className="logo" src={logo} alt="logo"/>
+            <div className="title">Kubeshark</div>
+            <div className="description">Kubernetes deep visibility</div>
         </div>
         <div style={{display: "flex", alignItems: "center"}}>
             <UI.InformationIcon/>
