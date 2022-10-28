@@ -1,4 +1,6 @@
-![Kubeshark: The API Traffic Viewer for Kubernetes](assets/kubeshark-logo.svg)
+<p align="center">
+  <img src="assets/kubeshark-logo.svg" alt="Kubeshark: Kubernetes deep visibility." height="128px"/>
+</p>
 
 <p align="center">
     <a href="https://github.com/kubeshark/kubeshark/blob/main/LICENSE">
@@ -18,24 +20,88 @@
     </a>
 </p>
 
-# The API Traffic Viewer for Kubernetes
+Kubeshark is an **observability and monitoring tool for** [**Kubernetes**](https://kubernetes.io/), enabling **dynamic analysis** of your microservices, detecting **anomalies** and **triggering functions** when certain patterns appear in runtime.
 
-A simple-yet-powerful API traffic viewer for Kubernetes enabling you to view all API communication between microservices to help your debug and troubleshoot regressions.
-
-Think TCPDump and Wireshark re-invented for Kubernetes.
+Think of Kubeshark as a **Kubernetes-aware** combination of [**Wireshark**](https://www.wireshark.org/), [**BPF Compiler Collection (BCC) tools**](https://github.com/iovisor/bcc) and beyond.
 
 ![Simple UI](assets/kubeshark-ui.png)
 
-## Quickstart and documentation
+## Quickstart
 
-You can run Kubeshark on any Kubernetes cluster (version of 1.16.0 or higher) in a matter of seconds. See the [Kubeshark Getting Started Guide](https://getkubeshark.io/docs/) for how.
+### Install
 
-For more comprehensive documentation, start with the [docs](https://getkubeshark.io/docs/kubeshark/kubeshark-cli).
+Install Kubeshark CLI with your favorite package manager:
 
-## Working in this repo
+#### Homebrew
 
-We ❤️ pull requests! See [CONTRIBUTING.md](docs/CONTRIBUTING.md) for info on contributing changes. <br />
-In the wiki you can find an intorduction to [kubeshark components](https://github.com/kubeshark/kubeshark/wiki/Introduction-to-Kubeshark), and [development workflows](https://github.com/kubeshark/kubeshark/wiki/Development-Workflows).
+```shell
+brew install kubeshark
+```
+
+#### apt
+
+```shell
+apt install kubeshark
+```
+
+#### yum
+
+```shell
+yum install kubeshark
+```
+
+#### apk
+
+```shell
+apk add kubeshark
+```
+
+#### Snap
+
+```shell
+snap install kubeshark
+```
+
+#### AppImage
+
+```shell
+appimage install kubeshark
+```
+
+#### Flatpak
+
+```shell
+flatpak install kubeshark
+```
+
+#### Chocolatey
+
+```shell
+choco install kubeshark
+```
+
+### Deploy
+
+Once you have the Kubeshark CLI installed on your system.
+Run the command below to deploy Kubeshark Agent into your Kubernetes cluster.
+
+> Kubeshark images are hosted on Docker Hub. Make sure you have access to https://hub.docker.com/
+
+> Make sure `kubeshark` executable in your `PATH`.
+
+```shell
+kubeshark deploy
+```
+
+## Documentation
+
+Visit our documentation website: [docs.kubeshark.co](https://docs.kubeshark.co)
+
+The documentation resources are open-source and can be found on GitHub: [kubeshark/docs](https://github.com/kubeshark/docs)
+
+## Contributing
+
+We ❤️ pull requests! See [CONTRIBUTING.md](docs/CONTRIBUTING.md) for the contribution guide.
 
 ## Code of Conduct
 
