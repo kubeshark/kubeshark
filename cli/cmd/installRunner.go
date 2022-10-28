@@ -10,6 +10,7 @@ import (
 )
 
 func runKubesharkInstall() {
+	// TODO: Remove this function
 	if config.Config.Install.Out {
 		bucketProvider := bucket.NewProvider(config.Config.Install.TemplateUrl, bucket.DefaultTimeout)
 		installTemplate, err := bucketProvider.GetInstallTemplate(config.Config.Install.TemplateName)
