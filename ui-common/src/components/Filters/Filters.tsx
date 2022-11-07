@@ -336,7 +336,7 @@ export const QueryForm: React.FC<QueryFormProps> = ({ validateQuery, reopenConne
                     </Grid>
                     <br></br>
                     <Typography id="modal-modal-description" style={{fontSize: 12, fontStyle: 'italic'}}>
-                        *The filtering functionality is provided through <b>Basenine</b> database server. Please refer to <a href="https://github.com/up9inc/basenine/wiki/BFL-Syntax-Reference"><b>BFL Syntax Reference</b></a> for more information.
+                        *Please refer to <a href="https://docs.kubeshark.co/en/querying#kfl-syntax-reference"><b>KFL Syntax Reference</b></a> for more information.
                     </Typography>
                 </Box>
             </Fade>
