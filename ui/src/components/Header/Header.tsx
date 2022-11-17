@@ -10,7 +10,7 @@ export const Header: React.FC = () => {
         <div style={{display: "flex", alignItems: "center"}}>
           <img className="logo" src={logo} alt="logo"/>
             <div className="title">Kubeshark</div>
-            <div className="description">Kubernetes deep visibility</div>
+            <div className="description">Traffic viewer for Kubernetes</div>
         </div>
         <div style={{display: "flex", alignItems: "center"}}>
             <UI.InformationIcon/>

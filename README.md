@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/kubeshark-logo.svg" alt="Kubeshark: Kubernetes deep visibility." height="128px"/>
+  <img src="assets/kubeshark-logo.svg" alt="Kubeshark: Traffic viewer for Kubernetes." height="128px"/>
 </p>
 
 <p align="center">
@@ -15,7 +15,7 @@
     <a href="https://hub.docker.com/r/kubeshark/kubeshark">
       <img alt="Image size" src="https://img.shields.io/docker/image-size/kubeshark/kubeshark/latest?logo=Docker&style=flat-square">
     </a>
-    <a href="https://join.slack.com/t/up9/shared_invite/zt-tfjnduli-QzlR8VV4Z1w3YnPIAJfhlQ">
+    <a href="https://join.slack.com/t/mertyildiran/shared_invite/zt-1k3sybpq9-uAhFkuPJiJftKniqrGHGhg">
       <img alt="Slack" src="https://img.shields.io/badge/slack-join_chat-white.svg?logo=slack&style=social">
     </a>
 </p>
