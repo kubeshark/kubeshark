@@ -2,9 +2,9 @@
 
 pushd "$(dirname "$0")" || exit 1
 
-MIZU_HOME=$(realpath ../../../)
+KUBESHARK_HOME=$(realpath ../../../)
 
-docker build -t mizu-ebpf-builder . || exit 1
+docker build -t kubeshark-ebpf-builder . || exit 1
 
 BPF_TARGET=amd64
 BPF_CFLAGS="-O2 -g -D__TARGET_ARCH_x86"
@@ -15,10 +15,10 @@ if [[ $ARCH == "aarch64" || $ARCH == "arm64" ]]; then
 fi
 
 docker run --rm \
-	--name mizu-ebpf-builder \
-	-v $MIZU_HOME:/mizu \
+	--name kubeshark-ebpf-builder \
+	-v $KUBESHARK_HOME:/kubeshark \
 	-v $(go env GOPATH):/root/go \
-	mizu-ebpf-builder \
+	kubeshark-ebpf-builder \
 	sh -c "
 		BPF_TARGET=\"$BPF_TARGET\" BPF_CFLAGS=\"$BPF_CFLAGS\" go generate tap/tlstapper/tls_tapper.go
         chown $(id -u):$(id -g) tap/tlstapper/tlstapper*_bpf*

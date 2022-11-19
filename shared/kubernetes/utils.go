@@ -3,7 +3,7 @@ package kubernetes
 import (
 	"regexp"
 
-	"github.com/up9inc/mizu/shared"
+	"github.com/kubeshark/kubeshark/shared"
 	core "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -48,17 +48,17 @@ func getMinimizedContainerStatuses(fullPod core.Pod) []core.ContainerStatus {
 	return result
 }
 
-func excludeMizuPods(pods []core.Pod) []core.Pod {
-	mizuPrefixRegex := regexp.MustCompile("^" + MizuResourcesPrefix)
+func excludeKubesharkPods(pods []core.Pod) []core.Pod {
+	kubesharkPrefixRegex := regexp.MustCompile("^" + KubesharkResourcesPrefix)
 
-	nonMizuPods := make([]core.Pod, 0)
+	nonKubesharkPods := make([]core.Pod, 0)
 	for _, pod := range pods {
-		if !mizuPrefixRegex.MatchString(pod.Name) {
-			nonMizuPods = append(nonMizuPods, pod)
+		if !kubesharkPrefixRegex.MatchString(pod.Name) {
+			nonKubesharkPods = append(nonKubesharkPods, pod)
 		}
 	}
 
-	return nonMizuPods
+	return nonKubesharkPods
 }
 
 func getPodArrayDiff(oldPods []core.Pod, newPods []core.Pod) (added []core.Pod, removed []core.Pod) {

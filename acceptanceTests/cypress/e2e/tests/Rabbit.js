@@ -1,6 +1,6 @@
 import {checkFilterByMethod, valueTabs,} from "../testHelpers/TrafficHelper";
 
-it('opening mizu', function () {
+it('opening kubeshark', function () {
     cy.visit(Cypress.env('testUrl'));
 });
 

@@ -6,7 +6,7 @@ import (
 
 var cleanCmd = &cobra.Command{
 	Use:   "clean",
-	Short: "Removes all mizu resources",
+	Short: "Removes all kubeshark resources",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		performCleanCommand()
 		return nil

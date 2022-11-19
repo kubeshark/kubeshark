@@ -5,8 +5,8 @@ import (
 	"time"
 
 	"github.com/google/gopacket/reassembly"
-	"github.com/up9inc/mizu/logger"
-	"github.com/up9inc/mizu/tap/api"
+	"github.com/kubeshark/kubeshark/logger"
+	"github.com/kubeshark/kubeshark/tap/api"
 )
 
 type CleanerStats struct {

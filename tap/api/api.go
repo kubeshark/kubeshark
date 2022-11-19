@@ -8,7 +8,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/up9inc/mizu/tap/dbgctl"
+	"github.com/kubeshark/kubeshark/tap/dbgctl"
 )
 
 const UnknownNamespace = ""
@@ -161,7 +161,7 @@ type Emitter interface {
 func (e *Emitting) Emit(item *OutputChannelItem) {
 	e.AppStats.IncMatchedPairs()
 
-	if dbgctl.MizuTapperDisableEmitting {
+	if dbgctl.KubesharkTapperDisableEmitting {
 		return
 	}
 

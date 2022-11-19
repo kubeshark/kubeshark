@@ -14,19 +14,19 @@ export function isValueExistsInElement(shouldInclude, content, domPathToContaine
     });
 }
 
-export function resizeToHugeMizu() {
-    cy.viewport(Cypress.env('mizuWidth'), Cypress.env('hugeMizuHeight'));
+export function resizeToHugeKubeshark() {
+    cy.viewport(Cypress.env('kubesharkWidth'), Cypress.env('hugeKubesharkHeight'));
 }
 
-export function resizeToNormalMizu() {
-    cy.viewport(Cypress.env('mizuWidth'), Cypress.env('normalMizuHeight'));
+export function resizeToNormalKubeshark() {
+    cy.viewport(Cypress.env('kubesharkWidth'), Cypress.env('normalKubesharkHeight'));
 }
 
 export function verifyMinimumEntries() {
     const entriesSent = Cypress.env('entriesCount');
     const minimumEntries = Math.round((0.75 * entriesSent));
 
-    it(`Making sure that mizu shows at least ${minimumEntries} entries`, function () {
+    it(`Making sure that kubeshark shows at least ${minimumEntries} entries`, function () {
         cy.get('#total-entries').then(number => {
             const getNum = () => {
                 return parseInt(number.text());

@@ -2,7 +2,7 @@ package routes
 
 import (
 	"github.com/gin-gonic/gin"
-	"github.com/up9inc/mizu/agent/pkg/controllers"
+	"github.com/kubeshark/kubeshark/agent/pkg/controllers"
 )
 
 // OASRoutes methods to access OAS spec

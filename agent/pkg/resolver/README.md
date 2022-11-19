@@ -1,29 +1,29 @@
 <!--
 (NOT RELEVANT CURRENTLY)
 ## Installation
-To be able to import this package, you must add `replace github.com/up9inc/mizu/resolver => ../resolver` to the end of your `go.mod` file 
+To be able to import this package, you must add `replace github.com/kubeshark/kubeshark/resolver => ../resolver` to the end of your `go.mod` file 
 
-And then add `github.com/up9inc/mizu/resolver v0.0.0` to your require block
+And then add `github.com/kubeshark/kubeshark/resolver v0.0.0` to your require block
 
 full example `go.mod`:
 
 ```
-module github.com/up9inc/mizu/cli
+module github.com/kubeshark/kubeshark/cli
 
 go 1.16
 
 require (
 	github.com/spf13/cobra v1.1.3
-	github.com/up9inc/mizu/resolver v0.0.0
+	github.com/kubeshark/kubeshark/resolver v0.0.0
 	k8s.io/api v0.21.0
 	k8s.io/apimachinery v0.21.0
 	k8s.io/client-go v0.21.0
 )
 
-replace github.com/up9inc/mizu/resolver => ../resolver
+replace github.com/kubeshark/kubeshark/resolver => ../resolver
 ```
 
-Now you will be able to import `github.com/up9inc/mizu/resolver` in any `.go` file
+Now you will be able to import `github.com/kubeshark/kubeshark/resolver` in any `.go` file
 -->
 ## Usage
 

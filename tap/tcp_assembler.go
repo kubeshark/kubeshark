@@ -11,11 +11,11 @@ import (
 	"github.com/google/gopacket/layers"
 	"github.com/google/gopacket/reassembly"
 	"github.com/hashicorp/golang-lru/simplelru"
-	"github.com/up9inc/mizu/logger"
-	"github.com/up9inc/mizu/tap/api"
-	"github.com/up9inc/mizu/tap/dbgctl"
-	"github.com/up9inc/mizu/tap/diagnose"
-	"github.com/up9inc/mizu/tap/source"
+	"github.com/kubeshark/kubeshark/logger"
+	"github.com/kubeshark/kubeshark/tap/api"
+	"github.com/kubeshark/kubeshark/tap/dbgctl"
+	"github.com/kubeshark/kubeshark/tap/diagnose"
+	"github.com/kubeshark/kubeshark/tap/source"
 )
 
 const (
@@ -179,7 +179,7 @@ func (a *tcpAssembler) processTcpPacket(origin api.Capture, packet gopacket.Pack
 		Origin:      origin,
 	}
 	diagnose.InternalStats.Totalsz += len(tcp.Payload)
-	if !dbgctl.MizuTapperDisableTcpReassembly {
+	if !dbgctl.KubesharkTapperDisableTcpReassembly {
 		a.AssembleWithContext(packet.NetworkLayer().NetworkFlow(), tcp, &c)
 	}
 }

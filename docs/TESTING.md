@@ -1,4 +1,4 @@
-![Mizu: The API Traffic Viewer for Kubernetes](../assets/mizu-logo.svg)
+![Kubeshark: The API Traffic Viewer for Kubernetes](../assets/kubeshark-logo.svg)
 # Testing guidelines
 
 ## Generic guidelines
@@ -16,7 +16,7 @@
 * In case of exported func testing
   * Name the test file "<tested_file_name>_test.go"
   * Name the test package "<tested_package>_test"
-  * Example - [Slice Utils](../cli/mizu/sliceUtils_test.go)
+  * Example - [Slice Utils](../cli/kubeshark/sliceUtils_test.go)
 * Make sure to run test coverage to make sure you covered all the cases and lines in the func  
   
 ## Acceptance tests

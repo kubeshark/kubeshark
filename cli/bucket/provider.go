@@ -2,22 +2,22 @@ package bucket
 
 import (
 	"fmt"
-	"github.com/up9inc/mizu/cli/utils"
+	"github.com/kubeshark/kubeshark/cli/utils"
 	"io/ioutil"
 	"net/http"
 	"time"
 )
 
 type Provider struct {
-	url     string
-	client  *http.Client
+	url    string
+	client *http.Client
 }
 
 const DefaultTimeout = 2 * time.Second
 
 func NewProvider(url string, timeout time.Duration) *Provider {
 	return &Provider{
-		url:     url,
+		url: url,
 		client: &http.Client{
 			Timeout: timeout,
 		},

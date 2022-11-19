@@ -21,14 +21,14 @@ import (
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/homedir"
 
-	"github.com/up9inc/mizu/shared"
+	"github.com/kubeshark/kubeshark/shared"
 )
 
 const (
 	LongRetriesCount      = 100
 	ShortRetriesCount     = 10
 	DefaultApiServerPort  = shared.DefaultApiServerPort
-	DefaultNamespaceName  = "mizu-tests"
+	DefaultNamespaceName  = "kubeshark-tests"
 	DefaultServiceName    = "httpbin"
 	DefaultEntriesCount   = 50
 	WaitAfterTapPodsReady = 3 * time.Second
@@ -46,26 +46,26 @@ func GetCliPath() (string, error) {
 		return "", filePathErr
 	}
 
-	cliPath := path.Join(dir, "../cli/bin/mizu_ci")
+	cliPath := path.Join(dir, "../cli/bin/kubeshark_ci")
 	return cliPath, nil
 }
 
-func GetMizuFolderPath() (string, error) {
+func GetKubesharkFolderPath() (string, error) {
 	home, homeDirErr := os.UserHomeDir()
 	if homeDirErr != nil {
 		return "", homeDirErr
 	}
 
-	return path.Join(home, ".mizu"), nil
+	return path.Join(home, ".kubeshark"), nil
 }
 
 func GetConfigPath() (string, error) {
-	mizuFolderPath, mizuPathError := GetMizuFolderPath()
-	if mizuPathError != nil {
-		return "", mizuPathError
+	kubesharkFolderPath, kubesharkPathError := GetKubesharkFolderPath()
+	if kubesharkPathError != nil {
+		return "", kubesharkPathError
 	}
 
-	return path.Join(mizuFolderPath, "config.yaml"), nil
+	return path.Join(kubesharkFolderPath, "config.yaml"), nil
 }
 
 func GetProxyUrl(namespace string, service string) string {
@@ -213,7 +213,7 @@ func DeleteKubeFile(kubeContext string, namespace string, filename string) error
 }
 
 func getDefaultCommandArgs() []string {
-	agentImageValue := os.Getenv("MIZU_CI_IMAGE")
+	agentImageValue := os.Getenv("KUBESHARK_CI_IMAGE")
 	setFlag := "--set"
 	agentImage := fmt.Sprintf("agent-image=%s", agentImageValue)
 	imagePullPolicy := "image-pull-policy=IfNotPresent"
@@ -244,7 +244,7 @@ func GetDefaultLogsCommandArgs() []string {
 }
 
 func GetDefaultTapNamespace() []string {
-	return []string{"-n", "mizu-tests"}
+	return []string{"-n", "kubeshark-tests"}
 }
 
 func GetDefaultConfigCommandArgs() []string {
@@ -397,7 +397,7 @@ func GetLogsPath() (string, error) {
 		return "", filePathErr
 	}
 
-	logsPath := path.Join(dir, "mizu_logs.zip")
+	logsPath := path.Join(dir, "kubeshark_logs.zip")
 	return logsPath, nil
 }
 

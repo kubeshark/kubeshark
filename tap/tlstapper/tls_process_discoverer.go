@@ -11,7 +11,7 @@ import (
 	"strings"
 
 	"github.com/go-errors/errors"
-	"github.com/up9inc/mizu/logger"
+	"github.com/kubeshark/kubeshark/logger"
 	v1 "k8s.io/api/core/v1"
 )
 

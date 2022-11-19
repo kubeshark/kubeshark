@@ -2,9 +2,10 @@ package oas
 
 import (
 	"fmt"
-	"github.com/chanced/openapi"
 	"math"
 	"strings"
+
+	"github.com/chanced/openapi"
 )
 
 type Counter struct {
@@ -66,8 +67,8 @@ func (m *CounterMap) addOther(other *CounterMap) {
 }
 
 func setCounterMsgIfOk(oldStr string, cnt *Counter) string {
-	tpl := "Mizu observed %d entries (%d failed), at %.3f hits/s, average response time is %.3f seconds"
-	if oldStr == "" || (strings.HasPrefix(oldStr, "Mizu ") && strings.HasSuffix(oldStr, " seconds")) {
+	tpl := "Kubeshark observed %d entries (%d failed), at %.3f hits/s, average response time is %.3f seconds"
+	if oldStr == "" || (strings.HasPrefix(oldStr, "Kubeshark ") && strings.HasSuffix(oldStr, " seconds")) {
 		return fmt.Sprintf(tpl, cnt.Entries, cnt.Failures, cnt.SumDuration/float64(cnt.Entries), cnt.SumRT/float64(cnt.Entries))
 	}
 	return oldStr

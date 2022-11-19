@@ -11,20 +11,20 @@ import (
 	"strings"
 	"time"
 
-	"github.com/up9inc/mizu/shared"
+	"github.com/kubeshark/kubeshark/shared"
 	"k8s.io/apimachinery/pkg/util/httpstream"
 	"k8s.io/client-go/tools/portforward"
 	"k8s.io/client-go/transport/spdy"
 
-	"github.com/up9inc/mizu/logger"
+	"github.com/kubeshark/kubeshark/logger"
 	"k8s.io/kubectl/pkg/proxy"
 )
 
 const k8sProxyApiPrefix = "/"
-const mizuServicePort = 80
+const kubesharkServicePort = 80
 
-func StartProxy(kubernetesProvider *Provider, proxyHost string, mizuPort uint16, mizuNamespace string, mizuServiceName string, cancel context.CancelFunc) (*http.Server, error) {
-	logger.Log.Debugf("Starting proxy using proxy method. namespace: [%v], service name: [%s], port: [%v]", mizuNamespace, mizuServiceName, mizuPort)
+func StartProxy(kubernetesProvider *Provider, proxyHost string, kubesharkPort uint16, kubesharkNamespace string, kubesharkServiceName string, cancel context.CancelFunc) (*http.Server, error) {
+	logger.Log.Debugf("Starting proxy using proxy method. namespace: [%v], service name: [%s], port: [%v]", kubesharkNamespace, kubesharkServiceName, kubesharkPort)
 	filter := &proxy.FilterServer{
 		AcceptPaths:   proxy.MakeRegexpArrayOrDie(proxy.DefaultPathAcceptRE),
 		RejectPaths:   proxy.MakeRegexpArrayOrDie(proxy.DefaultPathRejectRE),
@@ -37,10 +37,10 @@ func StartProxy(kubernetesProvider *Provider, proxyHost string, mizuPort uint16,
 		return nil, err
 	}
 	mux := http.NewServeMux()
-	mux.Handle(k8sProxyApiPrefix, getRerouteHttpHandlerMizuAPI(proxyHandler, mizuNamespace, mizuServiceName))
-	mux.Handle("/static/", getRerouteHttpHandlerMizuStatic(proxyHandler, mizuNamespace, mizuServiceName))
+	mux.Handle(k8sProxyApiPrefix, getRerouteHttpHandlerKubesharkAPI(proxyHandler, kubesharkNamespace, kubesharkServiceName))
+	mux.Handle("/static/", getRerouteHttpHandlerKubesharkStatic(proxyHandler, kubesharkNamespace, kubesharkServiceName))
 
-	l, err := net.Listen("tcp", fmt.Sprintf("%s:%d", proxyHost, int(mizuPort)))
+	l, err := net.Listen("tcp", fmt.Sprintf("%s:%d", proxyHost, int(kubesharkPort)))
 	if err != nil {
 		return nil, err
 	}
@@ -59,29 +59,29 @@ func StartProxy(kubernetesProvider *Provider, proxyHost string, mizuPort uint16,
 	return server, nil
 }
 
-func getMizuApiServerProxiedHostAndPath(mizuNamespace string, mizuServiceName string) string {
-	return fmt.Sprintf("/api/v1/namespaces/%s/services/%s:%d/proxy", mizuNamespace, mizuServiceName, mizuServicePort)
+func getKubesharkApiServerProxiedHostAndPath(kubesharkNamespace string, kubesharkServiceName string) string {
+	return fmt.Sprintf("/api/v1/namespaces/%s/services/%s:%d/proxy", kubesharkNamespace, kubesharkServiceName, kubesharkServicePort)
 }
 
-func GetMizuApiServerProxiedHostAndPath(mizuPort uint16) string {
-	return fmt.Sprintf("localhost:%d", mizuPort)
+func GetKubesharkApiServerProxiedHostAndPath(kubesharkPort uint16) string {
+	return fmt.Sprintf("localhost:%d", kubesharkPort)
 }
 
-func getRerouteHttpHandlerMizuAPI(proxyHandler http.Handler, mizuNamespace string, mizuServiceName string) http.Handler {
+func getRerouteHttpHandlerKubesharkAPI(proxyHandler http.Handler, kubesharkNamespace string, kubesharkServiceName string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		proxiedPath := getMizuApiServerProxiedHostAndPath(mizuNamespace, mizuServiceName)
+		proxiedPath := getKubesharkApiServerProxiedHostAndPath(kubesharkNamespace, kubesharkServiceName)
 
 		//avoid redirecting several times
 		if !strings.Contains(r.URL.Path, proxiedPath) {
-			r.URL.Path = fmt.Sprintf("%s%s", getMizuApiServerProxiedHostAndPath(mizuNamespace, mizuServiceName), r.URL.Path)
+			r.URL.Path = fmt.Sprintf("%s%s", getKubesharkApiServerProxiedHostAndPath(kubesharkNamespace, kubesharkServiceName), r.URL.Path)
 		}
 		proxyHandler.ServeHTTP(w, r)
 	})
 }
 
-func getRerouteHttpHandlerMizuStatic(proxyHandler http.Handler, mizuNamespace string, mizuServiceName string) http.Handler {
+func getRerouteHttpHandlerKubesharkStatic(proxyHandler http.Handler, kubesharkNamespace string, kubesharkServiceName string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		r.URL.Path = strings.Replace(r.URL.Path, "/static/", fmt.Sprintf("%s/static/", getMizuApiServerProxiedHostAndPath(mizuNamespace, mizuServiceName)), 1)
+		r.URL.Path = strings.Replace(r.URL.Path, "/static/", fmt.Sprintf("%s/static/", getKubesharkApiServerProxiedHostAndPath(kubesharkNamespace, kubesharkServiceName)), 1)
 		proxyHandler.ServeHTTP(w, r)
 	})
 }

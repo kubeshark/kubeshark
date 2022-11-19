@@ -32,17 +32,17 @@ type OASConfig struct {
 	MaxExampleLen int  `yaml:"max-example-len" default:"10240"`
 }
 
-type MizuAgentConfig struct {
-	MaxDBSizeBytes         int64         `json:"maxDBSizeBytes"`
-	InsertionFilter        string        `json:"insertionFilter"`
-	AgentImage             string        `json:"agentImage"`
-	PullPolicy             string        `json:"pullPolicy"`
-	LogLevel               logging.Level `json:"logLevel"`
-	TapperResources        Resources     `json:"tapperResources"`
-	MizuResourcesNamespace string        `json:"mizuResourceNamespace"`
-	AgentDatabasePath      string        `json:"agentDatabasePath"`
-	ServiceMap             bool          `json:"serviceMap"`
-	OAS                    OASConfig     `json:"oas"`
+type KubesharkAgentConfig struct {
+	MaxDBSizeBytes              int64         `json:"maxDBSizeBytes"`
+	InsertionFilter             string        `json:"insertionFilter"`
+	AgentImage                  string        `json:"agentImage"`
+	PullPolicy                  string        `json:"pullPolicy"`
+	LogLevel                    logging.Level `json:"logLevel"`
+	TapperResources             Resources     `json:"tapperResources"`
+	KubesharkResourcesNamespace string        `json:"kubesharkResourceNamespace"`
+	AgentDatabasePath           string        `json:"agentDatabasePath"`
+	ServiceMap                  bool          `json:"serviceMap"`
+	OAS                         OASConfig     `json:"oas"`
 }
 
 type WebSocketMessageMetadata struct {

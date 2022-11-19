@@ -1,10 +1,10 @@
 {
-  "name": "@up9/mizu-common",
+  "name": "@up9/kubeshark-common",
   "version": "0.0.0",
   "description": "Made with create-react-library",
   "author": "",
   "license": "MIT",
-  "repository": "/mizu-common",
+  "repository": "/kubeshark-common",
   "main": "dist/index.js",
   "module": "dist/index.modern.js",
   "source": "src/index.tsx",

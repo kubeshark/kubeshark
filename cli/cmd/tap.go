@@ -4,11 +4,11 @@ import (
 	"errors"
 
 	"github.com/creasty/defaults"
+	"github.com/kubeshark/kubeshark/cli/config"
+	"github.com/kubeshark/kubeshark/cli/config/configStructs"
+	"github.com/kubeshark/kubeshark/cli/errormessage"
+	"github.com/kubeshark/kubeshark/logger"
 	"github.com/spf13/cobra"
-	"github.com/up9inc/mizu/cli/config"
-	"github.com/up9inc/mizu/cli/config/configStructs"
-	"github.com/up9inc/mizu/cli/errormessage"
-	"github.com/up9inc/mizu/logger"
 )
 
 var tapCmd = &cobra.Command{
@@ -17,7 +17,7 @@ var tapCmd = &cobra.Command{
 	Long: `Record the ingoing traffic of a kubernetes pod.
 Supported protocols are HTTP and gRPC.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		RunMizuTap()
+		RunKubesharkTap()
 		return nil
 	},
 	PreRunE: func(cmd *cobra.Command, args []string) error {
@@ -31,7 +31,7 @@ Supported protocols are HTTP and gRPC.`,
 			return errormessage.FormatError(err)
 		}
 
-		logger.Log.Infof("Mizu will store up to %s of traffic, old traffic will be cleared once the limit is reached.", config.Config.Tap.HumanMaxEntriesDBSize)
+		logger.Log.Infof("Kubeshark will store up to %s of traffic, old traffic will be cleared once the limit is reached.", config.Config.Tap.HumanMaxEntriesDBSize)
 
 		return nil
 	},

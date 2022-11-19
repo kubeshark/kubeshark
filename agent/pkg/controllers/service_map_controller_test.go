@@ -7,12 +7,12 @@ import (
 	"net/http/httptest"
 	"testing"
 
-	"github.com/up9inc/mizu/agent/pkg/dependency"
-	"github.com/up9inc/mizu/agent/pkg/servicemap"
+	"github.com/kubeshark/kubeshark/agent/pkg/dependency"
+	"github.com/kubeshark/kubeshark/agent/pkg/servicemap"
 
 	"github.com/gin-gonic/gin"
+	tapApi "github.com/kubeshark/kubeshark/tap/api"
 	"github.com/stretchr/testify/suite"
-	tapApi "github.com/up9inc/mizu/tap/api"
 )
 
 const (
@@ -43,7 +43,7 @@ var ProtocolHttp = &tapApi.Protocol{
 	},
 	LongName:        "Hypertext Transfer Protocol -- HTTP/1.1",
 	Macro:           "http",
-	BackgroundColor: "#205cf5",
+	BackgroundColor: "#326de6",
 	ForegroundColor: "#ffffff",
 	FontSize:        12,
 	ReferenceLink:   "https://datatracker.ietf.org/doc/html/rfc2616",

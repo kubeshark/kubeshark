@@ -5,8 +5,8 @@ import (
 	"testing"
 
 	"github.com/gin-gonic/gin"
-	"github.com/up9inc/mizu/agent/pkg/dependency"
-	"github.com/up9inc/mizu/agent/pkg/oas"
+	"github.com/kubeshark/kubeshark/agent/pkg/dependency"
+	"github.com/kubeshark/kubeshark/agent/pkg/oas"
 )
 
 func TestGetOASServers(t *testing.T) {

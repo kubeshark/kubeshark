@@ -5,11 +5,11 @@ import (
 	"encoding/json"
 	"time"
 
+	"github.com/kubeshark/kubeshark/agent/pkg/dependency"
+	"github.com/kubeshark/kubeshark/logger"
+	"github.com/kubeshark/kubeshark/shared"
+	tapApi "github.com/kubeshark/kubeshark/tap/api"
 	basenine "github.com/up9inc/basenine/client/go"
-	"github.com/up9inc/mizu/agent/pkg/dependency"
-	"github.com/up9inc/mizu/logger"
-	"github.com/up9inc/mizu/shared"
-	tapApi "github.com/up9inc/mizu/tap/api"
 )
 
 type EntryStreamer interface {

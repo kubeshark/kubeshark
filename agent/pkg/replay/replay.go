@@ -10,9 +10,9 @@ import (
 	"time"
 
 	"github.com/google/uuid"
-	"github.com/up9inc/mizu/agent/pkg/app"
-	tapApi "github.com/up9inc/mizu/tap/api"
-	mizuhttp "github.com/up9inc/mizu/tap/extensions/http"
+	"github.com/kubeshark/kubeshark/agent/pkg/app"
+	tapApi "github.com/kubeshark/kubeshark/tap/api"
+	kubesharkhttp "github.com/kubeshark/kubeshark/tap/extensions/http"
 )
 
 var (
@@ -71,8 +71,8 @@ func getEntryFromRequestResponse(extension *tapApi.Extension, request *http.Requ
 				IsRequest:   true,
 				CaptureTime: captureTime,
 				CaptureSize: 0,
-				Payload: &mizuhttp.HTTPPayload{
-					Type: mizuhttp.TypeHttpRequest,
+				Payload: &kubesharkhttp.HTTPPayload{
+					Type: kubesharkhttp.TypeHttpRequest,
 					Data: request,
 				},
 			},
@@ -80,8 +80,8 @@ func getEntryFromRequestResponse(extension *tapApi.Extension, request *http.Requ
 				IsRequest:   false,
 				CaptureTime: captureTime,
 				CaptureSize: 0,
-				Payload: &mizuhttp.HTTPPayload{
-					Type: mizuhttp.TypeHttpResponse,
+				Payload: &kubesharkhttp.HTTPPayload{
+					Type: kubesharkhttp.TypeHttpResponse,
 					Data: response,
 				},
 			},
@@ -121,7 +121,7 @@ func ExecuteRequest(replayData *Details, timeout time.Duration) *Response {
 		for headerKey, headerValue := range replayData.Headers {
 			request.Header.Add(headerKey, headerValue)
 		}
-		request.Header.Add("x-mizu", uuid.New().String())
+		request.Header.Add("x-kubeshark", uuid.New().String())
 		response, requestErr := client.Do(request)
 
 		if requestErr != nil {

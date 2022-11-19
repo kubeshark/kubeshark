@@ -8,11 +8,11 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/up9inc/mizu/cli/uiUtils"
-	"github.com/up9inc/mizu/shared"
+	"github.com/kubeshark/kubeshark/cli/uiUtils"
+	"github.com/kubeshark/kubeshark/shared"
 
-	"github.com/up9inc/mizu/logger"
-	"github.com/up9inc/mizu/shared/units"
+	"github.com/kubeshark/kubeshark/logger"
+	"github.com/kubeshark/kubeshark/shared/units"
 )
 
 const (
@@ -51,6 +51,7 @@ type TapConfig struct {
 	TapperResources       shared.Resources `yaml:"tapper-resources"`
 	ServiceMesh           bool             `yaml:"service-mesh" default:"false"`
 	Tls                   bool             `yaml:"tls" default:"false"`
+	PacketCapture         string           `yaml:"packet-capture" default:"libpcap"`
 	Profiler              bool             `yaml:"profiler" default:"false"`
 	MaxLiveStreams        int              `yaml:"max-live-streams" default:"500"`
 }

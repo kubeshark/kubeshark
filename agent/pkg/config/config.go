@@ -3,9 +3,10 @@ package config
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/up9inc/mizu/shared"
 	"io/ioutil"
 	"os"
+
+	"github.com/kubeshark/kubeshark/shared"
 )
 
 // these values are used when the config.json file is not present
@@ -14,7 +15,7 @@ const (
 	DefaultDatabasePath         string = "./entries"
 )
 
-var Config *shared.MizuAgentConfig
+var Config *shared.KubesharkAgentConfig
 
 func LoadConfig() error {
 	if Config != nil {
@@ -45,8 +46,8 @@ func applyDefaultConfig() error {
 	return nil
 }
 
-func getDefaultConfig() (*shared.MizuAgentConfig, error) {
-	return &shared.MizuAgentConfig{
+func getDefaultConfig() (*shared.KubesharkAgentConfig, error) {
+	return &shared.KubesharkAgentConfig{
 		MaxDBSizeBytes:    defaultMaxDatabaseSizeBytes,
 		AgentDatabasePath: DefaultDatabasePath,
 	}, nil

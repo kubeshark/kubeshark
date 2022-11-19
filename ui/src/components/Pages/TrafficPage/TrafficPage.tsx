@@ -1,12 +1,12 @@
 import React, { useState } from "react";
 import { Button } from "@mui/material";
-import Api, { MizuWebsocketURL } from "../../../helpers/api";
+import Api, { KubesharkWebsocketURL } from "../../../helpers/api";
 import debounce from 'lodash/debounce';
 import { useRecoilState } from "recoil";
 import { useCommonStyles } from "../../../helpers/commonStyle"
 import serviceMapModalOpenAtom from "../../../recoil/serviceMapModalOpen";
-import { TrafficViewer } from "@up9/mizu-common"
-import "@up9/mizu-common/dist/index.css"
+import { TrafficViewer } from "@up9/kubeshark-common"
+import "@up9/kubeshark-common/dist/index.css"
 import oasModalOpenAtom from "../../../recoil/oasModalOpen/atom";
 import serviceMap from "../../assets/serviceMap.svg";
 import services from "../../assets/services.svg";
@@ -72,7 +72,7 @@ export const TrafficPage: React.FC = () => {
 
   return (
     <>
-      <TrafficViewer webSocketUrl={MizuWebsocketURL} shouldCloseWebSocket={shouldCloseWebSocket} setShouldCloseWebSocket={setShouldCloseWebSocket}
+      <TrafficViewer webSocketUrl={KubesharkWebsocketURL} shouldCloseWebSocket={shouldCloseWebSocket} setShouldCloseWebSocket={setShouldCloseWebSocket}
         trafficViewerApiProp={trafficViewerApi} actionButtons={actionButtons} isShowStatusBar={!(openOasModal || serviceMapModalOpen || trafficStatsModalOpen)} isDemoBannerView={false} entryDetailedConfig={{
           isReplayEnabled: REPLAY_ENABLED
         }} />

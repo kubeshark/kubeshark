@@ -1,35 +1,35 @@
-# Mizu release _VER_
-Mizu CHANGELOG is now part of [Mizu wiki](https://github.com/up9inc/mizu/wiki/CHANGELOG)
+# Kubeshark release _VER_
+Kubeshark CHANGELOG is now part of [Kubeshark wiki](https://github.com/kubeshark/kubeshark/wiki/CHANGELOG)
 
-## Download Mizu for your platform
+## Download Kubeshark for your platform
 
 **Mac** (x86-64/Intel)
 ```
-curl -Lo mizu https://github.com/up9inc/mizu/releases/download/_VER_/mizu_darwin_amd64 && chmod 755 mizu
+curl -Lo kubeshark https://github.com/kubeshark/kubeshark/releases/download/_VER_/kubeshark_darwin_amd64 && chmod 755 kubeshark
 ```
 
 **Mac** (AArch64/Apple M1 silicon)
 ```
-rm -f mizu && curl -Lo mizu https://github.com/up9inc/mizu/releases/download/_VER_/mizu_darwin_arm64 && chmod 755 mizu
+rm -f kubeshark && curl -Lo kubeshark https://github.com/kubeshark/kubeshark/releases/download/_VER_/kubeshark_darwin_arm64 && chmod 755 kubeshark
 ```
 
 **Linux** (x86-64)
 ```
-curl -Lo mizu https://github.com/up9inc/mizu/releases/download/_VER_/mizu_linux_amd64 && chmod 755 mizu
+curl -Lo kubeshark https://github.com/kubeshark/kubeshark/releases/download/_VER_/kubeshark_linux_amd64 && chmod 755 kubeshark
 ```
 
 **Linux** (AArch64)
 ```
-curl -Lo mizu https://github.com/up9inc/mizu/releases/download/_VER_/mizu_linux_arm64 && chmod 755 mizu
+curl -Lo kubeshark https://github.com/kubeshark/kubeshark/releases/download/_VER_/kubeshark_linux_arm64 && chmod 755 kubeshark
 ```
 
 **Windows** (x86-64)
 ```
-curl -LO https://github.com/up9inc/mizu/releases/download/_VER_/mizu.exe
+curl -LO https://github.com/kubeshark/kubeshark/releases/download/_VER_/kubeshark.exe
 ```
 
 ### Checksums
 SHA256 checksums available for compiled binaries.
-Run `shasum -a 256 -c mizu_OS_ARCH.sha256` to verify.
+Run `shasum -a 256 -c kubeshark_OS_ARCH.sha256` to verify.
 
 

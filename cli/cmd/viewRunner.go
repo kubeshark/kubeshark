@@ -5,17 +5,17 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/up9inc/mizu/cli/utils"
+	"github.com/kubeshark/kubeshark/cli/utils"
 
-	"github.com/up9inc/mizu/cli/apiserver"
-	"github.com/up9inc/mizu/cli/config"
-	"github.com/up9inc/mizu/cli/mizu/fsUtils"
-	"github.com/up9inc/mizu/cli/uiUtils"
-	"github.com/up9inc/mizu/logger"
-	"github.com/up9inc/mizu/shared/kubernetes"
+	"github.com/kubeshark/kubeshark/cli/apiserver"
+	"github.com/kubeshark/kubeshark/cli/config"
+	"github.com/kubeshark/kubeshark/cli/kubeshark/fsUtils"
+	"github.com/kubeshark/kubeshark/cli/uiUtils"
+	"github.com/kubeshark/kubeshark/logger"
+	"github.com/kubeshark/kubeshark/shared/kubernetes"
 )
 
-func runMizuView() {
+func runKubesharkView() {
 	kubernetesProvider, err := getKubernetesProviderForCli()
 	if err != nil {
 		return
@@ -27,14 +27,14 @@ func runMizuView() {
 	url := config.Config.View.Url
 
 	if url == "" {
-		exists, err := kubernetesProvider.DoesServiceExist(ctx, config.Config.MizuResourcesNamespace, kubernetes.ApiServerPodName)
+		exists, err := kubernetesProvider.DoesServiceExist(ctx, config.Config.KubesharkResourcesNamespace, kubernetes.ApiServerPodName)
 		if err != nil {
-			logger.Log.Errorf("Failed to found mizu service %v", err)
+			logger.Log.Errorf("Failed to found kubeshark service %v", err)
 			cancel()
 			return
 		}
 		if !exists {
-			logger.Log.Infof("%s service not found, you should run `mizu tap` command first", kubernetes.ApiServerPodName)
+			logger.Log.Infof("%s service not found, you should run `kubeshark tap` command first", kubernetes.ApiServerPodName)
 			cancel()
 			return
 		}
@@ -56,7 +56,7 @@ func runMizuView() {
 		return
 	}
 
-	logger.Log.Infof("Mizu is available at %s", url)
+	logger.Log.Infof("Kubeshark is available at %s", url)
 
 	if !config.Config.HeadlessMode {
 		uiUtils.OpenBrowser(url)

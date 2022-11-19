@@ -3,12 +3,13 @@ package api
 import (
 	"encoding/json"
 	"fmt"
-	basenine "github.com/up9inc/basenine/client/go"
-	"github.com/up9inc/mizu/logger"
-	"github.com/up9inc/mizu/shared"
-	"github.com/up9inc/mizu/tap/api"
 	"sync"
 	"time"
+
+	"github.com/kubeshark/kubeshark/logger"
+	"github.com/kubeshark/kubeshark/shared"
+	"github.com/kubeshark/kubeshark/tap/api"
+	basenine "github.com/up9inc/basenine/client/go"
 )
 
 type EntryInserter interface {
@@ -50,7 +51,7 @@ func (e *BasenineEntryInserter) Insert(entry *api.Entry) error {
 	return nil
 }
 
-func initializeConnection() *basenine.Connection{
+func initializeConnection() *basenine.Connection {
 	for {
 		connection, err := basenine.NewConnection(shared.BasenineHost, shared.BaseninePort)
 		if err != nil {

@@ -2,16 +2,16 @@ package cmd
 
 import (
 	"github.com/creasty/defaults"
+	"github.com/kubeshark/kubeshark/cli/config/configStructs"
+	"github.com/kubeshark/kubeshark/logger"
 	"github.com/spf13/cobra"
-	"github.com/up9inc/mizu/cli/config/configStructs"
-	"github.com/up9inc/mizu/logger"
 )
 
 var installCmd = &cobra.Command{
 	Use:   "install",
-	Short: "Installs mizu components",
+	Short: "Installs kubeshark components",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		runMizuInstall()
+		runKubesharkInstall()
 		return nil
 	},
 }
@@ -24,5 +24,5 @@ func init() {
 		logger.Log.Debug(err)
 	}
 
-	installCmd.Flags().BoolP(configStructs.OutInstallName, "o", defaultInstallConfig.Out, "print (to stdout) Kubernetes manifest used to install Mizu Pro edition")
+	installCmd.Flags().BoolP(configStructs.OutInstallName, "o", defaultInstallConfig.Out, "print (to stdout) Kubernetes manifest used to install Kubeshark Pro edition")
 }

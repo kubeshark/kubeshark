@@ -1,6 +1,6 @@
 import {isValueExistsInElement} from '../testHelpers/TrafficHelper';
 
-it('Loading Mizu', function () {
+it('Loading Kubeshark', function () {
     cy.visit(Cypress.env('testUrl'));
 });
 

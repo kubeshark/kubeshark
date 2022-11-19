@@ -1,8 +1,8 @@
-# This example shows permissions that are required for Mizu to resolve IPs to service names in namespace-restricted mode
+# This example shows permissions that are required for Kubeshark to resolve IPs to service names in namespace-restricted mode
 kind: Role
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: mizu-resolver-role
+  name: kubeshark-resolver-role
 rules:
 - apiGroups: [""]
   resources: ["serviceaccounts"]
@@ -26,12 +26,12 @@ rules:
 kind: RoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: mizu-resolver-rolebindings
+  name: kubeshark-resolver-rolebindings
 subjects:
 - kind: User
   name: user-with-restricted-access
   apiGroup: rbac.authorization.k8s.io
 roleRef:
   kind: Role
-  name: mizu-resolver-role
+  name: kubeshark-resolver-role
   apiGroup: rbac.authorization.k8s.io

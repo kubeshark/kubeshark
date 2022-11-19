@@ -7,7 +7,7 @@ on:
       - 'main'
 
 concurrency:
-  group: mizu-pr-validation-${{ github.ref }}
+  group: kubeshark-pr-validation-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -57,6 +57,6 @@ jobs:
         with:
           context: .
           push: false
-          tags: up9inc/mizu:devlatest
+          tags: kubeshark/kubeshark:devlatest
           cache-from: type=gha
           cache-to: type=gha,mode=max

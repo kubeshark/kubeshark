@@ -18,13 +18,13 @@ import (
 	"strings"
 	"time"
 
+	"github.com/kubeshark/kubeshark/logger"
+	"github.com/kubeshark/kubeshark/tap/api"
+	"github.com/kubeshark/kubeshark/tap/diagnose"
+	"github.com/kubeshark/kubeshark/tap/source"
+	"github.com/kubeshark/kubeshark/tap/tlstapper"
 	"github.com/shirou/gopsutil/cpu"
 	"github.com/struCoder/pidusage"
-	"github.com/up9inc/mizu/logger"
-	"github.com/up9inc/mizu/tap/api"
-	"github.com/up9inc/mizu/tap/diagnose"
-	"github.com/up9inc/mizu/tap/source"
-	"github.com/up9inc/mizu/tap/tlstapper"
 	v1 "k8s.io/api/core/v1"
 )
 
@@ -51,11 +51,13 @@ var maxLiveStreams = flag.Int("max-live-streams", 500, "Maximum live streams to 
 var iface = flag.String("i", "en0", "Interface to read packets from")
 var fname = flag.String("r", "", "Filename to read from, overrides -i")
 var snaplen = flag.Int("s", 65536, "Snap length (number of bytes max to read per packet")
-var tstype = flag.String("timestamp_type", "", "Type of timestamps to use")
+var targetSizeMb = flag.Int("target-size-mb", 8, "AF_PACKET target block size (MB)")
+var tstype = flag.String("timestamp-type", "", "Type of timestamps to use")
 var promisc = flag.Bool("promisc", true, "Set promiscuous mode")
 var staleTimeoutSeconds = flag.Int("staletimout", 120, "Max time in seconds to keep connections which don't transmit data")
 var servicemesh = flag.Bool("servicemesh", false, "Record decrypted traffic if the cluster is configured with a service mesh and with mtls")
 var tls = flag.Bool("tls", false, "Enable TLS tapper")
+var packetCapture = flag.String("packet-capture", "libpcap", "Packet capture backend. Possible values: libpcap, af_packet")
 
 var memprofile = flag.String("memprofile", "", "Write memory profile")
 
@@ -109,7 +111,7 @@ func UpdateTapTargets(newTapTargets []v1.Pod) {
 
 	packetSourceManager.UpdatePods(tapTargets, !*nodefrag, mainPacketInputChan)
 
-	if tlsTapperInstance != nil && os.Getenv("MIZU_GLOBAL_GOLANG_PID") == "" {
+	if tlsTapperInstance != nil && os.Getenv("KUBESHARK_GLOBAL_GOLANG_PID") == "" {
 		if err := tlstapper.UpdateTapTargets(tlsTapperInstance, &tapTargets, *procfs); err != nil {
 			tlstapper.LogError(err)
 			success = false
@@ -210,16 +212,17 @@ func initializePacketSources() error {
 	}
 
 	behaviour := source.TcpPacketSourceBehaviour{
-		SnapLength:  *snaplen,
-		Promisc:     *promisc,
-		Tstype:      *tstype,
-		DecoderName: *decoder,
-		Lazy:        *lazy,
-		BpfFilter:   bpffilter,
+		SnapLength:   *snaplen,
+		TargetSizeMb: *targetSizeMb,
+		Promisc:      *promisc,
+		Tstype:       *tstype,
+		DecoderName:  *decoder,
+		Lazy:         *lazy,
+		BpfFilter:    bpffilter,
 	}
 
 	var err error
-	packetSourceManager, err = source.NewPacketSourceManager(*procfs, *fname, *iface, *servicemesh, tapTargets, behaviour, !*nodefrag, mainPacketInputChan)
+	packetSourceManager, err = source.NewPacketSourceManager(*procfs, *fname, *iface, *servicemesh, tapTargets, behaviour, !*nodefrag, *packetCapture, mainPacketInputChan)
 	return err
 }
 
@@ -291,8 +294,8 @@ func startTlsTapper(extension *api.Extension, outputItems chan *api.OutputChanne
 
 	// A quick way to instrument libssl.so without PID filtering - used for debuging and troubleshooting
 	//
-	if os.Getenv("MIZU_GLOBAL_SSL_LIBRARY") != "" {
-		if err := tls.GlobalSSLLibTap(os.Getenv("MIZU_GLOBAL_SSL_LIBRARY")); err != nil {
+	if os.Getenv("KUBESHARK_GLOBAL_SSL_LIBRARY") != "" {
+		if err := tls.GlobalSSLLibTap(os.Getenv("KUBESHARK_GLOBAL_SSL_LIBRARY")); err != nil {
 			tlstapper.LogError(err)
 			return nil
 		}
@@ -300,8 +303,8 @@ func startTlsTapper(extension *api.Extension, outputItems chan *api.OutputChanne
 
 	// A quick way to instrument Go `crypto/tls` without PID filtering - used for debuging and troubleshooting
 	//
-	if os.Getenv("MIZU_GLOBAL_GOLANG_PID") != "" {
-		if err := tls.GlobalGoTap(*procfs, os.Getenv("MIZU_GLOBAL_GOLANG_PID")); err != nil {
+	if os.Getenv("KUBESHARK_GLOBAL_GOLANG_PID") != "" {
+		if err := tls.GlobalGoTap(*procfs, os.Getenv("KUBESHARK_GLOBAL_GOLANG_PID")); err != nil {
 			tlstapper.LogError(err)
 			return nil
 		}

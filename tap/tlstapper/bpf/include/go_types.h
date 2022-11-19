@@ -1,7 +1,7 @@
 /*
 Note: This file is licenced differently from the rest of the project
 SPDX-License-Identifier: GPL-2.0
-Copyright (C) UP9 Inc.
+Copyright (C) Kubeshark
 */
 
 #ifndef __GO_TYPES__
