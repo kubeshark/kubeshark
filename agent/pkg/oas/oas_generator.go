@@ -5,9 +5,9 @@ import (
 	"net/url"
 	"sync"
 
-	"github.com/up9inc/mizu/agent/pkg/har"
-	"github.com/up9inc/mizu/logger"
-	"github.com/up9inc/mizu/tap/api"
+	"github.com/kubeshark/kubeshark/agent/pkg/har"
+	"github.com/kubeshark/kubeshark/logger"
+	"github.com/kubeshark/kubeshark/tap/api"
 )
 
 var (
@@ -16,7 +16,7 @@ var (
 )
 
 type OasGeneratorSink interface {
-	HandleEntry(mizuEntry *api.Entry)
+	HandleEntry(kubesharkEntry *api.Entry)
 }
 
 type OasGenerator interface {
@@ -58,34 +58,34 @@ func (g *defaultOasGenerator) IsStarted() bool {
 	return g.started
 }
 
-func (g *defaultOasGenerator) HandleEntry(mizuEntry *api.Entry) {
+func (g *defaultOasGenerator) HandleEntry(kubesharkEntry *api.Entry) {
 	if !g.started {
 		return
 	}
 
-	if mizuEntry.Protocol.Name == "http" {
-		dest := mizuEntry.Destination.Name
+	if kubesharkEntry.Protocol.Name == "http" {
+		dest := kubesharkEntry.Destination.Name
 		if dest == "" {
-			logger.Log.Debugf("OAS: Unresolved entry %d", mizuEntry.Id)
+			logger.Log.Debugf("OAS: Unresolved entry %d", kubesharkEntry.Id)
 			return
 		}
 
-		entry, err := har.NewEntry(mizuEntry.Request, mizuEntry.Response, mizuEntry.StartTime, mizuEntry.ElapsedTime)
+		entry, err := har.NewEntry(kubesharkEntry.Request, kubesharkEntry.Response, kubesharkEntry.StartTime, kubesharkEntry.ElapsedTime)
 		if err != nil {
-			logger.Log.Warningf("Failed to turn MizuEntry %d into HAR Entry: %s", mizuEntry.Id, err)
+			logger.Log.Warningf("Failed to turn KubesharkEntry %d into HAR Entry: %s", kubesharkEntry.Id, err)
 			return
 		}
 
 		entryWSource := &EntryWithSource{
 			Entry:       *entry,
-			Source:      mizuEntry.Source.Name,
+			Source:      kubesharkEntry.Source.Name,
 			Destination: dest,
-			Id:          mizuEntry.Id,
+			Id:          kubesharkEntry.Id,
 		}
 
 		g.handleHARWithSource(entryWSource)
 	} else {
-		logger.Log.Debugf("OAS: Unsupported protocol in entry %d: %s", mizuEntry.Id, mizuEntry.Protocol.Name)
+		logger.Log.Debugf("OAS: Unsupported protocol in entry %d: %s", kubesharkEntry.Id, kubesharkEntry.Protocol.Name)
 	}
 }
 

@@ -1,8 +1,8 @@
-# This example shows permissions that are required for Mizu to resolve IPs to service names
+# This example shows permissions that are required for Kubeshark to resolve IPs to service names
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: mizu-resolver-clusterrole
+  name: kubeshark-resolver-clusterrole
 rules:
 - apiGroups: [""]
   resources: ["serviceaccounts"]
@@ -26,12 +26,12 @@ rules:
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: mizu-resolver-clusterrolebindings
+  name: kubeshark-resolver-clusterrolebindings
 subjects:
 - kind: User
   name: user-with-clusterwide-access
   apiGroup: rbac.authorization.k8s.io
 roleRef:
   kind: ClusterRole
-  name: mizu-resolver-clusterrole
+  name: kubeshark-resolver-clusterrole
   apiGroup: rbac.authorization.k8s.io

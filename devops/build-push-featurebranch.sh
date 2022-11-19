@@ -3,7 +3,7 @@ set -e
 
 GCP_PROJECT=up9-docker-hub
 REPOSITORY=gcr.io/$GCP_PROJECT
-SERVER_NAME=mizu
+SERVER_NAME=kubeshark
 GIT_BRANCH=$(git branch | grep \* | cut -d ' ' -f2 | tr '[:upper:]' '[:lower:]')
 
 DOCKER_REPO=$REPOSITORY/$SERVER_NAME/$GIT_BRANCH

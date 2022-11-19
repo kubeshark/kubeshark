@@ -7,10 +7,10 @@ import (
 	"github.com/google/gopacket"
 	"github.com/google/gopacket/ip4defrag"
 	"github.com/google/gopacket/layers"
-	"github.com/up9inc/mizu/logger"
-	"github.com/up9inc/mizu/tap/api"
-	"github.com/up9inc/mizu/tap/dbgctl"
-	"github.com/up9inc/mizu/tap/diagnose"
+	"github.com/kubeshark/kubeshark/logger"
+	"github.com/kubeshark/kubeshark/tap/api"
+	"github.com/kubeshark/kubeshark/tap/dbgctl"
+	"github.com/kubeshark/kubeshark/tap/diagnose"
 )
 
 type Handle interface {
@@ -120,7 +120,7 @@ func (source *tcpPacketSource) Stats() (packetsReceived uint, packetsDropped uin
 }
 
 func (source *tcpPacketSource) readPackets(ipdefrag bool, packets chan<- TcpPacketInfo) {
-	if dbgctl.MizuTapperDisablePcap {
+	if dbgctl.KubesharkTapperDisablePcap {
 		return
 	}
 	logger.Log.Infof("Start reading packets from %v", source.name)

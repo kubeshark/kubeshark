@@ -16,10 +16,10 @@ import (
 
 	"github.com/chanced/openapi"
 	"github.com/google/uuid"
+	"github.com/kubeshark/kubeshark/logger"
 	"github.com/nav-inc/datetime"
-	"github.com/up9inc/mizu/logger"
 
-	"github.com/up9inc/mizu/agent/pkg/har"
+	"github.com/kubeshark/kubeshark/agent/pkg/har"
 
 	"time"
 )

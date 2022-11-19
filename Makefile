@@ -18,7 +18,7 @@ help: ## This help.
 # Variables and lists
 TS_SUFFIX="$(shell date '+%s')"
 GIT_BRANCH="$(shell git branch | grep \* | cut -d ' ' -f2 | tr '[:upper:]' '[:lower:]' | tr '/' '_')"
-BUCKET_PATH=static.up9.io/mizu/$(GIT_BRANCH)
+BUCKET_PATH=static.up9.io/kubeshark/$(GIT_BRANCH)
 export VER?=0.0
 ARCH=$(shell uname -m)
 ifeq ($(ARCH),$(filter $(ARCH),aarch64 arm64))
@@ -39,8 +39,8 @@ cli-debug: ## Build CLI.
 	@echo "building cli"; cd cli && $(MAKE) build-debug
 
 agent: bpf ## Build agent.
-	@(echo "building mizu agent .." )
-	@(cd agent; go build -o build/mizuagent main.go)
+	@(echo "building kubeshark agent .." )
+	@(cd agent; go build -o build/kubesharkagent main.go)
 	@ls -l agent/build
 
 bpf: $(BPF_O_FILES)
@@ -50,8 +50,8 @@ $(BPF_O_FILES): $(wildcard tap/tlstapper/bpf/**/*.[ch])
 	@(./tap/tlstapper/bpf-builder/build.sh)
 
 agent-debug: ## Build agent for debug.
-	@(echo "building mizu agent for debug.." )
-	@(cd agent; go build -gcflags="all=-N -l" -o build/mizuagent main.go)
+	@(echo "building kubeshark agent for debug.." )
+	@(cd agent; go build -gcflags="all=-N -l" -o build/kubesharkagent main.go)
 	@ls -l agent/build
 
 docker: ## Build and publish agent docker image.
@@ -59,7 +59,7 @@ docker: ## Build and publish agent docker image.
 
 agent-docker: ## Build agent docker image.
 	@echo "Building agent docker image"
-	@docker build -t up9inc/mizu:devlatest .
+	@docker build -t kubeshark/kubeshark:devlatest .
 
 push: push-docker push-cli ## Build and publish agent docker image & CLI.
 

@@ -9,26 +9,26 @@ import (
 	"regexp"
 	"time"
 
-	"github.com/up9inc/mizu/cli/apiserver"
-	"github.com/up9inc/mizu/cli/config/configStructs"
-	"github.com/up9inc/mizu/cli/errormessage"
-	"github.com/up9inc/mizu/cli/mizu"
-	"github.com/up9inc/mizu/cli/mizu/fsUtils"
-	"github.com/up9inc/mizu/cli/resources"
-	"github.com/up9inc/mizu/cli/uiUtils"
-	"github.com/up9inc/mizu/shared"
+	"github.com/kubeshark/kubeshark/cli/apiserver"
+	"github.com/kubeshark/kubeshark/cli/config/configStructs"
+	"github.com/kubeshark/kubeshark/cli/errormessage"
+	"github.com/kubeshark/kubeshark/cli/kubeshark"
+	"github.com/kubeshark/kubeshark/cli/kubeshark/fsUtils"
+	"github.com/kubeshark/kubeshark/cli/resources"
+	"github.com/kubeshark/kubeshark/cli/uiUtils"
+	"github.com/kubeshark/kubeshark/shared"
 
-	"github.com/up9inc/mizu/cli/config"
-	"github.com/up9inc/mizu/logger"
-	"github.com/up9inc/mizu/shared/kubernetes"
+	"github.com/kubeshark/kubeshark/cli/config"
+	"github.com/kubeshark/kubeshark/logger"
+	"github.com/kubeshark/kubeshark/shared/kubernetes"
 )
 
 func GetApiServerUrl(port uint16) string {
-	return fmt.Sprintf("http://%s", kubernetes.GetMizuApiServerProxiedHostAndPath(port))
+	return fmt.Sprintf("http://%s", kubernetes.GetKubesharkApiServerProxiedHostAndPath(port))
 }
 
 func startProxyReportErrorIfAny(kubernetesProvider *kubernetes.Provider, ctx context.Context, cancel context.CancelFunc, port uint16) {
-	httpServer, err := kubernetes.StartProxy(kubernetesProvider, config.Config.Tap.ProxyHost, port, config.Config.MizuResourcesNamespace, kubernetes.ApiServerPodName, cancel)
+	httpServer, err := kubernetes.StartProxy(kubernetesProvider, config.Config.Tap.ProxyHost, port, config.Config.KubesharkResourcesNamespace, kubernetes.ApiServerPodName, cancel)
 	if err != nil {
 		logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error occured while running k8s proxy %v\n"+
 			"Try setting different port by using --%s", errormessage.FormatError(err), configStructs.GuiPortTapName))
@@ -44,7 +44,7 @@ func startProxyReportErrorIfAny(kubernetesProvider *kubernetes.Provider, ctx con
 		}
 
 		podRegex, _ := regexp.Compile(kubernetes.ApiServerPodName)
-		if _, err := kubernetes.NewPortForward(kubernetesProvider, config.Config.MizuResourcesNamespace, podRegex, port, ctx, cancel); err != nil {
+		if _, err := kubernetes.NewPortForward(kubernetesProvider, config.Config.KubesharkResourcesNamespace, podRegex, port, ctx, cancel); err != nil {
 			logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error occured while running port forward %v\n"+
 				"Try setting different port by using --%s", errormessage.FormatError(err), configStructs.GuiPortTapName))
 			cancel()
@@ -89,32 +89,32 @@ func getKubernetesProviderForCli() (*kubernetes.Provider, error) {
 func handleKubernetesProviderError(err error) {
 	var clusterBehindProxyErr *kubernetes.ClusterBehindProxyError
 	if ok := errors.As(err, &clusterBehindProxyErr); ok {
-		logger.Log.Errorf("cannot establish http-proxy connection to the Kubernetes cluster. If you’re using Lens or similar tool, please run mizu with regular kubectl config using --%v %v=$HOME/.kube/config flag", config.SetCommandName, config.KubeConfigPathConfigName)
+		logger.Log.Errorf("cannot establish http-proxy connection to the Kubernetes cluster. If you’re using Lens or similar tool, please run kubeshark with regular kubectl config using --%v %v=$HOME/.kube/config flag", config.SetCommandName, config.KubeConfigPathConfigName)
 	} else {
 		logger.Log.Error(err)
 	}
 }
 
-func finishMizuExecution(kubernetesProvider *kubernetes.Provider, isNsRestrictedMode bool, mizuResourcesNamespace string) {
+func finishKubesharkExecution(kubernetesProvider *kubernetes.Provider, isNsRestrictedMode bool, kubesharkResourcesNamespace string) {
 	removalCtx, cancel := context.WithTimeout(context.Background(), cleanupTimeout)
 	defer cancel()
 	dumpLogsIfNeeded(removalCtx, kubernetesProvider)
-	resources.CleanUpMizuResources(removalCtx, cancel, kubernetesProvider, isNsRestrictedMode, mizuResourcesNamespace)
+	resources.CleanUpKubesharkResources(removalCtx, cancel, kubernetesProvider, isNsRestrictedMode, kubesharkResourcesNamespace)
 }
 
 func dumpLogsIfNeeded(ctx context.Context, kubernetesProvider *kubernetes.Provider) {
 	if !config.Config.DumpLogs {
 		return
 	}
-	mizuDir := mizu.GetMizuFolderPath()
-	filePath := path.Join(mizuDir, fmt.Sprintf("mizu_logs_%s.zip", time.Now().Format("2006_01_02__15_04_05")))
+	kubesharkDir := kubeshark.GetKubesharkFolderPath()
+	filePath := path.Join(kubesharkDir, fmt.Sprintf("kubeshark_logs_%s.zip", time.Now().Format("2006_01_02__15_04_05")))
 	if err := fsUtils.DumpLogs(ctx, kubernetesProvider, filePath); err != nil {
 		logger.Log.Errorf("Failed dump logs %v", err)
 	}
 }
 
-func getSerializedMizuAgentConfig(mizuAgentConfig *shared.MizuAgentConfig) (string, error) {
-	serializedConfig, err := json.Marshal(mizuAgentConfig)
+func getSerializedKubesharkAgentConfig(kubesharkAgentConfig *shared.KubesharkAgentConfig) (string, error) {
+	serializedConfig, err := json.Marshal(kubesharkAgentConfig)
 	if err != nil {
 		return "", err
 	}

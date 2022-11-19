@@ -38,7 +38,7 @@ The log file names should be named in this format `XX_DESCRIPTION.log` when XX i
 
 Example run:
 ```
-cd $MIZU_HOME/performance_analysis
+cd $KUBESHARK_HOME/performance_analysis
 virtualenv venv
 source venv/bin/activate
 pip install -r requirements.txt
@@ -64,7 +64,7 @@ Tapper can be run with various debug modes:
 * No Send - Emit the request response pair, but don't send them to the Api Server.
 * Regular mode
 
-![Tapper Modes](https://github.com/up9inc/mizu/blob/debug/profile-tapper-benchmark/performance_analysis/tapper-modes.png)
+![Tapper Modes](https://github.com/kubeshark/kubeshark/blob/debug/profile-tapper-benchmark/performance_analysis/tapper-modes.png)
 
 # Run benchmark with various tapper modes
 
@@ -75,7 +75,7 @@ In order to run the benchmark you probably want:
 2. An up and running Basenine
 3. An up and running UI (optional)
 4. An up and running test server, like nginx, that can return a known payload at a known endpoint.
-5. Set MIZU_HOME environment variable to points to mizu directory
+5. Set KUBESHARK_HOME environment variable to points to kubeshark directory
 6. Install the `hey` tool
 
 ## Running the benchmark
@@ -84,24 +84,24 @@ In order to run a benchmark use the `run_tapper_benchmark.sh` script.
 
 Example run:
 ```
-cd $MIZU_HOME/performance_analysis
+cd $KUBESHARK_HOME/performance_analysis
 source venv/bin/activate # Assuming you already run plot_from_tapper_logs.py 
 ./run_tapper_benchmark.sh
 ```
 
 Running it without params use the default values, use the following environment variables for customization:
 ```
-export=MIZU_BENCHMARK_OUTPUT_DIR=/path/to/dir # Set the output directory for tapper logs and graph
-export=MIZU_BENCHMARK_CLIENT_PERIOD=1m # How long each test run
-export=MIZU_BENCHMARK_URL=http://server:port/path # The URL to use for the benchmarking process (the test server endpoint)
-export=MIZU_BENCHMARK_RUN_COUNT=3 # How many times each tapper mode should run
-export=MIZU_BENCHMARK_QPS=250 # How many queries per second the each client should send to the test server
-export=MIZU_BENCHMARK_CLIENTS_COUNT=5 # How many clients should run in parallel during the benchmark
+export=KUBESHARK_BENCHMARK_OUTPUT_DIR=/path/to/dir # Set the output directory for tapper logs and graph
+export=KUBESHARK_BENCHMARK_CLIENT_PERIOD=1m # How long each test run
+export=KUBESHARK_BENCHMARK_URL=http://server:port/path # The URL to use for the benchmarking process (the test server endpoint)
+export=KUBESHARK_BENCHMARK_RUN_COUNT=3 # How many times each tapper mode should run
+export=KUBESHARK_BENCHMARK_QPS=250 # How many queries per second the each client should send to the test server
+export=KUBESHARK_BENCHMARK_CLIENTS_COUNT=5 # How many clients should run in parallel during the benchmark
 ```
 
 # Example output graph
 
 An example output graph from a 15 min run with 15K payload and 1000 QPS looks like
 
-![Example Graph](https://github.com/up9inc/mizu/blob/debug/profile-tapper-benchmark/performance_analysis/example-graph.png)
+![Example Graph](https://github.com/kubeshark/kubeshark/blob/debug/profile-tapper-benchmark/performance_analysis/example-graph.png)
 

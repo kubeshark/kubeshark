@@ -1,25 +1,25 @@
 package kubernetes
 
 const (
-	MizuResourcesPrefix        = "mizu-"
-	ApiServerPodName           = MizuResourcesPrefix + "api-server"
-	ClusterRoleBindingName     = MizuResourcesPrefix + "cluster-role-binding"
-	ClusterRoleName            = MizuResourcesPrefix + "cluster-role"
+	KubesharkResourcesPrefix   = "kubeshark-"
+	ApiServerPodName           = KubesharkResourcesPrefix + "api-server"
+	ClusterRoleBindingName     = KubesharkResourcesPrefix + "cluster-role-binding"
+	ClusterRoleName            = KubesharkResourcesPrefix + "cluster-role"
 	K8sAllNamespaces           = ""
-	RoleBindingName            = MizuResourcesPrefix + "role-binding"
-	RoleName                   = MizuResourcesPrefix + "role"
-	ServiceAccountName         = MizuResourcesPrefix + "service-account"
-	TapperDaemonSetName        = MizuResourcesPrefix + "tapper-daemon-set"
-	TapperPodName              = MizuResourcesPrefix + "tapper"
-	ConfigMapName              = MizuResourcesPrefix + "config"
+	RoleBindingName            = KubesharkResourcesPrefix + "role-binding"
+	RoleName                   = KubesharkResourcesPrefix + "role"
+	ServiceAccountName         = KubesharkResourcesPrefix + "service-account"
+	TapperDaemonSetName        = KubesharkResourcesPrefix + "tapper-daemon-set"
+	TapperPodName              = KubesharkResourcesPrefix + "tapper"
+	ConfigMapName              = KubesharkResourcesPrefix + "config"
 	MinKubernetesServerVersion = "1.16.0"
 )
 
 const (
-	LabelPrefixApp      = "app.kubernetes.io/"
-	LabelManagedBy      = LabelPrefixApp + "managed-by"
-	LabelCreatedBy      = LabelPrefixApp + "created-by"
-	LabelValueMizu      = "mizu"
-	LabelValueMizuCLI   = "mizu-cli"
-	LabelValueMizuAgent = "mizu-agent"
+	LabelPrefixApp           = "app.kubernetes.io/"
+	LabelManagedBy           = LabelPrefixApp + "managed-by"
+	LabelCreatedBy           = LabelPrefixApp + "created-by"
+	LabelValueKubeshark      = "kubeshark"
+	LabelValueKubesharkCLI   = "kubeshark-cli"
+	LabelValueKubesharkAgent = "kubeshark-agent"
 )

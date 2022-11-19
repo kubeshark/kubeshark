@@ -17,7 +17,7 @@ FROM node:16 AS front-end
 WORKDIR /app/ui-build
 
 COPY ui/package.json ui/package-lock.json ./
-COPY --from=front-end-common ["/app/ui-build/up9-mizu-common-0.0.0.tgz", "."]
+COPY --from=front-end-common ["/app/ui-build/up9-kubeshark-common-0.0.0.tgz", "."]
 RUN npm i
 COPY ui .
 RUN npm run build
@@ -54,14 +54,14 @@ ENV BPF_TARGET=arm64 BPF_CFLAGS="-O2 -g -D__TARGET_ARCH_arm64"
 
 
 ### Builder image for x86-64 to AArch64 cross-compilation
-FROM up9inc/linux-arm64-musl-go-libpcap-capstone-bpf:capstone-5.0-rc2 AS builder-from-amd64-to-arm64v8
+FROM kubeshark/linux-arm64-musl-go-libpcap-capstone-bpf:capstone-5.0-rc2 AS builder-from-amd64-to-arm64v8
 ENV CGO_ENABLED=1 GOOS=linux
 ENV GOARCH=arm64 CGO_CFLAGS="-I/work/libpcap -I/work/capstone/include"
 ENV BPF_TARGET=arm64 BPF_CFLAGS="-O2 -g -D__TARGET_ARCH_arm64 -I/usr/xcc/aarch64-linux-musl-cross/aarch64-linux-musl/include/"
 
 
 ### Builder image for AArch64 to x86-64 cross-compilation
-FROM up9inc/linux-x86_64-musl-go-libpcap-capstone-bpf:capstone-5.0-rc2 AS builder-from-arm64v8-to-amd64
+FROM kubeshark/linux-x86_64-musl-go-libpcap-capstone-bpf:capstone-5.0-rc2 AS builder-from-arm64v8-to-amd64
 ENV CGO_ENABLED=1 GOOS=linux
 ENV GOARCH=amd64 CGO_CFLAGS="-I/libpcap -I/capstone/include"
 ENV BPF_TARGET=amd64 BPF_CFLAGS="-O2 -g -D__TARGET_ARCH_x86  -I/usr/local/musl/x86_64-unknown-linux-musl/include/"
@@ -110,10 +110,10 @@ RUN GOARCH=${BUILDARCH} go generate tls_tapper.go
 WORKDIR /app/agent-build
 
 RUN go build -ldflags="-extldflags=-static -s -w \
-    -X 'github.com/up9inc/mizu/agent/pkg/version.GitCommitHash=${COMMIT_HASH}' \
-    -X 'github.com/up9inc/mizu/agent/pkg/version.Branch=${GIT_BRANCH}' \
-    -X 'github.com/up9inc/mizu/agent/pkg/version.BuildTimestamp=${BUILD_TIMESTAMP}' \
-    -X 'github.com/up9inc/mizu/agent/pkg/version.Ver=${VER}'" -o mizuagent .
+    -X 'github.com/kubeshark/kubeshark/agent/pkg/version.GitCommitHash=${COMMIT_HASH}' \
+    -X 'github.com/kubeshark/kubeshark/agent/pkg/version.Branch=${GIT_BRANCH}' \
+    -X 'github.com/kubeshark/kubeshark/agent/pkg/version.BuildTimestamp=${BUILD_TIMESTAMP}' \
+    -X 'github.com/kubeshark/kubeshark/agent/pkg/version.Ver=${VER}'" -o kubesharkagent .
 
 # Download Basenine executable, verify the sha1sum
 ADD https://github.com/up9inc/basenine/releases/download/v0.8.3/basenine_linux_${GOARCH} ./basenine_linux_${GOARCH}
@@ -133,9 +133,9 @@ WORKDIR /app/data/
 WORKDIR /app
 
 # Copy binary and config files from /build to root folder of scratch container.
-COPY --from=builder ["/app/agent-build/mizuagent", "."]
+COPY --from=builder ["/app/agent-build/kubesharkagent", "."]
 COPY --from=builder ["/app/agent-build/basenine", "/usr/local/bin/basenine"]
 COPY --from=front-end ["/app/ui-build/build", "site"]
 
 # this script runs both apiserver and passivetapper and exits either if one of them exits, preventing a scenario where the container runs without one process
-ENTRYPOINT ["/app/mizuagent"]
+ENTRYPOINT ["/app/kubesharkagent"]

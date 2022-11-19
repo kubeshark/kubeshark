@@ -1,11 +1,11 @@
-module github.com/up9inc/mizu/acceptanceTests
+module github.com/kubeshark/kubeshark/acceptanceTests
 
 go 1.17
 
 require (
 	github.com/go-redis/redis/v8 v8.11.4
 	github.com/rabbitmq/amqp091-go v1.3.0
-	github.com/up9inc/mizu/shared v0.0.0
+	github.com/kubeshark/kubeshark/shared v0.0.0
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
 	k8s.io/apimachinery v0.23.3
 	k8s.io/client-go v0.23.3
@@ -47,10 +47,10 @@ require (
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
 
-replace github.com/up9inc/mizu/logger v0.0.0 => ../logger
+replace github.com/kubeshark/kubeshark/logger v0.0.0 => ../logger
 
-replace github.com/up9inc/mizu/shared v0.0.0 => ../shared
+replace github.com/kubeshark/kubeshark/shared v0.0.0 => ../shared
 
-replace github.com/up9inc/mizu/tap/api v0.0.0 => ../tap/api
+replace github.com/kubeshark/kubeshark/tap/api v0.0.0 => ../tap/api
 
-replace github.com/up9inc/mizu/tap/dbgctl v0.0.0 => ../tap/dbgctl
+replace github.com/kubeshark/kubeshark/tap/dbgctl v0.0.0 => ../tap/dbgctl

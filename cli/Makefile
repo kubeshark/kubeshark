@@ -15,9 +15,9 @@ help: ## This help.
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
 install:
-	go install mizu.go
+	go install kubeshark.go
 
-build-debug:  ## Build mizu CLI for debug
+build-debug:  ## Build kubeshark CLI for debug
 	export GCLFAGS='-gcflags="all=-N -l"'
 	${MAKE} build-base
 
@@ -25,15 +25,15 @@ build:
 	export LDFLAGS_EXT='-s -w'
 	${MAKE} build-base
 
-build-base: ## Build mizu CLI binary (select platform via GOOS / GOARCH env variables).
+build-base: ## Build kubeshark CLI binary (select platform via GOOS / GOARCH env variables).
 	go build ${GCLFAGS} -ldflags="${LDFLAGS_EXT} \
-					-X 'github.com/up9inc/mizu/cli/mizu.GitCommitHash=$(COMMIT_HASH)' \
-					-X 'github.com/up9inc/mizu/cli/mizu.Branch=$(GIT_BRANCH)' \
-					-X 'github.com/up9inc/mizu/cli/mizu.BuildTimestamp=$(BUILD_TIMESTAMP)' \
-					-X 'github.com/up9inc/mizu/cli/mizu.Platform=$(SUFFIX)' \
-					-X 'github.com/up9inc/mizu/cli/mizu.Ver=$(VER)'" \
-					-o bin/mizu_$(SUFFIX) mizu.go
-	(cd bin && shasum -a 256 mizu_${SUFFIX} > mizu_${SUFFIX}.sha256)
+					-X 'github.com/kubeshark/kubeshark/cli/kubeshark.GitCommitHash=$(COMMIT_HASH)' \
+					-X 'github.com/kubeshark/kubeshark/cli/kubeshark.Branch=$(GIT_BRANCH)' \
+					-X 'github.com/kubeshark/kubeshark/cli/kubeshark.BuildTimestamp=$(BUILD_TIMESTAMP)' \
+					-X 'github.com/kubeshark/kubeshark/cli/kubeshark.Platform=$(SUFFIX)' \
+					-X 'github.com/kubeshark/kubeshark/cli/kubeshark.Ver=$(VER)'" \
+					-o bin/kubeshark_$(SUFFIX) kubeshark.go
+	(cd bin && shasum -a 256 kubeshark_${SUFFIX} > kubeshark_${SUFFIX}.sha256)
 
 build-all: ## Build for all supported platforms.
 	echo "Compiling for every OS and Platform" && \
@@ -43,7 +43,7 @@ build-all: ## Build for all supported platforms.
 	$(MAKE) build GOOS=darwin GOARCH=amd64 && \
 	$(MAKE) build GOOS=darwin GOARCH=arm64 && \
 	$(MAKE) build GOOS=windows GOARCH=amd64 && \
-	mv ./bin/mizu_windows_amd64 ./bin/mizu.exe && \
+	mv ./bin/kubeshark_windows_amd64 ./bin/kubeshark.exe && \
 	echo "---------" && \
 	find ./bin -ls
 

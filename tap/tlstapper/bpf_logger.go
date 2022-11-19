@@ -7,7 +7,7 @@ import (
 
 	"github.com/cilium/ebpf/perf"
 	"github.com/go-errors/errors"
-	"github.com/up9inc/mizu/logger"
+	"github.com/kubeshark/kubeshark/logger"
 )
 
 const logPrefix = "[bpf] "

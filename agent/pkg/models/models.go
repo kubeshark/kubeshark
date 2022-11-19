@@ -3,11 +3,11 @@ package models
 import (
 	"encoding/json"
 
-	"github.com/up9inc/mizu/agent/pkg/har"
-	tapApi "github.com/up9inc/mizu/tap/api"
+	"github.com/kubeshark/kubeshark/agent/pkg/har"
+	tapApi "github.com/kubeshark/kubeshark/tap/api"
 
+	"github.com/kubeshark/kubeshark/shared"
 	basenine "github.com/up9inc/basenine/client/go"
-	"github.com/up9inc/mizu/shared"
 )
 
 type EntriesRequest struct {

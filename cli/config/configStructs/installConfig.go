@@ -5,7 +5,7 @@ const (
 )
 
 type InstallConfig struct {
-	TemplateUrl  string `yaml:"template-url" default:"https://storage.googleapis.com/static.up9.io/mizu/helm-template"`
+	TemplateUrl  string `yaml:"template-url" default:"https://storage.googleapis.com/static.up9.io/kubeshark/helm-template"`
 	TemplateName string `yaml:"template-name" default:"helm-template.yaml"`
 	Out          bool   `yaml:"out"`
 }

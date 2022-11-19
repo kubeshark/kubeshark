@@ -5,7 +5,7 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/up9inc/mizu/logger"
+	"github.com/kubeshark/kubeshark/logger"
 )
 
 /*

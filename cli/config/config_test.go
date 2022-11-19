@@ -2,7 +2,7 @@ package config_test
 
 import (
 	"fmt"
-	"github.com/up9inc/mizu/cli/config"
+	"github.com/kubeshark/kubeshark/cli/config"
 	"gopkg.in/yaml.v3"
 	"reflect"
 	"strings"

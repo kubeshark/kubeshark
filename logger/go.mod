@@ -1,4 +1,4 @@
-module github.com/up9inc/mizu/logger
+module github.com/kubeshark/kubeshark/logger
 
 go 1.17
 

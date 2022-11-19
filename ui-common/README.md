@@ -1,4 +1,4 @@
-# mizu-common
+# kubeshark-common
 
 > Made with create-react-library
 
@@ -7,7 +7,7 @@
 ## Install
 
 ```bash
-npm install --save @up9/mizu-common
+npm install --save @up9/kubeshark-common
 ```
 
 ## Usage
@@ -15,8 +15,8 @@ npm install --save @up9/mizu-common
 ```tsx
 import React, { Component } from 'react'
 
-import MyComponent from 'l@up9/mizu-common'
-import '@up9/mizu-common/dist/index.css'
+import MyComponent from 'l@up9/kubeshark-common'
+import '@up9/kubeshark-common/dist/index.css'
 
 class Example extends Component {
   render() {

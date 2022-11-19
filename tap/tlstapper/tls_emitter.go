@@ -1,6 +1,6 @@
 package tlstapper
 
-import "github.com/up9inc/mizu/tap/api"
+import "github.com/kubeshark/kubeshark/tap/api"
 
 type tlsEmitter struct {
 	delegate  api.Emitter

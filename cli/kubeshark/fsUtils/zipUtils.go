@@ -8,7 +8,7 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/up9inc/mizu/logger"
+	"github.com/kubeshark/kubeshark/logger"
 )
 
 func AddFileToZip(zipWriter *zip.Writer, filename string) error {

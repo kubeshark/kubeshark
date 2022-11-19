@@ -12,7 +12,7 @@
           "catalogue"
         ],
         "summary": "/catalogue",
-        "description": "Mizu observed 3 entries (0 failed), at 2.647 hits/s, average response time is 0.008 seconds",
+        "description": "Kubeshark observed 3 entries (0 failed), at 2.647 hits/s, average response time is 0.008 seconds",
         "operationId": "dd6c3dbe-6b6b-4ddd-baed-757e237ddb8a",
         "parameters": [
           {
@@ -221,7 +221,7 @@
           "catalogue"
         ],
         "summary": "/catalogue/size",
-        "description": "Mizu observed 1 entries (0 failed), at 0.000 hits/s, average response time is 0.013 seconds",
+        "description": "Kubeshark observed 1 entries (0 failed), at 0.000 hits/s, average response time is 0.013 seconds",
         "operationId": "2315e69d-9d66-48cf-b3d3-fec9c30bd28b",
         "parameters": [
           {
@@ -298,7 +298,7 @@
           "catalogue"
         ],
         "summary": "/catalogue/{id}",
-        "description": "Mizu observed 4 entries (0 failed), at 1.899 hits/s, average response time is 0.003 seconds",
+        "description": "Kubeshark observed 4 entries (0 failed), at 1.899 hits/s, average response time is 0.003 seconds",
         "parameters": [
           {
             "name": "non-required-header",
@@ -412,7 +412,7 @@
     "/tags": {
       "get": {
         "summary": "/tags",
-        "description": "Mizu observed 1 entries (0 failed), at 0.000 hits/s, average response time is 0.007 seconds",
+        "description": "Kubeshark observed 1 entries (0 failed), at 0.000 hits/s, average response time is 0.007 seconds",
         "operationId": "c4d7d0ed-1a78-4370-a049-efe3abc631a6",
         "responses": {
           "200": {

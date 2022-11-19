@@ -9,7 +9,7 @@ on:
       - 'develop'
 
 env:
-  MIZU_CI_IMAGE: mizu/ci:0.0
+  KUBESHARK_CI_IMAGE: kubeshark/ci:0.0
 
 jobs:
   run-acceptance-tests:
@@ -33,7 +33,7 @@ jobs:
           context: .
           push: false
           load: true
-          tags: ${{ env.MIZU_CI_IMAGE }}
+          tags: ${{ env.KUBESHARK_CI_IMAGE }}
           cache-from: type=gha
           cache-to: type=gha,mode=max
 

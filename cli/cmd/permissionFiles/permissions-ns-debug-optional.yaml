@@ -2,7 +2,7 @@
 kind: Role
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: mizu-runner-debug-role
+  name: kubeshark-runner-debug-role
 rules:
 - apiGroups: ["events.k8s.io"]
   resources: ["events"]
@@ -14,12 +14,12 @@ rules:
 kind: RoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: mizu-runner-debug-rolebindings
+  name: kubeshark-runner-debug-rolebindings
 subjects:
 - kind: User
   name: user-with-restricted-access
   apiGroup: rbac.authorization.k8s.io
 roleRef:
   kind: Role
-  name: mizu-runner-debug-role
+  name: kubeshark-runner-debug-role
   apiGroup: rbac.authorization.k8s.io

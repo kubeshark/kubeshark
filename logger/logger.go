@@ -6,7 +6,7 @@ import (
 	"github.com/op/go-logging"
 )
 
-var Log = logging.MustGetLogger("mizu")
+var Log = logging.MustGetLogger("kubeshark")
 
 var format = logging.MustStringFormatter(
 	`[%{time:2006-01-02T15:04:05.000-0700}] %{level:-5s} ▶ %{message} ▶ [%{pid} %{shortfile} %{shortfunc}]`,
@@ -15,7 +15,7 @@ var format = logging.MustStringFormatter(
 func InitLogger(logPath string) {
 	f, err := os.OpenFile(logPath, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
 	if err != nil {
-		Log.Infof("Failed to open mizu log file: %v, err %v", logPath, err)
+		Log.Infof("Failed to open kubeshark log file: %v, err %v", logPath, err)
 	}
 
 	fileLog := logging.NewLogBackend(f, "", 0)

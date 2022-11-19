@@ -6,11 +6,11 @@ import (
 	"regexp"
 	"time"
 
+	"github.com/kubeshark/kubeshark/logger"
+	"github.com/kubeshark/kubeshark/shared"
+	"github.com/kubeshark/kubeshark/shared/debounce"
+	"github.com/kubeshark/kubeshark/tap/api"
 	"github.com/op/go-logging"
-	"github.com/up9inc/mizu/logger"
-	"github.com/up9inc/mizu/shared"
-	"github.com/up9inc/mizu/shared/debounce"
-	"github.com/up9inc/mizu/tap/api"
 	core "k8s.io/api/core/v1"
 )
 
@@ -21,8 +21,8 @@ type TappedPodChangeEvent struct {
 	Removed []core.Pod
 }
 
-// MizuTapperSyncer uses a k8s pod watch to update tapper daemonsets when targeted pods are removed or created
-type MizuTapperSyncer struct {
+// KubesharkTapperSyncer uses a k8s pod watch to update tapper daemonsets when targeted pods are removed or created
+type KubesharkTapperSyncer struct {
 	startTime              time.Time
 	context                context.Context
 	CurrentlyTappedPods    []core.Pod
@@ -36,22 +36,22 @@ type MizuTapperSyncer struct {
 }
 
 type TapperSyncerConfig struct {
-	TargetNamespaces         []string
-	PodFilterRegex           regexp.Regexp
-	MizuResourcesNamespace   string
-	AgentImage               string
-	TapperResources          shared.Resources
-	ImagePullPolicy          core.PullPolicy
-	LogLevel                 logging.Level
-	MizuApiFilteringOptions  api.TrafficFilteringOptions
-	MizuServiceAccountExists bool
-	ServiceMesh              bool
-	Tls                      bool
-	MaxLiveStreams           int
+	TargetNamespaces              []string
+	PodFilterRegex                regexp.Regexp
+	KubesharkResourcesNamespace   string
+	AgentImage                    string
+	TapperResources               shared.Resources
+	ImagePullPolicy               core.PullPolicy
+	LogLevel                      logging.Level
+	KubesharkApiFilteringOptions  api.TrafficFilteringOptions
+	KubesharkServiceAccountExists bool
+	ServiceMesh                   bool
+	Tls                           bool
+	MaxLiveStreams                int
 }
 
-func CreateAndStartMizuTapperSyncer(ctx context.Context, kubernetesProvider *Provider, config TapperSyncerConfig, startTime time.Time) (*MizuTapperSyncer, error) {
-	syncer := &MizuTapperSyncer{
+func CreateAndStartKubesharkTapperSyncer(ctx context.Context, kubernetesProvider *Provider, config TapperSyncerConfig, startTime time.Time) (*KubesharkTapperSyncer, error) {
+	syncer := &KubesharkTapperSyncer{
 		startTime:              startTime.Truncate(time.Second), // Round down because k8s CreationTimestamp is given in 1 sec resolution.
 		context:                ctx,
 		CurrentlyTappedPods:    make([]core.Pod, 0),
@@ -66,7 +66,7 @@ func CreateAndStartMizuTapperSyncer(ctx context.Context, kubernetesProvider *Pro
 		return nil, err
 	}
 
-	if err := syncer.updateMizuTappers(); err != nil {
+	if err := syncer.updateKubesharkTappers(); err != nil {
 		return nil, err
 	}
 
@@ -76,10 +76,10 @@ func CreateAndStartMizuTapperSyncer(ctx context.Context, kubernetesProvider *Pro
 	return syncer, nil
 }
 
-func (tapperSyncer *MizuTapperSyncer) watchTapperPods() {
-	mizuResourceRegex := regexp.MustCompile(fmt.Sprintf("^%s.*", TapperPodName))
-	podWatchHelper := NewPodWatchHelper(tapperSyncer.kubernetesProvider, mizuResourceRegex)
-	eventChan, errorChan := FilteredWatch(tapperSyncer.context, podWatchHelper, []string{tapperSyncer.config.MizuResourcesNamespace}, podWatchHelper)
+func (tapperSyncer *KubesharkTapperSyncer) watchTapperPods() {
+	kubesharkResourceRegex := regexp.MustCompile(fmt.Sprintf("^%s.*", TapperPodName))
+	podWatchHelper := NewPodWatchHelper(tapperSyncer.kubernetesProvider, kubesharkResourceRegex)
+	eventChan, errorChan := FilteredWatch(tapperSyncer.context, podWatchHelper, []string{tapperSyncer.config.KubesharkResourcesNamespace}, podWatchHelper)
 
 	for {
 		select {
@@ -91,7 +91,7 @@ func (tapperSyncer *MizuTapperSyncer) watchTapperPods() {
 
 			pod, err := wEvent.ToPod()
 			if err != nil {
-				logger.Log.Debugf("[ERROR] parsing Mizu resource pod: %+v", err)
+				logger.Log.Debugf("[ERROR] parsing Kubeshark resource pod: %+v", err)
 				continue
 			}
 
@@ -115,10 +115,10 @@ func (tapperSyncer *MizuTapperSyncer) watchTapperPods() {
 	}
 }
 
-func (tapperSyncer *MizuTapperSyncer) watchTapperEvents() {
-	mizuResourceRegex := regexp.MustCompile(fmt.Sprintf("^%s.*", TapperPodName))
-	eventWatchHelper := NewEventWatchHelper(tapperSyncer.kubernetesProvider, mizuResourceRegex, "pod")
-	eventChan, errorChan := FilteredWatch(tapperSyncer.context, eventWatchHelper, []string{tapperSyncer.config.MizuResourcesNamespace}, eventWatchHelper)
+func (tapperSyncer *KubesharkTapperSyncer) watchTapperEvents() {
+	kubesharkResourceRegex := regexp.MustCompile(fmt.Sprintf("^%s.*", TapperPodName))
+	eventWatchHelper := NewEventWatchHelper(tapperSyncer.kubernetesProvider, kubesharkResourceRegex, "pod")
+	eventChan, errorChan := FilteredWatch(tapperSyncer.context, eventWatchHelper, []string{tapperSyncer.config.KubesharkResourcesNamespace}, eventWatchHelper)
 
 	for {
 		select {
@@ -130,7 +130,7 @@ func (tapperSyncer *MizuTapperSyncer) watchTapperEvents() {
 
 			event, err := wEvent.ToEvent()
 			if err != nil {
-				logger.Log.Debugf("[ERROR] parsing Mizu resource event: %+v", err)
+				logger.Log.Debugf("[ERROR] parsing Kubeshark resource event: %+v", err)
 				continue
 			}
 
@@ -143,7 +143,7 @@ func (tapperSyncer *MizuTapperSyncer) watchTapperEvents() {
 					event.Reason,
 					event.Note))
 
-			pod, err1 := tapperSyncer.kubernetesProvider.GetPod(tapperSyncer.context, tapperSyncer.config.MizuResourcesNamespace, event.Regarding.Name)
+			pod, err1 := tapperSyncer.kubernetesProvider.GetPod(tapperSyncer.context, tapperSyncer.config.KubesharkResourcesNamespace, event.Regarding.Name)
 			if err1 != nil {
 				logger.Log.Debugf(fmt.Sprintf("Couldn't get tapper pod %s", event.Regarding.Name))
 				continue
@@ -174,7 +174,7 @@ func (tapperSyncer *MizuTapperSyncer) watchTapperEvents() {
 	}
 }
 
-func (tapperSyncer *MizuTapperSyncer) watchPodsForTapping() {
+func (tapperSyncer *KubesharkTapperSyncer) watchPodsForTapping() {
 	podWatchHelper := NewPodWatchHelper(tapperSyncer.kubernetesProvider, &tapperSyncer.config.PodFilterRegex)
 	eventChan, errorChan := FilteredWatch(tapperSyncer.context, podWatchHelper, tapperSyncer.config.TargetNamespaces, podWatchHelper)
 
@@ -191,7 +191,7 @@ func (tapperSyncer *MizuTapperSyncer) watchPodsForTapping() {
 			logger.Log.Debugf("Nothing changed update tappers not needed")
 			return
 		}
-		if err := tapperSyncer.updateMizuTappers(); err != nil {
+		if err := tapperSyncer.updateKubesharkTappers(); err != nil {
 			tapperSyncer.ErrorOut <- K8sTapManagerError{
 				OriginalError:    err,
 				TapManagerReason: TapManagerTapperUpdateError,
@@ -261,7 +261,7 @@ func (tapperSyncer *MizuTapperSyncer) watchPodsForTapping() {
 	}
 }
 
-func (tapperSyncer *MizuTapperSyncer) handleErrorInWatchLoop(err error, restartTappersDebouncer *debounce.Debouncer) {
+func (tapperSyncer *KubesharkTapperSyncer) handleErrorInWatchLoop(err error, restartTappersDebouncer *debounce.Debouncer) {
 	logger.Log.Debugf("Watching pods loop, got error %v, stopping `restart tappers debouncer`", err)
 	restartTappersDebouncer.Cancel()
 	tapperSyncer.ErrorOut <- K8sTapManagerError{
@@ -270,11 +270,11 @@ func (tapperSyncer *MizuTapperSyncer) handleErrorInWatchLoop(err error, restartT
 	}
 }
 
-func (tapperSyncer *MizuTapperSyncer) updateCurrentlyTappedPods() (err error, changesFound bool) {
+func (tapperSyncer *KubesharkTapperSyncer) updateCurrentlyTappedPods() (err error, changesFound bool) {
 	if matchingPods, err := tapperSyncer.kubernetesProvider.ListAllRunningPodsMatchingRegex(tapperSyncer.context, &tapperSyncer.config.PodFilterRegex, tapperSyncer.config.TargetNamespaces); err != nil {
 		return err, false
 	} else {
-		podsToTap := excludeMizuPods(matchingPods)
+		podsToTap := excludeKubesharkPods(matchingPods)
 		addedPods, removedPods := getPodArrayDiff(tapperSyncer.CurrentlyTappedPods, podsToTap)
 		for _, addedPod := range addedPods {
 			logger.Log.Debugf("tapping new pod %s", addedPod.Name)
@@ -295,7 +295,7 @@ func (tapperSyncer *MizuTapperSyncer) updateCurrentlyTappedPods() (err error, ch
 	}
 }
 
-func (tapperSyncer *MizuTapperSyncer) updateMizuTappers() error {
+func (tapperSyncer *KubesharkTapperSyncer) updateKubesharkTappers() error {
 	nodesToTap := make([]string, len(tapperSyncer.nodeToTappedPodMap))
 	i := 0
 	for node := range tapperSyncer.nodeToTappedPodMap {
@@ -312,7 +312,7 @@ func (tapperSyncer *MizuTapperSyncer) updateMizuTappers() error {
 
 	if len(tapperSyncer.nodeToTappedPodMap) > 0 {
 		var serviceAccountName string
-		if tapperSyncer.config.MizuServiceAccountExists {
+		if tapperSyncer.config.KubesharkServiceAccountExists {
 			serviceAccountName = ServiceAccountName
 		} else {
 			serviceAccountName = ""
@@ -323,18 +323,18 @@ func (tapperSyncer *MizuTapperSyncer) updateMizuTappers() error {
 			nodeNames = append(nodeNames, nodeName)
 		}
 
-		if err := tapperSyncer.kubernetesProvider.ApplyMizuTapperDaemonSet(
+		if err := tapperSyncer.kubernetesProvider.ApplyKubesharkTapperDaemonSet(
 			tapperSyncer.context,
-			tapperSyncer.config.MizuResourcesNamespace,
+			tapperSyncer.config.KubesharkResourcesNamespace,
 			TapperDaemonSetName,
 			tapperSyncer.config.AgentImage,
 			TapperPodName,
-			fmt.Sprintf("%s.%s.svc", ApiServerPodName, tapperSyncer.config.MizuResourcesNamespace),
+			fmt.Sprintf("%s.%s.svc", ApiServerPodName, tapperSyncer.config.KubesharkResourcesNamespace),
 			nodeNames,
 			serviceAccountName,
 			tapperSyncer.config.TapperResources,
 			tapperSyncer.config.ImagePullPolicy,
-			tapperSyncer.config.MizuApiFilteringOptions,
+			tapperSyncer.config.KubesharkApiFilteringOptions,
 			tapperSyncer.config.LogLevel,
 			tapperSyncer.config.ServiceMesh,
 			tapperSyncer.config.Tls,
@@ -344,9 +344,9 @@ func (tapperSyncer *MizuTapperSyncer) updateMizuTappers() error {
 
 		logger.Log.Debugf("Successfully created %v tappers", len(tapperSyncer.nodeToTappedPodMap))
 	} else {
-		if err := tapperSyncer.kubernetesProvider.ResetMizuTapperDaemonSet(
+		if err := tapperSyncer.kubernetesProvider.ResetKubesharkTapperDaemonSet(
 			tapperSyncer.context,
-			tapperSyncer.config.MizuResourcesNamespace,
+			tapperSyncer.config.KubesharkResourcesNamespace,
 			TapperDaemonSetName,
 			tapperSyncer.config.AgentImage,
 			TapperPodName); err != nil {

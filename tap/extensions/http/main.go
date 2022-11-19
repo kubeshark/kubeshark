@@ -11,7 +11,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/up9inc/mizu/tap/api"
+	"github.com/kubeshark/kubeshark/tap/api"
 )
 
 var http10protocol = api.Protocol{
@@ -22,7 +22,7 @@ var http10protocol = api.Protocol{
 	},
 	LongName:        "Hypertext Transfer Protocol -- HTTP/1.0",
 	Macro:           "http",
-	BackgroundColor: "#205cf5",
+	BackgroundColor: "#326de6",
 	ForegroundColor: "#ffffff",
 	FontSize:        12,
 	ReferenceLink:   "https://datatracker.ietf.org/doc/html/rfc1945",
@@ -38,7 +38,7 @@ var http11protocol = api.Protocol{
 	},
 	LongName:        "Hypertext Transfer Protocol -- HTTP/1.1",
 	Macro:           "http",
-	BackgroundColor: "#205cf5",
+	BackgroundColor: "#326de6",
 	ForegroundColor: "#ffffff",
 	FontSize:        12,
 	ReferenceLink:   "https://datatracker.ietf.org/doc/html/rfc2616",

@@ -6,12 +6,12 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/kubeshark/kubeshark/agent/pkg/app"
+	"github.com/kubeshark/kubeshark/agent/pkg/models"
+	"github.com/kubeshark/kubeshark/logger"
+	"github.com/kubeshark/kubeshark/shared"
+	tapApi "github.com/kubeshark/kubeshark/tap/api"
 	basenine "github.com/up9inc/basenine/client/go"
-	"github.com/up9inc/mizu/agent/pkg/app"
-	"github.com/up9inc/mizu/agent/pkg/models"
-	"github.com/up9inc/mizu/logger"
-	"github.com/up9inc/mizu/shared"
-	tapApi "github.com/up9inc/mizu/tap/api"
 )
 
 type EntriesProvider interface {

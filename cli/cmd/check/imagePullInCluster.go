@@ -6,9 +6,9 @@ import (
 	"regexp"
 	"time"
 
-	"github.com/up9inc/mizu/cli/uiUtils"
-	"github.com/up9inc/mizu/logger"
-	"github.com/up9inc/mizu/shared/kubernetes"
+	"github.com/kubeshark/kubeshark/cli/uiUtils"
+	"github.com/kubeshark/kubeshark/logger"
+	"github.com/kubeshark/kubeshark/shared/kubernetes"
 	core "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -17,7 +17,7 @@ func ImagePullInCluster(ctx context.Context, kubernetesProvider *kubernetes.Prov
 	logger.Log.Infof("\nimage-pull-in-cluster\n--------------------")
 
 	namespace := "default"
-	podName := "mizu-test"
+	podName := "kubeshark-test"
 
 	defer func() {
 		if err := kubernetesProvider.RemovePod(ctx, namespace, podName); err != nil {
@@ -31,11 +31,11 @@ func ImagePullInCluster(ctx context.Context, kubernetesProvider *kubernetes.Prov
 	}
 
 	if err := checkImagePulled(ctx, kubernetesProvider, namespace, podName); err != nil {
-		logger.Log.Errorf("%v cluster is not able to pull mizu containers from docker hub, err: %v", fmt.Sprintf(uiUtils.Red, "✗"), err)
+		logger.Log.Errorf("%v cluster is not able to pull kubeshark containers from docker hub, err: %v", fmt.Sprintf(uiUtils.Red, "✗"), err)
 		return false
 	}
 
-	logger.Log.Infof("%v cluster is able to pull mizu containers from docker hub", fmt.Sprintf(uiUtils.Green, "√"))
+	logger.Log.Infof("%v cluster is able to pull kubeshark containers from docker hub", fmt.Sprintf(uiUtils.Green, "√"))
 	return true
 }
 
@@ -85,7 +85,7 @@ func createImagePullInClusterPod(ctx context.Context, kubernetesProvider *kubern
 			Containers: []core.Container{
 				{
 					Name:            "probe",
-					Image:           "up9inc/busybox",
+					Image:           "kubeshark/busybox",
 					ImagePullPolicy: "Always",
 					Command:         []string{"cat"},
 					Stdin:           true,

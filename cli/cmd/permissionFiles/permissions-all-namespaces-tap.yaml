@@ -1,8 +1,8 @@
-# This example shows the permissions that are required in order to run the `mizu tap` command
+# This example shows the permissions that are required in order to run the `kubeshark tap` command
 kind: ClusterRole
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: mizu-runner-clusterrole
+  name: kubeshark-runner-clusterrole
 rules:
 - apiGroups: [""]
   resources: ["pods"]
@@ -29,12 +29,12 @@ rules:
 kind: ClusterRoleBinding
 apiVersion: rbac.authorization.k8s.io/v1
 metadata:
-  name: mizu-runner-clusterrolebindings
+  name: kubeshark-runner-clusterrolebindings
 subjects:
 - kind: User
   name: user-with-clusterwide-access
   apiGroup: rbac.authorization.k8s.io
 roleRef:
   kind: ClusterRole
-  name: mizu-runner-clusterrole
+  name: kubeshark-runner-clusterrole
   apiGroup: rbac.authorization.k8s.io
