@@ -1,10 +1,10 @@
-name: Release
-
 on:
   push:
-    branches:
-      - 'develop'
-      - 'main'
+    # Sequence of patterns matched against refs/tags
+    tags:
+    - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
+
+name: Release
 
 concurrency:
   group: kubeshark-publish-${{ github.ref }}

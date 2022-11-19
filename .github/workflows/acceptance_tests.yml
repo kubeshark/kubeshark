@@ -1,12 +1,6 @@
-name: acceptance tests
+on: [push, pull_request]
 
-on:
-  pull_request:
-    branches:
-      - 'main'
-  push:
-    branches:
-      - 'develop'
+name: Acceptance tests
 
 env:
   KUBESHARK_CI_IMAGE: kubeshark/ci:0.0

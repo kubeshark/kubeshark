@@ -1,10 +1,10 @@
-name: Build
-
 on:
-  pull_request:
-    branches:
-      - 'develop'
-      - 'main'
+  push:
+    # Sequence of patterns matched against refs/tags
+    tags:
+    - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
+
+name: Build
 
 concurrency:
   group: kubeshark-pr-validation-${{ github.ref }}
@@ -19,7 +19,7 @@ jobs:
         uses: actions/checkout@v2
         with:
           fetch-depth: 2
-      
+
       - name: Check modified files
         id: modified_files
         run: devops/check_modified_files.sh cli/
@@ -42,7 +42,7 @@ jobs:
         uses: actions/checkout@v2
         with:
           fetch-depth: 2
-      
+
       - name: Check modified files
         id: modified_files
         run: devops/check_modified_files.sh agent/ shared/ tap/ ui/ ui-common/ Dockerfile

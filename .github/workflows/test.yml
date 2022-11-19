@@ -1,14 +1,6 @@
-name: Test
+on: [push, pull_request]
 
-on:
-  pull_request:
-    branches:
-      - 'develop'
-      - 'main'
-  push: # needed to upload test coverage report to codecov
-    branches:
-      - 'develop'
-      - 'main'
+name: Test
 
 concurrency:
   group: kubeshark-tests-validation-${{ github.ref }}
@@ -62,7 +54,7 @@ jobs:
 
       - name: Shared Test
         run: make test-shared
-      
+
       - name: Check extensions modified files
         id: ext_modified_files
         run: devops/check_modified_files.sh tap/extensions/ tap/api/
