@@ -20,23 +20,34 @@
     </a>
 </p>
 
-Kubeshark is an **observability and monitoring tool for** [**Kubernetes**](https://kubernetes.io/), enabling **dynamic analysis** of the microservices, detecting **anomalies** and **triggering functions** when certain patterns appear in runtime.
+<p>
+<p align="center">
+Mizu (by UP9) is now Kubeshark, read more about it <a href="https://www.kubeshark.co/mizu-is-now-kubeshark">here</a>
+</p>
 
-Think of Kubeshark as a **Kubernetes-aware** combination of [**Wireshark**](https://www.wireshark.org/), [**BPF Compiler Collection (BCC) tools**](https://github.com/iovisor/bcc) and beyond.
+Kubeshark, the API Traffic Viewer for kubernetes, provides deep visibility and monitoring of all API traffic and payloads going in, out and across containers and pods inside a Kubernetes cluster.
+
+Think of a combination of Chrome Dev Tools and Wireshark, re-invented for Kubernetes.
 
 ![Simple UI](assets/kubeshark-ui.png)
 
-## Quickstart
+## Download
 
-Installing Kubeshark can't be any easier. Either choose the right binary, download and use directly from [the releases section](https://github.com/kubeshark/kubeshark/releases/), or use a shell script to download the right binary for your operating system and CPU architecture:
+Kubeshark uses a ~45MB pre-compiled executable binary to communicate with the Kubernetes API. We recommend downloading the `kubeshark` CLI by using one of these options:
+
+> Choose the right binary, download and use directly from [the releases section](https://github.com/kubeshark/kubeshark/releases/); or
+
+> Use this :point_down: shell script to download the right binary for your operating system and CPU architecture.
 
 ```shell
 sh <(curl -Ls https://kubeshark.co/install)
 ```
 
-## Deploy
+> Compile from source
 
-Once you have the Kubeshark CLI installed on your system, run the command below to deploy the Kubeshark container into your Kubernetes cluster.
+## Run
+
+Use the `kubeshark` CLI to capture and view streaming API traffic in real time.
 
 ```shell
 kubeshark tap
@@ -44,7 +55,7 @@ kubeshark tap
 ### Troubleshooting Installation
 If something doesn't work or simply to play it safe prior to installing, make sure that:
 
-> Kubeshark images are hosted on Docker Hub. Make sure you have access to https://hub.docker.com/
+> Make sure you have access to https://hub.docker.com/
 
 > Make sure `kubeshark` executable in your `PATH`.
 
