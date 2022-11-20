@@ -27,7 +27,7 @@ Mizu (by UP9) is now Kubeshark, read more about it <a href="https://www.kubeshar
 
 Kubeshark, the API Traffic Viewer for kubernetes, provides deep visibility and monitoring of all API traffic and payloads going in, out and across containers and pods inside a Kubernetes cluster.
 
-Think of a combination of Chrome Dev Tools and Wireshark, re-invented for Kubernetes.
+Think of a combination of Chrome Dev Tools, TCPDump and Wireshark, re-invented for Kubernetes.
 
 ![Simple UI](assets/kubeshark-ui.png)
 
