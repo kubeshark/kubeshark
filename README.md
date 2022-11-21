@@ -38,15 +38,15 @@ Think of a combination of Chrome Dev Tools, TCPDump and Wireshark, re-invented f
 
 Kubeshark uses a ~45MB pre-compiled executable binary to communicate with the Kubernetes API. We recommend downloading the `kubeshark` CLI by using one of these options:
 
-> Choose the right binary, download and use directly from [the releases section](https://github.com/kubeshark/kubeshark/releases/); or
+- Choose the right binary, download and use directly from [the latest stable release](https://github.com/kubeshark/kubeshark/releases/latest).
 
-> Use this :point_down: shell script to download the right binary for your operating system and CPU architecture.
+- Use the shell script below :point_down: to automatically download the right binary for your operating system and CPU architecture:
 
 ```shell
 sh <(curl -Ls https://kubeshark.co/install)
 ```
 
-> Compile from source
+- Compile it from source using `make cli` command.
 
 ## Run
 
@@ -55,8 +55,9 @@ Use the `kubeshark` CLI to capture and view streaming API traffic in real time.
 ```shell
 kubeshark tap
 ```
+
 ### Troubleshooting Installation
-If something doesn't work or simply to play it safe prior to installing, make sure that:
+If something doesn't work or simply to play it safe prior to installing;
 
 > Make sure you have access to https://hub.docker.com/
 
