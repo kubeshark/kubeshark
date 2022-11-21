@@ -17,13 +17,6 @@ body:
       placeholder: ex. email@example.com
     validations:
       required: false
-  - type: input
-    id: original-thread
-    attributes:
-      label: Original Thread
-      description: A link to the original discussion thread (e.g. Slack, Discord, Email, Verbal)
-    validations:
-      required: false
   - type: textarea
     id: the-problem
     attributes:
@@ -31,6 +24,13 @@ body:
       description: Please describe the problem you are trying to solve
     validations:
       required: true
+  - type: input
+    id: original-thread
+    attributes:
+      label: Original Thread
+      description: A link to the original discussion thread (e.g. Slack, Discord, Email, Verbal)
+    validations:
+      required: false
   - type: textarea
     id: the-solution
     attributes:
