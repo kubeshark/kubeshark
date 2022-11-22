@@ -17,17 +17,4 @@
   * Name the test file "<tested_file_name>_test.go"
   * Name the test package "<tested_package>_test"
   * Example - [Slice Utils](../cli/kubeshark/sliceUtils_test.go)
-* Make sure to run test coverage to make sure you covered all the cases and lines in the func  
-  
-## Acceptance tests
-* Position the test file inside the [acceptance tests folder](../acceptanceTests)
-* Name the file "<tested_command>_test.go"
-* Name the package "acceptanceTests"
-* Do not run as part of the short tests
-* Use/Create generic test utils func in acceptanceTests/testsUtils
-* Don't use sleep inside the tests - active check 
-* Running acceptance tests locally
-  * Switch to the branch that is being tested
-  * Run acceptanceTests/setup.sh
-  * Run tests (make acceptance-test)
-* Example - [Tap](../acceptanceTests/tap_test.go)
+* Make sure to run test coverage to make sure you covered all the cases and lines in the func
