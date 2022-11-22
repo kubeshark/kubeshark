@@ -28,7 +28,6 @@ else
 	BPF_TARGET=amd64
 	BPF_ARCH_SUFFIX=x86
 endif
-BPF_O_FILES = tap/tlstapper/tlstapper46_bpfel_$(BPF_ARCH_SUFFIX).o tap/tlstapper/tlstapper_bpfel_$(BPF_ARCH_SUFFIX).o
 
 ui: ## Build UI.
 	@(cd ui; npm i ; npm run build; )
@@ -45,7 +44,7 @@ agent: bpf ## Build agent.
 	@(cd agent; go build -o build/kubesharkagent main.go)
 	@ls -l agent/build
 
-bpf: $(BPF_O_FILES)
+bpf:
 	BPF_TARGET="$(BPF_TARGET)" BPF_CFLAGS="-O2 -g -D__TARGET_ARCH_$(BPF_ARCH_SUFFIX)" go generate tap/tlstapper/tls_tapper.go
 
 agent-debug: ## Build agent for debug.
