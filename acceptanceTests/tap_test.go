@@ -3,7 +3,7 @@ package acceptanceTests
 import (
 	"archive/zip"
 	"fmt"
-	"io/ioutil"
+	"os"
 	"os/exec"
 	"path"
 	"strings"
@@ -532,7 +532,7 @@ func TestTapDumpLogs(t *testing.T) {
 		return
 	}
 
-	files, readErr := ioutil.ReadDir(kubesharkFolderPath)
+	files, readErr := os.ReadDir(kubesharkFolderPath)
 	if readErr != nil {
 		t.Errorf("failed to read kubeshark folder files, err: %v", readErr)
 		return

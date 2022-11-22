@@ -2,7 +2,6 @@ package source
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"strings"
 
@@ -15,7 +14,7 @@ const envoyBinary = "/envoy"
 func discoverRelevantEnvoyPids(procfs string, pods []v1.Pod) ([]string, error) {
 	result := make([]string, 0)
 
-	pids, err := ioutil.ReadDir(procfs)
+	pids, err := os.ReadDir(procfs)
 
 	if err != nil {
 		return result, err

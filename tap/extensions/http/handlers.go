@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"net/http"
 	"strings"
 	"time"
@@ -124,7 +123,7 @@ func handleHTTP1ClientStream(b *bufio.Reader, progress *api.ReadProgress, captur
 	}
 
 	var body []byte
-	body, err = ioutil.ReadAll(req.Body)
+	body, err = io.ReadAll(req.Body)
 	req.Body = io.NopCloser(bytes.NewBuffer(body)) // rewind
 
 	ident := fmt.Sprintf(
@@ -168,7 +167,7 @@ func handleHTTP1ServerStream(b *bufio.Reader, progress *api.ReadProgress, captur
 	}
 
 	var body []byte
-	body, err = ioutil.ReadAll(res.Body)
+	body, err = io.ReadAll(res.Body)
 	res.Body = io.NopCloser(bytes.NewBuffer(body)) // rewind
 
 	ident := fmt.Sprintf(

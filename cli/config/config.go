@@ -3,7 +3,7 @@ package config
 import (
 	"errors"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"os"
 	"reflect"
 	"strconv"
@@ -78,7 +78,7 @@ func WriteConfig(config *ConfigStruct) error {
 	}
 
 	data := []byte(template)
-	if err := ioutil.WriteFile(Config.ConfigFilePath, data, 0644); err != nil {
+	if err := os.WriteFile(Config.ConfigFilePath, data, 0644); err != nil {
 		return fmt.Errorf("failed writing config, err: %v", err)
 	}
 
@@ -91,7 +91,7 @@ func loadConfigFile(configFilePath string, config *ConfigStruct) error {
 		return openErr
 	}
 
-	buf, readErr := ioutil.ReadAll(reader)
+	buf, readErr := io.ReadAll(reader)
 	if readErr != nil {
 		return readErr
 	}

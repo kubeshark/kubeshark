@@ -3,7 +3,6 @@ package config
 import (
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
 	"os"
 
 	"github.com/kubeshark/kubeshark/shared"
@@ -23,7 +22,7 @@ func LoadConfig() error {
 	}
 	filePath := fmt.Sprintf("%s%s", shared.ConfigDirPath, shared.ConfigFileName)
 
-	content, err := ioutil.ReadFile(filePath)
+	content, err := os.ReadFile(filePath)
 	if err != nil {
 		if os.IsNotExist(err) {
 			return applyDefaultConfig()

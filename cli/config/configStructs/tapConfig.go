@@ -3,7 +3,6 @@ package configStructs
 import (
 	"fmt"
 	"io/fs"
-	"io/ioutil"
 	"os"
 	"regexp"
 	"strings"
@@ -70,7 +69,7 @@ func (config *TapConfig) GetInsertionFilter() string {
 	insertionFilter := config.InsertionFilter
 	if fs.ValidPath(insertionFilter) {
 		if _, err := os.Stat(insertionFilter); err == nil {
-			b, err := ioutil.ReadFile(insertionFilter)
+			b, err := os.ReadFile(insertionFilter)
 			if err != nil {
 				logger.Log.Warningf(uiUtils.Warning, fmt.Sprintf("Couldn't read the file on path: %s, err: %v", insertionFilter, err))
 			} else {

@@ -4,7 +4,6 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
-	"io/ioutil"
 	"mime"
 	"mime/multipart"
 	"net/textproto"
@@ -615,7 +614,7 @@ func handleFormDataMultipart(text string, content *openapi.MediaType, ctypeParam
 		}
 		defer part.Close()
 
-		body, err := ioutil.ReadAll(part)
+		body, err := io.ReadAll(part)
 		if err != nil {
 			logger.Log.Errorf("Error reading multipart Part %s: %v", part.Header, err)
 		}
