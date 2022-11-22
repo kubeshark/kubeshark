@@ -5,20 +5,20 @@ import (
 	"time"
 
 	"github.com/creasty/defaults"
+	"github.com/kubeshark/kubeshark/cli/config"
+	"github.com/kubeshark/kubeshark/cli/kubeshark"
+	"github.com/kubeshark/kubeshark/cli/kubeshark/fsUtils"
+	"github.com/kubeshark/kubeshark/cli/kubeshark/version"
+	"github.com/kubeshark/kubeshark/cli/uiUtils"
+	"github.com/kubeshark/kubeshark/logger"
 	"github.com/spf13/cobra"
-	"github.com/up9inc/mizu/cli/config"
-	"github.com/up9inc/mizu/cli/mizu"
-	"github.com/up9inc/mizu/cli/mizu/fsUtils"
-	"github.com/up9inc/mizu/cli/mizu/version"
-	"github.com/up9inc/mizu/cli/uiUtils"
-	"github.com/up9inc/mizu/logger"
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "mizu",
+	Use:   "kubeshark",
 	Short: "A web traffic viewer for kubernetes",
 	Long: `A web traffic viewer for kubernetes
-Further info is available at https://github.com/up9inc/mizu`,
+Further info is available at https://github.com/kubeshark/kubeshark`,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		if err := config.InitConfig(cmd); err != nil {
 			logger.Log.Fatal(err)
@@ -51,8 +51,8 @@ func printNewVersionIfNeeded(versionChan chan string) {
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the tapCmd.
 func Execute() {
-	if err := fsUtils.EnsureDir(mizu.GetMizuFolderPath()); err != nil {
-		logger.Log.Errorf("Failed to use mizu folder, %v", err)
+	if err := fsUtils.EnsureDir(kubeshark.GetKubesharkFolderPath()); err != nil {
+		logger.Log.Errorf("Failed to use kubeshark folder, %v", err)
 	}
 	logger.InitLogger(fsUtils.GetLogFilePath())
 

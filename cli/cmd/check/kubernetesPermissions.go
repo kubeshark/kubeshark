@@ -6,11 +6,11 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/up9inc/mizu/cli/bucket"
-	"github.com/up9inc/mizu/cli/config"
-	"github.com/up9inc/mizu/cli/uiUtils"
-	"github.com/up9inc/mizu/logger"
-	"github.com/up9inc/mizu/shared/kubernetes"
+	"github.com/kubeshark/kubeshark/cli/bucket"
+	"github.com/kubeshark/kubeshark/cli/config"
+	"github.com/kubeshark/kubeshark/cli/uiUtils"
+	"github.com/kubeshark/kubeshark/logger"
+	"github.com/kubeshark/kubeshark/shared/kubernetes"
 	rbac "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -41,7 +41,7 @@ func TapKubernetesPermissions(ctx context.Context, embedFS embed.FS, kubernetesP
 
 	switch resource := obj.(type) {
 	case *rbac.Role:
-		return checkRulesPermissions(ctx, kubernetesProvider, resource.Rules, config.Config.MizuResourcesNamespace)
+		return checkRulesPermissions(ctx, kubernetesProvider, resource.Rules, config.Config.KubesharkResourcesNamespace)
 	case *rbac.ClusterRole:
 		return checkRulesPermissions(ctx, kubernetesProvider, resource.Rules, "")
 	}

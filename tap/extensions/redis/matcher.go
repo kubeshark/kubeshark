@@ -4,7 +4,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/up9inc/mizu/tap/api"
+	"github.com/kubeshark/kubeshark/tap/api"
 )
 
 // Key is `{src_ip}_{dst_ip}_{src_ip}_{src_port}_{incremental_counter}`

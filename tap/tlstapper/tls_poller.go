@@ -16,8 +16,8 @@ import (
 	"github.com/cilium/ebpf/perf"
 	"github.com/go-errors/errors"
 	"github.com/hashicorp/golang-lru/simplelru"
-	"github.com/up9inc/mizu/logger"
-	"github.com/up9inc/mizu/tap/api"
+	"github.com/kubeshark/kubeshark/logger"
+	"github.com/kubeshark/kubeshark/tap/api"
 )
 
 const (
@@ -146,7 +146,7 @@ func (p *tlsPoller) handleTlsChunk(chunk *tlsTapperTlsChunk, extension *api.Exte
 
 	reader.newChunk(chunk)
 
-	if os.Getenv("MIZU_VERBOSE_TLS_TAPPER") == "true" {
+	if os.Getenv("KUBESHARK_VERBOSE_TLS_TAPPER") == "true" {
 		p.logTls(chunk, key, reader)
 	}
 

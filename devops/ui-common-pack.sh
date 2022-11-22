@@ -9,4 +9,4 @@ echo "dst folder: $dst_folder";
 cd $dst_folder/../ui-common
 npm i
 npm pack
-mv up9-mizu-common-0.0.0.tgz $dst_folder
+mv up9-kubeshark-common-0.0.0.tgz $dst_folder

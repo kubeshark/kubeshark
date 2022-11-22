@@ -6,18 +6,18 @@ import (
 	"time"
 
 	"github.com/antelman107/net-wait-go/wait"
+	"github.com/kubeshark/kubeshark/agent/pkg/api"
+	"github.com/kubeshark/kubeshark/agent/pkg/providers"
+	"github.com/kubeshark/kubeshark/agent/pkg/utils"
+	"github.com/kubeshark/kubeshark/logger"
+	tapApi "github.com/kubeshark/kubeshark/tap/api"
+	"github.com/kubeshark/kubeshark/tap/dbgctl"
+	amqpExt "github.com/kubeshark/kubeshark/tap/extensions/amqp"
+	httpExt "github.com/kubeshark/kubeshark/tap/extensions/http"
+	kafkaExt "github.com/kubeshark/kubeshark/tap/extensions/kafka"
+	redisExt "github.com/kubeshark/kubeshark/tap/extensions/redis"
 	"github.com/op/go-logging"
 	basenine "github.com/up9inc/basenine/client/go"
-	"github.com/up9inc/mizu/agent/pkg/api"
-	"github.com/up9inc/mizu/agent/pkg/providers"
-	"github.com/up9inc/mizu/agent/pkg/utils"
-	"github.com/up9inc/mizu/logger"
-	tapApi "github.com/up9inc/mizu/tap/api"
-	"github.com/up9inc/mizu/tap/dbgctl"
-	amqpExt "github.com/up9inc/mizu/tap/extensions/amqp"
-	httpExt "github.com/up9inc/mizu/tap/extensions/http"
-	kafkaExt "github.com/up9inc/mizu/tap/extensions/kafka"
-	redisExt "github.com/up9inc/mizu/tap/extensions/redis"
 )
 
 var (
@@ -42,7 +42,7 @@ func LoadExtensions() {
 		ProtocolsMap[k] = v
 	}
 
-	if !dbgctl.MizuTapperDisableNonHttpExtensions {
+	if !dbgctl.KubesharkTapperDisableNonHttpExtensions {
 		extensionAmqp := &tapApi.Extension{}
 		dissectorAmqp := amqpExt.NewDissector()
 		dissectorAmqp.Register(extensionAmqp)

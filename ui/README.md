@@ -1,2 +1,2 @@
-# mizu UI
+# kubeshark UI
 web app traffic viewer

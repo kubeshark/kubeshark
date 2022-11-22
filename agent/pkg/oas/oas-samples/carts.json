@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "http://carts",
-    "description": "Mizu observed 3 entries (0 failed), at 2.287 hits/s, average response time is 0.017 seconds",
+    "description": "Kubeshark observed 3 entries (0 failed), at 2.287 hits/s, average response time is 0.017 seconds",
     "version": "1.0"
   },
   "servers": [
@@ -14,7 +14,7 @@
     "/carts/{cartId}/items": {
       "get": {
         "summary": "/carts/{cartId}/items",
-        "description": "Mizu observed 3 entries (0 failed), at 2.287 hits/s, average response time is 0.017 seconds",
+        "description": "Kubeshark observed 3 entries (0 failed), at 2.287 hits/s, average response time is 0.017 seconds",
         "operationId": "84c9b926-1f73-4ab4-b381-3c124528959f",
         "responses": {
           "200": {

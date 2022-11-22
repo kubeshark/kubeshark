@@ -8,25 +8,25 @@ import (
 	"path"
 	"regexp"
 
-	"github.com/up9inc/mizu/cli/config"
-	"github.com/up9inc/mizu/cli/mizu"
-	"github.com/up9inc/mizu/logger"
-	"github.com/up9inc/mizu/shared/kubernetes"
+	"github.com/kubeshark/kubeshark/cli/config"
+	"github.com/kubeshark/kubeshark/cli/kubeshark"
+	"github.com/kubeshark/kubeshark/logger"
+	"github.com/kubeshark/kubeshark/shared/kubernetes"
 )
 
 func GetLogFilePath() string {
-	return path.Join(mizu.GetMizuFolderPath(), "mizu_cli.log")
+	return path.Join(kubeshark.GetKubesharkFolderPath(), "kubeshark_cli.log")
 }
 
 func DumpLogs(ctx context.Context, provider *kubernetes.Provider, filePath string) error {
-	podExactRegex := regexp.MustCompile("^" + kubernetes.MizuResourcesPrefix)
-	pods, err := provider.ListAllPodsMatchingRegex(ctx, podExactRegex, []string{config.Config.MizuResourcesNamespace})
+	podExactRegex := regexp.MustCompile("^" + kubernetes.KubesharkResourcesPrefix)
+	pods, err := provider.ListAllPodsMatchingRegex(ctx, podExactRegex, []string{config.Config.KubesharkResourcesNamespace})
 	if err != nil {
 		return err
 	}
 
 	if len(pods) == 0 {
-		return fmt.Errorf("no mizu pods found in namespace %s", config.Config.MizuResourcesNamespace)
+		return fmt.Errorf("no kubeshark pods found in namespace %s", config.Config.KubesharkResourcesNamespace)
 	}
 
 	newZipFile, err := os.Create(filePath)
@@ -55,17 +55,17 @@ func DumpLogs(ctx context.Context, provider *kubernetes.Provider, filePath strin
 		}
 	}
 
-	events, err := provider.GetNamespaceEvents(ctx, config.Config.MizuResourcesNamespace)
+	events, err := provider.GetNamespaceEvents(ctx, config.Config.KubesharkResourcesNamespace)
 	if err != nil {
 		logger.Log.Debugf("Failed to get k8b events, %v", err)
 	} else {
-		logger.Log.Debugf("Successfully read events for k8b namespace: %s", config.Config.MizuResourcesNamespace)
+		logger.Log.Debugf("Successfully read events for k8b namespace: %s", config.Config.KubesharkResourcesNamespace)
 	}
 
-	if err := AddStrToZip(zipWriter, events, fmt.Sprintf("%s_events.log", config.Config.MizuResourcesNamespace)); err != nil {
+	if err := AddStrToZip(zipWriter, events, fmt.Sprintf("%s_events.log", config.Config.KubesharkResourcesNamespace)); err != nil {
 		logger.Log.Debugf("Failed write logs, %v", err)
 	} else {
-		logger.Log.Debugf("Successfully added events for k8b namespace: %s", config.Config.MizuResourcesNamespace)
+		logger.Log.Debugf("Successfully added events for k8b namespace: %s", config.Config.KubesharkResourcesNamespace)
 	}
 
 	if err := AddFileToZip(zipWriter, config.Config.ConfigFilePath); err != nil {

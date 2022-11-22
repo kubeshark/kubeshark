@@ -4,8 +4,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/up9inc/mizu/tap/api"
-	"github.com/up9inc/mizu/tap/dbgctl"
+	"github.com/kubeshark/kubeshark/tap/api"
+	"github.com/kubeshark/kubeshark/tap/dbgctl"
 )
 
 type tcpStreamCallbacks interface {
@@ -102,7 +102,7 @@ func (t *tcpStream) GetReqResMatchers() []api.RequestResponseMatcher {
 }
 
 func (t *tcpStream) GetIsTapTarget() bool {
-	if dbgctl.MizuTapperDisableTcpStream {
+	if dbgctl.KubesharkTapperDisableTcpStream {
 		return false
 	}
 	return t.isTapTarget

@@ -3,8 +3,8 @@ package controllers
 import (
 	"net/http"
 
-	"github.com/up9inc/mizu/agent/pkg/dependency"
-	"github.com/up9inc/mizu/agent/pkg/servicemap"
+	"github.com/kubeshark/kubeshark/agent/pkg/dependency"
+	"github.com/kubeshark/kubeshark/agent/pkg/servicemap"
 
 	"github.com/gin-gonic/gin"
 )

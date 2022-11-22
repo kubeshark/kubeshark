@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"github.com/up9inc/mizu/cli/config"
+	"github.com/kubeshark/kubeshark/cli/config"
 )
 
 func performCleanCommand() {
@@ -10,5 +10,5 @@ func performCleanCommand() {
 		return
 	}
 
-	finishMizuExecution(kubernetesProvider, config.Config.IsNsRestrictedMode(), config.Config.MizuResourcesNamespace)
+	finishKubesharkExecution(kubernetesProvider, config.Config.IsNsRestrictedMode(), config.Config.KubesharkResourcesNamespace)
 }

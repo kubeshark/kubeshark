@@ -11,8 +11,8 @@ import (
 	"encoding/json"
 
 	"github.com/google/uuid"
-	tapApi "github.com/up9inc/mizu/tap/api"
-	mizuhttp "github.com/up9inc/mizu/tap/extensions/http"
+	tapApi "github.com/kubeshark/kubeshark/tap/api"
+	kubesharkhttp "github.com/kubeshark/kubeshark/tap/extensions/http"
 )
 
 func TestValid(t *testing.T) {
@@ -60,7 +60,7 @@ func TestValid(t *testing.T) {
 			for headerKey, headerValue := range replayData.Headers {
 				request.Header.Add(headerKey, headerValue)
 			}
-			request.Header.Add("x-mizu", uuid.New().String())
+			request.Header.Add("x-kubeshark", uuid.New().String())
 			response, requestErr := client.Do(request)
 
 			if requestErr != nil {
@@ -68,7 +68,7 @@ func TestValid(t *testing.T) {
 			}
 
 			extensionHttp := &tapApi.Extension{}
-			dissectorHttp := mizuhttp.NewDissector()
+			dissectorHttp := kubesharkhttp.NewDissector()
 			dissectorHttp.Register(extensionHttp)
 			extensionHttp.Dissector = dissectorHttp
 			extension := extensionHttp

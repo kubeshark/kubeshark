@@ -11,19 +11,19 @@ import (
 	"strings"
 	"time"
 
-	"github.com/up9inc/mizu/agent/pkg/dependency"
-	"github.com/up9inc/mizu/agent/pkg/oas"
-	"github.com/up9inc/mizu/agent/pkg/servicemap"
+	"github.com/kubeshark/kubeshark/agent/pkg/dependency"
+	"github.com/kubeshark/kubeshark/agent/pkg/oas"
+	"github.com/kubeshark/kubeshark/agent/pkg/servicemap"
 
-	"github.com/up9inc/mizu/agent/pkg/har"
-	"github.com/up9inc/mizu/agent/pkg/holder"
-	"github.com/up9inc/mizu/agent/pkg/providers"
+	"github.com/kubeshark/kubeshark/agent/pkg/har"
+	"github.com/kubeshark/kubeshark/agent/pkg/holder"
+	"github.com/kubeshark/kubeshark/agent/pkg/providers"
 
-	"github.com/up9inc/mizu/agent/pkg/resolver"
-	"github.com/up9inc/mizu/agent/pkg/utils"
+	"github.com/kubeshark/kubeshark/agent/pkg/resolver"
+	"github.com/kubeshark/kubeshark/agent/pkg/utils"
 
-	"github.com/up9inc/mizu/logger"
-	tapApi "github.com/up9inc/mizu/tap/api"
+	"github.com/kubeshark/kubeshark/logger"
+	tapApi "github.com/kubeshark/kubeshark/tap/api"
 )
 
 var k8sResolver *resolver.Resolver
@@ -106,27 +106,27 @@ func startReadingChannel(outputItems <-chan *tapApi.OutputChannelItem, extension
 			namespace = item.Namespace
 		}
 
-		mizuEntry := extension.Dissector.Analyze(item, resolvedSource, resolvedDestination, namespace)
+		kubesharkEntry := extension.Dissector.Analyze(item, resolvedSource, resolvedDestination, namespace)
 
-		data, err := json.Marshal(mizuEntry)
+		data, err := json.Marshal(kubesharkEntry)
 		if err != nil {
 			logger.Log.Errorf("Error while marshaling entry: %v", err)
 			continue
 		}
 
 		entryInserter := dependency.GetInstance(dependency.EntriesInserter).(EntryInserter)
-		if err := entryInserter.Insert(mizuEntry); err != nil {
+		if err := entryInserter.Insert(kubesharkEntry); err != nil {
 			logger.Log.Errorf("Error inserting entry, err: %v", err)
 		}
 
-		summary := extension.Dissector.Summarize(mizuEntry)
+		summary := extension.Dissector.Summarize(kubesharkEntry)
 		providers.EntryAdded(len(data), summary)
 
 		serviceMapGenerator := dependency.GetInstance(dependency.ServiceMapGeneratorDependency).(servicemap.ServiceMapSink)
-		serviceMapGenerator.NewTCPEntry(mizuEntry.Source, mizuEntry.Destination, &item.Protocol)
+		serviceMapGenerator.NewTCPEntry(kubesharkEntry.Source, kubesharkEntry.Destination, &item.Protocol)
 
 		oasGenerator := dependency.GetInstance(dependency.OasGeneratorDependency).(oas.OasGeneratorSink)
-		oasGenerator.HandleEntry(mizuEntry)
+		oasGenerator.HandleEntry(kubesharkEntry)
 	}
 }
 

@@ -6,39 +6,39 @@ import (
 	"path"
 	"path/filepath"
 
+	"github.com/kubeshark/kubeshark/cli/config/configStructs"
+	"github.com/kubeshark/kubeshark/cli/kubeshark"
+	"github.com/kubeshark/kubeshark/shared"
 	"github.com/op/go-logging"
-	"github.com/up9inc/mizu/cli/config/configStructs"
-	"github.com/up9inc/mizu/cli/mizu"
-	"github.com/up9inc/mizu/shared"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/util/homedir"
 )
 
 const (
-	MizuResourcesNamespaceConfigName = "mizu-resources-namespace"
-	ConfigFilePathCommandName        = "config-path"
-	KubeConfigPathConfigName         = "kube-config-path"
+	KubesharkResourcesNamespaceConfigName = "kubeshark-resources-namespace"
+	ConfigFilePathCommandName             = "config-path"
+	KubeConfigPathConfigName              = "kube-config-path"
 )
 
 type ConfigStruct struct {
-	Tap                    configStructs.TapConfig     `yaml:"tap"`
-	Check                  configStructs.CheckConfig   `yaml:"check"`
-	Install                configStructs.InstallConfig `yaml:"install"`
-	Version                configStructs.VersionConfig `yaml:"version"`
-	View                   configStructs.ViewConfig    `yaml:"view"`
-	Logs                   configStructs.LogsConfig    `yaml:"logs"`
-	Config                 configStructs.ConfigConfig  `yaml:"config,omitempty"`
-	AgentImage             string                      `yaml:"agent-image,omitempty" readonly:""`
-	ImagePullPolicyStr     string                      `yaml:"image-pull-policy" default:"Always"`
-	MizuResourcesNamespace string                      `yaml:"mizu-resources-namespace" default:"mizu"`
-	DumpLogs               bool                        `yaml:"dump-logs" default:"false"`
-	KubeConfigPathStr      string                      `yaml:"kube-config-path"`
-	KubeContext            string                      `yaml:"kube-context"`
-	ConfigFilePath         string                      `yaml:"config-path,omitempty" readonly:""`
-	HeadlessMode           bool                        `yaml:"headless" default:"false"`
-	LogLevelStr            string                      `yaml:"log-level,omitempty" default:"INFO" readonly:""`
-	ServiceMap             bool                        `yaml:"service-map" default:"true"`
-	OAS                    shared.OASConfig            `yaml:"oas"`
+	Tap                         configStructs.TapConfig     `yaml:"tap"`
+	Check                       configStructs.CheckConfig   `yaml:"check"`
+	Install                     configStructs.InstallConfig `yaml:"install"`
+	Version                     configStructs.VersionConfig `yaml:"version"`
+	View                        configStructs.ViewConfig    `yaml:"view"`
+	Logs                        configStructs.LogsConfig    `yaml:"logs"`
+	Config                      configStructs.ConfigConfig  `yaml:"config,omitempty"`
+	AgentImage                  string                      `yaml:"agent-image,omitempty" readonly:""`
+	ImagePullPolicyStr          string                      `yaml:"image-pull-policy" default:"Always"`
+	KubesharkResourcesNamespace string                      `yaml:"kubeshark-resources-namespace" default:"kubeshark"`
+	DumpLogs                    bool                        `yaml:"dump-logs" default:"false"`
+	KubeConfigPathStr           string                      `yaml:"kube-config-path"`
+	KubeContext                 string                      `yaml:"kube-context"`
+	ConfigFilePath              string                      `yaml:"config-path,omitempty" readonly:""`
+	HeadlessMode                bool                        `yaml:"headless" default:"false"`
+	LogLevelStr                 string                      `yaml:"log-level,omitempty" default:"INFO" readonly:""`
+	ServiceMap                  bool                        `yaml:"service-map" default:"true"`
+	OAS                         shared.OASConfig            `yaml:"oas"`
 }
 
 func (config *ConfigStruct) validate() error {
@@ -50,8 +50,8 @@ func (config *ConfigStruct) validate() error {
 }
 
 func (config *ConfigStruct) SetDefaults() {
-	config.AgentImage = fmt.Sprintf("%s:%s", shared.MizuAgentImageRepo, mizu.Ver)
-	config.ConfigFilePath = path.Join(mizu.GetMizuFolderPath(), "config.yaml")
+	config.AgentImage = fmt.Sprintf("%s:%s", shared.KubesharkAgentImageRepo, kubeshark.Ver)
+	config.ConfigFilePath = path.Join(kubeshark.GetKubesharkFolderPath(), "config.yaml")
 }
 
 func (config *ConfigStruct) ImagePullPolicy() v1.PullPolicy {
@@ -59,7 +59,7 @@ func (config *ConfigStruct) ImagePullPolicy() v1.PullPolicy {
 }
 
 func (config *ConfigStruct) IsNsRestrictedMode() bool {
-	return config.MizuResourcesNamespace != "mizu" // Notice "mizu" string must match the default MizuResourcesNamespace
+	return config.KubesharkResourcesNamespace != "kubeshark" // Notice "kubeshark" string must match the default KubesharkResourcesNamespace
 }
 
 func (config *ConfigStruct) KubeConfigPath() string {

@@ -5,10 +5,10 @@ import (
 	"embed"
 	"fmt"
 
-	"github.com/up9inc/mizu/cli/cmd/check"
-	"github.com/up9inc/mizu/cli/config"
-	"github.com/up9inc/mizu/cli/uiUtils"
-	"github.com/up9inc/mizu/logger"
+	"github.com/kubeshark/kubeshark/cli/cmd/check"
+	"github.com/kubeshark/kubeshark/cli/config"
+	"github.com/kubeshark/kubeshark/cli/uiUtils"
+	"github.com/kubeshark/kubeshark/logger"
 )
 
 var (
@@ -16,8 +16,8 @@ var (
 	embedFS embed.FS
 )
 
-func runMizuCheck() {
-	logger.Log.Infof("Mizu checks\n===================")
+func runKubesharkCheck() {
+	logger.Log.Infof("Kubeshark checks\n===================")
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // cancel will be called when this function exits

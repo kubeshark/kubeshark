@@ -11,8 +11,8 @@ import (
 	"time"
 
 	"github.com/chanced/openapi"
-	"github.com/up9inc/mizu/agent/pkg/har"
-	"github.com/up9inc/mizu/logger"
+	"github.com/kubeshark/kubeshark/agent/pkg/har"
+	"github.com/kubeshark/kubeshark/logger"
 	"github.com/wI2L/jsondiff"
 )
 
@@ -23,7 +23,7 @@ func outputSpec(label string, spec *openapi.OpenAPI, t *testing.T) string {
 		panic(err)
 	}
 
-	if os.Getenv("MIZU_OAS_WRITE_FILES") != "" {
+	if os.Getenv("KUBESHARK_OAS_WRITE_FILES") != "" {
 		path := "./oas-samples"
 		err := os.MkdirAll(path, 0o755)
 		if err != nil {
@@ -169,7 +169,7 @@ func TestFileSingle(t *testing.T) {
 			t.FailNow()
 		}
 
-		if os.Getenv("MIZU_OAS_WRITE_FILES") != "" {
+		if os.Getenv("KUBESHARK_OAS_WRITE_FILES") != "" {
 			err = ioutil.WriteFile(file+".spec.json", []byte(specText), 0644)
 			if err != nil {
 				panic(err)

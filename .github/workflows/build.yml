@@ -1,13 +1,13 @@
+on:
+  push:
+    # Sequence of patterns matched against refs/tags
+    tags:
+    - 'v*' # Push events to matching v*, i.e. v1.0, v20.15.10
+
 name: Build
 
-on:
-  pull_request:
-    branches:
-      - 'develop'
-      - 'main'
-
 concurrency:
-  group: mizu-pr-validation-${{ github.ref }}
+  group: kubeshark-pr-validation-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
@@ -19,7 +19,7 @@ jobs:
         uses: actions/checkout@v2
         with:
           fetch-depth: 2
-      
+
       - name: Check modified files
         id: modified_files
         run: devops/check_modified_files.sh cli/
@@ -42,7 +42,7 @@ jobs:
         uses: actions/checkout@v2
         with:
           fetch-depth: 2
-      
+
       - name: Check modified files
         id: modified_files
         run: devops/check_modified_files.sh agent/ shared/ tap/ ui/ ui-common/ Dockerfile
@@ -57,6 +57,6 @@ jobs:
         with:
           context: .
           push: false
-          tags: up9inc/mizu:devlatest
+          tags: kubeshark/kubeshark:devlatest
           cache-from: type=gha
           cache-to: type=gha,mode=max

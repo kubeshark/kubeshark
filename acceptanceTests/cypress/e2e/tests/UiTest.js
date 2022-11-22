@@ -3,8 +3,8 @@ import {
     getEntryId,
     leftOnHoverCheck,
     leftTextCheck,
-    resizeToHugeMizu,
-    resizeToNormalMizu,
+    resizeToHugeKubeshark,
+    resizeToNormalKubeshark,
     rightOnHoverCheck,
     rightTextCheck,
     verifyMinimumEntries,
@@ -20,7 +20,7 @@ podsArray.forEach((podStr, index) => {
     podsArray[index] = getExpectedDetailsDict(podAndNamespaceArr[0], podAndNamespaceArr[1]);
 });
 
-it('opening mizu', function () {
+it('opening kubeshark', function () {
     cy.visit(Cypress.env('testUrl'));
 });
 
@@ -98,11 +98,11 @@ if (Cypress.env('shouldCheckSrcAndDest')) {
     });
 
     checkFilter({
-        filter: `dst.name == "httpbin.mizu-tests"`,
+        filter: `dst.name == "httpbin.kubeshark-tests"`,
         leftSidePath: '> :nth-child(3) > :nth-child(2) > :nth-child(3) > :nth-child(2)',
-        leftSideExpectedText: 'httpbin.mizu-tests',
+        leftSideExpectedText: 'httpbin.kubeshark-tests',
         rightSidePath: '> :nth-child(2) > :nth-child(2) > :nth-child(2) > :nth-child(3) > :nth-child(2)',
-        rightSideExpectedText: 'httpbin.mizu-tests',
+        rightSideExpectedText: 'httpbin.kubeshark-tests',
         applyByCtrlEnter: false,
         numberOfRecords: 20
     });
@@ -224,7 +224,7 @@ function checkFilter(filterDetails) {
             checkRightSideResponseBody();
         });
 
-        resizeToHugeMizu();
+        resizeToHugeKubeshark();
 
         // checking only 'leftTextCheck' on all entries because the rest of the checks require more time
         cy.get(`#list [id^=entry]`).each(elem => {
@@ -237,7 +237,7 @@ function checkFilter(filterDetails) {
         deeperCheck(leftSidePath, rightSidePath, filter, rightSideExpectedText, entriesForDeeperCheck);
 
         // reloading then waiting for the entries number to load
-        resizeToNormalMizu();
+        resizeToNormalKubeshark();
         cy.reload();
         waitForFetch(numberOfRecords);
         pauseStream();
@@ -320,7 +320,7 @@ function serviceMapCheck() {
                 cy.wait('@serviceMapRequest').then(({response}) => {
                     const body = response.body;
                     const nodeParams = {
-                        destination: 'httpbin.mizu-tests',
+                        destination: 'httpbin.kubeshark-tests',
                         source: '127.0.0.1'
                     };
                     serviceMapAPICheck(body, parseInt(entriesNum), nodeParams);

@@ -14,8 +14,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/kubeshark/kubeshark/tap/api"
 	"github.com/stretchr/testify/assert"
-	"github.com/up9inc/mizu/tap/api"
 )
 
 const (

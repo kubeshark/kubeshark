@@ -5,8 +5,8 @@ import (
 	"strings"
 	"testing"
 
+	tapApi "github.com/kubeshark/kubeshark/tap/api"
 	"github.com/stretchr/testify/suite"
-	tapApi "github.com/up9inc/mizu/tap/api"
 )
 
 const (
@@ -57,7 +57,7 @@ var (
 		},
 		LongName:        "Hypertext Transfer Protocol -- HTTP/1.1",
 		Macro:           "http",
-		BackgroundColor: "#205cf5",
+		BackgroundColor: "#326de6",
 		ForegroundColor: "#ffffff",
 		FontSize:        12,
 		ReferenceLink:   "https://datatracker.ietf.org/doc/html/rfc2616",

@@ -24,7 +24,7 @@ var ignoredHeaders = []string{
 	"keep-alive", "etag", "alt-svc", "x-csrf-token", "x-ua-compatible", "vary", "x-powered-by",
 	"age", "allow", "www-authenticate", "expect-ct", "timing-allow-origin", "referrer-policy",
 	"x-aspnet-version", "x-aspnetmvc-version", "x-timer", "x-abuse-info", "x-mod-pagespeed",
-	"duration_ms", // UP9 custom
+	"duration_ms",
 }
 
 var ignoredHeaderPrefixes = []string{

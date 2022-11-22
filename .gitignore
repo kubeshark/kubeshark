@@ -53,7 +53,7 @@ tap/extensions/*/expect
 **/node_modules/**
 **/dist/**
 *.editorconfig
-ui/up9-mizu-common-0.0.0.tgz
+ui/up9-kubeshark-common-0.0.0.tgz
 
 # Ignore *.log files
 *.log

@@ -17,32 +17,32 @@ import (
 	"github.com/gin-contrib/pprof"
 	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/gin"
-	"github.com/up9inc/mizu/agent/pkg/dependency"
-	"github.com/up9inc/mizu/agent/pkg/entries"
-	"github.com/up9inc/mizu/agent/pkg/middlewares"
-	"github.com/up9inc/mizu/agent/pkg/models"
-	"github.com/up9inc/mizu/agent/pkg/oas"
-	"github.com/up9inc/mizu/agent/pkg/routes"
-	"github.com/up9inc/mizu/agent/pkg/servicemap"
-	"github.com/up9inc/mizu/agent/pkg/utils"
+	"github.com/kubeshark/kubeshark/agent/pkg/dependency"
+	"github.com/kubeshark/kubeshark/agent/pkg/entries"
+	"github.com/kubeshark/kubeshark/agent/pkg/middlewares"
+	"github.com/kubeshark/kubeshark/agent/pkg/models"
+	"github.com/kubeshark/kubeshark/agent/pkg/oas"
+	"github.com/kubeshark/kubeshark/agent/pkg/routes"
+	"github.com/kubeshark/kubeshark/agent/pkg/servicemap"
+	"github.com/kubeshark/kubeshark/agent/pkg/utils"
 
-	"github.com/up9inc/mizu/agent/pkg/api"
-	"github.com/up9inc/mizu/agent/pkg/app"
-	"github.com/up9inc/mizu/agent/pkg/config"
+	"github.com/kubeshark/kubeshark/agent/pkg/api"
+	"github.com/kubeshark/kubeshark/agent/pkg/app"
+	"github.com/kubeshark/kubeshark/agent/pkg/config"
 
 	"github.com/gorilla/websocket"
+	"github.com/kubeshark/kubeshark/logger"
+	"github.com/kubeshark/kubeshark/shared"
+	"github.com/kubeshark/kubeshark/tap"
+	tapApi "github.com/kubeshark/kubeshark/tap/api"
+	"github.com/kubeshark/kubeshark/tap/dbgctl"
 	"github.com/op/go-logging"
-	"github.com/up9inc/mizu/logger"
-	"github.com/up9inc/mizu/shared"
-	"github.com/up9inc/mizu/tap"
-	tapApi "github.com/up9inc/mizu/tap/api"
-	"github.com/up9inc/mizu/tap/dbgctl"
 )
 
 var tapperMode = flag.Bool("tap", false, "Run in tapper mode without API")
 var apiServerMode = flag.Bool("api-server", false, "Run in API server mode with API")
 var standaloneMode = flag.Bool("standalone", false, "Run in standalone tapper and API mode")
-var apiServerAddress = flag.String("api-server-address", "", "Address of mizu API server")
+var apiServerAddress = flag.String("api-server-address", "", "Address of kubeshark API server")
 var namespace = flag.String("namespace", "", "Resolve IPs if they belong to resources in this namespace (default is all)")
 var harsReaderMode = flag.Bool("hars-read", false, "Run in hars-read mode")
 var harsDir = flag.String("hars-dir", "", "Directory to read hars from")
@@ -94,7 +94,7 @@ func hostApi(socketHarOutputChannel chan<- *tapApi.OutputChannelItem) *gin.Engin
 	ginApp := gin.Default()
 
 	ginApp.GET("/echo", func(c *gin.Context) {
-		c.JSON(http.StatusOK, "Here is Mizu agent")
+		c.JSON(http.StatusOK, "Here is Kubeshark agent")
 	})
 
 	eventHandlers := api.RoutesEventHandlers{
@@ -240,7 +240,7 @@ func setUIFlags(uiIndexPath string) error {
 }
 
 func getTrafficFilteringOptions() *tapApi.TrafficFilteringOptions {
-	filteringOptionsJson := os.Getenv(shared.MizuFilteringOptionsEnvVar)
+	filteringOptionsJson := os.Getenv(shared.KubesharkFilteringOptionsEnvVar)
 	if filteringOptionsJson == "" {
 		return &tapApi.TrafficFilteringOptions{
 			IgnoredUserAgents: []string{},
@@ -249,7 +249,7 @@ func getTrafficFilteringOptions() *tapApi.TrafficFilteringOptions {
 	var filteringOptions tapApi.TrafficFilteringOptions
 	err := json.Unmarshal([]byte(filteringOptionsJson), &filteringOptions)
 	if err != nil {
-		panic(fmt.Sprintf("env var %s's value of %s is invalid! json must match the api.TrafficFilteringOptions struct %v", shared.MizuFilteringOptionsEnvVar, filteringOptionsJson, err))
+		panic(fmt.Sprintf("env var %s's value of %s is invalid! json must match the api.TrafficFilteringOptions struct %v", shared.KubesharkFilteringOptionsEnvVar, filteringOptionsJson, err))
 	}
 
 	return &filteringOptions
@@ -271,7 +271,7 @@ func pipeTapChannelToSocket(connection *websocket.Conn, messageDataChannel <-cha
 			continue
 		}
 
-		if dbgctl.MizuTapperDisableSending {
+		if dbgctl.KubesharkTapperDisableSending {
 			continue
 		}
 

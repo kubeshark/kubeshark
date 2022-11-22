@@ -5,11 +5,11 @@ import (
 )
 
 var (
-	MizuTapperDisablePcap              = os.Getenv("MIZU_DEBUG_DISABLE_PCAP") == "true"
-	MizuTapperDisableTcpReassembly     = os.Getenv("MIZU_DEBUG_DISABLE_TCP_REASSEMBLY") == "true"
-	MizuTapperDisableTcpStream         = os.Getenv("MIZU_DEBUG_DISABLE_TCP_STREAM") == "true"
-	MizuTapperDisableDissectors        = os.Getenv("MIZU_DEBUG_DISABLE_DISSECTORS") == "true"
-	MizuTapperDisableEmitting          = os.Getenv("MIZU_DEBUG_DISABLE_EMITTING") == "true"
-	MizuTapperDisableSending           = os.Getenv("MIZU_DEBUG_DISABLE_SENDING") == "true"
-	MizuTapperDisableNonHttpExtensions = os.Getenv("MIZU_DEBUG_DISABLE_NON_HTTP_EXTENSSION") == "true"
+	KubesharkTapperDisablePcap              = os.Getenv("KUBESHARK_DEBUG_DISABLE_PCAP") == "true"
+	KubesharkTapperDisableTcpReassembly     = os.Getenv("KUBESHARK_DEBUG_DISABLE_TCP_REASSEMBLY") == "true"
+	KubesharkTapperDisableTcpStream         = os.Getenv("KUBESHARK_DEBUG_DISABLE_TCP_STREAM") == "true"
+	KubesharkTapperDisableDissectors        = os.Getenv("KUBESHARK_DEBUG_DISABLE_DISSECTORS") == "true"
+	KubesharkTapperDisableEmitting          = os.Getenv("KUBESHARK_DEBUG_DISABLE_EMITTING") == "true"
+	KubesharkTapperDisableSending           = os.Getenv("KUBESHARK_DEBUG_DISABLE_SENDING") == "true"
+	KubesharkTapperDisableNonHttpExtensions = os.Getenv("KUBESHARK_DEBUG_DISABLE_NON_HTTP_EXTENSSION") == "true"
 )

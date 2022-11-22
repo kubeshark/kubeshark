@@ -3,9 +3,9 @@ package api
 import (
 	"fmt"
 
+	"github.com/kubeshark/kubeshark/agent/pkg/models"
+	tapApi "github.com/kubeshark/kubeshark/tap/api"
 	basenine "github.com/up9inc/basenine/client/go"
-	"github.com/up9inc/mizu/agent/pkg/models"
-	tapApi "github.com/up9inc/mizu/tap/api"
 )
 
 type EntryStreamerSocketConnector interface {

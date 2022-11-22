@@ -2,7 +2,7 @@
   "openapi": "3.1.0",
   "info": {
     "title": "https://httpbin.org",
-    "description": "Mizu observed 19 entries (0 failed), at 0.10 hits/s, average response time is 0.17 seconds",
+    "description": "Kubeshark observed 19 entries (0 failed), at 0.10 hits/s, average response time is 0.17 seconds",
     "version": "1.0"
   },
   "servers": [
@@ -14,7 +14,7 @@
     "/appears-once": {
       "get": {
         "summary": "/appears-once",
-        "description": "Mizu observed 1 entries (0 failed), at 0.00 hits/s, average response time is 0.63 seconds",
+        "description": "Kubeshark observed 1 entries (0 failed), at 0.00 hits/s, average response time is 0.63 seconds",
         "operationId": "<UUID4>",
         "responses": {
           "200": {
@@ -53,7 +53,7 @@
     "/appears-twice": {
       "get": {
         "summary": "/appears-twice",
-        "description": "Mizu observed 2 entries (0 failed), at 0.50 hits/s, average response time is 0.63 seconds",
+        "description": "Kubeshark observed 2 entries (0 failed), at 0.50 hits/s, average response time is 0.63 seconds",
         "operationId": "<UUID4>",
         "responses": {
           "200": {
@@ -92,7 +92,7 @@
     "/body-optional": {
       "post": {
         "summary": "/body-optional",
-        "description": "Mizu observed 3 entries (0 failed), at 0.00 hits/s, average response time is 0.00 seconds",
+        "description": "Kubeshark observed 3 entries (0 failed), at 0.00 hits/s, average response time is 0.00 seconds",
         "operationId": "<UUID4>",
         "responses": {
           "200": {
@@ -140,7 +140,7 @@
     "/body-required": {
       "post": {
         "summary": "/body-required",
-        "description": "Mizu observed 1 entries (0 failed), at 0.00 hits/s, average response time is 0.00 seconds",
+        "description": "Kubeshark observed 1 entries (0 failed), at 0.00 hits/s, average response time is 0.00 seconds",
         "operationId": "<UUID4>",
         "responses": {
           "200": {
@@ -189,7 +189,7 @@
     "/form-multipart": {
       "post": {
         "summary": "/form-multipart",
-        "description": "Mizu observed 1 entries (0 failed), at 0.00 hits/s, average response time is 0.00 seconds",
+        "description": "Kubeshark observed 1 entries (0 failed), at 0.00 hits/s, average response time is 0.00 seconds",
         "operationId": "<UUID4>",
         "responses": {
           "200": {
@@ -261,7 +261,7 @@
     "/form-urlencoded": {
       "post": {
         "summary": "/form-urlencoded",
-        "description": "Mizu observed 2 entries (0 failed), at 0.50 hits/s, average response time is 0.00 seconds",
+        "description": "Kubeshark observed 2 entries (0 failed), at 0.50 hits/s, average response time is 0.00 seconds",
         "operationId": "<UUID4>",
         "responses": {
           "200": {
@@ -348,7 +348,7 @@
           "param-patterns"
         ],
         "summary": "/param-patterns/prefix-gibberish-fine/{prefixgibberishfineId}",
-        "description": "Mizu observed 1 entries (0 failed), at 0.00 hits/s, average response time is 0.00 seconds",
+        "description": "Kubeshark observed 1 entries (0 failed), at 0.00 hits/s, average response time is 0.00 seconds",
         "operationId": "<UUID4>",
         "responses": {
           "200": {
@@ -406,7 +406,7 @@
           "param-patterns"
         ],
         "summary": "/param-patterns/{parampatternId}",
-        "description": "Mizu observed 2 entries (0 failed), at 0.00 hits/s, average response time is 0.00 seconds",
+        "description": "Kubeshark observed 2 entries (0 failed), at 0.00 hits/s, average response time is 0.00 seconds",
         "operationId": "<UUID4>",
         "responses": {
           "200": {
@@ -477,7 +477,7 @@
           "param-patterns"
         ],
         "summary": "/param-patterns/{parampatternId}/1",
-        "description": "Mizu observed 1 entries (0 failed), at 0.00 hits/s, average response time is 0.00 seconds",
+        "description": "Kubeshark observed 1 entries (0 failed), at 0.00 hits/s, average response time is 0.00 seconds",
         "operationId": "<UUID4>",
         "responses": {
           "200": {
@@ -548,7 +548,7 @@
           "param-patterns"
         ],
         "summary": "/param-patterns/{parampatternId}/static",
-        "description": "Mizu observed 1 entries (0 failed), at 0.00 hits/s, average response time is 0.00 seconds",
+        "description": "Kubeshark observed 1 entries (0 failed), at 0.00 hits/s, average response time is 0.00 seconds",
         "operationId": "<UUID4>",
         "responses": {
           "200": {
@@ -619,7 +619,7 @@
           "param-patterns"
         ],
         "summary": "/param-patterns/{parampatternId}/{param1}",
-        "description": "Mizu observed 1 entries (0 failed), at 0.00 hits/s, average response time is 0.00 seconds",
+        "description": "Kubeshark observed 1 entries (0 failed), at 0.00 hits/s, average response time is 0.00 seconds",
         "operationId": "<UUID4>",
         "responses": {
           "200": {
@@ -702,7 +702,7 @@
     "/{Id}": {
       "get": {
         "summary": "/{Id}",
-        "description": "Mizu observed 1 entries (0 failed), at 0.00 hits/s, average response time is 0.63 seconds",
+        "description": "Kubeshark observed 1 entries (0 failed), at 0.00 hits/s, average response time is 0.63 seconds",
         "operationId": "<UUID4>",
         "responses": {
           "200": {
@@ -761,7 +761,7 @@
     "/{Id}/sub1": {
       "get": {
         "summary": "/{Id}/sub1",
-        "description": "Mizu observed 1 entries (0 failed), at 0.00 hits/s, average response time is 0.11 seconds",
+        "description": "Kubeshark observed 1 entries (0 failed), at 0.00 hits/s, average response time is 0.11 seconds",
         "operationId": "<UUID4>",
         "responses": {
           "200": {
@@ -819,7 +819,7 @@
     "/{Id}/sub2": {
       "get": {
         "summary": "/{Id}/sub2",
-        "description": "Mizu observed 1 entries (0 failed), at 0.00 hits/s, average response time is 0.63 seconds",
+        "description": "Kubeshark observed 1 entries (0 failed), at 0.00 hits/s, average response time is 0.63 seconds",
         "operationId": "<UUID4>",
         "responses": {
           "200": {

@@ -5,21 +5,21 @@ import (
 	"fmt"
 	"regexp"
 
-	"github.com/up9inc/mizu/cli/apiserver"
-	"github.com/up9inc/mizu/cli/config"
-	"github.com/up9inc/mizu/cli/uiUtils"
-	"github.com/up9inc/mizu/logger"
-	"github.com/up9inc/mizu/shared/kubernetes"
+	"github.com/kubeshark/kubeshark/cli/apiserver"
+	"github.com/kubeshark/kubeshark/cli/config"
+	"github.com/kubeshark/kubeshark/cli/uiUtils"
+	"github.com/kubeshark/kubeshark/logger"
+	"github.com/kubeshark/kubeshark/shared/kubernetes"
 )
 
 func ServerConnection(kubernetesProvider *kubernetes.Provider) bool {
 	logger.Log.Infof("\nAPI-server-connectivity\n--------------------")
 
-	serverUrl := fmt.Sprintf("http://%s", kubernetes.GetMizuApiServerProxiedHostAndPath(config.Config.Tap.GuiPort))
+	serverUrl := fmt.Sprintf("http://%s", kubernetes.GetKubesharkApiServerProxiedHostAndPath(config.Config.Tap.GuiPort))
 
 	apiServerProvider := apiserver.NewProvider(serverUrl, 1, apiserver.DefaultTimeout)
 	if err := apiServerProvider.TestConnection(); err == nil {
-		logger.Log.Infof("%v found Mizu server tunnel available and connected successfully to API server", fmt.Sprintf(uiUtils.Green, "√"))
+		logger.Log.Infof("%v found Kubeshark server tunnel available and connected successfully to API server", fmt.Sprintf(uiUtils.Green, "√"))
 		return true
 	}
 
@@ -46,7 +46,7 @@ func checkProxy(serverUrl string, kubernetesProvider *kubernetes.Provider) error
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	httpServer, err := kubernetes.StartProxy(kubernetesProvider, config.Config.Tap.ProxyHost, config.Config.Tap.GuiPort, config.Config.MizuResourcesNamespace, kubernetes.ApiServerPodName, cancel)
+	httpServer, err := kubernetes.StartProxy(kubernetesProvider, config.Config.Tap.ProxyHost, config.Config.Tap.GuiPort, config.Config.KubesharkResourcesNamespace, kubernetes.ApiServerPodName, cancel)
 	if err != nil {
 		return err
 	}
@@ -68,7 +68,7 @@ func checkPortForward(serverUrl string, kubernetesProvider *kubernetes.Provider)
 	defer cancel()
 
 	podRegex, _ := regexp.Compile(kubernetes.ApiServerPodName)
-	forwarder, err := kubernetes.NewPortForward(kubernetesProvider, config.Config.MizuResourcesNamespace, podRegex, config.Config.Tap.GuiPort, ctx, cancel)
+	forwarder, err := kubernetes.NewPortForward(kubernetesProvider, config.Config.KubesharkResourcesNamespace, podRegex, config.Config.Tap.GuiPort, ctx, cancel)
 	if err != nil {
 		return err
 	}
