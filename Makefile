@@ -97,7 +97,6 @@ test-lint:  ## Run lint on all modules
 	cd shared && golangci-lint run
 	cd tap && golangci-lint run
 	cd cli && golangci-lint run
-	cd acceptanceTests && golangci-lint run
 	cd tap/api && golangci-lint run
 	cd tap/dbgctl && golangci-lint run
 	cd tap/extensions/ && for D in */; do cd $$D && golangci-lint run && cd ..; done
@@ -116,6 +115,3 @@ test-extensions:  ## Run extensions tests
 	@echo "running redis tests"; cd tap/extensions/redis && $(MAKE) test
 	@echo "running kafka tests"; cd tap/extensions/kafka && $(MAKE) test
 	@echo "running amqp tests"; cd tap/extensions/amqp && $(MAKE) test
-
-acceptance-test:  ## Run acceptance tests
-	@echo "running acceptance tests"; cd acceptanceTests && $(MAKE) test
