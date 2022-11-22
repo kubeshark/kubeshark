@@ -3,7 +3,7 @@ package version
 import (
 	"context"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"runtime"
 	"strings"
@@ -47,7 +47,7 @@ func CheckNewerVersion(versionChan chan string) {
 		return
 	}
 
-	data, err := ioutil.ReadAll(res.Body)
+	data, err := io.ReadAll(res.Body)
 	res.Body.Close()
 	if err != nil {
 		logger.Log.Debugf("[ERROR] Failed to read the version file -> %v", err)

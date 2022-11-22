@@ -5,7 +5,6 @@ import (
 	"errors"
 	"flag"
 	"fmt"
-	"io/ioutil"
 	"net/http"
 	"os"
 	"os/signal"
@@ -223,7 +222,7 @@ func disableRootStaticCache() gin.HandlerFunc {
 }
 
 func setUIFlags(uiIndexPath string) error {
-	read, err := ioutil.ReadFile(uiIndexPath)
+	read, err := os.ReadFile(uiIndexPath)
 	if err != nil {
 		return err
 	}
@@ -231,7 +230,7 @@ func setUIFlags(uiIndexPath string) error {
 	replacedContent := strings.Replace(string(read), "__IS_OAS_ENABLED__", strconv.FormatBool(config.Config.OAS.Enable), 1)
 	replacedContent = strings.Replace(replacedContent, "__IS_SERVICE_MAP_ENABLED__", strconv.FormatBool(config.Config.ServiceMap), 1)
 
-	err = ioutil.WriteFile(uiIndexPath, []byte(replacedContent), 0)
+	err = os.WriteFile(uiIndexPath, []byte(replacedContent), 0)
 	if err != nil {
 		return err
 	}

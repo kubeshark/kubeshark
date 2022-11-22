@@ -2,8 +2,8 @@ package tlstapper
 
 import (
 	"fmt"
-	"io/ioutil"
 	"net/url"
+	"os"
 	"path"
 	"path/filepath"
 	"regexp"
@@ -43,7 +43,7 @@ func UpdateTapTargets(tls *TlsTapper, pods *[]v1.Pod, procfs string) error {
 func findContainerPids(procfs string, containerIds map[string]v1.Pod) (map[uint32]v1.Pod, error) {
 	result := make(map[uint32]v1.Pod)
 
-	pids, err := ioutil.ReadDir(procfs)
+	pids, err := os.ReadDir(procfs)
 
 	if err != nil {
 		return result, err
@@ -107,7 +107,7 @@ func buildContainerIdsMap(pods *[]v1.Pod) map[string]v1.Pod {
 func getProcessCgroup(procfs string, pid string) (string, error) {
 	filePath := fmt.Sprintf("%s/%s/cgroup", procfs, pid)
 
-	bytes, err := ioutil.ReadFile(filePath)
+	bytes, err := os.ReadFile(filePath)
 
 	if err != nil {
 		logger.Log.Warningf("Error reading cgroup file %s - %v", filePath, err)

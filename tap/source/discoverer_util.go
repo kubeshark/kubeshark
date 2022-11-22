@@ -1,7 +1,7 @@
 package source
 
 import (
-	"io/ioutil"
+	"os"
 	"regexp"
 	"strings"
 
@@ -11,7 +11,7 @@ import (
 var numberRegex = regexp.MustCompile("[0-9]+")
 
 func getSingleValueFromEnvironmentVariableFile(filePath string, variableName string) (string, error) {
-	bytes, err := ioutil.ReadFile(filePath)
+	bytes, err := os.ReadFile(filePath)
 
 	if err != nil {
 		logger.Log.Warningf("Error reading environment file %v - %v", filePath, err)

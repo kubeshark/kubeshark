@@ -6,7 +6,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"io/ioutil"
 	"log"
 	"os"
 	"path"
@@ -192,7 +191,7 @@ func TestDissect(t *testing.T) {
 			if _, err := os.Stat(pathExpect); errors.Is(err, os.ErrNotExist) {
 				assert.Len(t, items, 0)
 			} else {
-				expectedBytes, err := ioutil.ReadFile(pathExpect)
+				expectedBytes, err := os.ReadFile(pathExpect)
 				assert.Nil(t, err)
 
 				assert.JSONEq(t, string(expectedBytes), string(marshaled))
@@ -222,7 +221,7 @@ func TestAnalyze(t *testing.T) {
 	for _, _path := range paths {
 		fmt.Printf("%s %s\n", msgAnalyzing, _path)
 
-		bytes, err := ioutil.ReadFile(_path)
+		bytes, err := os.ReadFile(_path)
 		assert.Nil(t, err)
 
 		var items []*api.OutputChannelItem
@@ -249,7 +248,7 @@ func TestAnalyze(t *testing.T) {
 			if _, err := os.Stat(pathExpect); errors.Is(err, os.ErrNotExist) {
 				assert.Len(t, items, 0)
 			} else {
-				expectedBytes, err := ioutil.ReadFile(pathExpect)
+				expectedBytes, err := os.ReadFile(pathExpect)
 				assert.Nil(t, err)
 
 				assert.JSONEq(t, string(expectedBytes), string(marshaled))
@@ -279,7 +278,7 @@ func TestSummarize(t *testing.T) {
 	for _, _path := range paths {
 		fmt.Printf("%s %s\n", msgSummarizing, _path)
 
-		bytes, err := ioutil.ReadFile(_path)
+		bytes, err := os.ReadFile(_path)
 		assert.Nil(t, err)
 
 		var entries []*api.Entry
@@ -306,7 +305,7 @@ func TestSummarize(t *testing.T) {
 			if _, err := os.Stat(pathExpect); errors.Is(err, os.ErrNotExist) {
 				assert.Len(t, entries, 0)
 			} else {
-				expectedBytes, err := ioutil.ReadFile(pathExpect)
+				expectedBytes, err := os.ReadFile(pathExpect)
 				assert.Nil(t, err)
 
 				assert.JSONEq(t, string(expectedBytes), string(marshaled))
@@ -336,7 +335,7 @@ func TestRepresent(t *testing.T) {
 	for _, _path := range paths {
 		fmt.Printf("%s %s\n", msgRepresenting, _path)
 
-		bytes, err := ioutil.ReadFile(_path)
+		bytes, err := os.ReadFile(_path)
 		assert.Nil(t, err)
 
 		var entries []*api.Entry
@@ -364,7 +363,7 @@ func TestRepresent(t *testing.T) {
 			if _, err := os.Stat(pathExpect); errors.Is(err, os.ErrNotExist) {
 				assert.Len(t, objects, 0)
 			} else {
-				expectedBytes, err := ioutil.ReadFile(pathExpect)
+				expectedBytes, err := os.ReadFile(pathExpect)
 				assert.Nil(t, err)
 
 				assert.JSONEq(t, string(expectedBytes), string(marshaled))

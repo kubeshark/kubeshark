@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"hash/crc32"
 	"io"
-	"io/ioutil"
 	"reflect"
 	"strings"
 )
@@ -166,7 +165,7 @@ func (d *decoder) discard(n int) {
 		n, err = r.Discard(n)
 		d.remain -= n
 	} else {
-		_, err = io.Copy(ioutil.Discard, d)
+		_, err = io.Copy(io.Discard, d)
 	}
 	d.setError(err)
 }

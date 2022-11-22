@@ -2,7 +2,7 @@ package oas
 
 import (
 	"encoding/json"
-	"io/ioutil"
+	"io"
 	"os"
 	"regexp"
 	"strings"
@@ -29,7 +29,7 @@ func outputSpec(label string, spec *openapi.OpenAPI, t *testing.T) string {
 		if err != nil {
 			panic(err)
 		}
-		err = ioutil.WriteFile(path+"/"+label+".json", content, 0644)
+		err = os.WriteFile(path+"/"+label+".json", content, 0644)
 		if err != nil {
 			panic(err)
 		}
@@ -150,7 +150,7 @@ func TestFileSingle(t *testing.T) {
 			t.FailNow()
 		}
 
-		expected, err := ioutil.ReadFile(file + ".spec.json")
+		expected, err := os.ReadFile(file + ".spec.json")
 		if err != nil {
 			t.Errorf(err.Error())
 			t.FailNow()
@@ -170,7 +170,7 @@ func TestFileSingle(t *testing.T) {
 		}
 
 		if os.Getenv("KUBESHARK_OAS_WRITE_FILES") != "" {
-			err = ioutil.WriteFile(file+".spec.json", []byte(specText), 0644)
+			err = os.WriteFile(file+".spec.json", []byte(specText), 0644)
 			if err != nil {
 				panic(err)
 			}
@@ -194,7 +194,7 @@ func loadStartingOAS(file string, label string, specs *sync.Map) {
 
 	defer fd.Close()
 
-	data, err := ioutil.ReadAll(fd)
+	data, err := io.ReadAll(fd)
 	if err != nil {
 		panic(err)
 	}
@@ -252,7 +252,7 @@ func TestLoadValid3_1(t *testing.T) {
 
 	defer fd.Close()
 
-	data, err := ioutil.ReadAll(fd)
+	data, err := io.ReadAll(fd)
 	if err != nil {
 		t.Log(err)
 		t.FailNow()

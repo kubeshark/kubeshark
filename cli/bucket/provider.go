@@ -2,10 +2,11 @@ package bucket
 
 import (
 	"fmt"
-	"github.com/kubeshark/kubeshark/cli/utils"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"time"
+
+	"github.com/kubeshark/kubeshark/cli/utils"
 )
 
 type Provider struct {
@@ -33,7 +34,7 @@ func (provider *Provider) GetInstallTemplate(templateName string) (string, error
 
 	defer response.Body.Close()
 
-	installTemplate, err := ioutil.ReadAll(response.Body)
+	installTemplate, err := io.ReadAll(response.Body)
 	if err != nil {
 		return "", err
 	}

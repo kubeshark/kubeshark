@@ -5,7 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"os"
 	"os/exec"
@@ -330,7 +330,7 @@ func ExecuteHttpRequest(response *http.Response, requestErr error) (interface{},
 
 	defer func() { response.Body.Close() }()
 
-	data, readErr := ioutil.ReadAll(response.Body)
+	data, readErr := io.ReadAll(response.Body)
 	if readErr != nil {
 		return nil, readErr
 	}

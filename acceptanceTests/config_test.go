@@ -2,7 +2,6 @@ package acceptanceTests
 
 import (
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"testing"
@@ -58,7 +57,7 @@ func TestConfigRegenerate(t *testing.T) {
 		return
 	}
 
-	_, readFileErr := ioutil.ReadFile(configPath)
+	_, readFileErr := os.ReadFile(configPath)
 	if readFileErr != nil {
 		t.Errorf("failed to read config file, err: %v", readFileErr)
 		return
@@ -95,7 +94,7 @@ func TestConfigGuiPort(t *testing.T) {
 				return
 			}
 
-			if writeErr := ioutil.WriteFile(configPath, configBytes, 0644); writeErr != nil {
+			if writeErr := os.WriteFile(configPath, configBytes, 0644); writeErr != nil {
 				t.Errorf("failed to write config to file, err: %v", writeErr)
 				return
 			}
@@ -168,7 +167,7 @@ func TestConfigSetGuiPort(t *testing.T) {
 				return
 			}
 
-			if writeErr := ioutil.WriteFile(configPath, configBytes, 0644); writeErr != nil {
+			if writeErr := os.WriteFile(configPath, configBytes, 0644); writeErr != nil {
 				t.Errorf("failed to write config to file, err: %v", writeErr)
 				return
 			}
@@ -243,7 +242,7 @@ func TestConfigFlagGuiPort(t *testing.T) {
 				return
 			}
 
-			if writeErr := ioutil.WriteFile(configPath, configBytes, 0644); writeErr != nil {
+			if writeErr := os.WriteFile(configPath, configBytes, 0644); writeErr != nil {
 				t.Errorf("failed to write config to file, err: %v", writeErr)
 				return
 			}
