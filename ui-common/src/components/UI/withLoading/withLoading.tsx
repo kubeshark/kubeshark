@@ -1,5 +1,5 @@
 import React from "react";
-import spinner from 'spinner.svg';
+import spinner from "./assets/spinner.svg";
 
 export interface WithLoadingProps {
     isLoading: boolean

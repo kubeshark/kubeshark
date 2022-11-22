@@ -1,8 +1,8 @@
 import React from "react";
 import { useEffect, useState } from "react";
 import styles from "./KeyValueTable.module.sass"
-import deleteIcon from "delete.svg"
-import deleteIconActive from "delete-active.svg"
+import deleteIcon from "./assets/delete.svg"
+import deleteIconActive from "./assets/delete-active.svg"
 import HoverImage from "../HoverImage/HoverImage";
 
 interface KeyValueTableProps {

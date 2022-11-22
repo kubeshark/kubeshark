@@ -1,11 +1,25 @@
-import TrafficViewer from './components/TrafficViewer/TrafficViewer';
-import * as UI from "./components/UI"
-import { StatusBar } from './components/UI';
-import useWS, { DEFAULT_LEFTOFF } from './hooks/useWS';
-import OasModal from './components/modals/OasModal/OasModal';
-import { ServiceMapModal } from './components/modals/ServiceMapModal/ServiceMapModal';
-import { TrafficStatsModal } from './components/modals/TrafficStatsModal/TrafficStatsModal';
+import ReactDOM from 'react-dom';
+import './index.sass';
+import {ToastContainer} from "react-toastify";
+import 'react-toastify/dist/ReactToastify.min.css';
+import {RecoilRoot} from "recoil";
+import App from './App';
+import { TOAST_CONTAINER_ID } from './consts';
 
-export { CodeEditorWrap as QueryForm } from './components/Filters/Filters';
-export { UI, StatusBar, OasModal, ServiceMapModal, TrafficStatsModal, TrafficViewer }
-export { useWS, DEFAULT_LEFTOFF }
+ReactDOM.render( <>
+    <RecoilRoot>
+        <App/>
+        <ToastContainer enableMultiContainer containerId={TOAST_CONTAINER_ID} 
+            position="bottom-right"
+            autoClose={5000}
+            hideProgressBar={false}
+            newestOnTop={false}
+            closeOnClick
+            rtl={false}
+            pauseOnFocusLoss
+            draggable
+            pauseOnHover
+        />
+    </RecoilRoot>
+</>,
+document.getElementById('root'));

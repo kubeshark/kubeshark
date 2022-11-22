@@ -1,8 +1,8 @@
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import DownloadIcon from '@mui/icons-material/FileDownloadOutlined';
 import UploadIcon from '@mui/icons-material/UploadFile';
-import closeIcon from "assets/close.svg";
-import refreshImg from "assets/refresh.svg";
+import closeIcon from "./assets/close.svg";
+import refreshImg from "./assets/refresh.svg";
 import { Accordion, AccordionDetails, AccordionSummary, Backdrop, Box, Button, Fade, Modal } from "@mui/material";
 import React, { Fragment, useCallback, useEffect, useState } from "react";
 import { toast } from "react-toastify";

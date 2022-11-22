@@ -1,10 +1,10 @@
 import { Box, Fade, FormControl, Modal, Backdrop } from "@mui/material";
 import { useCallback, useEffect, useState } from "react";
 import { RedocStandalone } from "redoc";
-import closeIcon from "assets/closeIcon.svg";
+import closeIcon from "./assets/closeIcon.svg";
 import { toast } from 'react-toastify';
 import style from './OasModal.module.sass';
-import openApiLogo from 'assets/openApiLogo.png'
+import openApiLogo from "./assets/openApiLogo.png"
 import { redocThemeOptions } from "./redocThemeOptions";
 import React from "react";
 import { TOAST_CONTAINER_ID } from "../../../configs/Consts";
@@ -26,7 +26,7 @@ const modalStyle = {
 };
 
 
-const OasModal = ({ openModal, handleCloseModal, getOasServices, getOasByService }) => {
+export const OasModal = ({ openModal, handleCloseModal, getOasServices, getOasByService }) => {
   const [oasServices, setOasServices] = useState([] as string[])
   const [selectedServiceName, setSelectedServiceName] = useState("");
   const [selectedServiceSpec, setSelectedServiceSpec] = useState(null);
@@ -111,5 +111,3 @@ const OasModal = ({ openModal, handleCloseModal, getOasServices, getOasByService
     </Modal>
   );
 };
-
-export default OasModal;

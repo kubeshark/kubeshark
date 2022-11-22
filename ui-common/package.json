@@ -1,5 +1,5 @@
 {
-  "name": "@up9/kubeshark-common",
+  "name": "kubeshark",
   "version": "0.0.0",
   "description": "Made with create-react-library",
   "author": "",
@@ -12,14 +12,11 @@
     "node": ">=10"
   },
   "scripts": {
-    "build": "microbundle-crl --no-compress --format modern,cjs",
-    "start": "microbundle-crl watch --no-compress --format modern,cjs",
-    "prepare": "run-s build",
-    "test": "run-s test:unit test:lint test:build",
-    "test:build": "run-s build",
-    "test:lint": "eslint .",
-    "predeploy": "cd example && npm install && npm run build",
-    "deploy": "gh-pages -d example/build",
+    "start": "craco start",
+    "start-dev": "./node_modules/.bin/env-cmd -f .env.dev.basic craco start",
+    "build": "./node_modules/.bin/env-cmd -f .env.basic craco build",
+    "test": "craco test",
+    "eject": "craco eject",
     "eslint": "eslint . --ext .js,.jsx,.ts,.tsx --max-warnings=0"
   },
   "peerDependencies": {
@@ -97,5 +94,17 @@
   "files": [
     "src/*.scss",
     "dist"
-  ]
+  ],
+  "browserslist": {
+    "production": [
+      ">0.2%",
+      "not dead",
+      "not op_mini all"
+    ],
+    "development": [
+      "last 1 chrome version",
+      "last 1 firefox version",
+      "last 1 safari version"
+    ]
+  }
 }

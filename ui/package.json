@@ -51,7 +51,6 @@
     "recoil": "^0.7.2"
   },
   "scripts": {
-    "prestart": "../devops/ui-common-pack.sh $PWD",
     "start": "craco start",
     "start-dev": "./node_modules/.bin/env-cmd -f .env.dev.basic craco start",
     "build": "./node_modules/.bin/env-cmd -f .env.basic craco build",

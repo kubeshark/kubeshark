@@ -1,6 +1,6 @@
 import React from "react";
-import circleImg from 'assets/dotted-circle.svg';
-import styles from './NoDataMessage.module.sass'
+import circleImg from "./assets/dotted-circle.svg";
+import styles from "./NoDataMessage.module.sass"
 
 export interface Props {
     messageText: string;

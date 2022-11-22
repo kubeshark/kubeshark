@@ -1,8 +1,8 @@
 import React from "react";
 import {AuthPresentation} from "../AuthPresentation/AuthPresentation";
-import logo from '../assets/Kubeshark-logo.svg';
+import logo from './assets/Kubeshark-logo.svg';
 import './Header.sass';
-import {UI} from "@up9/kubeshark-common"
+import * as UI from "../UI"
 
 
 export const Header: React.FC = () => {

@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from "react";
 import { Backdrop, Box, debounce, Fade, Modal } from "@mui/material";
 import styles from "./TrafficStatsModal.module.sass";
-import closeIcon from "assets/close.svg";
+import closeIcon from "./assets/close.svg";
 import { TrafficPieChart } from "./TrafficPieChart/TrafficPieChart";
 import { TimelineBarChart } from "./TimelineBarChart/TimelineBarChart";
 import { LoadingWrapper } from "../../UI/withLoading/withLoading";

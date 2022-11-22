@@ -5,12 +5,12 @@ import debounce from 'lodash/debounce';
 import { useRecoilState } from "recoil";
 import { useCommonStyles } from "../../../helpers/commonStyle"
 import serviceMapModalOpenAtom from "../../../recoil/serviceMapModalOpen";
-import { TrafficViewer } from "@up9/kubeshark-common"
-import "@up9/kubeshark-common/dist/index.css"
+import { TrafficViewer } from "../../TrafficViewer/TrafficViewer"
+import "../../../index.sass"
 import oasModalOpenAtom from "../../../recoil/oasModalOpen/atom";
-import serviceMap from "../../assets/serviceMap.svg";
-import services from "../../assets/services.svg";
-import trafficStatsIcon from "../../assets/trafficStats.svg";
+import serviceMap from "./assets/serviceMap.svg";
+import services from "./assets/services.svg";
+import trafficStatsIcon from "./assets/trafficStats.svg";
 import trafficStatsModalOpenAtom from "../../../recoil/trafficStatsModalOpen";
 import { REPLAY_ENABLED } from "../../../consts";
 
