@@ -118,7 +118,6 @@ jobs:
         run: |
           sudo npm install -g eslint
           cd ui
-          npm run prestart
           npm i
 
       - name: Lint
