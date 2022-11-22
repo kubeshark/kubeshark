@@ -1,22 +1,47 @@
 {
-  "name": "kubeshark-ui",
-  "version": "0.1.0",
-  "private": true,
+  "name": "kubeshark",
+  "version": "0.0.0",
+  "description": "Made with create-react-library",
+  "author": "",
+  "license": "MIT",
+  "repository": "/kubeshark-common",
+  "main": "dist/index.js",
+  "module": "dist/index.modern.js",
+  "source": "src/index.tsx",
+  "engines": {
+    "node": ">=10"
+  },
+  "scripts": {
+    "start": "craco start",
+    "build": "craco build",
+    "test": "craco test",
+    "eject": "craco eject",
+    "eslint": "eslint . --ext .js,.jsx,.ts,.tsx --max-warnings=0"
+  },
+  "peerDependencies": {
+    "@craco/craco": "^6.4.3",
+    "@types/jest": "^26.0.24",
+    "@types/node": "^12.20.54",
+    "react": "^17.0.2",
+    "react-copy-to-clipboard": "^5.1.0",
+    "react-dom": "^17.0.2",
+    "recoil": "^0.7.2",
+    "sass": "^1.52.3"
+  },
   "dependencies": {
     "@craco/craco": "^6.4.3",
-    "@elastic/datemath": "^5.0.3",
     "@elastic/eui": "^60.2.0",
     "@emotion/react": "^11.9.0",
     "@emotion/styled": "^11.8.1",
+    "@mui/icons-material": "^5.8.2",
+    "@mui/lab": "^5.0.0-alpha.84",
     "@mui/material": "^5.8.2",
     "@mui/styles": "^5.8.0",
-    "@types/jest": "^26.0.24",
-    "@types/node": "^12.20.54",
+    "@types/lodash": "^4.14.182",
     "@uiw/react-textarea-code-editor": "^1.6.0",
-    "@up9/kubeshark-common": "file:up9-kubeshark-common-0.0.0.tgz",
+    "ace-builds": "^1.6.0",
     "axios": "^0.27.2",
     "core-js": "^3.22.7",
-    "craco-babel-loader": "^1.0.3",
     "highlight.js": "^11.5.1",
     "json-beautify": "^1.1.1",
     "jsonpath": "^1.1.1",
@@ -26,38 +51,38 @@
     "moment": "^2.29.3",
     "node-fetch": "^3.2.4",
     "numeral": "^2.0.6",
-    "react": "^17.0.2",
-    "react-copy-to-clipboard": "^5.1.0",
-    "react-dom": "^17.0.2",
+    "protobuf-decoder": "^0.1.2",
+    "react-ace": "^9.0.0",
     "react-graph-vis": "^1.0.7",
     "react-lowlight": "^3.0.0",
     "react-router-dom": "^6.3.0",
     "react-scrollable-feed-virtualized": "^1.4.9",
     "react-syntax-highlighter": "^15.5.0",
     "react-toastify": "^8.2.0",
+    "recharts": "^2.1.10",
     "redoc": "^2.0.0-rc.71",
-    "sass": "^1.52.3",
     "styled-components": "^5.3.5",
-    "typescript": "^4.5.3",
+    "use-file-picker": "^1.4.2",
     "web-vitals": "^2.1.4",
     "xml-formatter": "^2.6.1"
   },
   "devDependencies": {
+    "@rollup/plugin-node-resolve": "^13.3.0",
+    "@svgr/rollup": "^6.2.1",
+    "@types/ace": "^0.0.48",
+    "cross-env": "^7.0.3",
     "env-cmd": "^10.1.0",
-    "npm-link-shared": "^0.5.6",
-    "react-app-rewire-alias": "^1.1.7",
-    "react-dev-utils": "^12.0.1",
-    "react-error-overlay": "6.0.9",
-    "recoil": "^0.7.2"
-  },
-  "scripts": {
-    "prestart": "../devops/ui-common-pack.sh $PWD",
-    "start": "craco start",
-    "start-dev": "./node_modules/.bin/env-cmd -f .env.dev.basic craco start",
-    "build": "./node_modules/.bin/env-cmd -f .env.basic craco build",
-    "test": "craco test",
-    "eject": "craco eject",
-    "eslint": "eslint . --ext .js,.jsx,.ts,.tsx --max-warnings=0"
+    "gh-pages": "^4.0.0",
+    "microbundle-crl": "^0.13.11",
+    "npm-run-all": "^4.1.5",
+    "prettier": "^2.6.2",
+    "react": "^17.0.2",
+    "react-dom": "^17.0.2",
+    "rollup-plugin-import-css": "^3.0.3",
+    "rollup-plugin-postcss": "^4.0.2",
+    "rollup-plugin-sass": "^1.2.12",
+    "rollup-plugin-scss": "^3.0.0",
+    "typescript": "^4.5.3"
   },
   "eslintConfig": {
     "extends": [
@@ -65,6 +90,10 @@
       "react-app/jest"
     ]
   },
+  "files": [
+    "src/*.scss",
+    "dist"
+  ],
   "browserslist": {
     "production": [
       ">0.2%",

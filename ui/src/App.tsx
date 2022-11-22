@@ -1,15 +1,15 @@
 import './App.sass';
 import { Header } from "./components/Header/Header";
 import { TrafficPage } from "./components/Pages/TrafficPage/TrafficPage";
-import { ServiceMapModal } from '@up9/kubeshark-common';
+import { ServiceMapModal } from './components/modals/ServiceMapModal/ServiceMapModal';
 import { useRecoilState } from "recoil";
 import serviceMapModalOpenAtom from "./recoil/serviceMapModalOpen";
 import oasModalOpenAtom from './recoil/oasModalOpen/atom';
 import trafficStatsModalOpenAtom from "./recoil/trafficStatsModalOpen";
-import { OasModal } from '@up9/kubeshark-common';
+import { OasModal } from './components/modals/OasModal/OasModal';
 import Api from './helpers/api';
 import { ThemeProvider, StyledEngineProvider, createTheme } from '@mui/material';
-import { TrafficStatsModal } from '@up9/kubeshark-common';
+import { TrafficStatsModal } from './components/modals/TrafficStatsModal/TrafficStatsModal';
 
 const api = Api.getInstance()
 

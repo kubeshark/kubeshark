@@ -114,25 +114,13 @@ jobs:
         with:
           node-version: 16
 
-      - name: ESLint prerequisites ui
+      - name: Install dependencies
         run: |
           sudo npm install -g eslint
           cd ui
-          npm run prestart
           npm i
 
-      - name: ESLint ui
+      - name: Lint
         run: |
           cd ui
-          npm run eslint
-
-      - name: ESLint prerequisites ui-common
-        run: |
-          sudo npm install -g eslint
-          cd ui-common
-          npm i
-
-      - name: ESLint ui-common
-        run: |
-          cd ui-common
           npm run eslint
