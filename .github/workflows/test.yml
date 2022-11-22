@@ -29,7 +29,10 @@ jobs:
         run: |
           sudo apt update
           sudo apt install -y \
-            libpcap-dev
+            libpcap-dev \
+            llvm \
+            libbpf-dev \
+            linux-headers-$(uname -r)
           ./devops/install-capstone.sh
 
       - name: Generate eBPF object files and Go bindings
