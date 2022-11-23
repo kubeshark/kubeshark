@@ -34,10 +34,10 @@ func NewProvider(url string, retries int, timeout time.Duration) *Provider {
 	}
 }
 
-func (provider *Provider) TestConnection() error {
+func (provider *Provider) TestConnection(path string) error {
 	retriesLeft := provider.retries
 	for retriesLeft > 0 {
-		if isReachable, err := provider.isReachable(); err != nil || !isReachable {
+		if isReachable, err := provider.isReachable(path); err != nil || !isReachable {
 			logger.Log.Debugf("api server not ready yet %v", err)
 		} else {
 			logger.Log.Debugf("connection test to api server passed successfully")
@@ -53,9 +53,9 @@ func (provider *Provider) TestConnection() error {
 	return nil
 }
 
-func (provider *Provider) isReachable() (bool, error) {
-	echoUrl := fmt.Sprintf("%s/echo", provider.url)
-	if _, err := utils.Get(echoUrl, provider.client); err != nil {
+func (provider *Provider) isReachable(path string) (bool, error) {
+	targetUrl := fmt.Sprintf("%s%s", provider.url, path)
+	if _, err := utils.Get(targetUrl, provider.client); err != nil {
 		return false, err
 	} else {
 		return true, nil

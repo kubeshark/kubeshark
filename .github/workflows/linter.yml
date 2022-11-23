@@ -101,26 +101,3 @@ jobs:
         with:
           version: latest
           working-directory: logger
-
-  eslint:
-    name: ESLint
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          fetch-depth: 2
-
-      - uses: actions/setup-node@v2
-        with:
-          node-version: 16
-
-      - name: Install dependencies
-        run: |
-          sudo npm install -g eslint
-          cd ui
-          npm i
-
-      - name: Lint
-        run: |
-          cd ui
-          npm run eslint

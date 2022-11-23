@@ -15,10 +15,10 @@ import (
 func ServerConnection(kubernetesProvider *kubernetes.Provider) bool {
 	logger.Log.Infof("\nAPI-server-connectivity\n--------------------")
 
-	serverUrl := fmt.Sprintf("http://%s", kubernetes.GetKubesharkApiServerProxiedHostAndPath(config.Config.Tap.GuiPort))
+	serverUrl := kubernetes.GetLocalhostOnPort(config.Config.Hub.PortForward.SrcPort)
 
 	apiServerProvider := apiserver.NewProvider(serverUrl, 1, apiserver.DefaultTimeout)
-	if err := apiServerProvider.TestConnection(); err == nil {
+	if err := apiServerProvider.TestConnection(""); err == nil {
 		logger.Log.Infof("%v found Kubeshark server tunnel available and connected successfully to API server", fmt.Sprintf(uiUtils.Green, "√"))
 		return true
 	}
@@ -46,13 +46,13 @@ func checkProxy(serverUrl string, kubernetesProvider *kubernetes.Provider) error
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	httpServer, err := kubernetes.StartProxy(kubernetesProvider, config.Config.Tap.ProxyHost, config.Config.Tap.GuiPort, config.Config.KubesharkResourcesNamespace, kubernetes.ApiServerPodName, cancel)
+	httpServer, err := kubernetes.StartProxy(kubernetesProvider, config.Config.Tap.ProxyHost, config.Config.Hub.PortForward.SrcPort, config.Config.Hub.PortForward.DstPort, config.Config.KubesharkResourcesNamespace, kubernetes.ApiServerPodName, cancel)
 	if err != nil {
 		return err
 	}
 
 	apiServerProvider := apiserver.NewProvider(serverUrl, apiserver.DefaultRetries, apiserver.DefaultTimeout)
-	if err := apiServerProvider.TestConnection(); err != nil {
+	if err := apiServerProvider.TestConnection(""); err != nil {
 		return err
 	}
 
@@ -68,13 +68,13 @@ func checkPortForward(serverUrl string, kubernetesProvider *kubernetes.Provider)
 	defer cancel()
 
 	podRegex, _ := regexp.Compile(kubernetes.ApiServerPodName)
-	forwarder, err := kubernetes.NewPortForward(kubernetesProvider, config.Config.KubesharkResourcesNamespace, podRegex, config.Config.Tap.GuiPort, ctx, cancel)
+	forwarder, err := kubernetes.NewPortForward(kubernetesProvider, config.Config.KubesharkResourcesNamespace, podRegex, config.Config.Tap.GuiPort, config.Config.Tap.GuiPort, ctx, cancel)
 	if err != nil {
 		return err
 	}
 
 	apiServerProvider := apiserver.NewProvider(serverUrl, apiserver.DefaultRetries, apiserver.DefaultTimeout)
-	if err := apiServerProvider.TestConnection(); err != nil {
+	if err := apiServerProvider.TestConnection(""); err != nil {
 		return err
 	}
 

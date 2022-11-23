@@ -7,7 +7,7 @@ const (
 	ConfigDirPath                   = "/app/config/"
 	DataDirPath                     = "/app/data/"
 	ConfigFileName                  = "kubeshark-config.json"
-	DefaultApiServerPort            = 8899
+	DefaultApiServerPort            = 80
 	LogLevelEnvVar                  = "LOG_LEVEL"
 	KubesharkAgentImageRepo         = "docker.io/kubeshark/kubeshark"
 	BasenineHost                    = "127.0.0.1"

@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 
+	"github.com/kubeshark/kubeshark/cli/config"
 	"github.com/kubeshark/kubeshark/cli/errormessage"
 	"github.com/kubeshark/kubeshark/cli/kubeshark"
 	"github.com/kubeshark/kubeshark/cli/uiUtils"
@@ -56,7 +57,16 @@ func CreateTapKubesharkResources(ctx context.Context, kubernetesProvider *kubern
 		return kubesharkServiceAccountExists, err
 	}
 
-	_, err = kubernetesProvider.CreateService(ctx, kubesharkResourcesNamespace, kubernetes.ApiServerPodName, kubernetes.ApiServerPodName)
+	if err := createFrontPod(ctx, kubernetesProvider, opts); err != nil {
+		return kubesharkServiceAccountExists, err
+	}
+
+	_, err = kubernetesProvider.CreateService(ctx, kubesharkResourcesNamespace, kubernetes.ApiServerPodName, kubernetes.ApiServerPodName, 80, int32(config.Config.Hub.PortForward.DstPort), int32(config.Config.Hub.PortForward.SrcPort))
+	if err != nil {
+		return kubesharkServiceAccountExists, err
+	}
+
+	_, err = kubernetesProvider.CreateService(ctx, kubesharkResourcesNamespace, "front", "front", 80, int32(config.Config.Front.PortForward.DstPort), int32(config.Config.Front.PortForward.SrcPort))
 	if err != nil {
 		return kubesharkServiceAccountExists, err
 	}
@@ -91,13 +101,25 @@ func createRBACIfNecessary(ctx context.Context, kubernetesProvider *kubernetes.P
 }
 
 func createKubesharkApiServerPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, opts *kubernetes.ApiServerOptions) error {
-	pod, err := kubernetesProvider.GetKubesharkApiServerPodObject(opts, false, "", false)
+	pod, err := kubernetesProvider.BuildApiServerPod(opts, false, "", false)
 	if err != nil {
 		return err
 	}
 	if _, err = kubernetesProvider.CreatePod(ctx, opts.Namespace, pod); err != nil {
 		return err
 	}
-	logger.Log.Debugf("Successfully created API server pod: %s", kubernetes.ApiServerPodName)
+	logger.Log.Infof("Successfully created pod: [%s]", pod.Name)
+	return nil
+}
+
+func createFrontPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, opts *kubernetes.ApiServerOptions) error {
+	pod, err := kubernetesProvider.BuildFrontPod(opts, false, "", false)
+	if err != nil {
+		return err
+	}
+	if _, err = kubernetesProvider.CreatePod(ctx, opts.Namespace, pod); err != nil {
+		return err
+	}
+	logger.Log.Infof("Successfully created pod: [%s]", pod.Name)
 	return nil
 }

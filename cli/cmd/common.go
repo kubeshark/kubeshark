@@ -23,12 +23,8 @@ import (
 	"github.com/kubeshark/kubeshark/shared/kubernetes"
 )
 
-func GetApiServerUrl(port uint16) string {
-	return fmt.Sprintf("http://%s", kubernetes.GetKubesharkApiServerProxiedHostAndPath(port))
-}
-
-func startProxyReportErrorIfAny(kubernetesProvider *kubernetes.Provider, ctx context.Context, cancel context.CancelFunc, port uint16) {
-	httpServer, err := kubernetes.StartProxy(kubernetesProvider, config.Config.Tap.ProxyHost, port, config.Config.KubesharkResourcesNamespace, kubernetes.ApiServerPodName, cancel)
+func startProxyReportErrorIfAny(kubernetesProvider *kubernetes.Provider, ctx context.Context, cancel context.CancelFunc, serviceName string, srcPort uint16, dstPort uint16, healthCheck string) {
+	httpServer, err := kubernetes.StartProxy(kubernetesProvider, config.Config.Tap.ProxyHost, srcPort, dstPort, config.Config.KubesharkResourcesNamespace, serviceName, cancel)
 	if err != nil {
 		logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error occured while running k8s proxy %v\n"+
 			"Try setting different port by using --%s", errormessage.FormatError(err), configStructs.GuiPortTapName))
@@ -36,25 +32,25 @@ func startProxyReportErrorIfAny(kubernetesProvider *kubernetes.Provider, ctx con
 		return
 	}
 
-	provider := apiserver.NewProvider(GetApiServerUrl(port), apiserver.DefaultRetries, apiserver.DefaultTimeout)
-	if err := provider.TestConnection(); err != nil {
+	provider := apiserver.NewProvider(kubernetes.GetLocalhostOnPort(srcPort), apiserver.DefaultRetries, apiserver.DefaultTimeout)
+	if err := provider.TestConnection(healthCheck); err != nil {
 		logger.Log.Debugf("Couldn't connect using proxy, stopping proxy and trying to create port-forward")
 		if err := httpServer.Shutdown(ctx); err != nil {
 			logger.Log.Debugf("Error occurred while stopping proxy %v", errormessage.FormatError(err))
 		}
 
 		podRegex, _ := regexp.Compile(kubernetes.ApiServerPodName)
-		if _, err := kubernetes.NewPortForward(kubernetesProvider, config.Config.KubesharkResourcesNamespace, podRegex, port, ctx, cancel); err != nil {
-			logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error occured while running port forward %v\n"+
-				"Try setting different port by using --%s", errormessage.FormatError(err), configStructs.GuiPortTapName))
+		if _, err := kubernetes.NewPortForward(kubernetesProvider, config.Config.KubesharkResourcesNamespace, podRegex, srcPort, dstPort, ctx, cancel); err != nil {
+			logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error occured while running port forward [%s] %v\n"+
+				"Try setting different port by using --%s", podRegex, errormessage.FormatError(err), configStructs.GuiPortTapName))
 			cancel()
 			return
 		}
 
-		provider = apiserver.NewProvider(GetApiServerUrl(port), apiserver.DefaultRetries, apiserver.DefaultTimeout)
-		if err := provider.TestConnection(); err != nil {
-			logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Couldn't connect to API server, for more info check logs at %s", fsUtils.GetLogFilePath()))
-			cancel()
+		provider = apiserver.NewProvider(kubernetes.GetLocalhostOnPort(srcPort), apiserver.DefaultRetries, apiserver.DefaultTimeout)
+		if err := provider.TestConnection(healthCheck); err != nil {
+			logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Couldn't connect to [%s], for more info check logs at %s", serviceName, fsUtils.GetLogFilePath()))
+			// cancel()
 			return
 		}
 	}

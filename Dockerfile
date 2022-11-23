@@ -1,16 +1,6 @@
 ARG BUILDARCH=amd64
 ARG TARGETARCH=amd64
 
-### Front-end
-FROM node:16 AS front-end
-
-WORKDIR /app/ui-build
-
-COPY ui/package.json ui/package-lock.json ./
-RUN npm i
-COPY ui .
-RUN npm run build
-
 ### Base builder image for native builds architecture
 FROM golang:1.17-alpine AS builder-native-base
 ENV CGO_ENABLED=1 GOOS=linux
@@ -124,7 +114,6 @@ WORKDIR /app
 # Copy binary and config files from /build to root folder of scratch container.
 COPY --from=builder ["/app/agent-build/kubesharkagent", "."]
 COPY --from=builder ["/app/agent-build/basenine", "/usr/local/bin/basenine"]
-COPY --from=front-end ["/app/ui-build/build", "site"]
 
 # this script runs both apiserver and passivetapper and exits either if one of them exits, preventing a scenario where the container runs without one process
 ENTRYPOINT ["/app/kubesharkagent"]

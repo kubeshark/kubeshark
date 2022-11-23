@@ -11,7 +11,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/kubeshark/kubeshark/shared"
 	"k8s.io/apimachinery/pkg/util/httpstream"
 	"k8s.io/client-go/tools/portforward"
 	"k8s.io/client-go/transport/spdy"
@@ -23,8 +22,8 @@ import (
 const k8sProxyApiPrefix = "/"
 const kubesharkServicePort = 80
 
-func StartProxy(kubernetesProvider *Provider, proxyHost string, kubesharkPort uint16, kubesharkNamespace string, kubesharkServiceName string, cancel context.CancelFunc) (*http.Server, error) {
-	logger.Log.Debugf("Starting proxy using proxy method. namespace: [%v], service name: [%s], port: [%v]", kubesharkNamespace, kubesharkServiceName, kubesharkPort)
+func StartProxy(kubernetesProvider *Provider, proxyHost string, srcPort uint16, dstPort uint16, kubesharkNamespace string, kubesharkServiceName string, cancel context.CancelFunc) (*http.Server, error) {
+	logger.Log.Infof("Starting proxy - namespace: [%v], service name: [%s], port: [%d:%d]\n", kubesharkNamespace, kubesharkServiceName, srcPort, dstPort)
 	filter := &proxy.FilterServer{
 		AcceptPaths:   proxy.MakeRegexpArrayOrDie(proxy.DefaultPathAcceptRE),
 		RejectPaths:   proxy.MakeRegexpArrayOrDie(proxy.DefaultPathRejectRE),
@@ -40,7 +39,7 @@ func StartProxy(kubernetesProvider *Provider, proxyHost string, kubesharkPort ui
 	mux.Handle(k8sProxyApiPrefix, getRerouteHttpHandlerKubesharkAPI(proxyHandler, kubesharkNamespace, kubesharkServiceName))
 	mux.Handle("/static/", getRerouteHttpHandlerKubesharkStatic(proxyHandler, kubesharkNamespace, kubesharkServiceName))
 
-	l, err := net.Listen("tcp", fmt.Sprintf("%s:%d", proxyHost, int(kubesharkPort)))
+	l, err := net.Listen("tcp", fmt.Sprintf("%s:%d", proxyHost, int(srcPort)))
 	if err != nil {
 		return nil, err
 	}
@@ -63,12 +62,22 @@ func getKubesharkApiServerProxiedHostAndPath(kubesharkNamespace string, kubeshar
 	return fmt.Sprintf("/api/v1/namespaces/%s/services/%s:%d/proxy", kubesharkNamespace, kubesharkServiceName, kubesharkServicePort)
 }
 
-func GetKubesharkApiServerProxiedHostAndPath(kubesharkPort uint16) string {
-	return fmt.Sprintf("localhost:%d", kubesharkPort)
+func GetLocalhostOnPort(port uint16) string {
+	return fmt.Sprintf("http://localhost:%d", port)
 }
 
 func getRerouteHttpHandlerKubesharkAPI(proxyHandler http.Handler, kubesharkNamespace string, kubesharkServiceName string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Credentials", "true")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type, Content-Length, Accept-Encoding, X-CSRF-Token, Authorization, accept, origin, Cache-Control, X-Requested-With, x-session-token")
+		w.Header().Set("Access-Control-Allow-Methods", "POST, OPTIONS, GET, PUT, DELETE")
+
+		if r.Method == "OPTIONS" {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+
 		proxiedPath := getKubesharkApiServerProxiedHostAndPath(kubesharkNamespace, kubesharkServiceName)
 
 		//avoid redirecting several times
@@ -86,7 +95,7 @@ func getRerouteHttpHandlerKubesharkStatic(proxyHandler http.Handler, kubesharkNa
 	})
 }
 
-func NewPortForward(kubernetesProvider *Provider, namespace string, podRegex *regexp.Regexp, localPort uint16, ctx context.Context, cancel context.CancelFunc) (*portforward.PortForwarder, error) {
+func NewPortForward(kubernetesProvider *Provider, namespace string, podRegex *regexp.Regexp, srcPort uint16, dstPort uint16, ctx context.Context, cancel context.CancelFunc) (*portforward.PortForwarder, error) {
 	pods, err := kubernetesProvider.ListAllRunningPodsMatchingRegex(ctx, podRegex, []string{namespace})
 	if err != nil {
 		return nil, err
@@ -96,7 +105,7 @@ func NewPortForward(kubernetesProvider *Provider, namespace string, podRegex *re
 
 	podName := pods[0].Name
 
-	logger.Log.Debugf("Starting proxy using port-forward method. namespace: [%v], pod name: [%s], port: [%v]", namespace, podName, localPort)
+	logger.Log.Debugf("Starting proxy using port-forward method. namespace: [%v], pod name: [%s], %d:%d", namespace, podName, srcPort, dstPort)
 
 	dialer, err := getHttpDialer(kubernetesProvider, namespace, podName)
 	if err != nil {
@@ -106,7 +115,7 @@ func NewPortForward(kubernetesProvider *Provider, namespace string, podRegex *re
 	stopChan, readyChan := make(chan struct{}, 1), make(chan struct{}, 1)
 	out, errOut := new(bytes.Buffer), new(bytes.Buffer)
 
-	forwarder, err := portforward.New(dialer, []string{fmt.Sprintf("%d:%d", localPort, shared.DefaultApiServerPort)}, stopChan, readyChan, out, errOut)
+	forwarder, err := portforward.New(dialer, []string{fmt.Sprintf("%d:%d", srcPort, dstPort)}, stopChan, readyChan, out, errOut)
 	if err != nil {
 		return nil, err
 	}

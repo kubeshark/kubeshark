@@ -20,7 +20,42 @@ const (
 	KubeConfigPathConfigName              = "kube-config-path"
 )
 
+type PortForward struct {
+	SrcPort uint16 `yaml:"src-port"`
+	DstPort uint16 `yaml:"dst-port"`
+}
+
+type HubConfig struct {
+	PortForward PortForward `yaml:"port-forward"`
+}
+
+type FrontConfig struct {
+	PortForward PortForward `yaml:"port-forward"`
+}
+
+func CreateDefaultConfig() ConfigStruct {
+	config := ConfigStruct{}
+
+	config.Hub = HubConfig{
+		PortForward{
+			8898,
+			80,
+		},
+	}
+
+	config.Front = FrontConfig{
+		PortForward{
+			8899,
+			80,
+		},
+	}
+
+	return config
+}
+
 type ConfigStruct struct {
+	Hub                         HubConfig                   `yaml:"hub"`
+	Front                       FrontConfig                 `yaml:"front"`
 	Tap                         configStructs.TapConfig     `yaml:"tap"`
 	Check                       configStructs.CheckConfig   `yaml:"check"`
 	Install                     configStructs.InstallConfig `yaml:"install"`
