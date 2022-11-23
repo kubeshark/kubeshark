@@ -54,8 +54,8 @@ func (provider *Provider) TestConnection(path string) error {
 }
 
 func (provider *Provider) isReachable(path string) (bool, error) {
-	echoUrl := fmt.Sprintf("%s%s", provider.url, path)
-	if _, err := utils.Get(echoUrl, provider.client); err != nil {
+	targetUrl := fmt.Sprintf("%s%s", provider.url, path)
+	if _, err := utils.Get(targetUrl, provider.client); err != nil {
 		return false, err
 	} else {
 		return true, nil

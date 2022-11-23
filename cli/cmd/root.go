@@ -29,7 +29,7 @@ Further info is available at https://github.com/kubeshark/kubeshark`,
 }
 
 func init() {
-	defaultConfig := config.ConfigStruct{}
+	defaultConfig := config.CreateDefaultConfig()
 	if err := defaults.Set(&defaultConfig); err != nil {
 		logger.Log.Debug(err)
 	}

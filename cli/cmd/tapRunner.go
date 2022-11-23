@@ -41,7 +41,7 @@ var apiProvider *apiserver.Provider
 func RunKubesharkTap() {
 	state.startTime = time.Now()
 
-	apiProvider = apiserver.NewProvider(GetApiServerUrl(8898), apiserver.DefaultRetries, apiserver.DefaultTimeout)
+	apiProvider = apiserver.NewProvider(kubernetes.GetLocalhostOnPort(config.Config.Hub.PortForward.SrcPort), apiserver.DefaultRetries, apiserver.DefaultTimeout)
 
 	kubernetesProvider, err := getKubernetesProviderForCli()
 	if err != nil {
@@ -405,24 +405,21 @@ func watchApiServerEvents(ctx context.Context, kubernetesProvider *kubernetes.Pr
 }
 
 func postApiServerStarted(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc) {
-	startProxyReportErrorIfAny(kubernetesProvider, ctx, cancel, 8898)
+	startProxyReportErrorIfAny(kubernetesProvider, ctx, cancel, "kubeshark-api-server", config.Config.Hub.PortForward.SrcPort, config.Config.Hub.PortForward.DstPort, "/echo")
 
 	if err := startTapperSyncer(ctx, cancel, kubernetesProvider, state.targetNamespaces, state.startTime); err != nil {
 		logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error starting kubeshark tapper syncer: %v", errormessage.FormatError(err)))
 		cancel()
 	}
 
-	url := GetApiServerUrl(8898)
+	url := kubernetes.GetLocalhostOnPort(config.Config.Hub.PortForward.SrcPort)
 	logger.Log.Infof("API Server is available at %s", url)
-	if !config.Config.HeadlessMode {
-		uiUtils.OpenBrowser(url)
-	}
 }
 
 func postFrontStarted(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc) {
-	startProxyReportErrorIfAnyFront(kubernetesProvider, ctx, cancel, 8899)
+	startProxyReportErrorIfAny(kubernetesProvider, ctx, cancel, "front", config.Config.Front.PortForward.SrcPort, config.Config.Front.PortForward.DstPort, "")
 
-	url := GetApiServerUrl(8899)
+	url := kubernetes.GetLocalhostOnPort(config.Config.Front.PortForward.SrcPort)
 	logger.Log.Infof("Kubeshark is available at %s", url)
 	if !config.Config.HeadlessMode {
 		uiUtils.OpenBrowser(url)

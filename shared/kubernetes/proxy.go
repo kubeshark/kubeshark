@@ -23,7 +23,7 @@ const k8sProxyApiPrefix = "/"
 const kubesharkServicePort = 80
 
 func StartProxy(kubernetesProvider *Provider, proxyHost string, srcPort uint16, dstPort uint16, kubesharkNamespace string, kubesharkServiceName string, cancel context.CancelFunc) (*http.Server, error) {
-	logger.Log.Infof("Starting proxy using proxy method. namespace: [%v], service name: [%s], %d:%d\n", kubesharkNamespace, kubesharkServiceName, srcPort, dstPort)
+	logger.Log.Infof("Starting proxy - namespace: [%v], service name: [%s], port: [%d:%d]\n", kubesharkNamespace, kubesharkServiceName, srcPort, dstPort)
 	filter := &proxy.FilterServer{
 		AcceptPaths:   proxy.MakeRegexpArrayOrDie(proxy.DefaultPathAcceptRE),
 		RejectPaths:   proxy.MakeRegexpArrayOrDie(proxy.DefaultPathRejectRE),
@@ -62,8 +62,8 @@ func getKubesharkApiServerProxiedHostAndPath(kubesharkNamespace string, kubeshar
 	return fmt.Sprintf("/api/v1/namespaces/%s/services/%s:%d/proxy", kubesharkNamespace, kubesharkServiceName, kubesharkServicePort)
 }
 
-func GetKubesharkApiServerProxiedHostAndPath(kubesharkPort uint16) string {
-	return fmt.Sprintf("localhost:%d", kubesharkPort)
+func GetLocalhostOnPort(port uint16) string {
+	return fmt.Sprintf("http://localhost:%d", port)
 }
 
 func getRerouteHttpHandlerKubesharkAPI(proxyHandler http.Handler, kubesharkNamespace string, kubesharkServiceName string) http.Handler {

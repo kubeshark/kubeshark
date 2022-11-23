@@ -46,7 +46,7 @@ var configCmd = &cobra.Command{
 func init() {
 	rootCmd.AddCommand(configCmd)
 
-	defaultConfig := config.ConfigStruct{}
+	defaultConfig := config.CreateDefaultConfig()
 	if err := defaults.Set(&defaultConfig); err != nil {
 		logger.Log.Debug(err)
 	}

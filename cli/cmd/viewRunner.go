@@ -39,15 +39,15 @@ func runKubesharkView() {
 			return
 		}
 
-		url = GetApiServerUrl(config.Config.View.GuiPort)
+		url = kubernetes.GetLocalhostOnPort(config.Config.Front.PortForward.SrcPort)
 
 		response, err := http.Get(fmt.Sprintf("%s/", url))
 		if err == nil && response.StatusCode == 200 {
-			logger.Log.Infof("Found a running service %s and open port %d", kubernetes.ApiServerPodName, config.Config.View.GuiPort)
+			logger.Log.Infof("Found a running service %s and open port %d", kubernetes.ApiServerPodName, config.Config.Front.PortForward.SrcPort)
 			return
 		}
 		logger.Log.Infof("Establishing connection to k8s cluster...")
-		startProxyReportErrorIfAny(kubernetesProvider, ctx, cancel, config.Config.View.GuiPort)
+		startProxyReportErrorIfAny(kubernetesProvider, ctx, cancel, "front", config.Config.Front.PortForward.SrcPort, config.Config.Front.PortForward.DstPort, "")
 	}
 
 	apiServerProvider := apiserver.NewProvider(url, apiserver.DefaultRetries, apiserver.DefaultTimeout)

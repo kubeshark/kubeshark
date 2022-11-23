@@ -15,7 +15,7 @@ import (
 func ServerConnection(kubernetesProvider *kubernetes.Provider) bool {
 	logger.Log.Infof("\nAPI-server-connectivity\n--------------------")
 
-	serverUrl := fmt.Sprintf("http://%s", kubernetes.GetKubesharkApiServerProxiedHostAndPath(config.Config.Tap.GuiPort))
+	serverUrl := kubernetes.GetLocalhostOnPort(config.Config.Hub.PortForward.SrcPort)
 
 	apiServerProvider := apiserver.NewProvider(serverUrl, 1, apiserver.DefaultTimeout)
 	if err := apiServerProvider.TestConnection(""); err == nil {
@@ -46,7 +46,7 @@ func checkProxy(serverUrl string, kubernetesProvider *kubernetes.Provider) error
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	httpServer, err := kubernetes.StartProxy(kubernetesProvider, config.Config.Tap.ProxyHost, 8899, 8899, config.Config.KubesharkResourcesNamespace, kubernetes.ApiServerPodName, cancel)
+	httpServer, err := kubernetes.StartProxy(kubernetesProvider, config.Config.Tap.ProxyHost, config.Config.Hub.PortForward.SrcPort, config.Config.Hub.PortForward.DstPort, config.Config.KubesharkResourcesNamespace, kubernetes.ApiServerPodName, cancel)
 	if err != nil {
 		return err
 	}

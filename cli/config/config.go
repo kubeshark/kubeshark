@@ -32,6 +32,19 @@ var (
 )
 
 func InitConfig(cmd *cobra.Command) error {
+	Config.Hub = HubConfig{
+		PortForward{
+			8898,
+			80,
+		},
+	}
+
+	Config.Front = FrontConfig{
+		PortForward{
+			8899,
+			80,
+		},
+	}
 	cmdName = cmd.Name()
 
 	if err := defaults.Set(&Config); err != nil {

@@ -184,7 +184,7 @@ type ApiServerOptions struct {
 	Profiler              bool
 }
 
-func (provider *Provider) GetKubesharkApiServerPodObject(opts *ApiServerOptions, mountVolumeClaim bool, volumeClaimName string, createAuthContainer bool) (*core.Pod, error) {
+func (provider *Provider) BuildApiServerPod(opts *ApiServerOptions, mountVolumeClaim bool, volumeClaimName string, createAuthContainer bool) (*core.Pod, error) {
 	configMapVolume := &core.ConfigMapVolumeSource{}
 	configMapVolume.Name = ConfigMapName
 
@@ -400,7 +400,7 @@ func (provider *Provider) GetKubesharkApiServerPodObject(opts *ApiServerOptions,
 	return pod, nil
 }
 
-func (provider *Provider) GetFrontPodObject(opts *ApiServerOptions, mountVolumeClaim bool, volumeClaimName string, createAuthContainer bool) (*core.Pod, error) {
+func (provider *Provider) BuildFrontPod(opts *ApiServerOptions, mountVolumeClaim bool, volumeClaimName string, createAuthContainer bool) (*core.Pod, error) {
 	configMapVolume := &core.ConfigMapVolumeSource{}
 	configMapVolume.Name = ConfigMapName
 
@@ -495,7 +495,7 @@ func (provider *Provider) CreatePod(ctx context.Context, namespace string, podSp
 	return provider.clientSet.CoreV1().Pods(namespace).Create(ctx, podSpec, metav1.CreateOptions{})
 }
 
-func (provider *Provider) CreateService(ctx context.Context, namespace string, serviceName string, appLabelValue string) (*core.Service, error) {
+func (provider *Provider) CreateService(ctx context.Context, namespace string, serviceName string, appLabelValue string, targetPort int, port int32, nodePort int32) (*core.Service, error) {
 	service := core.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: serviceName,
@@ -505,7 +505,13 @@ func (provider *Provider) CreateService(ctx context.Context, namespace string, s
 			},
 		},
 		Spec: core.ServiceSpec{
-			Ports:    []core.ServicePort{{TargetPort: intstr.FromInt(shared.DefaultApiServerPort), Port: 80, Name: "api"}},
+			Ports: []core.ServicePort{
+				{
+					Name:       serviceName,
+					TargetPort: intstr.FromInt(targetPort),
+					Port:       port,
+				},
+			},
 			Type:     core.ServiceTypeClusterIP,
 			Selector: map[string]string{"app": appLabelValue},
 		},
