@@ -41,7 +41,7 @@ var apiProvider *apiserver.Provider
 func RunKubesharkTap() {
 	state.startTime = time.Now()
 
-	apiProvider = apiserver.NewProvider(GetApiServerUrl(config.Config.Tap.GuiPort), apiserver.DefaultRetries, apiserver.DefaultTimeout)
+	apiProvider = apiserver.NewProvider(GetApiServerUrl(8898), apiserver.DefaultRetries, apiserver.DefaultTimeout)
 
 	kubernetesProvider, err := getKubernetesProviderForCli()
 	if err != nil {
