@@ -400,6 +400,97 @@ func (provider *Provider) GetKubesharkApiServerPodObject(opts *ApiServerOptions,
 	return pod, nil
 }
 
+func (provider *Provider) GetFrontPodObject(opts *ApiServerOptions, mountVolumeClaim bool, volumeClaimName string, createAuthContainer bool) (*core.Pod, error) {
+	configMapVolume := &core.ConfigMapVolumeSource{}
+	configMapVolume.Name = ConfigMapName
+
+	cpuLimit, err := resource.ParseQuantity(opts.Resources.CpuLimit)
+	if err != nil {
+		return nil, fmt.Errorf("invalid cpu limit for %s container", "front")
+	}
+	memLimit, err := resource.ParseQuantity(opts.Resources.MemoryLimit)
+	if err != nil {
+		return nil, fmt.Errorf("invalid memory limit for %s container", "front")
+	}
+	cpuRequests, err := resource.ParseQuantity(opts.Resources.CpuRequests)
+	if err != nil {
+		return nil, fmt.Errorf("invalid cpu request for %s container", "front")
+	}
+	memRequests, err := resource.ParseQuantity(opts.Resources.MemoryRequests)
+	if err != nil {
+		return nil, fmt.Errorf("invalid memory request for %s container", "front")
+	}
+
+	volumeMounts := []core.VolumeMount{}
+	volumes := []core.Volume{}
+
+	containers := []core.Container{
+		{
+			Name:            "front",
+			Image:           "kubeshark/front:test-amd64",
+			ImagePullPolicy: opts.ImagePullPolicy,
+			VolumeMounts:    volumeMounts,
+			ReadinessProbe: &core.Probe{
+				FailureThreshold: 3,
+				ProbeHandler: core.ProbeHandler{
+					TCPSocket: &core.TCPSocketAction{
+						Port: intstr.Parse("80"),
+					},
+				},
+				PeriodSeconds:    1,
+				SuccessThreshold: 1,
+				TimeoutSeconds:   1,
+			},
+			Resources: core.ResourceRequirements{
+				Limits: core.ResourceList{
+					"cpu":    cpuLimit,
+					"memory": memLimit,
+				},
+				Requests: core.ResourceList{
+					"cpu":    cpuRequests,
+					"memory": memRequests,
+				},
+			},
+			Command:    []string{"nginx"},
+			Args:       []string{"-g", "daemon off;"},
+			WorkingDir: shared.DataDirPath,
+		},
+	}
+
+	pod := &core.Pod{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: "front",
+			Labels: map[string]string{
+				"app":          "front",
+				LabelManagedBy: provider.managedBy,
+				LabelCreatedBy: provider.createdBy,
+			},
+		},
+		Spec: core.PodSpec{
+			Containers:                    containers,
+			Volumes:                       volumes,
+			DNSPolicy:                     core.DNSClusterFirstWithHostNet,
+			TerminationGracePeriodSeconds: new(int64),
+			Tolerations: []core.Toleration{
+				{
+					Operator: core.TolerationOpExists,
+					Effect:   core.TaintEffectNoExecute,
+				},
+				{
+					Operator: core.TolerationOpExists,
+					Effect:   core.TaintEffectNoSchedule,
+				},
+			},
+		},
+	}
+
+	//define the service account only when it exists to prevent pod crash
+	if opts.ServiceAccountName != "" {
+		pod.Spec.ServiceAccountName = opts.ServiceAccountName
+	}
+	return pod, nil
+}
+
 func (provider *Provider) CreatePod(ctx context.Context, namespace string, podSpec *core.Pod) (*core.Pod, error) {
 	return provider.clientSet.CoreV1().Pods(namespace).Create(ctx, podSpec, metav1.CreateOptions{})
 }

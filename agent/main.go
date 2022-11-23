@@ -14,7 +14,6 @@ import (
 	"time"
 
 	"github.com/gin-contrib/pprof"
-	"github.com/gin-contrib/static"
 	"github.com/gin-gonic/gin"
 	"github.com/kubeshark/kubeshark/agent/pkg/dependency"
 	"github.com/kubeshark/kubeshark/agent/pkg/entries"
@@ -100,20 +99,7 @@ func hostApi(socketHarOutputChannel chan<- *tapApi.OutputChannelItem) *gin.Engin
 		SocketOutChannel: socketHarOutputChannel,
 	}
 
-	ginApp.Use(disableRootStaticCache())
-
-	staticFolder := "./site"
-	indexStaticFile := staticFolder + "/index.html"
-	if err := setUIFlags(indexStaticFile); err != nil {
-		logger.Log.Errorf("Error setting ui flags, err: %v", err)
-	}
-
-	ginApp.Use(static.ServeRoot("/", staticFolder))
-	ginApp.NoRoute(func(c *gin.Context) {
-		c.File(indexStaticFile)
-	})
-
-	ginApp.Use(middlewares.CORSMiddleware()) // This has to be called after the static middleware, does not work if it's called before
+	ginApp.Use(middlewares.CORSMiddleware())
 
 	api.WebSocketRoutes(ginApp, &eventHandlers)
 
@@ -207,17 +193,6 @@ func enableExpFeatureIfNeeded() {
 	if config.Config.ServiceMap {
 		serviceMapGenerator := dependency.GetInstance(dependency.ServiceMapGeneratorDependency).(servicemap.ServiceMap)
 		serviceMapGenerator.Enable()
-	}
-}
-
-func disableRootStaticCache() gin.HandlerFunc {
-	return func(c *gin.Context) {
-		if c.Request.RequestURI == "/" {
-			// Disable cache only for the main static route
-			c.Writer.Header().Set("Cache-Control", "no-store")
-		}
-
-		c.Next()
 	}
 }
 

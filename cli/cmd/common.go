@@ -28,7 +28,7 @@ func GetApiServerUrl(port uint16) string {
 }
 
 func startProxyReportErrorIfAny(kubernetesProvider *kubernetes.Provider, ctx context.Context, cancel context.CancelFunc, port uint16) {
-	httpServer, err := kubernetes.StartProxy(kubernetesProvider, config.Config.Tap.ProxyHost, port, config.Config.KubesharkResourcesNamespace, kubernetes.ApiServerPodName, cancel)
+	httpServer, err := kubernetes.StartProxy(kubernetesProvider, config.Config.Tap.ProxyHost, 8898, 8899, config.Config.KubesharkResourcesNamespace, kubernetes.ApiServerPodName, cancel)
 	if err != nil {
 		logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error occured while running k8s proxy %v\n"+
 			"Try setting different port by using --%s", errormessage.FormatError(err), configStructs.GuiPortTapName))
@@ -36,24 +36,57 @@ func startProxyReportErrorIfAny(kubernetesProvider *kubernetes.Provider, ctx con
 		return
 	}
 
-	provider := apiserver.NewProvider(GetApiServerUrl(port), apiserver.DefaultRetries, apiserver.DefaultTimeout)
-	if err := provider.TestConnection(); err != nil {
+	provider := apiserver.NewProvider(GetApiServerUrl(8898), apiserver.DefaultRetries, apiserver.DefaultTimeout)
+	if err := provider.TestConnection("/echo"); err != nil {
 		logger.Log.Debugf("Couldn't connect using proxy, stopping proxy and trying to create port-forward")
 		if err := httpServer.Shutdown(ctx); err != nil {
 			logger.Log.Debugf("Error occurred while stopping proxy %v", errormessage.FormatError(err))
 		}
 
 		podRegex, _ := regexp.Compile(kubernetes.ApiServerPodName)
-		if _, err := kubernetes.NewPortForward(kubernetesProvider, config.Config.KubesharkResourcesNamespace, podRegex, port, ctx, cancel); err != nil {
+		if _, err := kubernetes.NewPortForward(kubernetesProvider, config.Config.KubesharkResourcesNamespace, podRegex, 8898, 8899, ctx, cancel); err != nil {
 			logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error occured while running port forward %v\n"+
 				"Try setting different port by using --%s", errormessage.FormatError(err), configStructs.GuiPortTapName))
 			cancel()
 			return
 		}
 
-		provider = apiserver.NewProvider(GetApiServerUrl(port), apiserver.DefaultRetries, apiserver.DefaultTimeout)
-		if err := provider.TestConnection(); err != nil {
+		provider = apiserver.NewProvider(GetApiServerUrl(8898), apiserver.DefaultRetries, apiserver.DefaultTimeout)
+		if err := provider.TestConnection("/echo"); err != nil {
 			logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Couldn't connect to API server, for more info check logs at %s", fsUtils.GetLogFilePath()))
+			cancel()
+			return
+		}
+	}
+}
+
+func startProxyReportErrorIfAnyFront(kubernetesProvider *kubernetes.Provider, ctx context.Context, cancel context.CancelFunc, port uint16) {
+	httpServer, err := kubernetes.StartProxy(kubernetesProvider, config.Config.Tap.ProxyHost, 8899, 80, config.Config.KubesharkResourcesNamespace, "front", cancel)
+	if err != nil {
+		logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error occured while running k8s proxy %v\n"+
+			"Try setting different port by using --%s", errormessage.FormatError(err), configStructs.GuiPortTapName))
+		cancel()
+		return
+	}
+
+	provider := apiserver.NewProvider(GetApiServerUrl(8899), apiserver.DefaultRetries, apiserver.DefaultTimeout)
+	if err := provider.TestConnection(""); err != nil {
+		logger.Log.Debugf("Couldn't connect using proxy, stopping proxy and trying to create port-forward")
+		if err := httpServer.Shutdown(ctx); err != nil {
+			logger.Log.Debugf("Error occurred while stopping proxy %v", errormessage.FormatError(err))
+		}
+
+		podRegex, _ := regexp.Compile("front")
+		if _, err := kubernetes.NewPortForward(kubernetesProvider, config.Config.KubesharkResourcesNamespace, podRegex, 8899, 80, ctx, cancel); err != nil {
+			logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error occured while running port forward %v\n"+
+				"Try setting different port by using --%s", errormessage.FormatError(err), configStructs.GuiPortTapName))
+			cancel()
+			return
+		}
+
+		provider = apiserver.NewProvider(GetApiServerUrl(8899), apiserver.DefaultRetries, apiserver.DefaultTimeout)
+		if err := provider.TestConnection(""); err != nil {
+			logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Couldn't connect to Front, for more info check logs at %s", fsUtils.GetLogFilePath()))
 			cancel()
 			return
 		}

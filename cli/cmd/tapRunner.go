@@ -102,6 +102,7 @@ func RunKubesharkTap() {
 
 	go goUtils.HandleExcWrapper(watchApiServerEvents, ctx, kubernetesProvider, cancel)
 	go goUtils.HandleExcWrapper(watchApiServerPod, ctx, kubernetesProvider, cancel)
+	go goUtils.HandleExcWrapper(watchFrontPod, ctx, kubernetesProvider, cancel)
 
 	// block until exit signal or error
 	utils.WaitForFinish(ctx, cancel)
@@ -289,6 +290,69 @@ func watchApiServerPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 	}
 }
 
+func watchFrontPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc) {
+	podExactRegex := regexp.MustCompile(fmt.Sprintf("^%s$", "front"))
+	podWatchHelper := kubernetes.NewPodWatchHelper(kubernetesProvider, podExactRegex)
+	eventChan, errorChan := kubernetes.FilteredWatch(ctx, podWatchHelper, []string{config.Config.KubesharkResourcesNamespace}, podWatchHelper)
+	isPodReady := false
+
+	apiServerTimeoutSec := config.GetIntEnvConfig(config.ApiServerTimeoutSec, 120)
+	timeAfter := time.After(time.Duration(apiServerTimeoutSec) * time.Second)
+	for {
+		select {
+		case wEvent, ok := <-eventChan:
+			if !ok {
+				eventChan = nil
+				continue
+			}
+
+			switch wEvent.Type {
+			case kubernetes.EventAdded:
+				logger.Log.Debugf("Watching API Server pod loop, added")
+			case kubernetes.EventDeleted:
+				logger.Log.Infof("%s removed", "front")
+				cancel()
+				return
+			case kubernetes.EventModified:
+				modifiedPod, err := wEvent.ToPod()
+				if err != nil {
+					logger.Log.Errorf(uiUtils.Error, err)
+					cancel()
+					continue
+				}
+
+				logger.Log.Debugf("Watching API Server pod loop, modified: %v, containers statuses: %v", modifiedPod.Status.Phase, modifiedPod.Status.ContainerStatuses)
+
+				if modifiedPod.Status.Phase == core.PodRunning && !isPodReady {
+					isPodReady = true
+					postFrontStarted(ctx, kubernetesProvider, cancel)
+				}
+			case kubernetes.EventBookmark:
+				break
+			case kubernetes.EventError:
+				break
+			}
+		case err, ok := <-errorChan:
+			if !ok {
+				errorChan = nil
+				continue
+			}
+
+			logger.Log.Errorf("[ERROR] Agent creation, watching %v namespace, error: %v", config.Config.KubesharkResourcesNamespace, err)
+			cancel()
+
+		case <-timeAfter:
+			if !isPodReady {
+				logger.Log.Errorf(uiUtils.Error, "Kubeshark API server was not ready in time")
+				cancel()
+			}
+		case <-ctx.Done():
+			logger.Log.Debugf("Watching API Server pod loop, ctx done")
+			return
+		}
+	}
+}
+
 func watchApiServerEvents(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc) {
 	podExactRegex := regexp.MustCompile(fmt.Sprintf("^%s", kubernetes.ApiServerPodName))
 	eventWatchHelper := kubernetes.NewEventWatchHelper(kubernetesProvider, podExactRegex, "pod")
@@ -341,14 +405,24 @@ func watchApiServerEvents(ctx context.Context, kubernetesProvider *kubernetes.Pr
 }
 
 func postApiServerStarted(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc) {
-	startProxyReportErrorIfAny(kubernetesProvider, ctx, cancel, config.Config.Tap.GuiPort)
+	startProxyReportErrorIfAny(kubernetesProvider, ctx, cancel, 8898)
 
 	if err := startTapperSyncer(ctx, cancel, kubernetesProvider, state.targetNamespaces, state.startTime); err != nil {
 		logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error starting kubeshark tapper syncer: %v", errormessage.FormatError(err)))
 		cancel()
 	}
 
-	url := GetApiServerUrl(config.Config.Tap.GuiPort)
+	url := GetApiServerUrl(8898)
+	logger.Log.Infof("API Server is available at %s", url)
+	if !config.Config.HeadlessMode {
+		uiUtils.OpenBrowser(url)
+	}
+}
+
+func postFrontStarted(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc) {
+	startProxyReportErrorIfAnyFront(kubernetesProvider, ctx, cancel, 8899)
+
+	url := GetApiServerUrl(8899)
 	logger.Log.Infof("Kubeshark is available at %s", url)
 	if !config.Config.HeadlessMode {
 		uiUtils.OpenBrowser(url)

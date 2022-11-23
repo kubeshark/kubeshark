@@ -56,7 +56,16 @@ func CreateTapKubesharkResources(ctx context.Context, kubernetesProvider *kubern
 		return kubesharkServiceAccountExists, err
 	}
 
+	if err := createFrontPod(ctx, kubernetesProvider, opts); err != nil {
+		return kubesharkServiceAccountExists, err
+	}
+
 	_, err = kubernetesProvider.CreateService(ctx, kubesharkResourcesNamespace, kubernetes.ApiServerPodName, kubernetes.ApiServerPodName)
+	if err != nil {
+		return kubesharkServiceAccountExists, err
+	}
+
+	_, err = kubernetesProvider.CreateService(ctx, kubesharkResourcesNamespace, "front", "front")
 	if err != nil {
 		return kubesharkServiceAccountExists, err
 	}
@@ -98,6 +107,18 @@ func createKubesharkApiServerPod(ctx context.Context, kubernetesProvider *kubern
 	if _, err = kubernetesProvider.CreatePod(ctx, opts.Namespace, pod); err != nil {
 		return err
 	}
-	logger.Log.Debugf("Successfully created API server pod: %s", kubernetes.ApiServerPodName)
+	logger.Log.Infof("Successfully created API server pod: %s", kubernetes.ApiServerPodName)
+	return nil
+}
+
+func createFrontPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, opts *kubernetes.ApiServerOptions) error {
+	pod, err := kubernetesProvider.GetFrontPodObject(opts, false, "", false)
+	if err != nil {
+		return err
+	}
+	if _, err = kubernetesProvider.CreatePod(ctx, opts.Namespace, pod); err != nil {
+		return err
+	}
+	logger.Log.Infof("Successfully created API server pod: %s", pod.Name)
 	return nil
 }
