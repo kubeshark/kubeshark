@@ -8,8 +8,6 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
-	"strconv"
-	"strings"
 	"syscall"
 	"time"
 
@@ -194,23 +192,6 @@ func enableExpFeatureIfNeeded() {
 		serviceMapGenerator := dependency.GetInstance(dependency.ServiceMapGeneratorDependency).(servicemap.ServiceMap)
 		serviceMapGenerator.Enable()
 	}
-}
-
-func setUIFlags(uiIndexPath string) error {
-	read, err := os.ReadFile(uiIndexPath)
-	if err != nil {
-		return err
-	}
-
-	replacedContent := strings.Replace(string(read), "__IS_OAS_ENABLED__", strconv.FormatBool(config.Config.OAS.Enable), 1)
-	replacedContent = strings.Replace(replacedContent, "__IS_SERVICE_MAP_ENABLED__", strconv.FormatBool(config.Config.ServiceMap), 1)
-
-	err = os.WriteFile(uiIndexPath, []byte(replacedContent), 0)
-	if err != nil {
-		return err
-	}
-
-	return nil
 }
 
 func getTrafficFilteringOptions() *tapApi.TrafficFilteringOptions {
