@@ -37,6 +37,9 @@ type tapState struct {
 
 var state tapState
 var apiProvider *apiserver.Provider
+var apiServerPodReady bool
+var frontPodReady bool
+var proxyDone bool
 
 func RunKubesharkTap() {
 	state.startTime = time.Now()
@@ -262,7 +265,13 @@ func watchApiServerPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 
 				if modifiedPod.Status.Phase == core.PodRunning && !isPodReady {
 					isPodReady = true
+					apiServerPodReady = true
 					postApiServerStarted(ctx, kubernetesProvider, cancel)
+				}
+
+				if !proxyDone && apiServerPodReady && frontPodReady {
+					proxyDone = true
+					postFrontStarted(ctx, kubernetesProvider, cancel)
 				}
 			case kubernetes.EventBookmark:
 				break
@@ -325,6 +334,11 @@ func watchFrontPod(ctx context.Context, kubernetesProvider *kubernetes.Provider,
 
 				if modifiedPod.Status.Phase == core.PodRunning && !isPodReady {
 					isPodReady = true
+					frontPodReady = true
+				}
+
+				if !proxyDone && apiServerPodReady && frontPodReady {
+					proxyDone = true
 					postFrontStarted(ctx, kubernetesProvider, cancel)
 				}
 			case kubernetes.EventBookmark:
