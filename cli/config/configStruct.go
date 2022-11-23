@@ -54,8 +54,8 @@ func CreateDefaultConfig() ConfigStruct {
 }
 
 type ConfigStruct struct {
-	Hub                         HubConfig                   `yaml:"port-forward"`
-	Front                       FrontConfig                 `yaml:"port-forward"`
+	Hub                         HubConfig                   `yaml:"hub"`
+	Front                       FrontConfig                 `yaml:"front"`
 	Tap                         configStructs.TapConfig     `yaml:"tap"`
 	Check                       configStructs.CheckConfig   `yaml:"check"`
 	Install                     configStructs.InstallConfig `yaml:"install"`
