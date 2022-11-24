@@ -24,20 +24,6 @@ jobs:
         with:
           go-version: '^1.17'
 
-      - name: Install dependencies
-        run: |
-          sudo apt update
-          sudo apt install -y \
-            libpcap-dev \
-            llvm \
-            libbpf-dev \
-            linux-headers-$(uname -r)
-          ./devops/install-capstone.sh
-          curl -sSfL https://raw.githubusercontent.com/golangci/golangci-lint/master/install.sh | sh -s -- -b $(go env GOPATH)/bin v1.50.1
-
-      - name: Generate eBPF object files and Go bindings
-        run: make bpf
-
       - name: Go lint - agent
         uses: golangci/golangci-lint-action@v2
         with:
@@ -52,49 +38,12 @@ jobs:
           working-directory: shared
           args: --timeout=10m
 
-      - name: Go lint - tap
-        uses: golangci/golangci-lint-action@v2
-        with:
-          version: latest
-          working-directory: tap
-          args: --timeout=10m
-
       - name: Go lint - CLI
         uses: golangci/golangci-lint-action@v2
         with:
           version: latest
           working-directory: cli
           args: --timeout=10m
-
-      - name: Go lint - tap/api
-        uses: golangci/golangci-lint-action@v2
-        with:
-          version: latest
-          working-directory: tap/api
-
-      - name: Go lint - tap/extensions/amqp
-        uses: golangci/golangci-lint-action@v2
-        with:
-          version: latest
-          working-directory: tap/extensions/amqp
-
-      - name: Go lint - tap/extensions/http
-        uses: golangci/golangci-lint-action@v2
-        with:
-          version: latest
-          working-directory: tap/extensions/http
-
-      - name: Go lint - tap/extensions/kafka
-        uses: golangci/golangci-lint-action@v2
-        with:
-          version: latest
-          working-directory: tap/extensions/kafka
-
-      - name: Go lint - tap/extensions/redis
-        uses: golangci/golangci-lint-action@v2
-        with:
-          version: latest
-          working-directory: tap/extensions/redis
 
       - name: Go lint - logger
         uses: golangci/golangci-lint-action@v2

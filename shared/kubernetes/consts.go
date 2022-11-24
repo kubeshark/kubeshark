@@ -1,7 +1,7 @@
 package kubernetes
 
 const (
-	KubesharkResourcesPrefix   = "kubeshark-"
+	KubesharkResourcesPrefix   = "ks-"
 	ApiServerPodName           = KubesharkResourcesPrefix + "api-server"
 	ClusterRoleBindingName     = KubesharkResourcesPrefix + "cluster-role-binding"
 	ClusterRoleName            = KubesharkResourcesPrefix + "cluster-role"
@@ -9,8 +9,8 @@ const (
 	RoleBindingName            = KubesharkResourcesPrefix + "role-binding"
 	RoleName                   = KubesharkResourcesPrefix + "role"
 	ServiceAccountName         = KubesharkResourcesPrefix + "service-account"
-	TapperDaemonSetName        = KubesharkResourcesPrefix + "tapper-daemon-set"
-	TapperPodName              = KubesharkResourcesPrefix + "tapper"
+	TapperDaemonSetName        = KubesharkResourcesPrefix + "worker-daemon-set"
+	TapperPodName              = KubesharkResourcesPrefix + "worker"
 	ConfigMapName              = KubesharkResourcesPrefix + "config"
 	MinKubernetesServerVersion = "1.16.0"
 )

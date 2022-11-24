@@ -24,20 +24,6 @@ jobs:
         with:
           go-version: '^1.17'
 
-      - name: Install dependencies
-        shell: bash
-        run: |
-          sudo apt update
-          sudo apt install -y \
-            libpcap-dev \
-            llvm \
-            libbpf-dev \
-            linux-headers-$(uname -r)
-          ./devops/install-capstone.sh
-
-      - name: Generate eBPF object files and Go bindings
-        run: make bpf
-
       - name: Test
         run: make test
 

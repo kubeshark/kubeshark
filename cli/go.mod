@@ -5,12 +5,12 @@ go 1.17
 require (
 	github.com/creasty/defaults v1.5.2
 	github.com/google/go-github/v37 v37.0.0
+	github.com/kubeshark/kubeshark/logger v0.0.0
+	github.com/kubeshark/kubeshark/shared v0.0.0
+	github.com/kubeshark/worker v0.1.1
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
 	github.com/spf13/cobra v1.3.0
 	github.com/spf13/pflag v1.0.5
-	github.com/kubeshark/kubeshark/logger v0.0.0
-	github.com/kubeshark/kubeshark/shared v0.0.0
-	github.com/kubeshark/kubeshark/tap/api v0.0.0
 	gopkg.in/yaml.v3 v3.0.0-20210107192922-496545a6307b
 	k8s.io/api v0.23.3
 	k8s.io/apimachinery v0.23.3
@@ -69,7 +69,6 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/russross/blackfriday v1.6.0 // indirect
 	github.com/stretchr/testify v1.7.0 // indirect
-	github.com/kubeshark/kubeshark/tap/dbgctl v0.0.0 // indirect
 	github.com/xlab/treeprint v1.1.0 // indirect
 	go.starlark.net v0.0.0-20220203230714-bb14e151c28f // indirect
 	golang.org/x/crypto v0.0.0-20220208050332-20e1d8d225ab // indirect
@@ -99,7 +98,3 @@ require (
 replace github.com/kubeshark/kubeshark/logger v0.0.0 => ../logger
 
 replace github.com/kubeshark/kubeshark/shared v0.0.0 => ../shared
-
-replace github.com/kubeshark/kubeshark/tap/api v0.0.0 => ../tap/api
-
-replace github.com/kubeshark/kubeshark/tap/dbgctl v0.0.0 => ../tap/dbgctl

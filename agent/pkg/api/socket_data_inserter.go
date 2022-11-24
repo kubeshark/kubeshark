@@ -8,7 +8,7 @@ import (
 
 	"github.com/kubeshark/kubeshark/logger"
 	"github.com/kubeshark/kubeshark/shared"
-	"github.com/kubeshark/kubeshark/tap/api"
+	"github.com/kubeshark/worker/api"
 	basenine "github.com/up9inc/basenine/client/go"
 )
 

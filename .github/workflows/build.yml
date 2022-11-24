@@ -45,7 +45,7 @@ jobs:
 
       - name: Check modified files
         id: modified_files
-        run: devops/check_modified_files.sh agent/ shared/ tap/ ui/ Dockerfile
+        run: devops/check_modified_files.sh agent/ shared/ Dockerfile
 
       - name: Set up Docker Buildx
         if: steps.modified_files.outputs.matched == 'true'

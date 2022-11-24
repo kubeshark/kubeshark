@@ -6,7 +6,7 @@ import (
 	"time"
 
 	"github.com/kubeshark/kubeshark/agent/pkg/providers"
-	"github.com/kubeshark/kubeshark/tap/api"
+	"github.com/kubeshark/worker/api"
 )
 
 func TestNoEntryAddedCount(t *testing.T) {

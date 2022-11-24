@@ -45,10 +45,6 @@ cypress.env.json
 */cypress/videos
 */cypress/support
 
-# Ignore test data in extensions
-tap/extensions/*/bin
-tap/extensions/*/expect
-
 # UI folders to ignore
 **/node_modules/**
 **/dist/**
@@ -59,3 +55,5 @@ tap/extensions/*/expect
 
 # Object files
 *.o
+
+hub

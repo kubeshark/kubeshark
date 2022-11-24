@@ -24,7 +24,7 @@ import (
 	"github.com/kubeshark/kubeshark/logger"
 	"github.com/kubeshark/kubeshark/shared"
 	"github.com/kubeshark/kubeshark/shared/kubernetes"
-	"github.com/kubeshark/kubeshark/tap/api"
+	"github.com/kubeshark/worker/api"
 )
 
 const cleanupTimeout = time.Minute

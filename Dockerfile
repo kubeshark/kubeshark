@@ -1,60 +1,29 @@
-ARG BUILDARCH=amd64
 ARG TARGETARCH=amd64
 
 ### Base builder image for native builds architecture
 FROM golang:1.17-alpine AS builder-native-base
 ENV CGO_ENABLED=1 GOOS=linux
-RUN apk add --no-cache \
-    libpcap-dev \
-    g++ \
-    perl-utils \
-    curl \
-    build-base \
-    binutils-gold \
-    bash \
-    clang \
-    llvm \
-    libbpf-dev \
-    linux-headers
-COPY devops/install-capstone.sh .
-RUN ./install-capstone.sh
+RUN apk add --no-cache g++ perl-utils
 
 
-### Intermediate builder image for x86-64 to x86-64 native builds
-FROM builder-native-base AS builder-from-amd64-to-amd64
+### Intermediate builder image for x86-64 native builds
+FROM builder-native-base AS builder-for-amd64
 ENV GOARCH=amd64
 ENV BPF_TARGET=amd64 BPF_CFLAGS="-O2 -g -D__TARGET_ARCH_x86"
 
 
-### Intermediate builder image for AArch64 to AArch64 native builds
-FROM builder-native-base AS builder-from-arm64v8-to-arm64v8
+### Intermediate builder image for AArch64 native builds
+FROM builder-native-base AS builder-for-arm64v8
 ENV GOARCH=arm64
 ENV BPF_TARGET=arm64 BPF_CFLAGS="-O2 -g -D__TARGET_ARCH_arm64"
 
 
-### Builder image for x86-64 to AArch64 cross-compilation
-FROM kubeshark/linux-arm64-musl-go-libpcap-capstone-bpf:capstone-5.0-rc2 AS builder-from-amd64-to-arm64v8
-ENV CGO_ENABLED=1 GOOS=linux
-ENV GOARCH=arm64 CGO_CFLAGS="-I/work/libpcap -I/work/capstone/include"
-ENV BPF_TARGET=arm64 BPF_CFLAGS="-O2 -g -D__TARGET_ARCH_arm64 -I/usr/xcc/aarch64-linux-musl-cross/aarch64-linux-musl/include/"
-
-
-### Builder image for AArch64 to x86-64 cross-compilation
-FROM kubeshark/linux-x86_64-musl-go-libpcap-capstone-bpf:capstone-5.0-rc2 AS builder-from-arm64v8-to-amd64
-ENV CGO_ENABLED=1 GOOS=linux
-ENV GOARCH=amd64 CGO_CFLAGS="-I/libpcap -I/capstone/include"
-ENV BPF_TARGET=amd64 BPF_CFLAGS="-O2 -g -D__TARGET_ARCH_x86  -I/usr/local/musl/x86_64-unknown-linux-musl/include/"
-
-
 ### Final builder image where the build happens
 # Possible build strategies:
-# BUILDARCH=amd64 TARGETARCH=amd64
-# BUILDARCH=arm64v8 TARGETARCH=arm64v8
-# BUILDARCH=amd64 TARGETARCH=arm64v8
-# BUILDARCH=arm64v8 TARGETARCH=amd64
-ARG BUILDARCH=amd64
+# TARGETARCH=amd64
+# TARGETARCH=arm64v8
 ARG TARGETARCH=amd64
-FROM builder-from-${BUILDARCH}-to-${TARGETARCH} AS builder
+FROM builder-for-${TARGETARCH} AS builder
 
 # Move to agent working directory (/agent-build)
 WORKDIR /app/agent-build
@@ -62,29 +31,17 @@ WORKDIR /app/agent-build
 COPY agent/go.mod agent/go.sum ./
 COPY shared/go.mod shared/go.mod ../shared/
 COPY logger/go.mod logger/go.mod ../logger/
-COPY tap/go.mod tap/go.mod ../tap/
-COPY tap/api/go.mod ../tap/api/
-COPY tap/dbgctl/go.mod ../tap/dbgctl/
-COPY tap/extensions/amqp/go.mod ../tap/extensions/amqp/
-COPY tap/extensions/http/go.mod ../tap/extensions/http/
-COPY tap/extensions/kafka/go.mod ../tap/extensions/kafka/
-COPY tap/extensions/redis/go.mod ../tap/extensions/redis/
 RUN go mod download
 
 # Copy and build agent code
 COPY shared ../shared
 COPY logger ../logger
-COPY tap ../tap
 COPY agent .
 
 ARG COMMIT_HASH
 ARG GIT_BRANCH
 ARG BUILD_TIMESTAMP
 ARG VER=0.0
-
-WORKDIR /app/tap/tlstapper
-RUN rm *_bpfel_*
-RUN GOARCH=${BUILDARCH} go generate tls_tapper.go
 
 WORKDIR /app/agent-build
 
@@ -115,5 +72,4 @@ WORKDIR /app
 COPY --from=builder ["/app/agent-build/kubesharkagent", "."]
 COPY --from=builder ["/app/agent-build/basenine", "/usr/local/bin/basenine"]
 
-# this script runs both apiserver and passivetapper and exits either if one of them exits, preventing a scenario where the container runs without one process
 ENTRYPOINT ["/app/kubesharkagent"]

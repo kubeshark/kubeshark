@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 
 	"github.com/kubeshark/kubeshark/agent/pkg/har"
-	tapApi "github.com/kubeshark/kubeshark/tap/api"
+	tapApi "github.com/kubeshark/worker/api"
 
 	"github.com/kubeshark/kubeshark/shared"
 	basenine "github.com/up9inc/basenine/client/go"

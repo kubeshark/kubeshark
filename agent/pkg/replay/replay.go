@@ -11,8 +11,8 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/kubeshark/kubeshark/agent/pkg/app"
-	tapApi "github.com/kubeshark/kubeshark/tap/api"
-	kubesharkhttp "github.com/kubeshark/kubeshark/tap/extensions/http"
+	tapApi "github.com/kubeshark/worker/api"
+	kubesharkhttp "github.com/kubeshark/worker/extensions/http"
 )
 
 var (

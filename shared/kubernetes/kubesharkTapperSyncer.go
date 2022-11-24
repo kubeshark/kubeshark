@@ -9,7 +9,7 @@ import (
 	"github.com/kubeshark/kubeshark/logger"
 	"github.com/kubeshark/kubeshark/shared"
 	"github.com/kubeshark/kubeshark/shared/debounce"
-	"github.com/kubeshark/kubeshark/tap/api"
+	"github.com/kubeshark/worker/api"
 	"github.com/op/go-logging"
 	core "k8s.io/api/core/v1"
 )
@@ -327,7 +327,7 @@ func (tapperSyncer *KubesharkTapperSyncer) updateKubesharkTappers() error {
 			tapperSyncer.context,
 			tapperSyncer.config.KubesharkResourcesNamespace,
 			TapperDaemonSetName,
-			tapperSyncer.config.AgentImage,
+			"kubeshark/worker:test-amd64",
 			TapperPodName,
 			fmt.Sprintf("%s.%s.svc", ApiServerPodName, tapperSyncer.config.KubesharkResourcesNamespace),
 			nodeNames,
