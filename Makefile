@@ -81,7 +81,7 @@ lint:  ## Run lint on all modules
 	cd shared && golangci-lint run
 	cd cli && golangci-lint run
 
-test: test-cli test-agent test-shared test-extensions
+test: test-cli test-agent test-shared
 
 test-cli:  ## Run cli tests
 	@echo "running cli tests"; cd cli && $(MAKE) test
