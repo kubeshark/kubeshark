@@ -207,7 +207,6 @@ func (provider *Provider) BuildApiServerPod(opts *ApiServerOptions, mountVolumeC
 
 	command := []string{
 		"./kubesharkagent",
-		"--api-server",
 	}
 
 	if opts.Profiler {
@@ -819,9 +818,8 @@ func (provider *Provider) ApplyKubesharkTapperDaemonSet(ctx context.Context, nam
 	}
 
 	kubesharkCmd := []string{
-		"./kubesharkagent",
+		"./worker",
 		"-i", "any",
-		"--tap",
 		"--api-server-address", fmt.Sprintf("ws://%s/wsTapper", apiServerPodIp),
 		"--nodefrag",
 		"--max-live-streams", strconv.Itoa(maxLiveStreams),

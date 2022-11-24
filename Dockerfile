@@ -4,20 +4,7 @@ ARG TARGETARCH=amd64
 ### Base builder image for native builds architecture
 FROM golang:1.17-alpine AS builder-native-base
 ENV CGO_ENABLED=1 GOOS=linux
-RUN apk add --no-cache \
-    libpcap-dev \
-    g++ \
-    perl-utils \
-    curl \
-    build-base \
-    binutils-gold \
-    bash \
-    clang \
-    llvm \
-    libbpf-dev \
-    linux-headers
-COPY devops/install-capstone.sh .
-RUN ./install-capstone.sh
+RUN apk add --no-cache g++ perl-utils
 
 
 ### Intermediate builder image for x86-64 to x86-64 native builds
