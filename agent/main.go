@@ -1,13 +1,10 @@
 package main
 
 import (
-	"encoding/json"
 	"flag"
-	"fmt"
 	"net/http"
 	"os"
 	"os/signal"
-	"time"
 
 	"github.com/gin-contrib/pprof"
 	"github.com/gin-gonic/gin"
@@ -31,15 +28,7 @@ import (
 
 var namespace = flag.String("namespace", "", "Resolve IPs if they belong to resources in this namespace (default is all)")
 var port = flag.Int("port", 80, "Port number of the HTTP server")
-var harsReaderMode = flag.Bool("hars-read", false, "Run in hars-read mode")
-var harsDir = flag.String("hars-dir", "", "Directory to read hars from")
 var profiler = flag.Bool("profiler", false, "Run pprof server")
-
-const (
-	socketConnectionRetries    = 30
-	socketConnectionRetryDelay = time.Second * 2
-	socketHandshakeTimeout     = time.Second * 2
-)
 
 func main() {
 	initializeDependencies()
@@ -118,22 +107,6 @@ func enableExpFeatureIfNeeded() {
 		serviceMapGenerator := dependency.GetInstance(dependency.ServiceMapGeneratorDependency).(servicemap.ServiceMap)
 		serviceMapGenerator.Enable()
 	}
-}
-
-func getTrafficFilteringOptions() *tapApi.TrafficFilteringOptions {
-	filteringOptionsJson := os.Getenv(shared.KubesharkFilteringOptionsEnvVar)
-	if filteringOptionsJson == "" {
-		return &tapApi.TrafficFilteringOptions{
-			IgnoredUserAgents: []string{},
-		}
-	}
-	var filteringOptions tapApi.TrafficFilteringOptions
-	err := json.Unmarshal([]byte(filteringOptionsJson), &filteringOptions)
-	if err != nil {
-		panic(fmt.Sprintf("env var %s's value of %s is invalid! json must match the api.TrafficFilteringOptions struct %v", shared.KubesharkFilteringOptionsEnvVar, filteringOptionsJson, err))
-	}
-
-	return &filteringOptions
 }
 
 func determineLogLevel() (logLevel logging.Level) {
