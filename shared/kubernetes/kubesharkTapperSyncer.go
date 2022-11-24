@@ -9,7 +9,7 @@ import (
 	"github.com/kubeshark/kubeshark/logger"
 	"github.com/kubeshark/kubeshark/shared"
 	"github.com/kubeshark/kubeshark/shared/debounce"
-	"github.com/kubeshark/kubeshark/tap/api"
+	"github.com/kubeshark/worker/api"
 	"github.com/op/go-logging"
 	core "k8s.io/api/core/v1"
 )

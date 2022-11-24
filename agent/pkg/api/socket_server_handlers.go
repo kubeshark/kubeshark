@@ -11,7 +11,7 @@ import (
 	"github.com/kubeshark/kubeshark/agent/pkg/providers/tappedPods"
 	"github.com/kubeshark/kubeshark/agent/pkg/providers/tappers"
 
-	tapApi "github.com/kubeshark/kubeshark/tap/api"
+	tapApi "github.com/kubeshark/worker/api"
 
 	"github.com/kubeshark/kubeshark/logger"
 	"github.com/kubeshark/kubeshark/shared"

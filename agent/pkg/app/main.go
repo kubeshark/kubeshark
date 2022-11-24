@@ -10,12 +10,11 @@ import (
 	"github.com/kubeshark/kubeshark/agent/pkg/providers"
 	"github.com/kubeshark/kubeshark/agent/pkg/utils"
 	"github.com/kubeshark/kubeshark/logger"
-	tapApi "github.com/kubeshark/kubeshark/tap/api"
-	"github.com/kubeshark/kubeshark/tap/dbgctl"
-	amqpExt "github.com/kubeshark/kubeshark/tap/extensions/amqp"
-	httpExt "github.com/kubeshark/kubeshark/tap/extensions/http"
-	kafkaExt "github.com/kubeshark/kubeshark/tap/extensions/kafka"
-	redisExt "github.com/kubeshark/kubeshark/tap/extensions/redis"
+	tapApi "github.com/kubeshark/worker/api"
+	amqpExt "github.com/kubeshark/worker/extensions/amqp"
+	httpExt "github.com/kubeshark/worker/extensions/http"
+	kafkaExt "github.com/kubeshark/worker/extensions/kafka"
+	redisExt "github.com/kubeshark/worker/extensions/redis"
 	"github.com/op/go-logging"
 	basenine "github.com/up9inc/basenine/client/go"
 )
@@ -42,39 +41,37 @@ func LoadExtensions() {
 		ProtocolsMap[k] = v
 	}
 
-	if !dbgctl.KubesharkTapperDisableNonHttpExtensions {
-		extensionAmqp := &tapApi.Extension{}
-		dissectorAmqp := amqpExt.NewDissector()
-		dissectorAmqp.Register(extensionAmqp)
-		extensionAmqp.Dissector = dissectorAmqp
-		Extensions = append(Extensions, extensionAmqp)
-		ExtensionsMap[extensionAmqp.Protocol.Name] = extensionAmqp
-		protocolsAmqp := dissectorAmqp.GetProtocols()
-		for k, v := range protocolsAmqp {
-			ProtocolsMap[k] = v
-		}
+	extensionAmqp := &tapApi.Extension{}
+	dissectorAmqp := amqpExt.NewDissector()
+	dissectorAmqp.Register(extensionAmqp)
+	extensionAmqp.Dissector = dissectorAmqp
+	Extensions = append(Extensions, extensionAmqp)
+	ExtensionsMap[extensionAmqp.Protocol.Name] = extensionAmqp
+	protocolsAmqp := dissectorAmqp.GetProtocols()
+	for k, v := range protocolsAmqp {
+		ProtocolsMap[k] = v
+	}
 
-		extensionKafka := &tapApi.Extension{}
-		dissectorKafka := kafkaExt.NewDissector()
-		dissectorKafka.Register(extensionKafka)
-		extensionKafka.Dissector = dissectorKafka
-		Extensions = append(Extensions, extensionKafka)
-		ExtensionsMap[extensionKafka.Protocol.Name] = extensionKafka
-		protocolsKafka := dissectorKafka.GetProtocols()
-		for k, v := range protocolsKafka {
-			ProtocolsMap[k] = v
-		}
+	extensionKafka := &tapApi.Extension{}
+	dissectorKafka := kafkaExt.NewDissector()
+	dissectorKafka.Register(extensionKafka)
+	extensionKafka.Dissector = dissectorKafka
+	Extensions = append(Extensions, extensionKafka)
+	ExtensionsMap[extensionKafka.Protocol.Name] = extensionKafka
+	protocolsKafka := dissectorKafka.GetProtocols()
+	for k, v := range protocolsKafka {
+		ProtocolsMap[k] = v
+	}
 
-		extensionRedis := &tapApi.Extension{}
-		dissectorRedis := redisExt.NewDissector()
-		dissectorRedis.Register(extensionRedis)
-		extensionRedis.Dissector = dissectorRedis
-		Extensions = append(Extensions, extensionRedis)
-		ExtensionsMap[extensionRedis.Protocol.Name] = extensionRedis
-		protocolsRedis := dissectorRedis.GetProtocols()
-		for k, v := range protocolsRedis {
-			ProtocolsMap[k] = v
-		}
+	extensionRedis := &tapApi.Extension{}
+	dissectorRedis := redisExt.NewDissector()
+	dissectorRedis.Register(extensionRedis)
+	extensionRedis.Dissector = dissectorRedis
+	Extensions = append(Extensions, extensionRedis)
+	ExtensionsMap[extensionRedis.Protocol.Name] = extensionRedis
+	protocolsRedis := dissectorRedis.GetProtocols()
+	for k, v := range protocolsRedis {
+		ProtocolsMap[k] = v
 	}
 
 	sort.Slice(Extensions, func(i, j int) bool {

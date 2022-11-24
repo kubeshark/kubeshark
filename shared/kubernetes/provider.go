@@ -15,7 +15,7 @@ import (
 	"github.com/kubeshark/kubeshark/logger"
 	"github.com/kubeshark/kubeshark/shared"
 	"github.com/kubeshark/kubeshark/shared/semver"
-	"github.com/kubeshark/kubeshark/tap/api"
+	"github.com/kubeshark/worker/api"
 	"github.com/op/go-logging"
 	auth "k8s.io/api/authorization/v1"
 	core "k8s.io/api/core/v1"

@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/kubeshark/kubeshark/agent/pkg/models"
-	tapApi "github.com/kubeshark/kubeshark/tap/api"
+	tapApi "github.com/kubeshark/worker/api"
 	basenine "github.com/up9inc/basenine/client/go"
 )
 

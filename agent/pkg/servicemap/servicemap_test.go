@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	tapApi "github.com/kubeshark/kubeshark/tap/api"
+	tapApi "github.com/kubeshark/worker/api"
 	"github.com/stretchr/testify/suite"
 )
 

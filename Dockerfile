@@ -62,29 +62,17 @@ WORKDIR /app/agent-build
 COPY agent/go.mod agent/go.sum ./
 COPY shared/go.mod shared/go.mod ../shared/
 COPY logger/go.mod logger/go.mod ../logger/
-COPY tap/go.mod tap/go.mod ../tap/
-COPY tap/api/go.mod ../tap/api/
-COPY tap/dbgctl/go.mod ../tap/dbgctl/
-COPY tap/extensions/amqp/go.mod ../tap/extensions/amqp/
-COPY tap/extensions/http/go.mod ../tap/extensions/http/
-COPY tap/extensions/kafka/go.mod ../tap/extensions/kafka/
-COPY tap/extensions/redis/go.mod ../tap/extensions/redis/
 RUN go mod download
 
 # Copy and build agent code
 COPY shared ../shared
 COPY logger ../logger
-COPY tap ../tap
 COPY agent .
 
 ARG COMMIT_HASH
 ARG GIT_BRANCH
 ARG BUILD_TIMESTAMP
 ARG VER=0.0
-
-WORKDIR /app/tap/tlstapper
-RUN rm *_bpfel_*
-RUN GOARCH=${BUILDARCH} go generate tls_tapper.go
 
 WORKDIR /app/agent-build
 
@@ -115,5 +103,4 @@ WORKDIR /app
 COPY --from=builder ["/app/agent-build/kubesharkagent", "."]
 COPY --from=builder ["/app/agent-build/basenine", "/usr/local/bin/basenine"]
 
-# this script runs both apiserver and passivetapper and exits either if one of them exits, preventing a scenario where the container runs without one process
 ENTRYPOINT ["/app/kubesharkagent"]

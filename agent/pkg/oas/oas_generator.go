@@ -7,7 +7,7 @@ import (
 
 	"github.com/kubeshark/kubeshark/agent/pkg/har"
 	"github.com/kubeshark/kubeshark/logger"
-	"github.com/kubeshark/kubeshark/tap/api"
+	"github.com/kubeshark/worker/api"
 )
 
 var (

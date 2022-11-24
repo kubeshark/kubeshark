@@ -12,7 +12,6 @@ import (
 
 	"github.com/gin-gonic/gin"
 	"github.com/kubeshark/kubeshark/logger"
-	"github.com/kubeshark/kubeshark/shared"
 )
 
 var (
@@ -20,7 +19,7 @@ var (
 )
 
 // StartServer starts the server with a graceful shutdown
-func StartServer(app *gin.Engine) {
+func StartServer(app *gin.Engine, port int) {
 	signals := make(chan os.Signal, 2)
 	signal.Notify(signals,
 		os.Interrupt,    // this catch ctrl + c
@@ -46,7 +45,7 @@ func StartServer(app *gin.Engine) {
 
 	// Run server.
 	logger.Log.Infof("Starting the server...")
-	if err := app.Run(fmt.Sprintf(":%d", shared.DefaultApiServerPort)); err != nil {
+	if err := app.Run(fmt.Sprintf(":%d", port)); err != nil {
 		logger.Log.Errorf("Server is not running! Reason: %v", err)
 	}
 }

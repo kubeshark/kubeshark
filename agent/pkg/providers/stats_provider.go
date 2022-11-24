@@ -10,7 +10,7 @@ import (
 
 	"github.com/jinzhu/copier"
 	"github.com/kubeshark/kubeshark/logger"
-	"github.com/kubeshark/kubeshark/tap/api"
+	"github.com/kubeshark/worker/api"
 )
 
 type GeneralStats struct {
