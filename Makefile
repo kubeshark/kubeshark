@@ -53,3 +53,6 @@ clean: ## Clean all build artifacts.
 
 test: ## Run cli tests.
 	@go test ./... -coverpkg=./... -race -coverprofile=coverage.out -covermode=atomic
+
+lint: ## Run linter
+	golangci-lint run
