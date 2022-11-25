@@ -2,11 +2,12 @@ package config_test
 
 import (
 	"fmt"
-	"github.com/kubeshark/kubeshark/cli/config"
-	"gopkg.in/yaml.v3"
 	"reflect"
 	"strings"
 	"testing"
+
+	"github.com/kubeshark/kubeshark/config"
+	"gopkg.in/yaml.v3"
 )
 
 func TestConfigWriteIgnoresReadonlyFields(t *testing.T) {

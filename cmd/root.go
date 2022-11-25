@@ -6,9 +6,9 @@ import (
 	"time"
 
 	"github.com/creasty/defaults"
-	"github.com/kubeshark/kubeshark/cli/config"
-	"github.com/kubeshark/kubeshark/cli/kubeshark/version"
-	"github.com/kubeshark/kubeshark/cli/uiUtils"
+	"github.com/kubeshark/kubeshark/config"
+	"github.com/kubeshark/kubeshark/kubeshark/version"
+	"github.com/kubeshark/kubeshark/uiUtils"
 	"github.com/spf13/cobra"
 )
 

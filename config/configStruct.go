@@ -6,9 +6,9 @@ import (
 	"path"
 	"path/filepath"
 
-	"github.com/kubeshark/kubeshark/cli/config/configStructs"
-	"github.com/kubeshark/kubeshark/cli/kubeshark"
-	"github.com/kubeshark/kubeshark/cli/utils"
+	"github.com/kubeshark/kubeshark/config/configStructs"
+	"github.com/kubeshark/kubeshark/kubeshark"
+	"github.com/kubeshark/kubeshark/utils"
 	"github.com/kubeshark/worker/models"
 	"github.com/op/go-logging"
 	v1 "k8s.io/api/core/v1"

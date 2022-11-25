@@ -1,7 +1,7 @@
 package cmd
 
 import (
-	"github.com/kubeshark/kubeshark/cli/config"
+	"github.com/kubeshark/kubeshark/config"
 )
 
 func performCleanCommand() {

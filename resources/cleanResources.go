@@ -5,10 +5,10 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/kubeshark/kubeshark/cli/errormessage"
-	"github.com/kubeshark/kubeshark/cli/kubernetes"
-	"github.com/kubeshark/kubeshark/cli/uiUtils"
-	"github.com/kubeshark/kubeshark/cli/utils"
+	"github.com/kubeshark/kubeshark/errormessage"
+	"github.com/kubeshark/kubeshark/kubernetes"
+	"github.com/kubeshark/kubeshark/uiUtils"
+	"github.com/kubeshark/kubeshark/utils"
 	"k8s.io/apimachinery/pkg/util/wait"
 )
 

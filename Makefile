@@ -27,11 +27,11 @@ build:
 
 build-base: ## Build kubeshark CLI binary (select platform via GOOS / GOARCH env variables).
 	go build ${GCLFAGS} -ldflags="${LDFLAGS_EXT} \
-					-X 'github.com/kubeshark/kubeshark/cli/kubeshark.GitCommitHash=$(COMMIT_HASH)' \
-					-X 'github.com/kubeshark/kubeshark/cli/kubeshark.Branch=$(GIT_BRANCH)' \
-					-X 'github.com/kubeshark/kubeshark/cli/kubeshark.BuildTimestamp=$(BUILD_TIMESTAMP)' \
-					-X 'github.com/kubeshark/kubeshark/cli/kubeshark.Platform=$(SUFFIX)' \
-					-X 'github.com/kubeshark/kubeshark/cli/kubeshark.Ver=$(VER)'" \
+					-X 'github.com/kubeshark/kubeshark/kubeshark.GitCommitHash=$(COMMIT_HASH)' \
+					-X 'github.com/kubeshark/kubeshark/kubeshark.Branch=$(GIT_BRANCH)' \
+					-X 'github.com/kubeshark/kubeshark/kubeshark.BuildTimestamp=$(BUILD_TIMESTAMP)' \
+					-X 'github.com/kubeshark/kubeshark/kubeshark.Platform=$(SUFFIX)' \
+					-X 'github.com/kubeshark/kubeshark/kubeshark.Ver=$(VER)'" \
 					-o bin/kubeshark_$(SUFFIX) kubeshark.go
 	(cd bin && shasum -a 256 kubeshark_${SUFFIX} > kubeshark_${SUFFIX}.sha256)
 

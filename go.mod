@@ -1,4 +1,4 @@
-module github.com/kubeshark/kubeshark/cli
+module github.com/kubeshark/kubeshark
 
 go 1.17
 

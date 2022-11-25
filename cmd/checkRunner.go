@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/kubeshark/kubeshark/cli/cmd/check"
-	"github.com/kubeshark/kubeshark/cli/config"
-	"github.com/kubeshark/kubeshark/cli/uiUtils"
+	"github.com/kubeshark/kubeshark/cmd/check"
+	"github.com/kubeshark/kubeshark/config"
+	"github.com/kubeshark/kubeshark/uiUtils"
 )
 
 var (

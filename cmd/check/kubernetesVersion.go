@@ -4,9 +4,9 @@ import (
 	"fmt"
 	"log"
 
-	"github.com/kubeshark/kubeshark/cli/kubernetes"
-	"github.com/kubeshark/kubeshark/cli/semver"
-	"github.com/kubeshark/kubeshark/cli/uiUtils"
+	"github.com/kubeshark/kubeshark/kubernetes"
+	"github.com/kubeshark/kubeshark/semver"
+	"github.com/kubeshark/kubeshark/uiUtils"
 )
 
 func KubernetesVersion(kubernetesVersion *semver.SemVersion) bool {

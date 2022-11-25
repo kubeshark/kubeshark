@@ -5,8 +5,8 @@ import (
 	"log"
 	"strings"
 
-	"github.com/kubeshark/kubeshark/cli/bucket"
-	"github.com/kubeshark/kubeshark/cli/config"
+	"github.com/kubeshark/kubeshark/bucket"
+	"github.com/kubeshark/kubeshark/config"
 )
 
 func runKubesharkInstall() {

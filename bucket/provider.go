@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/kubeshark/kubeshark/cli/utils"
+	"github.com/kubeshark/kubeshark/utils"
 )
 
 type Provider struct {

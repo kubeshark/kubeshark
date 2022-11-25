@@ -13,8 +13,8 @@ import (
 	"regexp"
 	"strconv"
 
-	"github.com/kubeshark/kubeshark/cli/semver"
-	"github.com/kubeshark/kubeshark/cli/utils"
+	"github.com/kubeshark/kubeshark/semver"
+	"github.com/kubeshark/kubeshark/utils"
 	"github.com/kubeshark/worker/api"
 	"github.com/kubeshark/worker/models"
 	"github.com/op/go-logging"

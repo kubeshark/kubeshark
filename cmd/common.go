@@ -10,17 +10,17 @@ import (
 	"regexp"
 	"time"
 
-	"github.com/kubeshark/kubeshark/cli/apiserver"
-	"github.com/kubeshark/kubeshark/cli/config/configStructs"
-	"github.com/kubeshark/kubeshark/cli/errormessage"
-	"github.com/kubeshark/kubeshark/cli/kubeshark"
-	"github.com/kubeshark/kubeshark/cli/kubeshark/fsUtils"
-	"github.com/kubeshark/kubeshark/cli/resources"
-	"github.com/kubeshark/kubeshark/cli/uiUtils"
+	"github.com/kubeshark/kubeshark/apiserver"
+	"github.com/kubeshark/kubeshark/config/configStructs"
+	"github.com/kubeshark/kubeshark/errormessage"
+	"github.com/kubeshark/kubeshark/kubeshark"
+	"github.com/kubeshark/kubeshark/kubeshark/fsUtils"
+	"github.com/kubeshark/kubeshark/resources"
+	"github.com/kubeshark/kubeshark/uiUtils"
 	"github.com/kubeshark/worker/models"
 
-	"github.com/kubeshark/kubeshark/cli/config"
-	"github.com/kubeshark/kubeshark/cli/kubernetes"
+	"github.com/kubeshark/kubeshark/config"
+	"github.com/kubeshark/kubeshark/kubernetes"
 )
 
 func startProxyReportErrorIfAny(kubernetesProvider *kubernetes.Provider, ctx context.Context, cancel context.CancelFunc, serviceName string, srcPort uint16, dstPort uint16, healthCheck string) {

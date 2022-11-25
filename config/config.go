@@ -11,8 +11,8 @@ import (
 	"strings"
 
 	"github.com/creasty/defaults"
-	"github.com/kubeshark/kubeshark/cli/uiUtils"
-	"github.com/kubeshark/kubeshark/cli/utils"
+	"github.com/kubeshark/kubeshark/uiUtils"
+	"github.com/kubeshark/kubeshark/utils"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"gopkg.in/yaml.v3"

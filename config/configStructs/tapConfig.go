@@ -8,10 +8,10 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/kubeshark/kubeshark/cli/uiUtils"
+	"github.com/kubeshark/kubeshark/uiUtils"
 	"github.com/kubeshark/worker/models"
 
-	"github.com/kubeshark/kubeshark/cli/units"
+	"github.com/kubeshark/kubeshark/units"
 )
 
 const (

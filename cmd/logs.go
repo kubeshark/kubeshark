@@ -5,10 +5,10 @@ import (
 	"log"
 
 	"github.com/creasty/defaults"
-	"github.com/kubeshark/kubeshark/cli/config"
-	"github.com/kubeshark/kubeshark/cli/config/configStructs"
-	"github.com/kubeshark/kubeshark/cli/errormessage"
-	"github.com/kubeshark/kubeshark/cli/kubeshark/fsUtils"
+	"github.com/kubeshark/kubeshark/config"
+	"github.com/kubeshark/kubeshark/config/configStructs"
+	"github.com/kubeshark/kubeshark/errormessage"
+	"github.com/kubeshark/kubeshark/kubeshark/fsUtils"
 	"github.com/spf13/cobra"
 )
 

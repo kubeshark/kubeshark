@@ -7,8 +7,8 @@ import (
 	"regexp"
 	"time"
 
-	"github.com/kubeshark/kubeshark/cli/debounce"
-	"github.com/kubeshark/kubeshark/cli/utils"
+	"github.com/kubeshark/kubeshark/debounce"
+	"github.com/kubeshark/kubeshark/utils"
 	"github.com/kubeshark/worker/api"
 	"github.com/kubeshark/worker/models"
 	"github.com/op/go-logging"

@@ -8,8 +8,8 @@ import (
 	"os"
 	"regexp"
 
-	"github.com/kubeshark/kubeshark/cli/config"
-	"github.com/kubeshark/kubeshark/cli/kubernetes"
+	"github.com/kubeshark/kubeshark/config"
+	"github.com/kubeshark/kubeshark/kubernetes"
 )
 
 func DumpLogs(ctx context.Context, provider *kubernetes.Provider, filePath string) error {

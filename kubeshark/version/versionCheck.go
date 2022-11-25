@@ -10,8 +10,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/kubeshark/kubeshark/cli/kubeshark"
-	"github.com/kubeshark/kubeshark/cli/pkg/version"
+	"github.com/kubeshark/kubeshark/kubeshark"
+	"github.com/kubeshark/kubeshark/pkg/version"
 
 	"github.com/google/go-github/v37/github"
 )

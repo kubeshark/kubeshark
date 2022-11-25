@@ -4,7 +4,7 @@ import (
 	"log"
 
 	"github.com/creasty/defaults"
-	"github.com/kubeshark/kubeshark/cli/config/configStructs"
+	"github.com/kubeshark/kubeshark/config/configStructs"
 	"github.com/spf13/cobra"
 )
 
