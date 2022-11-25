@@ -1,9 +1,10 @@
 package cmd
 
 import (
+	"log"
+
 	"github.com/creasty/defaults"
 	"github.com/kubeshark/kubeshark/cli/config/configStructs"
-	"github.com/kubeshark/kubeshark/logger"
 	"github.com/spf13/cobra"
 )
 
@@ -21,7 +22,7 @@ func init() {
 
 	defaultCheckConfig := configStructs.CheckConfig{}
 	if err := defaults.Set(&defaultCheckConfig); err != nil {
-		logger.Log.Debug(err)
+		log.Print(err)
 	}
 
 	checkCmd.Flags().Bool(configStructs.PreTapCheckName, defaultCheckConfig.PreTap, "Check pre-tap Kubeshark installation for potential problems")

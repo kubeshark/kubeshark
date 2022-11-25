@@ -2,11 +2,11 @@ package cmd
 
 import (
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/kubeshark/kubeshark/cli/bucket"
 	"github.com/kubeshark/kubeshark/cli/config"
-	"github.com/kubeshark/kubeshark/logger"
 )
 
 func runKubesharkInstall() {
@@ -15,7 +15,7 @@ func runKubesharkInstall() {
 		bucketProvider := bucket.NewProvider(config.Config.Install.TemplateUrl, bucket.DefaultTimeout)
 		installTemplate, err := bucketProvider.GetInstallTemplate(config.Config.Install.TemplateName)
 		if err != nil {
-			logger.Log.Errorf("Failed getting install template, err: %v", err)
+			log.Printf("Failed getting install template, err: %v", err)
 			return
 		}
 

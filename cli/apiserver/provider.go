@@ -4,13 +4,13 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 
 	"github.com/kubeshark/kubeshark/cli/utils"
 
 	"github.com/kubeshark/kubeshark/cli/config"
-	"github.com/kubeshark/kubeshark/logger"
 	"github.com/kubeshark/kubeshark/shared"
 	core "k8s.io/api/core/v1"
 )
@@ -38,9 +38,9 @@ func (provider *Provider) TestConnection(path string) error {
 	retriesLeft := provider.retries
 	for retriesLeft > 0 {
 		if isReachable, err := provider.isReachable(path); err != nil || !isReachable {
-			logger.Log.Debugf("api server not ready yet %v", err)
+			log.Printf("api server not ready yet %v", err)
 		} else {
-			logger.Log.Debugf("connection test to api server passed successfully")
+			log.Printf("connection test to api server passed successfully")
 			break
 		}
 		retriesLeft -= 1
@@ -71,7 +71,7 @@ func (provider *Provider) ReportTapperStatus(tapperStatus shared.TapperStatus) e
 		if _, err := utils.Post(tapperStatusUrl, "application/json", bytes.NewBuffer(jsonValue), provider.client); err != nil {
 			return fmt.Errorf("failed sending to API server the tapped pods %w", err)
 		} else {
-			logger.Log.Debugf("Reported to server API about tapper status: %v", tapperStatus)
+			log.Printf("Reported to server API about tapper status: %v", tapperStatus)
 			return nil
 		}
 	}
@@ -86,7 +86,7 @@ func (provider *Provider) ReportTappedPods(pods []core.Pod) error {
 		if _, err := utils.Post(tappedPodsUrl, "application/json", bytes.NewBuffer(jsonValue), provider.client); err != nil {
 			return fmt.Errorf("failed sending to API server the tapped pods %w", err)
 		} else {
-			logger.Log.Debugf("Reported to server API about %d taped pods successfully", len(pods))
+			log.Printf("Reported to server API about %d taped pods successfully", len(pods))
 			return nil
 		}
 	}

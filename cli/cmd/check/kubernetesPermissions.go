@@ -4,12 +4,12 @@ import (
 	"context"
 	"embed"
 	"fmt"
+	"log"
 	"strings"
 
 	"github.com/kubeshark/kubeshark/cli/bucket"
 	"github.com/kubeshark/kubeshark/cli/config"
 	"github.com/kubeshark/kubeshark/cli/uiUtils"
-	"github.com/kubeshark/kubeshark/logger"
 	"github.com/kubeshark/kubeshark/shared/kubernetes"
 	rbac "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -17,7 +17,7 @@ import (
 )
 
 func TapKubernetesPermissions(ctx context.Context, embedFS embed.FS, kubernetesProvider *kubernetes.Provider) bool {
-	logger.Log.Infof("\nkubernetes-permissions\n--------------------")
+	log.Printf("\nkubernetes-permissions\n--------------------")
 
 	var filePath string
 	if config.Config.IsNsRestrictedMode() {
@@ -28,14 +28,14 @@ func TapKubernetesPermissions(ctx context.Context, embedFS embed.FS, kubernetesP
 
 	data, err := embedFS.ReadFile(filePath)
 	if err != nil {
-		logger.Log.Errorf("%v error while checking kubernetes permissions, err: %v", fmt.Sprintf(uiUtils.Red, "✗"), err)
+		log.Printf("%v error while checking kubernetes permissions, err: %v", fmt.Sprintf(uiUtils.Red, "✗"), err)
 		return false
 	}
 
 	decode := scheme.Codecs.UniversalDeserializer().Decode
 	obj, _, err := decode(data, nil, nil)
 	if err != nil {
-		logger.Log.Errorf("%v error while checking kubernetes permissions, err: %v", fmt.Sprintf(uiUtils.Red, "✗"), err)
+		log.Printf("%v error while checking kubernetes permissions, err: %v", fmt.Sprintf(uiUtils.Red, "✗"), err)
 		return false
 	}
 
@@ -46,17 +46,17 @@ func TapKubernetesPermissions(ctx context.Context, embedFS embed.FS, kubernetesP
 		return checkRulesPermissions(ctx, kubernetesProvider, resource.Rules, "")
 	}
 
-	logger.Log.Errorf("%v error while checking kubernetes permissions, err: resource of type 'Role' or 'ClusterRole' not found in permission files", fmt.Sprintf(uiUtils.Red, "✗"))
+	log.Printf("%v error while checking kubernetes permissions, err: resource of type 'Role' or 'ClusterRole' not found in permission files", fmt.Sprintf(uiUtils.Red, "✗"))
 	return false
 }
 
 func InstallKubernetesPermissions(ctx context.Context, kubernetesProvider *kubernetes.Provider) bool {
-	logger.Log.Infof("\nkubernetes-permissions\n--------------------")
+	log.Printf("\nkubernetes-permissions\n--------------------")
 
 	bucketProvider := bucket.NewProvider(config.Config.Install.TemplateUrl, bucket.DefaultTimeout)
 	installTemplate, err := bucketProvider.GetInstallTemplate(config.Config.Install.TemplateName)
 	if err != nil {
-		logger.Log.Errorf("%v error while checking kubernetes permissions, err: %v", fmt.Sprintf(uiUtils.Red, "✗"), err)
+		log.Printf("%v error while checking kubernetes permissions, err: %v", fmt.Sprintf(uiUtils.Red, "✗"), err)
 		return false
 	}
 
@@ -68,7 +68,7 @@ func InstallKubernetesPermissions(ctx context.Context, kubernetesProvider *kuber
 	for _, resourceTemplate := range resourcesTemplate {
 		obj, _, err := decode([]byte(resourceTemplate), nil, nil)
 		if err != nil {
-			logger.Log.Errorf("%v error while checking kubernetes permissions, err: %v", fmt.Sprintf(uiUtils.Red, "✗"), err)
+			log.Printf("%v error while checking kubernetes permissions, err: %v", fmt.Sprintf(uiUtils.Red, "✗"), err)
 			return false
 		}
 
@@ -120,13 +120,13 @@ func checkPermissionExist(group string, resource string, verb string, namespace 
 	}
 
 	if err != nil {
-		logger.Log.Errorf("%v error checking permission for %v %v %v, err: %v", fmt.Sprintf(uiUtils.Red, "✗"), verb, resource, groupAndNamespace, err)
+		log.Printf("%v error checking permission for %v %v %v, err: %v", fmt.Sprintf(uiUtils.Red, "✗"), verb, resource, groupAndNamespace, err)
 		return false
 	} else if !exist {
-		logger.Log.Errorf("%v can't %v %v %v", fmt.Sprintf(uiUtils.Red, "✗"), verb, resource, groupAndNamespace)
+		log.Printf("%v can't %v %v %v", fmt.Sprintf(uiUtils.Red, "✗"), verb, resource, groupAndNamespace)
 		return false
 	}
 
-	logger.Log.Infof("%v can %v %v %v", fmt.Sprintf(uiUtils.Green, "√"), verb, resource, groupAndNamespace)
+	log.Printf("%v can %v %v %v", fmt.Sprintf(uiUtils.Green, "√"), verb, resource, groupAndNamespace)
 	return true
 }

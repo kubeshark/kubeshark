@@ -4,12 +4,12 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"os"
 	"reflect"
 	"strconv"
 	"strings"
 
-	"github.com/kubeshark/kubeshark/logger"
 	"github.com/kubeshark/kubeshark/shared"
 
 	"github.com/creasty/defaults"
@@ -67,7 +67,7 @@ func InitConfig(cmd *cobra.Command) error {
 	}
 
 	finalConfigPrettified, _ := uiUtils.PrettyJson(Config)
-	logger.Log.Debugf("Init config finished\n Final config: %v", finalConfigPrettified)
+	log.Printf("Init config finished\n Final config: %v", finalConfigPrettified)
 
 	return nil
 }
@@ -113,7 +113,7 @@ func loadConfigFile(configFilePath string, config *ConfigStruct) error {
 		return err
 	}
 
-	logger.Log.Debugf("Found config file, config path: %s", configFilePath)
+	log.Printf("Found config file, config path: %s", configFilePath)
 
 	return nil
 }
@@ -131,20 +131,20 @@ func initFlag(f *pflag.Flag) {
 	sliceValue, isSliceValue := f.Value.(pflag.SliceValue)
 	if !isSliceValue {
 		if err := mergeFlagValue(configElemValue, flagPath, strings.Join(flagPath, "."), f.Value.String()); err != nil {
-			logger.Log.Warningf(uiUtils.Warning, err)
+			log.Printf(uiUtils.Warning, err)
 		}
 		return
 	}
 
 	if f.Name == SetCommandName {
 		if err := mergeSetFlag(configElemValue, sliceValue.GetSlice()); err != nil {
-			logger.Log.Warningf(uiUtils.Warning, err)
+			log.Printf(uiUtils.Warning, err)
 		}
 		return
 	}
 
 	if err := mergeFlagValues(configElemValue, flagPath, strings.Join(flagPath, "."), sliceValue.GetSlice()); err != nil {
-		logger.Log.Warningf(uiUtils.Warning, err)
+		log.Printf(uiUtils.Warning, err)
 	}
 }
 

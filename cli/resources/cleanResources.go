@@ -3,18 +3,17 @@ package resources
 import (
 	"context"
 	"fmt"
+	"log"
 
 	"github.com/kubeshark/kubeshark/cli/errormessage"
-	"github.com/kubeshark/kubeshark/cli/kubeshark/fsUtils"
 	"github.com/kubeshark/kubeshark/cli/uiUtils"
 	"github.com/kubeshark/kubeshark/cli/utils"
-	"github.com/kubeshark/kubeshark/logger"
 	"github.com/kubeshark/kubeshark/shared/kubernetes"
 	"k8s.io/apimachinery/pkg/util/wait"
 )
 
 func CleanUpKubesharkResources(ctx context.Context, cancel context.CancelFunc, kubernetesProvider *kubernetes.Provider, isNsRestrictedMode bool, kubesharkResourcesNamespace string) {
-	logger.Log.Infof("\nRemoving kubeshark resources")
+	log.Printf("\nRemoving kubeshark resources")
 
 	var leftoverResources []string
 
@@ -25,11 +24,11 @@ func CleanUpKubesharkResources(ctx context.Context, cancel context.CancelFunc, k
 	}
 
 	if len(leftoverResources) > 0 {
-		errMsg := fmt.Sprintf("Failed to remove the following resources, for more info check logs at %s:", fsUtils.GetLogFilePath())
+		errMsg := fmt.Sprintf("Failed to remove the following resources.")
 		for _, resource := range leftoverResources {
 			errMsg += "\n- " + resource
 		}
-		logger.Log.Errorf(uiUtils.Error, errMsg)
+		log.Printf(uiUtils.Error, errMsg)
 	}
 }
 
@@ -79,11 +78,11 @@ func waitUntilNamespaceDeleted(ctx context.Context, cancel context.CancelFunc, k
 	if err := kubernetesProvider.WaitUtilNamespaceDeleted(ctx, kubesharkResourcesNamespace); err != nil {
 		switch {
 		case ctx.Err() == context.Canceled:
-			logger.Log.Debugf("Do nothing. User interrupted the wait")
+			log.Printf("Do nothing. User interrupted the wait")
 		case err == wait.ErrWaitTimeout:
-			logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Timeout while removing Namespace %s", kubesharkResourcesNamespace))
+			log.Printf(uiUtils.Error, fmt.Sprintf("Timeout while removing Namespace %s", kubesharkResourcesNamespace))
 		default:
-			logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error while waiting for Namespace %s to be deleted: %v", kubesharkResourcesNamespace, errormessage.FormatError(err)))
+			log.Printf(uiUtils.Error, fmt.Sprintf("Error while waiting for Namespace %s to be deleted: %v", kubesharkResourcesNamespace, errormessage.FormatError(err)))
 		}
 	}
 }
@@ -151,6 +150,6 @@ func cleanUpRestrictedMode(ctx context.Context, kubernetesProvider *kubernetes.P
 }
 
 func handleDeletionError(err error, resourceDesc string, leftoverResources *[]string) {
-	logger.Log.Debugf("Error removing %s: %v", resourceDesc, errormessage.FormatError(err))
+	log.Printf("Error removing %s: %v", resourceDesc, errormessage.FormatError(err))
 	*leftoverResources = append(*leftoverResources, resourceDesc)
 }

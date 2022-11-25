@@ -3,15 +3,15 @@ package check
 import (
 	"context"
 	"fmt"
+	"log"
 
 	"github.com/kubeshark/kubeshark/cli/config"
 	"github.com/kubeshark/kubeshark/cli/uiUtils"
-	"github.com/kubeshark/kubeshark/logger"
 	"github.com/kubeshark/kubeshark/shared/kubernetes"
 )
 
 func KubernetesResources(ctx context.Context, kubernetesProvider *kubernetes.Provider) bool {
-	logger.Log.Infof("\nk8s-components\n--------------------")
+	log.Printf("\nk8s-components\n--------------------")
 
 	exist, err := kubernetesProvider.DoesNamespaceExist(ctx, config.Config.KubesharkResourcesNamespace)
 	allResourcesExist := checkResourceExist(config.Config.KubesharkResourcesNamespace, "namespace", exist, err)
@@ -46,20 +46,20 @@ func KubernetesResources(ctx context.Context, kubernetesProvider *kubernetes.Pro
 
 func checkPodResourcesExist(ctx context.Context, kubernetesProvider *kubernetes.Provider) bool {
 	if pods, err := kubernetesProvider.ListPodsByAppLabel(ctx, config.Config.KubesharkResourcesNamespace, kubernetes.ApiServerPodName); err != nil {
-		logger.Log.Errorf("%v error checking if '%v' pod is running, err: %v", fmt.Sprintf(uiUtils.Red, "✗"), kubernetes.ApiServerPodName, err)
+		log.Printf("%v error checking if '%v' pod is running, err: %v", fmt.Sprintf(uiUtils.Red, "✗"), kubernetes.ApiServerPodName, err)
 		return false
 	} else if len(pods) == 0 {
-		logger.Log.Errorf("%v '%v' pod doesn't exist", fmt.Sprintf(uiUtils.Red, "✗"), kubernetes.ApiServerPodName)
+		log.Printf("%v '%v' pod doesn't exist", fmt.Sprintf(uiUtils.Red, "✗"), kubernetes.ApiServerPodName)
 		return false
 	} else if !kubernetes.IsPodRunning(&pods[0]) {
-		logger.Log.Errorf("%v '%v' pod not running", fmt.Sprintf(uiUtils.Red, "✗"), kubernetes.ApiServerPodName)
+		log.Printf("%v '%v' pod not running", fmt.Sprintf(uiUtils.Red, "✗"), kubernetes.ApiServerPodName)
 		return false
 	}
 
-	logger.Log.Infof("%v '%v' pod running", fmt.Sprintf(uiUtils.Green, "√"), kubernetes.ApiServerPodName)
+	log.Printf("%v '%v' pod running", fmt.Sprintf(uiUtils.Green, "√"), kubernetes.ApiServerPodName)
 
 	if pods, err := kubernetesProvider.ListPodsByAppLabel(ctx, config.Config.KubesharkResourcesNamespace, kubernetes.TapperPodName); err != nil {
-		logger.Log.Errorf("%v error checking if '%v' pods are running, err: %v", fmt.Sprintf(uiUtils.Red, "✗"), kubernetes.TapperPodName, err)
+		log.Printf("%v error checking if '%v' pods are running, err: %v", fmt.Sprintf(uiUtils.Red, "✗"), kubernetes.TapperPodName, err)
 		return false
 	} else {
 		tappers := 0
@@ -73,24 +73,24 @@ func checkPodResourcesExist(ctx context.Context, kubernetesProvider *kubernetes.
 		}
 
 		if notRunningTappers > 0 {
-			logger.Log.Errorf("%v '%v' %v/%v pods are not running", fmt.Sprintf(uiUtils.Red, "✗"), kubernetes.TapperPodName, notRunningTappers, tappers)
+			log.Printf("%v '%v' %v/%v pods are not running", fmt.Sprintf(uiUtils.Red, "✗"), kubernetes.TapperPodName, notRunningTappers, tappers)
 			return false
 		}
 
-		logger.Log.Infof("%v '%v' %v pods running", fmt.Sprintf(uiUtils.Green, "√"), kubernetes.TapperPodName, tappers)
+		log.Printf("%v '%v' %v pods running", fmt.Sprintf(uiUtils.Green, "√"), kubernetes.TapperPodName, tappers)
 		return true
 	}
 }
 
 func checkResourceExist(resourceName string, resourceType string, exist bool, err error) bool {
 	if err != nil {
-		logger.Log.Errorf("%v error checking if '%v' %v exists, err: %v", fmt.Sprintf(uiUtils.Red, "✗"), resourceName, resourceType, err)
+		log.Printf("%v error checking if '%v' %v exists, err: %v", fmt.Sprintf(uiUtils.Red, "✗"), resourceName, resourceType, err)
 		return false
 	} else if !exist {
-		logger.Log.Errorf("%v '%v' %v doesn't exist", fmt.Sprintf(uiUtils.Red, "✗"), resourceName, resourceType)
+		log.Printf("%v '%v' %v doesn't exist", fmt.Sprintf(uiUtils.Red, "✗"), resourceName, resourceType)
 		return false
 	}
 
-	logger.Log.Infof("%v '%v' %v exists", fmt.Sprintf(uiUtils.Green, "√"), resourceName, resourceType)
+	log.Printf("%v '%v' %v exists", fmt.Sprintf(uiUtils.Green, "√"), resourceName, resourceType)
 	return true
 }

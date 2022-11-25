@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"io"
+	"log"
 	"net/http"
 	"runtime"
 	"strings"
@@ -11,18 +12,17 @@ import (
 
 	"github.com/kubeshark/kubeshark/cli/kubeshark"
 	"github.com/kubeshark/kubeshark/cli/pkg/version"
-	"github.com/kubeshark/kubeshark/logger"
 
 	"github.com/google/go-github/v37/github"
 )
 
 func CheckNewerVersion(versionChan chan string) {
-	logger.Log.Debugf("Checking for newer version...")
+	log.Printf("Checking for newer version...")
 	start := time.Now()
 	client := github.NewClient(nil)
 	latestRelease, _, err := client.Repositories.GetLatestRelease(context.Background(), "kubeshark", "kubeshark")
 	if err != nil {
-		logger.Log.Debugf("[ERROR] Failed to get latest release")
+		log.Printf("[ERROR] Failed to get latest release")
 		versionChan <- ""
 		return
 	}
@@ -35,14 +35,14 @@ func CheckNewerVersion(versionChan chan string) {
 		}
 	}
 	if versionFileUrl == "" {
-		logger.Log.Debugf("[ERROR] Version file not found in the latest release")
+		log.Printf("[ERROR] Version file not found in the latest release")
 		versionChan <- ""
 		return
 	}
 
 	res, err := http.Get(versionFileUrl)
 	if err != nil {
-		logger.Log.Debugf("[ERROR] Failed to get the version file %v", err)
+		log.Printf("[ERROR] Failed to get the version file %v", err)
 		versionChan <- ""
 		return
 	}
@@ -50,7 +50,7 @@ func CheckNewerVersion(versionChan chan string) {
 	data, err := io.ReadAll(res.Body)
 	res.Body.Close()
 	if err != nil {
-		logger.Log.Debugf("[ERROR] Failed to read the version file -> %v", err)
+		log.Printf("[ERROR] Failed to read the version file -> %v", err)
 		versionChan <- ""
 		return
 	}
@@ -59,12 +59,12 @@ func CheckNewerVersion(versionChan chan string) {
 
 	greater, err := version.GreaterThen(gitHubVersion, kubeshark.Ver)
 	if err != nil {
-		logger.Log.Debugf("[ERROR] Ver version is not valid, github version %v, current version %v", gitHubVersion, kubeshark.Ver)
+		log.Printf("[ERROR] Ver version is not valid, github version %v, current version %v", gitHubVersion, kubeshark.Ver)
 		versionChan <- ""
 		return
 	}
 
-	logger.Log.Debugf("Finished version validation, github version %v, current version %v, took %v", gitHubVersion, kubeshark.Ver, time.Since(start))
+	log.Printf("Finished version validation, github version %v, current version %v, took %v", gitHubVersion, kubeshark.Ver, time.Since(start))
 
 	if greater {
 		var downloadMessage string

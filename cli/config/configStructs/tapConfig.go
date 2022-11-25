@@ -3,6 +3,7 @@ package configStructs
 import (
 	"fmt"
 	"io/fs"
+	"log"
 	"os"
 	"regexp"
 	"strings"
@@ -10,7 +11,6 @@ import (
 	"github.com/kubeshark/kubeshark/cli/uiUtils"
 	"github.com/kubeshark/kubeshark/shared"
 
-	"github.com/kubeshark/kubeshark/logger"
 	"github.com/kubeshark/kubeshark/shared/units"
 )
 
@@ -71,7 +71,7 @@ func (config *TapConfig) GetInsertionFilter() string {
 		if _, err := os.Stat(insertionFilter); err == nil {
 			b, err := os.ReadFile(insertionFilter)
 			if err != nil {
-				logger.Log.Warningf(uiUtils.Warning, fmt.Sprintf("Couldn't read the file on path: %s, err: %v", insertionFilter, err))
+				log.Printf(uiUtils.Warning, fmt.Sprintf("Couldn't read the file on path: %s, err: %v", insertionFilter, err))
 			} else {
 				insertionFilter = string(b)
 			}

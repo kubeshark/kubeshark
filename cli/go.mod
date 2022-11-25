@@ -5,7 +5,6 @@ go 1.17
 require (
 	github.com/creasty/defaults v1.5.2
 	github.com/google/go-github/v37 v37.0.0
-	github.com/kubeshark/kubeshark/logger v0.0.0
 	github.com/kubeshark/kubeshark/shared v0.0.0
 	github.com/kubeshark/worker v0.1.1
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
@@ -94,7 +93,5 @@ require (
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.1 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
-
-replace github.com/kubeshark/kubeshark/logger v0.0.0 => ../logger
 
 replace github.com/kubeshark/kubeshark/shared v0.0.0 => ../shared

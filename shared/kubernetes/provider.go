@@ -7,12 +7,12 @@ import (
 	"errors"
 	"fmt"
 	"io"
+	"log"
 	"net/url"
 	"path/filepath"
 	"regexp"
 	"strconv"
 
-	"github.com/kubeshark/kubeshark/logger"
 	"github.com/kubeshark/kubeshark/shared"
 	"github.com/kubeshark/kubeshark/shared/semver"
 	"github.com/kubeshark/worker/api"
@@ -77,7 +77,7 @@ func NewProvider(kubeConfigPath string, contextName string) (*Provider, error) {
 			"you can set alternative kube config file path by adding the kube-config-path field to the kubeshark config file, err:  %w", kubeConfigPath, err)
 	}
 
-	logger.Log.Debugf("K8s client config, host: %s, api path: %s, user agent: %s", restClientConfig.Host, restClientConfig.APIPath, restClientConfig.UserAgent)
+	log.Printf("K8s client config, host: %s, api path: %s, user agent: %s", restClientConfig.Host, restClientConfig.APIPath, restClientConfig.UserAgent)
 
 	return &Provider{
 		clientSet:        clientSet,
@@ -806,7 +806,7 @@ func (provider *Provider) CreateConfigMap(ctx context.Context, namespace string,
 }
 
 func (provider *Provider) ApplyKubesharkTapperDaemonSet(ctx context.Context, namespace string, daemonSetName string, podImage string, tapperPodName string, apiServerPodIp string, nodeNames []string, serviceAccountName string, resources shared.Resources, imagePullPolicy core.PullPolicy, kubesharkApiFilteringOptions api.TrafficFilteringOptions, logLevel logging.Level, serviceMesh bool, tls bool, maxLiveStreams int) error {
-	logger.Log.Debugf("Applying %d tapper daemon sets, ns: %s, daemonSetName: %s, podImage: %s, tapperPodName: %s", len(nodeNames), namespace, daemonSetName, podImage, tapperPodName)
+	log.Printf("Applying %d tapper daemon sets, ns: %s, daemonSetName: %s, podImage: %s, tapperPodName: %s", len(nodeNames), namespace, daemonSetName, podImage, tapperPodName)
 
 	if len(nodeNames) == 0 {
 		return fmt.Errorf("daemon set %s must tap at least 1 pod", daemonSetName)
@@ -1158,7 +1158,7 @@ func (provider *Provider) ListManagedRoleBindings(ctx context.Context, namespace
 func (provider *Provider) ValidateNotProxy() error {
 	kubernetesUrl, err := url.Parse(provider.clientConfig.Host)
 	if err != nil {
-		logger.Log.Debugf("ValidateNotProxy - error while parsing kubernetes host, err: %v", err)
+		log.Printf("ValidateNotProxy - error while parsing kubernetes host, err: %v", err)
 		return nil
 	}
 
@@ -1183,7 +1183,7 @@ func (provider *Provider) ValidateNotProxy() error {
 func (provider *Provider) GetKubernetesVersion() (*semver.SemVersion, error) {
 	serverVersion, err := provider.clientSet.ServerVersion()
 	if err != nil {
-		logger.Log.Debugf("error while getting kubernetes server version, err: %v", err)
+		log.Printf("error while getting kubernetes server version, err: %v", err)
 		return nil, err
 	}
 
@@ -1210,7 +1210,7 @@ func ValidateKubernetesVersion(serverVersionSemVer *semver.SemVersion) error {
 }
 
 func loadKubernetesConfiguration(kubeConfigPath string, context string) clientcmd.ClientConfig {
-	logger.Log.Debugf("Using kube config %s", kubeConfigPath)
+	log.Printf("Using kube config %s", kubeConfigPath)
 	configPathList := filepath.SplitList(kubeConfigPath)
 	configLoadingRules := &clientcmd.ClientConfigLoadingRules{}
 	if len(configPathList) <= 1 {

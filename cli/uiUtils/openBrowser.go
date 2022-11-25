@@ -2,10 +2,9 @@ package uiUtils
 
 import (
 	"fmt"
+	"log"
 	"os/exec"
 	"runtime"
-
-	"github.com/kubeshark/kubeshark/logger"
 )
 
 func OpenBrowser(url string) {
@@ -23,6 +22,6 @@ func OpenBrowser(url string) {
 	}
 
 	if err != nil {
-		logger.Log.Errorf("error while opening browser, %v", err)
+		log.Printf("error while opening browser, %v", err)
 	}
 }

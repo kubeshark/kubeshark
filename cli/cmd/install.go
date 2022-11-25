@@ -1,9 +1,10 @@
 package cmd
 
 import (
+	"log"
+
 	"github.com/creasty/defaults"
 	"github.com/kubeshark/kubeshark/cli/config/configStructs"
-	"github.com/kubeshark/kubeshark/logger"
 	"github.com/spf13/cobra"
 )
 
@@ -21,7 +22,7 @@ func init() {
 
 	defaultInstallConfig := configStructs.InstallConfig{}
 	if err := defaults.Set(&defaultInstallConfig); err != nil {
-		logger.Log.Debug(err)
+		log.Print(err)
 	}
 
 	installCmd.Flags().BoolP(configStructs.OutInstallName, "o", defaultInstallConfig.Out, "print (to stdout) Kubernetes manifest used to install Kubeshark Pro edition")

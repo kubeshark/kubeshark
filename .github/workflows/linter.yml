@@ -37,9 +37,3 @@ jobs:
           version: latest
           working-directory: cli
           args: --timeout=10m
-
-      - name: Go lint - logger
-        uses: golangci/golangci-lint-action@v2
-        with:
-          version: latest
-          working-directory: logger

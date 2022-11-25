@@ -1,17 +1,16 @@
 package goUtils
 
 import (
+	"log"
 	"reflect"
 	"runtime/debug"
-
-	"github.com/kubeshark/kubeshark/logger"
 )
 
 func HandleExcWrapper(fn interface{}, params ...interface{}) (result []reflect.Value) {
 	defer func() {
 		if panicMessage := recover(); panicMessage != nil {
 			stack := debug.Stack()
-			logger.Log.Fatalf("Unhandled panic: %v\n stack: %s", panicMessage, stack)
+			log.Fatalf("Unhandled panic: %v\n stack: %s", panicMessage, stack)
 		}
 	}()
 	f := reflect.ValueOf(fn)

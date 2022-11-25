@@ -3,12 +3,12 @@ package resources
 import (
 	"context"
 	"fmt"
+	"log"
 
 	"github.com/kubeshark/kubeshark/cli/config"
 	"github.com/kubeshark/kubeshark/cli/errormessage"
 	"github.com/kubeshark/kubeshark/cli/kubeshark"
 	"github.com/kubeshark/kubeshark/cli/uiUtils"
-	"github.com/kubeshark/kubeshark/logger"
 	"github.com/kubeshark/kubeshark/shared"
 	"github.com/kubeshark/kubeshark/shared/kubernetes"
 	"github.com/op/go-logging"
@@ -28,7 +28,7 @@ func CreateTapKubesharkResources(ctx context.Context, kubernetesProvider *kubern
 
 	kubesharkServiceAccountExists, err := createRBACIfNecessary(ctx, kubernetesProvider, isNsRestrictedMode, kubesharkResourcesNamespace, []string{"pods", "services", "endpoints"})
 	if err != nil {
-		logger.Log.Warningf(uiUtils.Warning, fmt.Sprintf("Failed to ensure the resources required for IP resolving. Kubeshark will not resolve target IPs to names. error: %v", errormessage.FormatError(err)))
+		log.Printf(uiUtils.Warning, fmt.Sprintf("Failed to ensure the resources required for IP resolving. Kubeshark will not resolve target IPs to names. error: %v", errormessage.FormatError(err)))
 	}
 
 	var serviceAccountName string
@@ -71,7 +71,7 @@ func CreateTapKubesharkResources(ctx context.Context, kubernetesProvider *kubern
 		return kubesharkServiceAccountExists, err
 	}
 
-	logger.Log.Debugf("Successfully created service: %s", kubernetes.ApiServerPodName)
+	log.Printf("Successfully created service: %s", kubernetes.ApiServerPodName)
 
 	return kubesharkServiceAccountExists, nil
 }
@@ -108,7 +108,7 @@ func createKubesharkApiServerPod(ctx context.Context, kubernetesProvider *kubern
 	if _, err = kubernetesProvider.CreatePod(ctx, opts.Namespace, pod); err != nil {
 		return err
 	}
-	logger.Log.Infof("Successfully created pod: [%s]", pod.Name)
+	log.Printf("Successfully created pod: [%s]", pod.Name)
 	return nil
 }
 
@@ -120,6 +120,6 @@ func createFrontPod(ctx context.Context, kubernetesProvider *kubernetes.Provider
 	if _, err = kubernetesProvider.CreatePod(ctx, opts.Namespace, pod); err != nil {
 		return err
 	}
-	logger.Log.Infof("Successfully created pod: [%s]", pod.Name)
+	log.Printf("Successfully created pod: [%s]", pod.Name)
 	return nil
 }

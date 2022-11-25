@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"log"
 	"regexp"
 	"strings"
 	"time"
@@ -21,7 +22,6 @@ import (
 	"github.com/kubeshark/kubeshark/cli/config/configStructs"
 	"github.com/kubeshark/kubeshark/cli/errormessage"
 	"github.com/kubeshark/kubeshark/cli/uiUtils"
-	"github.com/kubeshark/kubeshark/logger"
 	"github.com/kubeshark/kubeshark/shared"
 	"github.com/kubeshark/kubeshark/shared/kubernetes"
 	"github.com/kubeshark/worker/api"
@@ -59,13 +59,13 @@ func RunKubesharkTap() {
 	kubesharkAgentConfig := getTapKubesharkAgentConfig()
 	serializedKubesharkConfig, err := getSerializedKubesharkAgentConfig(kubesharkAgentConfig)
 	if err != nil {
-		logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error serializing kubeshark config: %v", errormessage.FormatError(err)))
+		log.Printf(uiUtils.Error, fmt.Sprintf("Error serializing kubeshark config: %v", errormessage.FormatError(err)))
 		return
 	}
 
 	if config.Config.IsNsRestrictedMode() {
 		if len(state.targetNamespaces) != 1 || !shared.Contains(state.targetNamespaces, config.Config.KubesharkResourcesNamespace) {
-			logger.Log.Errorf("Not supported mode. Kubeshark can't resolve IPs in other namespaces when running in namespace restricted mode.\n"+
+			log.Printf("Not supported mode. Kubeshark can't resolve IPs in other namespaces when running in namespace restricted mode.\n"+
 				"You can use the same namespace for --%s and --%s", configStructs.NamespacesTapName, config.KubesharkResourcesNamespaceConfigName)
 			return
 		}
@@ -78,24 +78,24 @@ func RunKubesharkTap() {
 		namespacesStr = "all namespaces"
 	}
 
-	logger.Log.Infof("Tapping pods in %s", namespacesStr)
+	log.Printf("Tapping pods in %s", namespacesStr)
 
 	if err := printTappedPodsPreview(ctx, kubernetesProvider, state.targetNamespaces); err != nil {
-		logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error listing pods: %v", errormessage.FormatError(err)))
+		log.Printf(uiUtils.Error, fmt.Sprintf("Error listing pods: %v", errormessage.FormatError(err)))
 	}
 
 	if config.Config.Tap.DryRun {
 		return
 	}
 
-	logger.Log.Infof("Waiting for Kubeshark Agent to start...")
+	log.Printf("Waiting for Kubeshark Agent to start...")
 	if state.kubesharkServiceAccountExists, err = resources.CreateTapKubesharkResources(ctx, kubernetesProvider, serializedKubesharkConfig, config.Config.IsNsRestrictedMode(), config.Config.KubesharkResourcesNamespace, config.Config.AgentImage, config.Config.Tap.MaxEntriesDBSizeBytes(), config.Config.Tap.ApiServerResources, config.Config.ImagePullPolicy(), config.Config.LogLevel(), config.Config.Tap.Profiler); err != nil {
 		var statusError *k8serrors.StatusError
 		if errors.As(err, &statusError) && (statusError.ErrStatus.Reason == metav1.StatusReasonAlreadyExists) {
-			logger.Log.Info("Kubeshark is already running in this namespace, change the `kubeshark-resources-namespace` configuration or run `kubeshark clean` to remove the currently running Kubeshark instance")
+			log.Print("Kubeshark is already running in this namespace, change the `kubeshark-resources-namespace` configuration or run `kubeshark clean` to remove the currently running Kubeshark instance")
 		} else {
 			defer resources.CleanUpKubesharkResources(ctx, cancel, kubernetesProvider, config.Config.IsNsRestrictedMode(), config.Config.KubesharkResourcesNamespace)
-			logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error creating resources: %v", errormessage.FormatError(err)))
+			log.Printf(uiUtils.Error, fmt.Sprintf("Error creating resources: %v", errormessage.FormatError(err)))
 		}
 
 		return
@@ -145,7 +145,7 @@ func printTappedPodsPreview(ctx context.Context, kubernetesProvider *kubernetes.
 			printNoPodsFoundSuggestion(namespaces)
 		}
 		for _, tappedPod := range matchingPods {
-			logger.Log.Infof(uiUtils.Green, fmt.Sprintf("+%s", tappedPod.Name))
+			log.Printf(uiUtils.Green, fmt.Sprintf("+%s", tappedPod.Name))
 		}
 		return nil
 	}
@@ -178,29 +178,29 @@ func startTapperSyncer(ctx context.Context, cancel context.CancelFunc, provider 
 			select {
 			case syncerErr, ok := <-tapperSyncer.ErrorOut:
 				if !ok {
-					logger.Log.Debug("kubesharkTapperSyncer err channel closed, ending listener loop")
+					log.Print("kubesharkTapperSyncer err channel closed, ending listener loop")
 					return
 				}
-				logger.Log.Errorf(uiUtils.Error, getErrorDisplayTextForK8sTapManagerError(syncerErr))
+				log.Printf(uiUtils.Error, getErrorDisplayTextForK8sTapManagerError(syncerErr))
 				cancel()
 			case _, ok := <-tapperSyncer.TapPodChangesOut:
 				if !ok {
-					logger.Log.Debug("kubesharkTapperSyncer pod changes channel closed, ending listener loop")
+					log.Print("kubesharkTapperSyncer pod changes channel closed, ending listener loop")
 					return
 				}
 				if err := apiProvider.ReportTappedPods(tapperSyncer.CurrentlyTappedPods); err != nil {
-					logger.Log.Debugf("[Error] failed update tapped pods %v", err)
+					log.Printf("[Error] failed update tapped pods %v", err)
 				}
 			case tapperStatus, ok := <-tapperSyncer.TapperStatusChangedOut:
 				if !ok {
-					logger.Log.Debug("kubesharkTapperSyncer tapper status changed channel closed, ending listener loop")
+					log.Print("kubesharkTapperSyncer tapper status changed channel closed, ending listener loop")
 					return
 				}
 				if err := apiProvider.ReportTapperStatus(tapperStatus); err != nil {
-					logger.Log.Debugf("[Error] failed update tapper status %v", err)
+					log.Printf("[Error] failed update tapper status %v", err)
 				}
 			case <-ctx.Done():
-				logger.Log.Debug("kubesharkTapperSyncer event listener loop exiting due to context done")
+				log.Print("kubesharkTapperSyncer event listener loop exiting due to context done")
 				return
 			}
 		}
@@ -214,7 +214,7 @@ func printNoPodsFoundSuggestion(targetNamespaces []string) {
 	if !shared.Contains(targetNamespaces, kubernetes.K8sAllNamespaces) {
 		suggestionStr = ". You can also try selecting a different namespace with -n or tap all namespaces with -A"
 	}
-	logger.Log.Warningf(uiUtils.Warning, fmt.Sprintf("Did not find any currently running pods that match the regex argument, kubeshark will automatically tap matching pods if any are created later%s", suggestionStr))
+	log.Printf(uiUtils.Warning, fmt.Sprintf("Did not find any currently running pods that match the regex argument, kubeshark will automatically tap matching pods if any are created later%s", suggestionStr))
 }
 
 func getErrorDisplayTextForK8sTapManagerError(err kubernetes.K8sTapManagerError) string {
@@ -248,20 +248,20 @@ func watchApiServerPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 
 			switch wEvent.Type {
 			case kubernetes.EventAdded:
-				logger.Log.Debugf("Watching API Server pod loop, added")
+				log.Printf("Watching API Server pod loop, added")
 			case kubernetes.EventDeleted:
-				logger.Log.Infof("%s removed", kubernetes.ApiServerPodName)
+				log.Printf("%s removed", kubernetes.ApiServerPodName)
 				cancel()
 				return
 			case kubernetes.EventModified:
 				modifiedPod, err := wEvent.ToPod()
 				if err != nil {
-					logger.Log.Errorf(uiUtils.Error, err)
+					log.Printf(uiUtils.Error, err)
 					cancel()
 					continue
 				}
 
-				logger.Log.Debugf("Watching API Server pod loop, modified: %v, containers statuses: %v", modifiedPod.Status.Phase, modifiedPod.Status.ContainerStatuses)
+				log.Printf("Watching API Server pod loop, modified: %v, containers statuses: %v", modifiedPod.Status.Phase, modifiedPod.Status.ContainerStatuses)
 
 				if modifiedPod.Status.Phase == core.PodRunning && !isPodReady {
 					isPodReady = true
@@ -284,16 +284,16 @@ func watchApiServerPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 				continue
 			}
 
-			logger.Log.Errorf("[ERROR] Agent creation, watching %v namespace, error: %v", config.Config.KubesharkResourcesNamespace, err)
+			log.Printf("[ERROR] Agent creation, watching %v namespace, error: %v", config.Config.KubesharkResourcesNamespace, err)
 			cancel()
 
 		case <-timeAfter:
 			if !isPodReady {
-				logger.Log.Errorf(uiUtils.Error, "Kubeshark API server was not ready in time")
+				log.Printf(uiUtils.Error, "Kubeshark API server was not ready in time")
 				cancel()
 			}
 		case <-ctx.Done():
-			logger.Log.Debugf("Watching API Server pod loop, ctx done")
+			log.Printf("Watching API Server pod loop, ctx done")
 			return
 		}
 	}
@@ -317,20 +317,20 @@ func watchFrontPod(ctx context.Context, kubernetesProvider *kubernetes.Provider,
 
 			switch wEvent.Type {
 			case kubernetes.EventAdded:
-				logger.Log.Debugf("Watching API Server pod loop, added")
+				log.Printf("Watching API Server pod loop, added")
 			case kubernetes.EventDeleted:
-				logger.Log.Infof("%s removed", "front")
+				log.Printf("%s removed", "front")
 				cancel()
 				return
 			case kubernetes.EventModified:
 				modifiedPod, err := wEvent.ToPod()
 				if err != nil {
-					logger.Log.Errorf(uiUtils.Error, err)
+					log.Printf(uiUtils.Error, err)
 					cancel()
 					continue
 				}
 
-				logger.Log.Debugf("Watching API Server pod loop, modified: %v, containers statuses: %v", modifiedPod.Status.Phase, modifiedPod.Status.ContainerStatuses)
+				log.Printf("Watching API Server pod loop, modified: %v, containers statuses: %v", modifiedPod.Status.Phase, modifiedPod.Status.ContainerStatuses)
 
 				if modifiedPod.Status.Phase == core.PodRunning && !isPodReady {
 					isPodReady = true
@@ -352,16 +352,16 @@ func watchFrontPod(ctx context.Context, kubernetesProvider *kubernetes.Provider,
 				continue
 			}
 
-			logger.Log.Errorf("[ERROR] Agent creation, watching %v namespace, error: %v", config.Config.KubesharkResourcesNamespace, err)
+			log.Printf("[ERROR] Agent creation, watching %v namespace, error: %v", config.Config.KubesharkResourcesNamespace, err)
 			cancel()
 
 		case <-timeAfter:
 			if !isPodReady {
-				logger.Log.Errorf(uiUtils.Error, "Kubeshark API server was not ready in time")
+				log.Printf(uiUtils.Error, "Kubeshark API server was not ready in time")
 				cancel()
 			}
 		case <-ctx.Done():
-			logger.Log.Debugf("Watching API Server pod loop, ctx done")
+			log.Printf("Watching API Server pod loop, ctx done")
 			return
 		}
 	}
@@ -381,7 +381,7 @@ func watchApiServerEvents(ctx context.Context, kubernetesProvider *kubernetes.Pr
 
 			event, err := wEvent.ToEvent()
 			if err != nil {
-				logger.Log.Debugf("[ERROR] parsing Kubeshark resource event: %+v", err)
+				log.Printf("[ERROR] parsing Kubeshark resource event: %+v", err)
 				continue
 			}
 
@@ -389,7 +389,7 @@ func watchApiServerEvents(ctx context.Context, kubernetesProvider *kubernetes.Pr
 				continue
 			}
 
-			logger.Log.Debugf(
+			log.Printf(
 				fmt.Sprintf("Watching API server events loop, event %s, time: %v, resource: %s (%s), reason: %s, note: %s",
 					event.Name,
 					event.CreationTimestamp.Time,
@@ -400,7 +400,7 @@ func watchApiServerEvents(ctx context.Context, kubernetesProvider *kubernetes.Pr
 
 			switch event.Reason {
 			case "FailedScheduling", "Failed":
-				logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Kubeshark API Server status: %s - %s", event.Reason, event.Note))
+				log.Printf(uiUtils.Error, fmt.Sprintf("Kubeshark API Server status: %s - %s", event.Reason, event.Note))
 				cancel()
 
 			}
@@ -410,9 +410,9 @@ func watchApiServerEvents(ctx context.Context, kubernetesProvider *kubernetes.Pr
 				continue
 			}
 
-			logger.Log.Debugf("[Error] Watching API server events loop, error: %+v", err)
+			log.Printf("[Error] Watching API server events loop, error: %+v", err)
 		case <-ctx.Done():
-			logger.Log.Debugf("Watching API server events loop, ctx done")
+			log.Printf("Watching API server events loop, ctx done")
 			return
 		}
 	}
@@ -422,19 +422,19 @@ func postApiServerStarted(ctx context.Context, kubernetesProvider *kubernetes.Pr
 	startProxyReportErrorIfAny(kubernetesProvider, ctx, cancel, "kubeshark-api-server", config.Config.Hub.PortForward.SrcPort, config.Config.Hub.PortForward.DstPort, "/echo")
 
 	if err := startTapperSyncer(ctx, cancel, kubernetesProvider, state.targetNamespaces, state.startTime); err != nil {
-		logger.Log.Errorf(uiUtils.Error, fmt.Sprintf("Error starting kubeshark tapper syncer: %v", errormessage.FormatError(err)))
+		log.Printf(uiUtils.Error, fmt.Sprintf("Error starting kubeshark tapper syncer: %v", errormessage.FormatError(err)))
 		cancel()
 	}
 
 	url := kubernetes.GetLocalhostOnPort(config.Config.Hub.PortForward.SrcPort)
-	logger.Log.Infof("API Server is available at %s", url)
+	log.Printf("API Server is available at %s", url)
 }
 
 func postFrontStarted(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc) {
 	startProxyReportErrorIfAny(kubernetesProvider, ctx, cancel, "front", config.Config.Front.PortForward.SrcPort, config.Config.Front.PortForward.DstPort, "")
 
 	url := kubernetes.GetLocalhostOnPort(config.Config.Front.PortForward.SrcPort)
-	logger.Log.Infof("Kubeshark is available at %s", url)
+	log.Printf("Kubeshark is available at %s", url)
 	if !config.Config.HeadlessMode {
 		uiUtils.OpenBrowser(url)
 	}
@@ -448,7 +448,7 @@ func getNamespaces(kubernetesProvider *kubernetes.Provider) []string {
 	} else {
 		currentNamespace, err := kubernetesProvider.CurrentNamespace()
 		if err != nil {
-			logger.Log.Fatalf(uiUtils.Red, fmt.Sprintf("error getting current namespace: %+v", err))
+			log.Fatalf(uiUtils.Red, fmt.Sprintf("error getting current namespace: %+v", err))
 		}
 		return []string{currentNamespace}
 	}
