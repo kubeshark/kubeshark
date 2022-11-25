@@ -1,4 +1,4 @@
-![Kubeshark: The API Traffic Viewer for Kubernetes](../assets/kubeshark-logo.svg)
+![Kubeshark: The API Traffic Viewer for Kubernetes](https://raw.githubusercontent.com/kubeshark/assets/master/svg/kubeshark-logo.svg)
 # Testing guidelines
 
 ## Generic guidelines
