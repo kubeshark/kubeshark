@@ -8,7 +8,7 @@ const (
 	DataDirPath                     = "/app/data/"
 	ConfigFileName                  = "kubeshark-config.json"
 	LogLevelEnvVar                  = "LOG_LEVEL"
-	KubesharkAgentImageRepo         = "docker.io/kubeshark/kubeshark"
+	KubesharkAgentImageRepo         = "docker.io/kubeshark/hub"
 	BasenineHost                    = "127.0.0.1"
 	BaseninePort                    = "9099"
 	BasenineReconnectInterval       = 3

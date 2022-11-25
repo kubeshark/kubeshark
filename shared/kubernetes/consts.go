@@ -2,7 +2,7 @@ package kubernetes
 
 const (
 	KubesharkResourcesPrefix   = "ks-"
-	ApiServerPodName           = KubesharkResourcesPrefix + "api-server"
+	ApiServerPodName           = KubesharkResourcesPrefix + "hub"
 	ClusterRoleBindingName     = KubesharkResourcesPrefix + "cluster-role-binding"
 	ClusterRoleName            = KubesharkResourcesPrefix + "cluster-role"
 	K8sAllNamespaces           = ""

@@ -8,22 +8,12 @@ SHELL=/bin/bash
 # HELP
 # This will output the help for each task
 # thanks to https://marmelab.com/blog/2016/02/29/auto-documented-makefile.html
-.PHONY: help ui agent agent-debug cli docker
+.PHONY: help cli
 
 help: ## This help.
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
 .DEFAULT_GOAL := help
-
-# Variables and lists
-TS_SUFFIX="$(shell date '+%s')"
-GIT_BRANCH="$(shell git branch | grep \* | cut -d ' ' -f2 | tr '[:upper:]' '[:lower:]' | tr '/' '_')"
-BUCKET_PATH=static.up9.io/kubeshark/$(GIT_BRANCH)
-export VER?=0.0
-
-ui: ## Build UI.
-	@(cd ui; npm i ; npm run build; )
-	@ls -l ui/build
 
 cli: ## Build CLI.
 	@echo "building cli"; cd cli && $(MAKE) build
@@ -31,63 +21,20 @@ cli: ## Build CLI.
 cli-debug: ## Build CLI.
 	@echo "building cli"; cd cli && $(MAKE) build-debug
 
-agent: ## Build agent.
-	@(echo "building kubeshark agent .." )
-	@(cd agent; go build -o build/kubesharkagent main.go)
-	@ls -l agent/build
-
-agent-debug: ## Build agent for debug.
-	@(echo "building kubeshark agent for debug.." )
-	@(cd agent; go build -gcflags="all=-N -l" -o build/kubesharkagent main.go)
-	@ls -l agent/build
-
-docker: ## Build and publish agent docker image.
-	$(MAKE) push-docker
-
-agent-docker: ## Build agent docker image.
-	@echo "Building agent docker image"
-	@docker build -t kubeshark/kubeshark:devlatest .
-
-push: push-docker push-cli ## Build and publish agent docker image & CLI.
-
-push-docker: ## Build and publish agent docker image.
-	@echo "publishing Docker image .. "
-	devops/build-push-featurebranch.sh
-
-push-cli: ## Build and publish CLI.
-	@echo "publishing CLI .. "
-	@cd cli; $(MAKE) build-all
-	@echo "publishing file ${OUTPUT_FILE} .."
-	#gsutil mv gs://${BUCKET_PATH}/${OUTPUT_FILE} gs://${BUCKET_PATH}/${OUTPUT_FILE}.${SUFFIX}
-	gsutil cp -r ./cli/bin/* gs://${BUCKET_PATH}/
-	gsutil setmeta -r -h "Cache-Control:public, max-age=30" gs://${BUCKET_PATH}/\*
-
-clean: clean-ui clean-agent clean-cli clean-docker ## Clean all build artifacts.
-
-clean-ui: ## Clean UI.
-	@(rm -rf ui/build ; echo "UI cleanup done" )
-
-clean-agent: ## Clean agent.
-	@(rm -rf agent/build ; echo "agent cleanup done" )
+clean: clean-ui clean-cli ## Clean all build artifacts.
 
 clean-cli:  ## Clean CLI.
 	@(cd cli; make clean ; echo "CLI cleanup done" )
 
-clean-docker:  ## Run clean docker
-	@(echo "DOCKER cleanup - NOT IMPLEMENTED YET " )
 
 lint:  ## Run lint on all modules
-	cd agent && golangci-lint run
 	cd shared && golangci-lint run
 	cd cli && golangci-lint run
 
-test: test-cli test-agent test-shared
+test: test-cli test-shared
 
 test-cli:  ## Run cli tests
 	@echo "running cli tests"; cd cli && $(MAKE) test
-
-test-agent:  ## Run agent tests
-	@echo "running agent tests"; cd agent && $(MAKE) test
 
 test-shared:  ## Run shared tests
 	@echo "running shared tests"; cd shared && $(MAKE) test
