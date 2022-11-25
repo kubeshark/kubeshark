@@ -206,7 +206,7 @@ func (provider *Provider) BuildApiServerPod(opts *ApiServerOptions, mountVolumeC
 	}
 
 	command := []string{
-		"./kubesharkagent",
+		"./hub",
 	}
 
 	if opts.Profiler {
