@@ -24,7 +24,7 @@ func CleanUpKubesharkResources(ctx context.Context, cancel context.CancelFunc, k
 	}
 
 	if len(leftoverResources) > 0 {
-		errMsg := fmt.Sprintf("Failed to remove the following resources.")
+		errMsg := "Failed to remove the following resources."
 		for _, resource := range leftoverResources {
 			errMsg += "\n- " + resource
 		}

@@ -136,17 +136,18 @@ func (tapperSyncer *KubesharkTapperSyncer) watchTapperEvents() {
 			}
 
 			log.Printf(
-				fmt.Sprintf("Watching tapper events loop, event %s, time: %v, resource: %s (%s), reason: %s, note: %s",
-					event.Name,
-					event.CreationTimestamp.Time,
-					event.Regarding.Name,
-					event.Regarding.Kind,
-					event.Reason,
-					event.Note))
+				"Watching tapper events loop, event %s, time: %v, resource: %s (%s), reason: %s, note: %s",
+				event.Name,
+				event.CreationTimestamp.Time,
+				event.Regarding.Name,
+				event.Regarding.Kind,
+				event.Reason,
+				event.Note,
+			)
 
 			pod, err1 := tapperSyncer.kubernetesProvider.GetPod(tapperSyncer.context, tapperSyncer.config.KubesharkResourcesNamespace, event.Regarding.Name)
 			if err1 != nil {
-				log.Printf(fmt.Sprintf("Couldn't get tapper pod %s", event.Regarding.Name))
+				log.Printf("Couldn't get tapper pod %s", event.Regarding.Name)
 				continue
 			}
 

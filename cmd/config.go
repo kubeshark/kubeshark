@@ -27,7 +27,7 @@ var configCmd = &cobra.Command{
 				return nil
 			}
 
-			log.Printf(fmt.Sprintf("Template File written to %s", fmt.Sprintf(uiUtils.Purple, config.Config.ConfigFilePath)))
+			log.Printf("Template File written to %s", fmt.Sprintf(uiUtils.Purple, config.Config.ConfigFilePath))
 		} else {
 			template, err := uiUtils.PrettyYaml(configWithDefaults)
 			if err != nil {

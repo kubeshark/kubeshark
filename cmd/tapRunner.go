@@ -390,13 +390,14 @@ func watchApiServerEvents(ctx context.Context, kubernetesProvider *kubernetes.Pr
 			}
 
 			log.Printf(
-				fmt.Sprintf("Watching API server events loop, event %s, time: %v, resource: %s (%s), reason: %s, note: %s",
-					event.Name,
-					event.CreationTimestamp.Time,
-					event.Regarding.Name,
-					event.Regarding.Kind,
-					event.Reason,
-					event.Note))
+				"Watching API server events loop, event %s, time: %v, resource: %s (%s), reason: %s, note: %s",
+				event.Name,
+				event.CreationTimestamp.Time,
+				event.Regarding.Name,
+				event.Regarding.Kind,
+				event.Reason,
+				event.Note,
+			)
 
 			switch event.Reason {
 			case "FailedScheduling", "Failed":
