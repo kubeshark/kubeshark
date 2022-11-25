@@ -1,7 +1,7 @@
 SHELL=/bin/bash
 
 .PHONY: help
-.DEFAULT_GOAL := help
+.DEFAULT_GOAL := build
 .ONESHELL:
 
 SUFFIX=$(GOOS)_$(GOARCH)
