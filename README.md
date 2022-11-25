@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/kubeshark-logo.svg" alt="Kubeshark: Traffic viewer for Kubernetes." height="128px"/>
+  <img src="https://raw.githubusercontent.com/kubeshark/assets/master/svg/kubeshark-logo.svg" alt="Kubeshark: Traffic viewer for Kubernetes." height="128px"/>
 </p>
 
 <p align="center">
@@ -32,7 +32,7 @@ Kubeshark, the API Traffic Viewer for kubernetes, provides deep visibility and m
 
 Think of a combination of Chrome Dev Tools, TCPDump and Wireshark, re-invented for Kubernetes.
 
-![Simple UI](assets/kubeshark-ui.png)
+![Simple UI](https://github.com/kubeshark/assets/raw/master/png/kubeshark-ui.png)
 
 ## Download
 
