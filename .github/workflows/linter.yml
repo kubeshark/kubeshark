@@ -24,13 +24,6 @@ jobs:
         with:
           go-version: '^1.17'
 
-      - name: Go lint - agent
-        uses: golangci/golangci-lint-action@v2
-        with:
-          version: latest
-          working-directory: agent
-          args: --timeout=10m
-
       - name: Go lint - shared
         uses: golangci/golangci-lint-action@v2
         with:
