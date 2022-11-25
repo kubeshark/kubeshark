@@ -56,4 +56,4 @@ cypress.env.json
 # Object files
 *.o
 
-hub
+bin

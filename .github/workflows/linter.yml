@@ -24,22 +24,8 @@ jobs:
         with:
           go-version: '^1.17'
 
-      - name: Go lint - shared
+      - name: Go lint
         uses: golangci/golangci-lint-action@v2
         with:
           version: latest
-          working-directory: shared
           args: --timeout=10m
-
-      - name: Go lint - CLI
-        uses: golangci/golangci-lint-action@v2
-        with:
-          version: latest
-          working-directory: cli
-          args: --timeout=10m
-
-      - name: Go lint - logger
-        uses: golangci/golangci-lint-action@v2
-        with:
-          version: latest
-          working-directory: logger
