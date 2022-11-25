@@ -7,15 +7,15 @@ import (
 
 	"github.com/kubeshark/kubeshark/cli/config"
 	"github.com/kubeshark/kubeshark/cli/errormessage"
+	"github.com/kubeshark/kubeshark/cli/kubernetes"
 	"github.com/kubeshark/kubeshark/cli/kubeshark"
 	"github.com/kubeshark/kubeshark/cli/uiUtils"
-	"github.com/kubeshark/kubeshark/shared"
-	"github.com/kubeshark/kubeshark/shared/kubernetes"
+	"github.com/kubeshark/worker/models"
 	"github.com/op/go-logging"
 	core "k8s.io/api/core/v1"
 )
 
-func CreateTapKubesharkResources(ctx context.Context, kubernetesProvider *kubernetes.Provider, serializedKubesharkConfig string, isNsRestrictedMode bool, kubesharkResourcesNamespace string, agentImage string, maxEntriesDBSizeBytes int64, apiServerResources shared.Resources, imagePullPolicy core.PullPolicy, logLevel logging.Level, profiler bool) (bool, error) {
+func CreateTapKubesharkResources(ctx context.Context, kubernetesProvider *kubernetes.Provider, serializedKubesharkConfig string, isNsRestrictedMode bool, kubesharkResourcesNamespace string, agentImage string, maxEntriesDBSizeBytes int64, apiServerResources models.Resources, imagePullPolicy core.PullPolicy, logLevel logging.Level, profiler bool) (bool, error) {
 	if !isNsRestrictedMode {
 		if err := createKubesharkNamespace(ctx, kubernetesProvider, kubesharkResourcesNamespace); err != nil {
 			return false, err

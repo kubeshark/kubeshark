@@ -8,8 +8,8 @@ import (
 
 	"github.com/kubeshark/kubeshark/cli/apiserver"
 	"github.com/kubeshark/kubeshark/cli/config"
+	"github.com/kubeshark/kubeshark/cli/kubernetes"
 	"github.com/kubeshark/kubeshark/cli/uiUtils"
-	"github.com/kubeshark/kubeshark/shared/kubernetes"
 )
 
 func ServerConnection(kubernetesProvider *kubernetes.Provider) bool {

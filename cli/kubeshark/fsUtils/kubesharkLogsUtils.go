@@ -9,7 +9,7 @@ import (
 	"regexp"
 
 	"github.com/kubeshark/kubeshark/cli/config"
-	"github.com/kubeshark/kubeshark/shared/kubernetes"
+	"github.com/kubeshark/kubeshark/cli/kubernetes"
 )
 
 func DumpLogs(ctx context.Context, provider *kubernetes.Provider, filePath string) error {

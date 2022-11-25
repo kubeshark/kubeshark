@@ -8,7 +8,8 @@ import (
 
 	"github.com/kubeshark/kubeshark/cli/config/configStructs"
 	"github.com/kubeshark/kubeshark/cli/kubeshark"
-	"github.com/kubeshark/kubeshark/shared"
+	"github.com/kubeshark/kubeshark/cli/utils"
+	"github.com/kubeshark/worker/models"
 	"github.com/op/go-logging"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/util/homedir"
@@ -73,7 +74,7 @@ type ConfigStruct struct {
 	HeadlessMode                bool                        `yaml:"headless" default:"false"`
 	LogLevelStr                 string                      `yaml:"log-level,omitempty" default:"INFO" readonly:""`
 	ServiceMap                  bool                        `yaml:"service-map" default:"true"`
-	OAS                         shared.OASConfig            `yaml:"oas"`
+	OAS                         models.OASConfig            `yaml:"oas"`
 }
 
 func (config *ConfigStruct) validate() error {
@@ -85,7 +86,7 @@ func (config *ConfigStruct) validate() error {
 }
 
 func (config *ConfigStruct) SetDefaults() {
-	config.AgentImage = fmt.Sprintf("%s:%s", shared.KubesharkAgentImageRepo, kubeshark.Ver)
+	config.AgentImage = fmt.Sprintf("%s:%s", utils.KubesharkAgentImageRepo, kubeshark.Ver)
 	config.ConfigFilePath = path.Join(kubeshark.GetKubesharkFolderPath(), "config.yaml")
 }
 

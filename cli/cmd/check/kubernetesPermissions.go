@@ -9,8 +9,8 @@ import (
 
 	"github.com/kubeshark/kubeshark/cli/bucket"
 	"github.com/kubeshark/kubeshark/cli/config"
+	"github.com/kubeshark/kubeshark/cli/kubernetes"
 	"github.com/kubeshark/kubeshark/cli/uiUtils"
-	"github.com/kubeshark/kubeshark/shared/kubernetes"
 	rbac "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/scheme"

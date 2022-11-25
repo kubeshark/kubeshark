@@ -7,9 +7,10 @@ import (
 	"regexp"
 	"time"
 
-	"github.com/kubeshark/kubeshark/shared"
-	"github.com/kubeshark/kubeshark/shared/debounce"
+	"github.com/kubeshark/kubeshark/cli/debounce"
+	"github.com/kubeshark/kubeshark/cli/utils"
 	"github.com/kubeshark/worker/api"
+	"github.com/kubeshark/worker/models"
 	"github.com/op/go-logging"
 	core "k8s.io/api/core/v1"
 )
@@ -29,9 +30,9 @@ type KubesharkTapperSyncer struct {
 	config                 TapperSyncerConfig
 	kubernetesProvider     *Provider
 	TapPodChangesOut       chan TappedPodChangeEvent
-	TapperStatusChangedOut chan shared.TapperStatus
+	TapperStatusChangedOut chan models.TapperStatus
 	ErrorOut               chan K8sTapManagerError
-	nodeToTappedPodMap     shared.NodeToPodsMap
+	nodeToTappedPodMap     models.NodeToPodsMap
 	tappedNodes            []string
 }
 
@@ -40,7 +41,7 @@ type TapperSyncerConfig struct {
 	PodFilterRegex                regexp.Regexp
 	KubesharkResourcesNamespace   string
 	AgentImage                    string
-	TapperResources               shared.Resources
+	TapperResources               models.Resources
 	ImagePullPolicy               core.PullPolicy
 	LogLevel                      logging.Level
 	KubesharkApiFilteringOptions  api.TrafficFilteringOptions
@@ -58,7 +59,7 @@ func CreateAndStartKubesharkTapperSyncer(ctx context.Context, kubernetesProvider
 		config:                 config,
 		kubernetesProvider:     kubernetesProvider,
 		TapPodChangesOut:       make(chan TappedPodChangeEvent, 100),
-		TapperStatusChangedOut: make(chan shared.TapperStatus, 100),
+		TapperStatusChangedOut: make(chan models.TapperStatus, 100),
 		ErrorOut:               make(chan K8sTapManagerError, 100),
 	}
 
@@ -97,7 +98,7 @@ func (tapperSyncer *KubesharkTapperSyncer) watchTapperPods() {
 
 			log.Printf("Watching tapper pods loop, tapper: %v, node: %v, status: %v", pod.Name, pod.Spec.NodeName, pod.Status.Phase)
 			if pod.Spec.NodeName != "" {
-				tapperStatus := shared.TapperStatus{TapperName: pod.Name, NodeName: pod.Spec.NodeName, Status: string(pod.Status.Phase)}
+				tapperStatus := models.TapperStatus{TapperName: pod.Name, NodeName: pod.Spec.NodeName, Status: string(pod.Status.Phase)}
 				tapperSyncer.TapperStatusChangedOut <- tapperStatus
 			}
 
@@ -156,7 +157,7 @@ func (tapperSyncer *KubesharkTapperSyncer) watchTapperEvents() {
 				nodeName = pod.Spec.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms[0].MatchFields[0].Values[0]
 			}
 
-			tapperStatus := shared.TapperStatus{TapperName: pod.Name, NodeName: nodeName, Status: string(pod.Status.Phase)}
+			tapperStatus := models.TapperStatus{TapperName: pod.Name, NodeName: nodeName, Status: string(pod.Status.Phase)}
 			tapperSyncer.TapperStatusChangedOut <- tapperStatus
 
 		case err, ok := <-errorChan:
@@ -303,7 +304,7 @@ func (tapperSyncer *KubesharkTapperSyncer) updateKubesharkTappers() error {
 		i++
 	}
 
-	if shared.EqualStringSlices(nodesToTap, tapperSyncer.tappedNodes) {
+	if utils.EqualStringSlices(nodesToTap, tapperSyncer.tappedNodes) {
 		log.Print("Skipping apply, DaemonSet is up to date")
 		return nil
 	}

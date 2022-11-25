@@ -9,9 +9,9 @@ import (
 	"strings"
 
 	"github.com/kubeshark/kubeshark/cli/uiUtils"
-	"github.com/kubeshark/kubeshark/shared"
+	"github.com/kubeshark/worker/models"
 
-	"github.com/kubeshark/kubeshark/shared/units"
+	"github.com/kubeshark/kubeshark/cli/units"
 )
 
 const (
@@ -46,8 +46,8 @@ type TapConfig struct {
 	HumanMaxEntriesDBSize string           `yaml:"max-entries-db-size" default:"200MB"`
 	InsertionFilter       string           `yaml:"insertion-filter" default:""`
 	DryRun                bool             `yaml:"dry-run" default:"false"`
-	ApiServerResources    shared.Resources `yaml:"api-server-resources"`
-	TapperResources       shared.Resources `yaml:"tapper-resources"`
+	ApiServerResources    models.Resources `yaml:"api-server-resources"`
+	TapperResources       models.Resources `yaml:"tapper-resources"`
 	ServiceMesh           bool             `yaml:"service-mesh" default:"false"`
 	Tls                   bool             `yaml:"tls" default:"false"`
 	PacketCapture         string           `yaml:"packet-capture" default:"libpcap"`

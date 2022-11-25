@@ -6,9 +6,9 @@ import (
 	"log"
 
 	"github.com/kubeshark/kubeshark/cli/errormessage"
+	"github.com/kubeshark/kubeshark/cli/kubernetes"
 	"github.com/kubeshark/kubeshark/cli/uiUtils"
 	"github.com/kubeshark/kubeshark/cli/utils"
-	"github.com/kubeshark/kubeshark/shared/kubernetes"
 	"k8s.io/apimachinery/pkg/util/wait"
 )
 

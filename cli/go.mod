@@ -4,9 +4,9 @@ go 1.17
 
 require (
 	github.com/creasty/defaults v1.5.2
+	github.com/docker/go-units v0.4.0
 	github.com/google/go-github/v37 v37.0.0
-	github.com/kubeshark/kubeshark/shared v0.0.0
-	github.com/kubeshark/worker v0.1.1
+	github.com/kubeshark/worker v0.1.4
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7
 	github.com/spf13/cobra v1.3.0
 	github.com/spf13/pflag v1.0.5
@@ -14,6 +14,7 @@ require (
 	k8s.io/api v0.23.3
 	k8s.io/apimachinery v0.23.3
 	k8s.io/client-go v0.23.3
+	k8s.io/kubectl v0.23.3
 )
 
 require (
@@ -30,7 +31,6 @@ require (
 	github.com/PuerkitoBio/urlesc v0.0.0-20170810143723-de5bf2ad4578 // indirect
 	github.com/chai2010/gettext-go v0.0.0-20160711120539-c6fed771bfd5 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
-	github.com/docker/go-units v0.4.0 // indirect
 	github.com/evanphx/json-patch v5.6.0+incompatible // indirect
 	github.com/exponent-io/jsonpath v0.0.0-20210407135951-1de76d718b3f // indirect
 	github.com/fvbommel/sortorder v1.0.2 // indirect
@@ -68,6 +68,7 @@ require (
 	github.com/pmezard/go-difflib v1.0.0 // indirect
 	github.com/russross/blackfriday v1.6.0 // indirect
 	github.com/stretchr/testify v1.7.0 // indirect
+	github.com/up9inc/basenine/client/go v0.0.0-20220612112747-3b28eeac9c51 // indirect
 	github.com/xlab/treeprint v1.1.0 // indirect
 	go.starlark.net v0.0.0-20220203230714-bb14e151c28f // indirect
 	golang.org/x/crypto v0.0.0-20220208050332-20e1d8d225ab // indirect
@@ -85,7 +86,6 @@ require (
 	k8s.io/component-base v0.23.3 // indirect
 	k8s.io/klog/v2 v2.40.1 // indirect
 	k8s.io/kube-openapi v0.0.0-20220124234850-424119656bbf // indirect
-	k8s.io/kubectl v0.23.3 // indirect
 	k8s.io/utils v0.0.0-20220127004650-9b3446523e65 // indirect
 	sigs.k8s.io/json v0.0.0-20211208200746-9f7c6b3444d2 // indirect
 	sigs.k8s.io/kustomize/api v0.11.1 // indirect
@@ -93,5 +93,3 @@ require (
 	sigs.k8s.io/structured-merge-diff/v4 v4.2.1 // indirect
 	sigs.k8s.io/yaml v1.3.0 // indirect
 )
-
-replace github.com/kubeshark/kubeshark/shared v0.0.0 => ../shared

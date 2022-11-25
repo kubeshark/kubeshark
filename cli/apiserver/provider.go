@@ -9,9 +9,9 @@ import (
 	"time"
 
 	"github.com/kubeshark/kubeshark/cli/utils"
+	"github.com/kubeshark/worker/models"
 
 	"github.com/kubeshark/kubeshark/cli/config"
-	"github.com/kubeshark/kubeshark/shared"
 	core "k8s.io/api/core/v1"
 )
 
@@ -62,7 +62,7 @@ func (provider *Provider) isReachable(path string) (bool, error) {
 	}
 }
 
-func (provider *Provider) ReportTapperStatus(tapperStatus shared.TapperStatus) error {
+func (provider *Provider) ReportTapperStatus(tapperStatus models.TapperStatus) error {
 	tapperStatusUrl := fmt.Sprintf("%s/status/tapperStatus", provider.url)
 
 	if jsonValue, err := json.Marshal(tapperStatus); err != nil {

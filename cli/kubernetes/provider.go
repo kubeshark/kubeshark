@@ -13,9 +13,10 @@ import (
 	"regexp"
 	"strconv"
 
-	"github.com/kubeshark/kubeshark/shared"
-	"github.com/kubeshark/kubeshark/shared/semver"
+	"github.com/kubeshark/kubeshark/cli/semver"
+	"github.com/kubeshark/kubeshark/cli/utils"
 	"github.com/kubeshark/worker/api"
+	"github.com/kubeshark/worker/models"
 	"github.com/op/go-logging"
 	auth "k8s.io/api/authorization/v1"
 	core "k8s.io/api/core/v1"
@@ -178,7 +179,7 @@ type ApiServerOptions struct {
 	ServiceAccountName    string
 	IsNamespaceRestricted bool
 	MaxEntriesDBSizeBytes int64
-	Resources             shared.Resources
+	Resources             models.Resources
 	ImagePullPolicy       core.PullPolicy
 	LogLevel              logging.Level
 	Profiler              bool
@@ -220,7 +221,7 @@ func (provider *Provider) BuildApiServerPod(opts *ApiServerOptions, mountVolumeC
 	volumeMounts := []core.VolumeMount{
 		{
 			Name:      ConfigMapName,
-			MountPath: shared.ConfigDirPath,
+			MountPath: models.ConfigDirPath,
 		},
 	}
 	volumes := []core.Volume{
@@ -243,7 +244,7 @@ func (provider *Provider) BuildApiServerPod(opts *ApiServerOptions, mountVolumeC
 		})
 		volumeMounts = append(volumeMounts, core.VolumeMount{
 			Name:      volumeClaimName,
-			MountPath: shared.DataDirPath,
+			MountPath: models.DataDirPath,
 		})
 	}
 
@@ -256,7 +257,7 @@ func (provider *Provider) BuildApiServerPod(opts *ApiServerOptions, mountVolumeC
 			Command:         command,
 			Env: []core.EnvVar{
 				{
-					Name:  shared.LogLevelEnvVar,
+					Name:  utils.LogLevelEnvVar,
 					Value: opts.LogLevel.String(),
 				},
 			},
@@ -280,7 +281,7 @@ func (provider *Provider) BuildApiServerPod(opts *ApiServerOptions, mountVolumeC
 				FailureThreshold: 3,
 				ProbeHandler: core.ProbeHandler{
 					TCPSocket: &core.TCPSocketAction{
-						Port: intstr.Parse(shared.BaseninePort),
+						Port: intstr.Parse(utils.BaseninePort),
 					},
 				},
 				PeriodSeconds:    1,
@@ -298,8 +299,8 @@ func (provider *Provider) BuildApiServerPod(opts *ApiServerOptions, mountVolumeC
 				},
 			},
 			Command:    []string{"basenine"},
-			Args:       []string{"-addr", "0.0.0.0", "-port", shared.BaseninePort, "-persistent"},
-			WorkingDir: shared.DataDirPath,
+			Args:       []string{"-addr", "0.0.0.0", "-port", utils.BaseninePort, "-persistent"},
+			WorkingDir: models.DataDirPath,
 		},
 	}
 
@@ -452,7 +453,7 @@ func (provider *Provider) BuildFrontPod(opts *ApiServerOptions, mountVolumeClaim
 			},
 			Command:    []string{"nginx"},
 			Args:       []string{"-g", "daemon off;"},
-			WorkingDir: shared.DataDirPath,
+			WorkingDir: models.DataDirPath,
 		},
 	}
 
@@ -783,7 +784,7 @@ func (provider *Provider) handleRemovalError(err error) error {
 
 func (provider *Provider) CreateConfigMap(ctx context.Context, namespace string, configMapName string, serializedKubesharkConfig string) error {
 	configMapData := make(map[string]string)
-	configMapData[shared.ConfigFileName] = serializedKubesharkConfig
+	configMapData[models.ConfigFileName] = serializedKubesharkConfig
 
 	configMap := &core.ConfigMap{
 		TypeMeta: metav1.TypeMeta{
@@ -805,7 +806,7 @@ func (provider *Provider) CreateConfigMap(ctx context.Context, namespace string,
 	return nil
 }
 
-func (provider *Provider) ApplyKubesharkTapperDaemonSet(ctx context.Context, namespace string, daemonSetName string, podImage string, tapperPodName string, apiServerPodIp string, nodeNames []string, serviceAccountName string, resources shared.Resources, imagePullPolicy core.PullPolicy, kubesharkApiFilteringOptions api.TrafficFilteringOptions, logLevel logging.Level, serviceMesh bool, tls bool, maxLiveStreams int) error {
+func (provider *Provider) ApplyKubesharkTapperDaemonSet(ctx context.Context, namespace string, daemonSetName string, podImage string, tapperPodName string, apiServerPodIp string, nodeNames []string, serviceAccountName string, resources models.Resources, imagePullPolicy core.PullPolicy, kubesharkApiFilteringOptions api.TrafficFilteringOptions, logLevel logging.Level, serviceMesh bool, tls bool, maxLiveStreams int) error {
 	log.Printf("Applying %d tapper daemon sets, ns: %s, daemonSetName: %s, podImage: %s, tapperPodName: %s", len(nodeNames), namespace, daemonSetName, podImage, tapperPodName)
 
 	if len(nodeNames) == 0 {
@@ -863,12 +864,12 @@ func (provider *Provider) ApplyKubesharkTapperDaemonSet(ctx context.Context, nam
 
 	agentContainer.WithCommand(kubesharkCmd...)
 	agentContainer.WithEnv(
-		applyconfcore.EnvVar().WithName(shared.LogLevelEnvVar).WithValue(logLevel.String()),
-		applyconfcore.EnvVar().WithName(shared.HostModeEnvVar).WithValue("1"),
-		applyconfcore.EnvVar().WithName(shared.KubesharkFilteringOptionsEnvVar).WithValue(string(kubesharkApiFilteringOptionsJsonStr)),
+		applyconfcore.EnvVar().WithName(utils.LogLevelEnvVar).WithValue(logLevel.String()),
+		applyconfcore.EnvVar().WithName(utils.HostModeEnvVar).WithValue("1"),
+		applyconfcore.EnvVar().WithName(utils.KubesharkFilteringOptionsEnvVar).WithValue(string(kubesharkApiFilteringOptionsJsonStr)),
 	)
 	agentContainer.WithEnv(
-		applyconfcore.EnvVar().WithName(shared.NodeNameEnvVar).WithValueFrom(
+		applyconfcore.EnvVar().WithName(utils.NodeNameEnvVar).WithValueFrom(
 			applyconfcore.EnvVarSource().WithFieldRef(
 				applyconfcore.ObjectFieldSelector().WithAPIVersion("v1").WithFieldPath("spec.nodeName"),
 			),

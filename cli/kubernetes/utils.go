@@ -3,13 +3,13 @@ package kubernetes
 import (
 	"regexp"
 
-	"github.com/kubeshark/kubeshark/shared"
+	"github.com/kubeshark/worker/models"
 	core "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func GetNodeHostToTappedPodsMap(tappedPods []core.Pod) shared.NodeToPodsMap {
-	nodeToTappedPodMap := make(shared.NodeToPodsMap)
+func GetNodeHostToTappedPodsMap(tappedPods []core.Pod) models.NodeToPodsMap {
+	nodeToTappedPodMap := make(models.NodeToPodsMap)
 	for _, pod := range tappedPods {
 		minimizedPod := getMinimizedPod(pod)
 
@@ -86,10 +86,10 @@ func getMissingPods(pods1 []core.Pod, pods2 []core.Pod) []core.Pod {
 	return missingPods
 }
 
-func GetPodInfosForPods(pods []core.Pod) []*shared.PodInfo {
-	podInfos := make([]*shared.PodInfo, 0)
+func GetPodInfosForPods(pods []core.Pod) []*models.PodInfo {
+	podInfos := make([]*models.PodInfo, 0)
 	for _, pod := range pods {
-		podInfos = append(podInfos, &shared.PodInfo{Name: pod.Name, Namespace: pod.Namespace, NodeName: pod.Spec.NodeName})
+		podInfos = append(podInfos, &models.PodInfo{Name: pod.Name, Namespace: pod.Namespace, NodeName: pod.Spec.NodeName})
 	}
 	return podInfos
 }

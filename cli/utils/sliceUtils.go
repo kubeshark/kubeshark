@@ -1,4 +1,4 @@
-package shared
+package utils
 
 func Contains(slice []string, containsValue string) bool {
 	for _, sliceValue := range slice {

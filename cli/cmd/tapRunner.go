@@ -21,10 +21,10 @@ import (
 	"github.com/kubeshark/kubeshark/cli/config"
 	"github.com/kubeshark/kubeshark/cli/config/configStructs"
 	"github.com/kubeshark/kubeshark/cli/errormessage"
+	"github.com/kubeshark/kubeshark/cli/kubernetes"
 	"github.com/kubeshark/kubeshark/cli/uiUtils"
-	"github.com/kubeshark/kubeshark/shared"
-	"github.com/kubeshark/kubeshark/shared/kubernetes"
 	"github.com/kubeshark/worker/api"
+	"github.com/kubeshark/worker/models"
 )
 
 const cleanupTimeout = time.Minute
@@ -64,7 +64,7 @@ func RunKubesharkTap() {
 	}
 
 	if config.Config.IsNsRestrictedMode() {
-		if len(state.targetNamespaces) != 1 || !shared.Contains(state.targetNamespaces, config.Config.KubesharkResourcesNamespace) {
+		if len(state.targetNamespaces) != 1 || !utils.Contains(state.targetNamespaces, config.Config.KubesharkResourcesNamespace) {
 			log.Printf("Not supported mode. Kubeshark can't resolve IPs in other namespaces when running in namespace restricted mode.\n"+
 				"You can use the same namespace for --%s and --%s", configStructs.NamespacesTapName, config.KubesharkResourcesNamespaceConfigName)
 			return
@@ -72,7 +72,7 @@ func RunKubesharkTap() {
 	}
 
 	var namespacesStr string
-	if !shared.Contains(state.targetNamespaces, kubernetes.K8sAllNamespaces) {
+	if !utils.Contains(state.targetNamespaces, kubernetes.K8sAllNamespaces) {
 		namespacesStr = fmt.Sprintf("namespaces \"%s\"", strings.Join(state.targetNamespaces, "\", \""))
 	} else {
 		namespacesStr = "all namespaces"
@@ -115,8 +115,8 @@ func finishTapExecution(kubernetesProvider *kubernetes.Provider) {
 	finishKubesharkExecution(kubernetesProvider, config.Config.IsNsRestrictedMode(), config.Config.KubesharkResourcesNamespace)
 }
 
-func getTapKubesharkAgentConfig() *shared.KubesharkAgentConfig {
-	kubesharkAgentConfig := shared.KubesharkAgentConfig{
+func getTapKubesharkAgentConfig() *models.Config {
+	kubesharkAgentConfig := models.Config{
 		MaxDBSizeBytes:              config.Config.Tap.MaxEntriesDBSizeBytes(),
 		InsertionFilter:             config.Config.Tap.GetInsertionFilter(),
 		AgentImage:                  config.Config.AgentImage,
@@ -124,7 +124,7 @@ func getTapKubesharkAgentConfig() *shared.KubesharkAgentConfig {
 		LogLevel:                    config.Config.LogLevel(),
 		TapperResources:             config.Config.Tap.TapperResources,
 		KubesharkResourcesNamespace: config.Config.KubesharkResourcesNamespace,
-		AgentDatabasePath:           shared.DataDirPath,
+		AgentDatabasePath:           models.DataDirPath,
 		ServiceMap:                  config.Config.ServiceMap,
 		OAS:                         config.Config.OAS,
 	}
@@ -211,7 +211,7 @@ func startTapperSyncer(ctx context.Context, cancel context.CancelFunc, provider 
 
 func printNoPodsFoundSuggestion(targetNamespaces []string) {
 	var suggestionStr string
-	if !shared.Contains(targetNamespaces, kubernetes.K8sAllNamespaces) {
+	if !utils.Contains(targetNamespaces, kubernetes.K8sAllNamespaces) {
 		suggestionStr = ". You can also try selecting a different namespace with -n or tap all namespaces with -A"
 	}
 	log.Printf(uiUtils.Warning, fmt.Sprintf("Did not find any currently running pods that match the regex argument, kubeshark will automatically tap matching pods if any are created later%s", suggestionStr))
@@ -444,7 +444,7 @@ func getNamespaces(kubernetesProvider *kubernetes.Provider) []string {
 	if config.Config.Tap.AllNamespaces {
 		return []string{kubernetes.K8sAllNamespaces}
 	} else if len(config.Config.Tap.Namespaces) > 0 {
-		return shared.Unique(config.Config.Tap.Namespaces)
+		return utils.Unique(config.Config.Tap.Namespaces)
 	} else {
 		currentNamespace, err := kubernetesProvider.CurrentNamespace()
 		if err != nil {

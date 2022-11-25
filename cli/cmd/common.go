@@ -17,10 +17,10 @@ import (
 	"github.com/kubeshark/kubeshark/cli/kubeshark/fsUtils"
 	"github.com/kubeshark/kubeshark/cli/resources"
 	"github.com/kubeshark/kubeshark/cli/uiUtils"
-	"github.com/kubeshark/kubeshark/shared"
+	"github.com/kubeshark/worker/models"
 
 	"github.com/kubeshark/kubeshark/cli/config"
-	"github.com/kubeshark/kubeshark/shared/kubernetes"
+	"github.com/kubeshark/kubeshark/cli/kubernetes"
 )
 
 func startProxyReportErrorIfAny(kubernetesProvider *kubernetes.Provider, ctx context.Context, cancel context.CancelFunc, serviceName string, srcPort uint16, dstPort uint16, healthCheck string) {
@@ -109,7 +109,7 @@ func dumpLogsIfNeeded(ctx context.Context, kubernetesProvider *kubernetes.Provid
 	}
 }
 
-func getSerializedKubesharkAgentConfig(kubesharkAgentConfig *shared.KubesharkAgentConfig) (string, error) {
+func getSerializedKubesharkAgentConfig(kubesharkAgentConfig *models.Config) (string, error) {
 	serializedConfig, err := json.Marshal(kubesharkAgentConfig)
 	if err != nil {
 		return "", err

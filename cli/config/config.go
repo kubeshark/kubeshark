@@ -10,10 +10,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/kubeshark/kubeshark/shared"
-
 	"github.com/creasty/defaults"
 	"github.com/kubeshark/kubeshark/cli/uiUtils"
+	"github.com/kubeshark/kubeshark/cli/utils"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"gopkg.in/yaml.v3"
@@ -122,7 +121,7 @@ func initFlag(f *pflag.Flag) {
 	configElemValue := reflect.ValueOf(&Config).Elem()
 
 	var flagPath []string
-	if shared.Contains([]string{ConfigFilePathCommandName}, f.Name) {
+	if utils.Contains([]string{ConfigFilePathCommandName}, f.Name) {
 		flagPath = []string{f.Name}
 	} else {
 		flagPath = []string{cmdName, f.Name}
