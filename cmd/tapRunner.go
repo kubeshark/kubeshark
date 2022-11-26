@@ -9,6 +9,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/kubeshark/kubeshark/internal/connect"
 	"github.com/kubeshark/kubeshark/resources"
 	"github.com/kubeshark/kubeshark/utils"
 
@@ -16,7 +17,6 @@ import (
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/kubeshark/kubeshark/apiserver"
 	"github.com/kubeshark/kubeshark/cmd/goUtils"
 	"github.com/kubeshark/kubeshark/config"
 	"github.com/kubeshark/kubeshark/config/configStructs"
@@ -35,7 +35,7 @@ type tapState struct {
 }
 
 var state tapState
-var apiProvider *apiserver.Provider
+var connector *connect.Connector
 var apiServerPodReady bool
 var frontPodReady bool
 var proxyDone bool
@@ -43,7 +43,7 @@ var proxyDone bool
 func RunKubesharkTap() {
 	state.startTime = time.Now()
 
-	apiProvider = apiserver.NewProvider(kubernetes.GetLocalhostOnPort(config.Config.Hub.PortForward.SrcPort), apiserver.DefaultRetries, apiserver.DefaultTimeout)
+	connector = connect.NewProvider(kubernetes.GetLocalhostOnPort(config.Config.Hub.PortForward.SrcPort), connect.DefaultRetries, connect.DefaultTimeout)
 
 	kubernetesProvider, err := getKubernetesProviderForCli()
 	if err != nil {

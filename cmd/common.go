@@ -10,9 +10,9 @@ import (
 	"regexp"
 	"time"
 
-	"github.com/kubeshark/kubeshark/apiserver"
 	"github.com/kubeshark/kubeshark/config/configStructs"
 	"github.com/kubeshark/kubeshark/errormessage"
+	"github.com/kubeshark/kubeshark/internal/connect"
 	"github.com/kubeshark/kubeshark/kubeshark"
 	"github.com/kubeshark/kubeshark/kubeshark/fsUtils"
 	"github.com/kubeshark/kubeshark/resources"
@@ -32,8 +32,8 @@ func startProxyReportErrorIfAny(kubernetesProvider *kubernetes.Provider, ctx con
 		return
 	}
 
-	provider := apiserver.NewProvider(kubernetes.GetLocalhostOnPort(srcPort), apiserver.DefaultRetries, apiserver.DefaultTimeout)
-	if err := provider.TestConnection(healthCheck); err != nil {
+	connector := connect.NewConnector(kubernetes.GetLocalhostOnPort(srcPort), connect.DefaultRetries, connect.DefaultTimeout)
+	if err := connector.TestConnection(healthCheck); err != nil {
 		log.Printf("Couldn't connect using proxy, stopping proxy and trying to create port-forward")
 		if err := httpServer.Shutdown(ctx); err != nil {
 			log.Printf("Error occurred while stopping proxy %v", errormessage.FormatError(err))
@@ -47,8 +47,8 @@ func startProxyReportErrorIfAny(kubernetesProvider *kubernetes.Provider, ctx con
 			return
 		}
 
-		provider = apiserver.NewProvider(kubernetes.GetLocalhostOnPort(srcPort), apiserver.DefaultRetries, apiserver.DefaultTimeout)
-		if err := provider.TestConnection(healthCheck); err != nil {
+		connector = connect.NewConnector(kubernetes.GetLocalhostOnPort(srcPort), connect.DefaultRetries, connect.DefaultTimeout)
+		if err := connector.TestConnection(healthCheck); err != nil {
 			log.Printf(utils.Error, fmt.Sprintf("Couldn't connect to [%s].", serviceName))
 			cancel()
 			return

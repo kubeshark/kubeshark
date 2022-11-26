@@ -6,8 +6,8 @@ import (
 	"log"
 	"regexp"
 
-	"github.com/kubeshark/kubeshark/apiserver"
 	"github.com/kubeshark/kubeshark/config"
+	"github.com/kubeshark/kubeshark/internal/connect"
 	"github.com/kubeshark/kubeshark/kubernetes"
 	"github.com/kubeshark/kubeshark/utils"
 )
@@ -17,8 +17,8 @@ func ServerConnection(kubernetesProvider *kubernetes.Provider) bool {
 
 	serverUrl := kubernetes.GetLocalhostOnPort(config.Config.Hub.PortForward.SrcPort)
 
-	apiServerProvider := apiserver.NewProvider(serverUrl, 1, apiserver.DefaultTimeout)
-	if err := apiServerProvider.TestConnection(""); err == nil {
+	connector := connect.NewConnector(serverUrl, 1, connect.DefaultTimeout)
+	if err := connector.TestConnection(""); err == nil {
 		log.Printf("%v found Kubeshark server tunnel available and connected successfully to API server", fmt.Sprintf(utils.Green, "√"))
 		return true
 	}
@@ -51,8 +51,8 @@ func checkProxy(serverUrl string, kubernetesProvider *kubernetes.Provider) error
 		return err
 	}
 
-	apiServerProvider := apiserver.NewProvider(serverUrl, apiserver.DefaultRetries, apiserver.DefaultTimeout)
-	if err := apiServerProvider.TestConnection(""); err != nil {
+	connector := connect.NewConnector(serverUrl, connect.DefaultRetries, connect.DefaultTimeout)
+	if err := connector.TestConnection(""); err != nil {
 		return err
 	}
 
@@ -73,8 +73,8 @@ func checkPortForward(serverUrl string, kubernetesProvider *kubernetes.Provider)
 		return err
 	}
 
-	apiServerProvider := apiserver.NewProvider(serverUrl, apiserver.DefaultRetries, apiserver.DefaultTimeout)
-	if err := apiServerProvider.TestConnection(""); err != nil {
+	connector := connect.NewConnector(serverUrl, connect.DefaultRetries, connect.DefaultTimeout)
+	if err := connector.TestConnection(""); err != nil {
 		return err
 	}
 

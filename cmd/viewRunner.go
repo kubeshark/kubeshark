@@ -6,9 +6,9 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/kubeshark/kubeshark/internal/connect"
 	"github.com/kubeshark/kubeshark/utils"
 
-	"github.com/kubeshark/kubeshark/apiserver"
 	"github.com/kubeshark/kubeshark/config"
 	"github.com/kubeshark/kubeshark/kubernetes"
 )
@@ -48,8 +48,8 @@ func runKubesharkView() {
 		startProxyReportErrorIfAny(kubernetesProvider, ctx, cancel, kubernetes.FrontServiceName, config.Config.Front.PortForward.SrcPort, config.Config.Front.PortForward.DstPort, "")
 	}
 
-	apiServerProvider := apiserver.NewProvider(url, apiserver.DefaultRetries, apiserver.DefaultTimeout)
-	if err := apiServerProvider.TestConnection(""); err != nil {
+	connector := connect.NewConnector(url, connect.DefaultRetries, connect.DefaultTimeout)
+	if err := connector.TestConnection(""); err != nil {
 		log.Printf(utils.Error, "Couldn't connect to API server.")
 		return
 	}

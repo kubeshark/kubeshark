@@ -1,4 +1,4 @@
-package apiserver
+package connect
 
 import (
 	"bytes"
@@ -15,7 +15,7 @@ import (
 	core "k8s.io/api/core/v1"
 )
 
-type Provider struct {
+type Connector struct {
 	url     string
 	retries int
 	client  *http.Client
@@ -24,8 +24,8 @@ type Provider struct {
 const DefaultRetries = 3
 const DefaultTimeout = 2 * time.Second
 
-func NewProvider(url string, retries int, timeout time.Duration) *Provider {
-	return &Provider{
+func NewConnector(url string, retries int, timeout time.Duration) *Connector {
+	return &Connector{
 		url:     url,
 		retries: config.GetIntEnvConfig(config.ApiServerRetries, retries),
 		client: &http.Client{
@@ -34,10 +34,10 @@ func NewProvider(url string, retries int, timeout time.Duration) *Provider {
 	}
 }
 
-func (provider *Provider) TestConnection(path string) error {
-	retriesLeft := provider.retries
+func (connector *Connector) TestConnection(path string) error {
+	retriesLeft := connector.retries
 	for retriesLeft > 0 {
-		if isReachable, err := provider.isReachable(path); err != nil || !isReachable {
+		if isReachable, err := connector.isReachable(path); err != nil || !isReachable {
 			log.Printf("api server not ready yet %v", err)
 		} else {
 			log.Printf("connection test to api server passed successfully")
@@ -48,27 +48,27 @@ func (provider *Provider) TestConnection(path string) error {
 	}
 
 	if retriesLeft == 0 {
-		return fmt.Errorf("couldn't reach the api server after %v retries", provider.retries)
+		return fmt.Errorf("couldn't reach the api server after %v retries", connector.retries)
 	}
 	return nil
 }
 
-func (provider *Provider) isReachable(path string) (bool, error) {
-	targetUrl := fmt.Sprintf("%s%s", provider.url, path)
-	if _, err := utils.Get(targetUrl, provider.client); err != nil {
+func (connector *Connector) isReachable(path string) (bool, error) {
+	targetUrl := fmt.Sprintf("%s%s", connector.url, path)
+	if _, err := utils.Get(targetUrl, connector.client); err != nil {
 		return false, err
 	} else {
 		return true, nil
 	}
 }
 
-func (provider *Provider) ReportTapperStatus(tapperStatus models.TapperStatus) error {
-	tapperStatusUrl := fmt.Sprintf("%s/status/tapperStatus", provider.url)
+func (connector *Connector) ReportTapperStatus(tapperStatus models.TapperStatus) error {
+	tapperStatusUrl := fmt.Sprintf("%s/status/tapperStatus", connector.url)
 
 	if jsonValue, err := json.Marshal(tapperStatus); err != nil {
 		return fmt.Errorf("failed Marshal the tapper status %w", err)
 	} else {
-		if _, err := utils.Post(tapperStatusUrl, "application/json", bytes.NewBuffer(jsonValue), provider.client); err != nil {
+		if _, err := utils.Post(tapperStatusUrl, "application/json", bytes.NewBuffer(jsonValue), connector.client); err != nil {
 			return fmt.Errorf("failed sending to API server the tapped pods %w", err)
 		} else {
 			log.Printf("Reported to server API about tapper status: %v", tapperStatus)
@@ -77,13 +77,13 @@ func (provider *Provider) ReportTapperStatus(tapperStatus models.TapperStatus) e
 	}
 }
 
-func (provider *Provider) ReportTappedPods(pods []core.Pod) error {
-	tappedPodsUrl := fmt.Sprintf("%s/status/tappedPods", provider.url)
+func (connector *Connector) ReportTappedPods(pods []core.Pod) error {
+	tappedPodsUrl := fmt.Sprintf("%s/status/tappedPods", connector.url)
 
 	if jsonValue, err := json.Marshal(pods); err != nil {
 		return fmt.Errorf("failed Marshal the tapped pods %w", err)
 	} else {
-		if _, err := utils.Post(tappedPodsUrl, "application/json", bytes.NewBuffer(jsonValue), provider.client); err != nil {
+		if _, err := utils.Post(tappedPodsUrl, "application/json", bytes.NewBuffer(jsonValue), connector.client); err != nil {
 			return fmt.Errorf("failed sending to API server the tapped pods %w", err)
 		} else {
 			log.Printf("Reported to server API about %d taped pods successfully", len(pods))
