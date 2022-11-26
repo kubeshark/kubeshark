@@ -15,9 +15,9 @@ import (
 )
 
 const (
-	KubesharkResourcesNamespaceConfigName = "kubeshark-resources-namespace"
-	ConfigFilePathCommandName             = "config-path"
-	KubeConfigPathConfigName              = "kube-config-path"
+	ResourcesNamespaceConfigName = "resources-namespace"
+	ConfigFilePathCommandName    = "config-path"
+	KubeConfigPathConfigName     = "kube-config-path"
 )
 
 type PortForward struct {
@@ -54,26 +54,25 @@ func CreateDefaultConfig() ConfigStruct {
 }
 
 type ConfigStruct struct {
-	Hub                         HubConfig                   `yaml:"hub"`
-	Front                       FrontConfig                 `yaml:"front"`
-	Tap                         configStructs.TapConfig     `yaml:"tap"`
-	Check                       configStructs.CheckConfig   `yaml:"check"`
-	Install                     configStructs.InstallConfig `yaml:"install"`
-	Version                     configStructs.VersionConfig `yaml:"version"`
-	View                        configStructs.ViewConfig    `yaml:"view"`
-	Logs                        configStructs.LogsConfig    `yaml:"logs"`
-	Config                      configStructs.ConfigConfig  `yaml:"config,omitempty"`
-	AgentImage                  string                      `yaml:"agent-image,omitempty" readonly:""`
-	ImagePullPolicyStr          string                      `yaml:"image-pull-policy" default:"Always"`
-	KubesharkResourcesNamespace string                      `yaml:"kubeshark-resources-namespace" default:"kubeshark"`
-	DumpLogs                    bool                        `yaml:"dump-logs" default:"false"`
-	KubeConfigPathStr           string                      `yaml:"kube-config-path"`
-	KubeContext                 string                      `yaml:"kube-context"`
-	ConfigFilePath              string                      `yaml:"config-path,omitempty" readonly:""`
-	HeadlessMode                bool                        `yaml:"headless" default:"false"`
-	LogLevelStr                 string                      `yaml:"log-level,omitempty" default:"INFO" readonly:""`
-	ServiceMap                  bool                        `yaml:"service-map" default:"true"`
-	OAS                         models.OASConfig            `yaml:"oas"`
+	Hub                HubConfig                   `yaml:"hub"`
+	Front              FrontConfig                 `yaml:"front"`
+	Tap                configStructs.TapConfig     `yaml:"tap"`
+	Check              configStructs.CheckConfig   `yaml:"check"`
+	Install            configStructs.InstallConfig `yaml:"install"`
+	Version            configStructs.VersionConfig `yaml:"version"`
+	View               configStructs.ViewConfig    `yaml:"view"`
+	Logs               configStructs.LogsConfig    `yaml:"logs"`
+	Config             configStructs.ConfigConfig  `yaml:"config,omitempty"`
+	ImagePullPolicyStr string                      `yaml:"image-pull-policy" default:"Always"`
+	ResourcesNamespace string                      `yaml:"resources-namespace" default:"kubeshark"`
+	DumpLogs           bool                        `yaml:"dump-logs" default:"false"`
+	KubeConfigPathStr  string                      `yaml:"kube-config-path"`
+	KubeContext        string                      `yaml:"kube-context"`
+	ConfigFilePath     string                      `yaml:"config-path,omitempty" readonly:""`
+	HeadlessMode       bool                        `yaml:"headless" default:"false"`
+	LogLevelStr        string                      `yaml:"log-level,omitempty" default:"INFO" readonly:""`
+	ServiceMap         bool                        `yaml:"service-map" default:"true"`
+	OAS                models.OASConfig            `yaml:"oas"`
 }
 
 func (config *ConfigStruct) validate() error {
@@ -85,7 +84,6 @@ func (config *ConfigStruct) validate() error {
 }
 
 func (config *ConfigStruct) SetDefaults() {
-	config.AgentImage = "kubeshark/hub:latest"
 	config.ConfigFilePath = path.Join(kubeshark.GetKubesharkFolderPath(), "config.yaml")
 }
 
@@ -94,7 +92,7 @@ func (config *ConfigStruct) ImagePullPolicy() v1.PullPolicy {
 }
 
 func (config *ConfigStruct) IsNsRestrictedMode() bool {
-	return config.KubesharkResourcesNamespace != "kubeshark" // Notice "kubeshark" string must match the default KubesharkResourcesNamespace
+	return config.ResourcesNamespace != "kubeshark" // Notice "kubeshark" string must match the default KubesharkResourcesNamespace
 }
 
 func (config *ConfigStruct) KubeConfigPath() string {

@@ -55,17 +55,17 @@ func RunKubesharkTap() {
 
 	state.targetNamespaces = getNamespaces(kubernetesProvider)
 
-	kubesharkAgentConfig := getTapKubesharkAgentConfig()
-	serializedKubesharkConfig, err := getSerializedKubesharkAgentConfig(kubesharkAgentConfig)
+	conf := getTapConfig()
+	serializedKubesharkConfig, err := getSerializedTapConfig(conf)
 	if err != nil {
 		log.Printf(utils.Error, fmt.Sprintf("Error serializing kubeshark config: %v", errormessage.FormatError(err)))
 		return
 	}
 
 	if config.Config.IsNsRestrictedMode() {
-		if len(state.targetNamespaces) != 1 || !utils.Contains(state.targetNamespaces, config.Config.KubesharkResourcesNamespace) {
+		if len(state.targetNamespaces) != 1 || !utils.Contains(state.targetNamespaces, config.Config.ResourcesNamespace) {
 			log.Printf("Not supported mode. Kubeshark can't resolve IPs in other namespaces when running in namespace restricted mode.\n"+
-				"You can use the same namespace for --%s and --%s", configStructs.NamespacesTapName, config.KubesharkResourcesNamespaceConfigName)
+				"You can use the same namespace for --%s and --%s", configStructs.NamespacesTapName, config.ResourcesNamespaceConfigName)
 			return
 		}
 	}
@@ -87,13 +87,13 @@ func RunKubesharkTap() {
 		return
 	}
 
-	log.Printf("Waiting for Kubeshark Agent to start...")
-	if state.kubesharkServiceAccountExists, err = resources.CreateTapKubesharkResources(ctx, kubernetesProvider, serializedKubesharkConfig, config.Config.IsNsRestrictedMode(), config.Config.KubesharkResourcesNamespace, config.Config.AgentImage, config.Config.Tap.MaxEntriesDBSizeBytes(), config.Config.Tap.HubResources, config.Config.ImagePullPolicy(), config.Config.LogLevel(), config.Config.Tap.Profiler); err != nil {
+	log.Printf("Waiting for Kubeshark deployment to finish...")
+	if state.kubesharkServiceAccountExists, err = resources.CreateTapKubesharkResources(ctx, kubernetesProvider, serializedKubesharkConfig, config.Config.IsNsRestrictedMode(), config.Config.ResourcesNamespace, config.Config.Tap.MaxEntriesDBSizeBytes(), config.Config.Tap.HubResources, config.Config.ImagePullPolicy(), config.Config.LogLevel(), config.Config.Tap.Profiler); err != nil {
 		var statusError *k8serrors.StatusError
 		if errors.As(err, &statusError) && (statusError.ErrStatus.Reason == metav1.StatusReasonAlreadyExists) {
 			log.Print("Kubeshark is already running in this namespace, change the `kubeshark-resources-namespace` configuration or run `kubeshark clean` to remove the currently running Kubeshark instance")
 		} else {
-			defer resources.CleanUpKubesharkResources(ctx, cancel, kubernetesProvider, config.Config.IsNsRestrictedMode(), config.Config.KubesharkResourcesNamespace)
+			defer resources.CleanUpKubesharkResources(ctx, cancel, kubernetesProvider, config.Config.IsNsRestrictedMode(), config.Config.ResourcesNamespace)
 			log.Printf(utils.Error, fmt.Sprintf("Error creating resources: %v", errormessage.FormatError(err)))
 		}
 
@@ -111,24 +111,23 @@ func RunKubesharkTap() {
 }
 
 func finishTapExecution(kubernetesProvider *kubernetes.Provider) {
-	finishKubesharkExecution(kubernetesProvider, config.Config.IsNsRestrictedMode(), config.Config.KubesharkResourcesNamespace)
+	finishKubesharkExecution(kubernetesProvider, config.Config.IsNsRestrictedMode(), config.Config.ResourcesNamespace)
 }
 
-func getTapKubesharkAgentConfig() *models.Config {
-	kubesharkAgentConfig := models.Config{
+func getTapConfig() *models.Config {
+	conf := models.Config{
 		MaxDBSizeBytes:              config.Config.Tap.MaxEntriesDBSizeBytes(),
 		InsertionFilter:             config.Config.Tap.GetInsertionFilter(),
-		AgentImage:                  config.Config.AgentImage,
 		PullPolicy:                  config.Config.ImagePullPolicyStr,
 		LogLevel:                    config.Config.LogLevel(),
 		TapperResources:             config.Config.Tap.TapperResources,
-		KubesharkResourcesNamespace: config.Config.KubesharkResourcesNamespace,
+		KubesharkResourcesNamespace: config.Config.ResourcesNamespace,
 		AgentDatabasePath:           models.DataDirPath,
 		ServiceMap:                  config.Config.ServiceMap,
 		OAS:                         config.Config.OAS,
 	}
 
-	return &kubesharkAgentConfig
+	return &conf
 }
 
 /*
@@ -154,8 +153,7 @@ func startTapperSyncer(ctx context.Context, cancel context.CancelFunc, provider 
 	tapperSyncer, err := kubernetes.CreateAndStartKubesharkTapperSyncer(ctx, provider, kubernetes.TapperSyncerConfig{
 		TargetNamespaces:            targetNamespaces,
 		PodFilterRegex:              *config.Config.Tap.PodRegex(),
-		KubesharkResourcesNamespace: config.Config.KubesharkResourcesNamespace,
-		AgentImage:                  config.Config.AgentImage,
+		KubesharkResourcesNamespace: config.Config.ResourcesNamespace,
 		TapperResources:             config.Config.Tap.TapperResources,
 		ImagePullPolicy:             config.Config.ImagePullPolicy(),
 		LogLevel:                    config.Config.LogLevel(),
@@ -232,7 +230,7 @@ func getErrorDisplayTextForK8sTapManagerError(err kubernetes.K8sTapManagerError)
 func watchHubPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc) {
 	podExactRegex := regexp.MustCompile(fmt.Sprintf("^%s$", kubernetes.HubPodName))
 	podWatchHelper := kubernetes.NewPodWatchHelper(kubernetesProvider, podExactRegex)
-	eventChan, errorChan := kubernetes.FilteredWatch(ctx, podWatchHelper, []string{config.Config.KubesharkResourcesNamespace}, podWatchHelper)
+	eventChan, errorChan := kubernetes.FilteredWatch(ctx, podWatchHelper, []string{config.Config.ResourcesNamespace}, podWatchHelper)
 	isPodReady := false
 
 	hubTimeoutSec := config.GetIntEnvConfig(config.HubTimeoutSec, 120)
@@ -283,7 +281,7 @@ func watchHubPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, c
 				continue
 			}
 
-			log.Printf("[ERROR] Agent creation, watching %v namespace, error: %v", config.Config.KubesharkResourcesNamespace, err)
+			log.Printf("[ERROR] Hub pod creation, watching %v namespace, error: %v", config.Config.ResourcesNamespace, err)
 			cancel()
 
 		case <-timeAfter:
@@ -301,7 +299,7 @@ func watchHubPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, c
 func watchFrontPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc) {
 	podExactRegex := regexp.MustCompile(fmt.Sprintf("^%s$", kubernetes.FrontPodName))
 	podWatchHelper := kubernetes.NewPodWatchHelper(kubernetesProvider, podExactRegex)
-	eventChan, errorChan := kubernetes.FilteredWatch(ctx, podWatchHelper, []string{config.Config.KubesharkResourcesNamespace}, podWatchHelper)
+	eventChan, errorChan := kubernetes.FilteredWatch(ctx, podWatchHelper, []string{config.Config.ResourcesNamespace}, podWatchHelper)
 	isPodReady := false
 
 	hubTimeoutSec := config.GetIntEnvConfig(config.HubTimeoutSec, 120)
@@ -351,7 +349,7 @@ func watchFrontPod(ctx context.Context, kubernetesProvider *kubernetes.Provider,
 				continue
 			}
 
-			log.Printf("[ERROR] Agent creation, watching %v namespace, error: %v", config.Config.KubesharkResourcesNamespace, err)
+			log.Printf("[ERROR] Front pod creation, watching %v namespace, error: %v", config.Config.ResourcesNamespace, err)
 			cancel()
 
 		case <-timeAfter:
@@ -360,7 +358,7 @@ func watchFrontPod(ctx context.Context, kubernetesProvider *kubernetes.Provider,
 				cancel()
 			}
 		case <-ctx.Done():
-			log.Printf("Watching Hub pod loop, ctx done")
+			log.Printf("Watching Front pod loop, ctx done")
 			return
 		}
 	}
@@ -369,7 +367,7 @@ func watchFrontPod(ctx context.Context, kubernetesProvider *kubernetes.Provider,
 func watchHubEvents(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc) {
 	podExactRegex := regexp.MustCompile(fmt.Sprintf("^%s", kubernetes.HubPodName))
 	eventWatchHelper := kubernetes.NewEventWatchHelper(kubernetesProvider, podExactRegex, "pod")
-	eventChan, errorChan := kubernetes.FilteredWatch(ctx, eventWatchHelper, []string{config.Config.KubesharkResourcesNamespace}, eventWatchHelper)
+	eventChan, errorChan := kubernetes.FilteredWatch(ctx, eventWatchHelper, []string{config.Config.ResourcesNamespace}, eventWatchHelper)
 	for {
 		select {
 		case wEvent, ok := <-eventChan:

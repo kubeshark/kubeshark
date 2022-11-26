@@ -85,7 +85,7 @@ func NewProvider(kubeConfigPath string, contextName string) (*Provider, error) {
 		kubernetesConfig: kubernetesConfig,
 		clientConfig:     *restClientConfig,
 		managedBy:        LabelValueKubeshark,
-		createdBy:        LabelValueKubesharkCLI,
+		createdBy:        LabelValueKubeshark,
 	}, nil
 }
 
@@ -105,7 +105,7 @@ func NewProviderInCluster() (*Provider, error) {
 		kubernetesConfig: nil, // not relevant in cluster
 		clientConfig:     *restClientConfig,
 		managedBy:        LabelValueKubeshark,
-		createdBy:        LabelValueKubesharkAgent,
+		createdBy:        LabelValueKubeshark,
 	}, nil
 }
 
@@ -838,10 +838,10 @@ func (provider *Provider) ApplyKubesharkTapperDaemonSet(ctx context.Context, nam
 		kubesharkCmd = append(kubesharkCmd, "--procfs", procfsMountPath)
 	}
 
-	agentContainer := applyconfcore.Container()
-	agentContainer.WithName(tapperPodName)
-	agentContainer.WithImage(podImage)
-	agentContainer.WithImagePullPolicy(imagePullPolicy)
+	workerContainer := applyconfcore.Container()
+	workerContainer.WithName(tapperPodName)
+	workerContainer.WithImage(podImage)
+	workerContainer.WithImagePullPolicy(imagePullPolicy)
 
 	caps := applyconfcore.Capabilities().WithDrop("ALL")
 
@@ -860,15 +860,15 @@ func (provider *Provider) ApplyKubesharkTapperDaemonSet(ctx context.Context, nam
 		}
 	}
 
-	agentContainer.WithSecurityContext(applyconfcore.SecurityContext().WithCapabilities(caps))
+	workerContainer.WithSecurityContext(applyconfcore.SecurityContext().WithCapabilities(caps))
 
-	agentContainer.WithCommand(kubesharkCmd...)
-	agentContainer.WithEnv(
+	workerContainer.WithCommand(kubesharkCmd...)
+	workerContainer.WithEnv(
 		applyconfcore.EnvVar().WithName(utils.LogLevelEnvVar).WithValue(logLevel.String()),
 		applyconfcore.EnvVar().WithName(utils.HostModeEnvVar).WithValue("1"),
 		applyconfcore.EnvVar().WithName(utils.KubesharkFilteringOptionsEnvVar).WithValue(string(kubesharkApiFilteringOptionsJsonStr)),
 	)
-	agentContainer.WithEnv(
+	workerContainer.WithEnv(
 		applyconfcore.EnvVar().WithName(utils.NodeNameEnvVar).WithValueFrom(
 			applyconfcore.EnvVarSource().WithFieldRef(
 				applyconfcore.ObjectFieldSelector().WithAPIVersion("v1").WithFieldPath("spec.nodeName"),
@@ -891,16 +891,16 @@ func (provider *Provider) ApplyKubesharkTapperDaemonSet(ctx context.Context, nam
 	if err != nil {
 		return fmt.Errorf("invalid memory request for %s container", tapperPodName)
 	}
-	agentResourceLimits := core.ResourceList{
+	workerResourceLimits := core.ResourceList{
 		"cpu":    cpuLimit,
 		"memory": memLimit,
 	}
-	agentResourceRequests := core.ResourceList{
+	workerResourceRequests := core.ResourceList{
 		"cpu":    cpuRequests,
 		"memory": memRequests,
 	}
-	agentResources := applyconfcore.ResourceRequirements().WithRequests(agentResourceRequests).WithLimits(agentResourceLimits)
-	agentContainer.WithResources(agentResources)
+	workerResources := applyconfcore.ResourceRequirements().WithRequests(workerResourceRequests).WithLimits(workerResourceLimits)
+	workerContainer.WithResources(workerResources)
 
 	matchFields := make([]*applyconfcore.NodeSelectorTermApplyConfiguration, 0)
 	for _, nodeName := range nodeNames {
@@ -934,14 +934,14 @@ func (provider *Provider) ApplyKubesharkTapperDaemonSet(ctx context.Context, nam
 	procfsVolume := applyconfcore.Volume()
 	procfsVolume.WithName(procfsVolumeName).WithHostPath(applyconfcore.HostPathVolumeSource().WithPath("/proc"))
 	procfsVolumeMount := applyconfcore.VolumeMount().WithName(procfsVolumeName).WithMountPath(procfsMountPath).WithReadOnly(true)
-	agentContainer.WithVolumeMounts(procfsVolumeMount)
+	workerContainer.WithVolumeMounts(procfsVolumeMount)
 
 	// We need access to /sys in order to install certain eBPF tracepoints
 	//
 	sysfsVolume := applyconfcore.Volume()
 	sysfsVolume.WithName(sysfsVolumeName).WithHostPath(applyconfcore.HostPathVolumeSource().WithPath("/sys"))
 	sysfsVolumeMount := applyconfcore.VolumeMount().WithName(sysfsVolumeName).WithMountPath(sysfsMountPath).WithReadOnly(true)
-	agentContainer.WithVolumeMounts(sysfsVolumeMount)
+	workerContainer.WithVolumeMounts(sysfsVolumeMount)
 
 	podSpec := applyconfcore.PodSpec()
 	podSpec.WithHostNetwork(true)
@@ -950,7 +950,7 @@ func (provider *Provider) ApplyKubesharkTapperDaemonSet(ctx context.Context, nam
 	if serviceAccountName != "" {
 		podSpec.WithServiceAccountName(serviceAccountName)
 	}
-	podSpec.WithContainers(agentContainer)
+	podSpec.WithContainers(workerContainer)
 	podSpec.WithAffinity(affinity)
 	podSpec.WithTolerations(noExecuteToleration, noScheduleToleration)
 	podSpec.WithVolumes(procfsVolume, sysfsVolume)
@@ -984,9 +984,9 @@ func (provider *Provider) ApplyKubesharkTapperDaemonSet(ctx context.Context, nam
 }
 
 func (provider *Provider) ResetKubesharkTapperDaemonSet(ctx context.Context, namespace string, daemonSetName string, podImage string, tapperPodName string) error {
-	agentContainer := applyconfcore.Container()
-	agentContainer.WithName(tapperPodName)
-	agentContainer.WithImage(podImage)
+	workerContainer := applyconfcore.Container()
+	workerContainer.WithName(tapperPodName)
+	workerContainer.WithImage(podImage)
 
 	nodeSelectorRequirement := applyconfcore.NodeSelectorRequirement()
 	nodeSelectorRequirement.WithKey("kubeshark-non-existing-label")
@@ -1001,7 +1001,7 @@ func (provider *Provider) ResetKubesharkTapperDaemonSet(ctx context.Context, nam
 	affinity.WithNodeAffinity(nodeAffinity)
 
 	podSpec := applyconfcore.PodSpec()
-	podSpec.WithContainers(agentContainer)
+	podSpec.WithContainers(workerContainer)
 	podSpec.WithAffinity(affinity)
 
 	podTemplate := applyconfcore.PodTemplateSpec()

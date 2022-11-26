@@ -41,7 +41,7 @@ func TapKubernetesPermissions(ctx context.Context, embedFS embed.FS, kubernetesP
 
 	switch resource := obj.(type) {
 	case *rbac.Role:
-		return checkRulesPermissions(ctx, kubernetesProvider, resource.Rules, config.Config.KubesharkResourcesNamespace)
+		return checkRulesPermissions(ctx, kubernetesProvider, resource.Rules, config.Config.ResourcesNamespace)
 	case *rbac.ClusterRole:
 		return checkRulesPermissions(ctx, kubernetesProvider, resource.Rules, "")
 	}

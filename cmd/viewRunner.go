@@ -25,7 +25,7 @@ func runKubesharkView() {
 	url := config.Config.View.Url
 
 	if url == "" {
-		exists, err := kubernetesProvider.DoesServiceExist(ctx, config.Config.KubesharkResourcesNamespace, kubernetes.HubServiceName)
+		exists, err := kubernetesProvider.DoesServiceExist(ctx, config.Config.ResourcesNamespace, kubernetes.HubServiceName)
 		if err != nil {
 			log.Printf("Failed to found kubeshark service %v", err)
 			cancel()

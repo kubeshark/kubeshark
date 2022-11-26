@@ -15,7 +15,7 @@ import (
 	core "k8s.io/api/core/v1"
 )
 
-func CreateTapKubesharkResources(ctx context.Context, kubernetesProvider *kubernetes.Provider, serializedKubesharkConfig string, isNsRestrictedMode bool, kubesharkResourcesNamespace string, agentImage string, maxEntriesDBSizeBytes int64, hubResources models.Resources, imagePullPolicy core.PullPolicy, logLevel logging.Level, profiler bool) (bool, error) {
+func CreateTapKubesharkResources(ctx context.Context, kubernetesProvider *kubernetes.Provider, serializedKubesharkConfig string, isNsRestrictedMode bool, kubesharkResourcesNamespace string, maxEntriesDBSizeBytes int64, hubResources models.Resources, imagePullPolicy core.PullPolicy, logLevel logging.Level, profiler bool) (bool, error) {
 	if !isNsRestrictedMode {
 		if err := createKubesharkNamespace(ctx, kubernetesProvider, kubesharkResourcesNamespace); err != nil {
 			return false, err
@@ -41,7 +41,7 @@ func CreateTapKubesharkResources(ctx context.Context, kubernetesProvider *kubern
 	opts := &kubernetes.HubOptions{
 		Namespace:             kubesharkResourcesNamespace,
 		PodName:               kubernetes.HubPodName,
-		PodImage:              agentImage,
+		PodImage:              "kubeshark/hub:latest",
 		KratosImage:           "",
 		KetoImage:             "",
 		ServiceAccountName:    serviceAccountName,
@@ -56,7 +56,7 @@ func CreateTapKubesharkResources(ctx context.Context, kubernetesProvider *kubern
 	frontOpts := &kubernetes.HubOptions{
 		Namespace:             kubesharkResourcesNamespace,
 		PodName:               kubernetes.FrontPodName,
-		PodImage:              agentImage,
+		PodImage:              "kubeshark/worker:latest",
 		KratosImage:           "",
 		KetoImage:             "",
 		ServiceAccountName:    serviceAccountName,

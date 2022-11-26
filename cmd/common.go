@@ -24,7 +24,7 @@ import (
 )
 
 func startProxyReportErrorIfAny(kubernetesProvider *kubernetes.Provider, ctx context.Context, cancel context.CancelFunc, serviceName string, srcPort uint16, dstPort uint16, healthCheck string) {
-	httpServer, err := kubernetes.StartProxy(kubernetesProvider, config.Config.Tap.ProxyHost, srcPort, dstPort, config.Config.KubesharkResourcesNamespace, serviceName, cancel)
+	httpServer, err := kubernetes.StartProxy(kubernetesProvider, config.Config.Tap.ProxyHost, srcPort, dstPort, config.Config.ResourcesNamespace, serviceName, cancel)
 	if err != nil {
 		log.Printf(utils.Error, fmt.Sprintf("Error occured while running k8s proxy %v\n"+
 			"Try setting different port by using --%s", errormessage.FormatError(err), configStructs.GuiPortTapName))
@@ -40,7 +40,7 @@ func startProxyReportErrorIfAny(kubernetesProvider *kubernetes.Provider, ctx con
 		}
 
 		podRegex, _ := regexp.Compile(kubernetes.HubPodName)
-		if _, err := kubernetes.NewPortForward(kubernetesProvider, config.Config.KubesharkResourcesNamespace, podRegex, srcPort, dstPort, ctx, cancel); err != nil {
+		if _, err := kubernetes.NewPortForward(kubernetesProvider, config.Config.ResourcesNamespace, podRegex, srcPort, dstPort, ctx, cancel); err != nil {
 			log.Printf(utils.Error, fmt.Sprintf("Error occured while running port forward [%s] %v\n"+
 				"Try setting different port by using --%s", podRegex, errormessage.FormatError(err), configStructs.GuiPortTapName))
 			cancel()
@@ -109,8 +109,8 @@ func dumpLogsIfNeeded(ctx context.Context, kubernetesProvider *kubernetes.Provid
 	}
 }
 
-func getSerializedKubesharkAgentConfig(kubesharkAgentConfig *models.Config) (string, error) {
-	serializedConfig, err := json.Marshal(kubesharkAgentConfig)
+func getSerializedTapConfig(conf *models.Config) (string, error) {
+	serializedConfig, err := json.Marshal(conf)
 	if err != nil {
 		return "", err
 	}

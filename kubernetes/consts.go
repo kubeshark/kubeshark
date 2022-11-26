@@ -19,10 +19,8 @@ const (
 )
 
 const (
-	LabelPrefixApp           = "app.kubernetes.io/"
-	LabelManagedBy           = LabelPrefixApp + "managed-by"
-	LabelCreatedBy           = LabelPrefixApp + "created-by"
-	LabelValueKubeshark      = "kubeshark"
-	LabelValueKubesharkCLI   = "kubeshark-cli"
-	LabelValueKubesharkAgent = "kubeshark-agent"
+	LabelPrefixApp      = "app.kubernetes.io/"
+	LabelManagedBy      = LabelPrefixApp + "managed-by"
+	LabelCreatedBy      = LabelPrefixApp + "created-by"
+	LabelValueKubeshark = "kubeshark"
 )

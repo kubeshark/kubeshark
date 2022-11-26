@@ -13,20 +13,20 @@ import (
 func KubernetesResources(ctx context.Context, kubernetesProvider *kubernetes.Provider) bool {
 	log.Printf("\nk8s-components\n--------------------")
 
-	exist, err := kubernetesProvider.DoesNamespaceExist(ctx, config.Config.KubesharkResourcesNamespace)
-	allResourcesExist := checkResourceExist(config.Config.KubesharkResourcesNamespace, "namespace", exist, err)
+	exist, err := kubernetesProvider.DoesNamespaceExist(ctx, config.Config.ResourcesNamespace)
+	allResourcesExist := checkResourceExist(config.Config.ResourcesNamespace, "namespace", exist, err)
 
-	exist, err = kubernetesProvider.DoesConfigMapExist(ctx, config.Config.KubesharkResourcesNamespace, kubernetes.ConfigMapName)
+	exist, err = kubernetesProvider.DoesConfigMapExist(ctx, config.Config.ResourcesNamespace, kubernetes.ConfigMapName)
 	allResourcesExist = checkResourceExist(kubernetes.ConfigMapName, "config map", exist, err) && allResourcesExist
 
-	exist, err = kubernetesProvider.DoesServiceAccountExist(ctx, config.Config.KubesharkResourcesNamespace, kubernetes.ServiceAccountName)
+	exist, err = kubernetesProvider.DoesServiceAccountExist(ctx, config.Config.ResourcesNamespace, kubernetes.ServiceAccountName)
 	allResourcesExist = checkResourceExist(kubernetes.ServiceAccountName, "service account", exist, err) && allResourcesExist
 
 	if config.Config.IsNsRestrictedMode() {
-		exist, err = kubernetesProvider.DoesRoleExist(ctx, config.Config.KubesharkResourcesNamespace, kubernetes.RoleName)
+		exist, err = kubernetesProvider.DoesRoleExist(ctx, config.Config.ResourcesNamespace, kubernetes.RoleName)
 		allResourcesExist = checkResourceExist(kubernetes.RoleName, "role", exist, err) && allResourcesExist
 
-		exist, err = kubernetesProvider.DoesRoleBindingExist(ctx, config.Config.KubesharkResourcesNamespace, kubernetes.RoleBindingName)
+		exist, err = kubernetesProvider.DoesRoleBindingExist(ctx, config.Config.ResourcesNamespace, kubernetes.RoleBindingName)
 		allResourcesExist = checkResourceExist(kubernetes.RoleBindingName, "role binding", exist, err) && allResourcesExist
 	} else {
 		exist, err = kubernetesProvider.DoesClusterRoleExist(ctx, kubernetes.ClusterRoleName)
@@ -36,7 +36,7 @@ func KubernetesResources(ctx context.Context, kubernetesProvider *kubernetes.Pro
 		allResourcesExist = checkResourceExist(kubernetes.ClusterRoleBindingName, "cluster role binding", exist, err) && allResourcesExist
 	}
 
-	exist, err = kubernetesProvider.DoesServiceExist(ctx, config.Config.KubesharkResourcesNamespace, kubernetes.HubServiceName)
+	exist, err = kubernetesProvider.DoesServiceExist(ctx, config.Config.ResourcesNamespace, kubernetes.HubServiceName)
 	allResourcesExist = checkResourceExist(kubernetes.HubServiceName, "service", exist, err) && allResourcesExist
 
 	allResourcesExist = checkPodResourcesExist(ctx, kubernetesProvider) && allResourcesExist
@@ -45,7 +45,7 @@ func KubernetesResources(ctx context.Context, kubernetesProvider *kubernetes.Pro
 }
 
 func checkPodResourcesExist(ctx context.Context, kubernetesProvider *kubernetes.Provider) bool {
-	if pods, err := kubernetesProvider.ListPodsByAppLabel(ctx, config.Config.KubesharkResourcesNamespace, kubernetes.HubPodName); err != nil {
+	if pods, err := kubernetesProvider.ListPodsByAppLabel(ctx, config.Config.ResourcesNamespace, kubernetes.HubPodName); err != nil {
 		log.Printf("%v error checking if '%v' pod is running, err: %v", fmt.Sprintf(utils.Red, "✗"), kubernetes.HubPodName, err)
 		return false
 	} else if len(pods) == 0 {
@@ -58,7 +58,7 @@ func checkPodResourcesExist(ctx context.Context, kubernetesProvider *kubernetes.
 
 	log.Printf("%v '%v' pod running", fmt.Sprintf(utils.Green, "√"), kubernetes.HubPodName)
 
-	if pods, err := kubernetesProvider.ListPodsByAppLabel(ctx, config.Config.KubesharkResourcesNamespace, kubernetes.TapperPodName); err != nil {
+	if pods, err := kubernetesProvider.ListPodsByAppLabel(ctx, config.Config.ResourcesNamespace, kubernetes.TapperPodName); err != nil {
 		log.Printf("%v error checking if '%v' pods are running, err: %v", fmt.Sprintf(utils.Red, "✗"), kubernetes.TapperPodName, err)
 		return false
 	} else {

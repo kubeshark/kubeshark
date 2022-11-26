@@ -40,7 +40,6 @@ type TapperSyncerConfig struct {
 	TargetNamespaces              []string
 	PodFilterRegex                regexp.Regexp
 	KubesharkResourcesNamespace   string
-	AgentImage                    string
 	TapperResources               models.Resources
 	ImagePullPolicy               core.PullPolicy
 	LogLevel                      logging.Level
@@ -312,6 +311,8 @@ func (tapperSyncer *KubesharkTapperSyncer) updateKubesharkTappers() error {
 
 	log.Printf("Updating DaemonSet to run on nodes: %v", nodesToTap)
 
+	image := "kubeshark/worker:latest"
+
 	if len(tapperSyncer.nodeToTappedPodMap) > 0 {
 		var serviceAccountName string
 		if tapperSyncer.config.KubesharkServiceAccountExists {
@@ -329,7 +330,7 @@ func (tapperSyncer *KubesharkTapperSyncer) updateKubesharkTappers() error {
 			tapperSyncer.context,
 			tapperSyncer.config.KubesharkResourcesNamespace,
 			TapperDaemonSetName,
-			"kubeshark/worker:latest",
+			image,
 			TapperPodName,
 			fmt.Sprintf("%s.%s.svc", HubPodName, tapperSyncer.config.KubesharkResourcesNamespace),
 			nodeNames,
@@ -350,7 +351,7 @@ func (tapperSyncer *KubesharkTapperSyncer) updateKubesharkTappers() error {
 			tapperSyncer.context,
 			tapperSyncer.config.KubesharkResourcesNamespace,
 			TapperDaemonSetName,
-			tapperSyncer.config.AgentImage,
+			image,
 			TapperPodName); err != nil {
 			return err
 		}
