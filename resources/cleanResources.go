@@ -90,8 +90,8 @@ func waitUntilNamespaceDeleted(ctx context.Context, cancel context.CancelFunc, k
 func cleanUpRestrictedMode(ctx context.Context, kubernetesProvider *kubernetes.Provider, kubesharkResourcesNamespace string) []string {
 	leftoverResources := make([]string, 0)
 
-	if err := kubernetesProvider.RemoveService(ctx, kubesharkResourcesNamespace, kubernetes.ApiServerPodName); err != nil {
-		resourceDesc := fmt.Sprintf("Service %s in namespace %s", kubernetes.ApiServerPodName, kubesharkResourcesNamespace)
+	if err := kubernetesProvider.RemoveService(ctx, kubesharkResourcesNamespace, kubernetes.ApiServerServiceName); err != nil {
+		resourceDesc := fmt.Sprintf("Service %s in namespace %s", kubernetes.ApiServerServiceName, kubesharkResourcesNamespace)
 		handleDeletionError(err, resourceDesc, &leftoverResources)
 	}
 

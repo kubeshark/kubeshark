@@ -46,7 +46,7 @@ func checkProxy(serverUrl string, kubernetesProvider *kubernetes.Provider) error
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	httpServer, err := kubernetes.StartProxy(kubernetesProvider, config.Config.Tap.ProxyHost, config.Config.Hub.PortForward.SrcPort, config.Config.Hub.PortForward.DstPort, config.Config.KubesharkResourcesNamespace, kubernetes.ApiServerPodName, cancel)
+	httpServer, err := kubernetes.StartProxy(kubernetesProvider, config.Config.Tap.ProxyHost, config.Config.Hub.PortForward.SrcPort, config.Config.Hub.PortForward.DstPort, config.Config.KubesharkResourcesNamespace, kubernetes.ApiServerServiceName, cancel)
 	if err != nil {
 		return err
 	}

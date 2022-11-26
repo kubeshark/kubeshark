@@ -36,8 +36,8 @@ func KubernetesResources(ctx context.Context, kubernetesProvider *kubernetes.Pro
 		allResourcesExist = checkResourceExist(kubernetes.ClusterRoleBindingName, "cluster role binding", exist, err) && allResourcesExist
 	}
 
-	exist, err = kubernetesProvider.DoesServiceExist(ctx, config.Config.KubesharkResourcesNamespace, kubernetes.ApiServerPodName)
-	allResourcesExist = checkResourceExist(kubernetes.ApiServerPodName, "service", exist, err) && allResourcesExist
+	exist, err = kubernetesProvider.DoesServiceExist(ctx, config.Config.KubesharkResourcesNamespace, kubernetes.ApiServerServiceName)
+	allResourcesExist = checkResourceExist(kubernetes.ApiServerServiceName, "service", exist, err) && allResourcesExist
 
 	allResourcesExist = checkPodResourcesExist(ctx, kubernetesProvider) && allResourcesExist
 

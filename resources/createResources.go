@@ -76,17 +76,19 @@ func CreateTapKubesharkResources(ctx context.Context, kubernetesProvider *kubern
 		return kubesharkServiceAccountExists, err
 	}
 
-	_, err = kubernetesProvider.CreateService(ctx, kubesharkResourcesNamespace, kubernetes.ApiServerPodName, kubernetes.ApiServerPodName, 80, int32(config.Config.Hub.PortForward.DstPort), int32(config.Config.Hub.PortForward.SrcPort))
+	_, err = kubernetesProvider.CreateService(ctx, kubesharkResourcesNamespace, kubernetes.ApiServerServiceName, kubernetes.ApiServerServiceName, 80, int32(config.Config.Hub.PortForward.DstPort), int32(config.Config.Hub.PortForward.SrcPort))
 	if err != nil {
 		return kubesharkServiceAccountExists, err
 	}
 
-	_, err = kubernetesProvider.CreateService(ctx, kubesharkResourcesNamespace, kubernetes.FrontPodName, kubernetes.FrontPodName, 80, int32(config.Config.Front.PortForward.DstPort), int32(config.Config.Front.PortForward.SrcPort))
+	log.Printf("Successfully created service: %s", kubernetes.ApiServerServiceName)
+
+	_, err = kubernetesProvider.CreateService(ctx, kubesharkResourcesNamespace, kubernetes.FrontServiceName, kubernetes.FrontServiceName, 80, int32(config.Config.Front.PortForward.DstPort), int32(config.Config.Front.PortForward.SrcPort))
 	if err != nil {
 		return kubesharkServiceAccountExists, err
 	}
 
-	log.Printf("Successfully created service: %s", kubernetes.ApiServerPodName)
+	log.Printf("Successfully created service: %s", kubernetes.FrontServiceName)
 
 	return kubesharkServiceAccountExists, nil
 }

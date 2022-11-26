@@ -26,14 +26,14 @@ func runKubesharkView() {
 	url := config.Config.View.Url
 
 	if url == "" {
-		exists, err := kubernetesProvider.DoesServiceExist(ctx, config.Config.KubesharkResourcesNamespace, kubernetes.ApiServerPodName)
+		exists, err := kubernetesProvider.DoesServiceExist(ctx, config.Config.KubesharkResourcesNamespace, kubernetes.ApiServerServiceName)
 		if err != nil {
 			log.Printf("Failed to found kubeshark service %v", err)
 			cancel()
 			return
 		}
 		if !exists {
-			log.Printf("%s service not found, you should run `kubeshark tap` command first", kubernetes.ApiServerPodName)
+			log.Printf("%s service not found, you should run `kubeshark tap` command first", kubernetes.ApiServerServiceName)
 			cancel()
 			return
 		}
@@ -42,7 +42,7 @@ func runKubesharkView() {
 
 		response, err := http.Get(fmt.Sprintf("%s/", url))
 		if err == nil && response.StatusCode == 200 {
-			log.Printf("Found a running service %s and open port %d", kubernetes.ApiServerPodName, config.Config.Front.PortForward.SrcPort)
+			log.Printf("Found a running service %s and open port %d", kubernetes.ApiServerServiceName, config.Config.Front.PortForward.SrcPort)
 			return
 		}
 		log.Printf("Establishing connection to k8s cluster...")
