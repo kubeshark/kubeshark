@@ -37,7 +37,7 @@ build-base: ## Build kubeshark CLI binary (select platform via GOOS / GOARCH env
 
 build-all: ## Build for all supported platforms.
 	echo "Compiling for every OS and Platform" && \
-	mkdir -p bin && sed s/_VER_/$(VER)/g README.md.TEMPLATE >  bin/README.md && \
+	mkdir -p bin && sed s/_VER_/$(VER)/g RELEASE.md.TEMPLATE >  bin/README.md && \
 	$(MAKE) build GOOS=linux GOARCH=amd64 && \
 	$(MAKE) build GOOS=linux GOARCH=arm64 && \
 	$(MAKE) build GOOS=darwin GOARCH=amd64 && \
