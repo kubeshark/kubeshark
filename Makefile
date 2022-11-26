@@ -32,8 +32,8 @@ build-base: ## Build kubeshark CLI binary (select platform via GOOS / GOARCH env
 					-X 'github.com/kubeshark/kubeshark/kubeshark.BuildTimestamp=$(BUILD_TIMESTAMP)' \
 					-X 'github.com/kubeshark/kubeshark/kubeshark.Platform=$(SUFFIX)' \
 					-X 'github.com/kubeshark/kubeshark/kubeshark.Ver=$(VER)'" \
-					-o bin/kubeshark_$(SUFFIX) kubeshark.go
-	(cd bin && shasum -a 256 kubeshark_${SUFFIX} > kubeshark_${SUFFIX}.sha256)
+					-o bin/kubeshark_$(SUFFIX) kubeshark.go && \
+	cd bin && shasum -a 256 kubeshark_${SUFFIX} > kubeshark_${SUFFIX}.sha256
 
 build-all: ## Build for all supported platforms.
 	echo "Compiling for every OS and Platform" && \
