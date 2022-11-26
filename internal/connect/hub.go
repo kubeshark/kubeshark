@@ -27,7 +27,7 @@ const DefaultTimeout = 2 * time.Second
 func NewConnector(url string, retries int, timeout time.Duration) *Connector {
 	return &Connector{
 		url:     url,
-		retries: config.GetIntEnvConfig(config.ApiServerRetries, retries),
+		retries: config.GetIntEnvConfig(config.HubRetries, retries),
 		client: &http.Client{
 			Timeout: timeout,
 		},
@@ -38,9 +38,9 @@ func (connector *Connector) TestConnection(path string) error {
 	retriesLeft := connector.retries
 	for retriesLeft > 0 {
 		if isReachable, err := connector.isReachable(path); err != nil || !isReachable {
-			log.Printf("api server not ready yet %v", err)
+			log.Printf("Hub is not ready yet %v!", err)
 		} else {
-			log.Printf("connection test to api server passed successfully")
+			log.Printf("Connection test to Hub passed successfully!")
 			break
 		}
 		retriesLeft -= 1
@@ -48,7 +48,7 @@ func (connector *Connector) TestConnection(path string) error {
 	}
 
 	if retriesLeft == 0 {
-		return fmt.Errorf("couldn't reach the api server after %v retries", connector.retries)
+		return fmt.Errorf("Couldn't reach the Hub after %d retries!", connector.retries)
 	}
 	return nil
 }
@@ -66,12 +66,12 @@ func (connector *Connector) ReportTapperStatus(tapperStatus models.TapperStatus)
 	tapperStatusUrl := fmt.Sprintf("%s/status/tapperStatus", connector.url)
 
 	if jsonValue, err := json.Marshal(tapperStatus); err != nil {
-		return fmt.Errorf("failed Marshal the tapper status %w", err)
+		return fmt.Errorf("Failed Marshal the tapper status %w", err)
 	} else {
 		if _, err := utils.Post(tapperStatusUrl, "application/json", bytes.NewBuffer(jsonValue), connector.client); err != nil {
-			return fmt.Errorf("failed sending to API server the tapped pods %w", err)
+			return fmt.Errorf("Failed sending to Hub the tapped pods %w", err)
 		} else {
-			log.Printf("Reported to server API about tapper status: %v", tapperStatus)
+			log.Printf("Reported to Hub about tapper status: %v", tapperStatus)
 			return nil
 		}
 	}
@@ -81,12 +81,12 @@ func (connector *Connector) ReportTappedPods(pods []core.Pod) error {
 	tappedPodsUrl := fmt.Sprintf("%s/status/tappedPods", connector.url)
 
 	if jsonValue, err := json.Marshal(pods); err != nil {
-		return fmt.Errorf("failed Marshal the tapped pods %w", err)
+		return fmt.Errorf("Failed Marshal the tapped pods %w", err)
 	} else {
 		if _, err := utils.Post(tappedPodsUrl, "application/json", bytes.NewBuffer(jsonValue), connector.client); err != nil {
-			return fmt.Errorf("failed sending to API server the tapped pods %w", err)
+			return fmt.Errorf("Failed sending to Hub the tapped pods %w", err)
 		} else {
-			log.Printf("Reported to server API about %d taped pods successfully", len(pods))
+			log.Printf("Reported to Hub about %d taped pods successfully", len(pods))
 			return nil
 		}
 	}

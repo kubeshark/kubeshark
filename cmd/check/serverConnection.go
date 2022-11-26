@@ -13,40 +13,40 @@ import (
 )
 
 func ServerConnection(kubernetesProvider *kubernetes.Provider) bool {
-	log.Printf("\nAPI-server-connectivity\n--------------------")
+	log.Printf("\nHub connectivity\n--------------------")
 
 	serverUrl := kubernetes.GetLocalhostOnPort(config.Config.Hub.PortForward.SrcPort)
 
 	connector := connect.NewConnector(serverUrl, 1, connect.DefaultTimeout)
 	if err := connector.TestConnection(""); err == nil {
-		log.Printf("%v found Kubeshark server tunnel available and connected successfully to API server", fmt.Sprintf(utils.Green, "√"))
+		log.Printf("%v found Kubeshark server tunnel available and connected successfully to Hub", fmt.Sprintf(utils.Green, "√"))
 		return true
 	}
 
-	connectedToApiServer := false
+	connectedToHub := false
 
 	if err := checkProxy(serverUrl, kubernetesProvider); err != nil {
-		log.Printf("%v couldn't connect to API server using proxy, err: %v", fmt.Sprintf(utils.Red, "✗"), err)
+		log.Printf("%v couldn't connect to Hub using proxy, err: %v", fmt.Sprintf(utils.Red, "✗"), err)
 	} else {
-		connectedToApiServer = true
-		log.Printf("%v connected successfully to API server using proxy", fmt.Sprintf(utils.Green, "√"))
+		connectedToHub = true
+		log.Printf("%v connected successfully to Hub using proxy", fmt.Sprintf(utils.Green, "√"))
 	}
 
 	if err := checkPortForward(serverUrl, kubernetesProvider); err != nil {
-		log.Printf("%v couldn't connect to API server using port-forward, err: %v", fmt.Sprintf(utils.Red, "✗"), err)
+		log.Printf("%v couldn't connect to Hub using port-forward, err: %v", fmt.Sprintf(utils.Red, "✗"), err)
 	} else {
-		connectedToApiServer = true
-		log.Printf("%v connected successfully to API server using port-forward", fmt.Sprintf(utils.Green, "√"))
+		connectedToHub = true
+		log.Printf("%v connected successfully to Hub using port-forward", fmt.Sprintf(utils.Green, "√"))
 	}
 
-	return connectedToApiServer
+	return connectedToHub
 }
 
 func checkProxy(serverUrl string, kubernetesProvider *kubernetes.Provider) error {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	httpServer, err := kubernetes.StartProxy(kubernetesProvider, config.Config.Tap.ProxyHost, config.Config.Hub.PortForward.SrcPort, config.Config.Hub.PortForward.DstPort, config.Config.KubesharkResourcesNamespace, kubernetes.ApiServerServiceName, cancel)
+	httpServer, err := kubernetes.StartProxy(kubernetesProvider, config.Config.Tap.ProxyHost, config.Config.Hub.PortForward.SrcPort, config.Config.Hub.PortForward.DstPort, config.Config.KubesharkResourcesNamespace, kubernetes.HubServiceName, cancel)
 	if err != nil {
 		return err
 	}
@@ -67,7 +67,7 @@ func checkPortForward(serverUrl string, kubernetesProvider *kubernetes.Provider)
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	podRegex, _ := regexp.Compile(kubernetes.ApiServerPodName)
+	podRegex, _ := regexp.Compile(kubernetes.HubPodName)
 	forwarder, err := kubernetes.NewPortForward(kubernetesProvider, config.Config.KubesharkResourcesNamespace, podRegex, config.Config.Tap.GuiPort, config.Config.Tap.GuiPort, ctx, cancel)
 	if err != nil {
 		return err

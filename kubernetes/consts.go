@@ -4,8 +4,8 @@ const (
 	KubesharkResourcesPrefix   = "ks-"
 	FrontPodName               = KubesharkResourcesPrefix + "front"
 	FrontServiceName           = FrontPodName
-	ApiServerPodName           = KubesharkResourcesPrefix + "hub"
-	ApiServerServiceName       = ApiServerPodName
+	HubPodName                 = KubesharkResourcesPrefix + "hub"
+	HubServiceName             = HubPodName
 	ClusterRoleBindingName     = KubesharkResourcesPrefix + "cluster-role-binding"
 	ClusterRoleName            = KubesharkResourcesPrefix + "cluster-role"
 	K8sAllNamespaces           = ""

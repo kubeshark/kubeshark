@@ -170,7 +170,7 @@ func (provider *Provider) CreateNamespace(ctx context.Context, name string) (*co
 	return provider.clientSet.CoreV1().Namespaces().Create(ctx, namespaceSpec, metav1.CreateOptions{})
 }
 
-type ApiServerOptions struct {
+type HubOptions struct {
 	Namespace             string
 	PodName               string
 	PodImage              string
@@ -185,7 +185,7 @@ type ApiServerOptions struct {
 	Profiler              bool
 }
 
-func (provider *Provider) BuildApiServerPod(opts *ApiServerOptions, mountVolumeClaim bool, volumeClaimName string, createAuthContainer bool) (*core.Pod, error) {
+func (provider *Provider) BuildHubPod(opts *HubOptions, mountVolumeClaim bool, volumeClaimName string, createAuthContainer bool) (*core.Pod, error) {
 	configMapVolume := &core.ConfigMapVolumeSource{}
 	configMapVolume.Name = ConfigMapName
 
@@ -400,7 +400,7 @@ func (provider *Provider) BuildApiServerPod(opts *ApiServerOptions, mountVolumeC
 	return pod, nil
 }
 
-func (provider *Provider) BuildFrontPod(opts *ApiServerOptions, mountVolumeClaim bool, volumeClaimName string, createAuthContainer bool) (*core.Pod, error) {
+func (provider *Provider) BuildFrontPod(opts *HubOptions, mountVolumeClaim bool, volumeClaimName string, createAuthContainer bool) (*core.Pod, error) {
 	configMapVolume := &core.ConfigMapVolumeSource{}
 	configMapVolume.Name = ConfigMapName
 
@@ -806,7 +806,7 @@ func (provider *Provider) CreateConfigMap(ctx context.Context, namespace string,
 	return nil
 }
 
-func (provider *Provider) ApplyKubesharkTapperDaemonSet(ctx context.Context, namespace string, daemonSetName string, podImage string, tapperPodName string, apiServerPodIp string, nodeNames []string, serviceAccountName string, resources models.Resources, imagePullPolicy core.PullPolicy, kubesharkApiFilteringOptions api.TrafficFilteringOptions, logLevel logging.Level, serviceMesh bool, tls bool, maxLiveStreams int) error {
+func (provider *Provider) ApplyKubesharkTapperDaemonSet(ctx context.Context, namespace string, daemonSetName string, podImage string, tapperPodName string, hubPodIp string, nodeNames []string, serviceAccountName string, resources models.Resources, imagePullPolicy core.PullPolicy, kubesharkApiFilteringOptions api.TrafficFilteringOptions, logLevel logging.Level, serviceMesh bool, tls bool, maxLiveStreams int) error {
 	log.Printf("Applying %d tapper daemon sets, ns: %s, daemonSetName: %s, podImage: %s, tapperPodName: %s", len(nodeNames), namespace, daemonSetName, podImage, tapperPodName)
 
 	if len(nodeNames) == 0 {
@@ -821,7 +821,7 @@ func (provider *Provider) ApplyKubesharkTapperDaemonSet(ctx context.Context, nam
 	kubesharkCmd := []string{
 		"./worker",
 		"-i", "any",
-		"--api-server-address", fmt.Sprintf("ws://%s/wsTapper", apiServerPodIp),
+		"--api-server-address", fmt.Sprintf("ws://%s/wsTapper", hubPodIp),
 		"--nodefrag",
 		"--max-live-streams", strconv.Itoa(maxLiveStreams),
 	}

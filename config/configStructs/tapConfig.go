@@ -44,7 +44,7 @@ type TapConfig struct {
 	HumanMaxEntriesDBSize string           `yaml:"max-entries-db-size" default:"200MB"`
 	InsertionFilter       string           `yaml:"insertion-filter" default:""`
 	DryRun                bool             `yaml:"dry-run" default:"false"`
-	ApiServerResources    models.Resources `yaml:"api-server-resources"`
+	HubResources          models.Resources `yaml:"hub-resources"`
 	TapperResources       models.Resources `yaml:"tapper-resources"`
 	ServiceMesh           bool             `yaml:"service-mesh" default:"false"`
 	Tls                   bool             `yaml:"tls" default:"false"`

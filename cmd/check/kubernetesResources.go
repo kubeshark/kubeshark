@@ -36,8 +36,8 @@ func KubernetesResources(ctx context.Context, kubernetesProvider *kubernetes.Pro
 		allResourcesExist = checkResourceExist(kubernetes.ClusterRoleBindingName, "cluster role binding", exist, err) && allResourcesExist
 	}
 
-	exist, err = kubernetesProvider.DoesServiceExist(ctx, config.Config.KubesharkResourcesNamespace, kubernetes.ApiServerServiceName)
-	allResourcesExist = checkResourceExist(kubernetes.ApiServerServiceName, "service", exist, err) && allResourcesExist
+	exist, err = kubernetesProvider.DoesServiceExist(ctx, config.Config.KubesharkResourcesNamespace, kubernetes.HubServiceName)
+	allResourcesExist = checkResourceExist(kubernetes.HubServiceName, "service", exist, err) && allResourcesExist
 
 	allResourcesExist = checkPodResourcesExist(ctx, kubernetesProvider) && allResourcesExist
 
@@ -45,18 +45,18 @@ func KubernetesResources(ctx context.Context, kubernetesProvider *kubernetes.Pro
 }
 
 func checkPodResourcesExist(ctx context.Context, kubernetesProvider *kubernetes.Provider) bool {
-	if pods, err := kubernetesProvider.ListPodsByAppLabel(ctx, config.Config.KubesharkResourcesNamespace, kubernetes.ApiServerPodName); err != nil {
-		log.Printf("%v error checking if '%v' pod is running, err: %v", fmt.Sprintf(utils.Red, "✗"), kubernetes.ApiServerPodName, err)
+	if pods, err := kubernetesProvider.ListPodsByAppLabel(ctx, config.Config.KubesharkResourcesNamespace, kubernetes.HubPodName); err != nil {
+		log.Printf("%v error checking if '%v' pod is running, err: %v", fmt.Sprintf(utils.Red, "✗"), kubernetes.HubPodName, err)
 		return false
 	} else if len(pods) == 0 {
-		log.Printf("%v '%v' pod doesn't exist", fmt.Sprintf(utils.Red, "✗"), kubernetes.ApiServerPodName)
+		log.Printf("%v '%v' pod doesn't exist", fmt.Sprintf(utils.Red, "✗"), kubernetes.HubPodName)
 		return false
 	} else if !kubernetes.IsPodRunning(&pods[0]) {
-		log.Printf("%v '%v' pod not running", fmt.Sprintf(utils.Red, "✗"), kubernetes.ApiServerPodName)
+		log.Printf("%v '%v' pod not running", fmt.Sprintf(utils.Red, "✗"), kubernetes.HubPodName)
 		return false
 	}
 
-	log.Printf("%v '%v' pod running", fmt.Sprintf(utils.Green, "√"), kubernetes.ApiServerPodName)
+	log.Printf("%v '%v' pod running", fmt.Sprintf(utils.Green, "√"), kubernetes.HubPodName)
 
 	if pods, err := kubernetesProvider.ListPodsByAppLabel(ctx, config.Config.KubesharkResourcesNamespace, kubernetes.TapperPodName); err != nil {
 		log.Printf("%v error checking if '%v' pods are running, err: %v", fmt.Sprintf(utils.Red, "✗"), kubernetes.TapperPodName, err)

@@ -6,8 +6,8 @@ import (
 )
 
 const (
-	ApiServerRetries = "API_SERVER_RETRIES"
-	ApiServerTimeoutSec = "API_SERVER_TIMEOUT_SEC"
+	HubRetries    = "HUB_SERVER_RETRIES"
+	HubTimeoutSec = "HUB_SERVER_TIMEOUT_SEC"
 )
 
 func GetIntEnvConfig(key string, defaultValue int) int {

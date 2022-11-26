@@ -15,7 +15,7 @@ import (
 	core "k8s.io/api/core/v1"
 )
 
-func CreateTapKubesharkResources(ctx context.Context, kubernetesProvider *kubernetes.Provider, serializedKubesharkConfig string, isNsRestrictedMode bool, kubesharkResourcesNamespace string, agentImage string, maxEntriesDBSizeBytes int64, apiServerResources models.Resources, imagePullPolicy core.PullPolicy, logLevel logging.Level, profiler bool) (bool, error) {
+func CreateTapKubesharkResources(ctx context.Context, kubernetesProvider *kubernetes.Provider, serializedKubesharkConfig string, isNsRestrictedMode bool, kubesharkResourcesNamespace string, agentImage string, maxEntriesDBSizeBytes int64, hubResources models.Resources, imagePullPolicy core.PullPolicy, logLevel logging.Level, profiler bool) (bool, error) {
 	if !isNsRestrictedMode {
 		if err := createKubesharkNamespace(ctx, kubernetesProvider, kubesharkResourcesNamespace); err != nil {
 			return false, err
@@ -38,22 +38,22 @@ func CreateTapKubesharkResources(ctx context.Context, kubernetesProvider *kubern
 		serviceAccountName = ""
 	}
 
-	opts := &kubernetes.ApiServerOptions{
+	opts := &kubernetes.HubOptions{
 		Namespace:             kubesharkResourcesNamespace,
-		PodName:               kubernetes.ApiServerPodName,
+		PodName:               kubernetes.HubPodName,
 		PodImage:              agentImage,
 		KratosImage:           "",
 		KetoImage:             "",
 		ServiceAccountName:    serviceAccountName,
 		IsNamespaceRestricted: isNsRestrictedMode,
 		MaxEntriesDBSizeBytes: maxEntriesDBSizeBytes,
-		Resources:             apiServerResources,
+		Resources:             hubResources,
 		ImagePullPolicy:       imagePullPolicy,
 		LogLevel:              logLevel,
 		Profiler:              profiler,
 	}
 
-	frontOpts := &kubernetes.ApiServerOptions{
+	frontOpts := &kubernetes.HubOptions{
 		Namespace:             kubesharkResourcesNamespace,
 		PodName:               kubernetes.FrontPodName,
 		PodImage:              agentImage,
@@ -62,13 +62,13 @@ func CreateTapKubesharkResources(ctx context.Context, kubernetesProvider *kubern
 		ServiceAccountName:    serviceAccountName,
 		IsNamespaceRestricted: isNsRestrictedMode,
 		MaxEntriesDBSizeBytes: maxEntriesDBSizeBytes,
-		Resources:             apiServerResources,
+		Resources:             hubResources,
 		ImagePullPolicy:       imagePullPolicy,
 		LogLevel:              logLevel,
 		Profiler:              profiler,
 	}
 
-	if err := createKubesharkApiServerPod(ctx, kubernetesProvider, opts); err != nil {
+	if err := createKubesharkHubPod(ctx, kubernetesProvider, opts); err != nil {
 		return kubesharkServiceAccountExists, err
 	}
 
@@ -76,12 +76,12 @@ func CreateTapKubesharkResources(ctx context.Context, kubernetesProvider *kubern
 		return kubesharkServiceAccountExists, err
 	}
 
-	_, err = kubernetesProvider.CreateService(ctx, kubesharkResourcesNamespace, kubernetes.ApiServerServiceName, kubernetes.ApiServerServiceName, 80, int32(config.Config.Hub.PortForward.DstPort), int32(config.Config.Hub.PortForward.SrcPort))
+	_, err = kubernetesProvider.CreateService(ctx, kubesharkResourcesNamespace, kubernetes.HubServiceName, kubernetes.HubServiceName, 80, int32(config.Config.Hub.PortForward.DstPort), int32(config.Config.Hub.PortForward.SrcPort))
 	if err != nil {
 		return kubesharkServiceAccountExists, err
 	}
 
-	log.Printf("Successfully created service: %s", kubernetes.ApiServerServiceName)
+	log.Printf("Successfully created service: %s", kubernetes.HubServiceName)
 
 	_, err = kubernetesProvider.CreateService(ctx, kubesharkResourcesNamespace, kubernetes.FrontServiceName, kubernetes.FrontServiceName, 80, int32(config.Config.Front.PortForward.DstPort), int32(config.Config.Front.PortForward.SrcPort))
 	if err != nil {
@@ -117,8 +117,8 @@ func createRBACIfNecessary(ctx context.Context, kubernetesProvider *kubernetes.P
 	return true, nil
 }
 
-func createKubesharkApiServerPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, opts *kubernetes.ApiServerOptions) error {
-	pod, err := kubernetesProvider.BuildApiServerPod(opts, false, "", false)
+func createKubesharkHubPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, opts *kubernetes.HubOptions) error {
+	pod, err := kubernetesProvider.BuildHubPod(opts, false, "", false)
 	if err != nil {
 		return err
 	}
@@ -129,7 +129,7 @@ func createKubesharkApiServerPod(ctx context.Context, kubernetesProvider *kubern
 	return nil
 }
 
-func createFrontPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, opts *kubernetes.ApiServerOptions) error {
+func createFrontPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, opts *kubernetes.HubOptions) error {
 	pod, err := kubernetesProvider.BuildFrontPod(opts, false, "", false)
 	if err != nil {
 		return err

@@ -39,7 +39,7 @@ func startProxyReportErrorIfAny(kubernetesProvider *kubernetes.Provider, ctx con
 			log.Printf("Error occurred while stopping proxy %v", errormessage.FormatError(err))
 		}
 
-		podRegex, _ := regexp.Compile(kubernetes.ApiServerPodName)
+		podRegex, _ := regexp.Compile(kubernetes.HubPodName)
 		if _, err := kubernetes.NewPortForward(kubernetesProvider, config.Config.KubesharkResourcesNamespace, podRegex, srcPort, dstPort, ctx, cancel); err != nil {
 			log.Printf(utils.Error, fmt.Sprintf("Error occured while running port forward [%s] %v\n"+
 				"Try setting different port by using --%s", podRegex, errormessage.FormatError(err), configStructs.GuiPortTapName))
