@@ -43,7 +43,7 @@ var proxyDone bool
 func RunKubesharkTap() {
 	state.startTime = time.Now()
 
-	connector = connect.NewProvider(kubernetes.GetLocalhostOnPort(config.Config.Hub.PortForward.SrcPort), connect.DefaultRetries, connect.DefaultTimeout)
+	connector = connect.NewConnector(kubernetes.GetLocalhostOnPort(config.Config.Hub.PortForward.SrcPort), connect.DefaultRetries, connect.DefaultTimeout)
 
 	kubernetesProvider, err := getKubernetesProviderForCli()
 	if err != nil {
@@ -187,7 +187,7 @@ func startTapperSyncer(ctx context.Context, cancel context.CancelFunc, provider 
 					log.Print("kubesharkTapperSyncer pod changes channel closed, ending listener loop")
 					return
 				}
-				if err := apiProvider.ReportTappedPods(tapperSyncer.CurrentlyTappedPods); err != nil {
+				if err := connector.ReportTappedPods(tapperSyncer.CurrentlyTappedPods); err != nil {
 					log.Printf("[Error] failed update tapped pods %v", err)
 				}
 			case tapperStatus, ok := <-tapperSyncer.TapperStatusChangedOut:
@@ -195,7 +195,7 @@ func startTapperSyncer(ctx context.Context, cancel context.CancelFunc, provider 
 					log.Print("kubesharkTapperSyncer tapper status changed channel closed, ending listener loop")
 					return
 				}
-				if err := apiProvider.ReportTapperStatus(tapperStatus); err != nil {
+				if err := connector.ReportTapperStatus(tapperStatus); err != nil {
 					log.Printf("[Error] failed update tapper status %v", err)
 				}
 			case <-ctx.Done():
