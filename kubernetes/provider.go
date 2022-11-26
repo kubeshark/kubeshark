@@ -427,7 +427,7 @@ func (provider *Provider) BuildFrontPod(opts *ApiServerOptions, mountVolumeClaim
 	containers := []core.Container{
 		{
 			Name:            "front",
-			Image:           "kubeshark/front:test-amd64",
+			Image:           "kubeshark/front:latest",
 			ImagePullPolicy: opts.ImagePullPolicy,
 			VolumeMounts:    volumeMounts,
 			ReadinessProbe: &core.Probe{

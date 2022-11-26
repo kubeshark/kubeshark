@@ -8,7 +8,6 @@ import (
 
 	"github.com/kubeshark/kubeshark/config/configStructs"
 	"github.com/kubeshark/kubeshark/kubeshark"
-	"github.com/kubeshark/kubeshark/utils"
 	"github.com/kubeshark/worker/models"
 	"github.com/op/go-logging"
 	v1 "k8s.io/api/core/v1"
@@ -86,7 +85,7 @@ func (config *ConfigStruct) validate() error {
 }
 
 func (config *ConfigStruct) SetDefaults() {
-	config.AgentImage = fmt.Sprintf("%s:%s", utils.KubesharkAgentImageRepo, kubeshark.Ver)
+	config.AgentImage = "kubeshark/hub:latest"
 	config.ConfigFilePath = path.Join(kubeshark.GetKubesharkFolderPath(), "config.yaml")
 }
 

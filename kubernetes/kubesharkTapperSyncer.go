@@ -329,7 +329,7 @@ func (tapperSyncer *KubesharkTapperSyncer) updateKubesharkTappers() error {
 			tapperSyncer.context,
 			tapperSyncer.config.KubesharkResourcesNamespace,
 			TapperDaemonSetName,
-			"kubeshark/worker:test-amd64",
+			"kubeshark/worker:latest",
 			TapperPodName,
 			fmt.Sprintf("%s.%s.svc", ApiServerPodName, tapperSyncer.config.KubesharkResourcesNamespace),
 			nodeNames,
