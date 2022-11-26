@@ -9,7 +9,7 @@ import (
 	"github.com/kubeshark/kubeshark/apiserver"
 	"github.com/kubeshark/kubeshark/config"
 	"github.com/kubeshark/kubeshark/kubernetes"
-	"github.com/kubeshark/kubeshark/uiUtils"
+	"github.com/kubeshark/kubeshark/utils"
 )
 
 func ServerConnection(kubernetesProvider *kubernetes.Provider) bool {
@@ -19,24 +19,24 @@ func ServerConnection(kubernetesProvider *kubernetes.Provider) bool {
 
 	apiServerProvider := apiserver.NewProvider(serverUrl, 1, apiserver.DefaultTimeout)
 	if err := apiServerProvider.TestConnection(""); err == nil {
-		log.Printf("%v found Kubeshark server tunnel available and connected successfully to API server", fmt.Sprintf(uiUtils.Green, "√"))
+		log.Printf("%v found Kubeshark server tunnel available and connected successfully to API server", fmt.Sprintf(utils.Green, "√"))
 		return true
 	}
 
 	connectedToApiServer := false
 
 	if err := checkProxy(serverUrl, kubernetesProvider); err != nil {
-		log.Printf("%v couldn't connect to API server using proxy, err: %v", fmt.Sprintf(uiUtils.Red, "✗"), err)
+		log.Printf("%v couldn't connect to API server using proxy, err: %v", fmt.Sprintf(utils.Red, "✗"), err)
 	} else {
 		connectedToApiServer = true
-		log.Printf("%v connected successfully to API server using proxy", fmt.Sprintf(uiUtils.Green, "√"))
+		log.Printf("%v connected successfully to API server using proxy", fmt.Sprintf(utils.Green, "√"))
 	}
 
 	if err := checkPortForward(serverUrl, kubernetesProvider); err != nil {
-		log.Printf("%v couldn't connect to API server using port-forward, err: %v", fmt.Sprintf(uiUtils.Red, "✗"), err)
+		log.Printf("%v couldn't connect to API server using port-forward, err: %v", fmt.Sprintf(utils.Red, "✗"), err)
 	} else {
 		connectedToApiServer = true
-		log.Printf("%v connected successfully to API server using port-forward", fmt.Sprintf(uiUtils.Green, "√"))
+		log.Printf("%v connected successfully to API server using port-forward", fmt.Sprintf(utils.Green, "√"))
 	}
 
 	return connectedToApiServer

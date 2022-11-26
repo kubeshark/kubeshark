@@ -1,4 +1,4 @@
-package uiUtils
+package utils
 
 import (
 	"fmt"

@@ -22,7 +22,6 @@ import (
 	"github.com/kubeshark/kubeshark/config/configStructs"
 	"github.com/kubeshark/kubeshark/errormessage"
 	"github.com/kubeshark/kubeshark/kubernetes"
-	"github.com/kubeshark/kubeshark/uiUtils"
 	"github.com/kubeshark/worker/api"
 	"github.com/kubeshark/worker/models"
 )
@@ -59,7 +58,7 @@ func RunKubesharkTap() {
 	kubesharkAgentConfig := getTapKubesharkAgentConfig()
 	serializedKubesharkConfig, err := getSerializedKubesharkAgentConfig(kubesharkAgentConfig)
 	if err != nil {
-		log.Printf(uiUtils.Error, fmt.Sprintf("Error serializing kubeshark config: %v", errormessage.FormatError(err)))
+		log.Printf(utils.Error, fmt.Sprintf("Error serializing kubeshark config: %v", errormessage.FormatError(err)))
 		return
 	}
 
@@ -81,7 +80,7 @@ func RunKubesharkTap() {
 	log.Printf("Tapping pods in %s", namespacesStr)
 
 	if err := printTappedPodsPreview(ctx, kubernetesProvider, state.targetNamespaces); err != nil {
-		log.Printf(uiUtils.Error, fmt.Sprintf("Error listing pods: %v", errormessage.FormatError(err)))
+		log.Printf(utils.Error, fmt.Sprintf("Error listing pods: %v", errormessage.FormatError(err)))
 	}
 
 	if config.Config.Tap.DryRun {
@@ -95,7 +94,7 @@ func RunKubesharkTap() {
 			log.Print("Kubeshark is already running in this namespace, change the `kubeshark-resources-namespace` configuration or run `kubeshark clean` to remove the currently running Kubeshark instance")
 		} else {
 			defer resources.CleanUpKubesharkResources(ctx, cancel, kubernetesProvider, config.Config.IsNsRestrictedMode(), config.Config.KubesharkResourcesNamespace)
-			log.Printf(uiUtils.Error, fmt.Sprintf("Error creating resources: %v", errormessage.FormatError(err)))
+			log.Printf(utils.Error, fmt.Sprintf("Error creating resources: %v", errormessage.FormatError(err)))
 		}
 
 		return
@@ -145,7 +144,7 @@ func printTappedPodsPreview(ctx context.Context, kubernetesProvider *kubernetes.
 			printNoPodsFoundSuggestion(namespaces)
 		}
 		for _, tappedPod := range matchingPods {
-			log.Printf(uiUtils.Green, fmt.Sprintf("+%s", tappedPod.Name))
+			log.Printf(utils.Green, fmt.Sprintf("+%s", tappedPod.Name))
 		}
 		return nil
 	}
@@ -181,7 +180,7 @@ func startTapperSyncer(ctx context.Context, cancel context.CancelFunc, provider 
 					log.Print("kubesharkTapperSyncer err channel closed, ending listener loop")
 					return
 				}
-				log.Printf(uiUtils.Error, getErrorDisplayTextForK8sTapManagerError(syncerErr))
+				log.Printf(utils.Error, getErrorDisplayTextForK8sTapManagerError(syncerErr))
 				cancel()
 			case _, ok := <-tapperSyncer.TapPodChangesOut:
 				if !ok {
@@ -214,7 +213,7 @@ func printNoPodsFoundSuggestion(targetNamespaces []string) {
 	if !utils.Contains(targetNamespaces, kubernetes.K8sAllNamespaces) {
 		suggestionStr = ". You can also try selecting a different namespace with -n or tap all namespaces with -A"
 	}
-	log.Printf(uiUtils.Warning, fmt.Sprintf("Did not find any currently running pods that match the regex argument, kubeshark will automatically tap matching pods if any are created later%s", suggestionStr))
+	log.Printf(utils.Warning, fmt.Sprintf("Did not find any currently running pods that match the regex argument, kubeshark will automatically tap matching pods if any are created later%s", suggestionStr))
 }
 
 func getErrorDisplayTextForK8sTapManagerError(err kubernetes.K8sTapManagerError) string {
@@ -256,7 +255,7 @@ func watchApiServerPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 			case kubernetes.EventModified:
 				modifiedPod, err := wEvent.ToPod()
 				if err != nil {
-					log.Printf(uiUtils.Error, err)
+					log.Printf(utils.Error, err)
 					cancel()
 					continue
 				}
@@ -289,7 +288,7 @@ func watchApiServerPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 
 		case <-timeAfter:
 			if !isPodReady {
-				log.Printf(uiUtils.Error, "Kubeshark API server was not ready in time")
+				log.Printf(utils.Error, "Kubeshark API server was not ready in time")
 				cancel()
 			}
 		case <-ctx.Done():
@@ -325,7 +324,7 @@ func watchFrontPod(ctx context.Context, kubernetesProvider *kubernetes.Provider,
 			case kubernetes.EventModified:
 				modifiedPod, err := wEvent.ToPod()
 				if err != nil {
-					log.Printf(uiUtils.Error, err)
+					log.Printf(utils.Error, err)
 					cancel()
 					continue
 				}
@@ -357,7 +356,7 @@ func watchFrontPod(ctx context.Context, kubernetesProvider *kubernetes.Provider,
 
 		case <-timeAfter:
 			if !isPodReady {
-				log.Printf(uiUtils.Error, "Kubeshark API server was not ready in time")
+				log.Printf(utils.Error, "Kubeshark API server was not ready in time")
 				cancel()
 			}
 		case <-ctx.Done():
@@ -401,7 +400,7 @@ func watchApiServerEvents(ctx context.Context, kubernetesProvider *kubernetes.Pr
 
 			switch event.Reason {
 			case "FailedScheduling", "Failed":
-				log.Printf(uiUtils.Error, fmt.Sprintf("Kubeshark API Server status: %s - %s", event.Reason, event.Note))
+				log.Printf(utils.Error, fmt.Sprintf("Kubeshark API Server status: %s - %s", event.Reason, event.Note))
 				cancel()
 
 			}
@@ -423,7 +422,7 @@ func postApiServerStarted(ctx context.Context, kubernetesProvider *kubernetes.Pr
 	startProxyReportErrorIfAny(kubernetesProvider, ctx, cancel, kubernetes.ApiServerServiceName, config.Config.Hub.PortForward.SrcPort, config.Config.Hub.PortForward.DstPort, "/echo")
 
 	if err := startTapperSyncer(ctx, cancel, kubernetesProvider, state.targetNamespaces, state.startTime); err != nil {
-		log.Printf(uiUtils.Error, fmt.Sprintf("Error starting kubeshark tapper syncer: %v", errormessage.FormatError(err)))
+		log.Printf(utils.Error, fmt.Sprintf("Error starting kubeshark tapper syncer: %v", errormessage.FormatError(err)))
 		cancel()
 	}
 
@@ -437,7 +436,7 @@ func postFrontStarted(ctx context.Context, kubernetesProvider *kubernetes.Provid
 	url := kubernetes.GetLocalhostOnPort(config.Config.Front.PortForward.SrcPort)
 	log.Printf("Kubeshark is available at %s", url)
 	if !config.Config.HeadlessMode {
-		uiUtils.OpenBrowser(url)
+		utils.OpenBrowser(url)
 	}
 }
 
@@ -449,7 +448,7 @@ func getNamespaces(kubernetesProvider *kubernetes.Provider) []string {
 	} else {
 		currentNamespace, err := kubernetesProvider.CurrentNamespace()
 		if err != nil {
-			log.Fatalf(uiUtils.Red, fmt.Sprintf("error getting current namespace: %+v", err))
+			log.Fatalf(utils.Red, fmt.Sprintf("error getting current namespace: %+v", err))
 		}
 		return []string{currentNamespace}
 	}

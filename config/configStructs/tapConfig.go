@@ -8,10 +8,8 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/kubeshark/kubeshark/uiUtils"
+	"github.com/kubeshark/kubeshark/utils"
 	"github.com/kubeshark/worker/models"
-
-	"github.com/kubeshark/kubeshark/units"
 )
 
 const (
@@ -61,7 +59,7 @@ func (config *TapConfig) PodRegex() *regexp.Regexp {
 }
 
 func (config *TapConfig) MaxEntriesDBSizeBytes() int64 {
-	maxEntriesDBSizeBytes, _ := units.HumanReadableToBytes(config.HumanMaxEntriesDBSize)
+	maxEntriesDBSizeBytes, _ := utils.HumanReadableToBytes(config.HumanMaxEntriesDBSize)
 	return maxEntriesDBSizeBytes
 }
 
@@ -71,7 +69,7 @@ func (config *TapConfig) GetInsertionFilter() string {
 		if _, err := os.Stat(insertionFilter); err == nil {
 			b, err := os.ReadFile(insertionFilter)
 			if err != nil {
-				log.Printf(uiUtils.Warning, fmt.Sprintf("Couldn't read the file on path: %s, err: %v", insertionFilter, err))
+				log.Printf(utils.Warning, fmt.Sprintf("Couldn't read the file on path: %s, err: %v", insertionFilter, err))
 			} else {
 				insertionFilter = string(b)
 			}
@@ -125,7 +123,7 @@ func (config *TapConfig) Validate() error {
 		return fmt.Errorf("%s is not a valid regex %s", config.PodRegexStr, compileErr)
 	}
 
-	_, parseHumanDataSizeErr := units.HumanReadableToBytes(config.HumanMaxEntriesDBSize)
+	_, parseHumanDataSizeErr := utils.HumanReadableToBytes(config.HumanMaxEntriesDBSize)
 	if parseHumanDataSizeErr != nil {
 		return fmt.Errorf("Could not parse --%s value %s", HumanMaxEntriesDBSizeTapName, config.HumanMaxEntriesDBSize)
 	}

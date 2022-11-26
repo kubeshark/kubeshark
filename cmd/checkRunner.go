@@ -8,7 +8,7 @@ import (
 
 	"github.com/kubeshark/kubeshark/cmd/check"
 	"github.com/kubeshark/kubeshark/config"
-	"github.com/kubeshark/kubeshark/uiUtils"
+	"github.com/kubeshark/kubeshark/utils"
 )
 
 var (
@@ -55,8 +55,8 @@ func runKubesharkCheck() {
 	}
 
 	if checkPassed {
-		log.Printf("\nStatus check results are %v", fmt.Sprintf(uiUtils.Green, "√"))
+		log.Printf("\nStatus check results are %v", fmt.Sprintf(utils.Green, "√"))
 	} else {
-		log.Printf("\nStatus check results are %v", fmt.Sprintf(uiUtils.Red, "✗"))
+		log.Printf("\nStatus check results are %v", fmt.Sprintf(utils.Red, "✗"))
 	}
 }

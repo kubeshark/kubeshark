@@ -16,7 +16,7 @@ import (
 	"github.com/kubeshark/kubeshark/kubeshark"
 	"github.com/kubeshark/kubeshark/kubeshark/fsUtils"
 	"github.com/kubeshark/kubeshark/resources"
-	"github.com/kubeshark/kubeshark/uiUtils"
+	"github.com/kubeshark/kubeshark/utils"
 	"github.com/kubeshark/worker/models"
 
 	"github.com/kubeshark/kubeshark/config"
@@ -26,7 +26,7 @@ import (
 func startProxyReportErrorIfAny(kubernetesProvider *kubernetes.Provider, ctx context.Context, cancel context.CancelFunc, serviceName string, srcPort uint16, dstPort uint16, healthCheck string) {
 	httpServer, err := kubernetes.StartProxy(kubernetesProvider, config.Config.Tap.ProxyHost, srcPort, dstPort, config.Config.KubesharkResourcesNamespace, serviceName, cancel)
 	if err != nil {
-		log.Printf(uiUtils.Error, fmt.Sprintf("Error occured while running k8s proxy %v\n"+
+		log.Printf(utils.Error, fmt.Sprintf("Error occured while running k8s proxy %v\n"+
 			"Try setting different port by using --%s", errormessage.FormatError(err), configStructs.GuiPortTapName))
 		cancel()
 		return
@@ -41,7 +41,7 @@ func startProxyReportErrorIfAny(kubernetesProvider *kubernetes.Provider, ctx con
 
 		podRegex, _ := regexp.Compile(kubernetes.ApiServerPodName)
 		if _, err := kubernetes.NewPortForward(kubernetesProvider, config.Config.KubesharkResourcesNamespace, podRegex, srcPort, dstPort, ctx, cancel); err != nil {
-			log.Printf(uiUtils.Error, fmt.Sprintf("Error occured while running port forward [%s] %v\n"+
+			log.Printf(utils.Error, fmt.Sprintf("Error occured while running port forward [%s] %v\n"+
 				"Try setting different port by using --%s", podRegex, errormessage.FormatError(err), configStructs.GuiPortTapName))
 			cancel()
 			return
@@ -49,7 +49,7 @@ func startProxyReportErrorIfAny(kubernetesProvider *kubernetes.Provider, ctx con
 
 		provider = apiserver.NewProvider(kubernetes.GetLocalhostOnPort(srcPort), apiserver.DefaultRetries, apiserver.DefaultTimeout)
 		if err := provider.TestConnection(healthCheck); err != nil {
-			log.Printf(uiUtils.Error, fmt.Sprintf("Couldn't connect to [%s].", serviceName))
+			log.Printf(utils.Error, fmt.Sprintf("Couldn't connect to [%s].", serviceName))
 			cancel()
 			return
 		}

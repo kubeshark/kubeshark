@@ -11,7 +11,6 @@ import (
 	"github.com/kubeshark/kubeshark/apiserver"
 	"github.com/kubeshark/kubeshark/config"
 	"github.com/kubeshark/kubeshark/kubernetes"
-	"github.com/kubeshark/kubeshark/uiUtils"
 )
 
 func runKubesharkView() {
@@ -51,14 +50,14 @@ func runKubesharkView() {
 
 	apiServerProvider := apiserver.NewProvider(url, apiserver.DefaultRetries, apiserver.DefaultTimeout)
 	if err := apiServerProvider.TestConnection(""); err != nil {
-		log.Printf(uiUtils.Error, "Couldn't connect to API server.")
+		log.Printf(utils.Error, "Couldn't connect to API server.")
 		return
 	}
 
 	log.Printf("Kubeshark is available at %s", url)
 
 	if !config.Config.HeadlessMode {
-		uiUtils.OpenBrowser(url)
+		utils.OpenBrowser(url)
 	}
 
 	utils.WaitForFinish(ctx, cancel)

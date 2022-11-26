@@ -9,7 +9,7 @@ import (
 	"github.com/kubeshark/kubeshark/errormessage"
 	"github.com/kubeshark/kubeshark/kubernetes"
 	"github.com/kubeshark/kubeshark/kubeshark"
-	"github.com/kubeshark/kubeshark/uiUtils"
+	"github.com/kubeshark/kubeshark/utils"
 	"github.com/kubeshark/worker/models"
 	"github.com/op/go-logging"
 	core "k8s.io/api/core/v1"
@@ -28,7 +28,7 @@ func CreateTapKubesharkResources(ctx context.Context, kubernetesProvider *kubern
 
 	kubesharkServiceAccountExists, err := createRBACIfNecessary(ctx, kubernetesProvider, isNsRestrictedMode, kubesharkResourcesNamespace, []string{"pods", "services", "endpoints"})
 	if err != nil {
-		log.Printf(uiUtils.Warning, fmt.Sprintf("Failed to ensure the resources required for IP resolving. Kubeshark will not resolve target IPs to names. error: %v", errormessage.FormatError(err)))
+		log.Printf(utils.Warning, fmt.Sprintf("Failed to ensure the resources required for IP resolving. Kubeshark will not resolve target IPs to names. error: %v", errormessage.FormatError(err)))
 	}
 
 	var serviceAccountName string

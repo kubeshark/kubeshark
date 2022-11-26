@@ -8,7 +8,7 @@ import (
 	"github.com/creasty/defaults"
 	"github.com/kubeshark/kubeshark/config"
 	"github.com/kubeshark/kubeshark/kubeshark/version"
-	"github.com/kubeshark/kubeshark/uiUtils"
+	"github.com/kubeshark/kubeshark/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -40,7 +40,7 @@ func printNewVersionIfNeeded(versionChan chan string) {
 	select {
 	case versionMsg := <-versionChan:
 		if versionMsg != "" {
-			log.Printf(uiUtils.Yellow, versionMsg)
+			log.Printf(utils.Yellow, versionMsg)
 		}
 	case <-time.After(2 * time.Second):
 	}

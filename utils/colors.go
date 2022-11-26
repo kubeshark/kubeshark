@@ -1,5 +1,4 @@
-package uiUtils
-
+package utils
 
 const (
 	Black   = "\033[1;30m%s\033[0m"

@@ -10,7 +10,7 @@ import (
 	"github.com/kubeshark/kubeshark/bucket"
 	"github.com/kubeshark/kubeshark/config"
 	"github.com/kubeshark/kubeshark/kubernetes"
-	"github.com/kubeshark/kubeshark/uiUtils"
+	"github.com/kubeshark/kubeshark/utils"
 	rbac "k8s.io/api/rbac/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -28,14 +28,14 @@ func TapKubernetesPermissions(ctx context.Context, embedFS embed.FS, kubernetesP
 
 	data, err := embedFS.ReadFile(filePath)
 	if err != nil {
-		log.Printf("%v error while checking kubernetes permissions, err: %v", fmt.Sprintf(uiUtils.Red, "✗"), err)
+		log.Printf("%v error while checking kubernetes permissions, err: %v", fmt.Sprintf(utils.Red, "✗"), err)
 		return false
 	}
 
 	decode := scheme.Codecs.UniversalDeserializer().Decode
 	obj, _, err := decode(data, nil, nil)
 	if err != nil {
-		log.Printf("%v error while checking kubernetes permissions, err: %v", fmt.Sprintf(uiUtils.Red, "✗"), err)
+		log.Printf("%v error while checking kubernetes permissions, err: %v", fmt.Sprintf(utils.Red, "✗"), err)
 		return false
 	}
 
@@ -46,7 +46,7 @@ func TapKubernetesPermissions(ctx context.Context, embedFS embed.FS, kubernetesP
 		return checkRulesPermissions(ctx, kubernetesProvider, resource.Rules, "")
 	}
 
-	log.Printf("%v error while checking kubernetes permissions, err: resource of type 'Role' or 'ClusterRole' not found in permission files", fmt.Sprintf(uiUtils.Red, "✗"))
+	log.Printf("%v error while checking kubernetes permissions, err: resource of type 'Role' or 'ClusterRole' not found in permission files", fmt.Sprintf(utils.Red, "✗"))
 	return false
 }
 
@@ -56,7 +56,7 @@ func InstallKubernetesPermissions(ctx context.Context, kubernetesProvider *kuber
 	bucketProvider := bucket.NewProvider(config.Config.Install.TemplateUrl, bucket.DefaultTimeout)
 	installTemplate, err := bucketProvider.GetInstallTemplate(config.Config.Install.TemplateName)
 	if err != nil {
-		log.Printf("%v error while checking kubernetes permissions, err: %v", fmt.Sprintf(uiUtils.Red, "✗"), err)
+		log.Printf("%v error while checking kubernetes permissions, err: %v", fmt.Sprintf(utils.Red, "✗"), err)
 		return false
 	}
 
@@ -68,7 +68,7 @@ func InstallKubernetesPermissions(ctx context.Context, kubernetesProvider *kuber
 	for _, resourceTemplate := range resourcesTemplate {
 		obj, _, err := decode([]byte(resourceTemplate), nil, nil)
 		if err != nil {
-			log.Printf("%v error while checking kubernetes permissions, err: %v", fmt.Sprintf(uiUtils.Red, "✗"), err)
+			log.Printf("%v error while checking kubernetes permissions, err: %v", fmt.Sprintf(utils.Red, "✗"), err)
 			return false
 		}
 
@@ -120,13 +120,13 @@ func checkPermissionExist(group string, resource string, verb string, namespace 
 	}
 
 	if err != nil {
-		log.Printf("%v error checking permission for %v %v %v, err: %v", fmt.Sprintf(uiUtils.Red, "✗"), verb, resource, groupAndNamespace, err)
+		log.Printf("%v error checking permission for %v %v %v, err: %v", fmt.Sprintf(utils.Red, "✗"), verb, resource, groupAndNamespace, err)
 		return false
 	} else if !exist {
-		log.Printf("%v can't %v %v %v", fmt.Sprintf(uiUtils.Red, "✗"), verb, resource, groupAndNamespace)
+		log.Printf("%v can't %v %v %v", fmt.Sprintf(utils.Red, "✗"), verb, resource, groupAndNamespace)
 		return false
 	}
 
-	log.Printf("%v can %v %v %v", fmt.Sprintf(uiUtils.Green, "√"), verb, resource, groupAndNamespace)
+	log.Printf("%v can %v %v %v", fmt.Sprintf(utils.Green, "√"), verb, resource, groupAndNamespace)
 	return true
 }

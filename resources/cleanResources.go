@@ -7,7 +7,6 @@ import (
 
 	"github.com/kubeshark/kubeshark/errormessage"
 	"github.com/kubeshark/kubeshark/kubernetes"
-	"github.com/kubeshark/kubeshark/uiUtils"
 	"github.com/kubeshark/kubeshark/utils"
 	"k8s.io/apimachinery/pkg/util/wait"
 )
@@ -28,7 +27,7 @@ func CleanUpKubesharkResources(ctx context.Context, cancel context.CancelFunc, k
 		for _, resource := range leftoverResources {
 			errMsg += "\n- " + resource
 		}
-		log.Printf(uiUtils.Error, errMsg)
+		log.Printf(utils.Error, errMsg)
 	}
 }
 
@@ -80,9 +79,9 @@ func waitUntilNamespaceDeleted(ctx context.Context, cancel context.CancelFunc, k
 		case ctx.Err() == context.Canceled:
 			log.Printf("Do nothing. User interrupted the wait")
 		case err == wait.ErrWaitTimeout:
-			log.Printf(uiUtils.Error, fmt.Sprintf("Timeout while removing Namespace %s", kubesharkResourcesNamespace))
+			log.Printf(utils.Error, fmt.Sprintf("Timeout while removing Namespace %s", kubesharkResourcesNamespace))
 		default:
-			log.Printf(uiUtils.Error, fmt.Sprintf("Error while waiting for Namespace %s to be deleted: %v", kubesharkResourcesNamespace, errormessage.FormatError(err)))
+			log.Printf(utils.Error, fmt.Sprintf("Error while waiting for Namespace %s to be deleted: %v", kubesharkResourcesNamespace, errormessage.FormatError(err)))
 		}
 	}
 }

@@ -1,8 +1,9 @@
-package uiUtils
+package utils
 
 import (
 	"bytes"
 	"encoding/json"
+
 	"gopkg.in/yaml.v3"
 )
 

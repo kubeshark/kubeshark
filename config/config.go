@@ -11,7 +11,6 @@ import (
 	"strings"
 
 	"github.com/creasty/defaults"
-	"github.com/kubeshark/kubeshark/uiUtils"
 	"github.com/kubeshark/kubeshark/utils"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -65,7 +64,7 @@ func InitConfig(cmd *cobra.Command) error {
 		return fmt.Errorf("config validation failed, err: %v", err)
 	}
 
-	finalConfigPrettified, _ := uiUtils.PrettyJson(Config)
+	finalConfigPrettified, _ := utils.PrettyJson(Config)
 	log.Printf("Init config finished\n Final config: %v", finalConfigPrettified)
 
 	return nil
@@ -84,7 +83,7 @@ func GetConfigWithDefaults() (*ConfigStruct, error) {
 }
 
 func WriteConfig(config *ConfigStruct) error {
-	template, err := uiUtils.PrettyYaml(config)
+	template, err := utils.PrettyYaml(config)
 	if err != nil {
 		return fmt.Errorf("failed converting config to yaml, err: %v", err)
 	}
@@ -130,20 +129,20 @@ func initFlag(f *pflag.Flag) {
 	sliceValue, isSliceValue := f.Value.(pflag.SliceValue)
 	if !isSliceValue {
 		if err := mergeFlagValue(configElemValue, flagPath, strings.Join(flagPath, "."), f.Value.String()); err != nil {
-			log.Printf(uiUtils.Warning, err)
+			log.Printf(utils.Warning, err)
 		}
 		return
 	}
 
 	if f.Name == SetCommandName {
 		if err := mergeSetFlag(configElemValue, sliceValue.GetSlice()); err != nil {
-			log.Printf(uiUtils.Warning, err)
+			log.Printf(utils.Warning, err)
 		}
 		return
 	}
 
 	if err := mergeFlagValues(configElemValue, flagPath, strings.Join(flagPath, "."), sliceValue.GetSlice()); err != nil {
-		log.Printf(uiUtils.Warning, err)
+		log.Printf(utils.Warning, err)
 	}
 }
 

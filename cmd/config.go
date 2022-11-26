@@ -7,7 +7,7 @@ import (
 	"github.com/creasty/defaults"
 	"github.com/kubeshark/kubeshark/config"
 	"github.com/kubeshark/kubeshark/config/configStructs"
-	"github.com/kubeshark/kubeshark/uiUtils"
+	"github.com/kubeshark/kubeshark/utils"
 	"github.com/spf13/cobra"
 )
 
@@ -27,9 +27,9 @@ var configCmd = &cobra.Command{
 				return nil
 			}
 
-			log.Printf("Template File written to %s", fmt.Sprintf(uiUtils.Purple, config.Config.ConfigFilePath))
+			log.Printf("Template File written to %s", fmt.Sprintf(utils.Purple, config.Config.ConfigFilePath))
 		} else {
-			template, err := uiUtils.PrettyYaml(configWithDefaults)
+			template, err := utils.PrettyYaml(configWithDefaults)
 			if err != nil {
 				log.Printf("Failed converting config with defaults to yaml, err: %v", err)
 				return nil
