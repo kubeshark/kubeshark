@@ -53,11 +53,26 @@ func CreateTapKubesharkResources(ctx context.Context, kubernetesProvider *kubern
 		Profiler:              profiler,
 	}
 
+	frontOpts := &kubernetes.ApiServerOptions{
+		Namespace:             kubesharkResourcesNamespace,
+		PodName:               kubernetes.FrontPodName,
+		PodImage:              agentImage,
+		KratosImage:           "",
+		KetoImage:             "",
+		ServiceAccountName:    serviceAccountName,
+		IsNamespaceRestricted: isNsRestrictedMode,
+		MaxEntriesDBSizeBytes: maxEntriesDBSizeBytes,
+		Resources:             apiServerResources,
+		ImagePullPolicy:       imagePullPolicy,
+		LogLevel:              logLevel,
+		Profiler:              profiler,
+	}
+
 	if err := createKubesharkApiServerPod(ctx, kubernetesProvider, opts); err != nil {
 		return kubesharkServiceAccountExists, err
 	}
 
-	if err := createFrontPod(ctx, kubernetesProvider, opts); err != nil {
+	if err := createFrontPod(ctx, kubernetesProvider, frontOpts); err != nil {
 		return kubesharkServiceAccountExists, err
 	}
 
@@ -66,7 +81,7 @@ func CreateTapKubesharkResources(ctx context.Context, kubernetesProvider *kubern
 		return kubesharkServiceAccountExists, err
 	}
 
-	_, err = kubernetesProvider.CreateService(ctx, kubesharkResourcesNamespace, "front", "front", 80, int32(config.Config.Front.PortForward.DstPort), int32(config.Config.Front.PortForward.SrcPort))
+	_, err = kubernetesProvider.CreateService(ctx, kubesharkResourcesNamespace, kubernetes.FrontPodName, kubernetes.FrontPodName, 80, int32(config.Config.Front.PortForward.DstPort), int32(config.Config.Front.PortForward.SrcPort))
 	if err != nil {
 		return kubesharkServiceAccountExists, err
 	}

@@ -300,7 +300,7 @@ func watchApiServerPod(ctx context.Context, kubernetesProvider *kubernetes.Provi
 }
 
 func watchFrontPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc) {
-	podExactRegex := regexp.MustCompile(fmt.Sprintf("^%s$", "front"))
+	podExactRegex := regexp.MustCompile(fmt.Sprintf("^%s$", kubernetes.FrontPodName))
 	podWatchHelper := kubernetes.NewPodWatchHelper(kubernetesProvider, podExactRegex)
 	eventChan, errorChan := kubernetes.FilteredWatch(ctx, podWatchHelper, []string{config.Config.KubesharkResourcesNamespace}, podWatchHelper)
 	isPodReady := false
@@ -319,7 +319,7 @@ func watchFrontPod(ctx context.Context, kubernetesProvider *kubernetes.Provider,
 			case kubernetes.EventAdded:
 				log.Printf("Watching API Server pod loop, added")
 			case kubernetes.EventDeleted:
-				log.Printf("%s removed", "front")
+				log.Printf("%s removed", kubernetes.FrontPodName)
 				cancel()
 				return
 			case kubernetes.EventModified:
@@ -420,7 +420,7 @@ func watchApiServerEvents(ctx context.Context, kubernetesProvider *kubernetes.Pr
 }
 
 func postApiServerStarted(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc) {
-	startProxyReportErrorIfAny(kubernetesProvider, ctx, cancel, "kubeshark-api-server", config.Config.Hub.PortForward.SrcPort, config.Config.Hub.PortForward.DstPort, "/echo")
+	startProxyReportErrorIfAny(kubernetesProvider, ctx, cancel, kubernetes.ApiServerServiceName, config.Config.Hub.PortForward.SrcPort, config.Config.Hub.PortForward.DstPort, "/echo")
 
 	if err := startTapperSyncer(ctx, cancel, kubernetesProvider, state.targetNamespaces, state.startTime); err != nil {
 		log.Printf(uiUtils.Error, fmt.Sprintf("Error starting kubeshark tapper syncer: %v", errormessage.FormatError(err)))
@@ -432,7 +432,7 @@ func postApiServerStarted(ctx context.Context, kubernetesProvider *kubernetes.Pr
 }
 
 func postFrontStarted(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc) {
-	startProxyReportErrorIfAny(kubernetesProvider, ctx, cancel, "front", config.Config.Front.PortForward.SrcPort, config.Config.Front.PortForward.DstPort, "")
+	startProxyReportErrorIfAny(kubernetesProvider, ctx, cancel, kubernetes.FrontServiceName, config.Config.Front.PortForward.SrcPort, config.Config.Front.PortForward.DstPort, "")
 
 	url := kubernetes.GetLocalhostOnPort(config.Config.Front.PortForward.SrcPort)
 	log.Printf("Kubeshark is available at %s", url)

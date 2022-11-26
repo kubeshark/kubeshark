@@ -406,19 +406,19 @@ func (provider *Provider) BuildFrontPod(opts *ApiServerOptions, mountVolumeClaim
 
 	cpuLimit, err := resource.ParseQuantity(opts.Resources.CpuLimit)
 	if err != nil {
-		return nil, fmt.Errorf("invalid cpu limit for %s container", "front")
+		return nil, fmt.Errorf("invalid cpu limit for %s container", opts.PodName)
 	}
 	memLimit, err := resource.ParseQuantity(opts.Resources.MemoryLimit)
 	if err != nil {
-		return nil, fmt.Errorf("invalid memory limit for %s container", "front")
+		return nil, fmt.Errorf("invalid memory limit for %s container", opts.PodName)
 	}
 	cpuRequests, err := resource.ParseQuantity(opts.Resources.CpuRequests)
 	if err != nil {
-		return nil, fmt.Errorf("invalid cpu request for %s container", "front")
+		return nil, fmt.Errorf("invalid cpu request for %s container", opts.PodName)
 	}
 	memRequests, err := resource.ParseQuantity(opts.Resources.MemoryRequests)
 	if err != nil {
-		return nil, fmt.Errorf("invalid memory request for %s container", "front")
+		return nil, fmt.Errorf("invalid memory request for %s container", opts.PodName)
 	}
 
 	volumeMounts := []core.VolumeMount{}
@@ -426,7 +426,7 @@ func (provider *Provider) BuildFrontPod(opts *ApiServerOptions, mountVolumeClaim
 
 	containers := []core.Container{
 		{
-			Name:            "front",
+			Name:            opts.PodName,
 			Image:           "kubeshark/front:latest",
 			ImagePullPolicy: opts.ImagePullPolicy,
 			VolumeMounts:    volumeMounts,
@@ -459,9 +459,9 @@ func (provider *Provider) BuildFrontPod(opts *ApiServerOptions, mountVolumeClaim
 
 	pod := &core.Pod{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: "front",
+			Name: opts.PodName,
 			Labels: map[string]string{
-				"app":          "front",
+				"app":          opts.PodName,
 				LabelManagedBy: provider.managedBy,
 				LabelCreatedBy: provider.createdBy,
 			},

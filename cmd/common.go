@@ -49,8 +49,8 @@ func startProxyReportErrorIfAny(kubernetesProvider *kubernetes.Provider, ctx con
 
 		provider = apiserver.NewProvider(kubernetes.GetLocalhostOnPort(srcPort), apiserver.DefaultRetries, apiserver.DefaultTimeout)
 		if err := provider.TestConnection(healthCheck); err != nil {
-			log.Printf(uiUtils.Error, "Couldn't connect to [%s].")
-			// cancel()
+			log.Printf(uiUtils.Error, fmt.Sprintf("Couldn't connect to [%s].", serviceName))
+			cancel()
 			return
 		}
 	}
