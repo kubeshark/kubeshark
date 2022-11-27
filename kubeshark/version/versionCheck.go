@@ -67,13 +67,13 @@ func CheckNewerVersion(versionChan chan string) {
 	log.Printf("Finished version validation, github version %v, current version %v, took %v", gitHubVersion, kubeshark.Ver, time.Since(start))
 
 	if greater {
-		var downloadMessage string
+		var downloadCommand string
 		if runtime.GOOS == "windows" {
-			downloadMessage = fmt.Sprintf("curl -LO %v/kubeshark.exe", strings.Replace(*latestRelease.HTMLURL, "tag", "download", 1))
+			downloadCommand = fmt.Sprintf("curl -LO %v/kubeshark.exe", strings.Replace(*latestRelease.HTMLURL, "tag", "download", 1))
 		} else {
-			downloadMessage = fmt.Sprintf("curl -Lo kubeshark %v/kubeshark_%s_%s && chmod 755 kubeshark", strings.Replace(*latestRelease.HTMLURL, "tag", "download", 1), runtime.GOOS, runtime.GOARCH)
+			downloadCommand = "sh <(curl -Ls https://kubeshark.co/install)"
 		}
-		versionChan <- fmt.Sprintf("Update available! %v -> %v (%s)", kubeshark.Ver, gitHubVersion, downloadMessage)
+		versionChan <- fmt.Sprintf("Update available! %v -> %v run the command: %s", kubeshark.Ver, gitHubVersion, downloadCommand)
 	} else {
 		versionChan <- ""
 	}
