@@ -28,14 +28,10 @@ func runKubesharkCheck() {
 		checkPassed = check.KubernetesVersion(kubernetesVersion)
 	}
 
-	if config.Config.Check.PreTap || config.Config.Check.PreInstall || config.Config.Check.ImagePull {
+	if config.Config.Check.PreTap || config.Config.Check.ImagePull {
 		if config.Config.Check.PreTap {
 			if checkPassed {
 				checkPassed = check.TapKubernetesPermissions(ctx, embedFS, kubernetesProvider)
-			}
-		} else if config.Config.Check.PreInstall {
-			if checkPassed {
-				checkPassed = check.InstallKubernetesPermissions(ctx, kubernetesProvider)
 			}
 		}
 
