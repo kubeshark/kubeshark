@@ -3,14 +3,13 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"log"
 	"net/http"
 
-	"github.com/kubeshark/kubeshark/internal/connect"
-	"github.com/kubeshark/kubeshark/utils"
-
 	"github.com/kubeshark/kubeshark/config"
+	"github.com/kubeshark/kubeshark/internal/connect"
 	"github.com/kubeshark/kubeshark/kubernetes"
+	"github.com/kubeshark/kubeshark/utils"
+	"github.com/rs/zerolog/log"
 )
 
 func runKubesharkView() {
@@ -27,12 +26,19 @@ func runKubesharkView() {
 	if url == "" {
 		exists, err := kubernetesProvider.DoesServiceExist(ctx, config.Config.ResourcesNamespace, kubernetes.HubServiceName)
 		if err != nil {
-			log.Printf("Failed to found kubeshark service %v", err)
+			log.Error().
+				Str("name", "kubeshark").
+				Err(err).
+				Msg("Failed to found service!")
 			cancel()
 			return
 		}
 		if !exists {
 			log.Printf("%s service not found, you should run `kubeshark tap` command first", kubernetes.HubServiceName)
+			log.Error().
+				Str("name", kubernetes.HubServiceName).
+				Str("tap-command", "kubeshark tap").
+				Msg("Service not found! You should run the tap command first:")
 			cancel()
 			return
 		}
@@ -41,20 +47,23 @@ func runKubesharkView() {
 
 		response, err := http.Get(fmt.Sprintf("%s/", url))
 		if err == nil && response.StatusCode == 200 {
-			log.Printf("Found a running service %s and open port %d", kubernetes.HubServiceName, config.Config.Front.PortForward.SrcPort)
+			log.Info().
+				Str("name", kubernetes.HubServiceName).
+				Int("port", int(config.Config.Front.PortForward.SrcPort)).
+				Msg("Found a running service.")
 			return
 		}
-		log.Printf("Establishing connection to k8s cluster...")
+		log.Info().Msg("Establishing connection to k8s cluster...")
 		startProxyReportErrorIfAny(kubernetesProvider, ctx, cancel, kubernetes.FrontServiceName, config.Config.Front.PortForward.SrcPort, config.Config.Front.PortForward.DstPort, "")
 	}
 
 	connector := connect.NewConnector(url, connect.DefaultRetries, connect.DefaultTimeout)
 	if err := connector.TestConnection(""); err != nil {
-		log.Printf(utils.Error, "Couldn't connect to Hub.")
+		log.Error().Msg(fmt.Sprintf(utils.Error, "Couldn't connect to Hub."))
 		return
 	}
 
-	log.Printf("Kubeshark is available at %s", url)
+	log.Info().Msg(fmt.Sprintf("Kubeshark is available at %s", url))
 
 	if !config.Config.HeadlessMode {
 		utils.OpenBrowser(url)

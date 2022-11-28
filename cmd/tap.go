@@ -2,12 +2,12 @@ package cmd
 
 import (
 	"errors"
-	"log"
 
 	"github.com/creasty/defaults"
 	"github.com/kubeshark/kubeshark/config"
 	"github.com/kubeshark/kubeshark/config/configStructs"
 	"github.com/kubeshark/kubeshark/errormessage"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 )
 
@@ -31,7 +31,9 @@ Supported protocols are HTTP and gRPC.`,
 			return errormessage.FormatError(err)
 		}
 
-		log.Printf("Kubeshark will store up to %s of traffic, old traffic will be cleared once the limit is reached.", config.Config.Tap.HumanMaxEntriesDBSize)
+		log.Info().
+			Str("limit", config.Config.Tap.HumanMaxEntriesDBSize).
+			Msg("Kubeshark will store traffic up to a limit. The old traffic will be cleared once the limit is reached.")
 
 		return nil
 	},
@@ -42,7 +44,7 @@ func init() {
 
 	defaultTapConfig := configStructs.TapConfig{}
 	if err := defaults.Set(&defaultTapConfig); err != nil {
-		log.Print(err)
+		log.Debug().Err(err)
 	}
 
 	tapCmd.Flags().Uint16P(configStructs.GuiPortTapName, "p", defaultTapConfig.GuiPort, "Provide a custom port for the web interface webserver")

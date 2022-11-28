@@ -4,11 +4,11 @@ import (
 	"context"
 	"embed"
 	"fmt"
-	"log"
 
 	"github.com/kubeshark/kubeshark/cmd/check"
 	"github.com/kubeshark/kubeshark/config"
 	"github.com/kubeshark/kubeshark/utils"
+	"github.com/rs/zerolog/log"
 )
 
 var (
@@ -17,7 +17,7 @@ var (
 )
 
 func runKubesharkCheck() {
-	log.Printf("Kubeshark checks\n===================")
+	log.Info().Msg("Kubeshark checks...")
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // cancel will be called when this function exits
@@ -51,8 +51,8 @@ func runKubesharkCheck() {
 	}
 
 	if checkPassed {
-		log.Printf("\nStatus check results are %v", fmt.Sprintf(utils.Green, "√"))
+		log.Info().Msg(fmt.Sprintf("Status check results are %v", fmt.Sprintf(utils.Green, "√")))
 	} else {
-		log.Printf("\nStatus check results are %v", fmt.Sprintf(utils.Red, "✗"))
+		log.Info().Msg(fmt.Sprintf("Status check results are %v", fmt.Sprintf(utils.Red, "✗")))
 	}
 }

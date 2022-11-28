@@ -3,39 +3,55 @@ package check
 import (
 	"context"
 	"fmt"
-	"log"
 	"regexp"
 	"time"
 
 	"github.com/kubeshark/kubeshark/kubernetes"
 	"github.com/kubeshark/kubeshark/utils"
+	"github.com/rs/zerolog/log"
 	core "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func ImagePullInCluster(ctx context.Context, kubernetesProvider *kubernetes.Provider) bool {
-	log.Printf("\nimage-pull-in-cluster\n--------------------")
+	log.Info().Msg("[image-pull-in-cluster]")
 
 	namespace := "default"
 	podName := "kubeshark-test"
 
 	defer func() {
 		if err := kubernetesProvider.RemovePod(ctx, namespace, podName); err != nil {
-			log.Printf("%v error while removing test pod in cluster, err: %v", fmt.Sprintf(utils.Red, "✗"), err)
+			log.Error().
+				Str("namespace", namespace).
+				Str("pod", podName).
+				Err(err).
+				Msg("While removing test pod!")
 		}
 	}()
 
 	if err := createImagePullInClusterPod(ctx, kubernetesProvider, namespace, podName); err != nil {
-		log.Printf("%v error while creating test pod in cluster, err: %v", fmt.Sprintf(utils.Red, "✗"), err)
+		log.Error().
+			Str("namespace", namespace).
+			Str("pod", podName).
+			Err(err).
+			Msg("While creating test pod!")
 		return false
 	}
 
 	if err := checkImagePulled(ctx, kubernetesProvider, namespace, podName); err != nil {
 		log.Printf("%v cluster is not able to pull kubeshark containers from docker hub, err: %v", fmt.Sprintf(utils.Red, "✗"), err)
+		log.Error().
+			Str("namespace", namespace).
+			Str("pod", podName).
+			Err(err).
+			Msg("Unable to pull images from Docker Hub!")
 		return false
 	}
 
-	log.Printf("%v cluster is able to pull kubeshark containers from docker hub", fmt.Sprintf(utils.Green, "√"))
+	log.Info().
+		Str("namespace", namespace).
+		Str("pod", podName).
+		Msg("Pulling images from Docker Hub is passed.")
 	return true
 }
 
