@@ -2,13 +2,13 @@ package cmd
 
 import (
 	"context"
-	"log"
 
 	"github.com/creasty/defaults"
 	"github.com/kubeshark/kubeshark/config"
 	"github.com/kubeshark/kubeshark/config/configStructs"
 	"github.com/kubeshark/kubeshark/errormessage"
 	"github.com/kubeshark/kubeshark/kubeshark/fsUtils"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 )
 
@@ -26,10 +26,10 @@ var logsCmd = &cobra.Command{
 			return errormessage.FormatError(validationErr)
 		}
 
-		log.Printf("Using file path %s", config.Config.Logs.FilePath())
+		log.Debug().Str("logs-path", config.Config.Logs.FilePath()).Msg("Using this logs path...")
 
 		if dumpLogsErr := fsUtils.DumpLogs(ctx, kubernetesProvider, config.Config.Logs.FilePath()); dumpLogsErr != nil {
-			log.Printf("Failed dump logs %v", dumpLogsErr)
+			log.Error().Err(dumpLogsErr).Msg("Failed to dump logs.")
 		}
 
 		return nil
@@ -41,7 +41,7 @@ func init() {
 
 	defaultLogsConfig := configStructs.LogsConfig{}
 	if err := defaults.Set(&defaultLogsConfig); err != nil {
-		log.Print(err)
+		log.Debug().Err(err)
 	}
 
 	logsCmd.Flags().StringP(configStructs.FileLogsName, "f", defaultLogsConfig.FileStr, "Path for zip file (default current <pwd>\\kubeshark_logs.zip)")

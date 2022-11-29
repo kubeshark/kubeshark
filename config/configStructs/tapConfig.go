@@ -3,13 +3,13 @@ package configStructs
 import (
 	"fmt"
 	"io/fs"
-	"log"
 	"os"
 	"regexp"
 	"strings"
 
 	"github.com/kubeshark/kubeshark/utils"
 	"github.com/kubeshark/worker/models"
+	"github.com/rs/zerolog/log"
 )
 
 const (
@@ -69,7 +69,7 @@ func (config *TapConfig) GetInsertionFilter() string {
 		if _, err := os.Stat(insertionFilter); err == nil {
 			b, err := os.ReadFile(insertionFilter)
 			if err != nil {
-				log.Printf(utils.Warning, fmt.Sprintf("Couldn't read the file on path: %s, err: %v", insertionFilter, err))
+				log.Warn().Err(err).Str("insertion-filter-path", insertionFilter).Msg("Couldn't read the file! Defaulting to string.")
 			} else {
 				insertionFilter = string(b)
 			}
@@ -78,6 +78,7 @@ func (config *TapConfig) GetInsertionFilter() string {
 
 	redactFilter := getRedactFilter(config)
 	if insertionFilter != "" && redactFilter != "" {
+		log.Info().Str("filter", insertionFilter).Msg("Using insertion filter:")
 		return fmt.Sprintf("(%s) and (%s)", insertionFilter, redactFilter)
 	} else if insertionFilter == "" && redactFilter != "" {
 		return redactFilter

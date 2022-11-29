@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"log"
 	"net/http"
 	"time"
 
@@ -12,6 +11,7 @@ import (
 	"github.com/kubeshark/worker/models"
 
 	"github.com/kubeshark/kubeshark/config"
+	"github.com/rs/zerolog/log"
 	core "k8s.io/api/core/v1"
 )
 
@@ -38,9 +38,9 @@ func (connector *Connector) TestConnection(path string) error {
 	retriesLeft := connector.retries
 	for retriesLeft > 0 {
 		if isReachable, err := connector.isReachable(path); err != nil || !isReachable {
-			log.Printf("Hub is not ready yet %v!", err)
+			log.Debug().Err(err).Msg("Hub is not ready yet!")
 		} else {
-			log.Printf("Connection test to Hub passed successfully!")
+			log.Debug().Msg("Connection test to Hub passed successfully.")
 			break
 		}
 		retriesLeft -= 1
@@ -71,7 +71,7 @@ func (connector *Connector) ReportTapperStatus(tapperStatus models.TapperStatus)
 		if _, err := utils.Post(tapperStatusUrl, "application/json", bytes.NewBuffer(jsonValue), connector.client); err != nil {
 			return fmt.Errorf("Failed sending to Hub the tapped pods %w", err)
 		} else {
-			log.Printf("Reported to Hub about tapper status: %v", tapperStatus)
+			log.Debug().Interface("tapper-status", tapperStatus).Msg("Reported to Hub about tapper status:")
 			return nil
 		}
 	}
@@ -86,7 +86,7 @@ func (connector *Connector) ReportTappedPods(pods []core.Pod) error {
 		if _, err := utils.Post(tappedPodsUrl, "application/json", bytes.NewBuffer(jsonValue), connector.client); err != nil {
 			return fmt.Errorf("Failed sending to Hub the tapped pods %w", err)
 		} else {
-			log.Printf("Reported to Hub about %d taped pods successfully", len(pods))
+			log.Debug().Int("pod-count", len(pods)).Msg("Reported to Hub about tapped pod count:")
 			return nil
 		}
 	}

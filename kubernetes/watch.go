@@ -4,12 +4,11 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log"
 	"sync"
 	"time"
 
 	"github.com/kubeshark/kubeshark/debounce"
-
+	"github.com/rs/zerolog/log"
 	"k8s.io/apimachinery/pkg/watch"
 )
 
@@ -57,13 +56,13 @@ func FilteredWatch(ctx context.Context, watcherCreator WatchCreator, targetNames
 				} else {
 					if !watchRestartDebouncer.IsOn() {
 						if err := watchRestartDebouncer.SetOn(); err != nil {
-							log.Print(err)
+							log.Error().Err(err)
 						}
-						log.Print("k8s watch channel closed, restarting watcher")
+						log.Warn().Msg("K8s watch channel closed, restarting watcher...")
 						time.Sleep(time.Second * 5)
 						continue
 					} else {
-						errorChan <- errors.New("k8s watch unstable, closes frequently")
+						errorChan <- errors.New("K8s watch unstable, closes frequently")
 						break
 					}
 				}

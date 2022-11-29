@@ -2,41 +2,39 @@ package check
 
 import (
 	"context"
-	"fmt"
-	"log"
 	"regexp"
 
 	"github.com/kubeshark/kubeshark/config"
 	"github.com/kubeshark/kubeshark/internal/connect"
 	"github.com/kubeshark/kubeshark/kubernetes"
-	"github.com/kubeshark/kubeshark/utils"
+	"github.com/rs/zerolog/log"
 )
 
 func ServerConnection(kubernetesProvider *kubernetes.Provider) bool {
-	log.Printf("\nHub connectivity\n--------------------")
+	log.Info().Msg("[hub-connectivity]")
 
 	serverUrl := kubernetes.GetLocalhostOnPort(config.Config.Hub.PortForward.SrcPort)
 
 	connector := connect.NewConnector(serverUrl, 1, connect.DefaultTimeout)
 	if err := connector.TestConnection(""); err == nil {
-		log.Printf("%v found Kubeshark server tunnel available and connected successfully to Hub", fmt.Sprintf(utils.Green, "√"))
+		log.Info().Msg("Found Kubeshark server tunnel available and connected successfully to Hub!")
 		return true
 	}
 
 	connectedToHub := false
 
 	if err := checkProxy(serverUrl, kubernetesProvider); err != nil {
-		log.Printf("%v couldn't connect to Hub using proxy, err: %v", fmt.Sprintf(utils.Red, "✗"), err)
+		log.Error().Err(err).Msg("Couldn't connect to Hub using proxy!")
 	} else {
 		connectedToHub = true
-		log.Printf("%v connected successfully to Hub using proxy", fmt.Sprintf(utils.Green, "√"))
+		log.Info().Msg("Connected successfully to Hub using proxy.")
 	}
 
 	if err := checkPortForward(serverUrl, kubernetesProvider); err != nil {
-		log.Printf("%v couldn't connect to Hub using port-forward, err: %v", fmt.Sprintf(utils.Red, "✗"), err)
+		log.Error().Err(err).Msg("Couldn't connect to Hub using port-forward!")
 	} else {
 		connectedToHub = true
-		log.Printf("%v connected successfully to Hub using port-forward", fmt.Sprintf(utils.Green, "√"))
+		log.Info().Msg("Connected successfully to Hub using port-forward.")
 	}
 
 	return connectedToHub
@@ -57,7 +55,7 @@ func checkProxy(serverUrl string, kubernetesProvider *kubernetes.Provider) error
 	}
 
 	if err := httpServer.Shutdown(ctx); err != nil {
-		log.Printf("Error occurred while stopping proxy, err: %v", err)
+		log.Error().Err(err).Msg("While stopping the proxy!")
 	}
 
 	return nil

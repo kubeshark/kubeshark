@@ -1,22 +1,19 @@
 package check
 
 import (
-	"fmt"
-	"log"
-
 	"github.com/kubeshark/kubeshark/kubernetes"
 	"github.com/kubeshark/kubeshark/semver"
-	"github.com/kubeshark/kubeshark/utils"
+	"github.com/rs/zerolog/log"
 )
 
 func KubernetesVersion(kubernetesVersion *semver.SemVersion) bool {
-	log.Printf("\nkubernetes-version\n--------------------")
+	log.Info().Msg("[kubernetes-api]")
 
 	if err := kubernetes.ValidateKubernetesVersion(kubernetesVersion); err != nil {
-		log.Printf("%v not running the minimum Kubernetes API version, err: %v", fmt.Sprintf(utils.Red, "✗"), err)
+		log.Error().Err(err).Msg("Not running the minimum Kubernetes API version!")
 		return false
 	}
 
-	log.Printf("%v is running the minimum Kubernetes API version", fmt.Sprintf(utils.Green, "√"))
+	log.Info().Msg("Running the minimum Kubernetes API version")
 	return true
 }

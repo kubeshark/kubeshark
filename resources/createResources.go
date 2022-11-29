@@ -2,20 +2,18 @@ package resources
 
 import (
 	"context"
-	"fmt"
-	"log"
 
 	"github.com/kubeshark/kubeshark/config"
 	"github.com/kubeshark/kubeshark/errormessage"
 	"github.com/kubeshark/kubeshark/kubernetes"
 	"github.com/kubeshark/kubeshark/kubeshark"
-	"github.com/kubeshark/kubeshark/utils"
 	"github.com/kubeshark/worker/models"
-	"github.com/op/go-logging"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	core "k8s.io/api/core/v1"
 )
 
-func CreateTapKubesharkResources(ctx context.Context, kubernetesProvider *kubernetes.Provider, serializedKubesharkConfig string, isNsRestrictedMode bool, kubesharkResourcesNamespace string, maxEntriesDBSizeBytes int64, hubResources models.Resources, imagePullPolicy core.PullPolicy, logLevel logging.Level, profiler bool) (bool, error) {
+func CreateTapKubesharkResources(ctx context.Context, kubernetesProvider *kubernetes.Provider, serializedKubesharkConfig string, isNsRestrictedMode bool, kubesharkResourcesNamespace string, maxEntriesDBSizeBytes int64, hubResources models.Resources, imagePullPolicy core.PullPolicy, logLevel zerolog.Level, profiler bool) (bool, error) {
 	if !isNsRestrictedMode {
 		if err := createKubesharkNamespace(ctx, kubernetesProvider, kubesharkResourcesNamespace); err != nil {
 			return false, err
@@ -28,7 +26,7 @@ func CreateTapKubesharkResources(ctx context.Context, kubernetesProvider *kubern
 
 	kubesharkServiceAccountExists, err := createRBACIfNecessary(ctx, kubernetesProvider, isNsRestrictedMode, kubesharkResourcesNamespace, []string{"pods", "services", "endpoints"})
 	if err != nil {
-		log.Printf(utils.Warning, fmt.Sprintf("Failed to ensure the resources required for IP resolving. Kubeshark will not resolve target IPs to names. error: %v", errormessage.FormatError(err)))
+		log.Warn().Err(errormessage.FormatError(err)).Msg("Failed to ensure the resources required for IP resolving. Kubeshark will not resolve target IPs to names.")
 	}
 
 	var serviceAccountName string
@@ -81,14 +79,14 @@ func CreateTapKubesharkResources(ctx context.Context, kubernetesProvider *kubern
 		return kubesharkServiceAccountExists, err
 	}
 
-	log.Printf("Successfully created service: %s", kubernetes.HubServiceName)
+	log.Info().Str("service-name", kubernetes.HubServiceName).Msg("Successfully created service:")
 
 	_, err = kubernetesProvider.CreateService(ctx, kubesharkResourcesNamespace, kubernetes.FrontServiceName, kubernetes.FrontServiceName, 80, int32(config.Config.Front.PortForward.DstPort), int32(config.Config.Front.PortForward.SrcPort))
 	if err != nil {
 		return kubesharkServiceAccountExists, err
 	}
 
-	log.Printf("Successfully created service: %s", kubernetes.FrontServiceName)
+	log.Info().Str("service-name", kubernetes.FrontServiceName).Msg("Successfully created service:")
 
 	return kubesharkServiceAccountExists, nil
 }
@@ -125,7 +123,7 @@ func createKubesharkHubPod(ctx context.Context, kubernetesProvider *kubernetes.P
 	if _, err = kubernetesProvider.CreatePod(ctx, opts.Namespace, pod); err != nil {
 		return err
 	}
-	log.Printf("Successfully created pod: [%s]", pod.Name)
+	log.Info().Str("pod-name", pod.Name).Msg("Successfully created pod.")
 	return nil
 }
 
@@ -137,6 +135,6 @@ func createFrontPod(ctx context.Context, kubernetesProvider *kubernetes.Provider
 	if _, err = kubernetesProvider.CreatePod(ctx, opts.Namespace, pod); err != nil {
 		return err
 	}
-	log.Printf("Successfully created pod: [%s]", pod.Name)
+	log.Info().Str("pod-name", pod.Name).Msg("Successfully created pod.")
 	return nil
 }

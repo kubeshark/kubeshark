@@ -3,7 +3,6 @@ package kubernetes
 import (
 	"context"
 	"fmt"
-	"log"
 	"regexp"
 	"time"
 
@@ -11,7 +10,8 @@ import (
 	"github.com/kubeshark/kubeshark/utils"
 	"github.com/kubeshark/worker/api"
 	"github.com/kubeshark/worker/models"
-	"github.com/op/go-logging"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	core "k8s.io/api/core/v1"
 )
 
@@ -42,7 +42,7 @@ type TapperSyncerConfig struct {
 	KubesharkResourcesNamespace   string
 	TapperResources               models.Resources
 	ImagePullPolicy               core.PullPolicy
-	LogLevel                      logging.Level
+	LogLevel                      zerolog.Level
 	KubesharkApiFilteringOptions  api.TrafficFilteringOptions
 	KubesharkServiceAccountExists bool
 	ServiceMesh                   bool
@@ -91,11 +91,15 @@ func (tapperSyncer *KubesharkTapperSyncer) watchTapperPods() {
 
 			pod, err := wEvent.ToPod()
 			if err != nil {
-				log.Printf("[ERROR] parsing Kubeshark resource pod: %+v", err)
+				log.Error().Str("pod", TapperPodName).Err(err).Msg("While parsing Kubeshark resource!")
 				continue
 			}
 
-			log.Printf("Watching tapper pods loop, tapper: %v, node: %v, status: %v", pod.Name, pod.Spec.NodeName, pod.Status.Phase)
+			log.Debug().
+				Str("pod", pod.Name).
+				Str("node", pod.Spec.NodeName).
+				Interface("phase", pod.Status.Phase).
+				Msg("Watching pod events...")
 			if pod.Spec.NodeName != "" {
 				tapperStatus := models.TapperStatus{TapperName: pod.Name, NodeName: pod.Spec.NodeName, Status: string(pod.Status.Phase)}
 				tapperSyncer.TapperStatusChangedOut <- tapperStatus
@@ -106,10 +110,12 @@ func (tapperSyncer *KubesharkTapperSyncer) watchTapperPods() {
 				errorChan = nil
 				continue
 			}
-			log.Printf("[ERROR] Watching tapper pods loop, error: %+v", err)
+			log.Error().Str("pod", TapperPodName).Err(err).Msg("While watching pod!")
 
 		case <-tapperSyncer.context.Done():
-			log.Printf("Watching tapper pods loop, ctx done")
+			log.Debug().
+				Str("pod", TapperPodName).
+				Msg("Watching pod, context done.")
 			return
 		}
 	}
@@ -130,23 +136,26 @@ func (tapperSyncer *KubesharkTapperSyncer) watchTapperEvents() {
 
 			event, err := wEvent.ToEvent()
 			if err != nil {
-				log.Printf("[ERROR] parsing Kubeshark resource event: %+v", err)
+				log.Error().
+					Str("pod", TapperPodName).
+					Err(err).
+					Msg("Parsing resource event.")
 				continue
 			}
 
-			log.Printf(
-				"Watching tapper events loop, event %s, time: %v, resource: %s (%s), reason: %s, note: %s",
-				event.Name,
-				event.CreationTimestamp.Time,
-				event.Regarding.Name,
-				event.Regarding.Kind,
-				event.Reason,
-				event.Note,
-			)
+			log.Debug().
+				Str("pod", TapperPodName).
+				Str("event", event.Name).
+				Time("time", event.CreationTimestamp.Time).
+				Str("name", event.Regarding.Name).
+				Str("kind", event.Regarding.Kind).
+				Str("reason", event.Reason).
+				Str("note", event.Note).
+				Msg("Watching events.")
 
 			pod, err1 := tapperSyncer.kubernetesProvider.GetPod(tapperSyncer.context, tapperSyncer.config.KubesharkResourcesNamespace, event.Regarding.Name)
 			if err1 != nil {
-				log.Printf("Couldn't get tapper pod %s", event.Regarding.Name)
+				log.Error().Str("name", event.Regarding.Name).Msg("Couldn't get pod")
 				continue
 			}
 
@@ -166,10 +175,15 @@ func (tapperSyncer *KubesharkTapperSyncer) watchTapperEvents() {
 				continue
 			}
 
-			log.Printf("[ERROR] Watching tapper events loop, error: %+v", err)
+			log.Error().
+				Str("pod", TapperPodName).
+				Err(err).
+				Msg("While watching events.")
 
 		case <-tapperSyncer.context.Done():
-			log.Printf("Watching tapper events loop, ctx done")
+			log.Debug().
+				Str("pod", TapperPodName).
+				Msg("Watching pod events, context done.")
 			return
 		}
 	}
@@ -189,7 +203,7 @@ func (tapperSyncer *KubesharkTapperSyncer) watchPodsForTapping() {
 		}
 
 		if !changeFound {
-			log.Printf("Nothing changed update tappers not needed")
+			log.Debug().Msg("Nothing changed. Updating tappers is not needed.")
 			return
 		}
 		if err := tapperSyncer.updateKubesharkTappers(); err != nil {
@@ -217,17 +231,37 @@ func (tapperSyncer *KubesharkTapperSyncer) watchPodsForTapping() {
 
 			switch wEvent.Type {
 			case EventAdded:
-				log.Printf("Added matching pod %s, ns: %s", pod.Name, pod.Namespace)
+				log.Debug().
+					Str("pod", pod.Name).
+					Str("namespace", pod.Namespace).
+					Msg("Added matching pod.")
 				if err := restartTappersDebouncer.SetOn(); err != nil {
-					log.Print(err)
+					log.Error().
+						Str("pod", pod.Name).
+						Str("namespace", pod.Namespace).
+						Err(err).
+						Msg("While restarting tappers!")
 				}
 			case EventDeleted:
-				log.Printf("Removed matching pod %s, ns: %s", pod.Name, pod.Namespace)
+				log.Debug().
+					Str("pod", pod.Name).
+					Str("namespace", pod.Namespace).
+					Msg("Removed matching pod.")
 				if err := restartTappersDebouncer.SetOn(); err != nil {
-					log.Print(err)
+					log.Error().
+						Str("pod", pod.Name).
+						Str("namespace", pod.Namespace).
+						Err(err).
+						Msg("While restarting tappers!")
 				}
 			case EventModified:
-				log.Printf("Modified matching pod %s, ns: %s, phase: %s, ip: %s", pod.Name, pod.Namespace, pod.Status.Phase, pod.Status.PodIP)
+				log.Debug().
+					Str("pod", pod.Name).
+					Str("namespace", pod.Namespace).
+					Str("ip", pod.Status.PodIP).
+					Interface("phase", pod.Status.Phase).
+					Msg("Modified matching pod.")
+
 				// Act only if the modified pod has already obtained an IP address.
 				// After filtering for IPs, on a normal pod restart this includes the following events:
 				// - Pod deletion
@@ -236,7 +270,11 @@ func (tapperSyncer *KubesharkTapperSyncer) watchPodsForTapping() {
 				// Ready/unready transitions might also trigger this event.
 				if pod.Status.PodIP != "" {
 					if err := restartTappersDebouncer.SetOn(); err != nil {
-						log.Print(err)
+						log.Error().
+							Str("pod", pod.Name).
+							Str("namespace", pod.Namespace).
+							Err(err).
+							Msg("While restarting tappers!")
 					}
 				}
 			case EventBookmark:
@@ -254,7 +292,7 @@ func (tapperSyncer *KubesharkTapperSyncer) watchPodsForTapping() {
 			continue
 
 		case <-tapperSyncer.context.Done():
-			log.Printf("Watching pods loop, context done, stopping `restart tappers debouncer`")
+			log.Debug().Msg("Watching pods, context done. Stopping \"restart tappers debouncer\"")
 			restartTappersDebouncer.Cancel()
 			// TODO: Does this also perform cleanup?
 			return
@@ -263,7 +301,7 @@ func (tapperSyncer *KubesharkTapperSyncer) watchPodsForTapping() {
 }
 
 func (tapperSyncer *KubesharkTapperSyncer) handleErrorInWatchLoop(err error, restartTappersDebouncer *debounce.Debouncer) {
-	log.Printf("Watching pods loop, got error %v, stopping `restart tappers debouncer`", err)
+	log.Error().Err(err).Msg("While watching pods, got an error! Stopping \"restart tappers debouncer\"")
 	restartTappersDebouncer.Cancel()
 	tapperSyncer.ErrorOut <- K8sTapManagerError{
 		OriginalError:    err,
@@ -278,10 +316,10 @@ func (tapperSyncer *KubesharkTapperSyncer) updateCurrentlyTappedPods() (err erro
 		podsToTap := excludeKubesharkPods(matchingPods)
 		addedPods, removedPods := getPodArrayDiff(tapperSyncer.CurrentlyTappedPods, podsToTap)
 		for _, addedPod := range addedPods {
-			log.Printf("tapping new pod %s", addedPod.Name)
+			log.Info().Str("pod", addedPod.Name).Msg("Tapping new pod.")
 		}
 		for _, removedPod := range removedPods {
-			log.Printf("pod %s is no longer running, tapping for it stopped", removedPod.Name)
+			log.Info().Str("pod", removedPod.Name).Msg("Pod is no longer running. Tapping is stopped.")
 		}
 		if len(addedPods) > 0 || len(removedPods) > 0 {
 			tapperSyncer.CurrentlyTappedPods = podsToTap
@@ -305,11 +343,11 @@ func (tapperSyncer *KubesharkTapperSyncer) updateKubesharkTappers() error {
 	}
 
 	if utils.EqualStringSlices(nodesToTap, tapperSyncer.tappedNodes) {
-		log.Print("Skipping apply, DaemonSet is up to date")
+		log.Debug().Msg("Skipping apply, DaemonSet is up to date")
 		return nil
 	}
 
-	log.Printf("Updating DaemonSet to run on nodes: %v", nodesToTap)
+	log.Debug().Strs("nodes", nodesToTap).Msg("Updating DaemonSet to run on nodes.")
 
 	image := "kubeshark/worker:latest"
 
@@ -345,7 +383,7 @@ func (tapperSyncer *KubesharkTapperSyncer) updateKubesharkTappers() error {
 			return err
 		}
 
-		log.Printf("Successfully created %v tappers", len(tapperSyncer.nodeToTappedPodMap))
+		log.Debug().Int("tapper-count", len(tapperSyncer.nodeToTappedPodMap)).Msg("Successfully created tappers.")
 	} else {
 		if err := tapperSyncer.kubernetesProvider.ResetKubesharkTapperDaemonSet(
 			tapperSyncer.context,
@@ -356,7 +394,7 @@ func (tapperSyncer *KubesharkTapperSyncer) updateKubesharkTappers() error {
 			return err
 		}
 
-		log.Printf("Successfully reset tapper daemon set")
+		log.Debug().Msg("Successfully reset tapper daemon set")
 	}
 
 	tapperSyncer.tappedNodes = nodesToTap

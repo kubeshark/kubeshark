@@ -1,21 +1,25 @@
 package goUtils
 
 import (
-	"log"
 	"reflect"
 	"runtime/debug"
+
+	"github.com/rs/zerolog/log"
 )
 
 func HandleExcWrapper(fn interface{}, params ...interface{}) (result []reflect.Value) {
 	defer func() {
 		if panicMessage := recover(); panicMessage != nil {
 			stack := debug.Stack()
-			log.Fatalf("Unhandled panic: %v\n stack: %s", panicMessage, stack)
+			log.Fatal().
+				Interface("msg", panicMessage).
+				Interface("stack", stack).
+				Msg("Unhandled panic!")
 		}
 	}()
 	f := reflect.ValueOf(fn)
 	if f.Type().NumIn() != len(params) {
-		panic("incorrect number of parameters!")
+		panic("Incorrect number of parameters!")
 	}
 	inputs := make([]reflect.Value, len(params))
 	for k, in := range params {

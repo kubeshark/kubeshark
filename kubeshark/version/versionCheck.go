@@ -4,7 +4,6 @@ import (
 	"context"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 	"runtime"
 	"strings"
@@ -12,18 +11,19 @@ import (
 
 	"github.com/kubeshark/kubeshark/kubeshark"
 	"github.com/kubeshark/kubeshark/pkg/version"
+	"github.com/kubeshark/kubeshark/utils"
+	"github.com/rs/zerolog/log"
 
 	"github.com/google/go-github/v37/github"
 )
 
-func CheckNewerVersion(versionChan chan string) {
-	log.Printf("Checking for newer version...")
+func CheckNewerVersion() {
+	log.Info().Msg("Checking for newer version...")
 	start := time.Now()
 	client := github.NewClient(nil)
 	latestRelease, _, err := client.Repositories.GetLatestRelease(context.Background(), "kubeshark", "kubeshark")
 	if err != nil {
-		log.Printf("[ERROR] Failed to get latest release")
-		versionChan <- ""
+		log.Error().Msg("Failed to get latest release.")
 		return
 	}
 
@@ -35,23 +35,20 @@ func CheckNewerVersion(versionChan chan string) {
 		}
 	}
 	if versionFileUrl == "" {
-		log.Printf("[ERROR] Version file not found in the latest release")
-		versionChan <- ""
+		log.Error().Msg("Version file not found in the latest release.")
 		return
 	}
 
 	res, err := http.Get(versionFileUrl)
 	if err != nil {
-		log.Printf("[ERROR] Failed to get the version file %v", err)
-		versionChan <- ""
+		log.Error().Err(err).Msg("Failed to get the version file.")
 		return
 	}
 
 	data, err := io.ReadAll(res.Body)
 	res.Body.Close()
 	if err != nil {
-		log.Printf("[ERROR] Failed to read the version file -> %v", err)
-		versionChan <- ""
+		log.Error().Err(err).Msg("Failed to read the version file.")
 		return
 	}
 	gitHubVersion := string(data)
@@ -59,12 +56,18 @@ func CheckNewerVersion(versionChan chan string) {
 
 	greater, err := version.GreaterThen(gitHubVersion, kubeshark.Ver)
 	if err != nil {
-		log.Printf("[ERROR] Ver version is not valid, github version %v, current version %v", gitHubVersion, kubeshark.Ver)
-		versionChan <- ""
+		log.Error().
+			Str("upstream-version", gitHubVersion).
+			Str("local-version", kubeshark.Ver).
+			Msg("Version is invalid!")
 		return
 	}
 
-	log.Printf("Finished version validation, github version %v, current version %v, took %v", gitHubVersion, kubeshark.Ver, time.Since(start))
+	log.Debug().
+		Str("upstream-version", gitHubVersion).
+		Str("local-version", kubeshark.Ver).
+		Dur("elapsed-time", time.Since(start)).
+		Msg("Finished version validation.")
 
 	if greater {
 		var downloadCommand string
@@ -73,8 +76,7 @@ func CheckNewerVersion(versionChan chan string) {
 		} else {
 			downloadCommand = "sh <(curl -Ls https://kubeshark.co/install)"
 		}
-		versionChan <- fmt.Sprintf("Update available! %v -> %v run the command: %s", kubeshark.Ver, gitHubVersion, downloadCommand)
-	} else {
-		versionChan <- ""
+		msg := fmt.Sprintf("Update available! %v -> %v run:", kubeshark.Ver, gitHubVersion)
+		log.Info().Str("command", downloadCommand).Msg(fmt.Sprintf(utils.Yellow, msg))
 	}
 }

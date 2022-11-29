@@ -4,7 +4,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"reflect"
 	"strconv"
@@ -12,6 +11,8 @@ import (
 
 	"github.com/creasty/defaults"
 	"github.com/kubeshark/kubeshark/utils"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"gopkg.in/yaml.v3"
@@ -22,6 +23,7 @@ const (
 	SetCommandName = "set"
 	FieldNameTag   = "yaml"
 	ReadonlyTag    = "readonly"
+	DebugFlag      = "debug"
 )
 
 var (
@@ -30,6 +32,15 @@ var (
 )
 
 func InitConfig(cmd *cobra.Command) error {
+	debugMode, err := cmd.Flags().GetBool(DebugFlag)
+	if err != nil {
+		log.Error().Err(err).Msg(fmt.Sprintf("Can't recieve '%s' flag", DebugFlag))
+	}
+
+	if debugMode {
+		zerolog.SetGlobalLevel(zerolog.DebugLevel)
+	}
+
 	Config.Hub = HubConfig{
 		PortForward{
 			8898,
@@ -64,8 +75,7 @@ func InitConfig(cmd *cobra.Command) error {
 		return fmt.Errorf("config validation failed, err: %v", err)
 	}
 
-	finalConfigPrettified, _ := utils.PrettyJson(Config)
-	log.Printf("Init config finished\n Final config: %v", finalConfigPrettified)
+	log.Debug().Interface("config", Config).Msg("Init config is finished.")
 
 	return nil
 }
@@ -111,7 +121,7 @@ func loadConfigFile(configFilePath string, config *ConfigStruct) error {
 		return err
 	}
 
-	log.Printf("Found config file, config path: %s", configFilePath)
+	log.Info().Str("path", configFilePath).Msg("Found config file!")
 
 	return nil
 }
@@ -129,20 +139,20 @@ func initFlag(f *pflag.Flag) {
 	sliceValue, isSliceValue := f.Value.(pflag.SliceValue)
 	if !isSliceValue {
 		if err := mergeFlagValue(configElemValue, flagPath, strings.Join(flagPath, "."), f.Value.String()); err != nil {
-			log.Printf(utils.Warning, err)
+			log.Warn().Err(err)
 		}
 		return
 	}
 
 	if f.Name == SetCommandName {
 		if err := mergeSetFlag(configElemValue, sliceValue.GetSlice()); err != nil {
-			log.Printf(utils.Warning, err)
+			log.Warn().Err(err)
 		}
 		return
 	}
 
 	if err := mergeFlagValues(configElemValue, flagPath, strings.Join(flagPath, "."), sliceValue.GetSlice()); err != nil {
-		log.Printf(utils.Warning, err)
+		log.Warn().Err(err)
 	}
 }
 

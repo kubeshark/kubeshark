@@ -3,16 +3,16 @@ package resources
 import (
 	"context"
 	"fmt"
-	"log"
 
 	"github.com/kubeshark/kubeshark/errormessage"
 	"github.com/kubeshark/kubeshark/kubernetes"
 	"github.com/kubeshark/kubeshark/utils"
+	"github.com/rs/zerolog/log"
 	"k8s.io/apimachinery/pkg/util/wait"
 )
 
 func CleanUpKubesharkResources(ctx context.Context, cancel context.CancelFunc, kubernetesProvider *kubernetes.Provider, isNsRestrictedMode bool, kubesharkResourcesNamespace string) {
-	log.Printf("\nRemoving kubeshark resources")
+	log.Info().Msg("Removing Kubeshark resources...")
 
 	var leftoverResources []string
 
@@ -27,7 +27,7 @@ func CleanUpKubesharkResources(ctx context.Context, cancel context.CancelFunc, k
 		for _, resource := range leftoverResources {
 			errMsg += "\n- " + resource
 		}
-		log.Printf(utils.Error, errMsg)
+		log.Error().Msg(fmt.Sprintf(utils.Error, errMsg))
 	}
 }
 
@@ -78,10 +78,18 @@ func waitUntilNamespaceDeleted(ctx context.Context, cancel context.CancelFunc, k
 		switch {
 		case ctx.Err() == context.Canceled:
 			log.Printf("Do nothing. User interrupted the wait")
+			log.Warn().
+				Str("namespace", kubesharkResourcesNamespace).
+				Msg("Did nothing. User interrupted the wait.")
 		case err == wait.ErrWaitTimeout:
-			log.Printf(utils.Error, fmt.Sprintf("Timeout while removing Namespace %s", kubesharkResourcesNamespace))
+			log.Warn().
+				Str("namespace", kubesharkResourcesNamespace).
+				Msg("Timed out while deleting the namespace.")
 		default:
-			log.Printf(utils.Error, fmt.Sprintf("Error while waiting for Namespace %s to be deleted: %v", kubesharkResourcesNamespace, errormessage.FormatError(err)))
+			log.Warn().
+				Err(errormessage.FormatError(err)).
+				Str("namespace", kubesharkResourcesNamespace).
+				Msg("Unknown error while deleting the namespace.")
 		}
 	}
 }
@@ -149,6 +157,6 @@ func cleanUpRestrictedMode(ctx context.Context, kubernetesProvider *kubernetes.P
 }
 
 func handleDeletionError(err error, resourceDesc string, leftoverResources *[]string) {
-	log.Printf("Error removing %s: %v", resourceDesc, errormessage.FormatError(err))
+	log.Warn().Err(errormessage.FormatError(err)).Msg(fmt.Sprintf("Error while removing %s", resourceDesc))
 	*leftoverResources = append(*leftoverResources, resourceDesc)
 }

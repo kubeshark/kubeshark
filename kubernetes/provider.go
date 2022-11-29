@@ -7,7 +7,6 @@ import (
 	"errors"
 	"fmt"
 	"io"
-	"log"
 	"net/url"
 	"path/filepath"
 	"regexp"
@@ -17,7 +16,8 @@ import (
 	"github.com/kubeshark/kubeshark/utils"
 	"github.com/kubeshark/worker/api"
 	"github.com/kubeshark/worker/models"
-	"github.com/op/go-logging"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
 	auth "k8s.io/api/authorization/v1"
 	core "k8s.io/api/core/v1"
 	rbac "k8s.io/api/rbac/v1"
@@ -78,7 +78,11 @@ func NewProvider(kubeConfigPath string, contextName string) (*Provider, error) {
 			"you can set alternative kube config file path by adding the kube-config-path field to the kubeshark config file, err:  %w", kubeConfigPath, err)
 	}
 
-	log.Printf("K8s client config, host: %s, api path: %s, user agent: %s", restClientConfig.Host, restClientConfig.APIPath, restClientConfig.UserAgent)
+	log.Debug().
+		Str("host", restClientConfig.Host).
+		Str("api-path", restClientConfig.APIPath).
+		Str("user-agent", restClientConfig.UserAgent).
+		Msg("K8s client config.")
 
 	return &Provider{
 		clientSet:        clientSet,
@@ -181,7 +185,7 @@ type HubOptions struct {
 	MaxEntriesDBSizeBytes int64
 	Resources             models.Resources
 	ImagePullPolicy       core.PullPolicy
-	LogLevel              logging.Level
+	LogLevel              zerolog.Level
 	Profiler              bool
 }
 
@@ -806,8 +810,14 @@ func (provider *Provider) CreateConfigMap(ctx context.Context, namespace string,
 	return nil
 }
 
-func (provider *Provider) ApplyKubesharkTapperDaemonSet(ctx context.Context, namespace string, daemonSetName string, podImage string, tapperPodName string, hubPodIp string, nodeNames []string, serviceAccountName string, resources models.Resources, imagePullPolicy core.PullPolicy, kubesharkApiFilteringOptions api.TrafficFilteringOptions, logLevel logging.Level, serviceMesh bool, tls bool, maxLiveStreams int) error {
-	log.Printf("Applying %d tapper daemon sets, ns: %s, daemonSetName: %s, podImage: %s, tapperPodName: %s", len(nodeNames), namespace, daemonSetName, podImage, tapperPodName)
+func (provider *Provider) ApplyKubesharkTapperDaemonSet(ctx context.Context, namespace string, daemonSetName string, podImage string, tapperPodName string, hubPodIp string, nodeNames []string, serviceAccountName string, resources models.Resources, imagePullPolicy core.PullPolicy, kubesharkApiFilteringOptions api.TrafficFilteringOptions, logLevel zerolog.Level, serviceMesh bool, tls bool, maxLiveStreams int) error {
+	log.Debug().
+		Int("node-count", len(nodeNames)).
+		Str("namespace", namespace).
+		Str("daemonset-name", daemonSetName).
+		Str("image", podImage).
+		Str("pod-name", tapperPodName).
+		Msg("Applying tapper DaemonSets.")
 
 	if len(nodeNames) == 0 {
 		return fmt.Errorf("daemon set %s must tap at least 1 pod", daemonSetName)
@@ -1159,7 +1169,7 @@ func (provider *Provider) ListManagedRoleBindings(ctx context.Context, namespace
 func (provider *Provider) ValidateNotProxy() error {
 	kubernetesUrl, err := url.Parse(provider.clientConfig.Host)
 	if err != nil {
-		log.Printf("ValidateNotProxy - error while parsing kubernetes host, err: %v", err)
+		log.Debug().Err(err).Msg("While parsing Kubernetes host!")
 		return nil
 	}
 
@@ -1184,7 +1194,7 @@ func (provider *Provider) ValidateNotProxy() error {
 func (provider *Provider) GetKubernetesVersion() (*semver.SemVersion, error) {
 	serverVersion, err := provider.clientSet.ServerVersion()
 	if err != nil {
-		log.Printf("error while getting kubernetes server version, err: %v", err)
+		log.Debug().Err(err).Msg("While getting Kubernetes server version!")
 		return nil, err
 	}
 
@@ -1211,7 +1221,7 @@ func ValidateKubernetesVersion(serverVersionSemVer *semver.SemVersion) error {
 }
 
 func loadKubernetesConfiguration(kubeConfigPath string, context string) clientcmd.ClientConfig {
-	log.Printf("Using kube config %s", kubeConfigPath)
+	log.Info().Str("path", kubeConfigPath).Msg("Using kubeconfig:")
 	configPathList := filepath.SplitList(kubeConfigPath)
 	configLoadingRules := &clientcmd.ClientConfigLoadingRules{}
 	if len(configPathList) <= 1 {
