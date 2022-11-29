@@ -55,24 +55,23 @@ func CreateDefaultConfig() ConfigStruct {
 }
 
 type ConfigStruct struct {
-	Hub                HubConfig                   `yaml:"hub"`
-	Front              FrontConfig                 `yaml:"front"`
-	Tap                configStructs.TapConfig     `yaml:"tap"`
-	Check              configStructs.CheckConfig   `yaml:"check"`
-	Version            configStructs.VersionConfig `yaml:"version"`
-	View               configStructs.ViewConfig    `yaml:"view"`
-	Logs               configStructs.LogsConfig    `yaml:"logs"`
-	Config             configStructs.ConfigConfig  `yaml:"config,omitempty"`
-	ImagePullPolicyStr string                      `yaml:"image-pull-policy" default:"Always"`
-	ResourcesNamespace string                      `yaml:"resources-namespace" default:"kubeshark"`
-	DumpLogs           bool                        `yaml:"dump-logs" default:"false"`
-	KubeConfigPathStr  string                      `yaml:"kube-config-path"`
-	KubeContext        string                      `yaml:"kube-context"`
-	ConfigFilePath     string                      `yaml:"config-path,omitempty" readonly:""`
-	HeadlessMode       bool                        `yaml:"headless" default:"false"`
-	LogLevelStr        string                      `yaml:"log-level,omitempty" default:"info" readonly:""`
-	ServiceMap         bool                        `yaml:"service-map" default:"true"`
-	OAS                models.OASConfig            `yaml:"oas"`
+	Hub                HubConfig                  `yaml:"hub"`
+	Front              FrontConfig                `yaml:"front"`
+	Tap                configStructs.TapConfig    `yaml:"tap"`
+	Check              configStructs.CheckConfig  `yaml:"check"`
+	View               configStructs.ViewConfig   `yaml:"view"`
+	Logs               configStructs.LogsConfig   `yaml:"logs"`
+	Config             configStructs.ConfigConfig `yaml:"config,omitempty"`
+	ImagePullPolicyStr string                     `yaml:"image-pull-policy" default:"Always"`
+	ResourcesNamespace string                     `yaml:"resources-namespace" default:"kubeshark"`
+	DumpLogs           bool                       `yaml:"dump-logs" default:"false"`
+	KubeConfigPathStr  string                     `yaml:"kube-config-path"`
+	KubeContext        string                     `yaml:"kube-context"`
+	ConfigFilePath     string                     `yaml:"config-path,omitempty" readonly:""`
+	HeadlessMode       bool                       `yaml:"headless" default:"false"`
+	LogLevelStr        string                     `yaml:"log-level,omitempty" default:"info" readonly:""`
+	ServiceMap         bool                       `yaml:"service-map" default:"true"`
+	OAS                models.OASConfig           `yaml:"oas"`
 }
 
 func (config *ConfigStruct) validate() error {

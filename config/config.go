@@ -10,6 +10,7 @@ import (
 	"strings"
 
 	"github.com/creasty/defaults"
+	"github.com/kubeshark/kubeshark/kubeshark/version"
 	"github.com/kubeshark/kubeshark/utils"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -27,19 +28,27 @@ const (
 )
 
 var (
-	Config  = ConfigStruct{}
-	cmdName string
+	Config    = ConfigStruct{}
+	DebugMode bool
+	cmdName   string
 )
 
 func InitConfig(cmd *cobra.Command) error {
-	debugMode, err := cmd.Flags().GetBool(DebugFlag)
+	var err error
+	DebugMode, err = cmd.Flags().GetBool(DebugFlag)
 	if err != nil {
 		log.Error().Err(err).Msg(fmt.Sprintf("Can't recieve '%s' flag", DebugFlag))
 	}
 
-	if debugMode {
+	if DebugMode {
 		zerolog.SetGlobalLevel(zerolog.DebugLevel)
 	}
+
+	if cmd.Use == "version" {
+		return nil
+	}
+
+	go version.CheckNewerVersion()
 
 	Config.Hub = HubConfig{
 		PortForward{

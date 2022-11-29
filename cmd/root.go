@@ -5,7 +5,6 @@ import (
 
 	"github.com/creasty/defaults"
 	"github.com/kubeshark/kubeshark/config"
-	"github.com/kubeshark/kubeshark/kubeshark/version"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 )
@@ -32,13 +31,11 @@ func init() {
 
 	rootCmd.PersistentFlags().StringSlice(config.SetCommandName, []string{}, fmt.Sprintf("Override values using --%s", config.SetCommandName))
 	rootCmd.PersistentFlags().String(config.ConfigFilePathCommandName, defaultConfig.ConfigFilePath, fmt.Sprintf("Override config file path using --%s", config.ConfigFilePathCommandName))
-	rootCmd.PersistentFlags().Bool("debug", false, "Enable debug mode.")
+	rootCmd.PersistentFlags().BoolP("debug", "d", false, "Enable debug mode.")
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.
 // This is called by main.main(). It only needs to happen once to the tapCmd.
 func Execute() {
-	go version.CheckNewerVersion()
-
 	cobra.CheckErr(rootCmd.Execute())
 }
