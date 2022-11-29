@@ -11,6 +11,7 @@ import (
 
 	"github.com/creasty/defaults"
 	"github.com/kubeshark/kubeshark/utils"
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
@@ -22,6 +23,7 @@ const (
 	SetCommandName = "set"
 	FieldNameTag   = "yaml"
 	ReadonlyTag    = "readonly"
+	DebugFlag      = "debug"
 )
 
 var (
@@ -30,6 +32,15 @@ var (
 )
 
 func InitConfig(cmd *cobra.Command) error {
+	debugMode, err := cmd.Flags().GetBool(DebugFlag)
+	if err != nil {
+		log.Error().Err(err).Msg(fmt.Sprintf("Can't recieve '%s' flag", DebugFlag))
+	}
+
+	if debugMode {
+		zerolog.SetGlobalLevel(zerolog.DebugLevel)
+	}
+
 	Config.Hub = HubConfig{
 		PortForward{
 			8898,

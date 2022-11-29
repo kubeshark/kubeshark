@@ -11,7 +11,7 @@ import (
 )
 
 func main() {
-	zerolog.SetGlobalLevel(zerolog.DebugLevel)
+	zerolog.SetGlobalLevel(zerolog.InfoLevel)
 	log.Logger = log.Output(zerolog.ConsoleWriter{Out: os.Stderr, TimeFormat: time.RFC3339})
 	goUtils.HandleExcWrapper(cmd.Execute)
 }
