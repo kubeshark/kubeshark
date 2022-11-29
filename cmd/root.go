@@ -11,9 +11,10 @@ import (
 
 var rootCmd = &cobra.Command{
 	Use:   "kubeshark",
-	Short: "A web traffic viewer for kubernetes",
-	Long: `A web traffic viewer for kubernetes
-Further info is available at https://github.com/kubeshark/kubeshark`,
+	Short: "Kubeshark: The Observability and Monitoring Tool For Kubernetes",
+	Long: `Kubeshark: The Observability and Monitoring Tool For Kubernetes
+An extensible Kubernetes-aware network sniffer and kernel tracer.
+For more info: https://kubeshark.co`,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		if err := config.InitConfig(cmd); err != nil {
 			log.Fatal().Err(err).Send()

@@ -26,7 +26,7 @@ const (
 	MaxLiveStreamsName           = "max-live-streams"
 )
 
-type TapConfig struct {
+type DeployConfig struct {
 	PodRegexStr       string   `yaml:"regex" default:".*"`
 	GuiPort           uint16   `yaml:"gui-port" default:"8899"`
 	ProxyHost         string   `yaml:"proxy-host" default:"127.0.0.1"`
@@ -53,17 +53,17 @@ type TapConfig struct {
 	MaxLiveStreams        int              `yaml:"max-live-streams" default:"500"`
 }
 
-func (config *TapConfig) PodRegex() *regexp.Regexp {
+func (config *DeployConfig) PodRegex() *regexp.Regexp {
 	podRegex, _ := regexp.Compile(config.PodRegexStr)
 	return podRegex
 }
 
-func (config *TapConfig) MaxEntriesDBSizeBytes() int64 {
+func (config *DeployConfig) MaxEntriesDBSizeBytes() int64 {
 	maxEntriesDBSizeBytes, _ := utils.HumanReadableToBytes(config.HumanMaxEntriesDBSize)
 	return maxEntriesDBSizeBytes
 }
 
-func (config *TapConfig) GetInsertionFilter() string {
+func (config *DeployConfig) GetInsertionFilter() string {
 	insertionFilter := config.InsertionFilter
 	if fs.ValidPath(insertionFilter) {
 		if _, err := os.Stat(insertionFilter); err == nil {
@@ -87,7 +87,7 @@ func (config *TapConfig) GetInsertionFilter() string {
 	return insertionFilter
 }
 
-func getRedactFilter(config *TapConfig) string {
+func getRedactFilter(config *DeployConfig) string {
 	if !config.EnableRedaction {
 		return ""
 	}
@@ -118,7 +118,7 @@ func getRedactFilter(config *TapConfig) string {
 	return fmt.Sprintf("redact(\"%s\")", strings.Join(redactValues, "\",\""))
 }
 
-func (config *TapConfig) Validate() error {
+func (config *DeployConfig) Validate() error {
 	_, compileErr := regexp.Compile(config.PodRegexStr)
 	if compileErr != nil {
 		return fmt.Errorf("%s is not a valid regex %s", config.PodRegexStr, compileErr)

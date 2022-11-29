@@ -22,7 +22,7 @@ import (
 )
 
 func startProxyReportErrorIfAny(kubernetesProvider *kubernetes.Provider, ctx context.Context, cancel context.CancelFunc, serviceName string, srcPort uint16, dstPort uint16, healthCheck string) {
-	httpServer, err := kubernetes.StartProxy(kubernetesProvider, config.Config.Tap.ProxyHost, srcPort, dstPort, config.Config.ResourcesNamespace, serviceName, cancel)
+	httpServer, err := kubernetes.StartProxy(kubernetesProvider, config.Config.Deploy.ProxyHost, srcPort, dstPort, config.Config.ResourcesNamespace, serviceName, cancel)
 	if err != nil {
 		log.Error().
 			Err(errormessage.FormatError(err)).
@@ -115,7 +115,7 @@ func dumpLogsIfNeeded(ctx context.Context, kubernetesProvider *kubernetes.Provid
 	}
 }
 
-func getSerializedTapConfig(conf *models.Config) (string, error) {
+func getSerializedDeployConfig(conf *models.Config) (string, error) {
 	serializedConfig, err := json.Marshal(conf)
 	if err != nil {
 		return "", err

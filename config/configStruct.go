@@ -57,7 +57,7 @@ func CreateDefaultConfig() ConfigStruct {
 type ConfigStruct struct {
 	Hub                HubConfig                  `yaml:"hub"`
 	Front              FrontConfig                `yaml:"front"`
-	Tap                configStructs.TapConfig    `yaml:"tap"`
+	Deploy             configStructs.DeployConfig `yaml:"deploy"`
 	Logs               configStructs.LogsConfig   `yaml:"logs"`
 	Config             configStructs.ConfigConfig `yaml:"config,omitempty"`
 	ImagePullPolicyStr string                     `yaml:"image-pull-policy" default:"Always"`
