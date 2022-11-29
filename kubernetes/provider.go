@@ -16,7 +16,7 @@ import (
 	"github.com/kubeshark/kubeshark/utils"
 	"github.com/kubeshark/worker/api"
 	"github.com/kubeshark/worker/models"
-	"github.com/op/go-logging"
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	auth "k8s.io/api/authorization/v1"
 	core "k8s.io/api/core/v1"
@@ -185,7 +185,7 @@ type HubOptions struct {
 	MaxEntriesDBSizeBytes int64
 	Resources             models.Resources
 	ImagePullPolicy       core.PullPolicy
-	LogLevel              logging.Level
+	LogLevel              zerolog.Level
 	Profiler              bool
 }
 
@@ -810,7 +810,7 @@ func (provider *Provider) CreateConfigMap(ctx context.Context, namespace string,
 	return nil
 }
 
-func (provider *Provider) ApplyKubesharkTapperDaemonSet(ctx context.Context, namespace string, daemonSetName string, podImage string, tapperPodName string, hubPodIp string, nodeNames []string, serviceAccountName string, resources models.Resources, imagePullPolicy core.PullPolicy, kubesharkApiFilteringOptions api.TrafficFilteringOptions, logLevel logging.Level, serviceMesh bool, tls bool, maxLiveStreams int) error {
+func (provider *Provider) ApplyKubesharkTapperDaemonSet(ctx context.Context, namespace string, daemonSetName string, podImage string, tapperPodName string, hubPodIp string, nodeNames []string, serviceAccountName string, resources models.Resources, imagePullPolicy core.PullPolicy, kubesharkApiFilteringOptions api.TrafficFilteringOptions, logLevel zerolog.Level, serviceMesh bool, tls bool, maxLiveStreams int) error {
 	log.Debug().
 		Int("node-count", len(nodeNames)).
 		Str("namespace", namespace).
