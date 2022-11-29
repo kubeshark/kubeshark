@@ -20,7 +20,8 @@ var versionCmd = &cobra.Command{
 			Str("version", kubeshark.Ver).
 			Str("branch", kubeshark.Branch).
 			Str("commit-hash", kubeshark.GitCommitHash).
-			Time("build-time", time.Unix(timeStampInt, 0))
+			Time("build-time", time.Unix(timeStampInt, 0)).
+			Send()
 		return nil
 	},
 }
@@ -30,7 +31,7 @@ func init() {
 
 	defaultVersionConfig := configStructs.VersionConfig{}
 	if err := defaults.Set(&defaultVersionConfig); err != nil {
-		log.Print(err)
+		log.Error().Err(err).Send()
 	}
 
 	versionCmd.Flags().BoolP(configStructs.DebugInfoVersionName, "d", defaultVersionConfig.DebugInfo, "Provide all information about version")
