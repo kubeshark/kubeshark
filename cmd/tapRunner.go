@@ -118,7 +118,6 @@ func getTapConfig() *models.Config {
 		MaxDBSizeBytes:              config.Config.Tap.MaxEntriesDBSizeBytes(),
 		InsertionFilter:             config.Config.Tap.GetInsertionFilter(),
 		PullPolicy:                  config.Config.ImagePullPolicyStr,
-		LogLevel:                    config.Config.LogLevel(),
 		TapperResources:             config.Config.Tap.TapperResources,
 		KubesharkResourcesNamespace: config.Config.ResourcesNamespace,
 		AgentDatabasePath:           models.DataDirPath,
