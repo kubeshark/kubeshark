@@ -97,6 +97,11 @@ func waitUntilNamespaceDeleted(ctx context.Context, cancel context.CancelFunc, k
 func cleanUpRestrictedMode(ctx context.Context, kubernetesProvider *kubernetes.Provider, kubesharkResourcesNamespace string) []string {
 	leftoverResources := make([]string, 0)
 
+	if err := kubernetesProvider.RemoveService(ctx, kubesharkResourcesNamespace, kubernetes.FrontServiceName); err != nil {
+		resourceDesc := fmt.Sprintf("Service %s in namespace %s", kubernetes.FrontServiceName, kubesharkResourcesNamespace)
+		handleDeletionError(err, resourceDesc, &leftoverResources)
+	}
+
 	if err := kubernetesProvider.RemoveService(ctx, kubesharkResourcesNamespace, kubernetes.HubServiceName); err != nil {
 		resourceDesc := fmt.Sprintf("Service %s in namespace %s", kubernetes.HubServiceName, kubesharkResourcesNamespace)
 		handleDeletionError(err, resourceDesc, &leftoverResources)
@@ -150,6 +155,11 @@ func cleanUpRestrictedMode(ctx context.Context, kubernetesProvider *kubernetes.P
 
 	if err := kubernetesProvider.RemovePod(ctx, kubesharkResourcesNamespace, kubernetes.HubPodName); err != nil {
 		resourceDesc := fmt.Sprintf("Pod %s in namespace %s", kubernetes.HubPodName, kubesharkResourcesNamespace)
+		handleDeletionError(err, resourceDesc, &leftoverResources)
+	}
+
+	if err := kubernetesProvider.RemovePod(ctx, kubesharkResourcesNamespace, kubernetes.FrontPodName); err != nil {
+		resourceDesc := fmt.Sprintf("Pod %s in namespace %s", kubernetes.FrontPodName, kubesharkResourcesNamespace)
 		handleDeletionError(err, resourceDesc, &leftoverResources)
 	}
 
