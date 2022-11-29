@@ -8,19 +8,19 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func GetNodeHostToTappedPodsMap(tappedPods []core.Pod) models.NodeToPodsMap {
-	nodeToTappedPodMap := make(models.NodeToPodsMap)
-	for _, pod := range tappedPods {
+func GetNodeHostToTargettedPodsMap(targettedPods []core.Pod) models.NodeToPodsMap {
+	nodeToTargettedPodsMap := make(models.NodeToPodsMap)
+	for _, pod := range targettedPods {
 		minimizedPod := getMinimizedPod(pod)
 
-		existingList := nodeToTappedPodMap[pod.Spec.NodeName]
+		existingList := nodeToTargettedPodsMap[pod.Spec.NodeName]
 		if existingList == nil {
-			nodeToTappedPodMap[pod.Spec.NodeName] = []core.Pod{minimizedPod}
+			nodeToTargettedPodsMap[pod.Spec.NodeName] = []core.Pod{minimizedPod}
 		} else {
-			nodeToTappedPodMap[pod.Spec.NodeName] = append(nodeToTappedPodMap[pod.Spec.NodeName], minimizedPod)
+			nodeToTargettedPodsMap[pod.Spec.NodeName] = append(nodeToTargettedPodsMap[pod.Spec.NodeName], minimizedPod)
 		}
 	}
-	return nodeToTappedPodMap
+	return nodeToTargettedPodsMap
 }
 
 func getMinimizedPod(fullPod core.Pod) core.Pod {
@@ -48,7 +48,7 @@ func getMinimizedContainerStatuses(fullPod core.Pod) []core.ContainerStatus {
 	return result
 }
 
-func excludeKubesharkPods(pods []core.Pod) []core.Pod {
+func excludeSelfPods(pods []core.Pod) []core.Pod {
 	kubesharkPrefixRegex := regexp.MustCompile("^" + KubesharkResourcesPrefix)
 
 	nonKubesharkPods := make([]core.Pod, 0)

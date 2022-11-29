@@ -62,31 +62,31 @@ func (connector *Connector) isReachable(path string) (bool, error) {
 	}
 }
 
-func (connector *Connector) ReportTapperStatus(tapperStatus models.TapperStatus) error {
-	tapperStatusUrl := fmt.Sprintf("%s/status/tapperStatus", connector.url)
+func (connector *Connector) ReportWorkerStatus(workerStatus models.TapperStatus) error {
+	workerStatusUrl := fmt.Sprintf("%s/status/tapperStatus", connector.url)
 
-	if jsonValue, err := json.Marshal(tapperStatus); err != nil {
-		return fmt.Errorf("Failed Marshal the tapper status %w", err)
+	if jsonValue, err := json.Marshal(workerStatus); err != nil {
+		return fmt.Errorf("Failed Marshal the worker status %w", err)
 	} else {
-		if _, err := utils.Post(tapperStatusUrl, "application/json", bytes.NewBuffer(jsonValue), connector.client); err != nil {
-			return fmt.Errorf("Failed sending to Hub the tapped pods %w", err)
+		if _, err := utils.Post(workerStatusUrl, "application/json", bytes.NewBuffer(jsonValue), connector.client); err != nil {
+			return fmt.Errorf("Failed sending to Hub the targetted pods %w", err)
 		} else {
-			log.Debug().Interface("tapper-status", tapperStatus).Msg("Reported to Hub about tapper status:")
+			log.Debug().Interface("worker-status", workerStatus).Msg("Reported to Hub about Worker status:")
 			return nil
 		}
 	}
 }
 
-func (connector *Connector) ReportTappedPods(pods []core.Pod) error {
-	tappedPodsUrl := fmt.Sprintf("%s/status/tappedPods", connector.url)
+func (connector *Connector) ReportTargettedPods(pods []core.Pod) error {
+	targettedPodsUrl := fmt.Sprintf("%s/status/tappedPods", connector.url)
 
 	if jsonValue, err := json.Marshal(pods); err != nil {
-		return fmt.Errorf("Failed Marshal the tapped pods %w", err)
+		return fmt.Errorf("Failed Marshal the targetted pods %w", err)
 	} else {
-		if _, err := utils.Post(tappedPodsUrl, "application/json", bytes.NewBuffer(jsonValue), connector.client); err != nil {
-			return fmt.Errorf("Failed sending to Hub the tapped pods %w", err)
+		if _, err := utils.Post(targettedPodsUrl, "application/json", bytes.NewBuffer(jsonValue), connector.client); err != nil {
+			return fmt.Errorf("Failed sending to Hub the targetted pods %w", err)
 		} else {
-			log.Debug().Int("pod-count", len(pods)).Msg("Reported to Hub about tapped pod count:")
+			log.Debug().Int("pod-count", len(pods)).Msg("Reported to Hub about targetted pod count:")
 			return nil
 		}
 	}

@@ -17,7 +17,7 @@ func FormatError(err error) error {
 	if k8serrors.IsForbidden(err) {
 		errorNew = fmt.Errorf("insufficient permissions: %w. "+
 			"supply the required permission or control Kubeshark's access to namespaces by setting %s "+
-			"in the config file or setting the tapped namespace with --%s %s=<NAMEPSACE>",
+			"in the config file or setting the targetted namespace with --%s %s=<NAMEPSACE>",
 			err,
 			config.ResourcesNamespaceConfigName,
 			config.SetCommandName,

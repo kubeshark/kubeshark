@@ -29,7 +29,7 @@ func runKubesharkCheck() {
 	}
 
 	if checkPassed {
-		checkPassed = check.TapKubernetesPermissions(ctx, embedFS, kubernetesProvider)
+		checkPassed = check.KubernetesPermissions(ctx, embedFS, kubernetesProvider)
 	}
 
 	if checkPassed {
@@ -47,8 +47,8 @@ func runKubesharkCheck() {
 		log.Info().Msg(fmt.Sprintf(utils.Green, "All checks are passed."))
 	} else {
 		log.Error().
-			Str("command1", "kubeshark clean").
-			Str("command2", "kubeshark tap").
+			Str("command1", fmt.Sprintf("kubeshark %s", cleanCmd.Use)).
+			Str("command2", fmt.Sprintf("kubeshark %s", deployCmd.Use)).
 			Msg(fmt.Sprintf(utils.Red, "There are issues in your deployment! Run these commands:"))
 		os.Exit(1)
 	}

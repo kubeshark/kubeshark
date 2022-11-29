@@ -16,7 +16,7 @@ var deployCmd = &cobra.Command{
 	Short: "Deploy Kubeshark into your K8s cluster.",
 	Long:  `Deploy Kubeshark into your K8s cluster to gain visibility.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		RunKubesharkTap()
+		deploy()
 		return nil
 	},
 	PreRunE: func(cmd *cobra.Command, args []string) error {
@@ -46,15 +46,15 @@ func init() {
 		log.Debug().Err(err).Send()
 	}
 
-	deployCmd.Flags().Uint16P(configStructs.GuiPortTapName, "p", defaultDeployConfig.GuiPort, "Provide a custom port for the web interface webserver")
-	deployCmd.Flags().StringSliceP(configStructs.NamespacesTapName, "n", defaultDeployConfig.Namespaces, "Namespaces selector")
-	deployCmd.Flags().BoolP(configStructs.AllNamespacesTapName, "A", defaultDeployConfig.AllNamespaces, "Tap all namespaces")
-	deployCmd.Flags().Bool(configStructs.EnableRedactionTapName, defaultDeployConfig.EnableRedaction, "Enables redaction of potentially sensitive request/response headers and body values")
-	deployCmd.Flags().String(configStructs.HumanMaxEntriesDBSizeTapName, defaultDeployConfig.HumanMaxEntriesDBSize, "Override the default max entries db size")
+	deployCmd.Flags().Uint16P(configStructs.ProxyPortLabel, "p", defaultDeployConfig.ProxyPort, "Provide a custom port for the web interface webserver.")
+	deployCmd.Flags().StringSliceP(configStructs.NamespacesLabel, "n", defaultDeployConfig.Namespaces, "Namespaces selector.")
+	deployCmd.Flags().BoolP(configStructs.AllNamespacesLabel, "A", defaultDeployConfig.AllNamespaces, "Deploy to all namespaces.")
+	deployCmd.Flags().Bool(configStructs.EnableRedactionLabel, defaultDeployConfig.EnableRedaction, "Enables redaction of potentially sensitive request/response headers and body values.")
+	deployCmd.Flags().String(configStructs.HumanMaxEntriesDBSizeLabel, defaultDeployConfig.HumanMaxEntriesDBSize, "Override the default max entries db size.")
 	deployCmd.Flags().String(configStructs.InsertionFilterName, defaultDeployConfig.InsertionFilter, "Set the insertion filter. Accepts string or a file path.")
-	deployCmd.Flags().Bool(configStructs.DryRunTapName, defaultDeployConfig.DryRun, "Preview of all pods matching the regex, without tapping them")
-	deployCmd.Flags().Bool(configStructs.ServiceMeshName, defaultDeployConfig.ServiceMesh, "Record decrypted traffic if the cluster is configured with a service mesh and with mtls")
-	deployCmd.Flags().Bool(configStructs.TlsName, defaultDeployConfig.Tls, "Record tls traffic")
-	deployCmd.Flags().Bool(configStructs.ProfilerName, defaultDeployConfig.Profiler, "Run pprof server")
-	deployCmd.Flags().Int(configStructs.MaxLiveStreamsName, defaultDeployConfig.MaxLiveStreams, "Maximum live tcp streams to handle concurrently")
+	deployCmd.Flags().Bool(configStructs.DryRunLabel, defaultDeployConfig.DryRun, "Preview of all pods matching the regex, without deploying workers on them.")
+	deployCmd.Flags().Bool(configStructs.ServiceMeshName, defaultDeployConfig.ServiceMesh, "Record decrypted traffic if the cluster is configured with a service mesh and with mtls.")
+	deployCmd.Flags().Bool(configStructs.TlsName, defaultDeployConfig.Tls, "Record tls traffic.")
+	deployCmd.Flags().Bool(configStructs.ProfilerName, defaultDeployConfig.Profiler, "Run pprof server.")
+	deployCmd.Flags().Int(configStructs.MaxLiveStreamsName, defaultDeployConfig.MaxLiveStreams, "Maximum live tcp streams to handle concurrently.")
 }

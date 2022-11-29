@@ -66,33 +66,33 @@ func checkPodResourcesExist(ctx context.Context, kubernetesProvider *kubernetes.
 		Str("name", kubernetes.HubPodName).
 		Msg("Pod is running.")
 
-	if pods, err := kubernetesProvider.ListPodsByAppLabel(ctx, config.Config.ResourcesNamespace, kubernetes.TapperPodName); err != nil {
+	if pods, err := kubernetesProvider.ListPodsByAppLabel(ctx, config.Config.ResourcesNamespace, kubernetes.WorkerPodName); err != nil {
 		log.Error().
-			Str("name", kubernetes.TapperPodName).
+			Str("name", kubernetes.WorkerPodName).
 			Err(err).
 			Msg("While checking if pods are running!")
 		return false
 	} else {
-		tappers := 0
-		notRunningTappers := 0
+		workers := 0
+		notRunningWorkers := 0
 
 		for _, pod := range pods {
-			tappers += 1
+			workers += 1
 			if !kubernetes.IsPodRunning(&pod) {
-				notRunningTappers += 1
+				notRunningWorkers += 1
 			}
 		}
 
-		if notRunningTappers > 0 {
+		if notRunningWorkers > 0 {
 			log.Error().
-				Str("name", kubernetes.TapperPodName).
-				Msg(fmt.Sprintf("%d/%d pods are not running!", notRunningTappers, tappers))
+				Str("name", kubernetes.WorkerPodName).
+				Msg(fmt.Sprintf("%d/%d pods are not running!", notRunningWorkers, workers))
 			return false
 		}
 
 		log.Info().
-			Str("name", kubernetes.TapperPodName).
-			Msg(fmt.Sprintf("All %d pods are running.", tappers))
+			Str("name", kubernetes.WorkerPodName).
+			Msg(fmt.Sprintf("All %d pods are running.", workers))
 		return true
 	}
 }

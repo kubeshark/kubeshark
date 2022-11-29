@@ -810,17 +810,17 @@ func (provider *Provider) CreateConfigMap(ctx context.Context, namespace string,
 	return nil
 }
 
-func (provider *Provider) ApplyKubesharkTapperDaemonSet(ctx context.Context, namespace string, daemonSetName string, podImage string, tapperPodName string, hubPodIp string, nodeNames []string, serviceAccountName string, resources models.Resources, imagePullPolicy core.PullPolicy, kubesharkApiFilteringOptions api.TrafficFilteringOptions, logLevel zerolog.Level, serviceMesh bool, tls bool, maxLiveStreams int) error {
+func (provider *Provider) ApplyWorkerDaemonSet(ctx context.Context, namespace string, daemonSetName string, podImage string, workerPodName string, hubPodIp string, nodeNames []string, serviceAccountName string, resources models.Resources, imagePullPolicy core.PullPolicy, kubesharkApiFilteringOptions api.TrafficFilteringOptions, logLevel zerolog.Level, serviceMesh bool, tls bool, maxLiveStreams int) error {
 	log.Debug().
 		Int("node-count", len(nodeNames)).
 		Str("namespace", namespace).
 		Str("daemonset-name", daemonSetName).
 		Str("image", podImage).
-		Str("pod", tapperPodName).
-		Msg("Applying tapper DaemonSets.")
+		Str("pod", workerPodName).
+		Msg("Applying worker DaemonSets.")
 
 	if len(nodeNames) == 0 {
-		return fmt.Errorf("daemon set %s must tap at least 1 pod", daemonSetName)
+		return fmt.Errorf("DaemonSet %s must target at least 1 pod", daemonSetName)
 	}
 
 	kubesharkApiFilteringOptionsJsonStr, err := json.Marshal(kubesharkApiFilteringOptions)
@@ -849,7 +849,7 @@ func (provider *Provider) ApplyKubesharkTapperDaemonSet(ctx context.Context, nam
 	}
 
 	workerContainer := applyconfcore.Container()
-	workerContainer.WithName(tapperPodName)
+	workerContainer.WithName(workerPodName)
 	workerContainer.WithImage(podImage)
 	workerContainer.WithImagePullPolicy(imagePullPolicy)
 
@@ -887,19 +887,19 @@ func (provider *Provider) ApplyKubesharkTapperDaemonSet(ctx context.Context, nam
 	)
 	cpuLimit, err := resource.ParseQuantity(resources.CpuLimit)
 	if err != nil {
-		return fmt.Errorf("invalid cpu limit for %s container", tapperPodName)
+		return fmt.Errorf("invalid cpu limit for %s container", workerPodName)
 	}
 	memLimit, err := resource.ParseQuantity(resources.MemoryLimit)
 	if err != nil {
-		return fmt.Errorf("invalid memory limit for %s container", tapperPodName)
+		return fmt.Errorf("invalid memory limit for %s container", workerPodName)
 	}
 	cpuRequests, err := resource.ParseQuantity(resources.CpuRequests)
 	if err != nil {
-		return fmt.Errorf("invalid cpu request for %s container", tapperPodName)
+		return fmt.Errorf("invalid cpu request for %s container", workerPodName)
 	}
 	memRequests, err := resource.ParseQuantity(resources.MemoryRequests)
 	if err != nil {
-		return fmt.Errorf("invalid memory request for %s container", tapperPodName)
+		return fmt.Errorf("invalid memory request for %s container", workerPodName)
 	}
 	workerResourceLimits := core.ResourceList{
 		"cpu":    cpuLimit,
@@ -967,14 +967,14 @@ func (provider *Provider) ApplyKubesharkTapperDaemonSet(ctx context.Context, nam
 
 	podTemplate := applyconfcore.PodTemplateSpec()
 	podTemplate.WithLabels(map[string]string{
-		"app":          tapperPodName,
+		"app":          workerPodName,
 		LabelManagedBy: provider.managedBy,
 		LabelCreatedBy: provider.createdBy,
 	})
 	podTemplate.WithSpec(podSpec)
 
 	labelSelector := applyconfmeta.LabelSelector()
-	labelSelector.WithMatchLabels(map[string]string{"app": tapperPodName})
+	labelSelector.WithMatchLabels(map[string]string{"app": workerPodName})
 
 	applyOptions := metav1.ApplyOptions{
 		Force:        true,
@@ -993,9 +993,9 @@ func (provider *Provider) ApplyKubesharkTapperDaemonSet(ctx context.Context, nam
 	return err
 }
 
-func (provider *Provider) ResetKubesharkTapperDaemonSet(ctx context.Context, namespace string, daemonSetName string, podImage string, tapperPodName string) error {
+func (provider *Provider) ResetWorkerDaemonSet(ctx context.Context, namespace string, daemonSetName string, podImage string, workerPodName string) error {
 	workerContainer := applyconfcore.Container()
-	workerContainer.WithName(tapperPodName)
+	workerContainer.WithName(workerPodName)
 	workerContainer.WithImage(podImage)
 
 	nodeSelectorRequirement := applyconfcore.NodeSelectorRequirement()
@@ -1016,14 +1016,14 @@ func (provider *Provider) ResetKubesharkTapperDaemonSet(ctx context.Context, nam
 
 	podTemplate := applyconfcore.PodTemplateSpec()
 	podTemplate.WithLabels(map[string]string{
-		"app":          tapperPodName,
+		"app":          workerPodName,
 		LabelManagedBy: provider.managedBy,
 		LabelCreatedBy: provider.createdBy,
 	})
 	podTemplate.WithSpec(podSpec)
 
 	labelSelector := applyconfmeta.LabelSelector()
-	labelSelector.WithMatchLabels(map[string]string{"app": tapperPodName})
+	labelSelector.WithMatchLabels(map[string]string{"app": workerPodName})
 
 	applyOptions := metav1.ApplyOptions{
 		Force:        true,

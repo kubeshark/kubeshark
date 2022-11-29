@@ -13,22 +13,22 @@ import (
 )
 
 const (
-	GuiPortTapName               = "gui-port"
-	NamespacesTapName            = "namespaces"
-	AllNamespacesTapName         = "all-namespaces"
-	EnableRedactionTapName       = "redact"
-	HumanMaxEntriesDBSizeTapName = "max-entries-db-size"
-	InsertionFilterName          = "insertion-filter"
-	DryRunTapName                = "dry-run"
-	ServiceMeshName              = "service-mesh"
-	TlsName                      = "tls"
-	ProfilerName                 = "profiler"
-	MaxLiveStreamsName           = "max-live-streams"
+	ProxyPortLabel             = "proxy-port"
+	NamespacesLabel            = "namespaces"
+	AllNamespacesLabel         = "all-namespaces"
+	EnableRedactionLabel       = "redact"
+	HumanMaxEntriesDBSizeLabel = "max-entries-db-size"
+	InsertionFilterName        = "insertion-filter"
+	DryRunLabel                = "dry-run"
+	ServiceMeshName            = "service-mesh"
+	TlsName                    = "tls"
+	ProfilerName               = "profiler"
+	MaxLiveStreamsName         = "max-live-streams"
 )
 
 type DeployConfig struct {
 	PodRegexStr       string   `yaml:"regex" default:".*"`
-	GuiPort           uint16   `yaml:"gui-port" default:"8899"`
+	ProxyPort         uint16   `yaml:"proxy-port" default:"8899"`
 	ProxyHost         string   `yaml:"proxy-host" default:"127.0.0.1"`
 	Namespaces        []string `yaml:"namespaces"`
 	AllNamespaces     bool     `yaml:"all-namespaces" default:"false"`
@@ -45,7 +45,7 @@ type DeployConfig struct {
 	InsertionFilter       string           `yaml:"insertion-filter" default:""`
 	DryRun                bool             `yaml:"dry-run" default:"false"`
 	HubResources          models.Resources `yaml:"hub-resources"`
-	TapperResources       models.Resources `yaml:"tapper-resources"`
+	WorkerResources       models.Resources `yaml:"worker-resources"`
 	ServiceMesh           bool             `yaml:"service-mesh" default:"false"`
 	Tls                   bool             `yaml:"tls" default:"false"`
 	PacketCapture         string           `yaml:"packet-capture" default:"libpcap"`
@@ -126,7 +126,7 @@ func (config *DeployConfig) Validate() error {
 
 	_, parseHumanDataSizeErr := utils.HumanReadableToBytes(config.HumanMaxEntriesDBSize)
 	if parseHumanDataSizeErr != nil {
-		return fmt.Errorf("Could not parse --%s value %s", HumanMaxEntriesDBSizeTapName, config.HumanMaxEntriesDBSize)
+		return fmt.Errorf("Could not parse --%s value %s", HumanMaxEntriesDBSizeLabel, config.HumanMaxEntriesDBSize)
 	}
 
 	return nil

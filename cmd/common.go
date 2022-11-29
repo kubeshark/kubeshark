@@ -26,7 +26,7 @@ func startProxyReportErrorIfAny(kubernetesProvider *kubernetes.Provider, ctx con
 	if err != nil {
 		log.Error().
 			Err(errormessage.FormatError(err)).
-			Msg(fmt.Sprintf("Error occured while running k8s proxy. Try setting different port by using --%s", configStructs.GuiPortTapName))
+			Msg(fmt.Sprintf("Error occured while running k8s proxy. Try setting different port by using --%s", configStructs.ProxyPortLabel))
 		cancel()
 		return
 	}
@@ -45,7 +45,7 @@ func startProxyReportErrorIfAny(kubernetesProvider *kubernetes.Provider, ctx con
 			log.Error().
 				Str("pod-regex", podRegex.String()).
 				Err(errormessage.FormatError(err)).
-				Msg(fmt.Sprintf("Error occured while running port forward. Try setting different port by using --%s", configStructs.GuiPortTapName))
+				Msg(fmt.Sprintf("Error occured while running port forward. Try setting different port by using --%s", configStructs.ProxyPortLabel))
 			cancel()
 			return
 		}

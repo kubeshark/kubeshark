@@ -107,8 +107,8 @@ func cleanUpRestrictedMode(ctx context.Context, kubernetesProvider *kubernetes.P
 		handleDeletionError(err, resourceDesc, &leftoverResources)
 	}
 
-	if err := kubernetesProvider.RemoveDaemonSet(ctx, kubesharkResourcesNamespace, kubernetes.TapperDaemonSetName); err != nil {
-		resourceDesc := fmt.Sprintf("DaemonSet %s in namespace %s", kubernetes.TapperDaemonSetName, kubesharkResourcesNamespace)
+	if err := kubernetesProvider.RemoveDaemonSet(ctx, kubesharkResourcesNamespace, kubernetes.WorkerDaemonSetName); err != nil {
+		resourceDesc := fmt.Sprintf("DaemonSet %s in namespace %s", kubernetes.WorkerDaemonSetName, kubesharkResourcesNamespace)
 		handleDeletionError(err, resourceDesc, &leftoverResources)
 	}
 

@@ -12,8 +12,8 @@ const (
 	RoleBindingName            = KubesharkResourcesPrefix + "role-binding"
 	RoleName                   = KubesharkResourcesPrefix + "role"
 	ServiceAccountName         = KubesharkResourcesPrefix + "service-account"
-	TapperDaemonSetName        = KubesharkResourcesPrefix + "worker-daemon-set"
-	TapperPodName              = KubesharkResourcesPrefix + "worker"
+	WorkerDaemonSetName        = KubesharkResourcesPrefix + "worker-daemon-set"
+	WorkerPodName              = KubesharkResourcesPrefix + "worker"
 	ConfigMapName              = KubesharkResourcesPrefix + "config"
 	MinKubernetesServerVersion = "1.16.0"
 )

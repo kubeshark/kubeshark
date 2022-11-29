@@ -12,7 +12,7 @@ import (
 	"k8s.io/client-go/kubernetes/scheme"
 )
 
-func TapKubernetesPermissions(ctx context.Context, embedFS embed.FS, kubernetesProvider *kubernetes.Provider) bool {
+func KubernetesPermissions(ctx context.Context, embedFS embed.FS, kubernetesProvider *kubernetes.Provider) bool {
 	log.Info().Str("procedure", "kubernetes-permissions").Msg("Checking:")
 
 	var filePath string

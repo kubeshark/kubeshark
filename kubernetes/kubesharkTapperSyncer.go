@@ -15,32 +15,32 @@ import (
 	core "k8s.io/api/core/v1"
 )
 
-const updateTappersDelay = 5 * time.Second
+const updateWorkersDelay = 5 * time.Second
 
-type TappedPodChangeEvent struct {
+type TargettedPodChangeEvent struct {
 	Added   []core.Pod
 	Removed []core.Pod
 }
 
-// KubesharkTapperSyncer uses a k8s pod watch to update tapper daemonsets when targeted pods are removed or created
-type KubesharkTapperSyncer struct {
+// WorkerSyncer uses a k8s pod watch to update Worker daemonsets when targeted pods are removed or created
+type WorkerSyncer struct {
 	startTime              time.Time
 	context                context.Context
-	CurrentlyTappedPods    []core.Pod
-	config                 TapperSyncerConfig
+	CurrentlyTargettedPods []core.Pod
+	config                 WorkerSyncerConfig
 	kubernetesProvider     *Provider
-	TapPodChangesOut       chan TappedPodChangeEvent
-	TapperStatusChangedOut chan models.TapperStatus
-	ErrorOut               chan K8sTapManagerError
-	nodeToTappedPodMap     models.NodeToPodsMap
-	tappedNodes            []string
+	DeployPodChangesOut    chan TargettedPodChangeEvent
+	WorkerStatusChangedOut chan models.TapperStatus
+	ErrorOut               chan K8sDeployManagerError
+	nodeToTargettedPodMap  models.NodeToPodsMap
+	targettedNodes         []string
 }
 
-type TapperSyncerConfig struct {
+type WorkerSyncerConfig struct {
 	TargetNamespaces              []string
 	PodFilterRegex                regexp.Regexp
 	KubesharkResourcesNamespace   string
-	TapperResources               models.Resources
+	WorkerResources               models.Resources
 	ImagePullPolicy               core.PullPolicy
 	LogLevel                      zerolog.Level
 	KubesharkApiFilteringOptions  api.TrafficFilteringOptions
@@ -50,36 +50,36 @@ type TapperSyncerConfig struct {
 	MaxLiveStreams                int
 }
 
-func CreateAndStartKubesharkTapperSyncer(ctx context.Context, kubernetesProvider *Provider, config TapperSyncerConfig, startTime time.Time) (*KubesharkTapperSyncer, error) {
-	syncer := &KubesharkTapperSyncer{
+func CreateAndStartWorkerSyncer(ctx context.Context, kubernetesProvider *Provider, config WorkerSyncerConfig, startTime time.Time) (*WorkerSyncer, error) {
+	syncer := &WorkerSyncer{
 		startTime:              startTime.Truncate(time.Second), // Round down because k8s CreationTimestamp is given in 1 sec resolution.
 		context:                ctx,
-		CurrentlyTappedPods:    make([]core.Pod, 0),
+		CurrentlyTargettedPods: make([]core.Pod, 0),
 		config:                 config,
 		kubernetesProvider:     kubernetesProvider,
-		TapPodChangesOut:       make(chan TappedPodChangeEvent, 100),
-		TapperStatusChangedOut: make(chan models.TapperStatus, 100),
-		ErrorOut:               make(chan K8sTapManagerError, 100),
+		DeployPodChangesOut:    make(chan TargettedPodChangeEvent, 100),
+		WorkerStatusChangedOut: make(chan models.TapperStatus, 100),
+		ErrorOut:               make(chan K8sDeployManagerError, 100),
 	}
 
-	if err, _ := syncer.updateCurrentlyTappedPods(); err != nil {
+	if err, _ := syncer.updateCurrentlyTargettedPods(); err != nil {
 		return nil, err
 	}
 
-	if err := syncer.updateKubesharkTappers(); err != nil {
+	if err := syncer.updateWorkers(); err != nil {
 		return nil, err
 	}
 
-	go syncer.watchPodsForTapping()
-	go syncer.watchTapperEvents()
-	go syncer.watchTapperPods()
+	go syncer.watchPodsForTargetting()
+	go syncer.watchWorkerEvents()
+	go syncer.watchWorkerPods()
 	return syncer, nil
 }
 
-func (tapperSyncer *KubesharkTapperSyncer) watchTapperPods() {
-	kubesharkResourceRegex := regexp.MustCompile(fmt.Sprintf("^%s.*", TapperPodName))
-	podWatchHelper := NewPodWatchHelper(tapperSyncer.kubernetesProvider, kubesharkResourceRegex)
-	eventChan, errorChan := FilteredWatch(tapperSyncer.context, podWatchHelper, []string{tapperSyncer.config.KubesharkResourcesNamespace}, podWatchHelper)
+func (workerSyncer *WorkerSyncer) watchWorkerPods() {
+	kubesharkResourceRegex := regexp.MustCompile(fmt.Sprintf("^%s.*", WorkerPodName))
+	podWatchHelper := NewPodWatchHelper(workerSyncer.kubernetesProvider, kubesharkResourceRegex)
+	eventChan, errorChan := FilteredWatch(workerSyncer.context, podWatchHelper, []string{workerSyncer.config.KubesharkResourcesNamespace}, podWatchHelper)
 
 	for {
 		select {
@@ -91,7 +91,7 @@ func (tapperSyncer *KubesharkTapperSyncer) watchTapperPods() {
 
 			pod, err := wEvent.ToPod()
 			if err != nil {
-				log.Error().Str("pod", TapperPodName).Err(err).Msg("While parsing Kubeshark resource!")
+				log.Error().Str("pod", WorkerPodName).Err(err).Msg("While parsing Kubeshark resource!")
 				continue
 			}
 
@@ -101,8 +101,8 @@ func (tapperSyncer *KubesharkTapperSyncer) watchTapperPods() {
 				Interface("phase", pod.Status.Phase).
 				Msg("Watching pod events...")
 			if pod.Spec.NodeName != "" {
-				tapperStatus := models.TapperStatus{TapperName: pod.Name, NodeName: pod.Spec.NodeName, Status: string(pod.Status.Phase)}
-				tapperSyncer.TapperStatusChangedOut <- tapperStatus
+				workerStatus := models.TapperStatus{TapperName: pod.Name, NodeName: pod.Spec.NodeName, Status: string(pod.Status.Phase)}
+				workerSyncer.WorkerStatusChangedOut <- workerStatus
 			}
 
 		case err, ok := <-errorChan:
@@ -110,21 +110,21 @@ func (tapperSyncer *KubesharkTapperSyncer) watchTapperPods() {
 				errorChan = nil
 				continue
 			}
-			log.Error().Str("pod", TapperPodName).Err(err).Msg("While watching pod!")
+			log.Error().Str("pod", WorkerPodName).Err(err).Msg("While watching pod!")
 
-		case <-tapperSyncer.context.Done():
+		case <-workerSyncer.context.Done():
 			log.Debug().
-				Str("pod", TapperPodName).
+				Str("pod", WorkerPodName).
 				Msg("Watching pod, context done.")
 			return
 		}
 	}
 }
 
-func (tapperSyncer *KubesharkTapperSyncer) watchTapperEvents() {
-	kubesharkResourceRegex := regexp.MustCompile(fmt.Sprintf("^%s.*", TapperPodName))
-	eventWatchHelper := NewEventWatchHelper(tapperSyncer.kubernetesProvider, kubesharkResourceRegex, "pod")
-	eventChan, errorChan := FilteredWatch(tapperSyncer.context, eventWatchHelper, []string{tapperSyncer.config.KubesharkResourcesNamespace}, eventWatchHelper)
+func (workerSyncer *WorkerSyncer) watchWorkerEvents() {
+	kubesharkResourceRegex := regexp.MustCompile(fmt.Sprintf("^%s.*", WorkerPodName))
+	eventWatchHelper := NewEventWatchHelper(workerSyncer.kubernetesProvider, kubesharkResourceRegex, "pod")
+	eventChan, errorChan := FilteredWatch(workerSyncer.context, eventWatchHelper, []string{workerSyncer.config.KubesharkResourcesNamespace}, eventWatchHelper)
 
 	for {
 		select {
@@ -137,14 +137,14 @@ func (tapperSyncer *KubesharkTapperSyncer) watchTapperEvents() {
 			event, err := wEvent.ToEvent()
 			if err != nil {
 				log.Error().
-					Str("pod", TapperPodName).
+					Str("pod", WorkerPodName).
 					Err(err).
 					Msg("Parsing resource event.")
 				continue
 			}
 
 			log.Debug().
-				Str("pod", TapperPodName).
+				Str("pod", WorkerPodName).
 				Str("event", event.Name).
 				Time("time", event.CreationTimestamp.Time).
 				Str("name", event.Regarding.Name).
@@ -153,7 +153,7 @@ func (tapperSyncer *KubesharkTapperSyncer) watchTapperEvents() {
 				Str("note", event.Note).
 				Msg("Watching events.")
 
-			pod, err1 := tapperSyncer.kubernetesProvider.GetPod(tapperSyncer.context, tapperSyncer.config.KubesharkResourcesNamespace, event.Regarding.Name)
+			pod, err1 := workerSyncer.kubernetesProvider.GetPod(workerSyncer.context, workerSyncer.config.KubesharkResourcesNamespace, event.Regarding.Name)
 			if err1 != nil {
 				log.Error().Str("name", event.Regarding.Name).Msg("Couldn't get pod")
 				continue
@@ -166,8 +166,8 @@ func (tapperSyncer *KubesharkTapperSyncer) watchTapperEvents() {
 				nodeName = pod.Spec.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms[0].MatchFields[0].Values[0]
 			}
 
-			tapperStatus := models.TapperStatus{TapperName: pod.Name, NodeName: nodeName, Status: string(pod.Status.Phase)}
-			tapperSyncer.TapperStatusChangedOut <- tapperStatus
+			workerStatus := models.TapperStatus{TapperName: pod.Name, NodeName: nodeName, Status: string(pod.Status.Phase)}
+			workerSyncer.WorkerStatusChangedOut <- workerStatus
 
 		case err, ok := <-errorChan:
 			if !ok {
@@ -176,44 +176,44 @@ func (tapperSyncer *KubesharkTapperSyncer) watchTapperEvents() {
 			}
 
 			log.Error().
-				Str("pod", TapperPodName).
+				Str("pod", WorkerPodName).
 				Err(err).
 				Msg("While watching events.")
 
-		case <-tapperSyncer.context.Done():
+		case <-workerSyncer.context.Done():
 			log.Debug().
-				Str("pod", TapperPodName).
+				Str("pod", WorkerPodName).
 				Msg("Watching pod events, context done.")
 			return
 		}
 	}
 }
 
-func (tapperSyncer *KubesharkTapperSyncer) watchPodsForTapping() {
-	podWatchHelper := NewPodWatchHelper(tapperSyncer.kubernetesProvider, &tapperSyncer.config.PodFilterRegex)
-	eventChan, errorChan := FilteredWatch(tapperSyncer.context, podWatchHelper, tapperSyncer.config.TargetNamespaces, podWatchHelper)
+func (workerSyncer *WorkerSyncer) watchPodsForTargetting() {
+	podWatchHelper := NewPodWatchHelper(workerSyncer.kubernetesProvider, &workerSyncer.config.PodFilterRegex)
+	eventChan, errorChan := FilteredWatch(workerSyncer.context, podWatchHelper, workerSyncer.config.TargetNamespaces, podWatchHelper)
 
 	handleChangeInPods := func() {
-		err, changeFound := tapperSyncer.updateCurrentlyTappedPods()
+		err, changeFound := workerSyncer.updateCurrentlyTargettedPods()
 		if err != nil {
-			tapperSyncer.ErrorOut <- K8sTapManagerError{
-				OriginalError:    err,
-				TapManagerReason: TapManagerPodListError,
+			workerSyncer.ErrorOut <- K8sDeployManagerError{
+				OriginalError:       err,
+				DeployManagerReason: DeployManagerPodListError,
 			}
 		}
 
 		if !changeFound {
-			log.Debug().Msg("Nothing changed. Updating tappers is not needed.")
+			log.Debug().Msg("Nothing changed. Updating workers is not needed.")
 			return
 		}
-		if err := tapperSyncer.updateKubesharkTappers(); err != nil {
-			tapperSyncer.ErrorOut <- K8sTapManagerError{
-				OriginalError:    err,
-				TapManagerReason: TapManagerTapperUpdateError,
+		if err := workerSyncer.updateWorkers(); err != nil {
+			workerSyncer.ErrorOut <- K8sDeployManagerError{
+				OriginalError:       err,
+				DeployManagerReason: DeployManagerWorkerUpdateError,
 			}
 		}
 	}
-	restartTappersDebouncer := debounce.NewDebouncer(updateTappersDelay, handleChangeInPods)
+	restartWorkersDebouncer := debounce.NewDebouncer(updateWorkersDelay, handleChangeInPods)
 
 	for {
 		select {
@@ -225,7 +225,7 @@ func (tapperSyncer *KubesharkTapperSyncer) watchPodsForTapping() {
 
 			pod, err := wEvent.ToPod()
 			if err != nil {
-				tapperSyncer.handleErrorInWatchLoop(err, restartTappersDebouncer)
+				workerSyncer.handleErrorInWatchLoop(err, restartWorkersDebouncer)
 				continue
 			}
 
@@ -235,24 +235,24 @@ func (tapperSyncer *KubesharkTapperSyncer) watchPodsForTapping() {
 					Str("pod", pod.Name).
 					Str("namespace", pod.Namespace).
 					Msg("Added matching pod.")
-				if err := restartTappersDebouncer.SetOn(); err != nil {
+				if err := restartWorkersDebouncer.SetOn(); err != nil {
 					log.Error().
 						Str("pod", pod.Name).
 						Str("namespace", pod.Namespace).
 						Err(err).
-						Msg("While restarting tappers!")
+						Msg("While restarting workers!")
 				}
 			case EventDeleted:
 				log.Debug().
 					Str("pod", pod.Name).
 					Str("namespace", pod.Namespace).
 					Msg("Removed matching pod.")
-				if err := restartTappersDebouncer.SetOn(); err != nil {
+				if err := restartWorkersDebouncer.SetOn(); err != nil {
 					log.Error().
 						Str("pod", pod.Name).
 						Str("namespace", pod.Namespace).
 						Err(err).
-						Msg("While restarting tappers!")
+						Msg("While restarting workers!")
 				}
 			case EventModified:
 				log.Debug().
@@ -269,12 +269,12 @@ func (tapperSyncer *KubesharkTapperSyncer) watchPodsForTapping() {
 				// - Pod reaches ready state
 				// Ready/unready transitions might also trigger this event.
 				if pod.Status.PodIP != "" {
-					if err := restartTappersDebouncer.SetOn(); err != nil {
+					if err := restartWorkersDebouncer.SetOn(); err != nil {
 						log.Error().
 							Str("pod", pod.Name).
 							Str("namespace", pod.Namespace).
 							Err(err).
-							Msg("While restarting tappers!")
+							Msg("While restarting workers!")
 					}
 				}
 			case EventBookmark:
@@ -288,33 +288,33 @@ func (tapperSyncer *KubesharkTapperSyncer) watchPodsForTapping() {
 				continue
 			}
 
-			tapperSyncer.handleErrorInWatchLoop(err, restartTappersDebouncer)
+			workerSyncer.handleErrorInWatchLoop(err, restartWorkersDebouncer)
 			continue
 
-		case <-tapperSyncer.context.Done():
-			log.Debug().Msg("Watching pods, context done. Stopping \"restart tappers debouncer\"")
-			restartTappersDebouncer.Cancel()
+		case <-workerSyncer.context.Done():
+			log.Debug().Msg("Watching pods, context done. Stopping \"restart workers debouncer\"")
+			restartWorkersDebouncer.Cancel()
 			// TODO: Does this also perform cleanup?
 			return
 		}
 	}
 }
 
-func (tapperSyncer *KubesharkTapperSyncer) handleErrorInWatchLoop(err error, restartTappersDebouncer *debounce.Debouncer) {
-	log.Error().Err(err).Msg("While watching pods, got an error! Stopping \"restart tappers debouncer\"")
-	restartTappersDebouncer.Cancel()
-	tapperSyncer.ErrorOut <- K8sTapManagerError{
-		OriginalError:    err,
-		TapManagerReason: TapManagerPodWatchError,
+func (workerSyncer *WorkerSyncer) handleErrorInWatchLoop(err error, restartWorkersDebouncer *debounce.Debouncer) {
+	log.Error().Err(err).Msg("While watching pods, got an error! Stopping \"restart workers debouncer\"")
+	restartWorkersDebouncer.Cancel()
+	workerSyncer.ErrorOut <- K8sDeployManagerError{
+		OriginalError:       err,
+		DeployManagerReason: DeployManagerPodWatchError,
 	}
 }
 
-func (tapperSyncer *KubesharkTapperSyncer) updateCurrentlyTappedPods() (err error, changesFound bool) {
-	if matchingPods, err := tapperSyncer.kubernetesProvider.ListAllRunningPodsMatchingRegex(tapperSyncer.context, &tapperSyncer.config.PodFilterRegex, tapperSyncer.config.TargetNamespaces); err != nil {
+func (workerSyncer *WorkerSyncer) updateCurrentlyTargettedPods() (err error, changesFound bool) {
+	if matchingPods, err := workerSyncer.kubernetesProvider.ListAllRunningPodsMatchingRegex(workerSyncer.context, &workerSyncer.config.PodFilterRegex, workerSyncer.config.TargetNamespaces); err != nil {
 		return err, false
 	} else {
-		podsToTap := excludeKubesharkPods(matchingPods)
-		addedPods, removedPods := getPodArrayDiff(tapperSyncer.CurrentlyTappedPods, podsToTap)
+		podsToTarget := excludeSelfPods(matchingPods)
+		addedPods, removedPods := getPodArrayDiff(workerSyncer.CurrentlyTargettedPods, podsToTarget)
 		for _, addedPod := range addedPods {
 			log.Info().Str("pod", addedPod.Name).Msg("Currently targetting:")
 		}
@@ -322,9 +322,9 @@ func (tapperSyncer *KubesharkTapperSyncer) updateCurrentlyTappedPods() (err erro
 			log.Info().Str("pod", removedPod.Name).Msg("Pod is no longer running. Targetting is stopped.")
 		}
 		if len(addedPods) > 0 || len(removedPods) > 0 {
-			tapperSyncer.CurrentlyTappedPods = podsToTap
-			tapperSyncer.nodeToTappedPodMap = GetNodeHostToTappedPodsMap(tapperSyncer.CurrentlyTappedPods)
-			tapperSyncer.TapPodChangesOut <- TappedPodChangeEvent{
+			workerSyncer.CurrentlyTargettedPods = podsToTarget
+			workerSyncer.nodeToTargettedPodMap = GetNodeHostToTargettedPodsMap(workerSyncer.CurrentlyTargettedPods)
+			workerSyncer.DeployPodChangesOut <- TargettedPodChangeEvent{
 				Added:   addedPods,
 				Removed: removedPods,
 			}
@@ -334,70 +334,70 @@ func (tapperSyncer *KubesharkTapperSyncer) updateCurrentlyTappedPods() (err erro
 	}
 }
 
-func (tapperSyncer *KubesharkTapperSyncer) updateKubesharkTappers() error {
-	nodesToTap := make([]string, len(tapperSyncer.nodeToTappedPodMap))
+func (workerSyncer *WorkerSyncer) updateWorkers() error {
+	nodesToTarget := make([]string, len(workerSyncer.nodeToTargettedPodMap))
 	i := 0
-	for node := range tapperSyncer.nodeToTappedPodMap {
-		nodesToTap[i] = node
+	for node := range workerSyncer.nodeToTargettedPodMap {
+		nodesToTarget[i] = node
 		i++
 	}
 
-	if utils.EqualStringSlices(nodesToTap, tapperSyncer.tappedNodes) {
+	if utils.EqualStringSlices(nodesToTarget, workerSyncer.targettedNodes) {
 		log.Debug().Msg("Skipping apply, DaemonSet is up to date")
 		return nil
 	}
 
-	log.Debug().Strs("nodes", nodesToTap).Msg("Updating DaemonSet to run on nodes.")
+	log.Debug().Strs("nodes", nodesToTarget).Msg("Updating DaemonSet to run on nodes.")
 
 	image := "kubeshark/worker:latest"
 
-	if len(tapperSyncer.nodeToTappedPodMap) > 0 {
+	if len(workerSyncer.nodeToTargettedPodMap) > 0 {
 		var serviceAccountName string
-		if tapperSyncer.config.KubesharkServiceAccountExists {
+		if workerSyncer.config.KubesharkServiceAccountExists {
 			serviceAccountName = ServiceAccountName
 		} else {
 			serviceAccountName = ""
 		}
 
-		nodeNames := make([]string, 0, len(tapperSyncer.nodeToTappedPodMap))
-		for nodeName := range tapperSyncer.nodeToTappedPodMap {
+		nodeNames := make([]string, 0, len(workerSyncer.nodeToTargettedPodMap))
+		for nodeName := range workerSyncer.nodeToTargettedPodMap {
 			nodeNames = append(nodeNames, nodeName)
 		}
 
-		if err := tapperSyncer.kubernetesProvider.ApplyKubesharkTapperDaemonSet(
-			tapperSyncer.context,
-			tapperSyncer.config.KubesharkResourcesNamespace,
-			TapperDaemonSetName,
+		if err := workerSyncer.kubernetesProvider.ApplyWorkerDaemonSet(
+			workerSyncer.context,
+			workerSyncer.config.KubesharkResourcesNamespace,
+			WorkerDaemonSetName,
 			image,
-			TapperPodName,
-			fmt.Sprintf("%s.%s.svc", HubPodName, tapperSyncer.config.KubesharkResourcesNamespace),
+			WorkerPodName,
+			fmt.Sprintf("%s.%s.svc", HubPodName, workerSyncer.config.KubesharkResourcesNamespace),
 			nodeNames,
 			serviceAccountName,
-			tapperSyncer.config.TapperResources,
-			tapperSyncer.config.ImagePullPolicy,
-			tapperSyncer.config.KubesharkApiFilteringOptions,
-			tapperSyncer.config.LogLevel,
-			tapperSyncer.config.ServiceMesh,
-			tapperSyncer.config.Tls,
-			tapperSyncer.config.MaxLiveStreams); err != nil {
+			workerSyncer.config.WorkerResources,
+			workerSyncer.config.ImagePullPolicy,
+			workerSyncer.config.KubesharkApiFilteringOptions,
+			workerSyncer.config.LogLevel,
+			workerSyncer.config.ServiceMesh,
+			workerSyncer.config.Tls,
+			workerSyncer.config.MaxLiveStreams); err != nil {
 			return err
 		}
 
-		log.Debug().Int("tapper-count", len(tapperSyncer.nodeToTappedPodMap)).Msg("Successfully created tappers.")
+		log.Debug().Int("worker-count", len(workerSyncer.nodeToTargettedPodMap)).Msg("Successfully created workers.")
 	} else {
-		if err := tapperSyncer.kubernetesProvider.ResetKubesharkTapperDaemonSet(
-			tapperSyncer.context,
-			tapperSyncer.config.KubesharkResourcesNamespace,
-			TapperDaemonSetName,
+		if err := workerSyncer.kubernetesProvider.ResetWorkerDaemonSet(
+			workerSyncer.context,
+			workerSyncer.config.KubesharkResourcesNamespace,
+			WorkerDaemonSetName,
 			image,
-			TapperPodName); err != nil {
+			WorkerPodName); err != nil {
 			return err
 		}
 
-		log.Debug().Msg("Successfully reset tapper daemon set")
+		log.Debug().Msg("Successfully resetted Worker DaemonSet")
 	}
 
-	tapperSyncer.tappedNodes = nodesToTap
+	workerSyncer.targettedNodes = nodesToTarget
 
 	return nil
 }
