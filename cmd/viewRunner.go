@@ -59,7 +59,7 @@ func runKubesharkView() {
 
 	connector := connect.NewConnector(url, connect.DefaultRetries, connect.DefaultTimeout)
 	if err := connector.TestConnection(""); err != nil {
-		log.Error().Msg(fmt.Sprintf(utils.Error, "Couldn't connect to Hub."))
+		log.Error().Msg(fmt.Sprintf(utils.Red, "Couldn't connect to Hub."))
 		return
 	}
 

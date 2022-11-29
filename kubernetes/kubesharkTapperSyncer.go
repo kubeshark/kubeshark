@@ -316,10 +316,10 @@ func (tapperSyncer *KubesharkTapperSyncer) updateCurrentlyTappedPods() (err erro
 		podsToTap := excludeKubesharkPods(matchingPods)
 		addedPods, removedPods := getPodArrayDiff(tapperSyncer.CurrentlyTappedPods, podsToTap)
 		for _, addedPod := range addedPods {
-			log.Info().Str("pod", addedPod.Name).Msg("Tapping new pod.")
+			log.Info().Str("pod", addedPod.Name).Msg("Currently targetting:")
 		}
 		for _, removedPod := range removedPods {
-			log.Info().Str("pod", removedPod.Name).Msg("Pod is no longer running. Tapping is stopped.")
+			log.Info().Str("pod", removedPod.Name).Msg("Pod is no longer running. Targetting is stopped.")
 		}
 		if len(addedPods) > 0 || len(removedPods) > 0 {
 			tapperSyncer.CurrentlyTappedPods = podsToTap

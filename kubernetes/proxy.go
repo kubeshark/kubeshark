@@ -24,7 +24,7 @@ const kubesharkServicePort = 80
 func StartProxy(kubernetesProvider *Provider, proxyHost string, srcPort uint16, dstPort uint16, kubesharkNamespace string, kubesharkServiceName string, cancel context.CancelFunc) (*http.Server, error) {
 	log.Info().
 		Str("namespace", kubesharkNamespace).
-		Str("service-name", kubesharkServiceName).
+		Str("service", kubesharkServiceName).
 		Int("src-port", int(srcPort)).
 		Int("dst-port", int(dstPort)).
 		Msg("Starting proxy...")
@@ -112,7 +112,7 @@ func NewPortForward(kubernetesProvider *Provider, namespace string, podRegex *re
 
 	log.Info().
 		Str("namespace", namespace).
-		Str("pod-name", podName).
+		Str("pod", podName).
 		Int("src-port", int(srcPort)).
 		Int("dst-port", int(dstPort)).
 		Msg("Starting proxy using port-forward method...")

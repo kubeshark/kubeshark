@@ -816,7 +816,7 @@ func (provider *Provider) ApplyKubesharkTapperDaemonSet(ctx context.Context, nam
 		Str("namespace", namespace).
 		Str("daemonset-name", daemonSetName).
 		Str("image", podImage).
-		Str("pod-name", tapperPodName).
+		Str("pod", tapperPodName).
 		Msg("Applying tapper DaemonSets.")
 
 	if len(nodeNames) == 0 {

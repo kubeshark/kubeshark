@@ -12,7 +12,7 @@ import (
 )
 
 func CleanUpKubesharkResources(ctx context.Context, cancel context.CancelFunc, kubernetesProvider *kubernetes.Provider, isNsRestrictedMode bool, kubesharkResourcesNamespace string) {
-	log.Info().Msg("Removing Kubeshark resources...")
+	log.Warn().Msg("Removing Kubeshark resources...")
 
 	var leftoverResources []string
 
@@ -27,7 +27,7 @@ func CleanUpKubesharkResources(ctx context.Context, cancel context.CancelFunc, k
 		for _, resource := range leftoverResources {
 			errMsg += "\n- " + resource
 		}
-		log.Error().Msg(fmt.Sprintf(utils.Error, errMsg))
+		log.Error().Msg(fmt.Sprintf(utils.Red, errMsg))
 	}
 }
 

@@ -33,7 +33,7 @@ Supported protocols are HTTP and gRPC.`,
 
 		log.Info().
 			Str("limit", config.Config.Tap.HumanMaxEntriesDBSize).
-			Msg("Kubeshark will store traffic up to a limit. The old traffic will be cleared once the limit is reached.")
+			Msg("Kubeshark will store the traffic up to a limit. Oldest entries will be removed once the limit is reached.")
 
 		return nil
 	},

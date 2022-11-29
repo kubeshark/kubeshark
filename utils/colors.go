@@ -9,6 +9,4 @@ const (
 	Magenta = "\033[1;35m%s\033[0m"
 	Teal    = "\033[1;36m%s\033[0m"
 	White   = "\033[1;37m%s\033[0m"
-	Error   = Red
-	Warning = Yellow
 )

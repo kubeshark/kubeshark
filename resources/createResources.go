@@ -79,14 +79,14 @@ func CreateTapKubesharkResources(ctx context.Context, kubernetesProvider *kubern
 		return kubesharkServiceAccountExists, err
 	}
 
-	log.Info().Str("service-name", kubernetes.HubServiceName).Msg("Successfully created service:")
+	log.Info().Str("service", kubernetes.HubServiceName).Msg("Successfully created a service.")
 
 	_, err = kubernetesProvider.CreateService(ctx, kubesharkResourcesNamespace, kubernetes.FrontServiceName, kubernetes.FrontServiceName, 80, int32(config.Config.Front.PortForward.DstPort), int32(config.Config.Front.PortForward.SrcPort))
 	if err != nil {
 		return kubesharkServiceAccountExists, err
 	}
 
-	log.Info().Str("service-name", kubernetes.FrontServiceName).Msg("Successfully created service:")
+	log.Info().Str("service", kubernetes.FrontServiceName).Msg("Successfully created a service.")
 
 	return kubesharkServiceAccountExists, nil
 }
@@ -123,7 +123,7 @@ func createKubesharkHubPod(ctx context.Context, kubernetesProvider *kubernetes.P
 	if _, err = kubernetesProvider.CreatePod(ctx, opts.Namespace, pod); err != nil {
 		return err
 	}
-	log.Info().Str("pod-name", pod.Name).Msg("Successfully created pod.")
+	log.Info().Str("pod", pod.Name).Msg("Successfully created a pod.")
 	return nil
 }
 
@@ -135,6 +135,6 @@ func createFrontPod(ctx context.Context, kubernetesProvider *kubernetes.Provider
 	if _, err = kubernetesProvider.CreatePod(ctx, opts.Namespace, pod); err != nil {
 		return err
 	}
-	log.Info().Str("pod-name", pod.Name).Msg("Successfully created pod.")
+	log.Info().Str("pod", pod.Name).Msg("Successfully created a pod.")
 	return nil
 }

@@ -18,7 +18,7 @@ import (
 )
 
 func CheckNewerVersion() {
-	log.Info().Msg("Checking for newer version...")
+	log.Info().Msg("Checking for a newer version...")
 	start := time.Now()
 	client := github.NewClient(nil)
 	latestRelease, _, err := client.Repositories.GetLatestRelease(context.Background(), "kubeshark", "kubeshark")
@@ -77,6 +77,6 @@ func CheckNewerVersion() {
 			downloadCommand = "sh <(curl -Ls https://kubeshark.co/install)"
 		}
 		msg := fmt.Sprintf("Update available! %v -> %v run:", kubeshark.Ver, gitHubVersion)
-		log.Info().Str("command", downloadCommand).Msg(fmt.Sprintf(utils.Yellow, msg))
+		log.Warn().Str("command", downloadCommand).Msg(fmt.Sprintf(utils.Yellow, msg))
 	}
 }

@@ -5,7 +5,6 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
-	"strings"
 	"time"
 
 	"github.com/kubeshark/kubeshark/internal/connect"
@@ -69,14 +68,7 @@ func RunKubesharkTap() {
 		}
 	}
 
-	var namespacesStr string
-	if !utils.Contains(state.targetNamespaces, kubernetes.K8sAllNamespaces) {
-		namespacesStr = fmt.Sprintf("namespaces \"%s\"", strings.Join(state.targetNamespaces, "\", \""))
-	} else {
-		namespacesStr = "all namespaces"
-	}
-
-	log.Info().Str("namespace", namespacesStr).Msg("Tapping pods in:")
+	log.Info().Strs("namespaces", state.targetNamespaces).Msg("Targetting pods in:")
 
 	if err := printTappedPodsPreview(ctx, kubernetesProvider, state.targetNamespaces); err != nil {
 		log.Error().Err(errormessage.FormatError(err)).Msg("Error listing pods!")
@@ -141,7 +133,7 @@ func printTappedPodsPreview(ctx context.Context, kubernetesProvider *kubernetes.
 			printNoPodsFoundSuggestion(namespaces)
 		}
 		for _, tappedPod := range matchingPods {
-			log.Info().Msg(fmt.Sprintf(utils.Green, fmt.Sprintf("+%s", tappedPod.Name)))
+			log.Info().Msg(fmt.Sprintf("New pod: %s", fmt.Sprintf(utils.Green, tappedPod.Name)))
 		}
 		return nil
 	}
@@ -464,14 +456,14 @@ func postHubStarted(ctx context.Context, kubernetesProvider *kubernetes.Provider
 	}
 
 	url := kubernetes.GetLocalhostOnPort(config.Config.Hub.PortForward.SrcPort)
-	log.Info().Msg(fmt.Sprintf("Hub is available at %s", url))
+	log.Info().Str("url", url).Msg(fmt.Sprintf(utils.Green, "Hub is available at:"))
 }
 
 func postFrontStarted(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc) {
 	startProxyReportErrorIfAny(kubernetesProvider, ctx, cancel, kubernetes.FrontServiceName, config.Config.Front.PortForward.SrcPort, config.Config.Front.PortForward.DstPort, "")
 
 	url := kubernetes.GetLocalhostOnPort(config.Config.Front.PortForward.SrcPort)
-	log.Info().Msg(fmt.Sprintf("Kubeshark is available at %s", url))
+	log.Info().Str("url", url).Msg(fmt.Sprintf(utils.Green, "Kubeshark is available at:"))
 	if !config.Config.HeadlessMode {
 		utils.OpenBrowser(url)
 	}
