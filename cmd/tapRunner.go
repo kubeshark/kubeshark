@@ -464,6 +464,7 @@ func postFrontStarted(ctx context.Context, kubernetesProvider *kubernetes.Provid
 
 	url := kubernetes.GetLocalhostOnPort(config.Config.Front.PortForward.SrcPort)
 	log.Info().Str("url", url).Msg(fmt.Sprintf(utils.Green, "Kubeshark is available at:"))
+
 	if !config.Config.HeadlessMode {
 		utils.OpenBrowser(url)
 	}

@@ -58,7 +58,6 @@ type ConfigStruct struct {
 	Hub                HubConfig                  `yaml:"hub"`
 	Front              FrontConfig                `yaml:"front"`
 	Tap                configStructs.TapConfig    `yaml:"tap"`
-	View               configStructs.ViewConfig   `yaml:"view"`
 	Logs               configStructs.LogsConfig   `yaml:"logs"`
 	Config             configStructs.ConfigConfig `yaml:"config,omitempty"`
 	ImagePullPolicyStr string                     `yaml:"image-pull-policy" default:"Always"`
