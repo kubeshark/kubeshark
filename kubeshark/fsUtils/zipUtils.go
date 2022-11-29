@@ -4,10 +4,11 @@ import (
 	"archive/zip"
 	"fmt"
 	"io"
-	"log"
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/rs/zerolog/log"
 )
 
 func AddFileToZip(zipWriter *zip.Writer, filename string) error {
@@ -83,7 +84,7 @@ func Unzip(reader *zip.Reader, dest string) error {
 			_ = os.MkdirAll(path, f.Mode())
 		} else {
 			_ = os.MkdirAll(filepath.Dir(path), f.Mode())
-			log.Printf("writing HAR file [ %v ]", path)
+			log.Info().Str("path", path).Msg("Writing HAR file...")
 			f, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, f.Mode())
 			if err != nil {
 				return err
@@ -92,7 +93,7 @@ func Unzip(reader *zip.Reader, dest string) error {
 				if err := f.Close(); err != nil {
 					panic(err)
 				}
-				log.Print(" done")
+				log.Info().Str("path", path).Msg("HAR file at:")
 			}()
 
 			_, err = io.Copy(f, rc)

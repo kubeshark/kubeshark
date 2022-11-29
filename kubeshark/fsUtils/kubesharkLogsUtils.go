@@ -4,12 +4,12 @@ import (
 	"archive/zip"
 	"context"
 	"fmt"
-	"log"
 	"os"
 	"regexp"
 
 	"github.com/kubeshark/kubeshark/config"
 	"github.com/kubeshark/kubeshark/kubernetes"
+	"github.com/rs/zerolog/log"
 )
 
 func DumpLogs(ctx context.Context, provider *kubernetes.Provider, filePath string) error {
@@ -35,39 +35,49 @@ func DumpLogs(ctx context.Context, provider *kubernetes.Provider, filePath strin
 		for _, container := range pod.Spec.Containers {
 			logs, err := provider.GetPodLogs(ctx, pod.Namespace, pod.Name, container.Name)
 			if err != nil {
-				log.Printf("Failed to get logs, %v", err)
+				log.Error().Err(err).Msg("Failed to get logs!")
 				continue
 			} else {
-				log.Printf("Successfully read log length %d for pod: %s.%s.%s", len(logs), pod.Namespace, pod.Name, container.Name)
+				log.Debug().
+					Int("length", len(logs)).
+					Str("namespace", pod.Namespace).
+					Str("pod", pod.Name).
+					Str("container", container.Name).
+					Msg("Successfully read log length.")
 			}
 
 			if err := AddStrToZip(zipWriter, logs, fmt.Sprintf("%s.%s.%s.log", pod.Namespace, pod.Name, container.Name)); err != nil {
-				log.Printf("Failed write logs, %v", err)
+				log.Error().Err(err).Msg("Failed write logs!")
 			} else {
-				log.Printf("Successfully added log length %d from pod: %s.%s.%s", len(logs), pod.Namespace, pod.Name, container.Name)
+				log.Debug().
+					Int("length", len(logs)).
+					Str("namespace", pod.Namespace).
+					Str("pod", pod.Name).
+					Str("container", container.Name).
+					Msg("Successfully added log length.")
 			}
 		}
 	}
 
 	events, err := provider.GetNamespaceEvents(ctx, config.Config.ResourcesNamespace)
 	if err != nil {
-		log.Printf("Failed to get k8b events, %v", err)
+		log.Error().Err(err).Msg("Failed to get k8b events!")
 	} else {
-		log.Printf("Successfully read events for k8b namespace: %s", config.Config.ResourcesNamespace)
+		log.Debug().Str("namespace", config.Config.ResourcesNamespace).Msg("Successfully read events.")
 	}
 
 	if err := AddStrToZip(zipWriter, events, fmt.Sprintf("%s_events.log", config.Config.ResourcesNamespace)); err != nil {
-		log.Printf("Failed write logs, %v", err)
+		log.Error().Err(err).Msg("Failed write logs!")
 	} else {
-		log.Printf("Successfully added events for k8b namespace: %s", config.Config.ResourcesNamespace)
+		log.Debug().Str("namespace", config.Config.ResourcesNamespace).Msg("Successfully added events.")
 	}
 
 	if err := AddFileToZip(zipWriter, config.Config.ConfigFilePath); err != nil {
-		log.Printf("Failed write file, %v", err)
+		log.Error().Err(err).Msg("Failed write file!")
 	} else {
-		log.Printf("Successfully added file %s", config.Config.ConfigFilePath)
+		log.Debug().Str("file-path", config.Config.ConfigFilePath).Msg("Successfully added file.")
 	}
 
-	log.Printf("You can find the zip file with all logs in %s", filePath)
+	log.Info().Str("path", filePath).Msg("You can find the ZIP file with all logs at:")
 	return nil
 }

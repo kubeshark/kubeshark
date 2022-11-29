@@ -412,16 +412,6 @@ func watchHubEvents(ctx context.Context, kubernetesProvider *kubernetes.Provider
 				continue
 			}
 
-			log.Printf(
-				"Watching Hub events loop, event %s, time: %v, resource: %s (%s), reason: %s, note: %s",
-				event.Name,
-				event.CreationTimestamp.Time,
-				event.Regarding.Name,
-				event.Regarding.Kind,
-				event.Reason,
-				event.Note,
-			)
-
 			log.Debug().
 				Str("pod", kubernetes.HubPodName).
 				Str("event", event.Name).
@@ -456,6 +446,7 @@ func watchHubEvents(ctx context.Context, kubernetesProvider *kubernetes.Provider
 				Str("pod", kubernetes.HubPodName).
 				Err(err).
 				Msg("While watching events.")
+
 		case <-ctx.Done():
 			log.Debug().
 				Str("pod", kubernetes.HubPodName).

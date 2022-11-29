@@ -4,17 +4,16 @@ import (
 	"context"
 	"embed"
 	"fmt"
-	"log"
 
 	"github.com/kubeshark/kubeshark/config"
 	"github.com/kubeshark/kubeshark/kubernetes"
-	"github.com/kubeshark/kubeshark/utils"
+	"github.com/rs/zerolog/log"
 	rbac "k8s.io/api/rbac/v1"
 	"k8s.io/client-go/kubernetes/scheme"
 )
 
 func TapKubernetesPermissions(ctx context.Context, embedFS embed.FS, kubernetesProvider *kubernetes.Provider) bool {
-	log.Printf("\nkubernetes-permissions\n--------------------")
+	log.Info().Msg("[kubernetes-permissions]")
 
 	var filePath string
 	if config.Config.IsNsRestrictedMode() {
@@ -25,14 +24,14 @@ func TapKubernetesPermissions(ctx context.Context, embedFS embed.FS, kubernetesP
 
 	data, err := embedFS.ReadFile(filePath)
 	if err != nil {
-		log.Printf("%v error while checking kubernetes permissions, err: %v", fmt.Sprintf(utils.Red, "✗"), err)
+		log.Error().Err(err).Msg("While checking Kubernetes permissions!")
 		return false
 	}
 
 	decode := scheme.Codecs.UniversalDeserializer().Decode
 	obj, _, err := decode(data, nil, nil)
 	if err != nil {
-		log.Printf("%v error while checking kubernetes permissions, err: %v", fmt.Sprintf(utils.Red, "✗"), err)
+		log.Error().Err(err).Msg("While checking Kubernetes permissions!")
 		return false
 	}
 
@@ -43,7 +42,7 @@ func TapKubernetesPermissions(ctx context.Context, embedFS embed.FS, kubernetesP
 		return checkRulesPermissions(ctx, kubernetesProvider, resource.Rules, "")
 	}
 
-	log.Printf("%v error while checking kubernetes permissions, err: resource of type 'Role' or 'ClusterRole' not found in permission files", fmt.Sprintf(utils.Red, "✗"))
+	log.Error().Msg("While checking Kubernetes permissions! Resource of types 'Role' or 'ClusterRole' are not found in permission files.")
 	return false
 }
 
@@ -75,13 +74,18 @@ func checkPermissionExist(group string, resource string, verb string, namespace 
 	}
 
 	if err != nil {
-		log.Printf("%v error checking permission for %v %v %v, err: %v", fmt.Sprintf(utils.Red, "✗"), verb, resource, groupAndNamespace, err)
+		log.Error().
+			Str("verb", verb).
+			Str("resource", resource).
+			Str("group-and-namespace", groupAndNamespace).
+			Err(err).
+			Msg("While checking Kubernetes permissions!")
 		return false
 	} else if !exist {
-		log.Printf("%v can't %v %v %v", fmt.Sprintf(utils.Red, "✗"), verb, resource, groupAndNamespace)
+		log.Error().Msg(fmt.Sprintf("Can't %v %v %v", verb, resource, groupAndNamespace))
 		return false
 	}
 
-	log.Printf("%v can %v %v %v", fmt.Sprintf(utils.Green, "√"), verb, resource, groupAndNamespace)
+	log.Info().Msg(fmt.Sprintf("Can %v %v %v", verb, resource, groupAndNamespace))
 	return true
 }

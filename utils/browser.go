@@ -2,9 +2,10 @@ package utils
 
 import (
 	"fmt"
-	"log"
 	"os/exec"
 	"runtime"
+
+	"github.com/rs/zerolog/log"
 )
 
 func OpenBrowser(url string) {
@@ -22,6 +23,6 @@ func OpenBrowser(url string) {
 	}
 
 	if err != nil {
-		log.Printf("error while opening browser, %v", err)
+		log.Error().Err(err).Msg("While trying to open a browser")
 	}
 }

@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"fmt"
-	"log"
 	"net"
 	"net/http"
 	"net/url"
@@ -12,10 +11,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/rs/zerolog/log"
 	"k8s.io/apimachinery/pkg/util/httpstream"
 	"k8s.io/client-go/tools/portforward"
 	"k8s.io/client-go/transport/spdy"
-
 	"k8s.io/kubectl/pkg/proxy"
 )
 
@@ -23,7 +22,13 @@ const k8sProxyApiPrefix = "/"
 const kubesharkServicePort = 80
 
 func StartProxy(kubernetesProvider *Provider, proxyHost string, srcPort uint16, dstPort uint16, kubesharkNamespace string, kubesharkServiceName string, cancel context.CancelFunc) (*http.Server, error) {
-	log.Printf("Starting proxy - namespace: [%v], service name: [%s], port: [%d:%d]\n", kubesharkNamespace, kubesharkServiceName, srcPort, dstPort)
+	log.Info().
+		Str("namespace", kubesharkNamespace).
+		Str("service-name", kubesharkServiceName).
+		Int("src-port", int(srcPort)).
+		Int("dst-port", int(dstPort)).
+		Msg("Starting proxy...")
+
 	filter := &proxy.FilterServer{
 		AcceptPaths:   proxy.MakeRegexpArrayOrDie(proxy.DefaultPathAcceptRE),
 		RejectPaths:   proxy.MakeRegexpArrayOrDie(proxy.DefaultPathRejectRE),
@@ -50,7 +55,7 @@ func StartProxy(kubernetesProvider *Provider, proxyHost string, srcPort uint16, 
 
 	go func() {
 		if err := server.Serve(l); err != nil && err != http.ErrServerClosed {
-			log.Printf("Error creating proxy, %v", err)
+			log.Error().Err(err).Msg("While creating proxy!")
 			cancel()
 		}
 	}()
@@ -105,7 +110,12 @@ func NewPortForward(kubernetesProvider *Provider, namespace string, podRegex *re
 
 	podName := pods[0].Name
 
-	log.Printf("Starting proxy using port-forward method. namespace: [%v], pod name: [%s], %d:%d", namespace, podName, srcPort, dstPort)
+	log.Info().
+		Str("namespace", namespace).
+		Str("pod-name", podName).
+		Int("src-port", int(srcPort)).
+		Int("dst-port", int(dstPort)).
+		Msg("Starting proxy using port-forward method...")
 
 	dialer, err := getHttpDialer(kubernetesProvider, namespace, podName)
 	if err != nil {
@@ -122,7 +132,7 @@ func NewPortForward(kubernetesProvider *Provider, namespace string, podRegex *re
 
 	go func() {
 		if err = forwarder.ForwardPorts(); err != nil {
-			log.Printf("kubernetes port-forwarding error: %v", err)
+			log.Error().Err(err).Msg("While Kubernetes port-forwarding!")
 			cancel()
 		}
 	}()
@@ -133,7 +143,7 @@ func NewPortForward(kubernetesProvider *Provider, namespace string, podRegex *re
 func getHttpDialer(kubernetesProvider *Provider, namespace string, podName string) (httpstream.Dialer, error) {
 	roundTripper, upgrader, err := spdy.RoundTripperFor(&kubernetesProvider.clientConfig)
 	if err != nil {
-		log.Printf("Error creating http dialer")
+		log.Error().Err(err).Msg("While creating HTTP dialer!")
 		return nil, err
 	}
 
@@ -144,7 +154,9 @@ func getHttpDialer(kubernetesProvider *Provider, namespace string, podName strin
 	path := fmt.Sprintf("%s/api/v1/namespaces/%s/pods/%s/portforward", clientConfigHostUrl.Path, namespace, podName)
 
 	serverURL := url.URL{Scheme: "https", Path: path, Host: clientConfigHostUrl.Host}
-	log.Printf("Http dialer url %v", serverURL)
+	log.Debug().
+		Str("url", serverURL.String()).
+		Msg("HTTP dialer URL:")
 
 	return spdy.NewDialer(upgrader, &http.Client{Transport: roundTripper}, http.MethodPost, &serverURL), nil
 }
