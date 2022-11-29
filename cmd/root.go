@@ -17,7 +17,7 @@ var rootCmd = &cobra.Command{
 Further info is available at https://github.com/kubeshark/kubeshark`,
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		if err := config.InitConfig(cmd); err != nil {
-			log.Fatal().Err(err)
+			log.Fatal().Err(err).Send()
 		}
 
 		return nil
@@ -27,7 +27,7 @@ Further info is available at https://github.com/kubeshark/kubeshark`,
 func init() {
 	defaultConfig := config.CreateDefaultConfig()
 	if err := defaults.Set(&defaultConfig); err != nil {
-		log.Debug().Err(err)
+		log.Debug().Err(err).Send()
 	}
 
 	rootCmd.PersistentFlags().StringSlice(config.SetCommandName, []string{}, fmt.Sprintf("Override values using --%s", config.SetCommandName))

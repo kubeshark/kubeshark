@@ -56,7 +56,7 @@ func FilteredWatch(ctx context.Context, watcherCreator WatchCreator, targetNames
 				} else {
 					if !watchRestartDebouncer.IsOn() {
 						if err := watchRestartDebouncer.SetOn(); err != nil {
-							log.Error().Err(err)
+							log.Error().Err(err).Send()
 						}
 						log.Warn().Msg("K8s watch channel closed, restarting watcher...")
 						time.Sleep(time.Second * 5)

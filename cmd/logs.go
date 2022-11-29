@@ -41,7 +41,7 @@ func init() {
 
 	defaultLogsConfig := configStructs.LogsConfig{}
 	if err := defaults.Set(&defaultLogsConfig); err != nil {
-		log.Debug().Err(err)
+		log.Debug().Err(err).Send()
 	}
 
 	logsCmd.Flags().StringP(configStructs.FileLogsName, "f", defaultLogsConfig.FileStr, "Path for zip file (default current <pwd>\\kubeshark_logs.zip)")

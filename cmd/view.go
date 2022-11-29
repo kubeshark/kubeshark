@@ -21,13 +21,13 @@ func init() {
 
 	defaultViewConfig := configStructs.ViewConfig{}
 	if err := defaults.Set(&defaultViewConfig); err != nil {
-		log.Error().Err(err)
+		log.Error().Err(err).Send()
 	}
 
 	viewCmd.Flags().Uint16P(configStructs.GuiPortViewName, "p", defaultViewConfig.GuiPort, "Provide a custom port for the web interface webserver")
 	viewCmd.Flags().StringP(configStructs.UrlViewName, "u", defaultViewConfig.Url, "Provide a custom host")
 
 	if err := viewCmd.Flags().MarkHidden(configStructs.UrlViewName); err != nil {
-		log.Error().Err(err)
+		log.Error().Err(err).Send()
 	}
 }

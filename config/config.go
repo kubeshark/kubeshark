@@ -139,20 +139,20 @@ func initFlag(f *pflag.Flag) {
 	sliceValue, isSliceValue := f.Value.(pflag.SliceValue)
 	if !isSliceValue {
 		if err := mergeFlagValue(configElemValue, flagPath, strings.Join(flagPath, "."), f.Value.String()); err != nil {
-			log.Warn().Err(err)
+			log.Warn().Err(err).Send()
 		}
 		return
 	}
 
 	if f.Name == SetCommandName {
 		if err := mergeSetFlag(configElemValue, sliceValue.GetSlice()); err != nil {
-			log.Warn().Err(err)
+			log.Warn().Err(err).Send()
 		}
 		return
 	}
 
 	if err := mergeFlagValues(configElemValue, flagPath, strings.Join(flagPath, "."), sliceValue.GetSlice()); err != nil {
-		log.Warn().Err(err)
+		log.Warn().Err(err).Send()
 	}
 }
 

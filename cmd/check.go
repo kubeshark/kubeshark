@@ -21,7 +21,7 @@ func init() {
 
 	defaultCheckConfig := configStructs.CheckConfig{}
 	if err := defaults.Set(&defaultCheckConfig); err != nil {
-		log.Error().Err(err)
+		log.Error().Err(err).Send()
 	}
 
 	checkCmd.Flags().Bool(configStructs.PreTapCheckName, defaultCheckConfig.PreTap, "Check pre-tap Kubeshark installation for potential problems")

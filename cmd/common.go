@@ -93,7 +93,7 @@ func handleKubernetesProviderError(err error) {
 	if ok := errors.As(err, &clusterBehindProxyErr); ok {
 		log.Error().Msg(fmt.Sprintf("Cannot establish http-proxy connection to the Kubernetes cluster. If you’re using Lens or similar tool, please run kubeshark with regular kubectl config using --%v %v=$HOME/.kube/config flag", config.SetCommandName, config.KubeConfigPathConfigName))
 	} else {
-		log.Error().Err(err)
+		log.Error().Err(err).Send()
 	}
 }
 

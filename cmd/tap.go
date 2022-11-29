@@ -44,7 +44,7 @@ func init() {
 
 	defaultTapConfig := configStructs.TapConfig{}
 	if err := defaults.Set(&defaultTapConfig); err != nil {
-		log.Debug().Err(err)
+		log.Debug().Err(err).Send()
 	}
 
 	tapCmd.Flags().Uint16P(configStructs.GuiPortTapName, "p", defaultTapConfig.GuiPort, "Provide a custom port for the web interface webserver")

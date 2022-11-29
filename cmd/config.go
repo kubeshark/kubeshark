@@ -48,7 +48,7 @@ func init() {
 
 	defaultConfig := config.CreateDefaultConfig()
 	if err := defaults.Set(&defaultConfig); err != nil {
-		log.Debug().Err(err)
+		log.Debug().Err(err).Send()
 	}
 
 	configCmd.Flags().BoolP(configStructs.RegenerateConfigName, "r", defaultConfig.Config.Regenerate, fmt.Sprintf("Regenerate the config file with default values to path %s or to chosen path using --%s", defaultConfig.ConfigFilePath, config.ConfigFilePathCommandName))
