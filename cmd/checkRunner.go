@@ -4,9 +4,9 @@ import (
 	"context"
 	"embed"
 	"fmt"
+	"os"
 
 	"github.com/kubeshark/kubeshark/cmd/check"
-	"github.com/kubeshark/kubeshark/config"
 	"github.com/kubeshark/kubeshark/utils"
 	"github.com/rs/zerolog/log"
 )
@@ -17,7 +17,7 @@ var (
 )
 
 func runKubesharkCheck() {
-	log.Info().Msg("Kubeshark checks...")
+	log.Info().Msg("Checking the deployment...")
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // cancel will be called when this function exits
@@ -28,31 +28,28 @@ func runKubesharkCheck() {
 		checkPassed = check.KubernetesVersion(kubernetesVersion)
 	}
 
-	if config.Config.Check.PreTap || config.Config.Check.ImagePull {
-		if config.Config.Check.PreTap {
-			if checkPassed {
-				checkPassed = check.TapKubernetesPermissions(ctx, embedFS, kubernetesProvider)
-			}
-		}
-
-		if config.Config.Check.ImagePull {
-			if checkPassed {
-				checkPassed = check.ImagePullInCluster(ctx, kubernetesProvider)
-			}
-		}
-	} else {
-		if checkPassed {
-			checkPassed = check.KubernetesResources(ctx, kubernetesProvider)
-		}
-
-		if checkPassed {
-			checkPassed = check.ServerConnection(kubernetesProvider)
-		}
+	if checkPassed {
+		checkPassed = check.TapKubernetesPermissions(ctx, embedFS, kubernetesProvider)
 	}
 
 	if checkPassed {
-		log.Info().Msg(fmt.Sprintf("Status check results are %v", fmt.Sprintf(utils.Green, "√")))
+		checkPassed = check.ImagePullInCluster(ctx, kubernetesProvider)
+	}
+	if checkPassed {
+		checkPassed = check.KubernetesResources(ctx, kubernetesProvider)
+	}
+
+	if checkPassed {
+		checkPassed = check.ServerConnection(kubernetesProvider)
+	}
+
+	if checkPassed {
+		log.Info().Msg(fmt.Sprintf(utils.Green, "All checks are passed."))
 	} else {
-		log.Info().Msg(fmt.Sprintf("Status check results are %v", fmt.Sprintf(utils.Red, "✗")))
+		log.Error().
+			Str("command1", "kubeshark clean").
+			Str("command2", "kubeshark tap").
+			Msg(fmt.Sprintf(utils.Red, "There are issues in your deployment! Run these commands:"))
+		os.Exit(1)
 	}
 }

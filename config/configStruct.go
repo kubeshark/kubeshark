@@ -58,7 +58,6 @@ type ConfigStruct struct {
 	Hub                HubConfig                  `yaml:"hub"`
 	Front              FrontConfig                `yaml:"front"`
 	Tap                configStructs.TapConfig    `yaml:"tap"`
-	Check              configStructs.CheckConfig  `yaml:"check"`
 	View               configStructs.ViewConfig   `yaml:"view"`
 	Logs               configStructs.LogsConfig   `yaml:"logs"`
 	Config             configStructs.ConfigConfig `yaml:"config,omitempty"`

@@ -10,7 +10,7 @@ import (
 )
 
 func KubernetesResources(ctx context.Context, kubernetesProvider *kubernetes.Provider) bool {
-	log.Info().Msg("[k8s-components]")
+	log.Info().Str("procedure", "k8s-components").Msg("Checking:")
 
 	exist, err := kubernetesProvider.DoesNamespaceExist(ctx, config.Config.ResourcesNamespace)
 	allResourcesExist := checkResourceExist(config.Config.ResourcesNamespace, "namespace", exist, err)

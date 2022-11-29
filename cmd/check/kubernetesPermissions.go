@@ -13,7 +13,7 @@ import (
 )
 
 func TapKubernetesPermissions(ctx context.Context, embedFS embed.FS, kubernetesProvider *kubernetes.Provider) bool {
-	log.Info().Msg("[kubernetes-permissions]")
+	log.Info().Str("procedure", "kubernetes-permissions").Msg("Checking:")
 
 	var filePath string
 	if config.Config.IsNsRestrictedMode() {

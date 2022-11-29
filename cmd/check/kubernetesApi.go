@@ -8,7 +8,7 @@ import (
 )
 
 func KubernetesApi() (*kubernetes.Provider, *semver.SemVersion, bool) {
-	log.Info().Msg("[kubernetes-api]")
+	log.Info().Str("procedure", "kubernetes-api").Msg("Checking:")
 
 	kubernetesProvider, err := kubernetes.NewProvider(config.Config.KubeConfigPath(), config.Config.KubeContext)
 	if err != nil {

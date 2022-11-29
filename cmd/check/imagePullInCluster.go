@@ -14,7 +14,7 @@ import (
 )
 
 func ImagePullInCluster(ctx context.Context, kubernetesProvider *kubernetes.Provider) bool {
-	log.Info().Msg("[image-pull-in-cluster]")
+	log.Info().Str("procedure", "image-pull-in-cluster").Msg("Checking:")
 
 	namespace := "default"
 	podName := "kubeshark-test"
@@ -92,6 +92,8 @@ func checkImagePulled(ctx context.Context, kubernetesProvider *kubernetes.Provid
 }
 
 func createImagePullInClusterPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, namespace string, podName string) error {
+	image := "kubeshark/worker:latest"
+	log.Info().Str("image", image).Msg("Testing image pull:")
 	var zero int64
 	pod := &core.Pod{
 		ObjectMeta: metav1.ObjectMeta{
@@ -101,7 +103,7 @@ func createImagePullInClusterPod(ctx context.Context, kubernetesProvider *kubern
 			Containers: []core.Container{
 				{
 					Name:            "probe",
-					Image:           "kubeshark/busybox",
+					Image:           "kubeshark/worker:latest",
 					ImagePullPolicy: "Always",
 					Command:         []string{"cat"},
 					Stdin:           true,
