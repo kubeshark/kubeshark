@@ -6,9 +6,9 @@ import (
 	"path"
 	"path/filepath"
 
+	"github.com/kubeshark/base/pkg/models"
 	"github.com/kubeshark/kubeshark/config/configStructs"
 	"github.com/kubeshark/kubeshark/kubeshark"
-	"github.com/kubeshark/worker/models"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	v1 "k8s.io/api/core/v1"

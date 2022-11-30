@@ -9,6 +9,7 @@ import (
 	"regexp"
 	"time"
 
+	"github.com/kubeshark/base/pkg/models"
 	"github.com/kubeshark/kubeshark/config"
 	"github.com/kubeshark/kubeshark/config/configStructs"
 	"github.com/kubeshark/kubeshark/errormessage"
@@ -17,7 +18,6 @@ import (
 	"github.com/kubeshark/kubeshark/kubeshark"
 	"github.com/kubeshark/kubeshark/kubeshark/fsUtils"
 	"github.com/kubeshark/kubeshark/resources"
-	"github.com/kubeshark/worker/models"
 	"github.com/rs/zerolog/log"
 )
 

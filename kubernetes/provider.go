@@ -12,10 +12,10 @@ import (
 	"regexp"
 	"strconv"
 
+	"github.com/kubeshark/base/pkg/api"
+	"github.com/kubeshark/base/pkg/models"
 	"github.com/kubeshark/kubeshark/semver"
 	"github.com/kubeshark/kubeshark/utils"
-	"github.com/kubeshark/worker/api"
-	"github.com/kubeshark/worker/models"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	auth "k8s.io/api/authorization/v1"

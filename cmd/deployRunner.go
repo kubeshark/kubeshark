@@ -15,13 +15,13 @@ import (
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
+	"github.com/kubeshark/base/pkg/api"
+	"github.com/kubeshark/base/pkg/models"
 	"github.com/kubeshark/kubeshark/cmd/goUtils"
 	"github.com/kubeshark/kubeshark/config"
 	"github.com/kubeshark/kubeshark/config/configStructs"
 	"github.com/kubeshark/kubeshark/errormessage"
 	"github.com/kubeshark/kubeshark/kubernetes"
-	"github.com/kubeshark/worker/api"
-	"github.com/kubeshark/worker/models"
 	"github.com/rs/zerolog/log"
 )
 

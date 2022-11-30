@@ -3,7 +3,7 @@ package kubernetes
 import (
 	"regexp"
 
-	"github.com/kubeshark/worker/models"
+	"github.com/kubeshark/base/pkg/models"
 	core "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )

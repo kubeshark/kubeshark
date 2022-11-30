@@ -3,11 +3,11 @@ package resources
 import (
 	"context"
 
+	"github.com/kubeshark/base/pkg/models"
 	"github.com/kubeshark/kubeshark/config"
 	"github.com/kubeshark/kubeshark/errormessage"
 	"github.com/kubeshark/kubeshark/kubernetes"
 	"github.com/kubeshark/kubeshark/kubeshark"
-	"github.com/kubeshark/worker/models"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	core "k8s.io/api/core/v1"

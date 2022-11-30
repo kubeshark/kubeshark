@@ -7,8 +7,8 @@ import (
 	"net/http"
 	"time"
 
+	"github.com/kubeshark/base/pkg/models"
 	"github.com/kubeshark/kubeshark/utils"
-	"github.com/kubeshark/worker/models"
 
 	"github.com/kubeshark/kubeshark/config"
 	"github.com/rs/zerolog/log"
