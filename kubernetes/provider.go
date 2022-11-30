@@ -831,7 +831,7 @@ func (provider *Provider) ApplyWorkerDaemonSet(ctx context.Context, namespace st
 	kubesharkCmd := []string{
 		"./worker",
 		"-i", "any",
-		"--api-server-address", fmt.Sprintf("ws://%s/wsTapper", hubPodIp),
+		"--api-server-address", fmt.Sprintf("ws://%s/wsWorker", hubPodIp),
 		"--nodefrag",
 		"--max-live-streams", strconv.Itoa(maxLiveStreams),
 	}

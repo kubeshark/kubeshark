@@ -107,14 +107,14 @@ func finishDeployExecution(kubernetesProvider *kubernetes.Provider) {
 
 func getDeployConfig() *models.Config {
 	conf := models.Config{
-		MaxDBSizeBytes:              config.Config.Deploy.MaxEntriesDBSizeBytes(),
-		InsertionFilter:             config.Config.Deploy.GetInsertionFilter(),
-		PullPolicy:                  config.Config.ImagePullPolicyStr,
-		TapperResources:             config.Config.Deploy.WorkerResources,
-		KubesharkResourcesNamespace: config.Config.ResourcesNamespace,
-		AgentDatabasePath:           models.DataDirPath,
-		ServiceMap:                  config.Config.ServiceMap,
-		OAS:                         config.Config.OAS,
+		MaxDBSizeBytes:     config.Config.Deploy.MaxEntriesDBSizeBytes(),
+		InsertionFilter:    config.Config.Deploy.GetInsertionFilter(),
+		PullPolicy:         config.Config.ImagePullPolicyStr,
+		WorkerResources:    config.Config.Deploy.WorkerResources,
+		ResourcesNamespace: config.Config.ResourcesNamespace,
+		DatabasePath:       models.DataDirPath,
+		ServiceMap:         config.Config.ServiceMap,
+		OAS:                config.Config.OAS,
 	}
 
 	return &conf
