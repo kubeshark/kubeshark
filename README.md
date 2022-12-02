@@ -46,7 +46,7 @@ Kubeshark uses a ~45MB pre-compiled executable binary to communicate with the Ku
 sh <(curl -Ls https://kubeshark.co/install)
 ```
 
-- Compile it from source using `make cli` command.
+- Compile it from source using `make` command then use `./bin/kubeshark__` executable.
 
 ## Run
 
