@@ -113,8 +113,6 @@ func getDeployConfig() *models.Config {
 		WorkerResources:    config.Config.Deploy.WorkerResources,
 		ResourcesNamespace: config.Config.ResourcesNamespace,
 		DatabasePath:       models.DataDirPath,
-		ServiceMap:         config.Config.ServiceMap,
-		OAS:                config.Config.OAS,
 	}
 
 	return &conf
