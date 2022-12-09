@@ -1,0 +1,9 @@
+brews:
+  - name: kubeshark
+    homepage: https://github.com/kubeshark/kubeshark
+    tap:
+      owner: kubeshark
+      name: homebrew-kubeshark
+    commit_author:
+      name: mertyildiran
+      email: me@mertyildiran.com
