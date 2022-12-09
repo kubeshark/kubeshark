@@ -62,8 +62,8 @@ func (connector *Connector) isReachable(path string) (bool, error) {
 	}
 }
 
-func (connector *Connector) ReportWorkerStatus(workerStatus models.TapperStatus) error {
-	workerStatusUrl := fmt.Sprintf("%s/status/tapperStatus", connector.url)
+func (connector *Connector) ReportWorkerStatus(workerStatus models.WorkerStatus) error {
+	workerStatusUrl := fmt.Sprintf("%s/status/workerStatus", connector.url)
 
 	if jsonValue, err := json.Marshal(workerStatus); err != nil {
 		return fmt.Errorf("Failed Marshal the worker status %w", err)
@@ -78,7 +78,7 @@ func (connector *Connector) ReportWorkerStatus(workerStatus models.TapperStatus)
 }
 
 func (connector *Connector) ReportTargettedPods(pods []core.Pod) error {
-	targettedPodsUrl := fmt.Sprintf("%s/status/tappedPods", connector.url)
+	targettedPodsUrl := fmt.Sprintf("%s/status/targettedPods", connector.url)
 
 	if jsonValue, err := json.Marshal(pods); err != nil {
 		return fmt.Errorf("Failed Marshal the targetted pods %w", err)

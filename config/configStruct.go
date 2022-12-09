@@ -6,7 +6,6 @@ import (
 	"path"
 	"path/filepath"
 
-	"github.com/kubeshark/base/pkg/models"
 	"github.com/kubeshark/kubeshark/config/configStructs"
 	"github.com/kubeshark/kubeshark/kubeshark"
 	"github.com/rs/zerolog"
@@ -68,8 +67,6 @@ type ConfigStruct struct {
 	ConfigFilePath     string                     `yaml:"config-path,omitempty" readonly:""`
 	HeadlessMode       bool                       `yaml:"headless" default:"false"`
 	LogLevelStr        string                     `yaml:"log-level,omitempty" default:"info" readonly:""`
-	ServiceMap         bool                       `yaml:"service-map" default:"true"`
-	OAS                models.OASConfig           `yaml:"oas"`
 }
 
 func (config *ConfigStruct) validate() error {

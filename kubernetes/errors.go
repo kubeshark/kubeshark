@@ -3,7 +3,7 @@ package kubernetes
 type K8sDeployManagerErrorReason string
 
 const (
-	DeployManagerWorkerUpdateError K8sDeployManagerErrorReason = "TAPPER_UPDATE_ERROR"
+	DeployManagerWorkerUpdateError K8sDeployManagerErrorReason = "WORKER_UPDATE_ERROR"
 	DeployManagerPodWatchError     K8sDeployManagerErrorReason = "POD_WATCH_ERROR"
 	DeployManagerPodListError      K8sDeployManagerErrorReason = "POD_LIST_ERROR"
 )

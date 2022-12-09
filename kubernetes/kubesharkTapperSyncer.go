@@ -30,7 +30,7 @@ type WorkerSyncer struct {
 	config                 WorkerSyncerConfig
 	kubernetesProvider     *Provider
 	DeployPodChangesOut    chan TargettedPodChangeEvent
-	WorkerStatusChangedOut chan models.TapperStatus
+	WorkerStatusChangedOut chan models.WorkerStatus
 	ErrorOut               chan K8sDeployManagerError
 	nodeToTargettedPodMap  models.NodeToPodsMap
 	targettedNodes         []string
@@ -58,7 +58,7 @@ func CreateAndStartWorkerSyncer(ctx context.Context, kubernetesProvider *Provide
 		config:                 config,
 		kubernetesProvider:     kubernetesProvider,
 		DeployPodChangesOut:    make(chan TargettedPodChangeEvent, 100),
-		WorkerStatusChangedOut: make(chan models.TapperStatus, 100),
+		WorkerStatusChangedOut: make(chan models.WorkerStatus, 100),
 		ErrorOut:               make(chan K8sDeployManagerError, 100),
 	}
 
@@ -101,7 +101,7 @@ func (workerSyncer *WorkerSyncer) watchWorkerPods() {
 				Interface("phase", pod.Status.Phase).
 				Msg("Watching pod events...")
 			if pod.Spec.NodeName != "" {
-				workerStatus := models.TapperStatus{TapperName: pod.Name, NodeName: pod.Spec.NodeName, Status: string(pod.Status.Phase)}
+				workerStatus := models.WorkerStatus{Name: pod.Name, NodeName: pod.Spec.NodeName, Status: string(pod.Status.Phase)}
 				workerSyncer.WorkerStatusChangedOut <- workerStatus
 			}
 
@@ -166,7 +166,7 @@ func (workerSyncer *WorkerSyncer) watchWorkerEvents() {
 				nodeName = pod.Spec.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms[0].MatchFields[0].Values[0]
 			}
 
-			workerStatus := models.TapperStatus{TapperName: pod.Name, NodeName: nodeName, Status: string(pod.Status.Phase)}
+			workerStatus := models.WorkerStatus{Name: pod.Name, NodeName: nodeName, Status: string(pod.Status.Phase)}
 			workerSyncer.WorkerStatusChangedOut <- workerStatus
 
 		case err, ok := <-errorChan:
