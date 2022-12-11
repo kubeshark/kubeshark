@@ -798,10 +798,7 @@ func (provider *Provider) ApplyWorkerDaemonSet(ctx context.Context, namespace st
 		return err
 	}
 
-	kubesharkCmd := []string{
-		"./worker",
-		"-i", "any",
-	}
+	kubesharkCmd := []string{"./worker", "-i", "any", "-port", "8897"}
 
 	if serviceMesh {
 		kubesharkCmd = append(kubesharkCmd, "--servicemesh")
