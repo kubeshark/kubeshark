@@ -48,7 +48,6 @@ type WorkerSyncerConfig struct {
 	KubesharkServiceAccountExists bool
 	ServiceMesh                   bool
 	Tls                           bool
-	MaxLiveStreams                int
 }
 
 func CreateAndStartWorkerSyncer(ctx context.Context, kubernetesProvider *Provider, config WorkerSyncerConfig, startTime time.Time) (*WorkerSyncer, error) {
@@ -371,7 +370,6 @@ func (workerSyncer *WorkerSyncer) updateWorkers() error {
 			WorkerDaemonSetName,
 			image,
 			WorkerPodName,
-			fmt.Sprintf("%s.%s.svc", HubPodName, workerSyncer.config.KubesharkResourcesNamespace),
 			nodeNames,
 			serviceAccountName,
 			workerSyncer.config.WorkerResources,
@@ -379,8 +377,7 @@ func (workerSyncer *WorkerSyncer) updateWorkers() error {
 			workerSyncer.config.KubesharkApiFilteringOptions,
 			workerSyncer.config.LogLevel,
 			workerSyncer.config.ServiceMesh,
-			workerSyncer.config.Tls,
-			workerSyncer.config.MaxLiveStreams); err != nil {
+			workerSyncer.config.Tls); err != nil {
 			return err
 		}
 

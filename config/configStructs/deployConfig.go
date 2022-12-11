@@ -24,7 +24,6 @@ const (
 	ServiceMeshName            = "service-mesh"
 	TlsName                    = "tls"
 	ProfilerName               = "profiler"
-	MaxLiveStreamsName         = "max-live-streams"
 )
 
 type DeployConfig struct {
@@ -52,7 +51,6 @@ type DeployConfig struct {
 	Tls                   bool             `yaml:"tls" default:"false"`
 	PacketCapture         string           `yaml:"packet-capture" default:"libpcap"`
 	Profiler              bool             `yaml:"profiler" default:"false"`
-	MaxLiveStreams        int              `yaml:"max-live-streams" default:"500"`
 }
 
 func (config *DeployConfig) PodRegex() *regexp.Regexp {

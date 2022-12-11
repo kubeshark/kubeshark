@@ -10,7 +10,6 @@ import (
 	"net/url"
 	"path/filepath"
 	"regexp"
-	"strconv"
 
 	"github.com/kubeshark/base/pkg/api"
 	"github.com/kubeshark/base/pkg/models"
@@ -781,7 +780,7 @@ func (provider *Provider) CreateConfigMap(ctx context.Context, namespace string,
 	return nil
 }
 
-func (provider *Provider) ApplyWorkerDaemonSet(ctx context.Context, namespace string, daemonSetName string, podImage string, workerPodName string, hubPodIp string, nodeNames []string, serviceAccountName string, resources models.Resources, imagePullPolicy core.PullPolicy, kubesharkApiFilteringOptions api.TrafficFilteringOptions, logLevel zerolog.Level, serviceMesh bool, tls bool, maxLiveStreams int) error {
+func (provider *Provider) ApplyWorkerDaemonSet(ctx context.Context, namespace string, daemonSetName string, podImage string, workerPodName string, nodeNames []string, serviceAccountName string, resources models.Resources, imagePullPolicy core.PullPolicy, kubesharkApiFilteringOptions api.TrafficFilteringOptions, logLevel zerolog.Level, serviceMesh bool, tls bool) error {
 	log.Debug().
 		Int("node-count", len(nodeNames)).
 		Str("namespace", namespace).
@@ -802,9 +801,6 @@ func (provider *Provider) ApplyWorkerDaemonSet(ctx context.Context, namespace st
 	kubesharkCmd := []string{
 		"./worker",
 		"-i", "any",
-		"--hub-ws-address", fmt.Sprintf("ws://%s/wsWorker", hubPodIp),
-		"--nodefrag",
-		"--max-live-streams", strconv.Itoa(maxLiveStreams),
 	}
 
 	if serviceMesh {

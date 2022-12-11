@@ -153,7 +153,6 @@ func startWorkerSyncer(ctx context.Context, cancel context.CancelFunc, provider 
 		KubesharkServiceAccountExists: state.kubesharkServiceAccountExists,
 		ServiceMesh:                   config.Config.Deploy.ServiceMesh,
 		Tls:                           config.Config.Deploy.Tls,
-		MaxLiveStreams:                config.Config.Deploy.MaxLiveStreams,
 	}, startTime)
 
 	if err != nil {
