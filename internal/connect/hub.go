@@ -65,28 +65,28 @@ func (connector *Connector) isReachable(path string) (bool, error) {
 func (connector *Connector) PostWorkerPodToHub(pod *v1.Pod) error {
 	setWorkerUrl := fmt.Sprintf("%s/pods/set-worker", connector.url)
 
-	if jsonValue, err := json.Marshal(pod); err != nil {
+	if podMarshalled, err := json.Marshal(pod); err != nil {
 		return fmt.Errorf("Failed to marshal the Worker pod: %w", err)
 	} else {
-		if _, err := utils.Post(setWorkerUrl, "application/json", bytes.NewBuffer(jsonValue), connector.client); err != nil {
+		if _, err := utils.Post(setWorkerUrl, "application/json", bytes.NewBuffer(podMarshalled), connector.client); err != nil {
 			return fmt.Errorf("Failed sending the Worker pod to Hub: %w", err)
 		} else {
-			log.Debug().Interface("worker-pod", pod).Msg("Reported to Hub about Worker status:")
+			log.Debug().Interface("worker-pod", pod).Msg("Reported worker pod to Hub:")
 			return nil
 		}
 	}
 }
 
-func (connector *Connector) ReportTargettedPods(pods []core.Pod) error {
-	targettedPodsUrl := fmt.Sprintf("%s/status/targettedPods", connector.url)
+func (connector *Connector) PostTargettedPodsToHub(pods []core.Pod) error {
+	setTargettedUrl := fmt.Sprintf("%s/pods/set-targetted", connector.url)
 
-	if jsonValue, err := json.Marshal(pods); err != nil {
-		return fmt.Errorf("Failed Marshal the targetted pods %w", err)
+	if podsMarshalled, err := json.Marshal(pods); err != nil {
+		return fmt.Errorf("Failed to marshal the targetted pods: %w", err)
 	} else {
-		if _, err := utils.Post(targettedPodsUrl, "application/json", bytes.NewBuffer(jsonValue), connector.client); err != nil {
-			return fmt.Errorf("Failed sending to Hub the targetted pods %w", err)
+		if _, err := utils.Post(setTargettedUrl, "application/json", bytes.NewBuffer(podsMarshalled), connector.client); err != nil {
+			return fmt.Errorf("Failed sending the targetted pods to Hub: %w", err)
 		} else {
-			log.Debug().Int("pod-count", len(pods)).Msg("Reported to Hub about targetted pod count:")
+			log.Debug().Int("pod-count", len(pods)).Msg("Reported targetted pods to Hub:")
 			return nil
 		}
 	}
