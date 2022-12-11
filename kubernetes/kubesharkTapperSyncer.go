@@ -9,6 +9,7 @@ import (
 	"github.com/kubeshark/base/pkg/api"
 	"github.com/kubeshark/base/pkg/models"
 	"github.com/kubeshark/kubeshark/debounce"
+	"github.com/kubeshark/kubeshark/docker"
 	"github.com/kubeshark/kubeshark/utils"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
@@ -349,7 +350,7 @@ func (workerSyncer *WorkerSyncer) updateWorkers() error {
 
 	log.Debug().Strs("nodes", nodesToTarget).Msg("Updating DaemonSet to run on nodes.")
 
-	image := "kubeshark/worker:latest"
+	image := docker.GetWorkerImage()
 
 	if len(workerSyncer.nodeToTargettedPodMap) > 0 {
 		var serviceAccountName string

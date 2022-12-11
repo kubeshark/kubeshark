@@ -5,6 +5,7 @@ import (
 
 	"github.com/kubeshark/base/pkg/models"
 	"github.com/kubeshark/kubeshark/config"
+	"github.com/kubeshark/kubeshark/docker"
 	"github.com/kubeshark/kubeshark/errormessage"
 	"github.com/kubeshark/kubeshark/kubernetes"
 	"github.com/kubeshark/kubeshark/kubeshark"
@@ -39,7 +40,7 @@ func CreateHubResources(ctx context.Context, kubernetesProvider *kubernetes.Prov
 	opts := &kubernetes.HubOptions{
 		Namespace:             kubesharkResourcesNamespace,
 		PodName:               kubernetes.HubPodName,
-		PodImage:              "kubeshark/hub:latest",
+		PodImage:              docker.GetHubImage(),
 		KratosImage:           "",
 		KetoImage:             "",
 		ServiceAccountName:    serviceAccountName,
@@ -54,7 +55,7 @@ func CreateHubResources(ctx context.Context, kubernetesProvider *kubernetes.Prov
 	frontOpts := &kubernetes.HubOptions{
 		Namespace:             kubesharkResourcesNamespace,
 		PodName:               kubernetes.FrontPodName,
-		PodImage:              "kubeshark/worker:latest",
+		PodImage:              docker.GetWorkerImage(),
 		KratosImage:           "",
 		KetoImage:             "",
 		ServiceAccountName:    serviceAccountName,

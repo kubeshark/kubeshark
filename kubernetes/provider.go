@@ -14,6 +14,7 @@ import (
 
 	"github.com/kubeshark/base/pkg/api"
 	"github.com/kubeshark/base/pkg/models"
+	"github.com/kubeshark/kubeshark/docker"
 	"github.com/kubeshark/kubeshark/semver"
 	"github.com/kubeshark/kubeshark/utils"
 	"github.com/rs/zerolog"
@@ -431,7 +432,7 @@ func (provider *Provider) BuildFrontPod(opts *HubOptions, mountVolumeClaim bool,
 	containers := []core.Container{
 		{
 			Name:            opts.PodName,
-			Image:           "kubeshark/front:latest",
+			Image:           docker.GetFrontImage(),
 			ImagePullPolicy: opts.ImagePullPolicy,
 			VolumeMounts:    volumeMounts,
 			ReadinessProbe: &core.Probe{

@@ -6,6 +6,7 @@ import (
 	"regexp"
 	"time"
 
+	"github.com/kubeshark/kubeshark/docker"
 	"github.com/kubeshark/kubeshark/kubernetes"
 	"github.com/kubeshark/kubeshark/utils"
 	"github.com/rs/zerolog/log"
@@ -92,7 +93,7 @@ func checkImagePulled(ctx context.Context, kubernetesProvider *kubernetes.Provid
 }
 
 func createImagePullInClusterPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, namespace string, podName string) error {
-	image := "kubeshark/worker:latest"
+	image := docker.GetWorkerImage()
 	log.Info().Str("image", image).Msg("Testing image pull:")
 	var zero int64
 	pod := &core.Pod{
@@ -103,7 +104,7 @@ func createImagePullInClusterPod(ctx context.Context, kubernetesProvider *kubern
 			Containers: []core.Container{
 				{
 					Name:            "probe",
-					Image:           "kubeshark/worker:latest",
+					Image:           image,
 					ImagePullPolicy: "Always",
 					Command:         []string{"cat"},
 					Stdin:           true,
