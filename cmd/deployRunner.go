@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"time"
 
+	"github.com/kubeshark/kubeshark/docker"
 	"github.com/kubeshark/kubeshark/internal/connect"
 	"github.com/kubeshark/kubeshark/resources"
 	"github.com/kubeshark/kubeshark/utils"
@@ -41,6 +42,7 @@ var proxyDone bool
 
 func deploy() {
 	state.startTime = time.Now()
+	docker.SetTag(config.Config.Deploy.Tag)
 
 	connector = connect.NewConnector(kubernetes.GetLocalhostOnPort(config.Config.Hub.PortForward.SrcPort), connect.DefaultRetries, connect.DefaultTimeout)
 

@@ -13,6 +13,7 @@ import (
 )
 
 const (
+	TagLabel                   = "tag"
 	ProxyPortLabel             = "proxy-port"
 	NamespacesLabel            = "namespaces"
 	AllNamespacesLabel         = "all-namespaces"
@@ -27,6 +28,7 @@ const (
 )
 
 type DeployConfig struct {
+	Tag               string   `yaml:"tag" default:"latest"`
 	PodRegexStr       string   `yaml:"regex" default:".*"`
 	ProxyPort         uint16   `yaml:"proxy-port" default:"8899"`
 	ProxyHost         string   `yaml:"proxy-host" default:"127.0.0.1"`

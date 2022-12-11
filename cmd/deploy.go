@@ -46,6 +46,7 @@ func init() {
 		log.Debug().Err(err).Send()
 	}
 
+	deployCmd.Flags().StringP(configStructs.TagLabel, "t", defaultDeployConfig.Tag, "The tag of the Docker images that are going to be deployed.")
 	deployCmd.Flags().Uint16P(configStructs.ProxyPortLabel, "p", defaultDeployConfig.ProxyPort, "Provide a custom port for the web interface webserver.")
 	deployCmd.Flags().StringSliceP(configStructs.NamespacesLabel, "n", defaultDeployConfig.Namespaces, "Namespaces selector.")
 	deployCmd.Flags().BoolP(configStructs.AllNamespacesLabel, "A", defaultDeployConfig.AllNamespaces, "Deploy to all namespaces.")
