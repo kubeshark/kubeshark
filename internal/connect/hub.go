@@ -7,12 +7,12 @@ import (
 	"net/http"
 	"time"
 
-	"github.com/kubeshark/base/pkg/models"
 	"github.com/kubeshark/kubeshark/utils"
 
 	"github.com/kubeshark/kubeshark/config"
 	"github.com/rs/zerolog/log"
 	core "k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 )
 
 type Connector struct {
@@ -62,16 +62,16 @@ func (connector *Connector) isReachable(path string) (bool, error) {
 	}
 }
 
-func (connector *Connector) ReportWorkerStatus(workerStatus models.WorkerStatus) error {
-	workerStatusUrl := fmt.Sprintf("%s/status/workerStatus", connector.url)
+func (connector *Connector) PostWorkerPodToHub(pod *v1.Pod) error {
+	setWorkerUrl := fmt.Sprintf("%s/pods/set-worker", connector.url)
 
-	if jsonValue, err := json.Marshal(workerStatus); err != nil {
-		return fmt.Errorf("Failed Marshal the worker status %w", err)
+	if jsonValue, err := json.Marshal(pod); err != nil {
+		return fmt.Errorf("Failed to marshal the Worker pod: %w", err)
 	} else {
-		if _, err := utils.Post(workerStatusUrl, "application/json", bytes.NewBuffer(jsonValue), connector.client); err != nil {
-			return fmt.Errorf("Failed sending to Hub the targetted pods %w", err)
+		if _, err := utils.Post(setWorkerUrl, "application/json", bytes.NewBuffer(jsonValue), connector.client); err != nil {
+			return fmt.Errorf("Failed sending the Worker pod to Hub: %w", err)
 		} else {
-			log.Debug().Interface("worker-status", workerStatus).Msg("Reported to Hub about Worker status:")
+			log.Debug().Interface("worker-pod", pod).Msg("Reported to Hub about Worker status:")
 			return nil
 		}
 	}

@@ -13,25 +13,25 @@ import (
 	"github.com/kubeshark/kubeshark/utils"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
-	core "k8s.io/api/core/v1"
+	v1 "k8s.io/api/core/v1"
 )
 
 const updateWorkersDelay = 5 * time.Second
 
 type TargettedPodChangeEvent struct {
-	Added   []core.Pod
-	Removed []core.Pod
+	Added   []v1.Pod
+	Removed []v1.Pod
 }
 
 // WorkerSyncer uses a k8s pod watch to update Worker daemonsets when targeted pods are removed or created
 type WorkerSyncer struct {
 	startTime              time.Time
 	context                context.Context
-	CurrentlyTargettedPods []core.Pod
+	CurrentlyTargettedPods []v1.Pod
 	config                 WorkerSyncerConfig
 	kubernetesProvider     *Provider
 	DeployPodChangesOut    chan TargettedPodChangeEvent
-	WorkerStatusChangedOut chan models.WorkerStatus
+	WorkerPodsChanges      chan *v1.Pod
 	ErrorOut               chan K8sDeployManagerError
 	nodeToTargettedPodMap  models.NodeToPodsMap
 	targettedNodes         []string
@@ -42,7 +42,7 @@ type WorkerSyncerConfig struct {
 	PodFilterRegex                regexp.Regexp
 	KubesharkResourcesNamespace   string
 	WorkerResources               models.Resources
-	ImagePullPolicy               core.PullPolicy
+	ImagePullPolicy               v1.PullPolicy
 	LogLevel                      zerolog.Level
 	KubesharkApiFilteringOptions  api.TrafficFilteringOptions
 	KubesharkServiceAccountExists bool
@@ -54,11 +54,11 @@ func CreateAndStartWorkerSyncer(ctx context.Context, kubernetesProvider *Provide
 	syncer := &WorkerSyncer{
 		startTime:              startTime.Truncate(time.Second), // Round down because k8s CreationTimestamp is given in 1 sec resolution.
 		context:                ctx,
-		CurrentlyTargettedPods: make([]core.Pod, 0),
+		CurrentlyTargettedPods: make([]v1.Pod, 0),
 		config:                 config,
 		kubernetesProvider:     kubernetesProvider,
 		DeployPodChangesOut:    make(chan TargettedPodChangeEvent, 100),
-		WorkerStatusChangedOut: make(chan models.WorkerStatus, 100),
+		WorkerPodsChanges:      make(chan *v1.Pod, 100),
 		ErrorOut:               make(chan K8sDeployManagerError, 100),
 	}
 
@@ -101,8 +101,7 @@ func (workerSyncer *WorkerSyncer) watchWorkerPods() {
 				Interface("phase", pod.Status.Phase).
 				Msg("Watching pod events...")
 			if pod.Spec.NodeName != "" {
-				workerStatus := models.WorkerStatus{Name: pod.Name, NodeName: pod.Spec.NodeName, Status: string(pod.Status.Phase)}
-				workerSyncer.WorkerStatusChangedOut <- workerStatus
+				workerSyncer.WorkerPodsChanges <- pod
 			}
 
 		case err, ok := <-errorChan:
@@ -159,15 +158,7 @@ func (workerSyncer *WorkerSyncer) watchWorkerEvents() {
 				continue
 			}
 
-			nodeName := ""
-			if event.Reason != "FailedScheduling" {
-				nodeName = pod.Spec.NodeName
-			} else {
-				nodeName = pod.Spec.Affinity.NodeAffinity.RequiredDuringSchedulingIgnoredDuringExecution.NodeSelectorTerms[0].MatchFields[0].Values[0]
-			}
-
-			workerStatus := models.WorkerStatus{Name: pod.Name, NodeName: nodeName, Status: string(pod.Status.Phase)}
-			workerSyncer.WorkerStatusChangedOut <- workerStatus
+			workerSyncer.WorkerPodsChanges <- pod
 
 		case err, ok := <-errorChan:
 			if !ok {
