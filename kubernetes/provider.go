@@ -277,36 +277,6 @@ func (provider *Provider) BuildHubPod(opts *HubOptions, mountVolumeClaim bool, v
 				},
 			},
 		},
-		{
-			Name:            "basenine",
-			Image:           opts.PodImage,
-			ImagePullPolicy: opts.ImagePullPolicy,
-			VolumeMounts:    volumeMounts,
-			ReadinessProbe: &core.Probe{
-				FailureThreshold: 3,
-				ProbeHandler: core.ProbeHandler{
-					TCPSocket: &core.TCPSocketAction{
-						Port: intstr.Parse(utils.BaseninePort),
-					},
-				},
-				PeriodSeconds:    1,
-				SuccessThreshold: 1,
-				TimeoutSeconds:   1,
-			},
-			Resources: core.ResourceRequirements{
-				Limits: core.ResourceList{
-					"cpu":    cpuLimit,
-					"memory": memLimit,
-				},
-				Requests: core.ResourceList{
-					"cpu":    cpuRequests,
-					"memory": memRequests,
-				},
-			},
-			Command:    []string{"basenine"},
-			Args:       []string{"-addr", "0.0.0.0", "-port", utils.BaseninePort, "-persistent"},
-			WorkingDir: models.DataDirPath,
-		},
 	}
 
 	if createAuthContainer {
