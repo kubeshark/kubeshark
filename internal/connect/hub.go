@@ -63,12 +63,12 @@ func (connector *Connector) isReachable(path string) (bool, error) {
 }
 
 func (connector *Connector) PostWorkerPodToHub(pod *v1.Pod) error {
-	setWorkerUrl := fmt.Sprintf("%s/pods/set-worker", connector.url)
+	postWorkerUrl := fmt.Sprintf("%s/pods/worker", connector.url)
 
 	if podMarshalled, err := json.Marshal(pod); err != nil {
 		return fmt.Errorf("Failed to marshal the Worker pod: %w", err)
 	} else {
-		if _, err := utils.Post(setWorkerUrl, "application/json", bytes.NewBuffer(podMarshalled), connector.client); err != nil {
+		if _, err := utils.Post(postWorkerUrl, "application/json", bytes.NewBuffer(podMarshalled), connector.client); err != nil {
 			return fmt.Errorf("Failed sending the Worker pod to Hub: %w", err)
 		} else {
 			log.Debug().Interface("worker-pod", pod).Msg("Reported worker pod to Hub:")
@@ -78,12 +78,12 @@ func (connector *Connector) PostWorkerPodToHub(pod *v1.Pod) error {
 }
 
 func (connector *Connector) PostTargettedPodsToHub(pods []core.Pod) error {
-	setTargettedUrl := fmt.Sprintf("%s/pods/set-targetted", connector.url)
+	postTargettedUrl := fmt.Sprintf("%s/pods/targetted", connector.url)
 
 	if podsMarshalled, err := json.Marshal(pods); err != nil {
 		return fmt.Errorf("Failed to marshal the targetted pods: %w", err)
 	} else {
-		if _, err := utils.Post(setTargettedUrl, "application/json", bytes.NewBuffer(podsMarshalled), connector.client); err != nil {
+		if _, err := utils.Post(postTargettedUrl, "application/json", bytes.NewBuffer(podsMarshalled), connector.client); err != nil {
 			return fmt.Errorf("Failed sending the targetted pods to Hub: %w", err)
 		} else {
 			log.Debug().Int("pod-count", len(pods)).Msg("Reported targetted pods to Hub:")
