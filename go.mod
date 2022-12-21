@@ -6,7 +6,7 @@ require (
 	github.com/creasty/defaults v1.5.2
 	github.com/docker/go-units v0.4.0
 	github.com/google/go-github/v37 v37.0.0
-	github.com/kubeshark/base v0.1.5
+	github.com/kubeshark/base v0.1.7
 	github.com/rs/zerolog v1.28.0
 	github.com/spf13/cobra v1.3.0
 	github.com/spf13/pflag v1.0.5
