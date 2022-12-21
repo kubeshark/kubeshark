@@ -1,7 +1,7 @@
 package kubernetes
 
 const (
-	KubesharkResourcesPrefix   = "ks-"
+	KubesharkResourcesPrefix   = "kubeshark-"
 	FrontPodName               = KubesharkResourcesPrefix + "front"
 	FrontServiceName           = FrontPodName
 	HubPodName                 = KubesharkResourcesPrefix + "hub"
