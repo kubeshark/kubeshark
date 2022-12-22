@@ -47,8 +47,8 @@ type DeployConfig struct {
 	DryRun                bool             `yaml:"dry-run" default:"false"`
 	HubResources          models.Resources `yaml:"hub-resources"`
 	WorkerResources       models.Resources `yaml:"worker-resources"`
-	ServiceMesh           bool             `yaml:"service-mesh" default:"false"`
-	Tls                   bool             `yaml:"tls" default:"false"`
+	ServiceMesh           bool             `yaml:"service-mesh" default:"true"`
+	Tls                   bool             `yaml:"tls" default:"true"`
 	PacketCapture         string           `yaml:"packet-capture" default:"libpcap"`
 	Profiler              bool             `yaml:"profiler" default:"false"`
 }
