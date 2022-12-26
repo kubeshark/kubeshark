@@ -5,6 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/kubeshark/kubeshark/utils"
@@ -62,32 +63,46 @@ func (connector *Connector) isReachable(path string) (bool, error) {
 	}
 }
 
-func (connector *Connector) PostWorkerPodToHub(pod *v1.Pod) error {
+func (connector *Connector) PostWorkerPodToHub(pod *v1.Pod) {
 	postWorkerUrl := fmt.Sprintf("%s/pods/worker", connector.url)
 
 	if podMarshalled, err := json.Marshal(pod); err != nil {
-		return fmt.Errorf("Failed to marshal the Worker pod: %w", err)
+		log.Error().Err(err).Msg("Failed to marshal the Worker pod:")
 	} else {
-		if _, err := utils.Post(postWorkerUrl, "application/json", bytes.NewBuffer(podMarshalled), connector.client); err != nil {
-			return fmt.Errorf("Failed sending the Worker pod to Hub: %w", err)
-		} else {
-			log.Debug().Interface("worker-pod", pod).Msg("Reported worker pod to Hub:")
-			return nil
+		ok := false
+		for !ok {
+			if _, err = utils.Post(postWorkerUrl, "application/json", bytes.NewBuffer(podMarshalled), connector.client); err != nil {
+				if _, ok := err.(*url.Error); ok {
+					break
+				}
+				log.Debug().Err(err).Msg("Failed sending the Worker pod to Hub:")
+			} else {
+				ok = true
+				log.Debug().Interface("worker-pod", pod).Msg("Reported worker pod to Hub:")
+			}
+			time.Sleep(1 * time.Second)
 		}
 	}
 }
 
-func (connector *Connector) PostTargettedPodsToHub(pods []core.Pod) error {
+func (connector *Connector) PostTargettedPodsToHub(pods []core.Pod) {
 	postTargettedUrl := fmt.Sprintf("%s/pods/targetted", connector.url)
 
 	if podsMarshalled, err := json.Marshal(pods); err != nil {
-		return fmt.Errorf("Failed to marshal the targetted pods: %w", err)
+		log.Error().Err(err).Msg("Failed to marshal the targetted pods:")
 	} else {
-		if _, err := utils.Post(postTargettedUrl, "application/json", bytes.NewBuffer(podsMarshalled), connector.client); err != nil {
-			return fmt.Errorf("Failed sending the targetted pods to Hub: %w", err)
-		} else {
-			log.Debug().Int("pod-count", len(pods)).Msg("Reported targetted pods to Hub:")
-			return nil
+		ok := false
+		for !ok {
+			if _, err = utils.Post(postTargettedUrl, "application/json", bytes.NewBuffer(podsMarshalled), connector.client); err != nil {
+				if _, ok := err.(*url.Error); ok {
+					break
+				}
+				log.Debug().Err(err).Msg("Failed sending the targetted pods to Hub:")
+			} else {
+				ok = true
+				log.Debug().Int("pod-count", len(pods)).Msg("Reported targetted pods to Hub:")
+			}
+			time.Sleep(1 * time.Second)
 		}
 	}
 }

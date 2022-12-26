@@ -174,17 +174,13 @@ func startWorkerSyncer(ctx context.Context, cancel context.CancelFunc, provider 
 					log.Debug().Msg("workerSyncer pod changes channel closed, ending listener loop")
 					return
 				}
-				if err := connector.PostTargettedPodsToHub(workerSyncer.CurrentlyTargettedPods); err != nil {
-					log.Error().Err(err).Msg("Failed to POST targetted pods to Hub.")
-				}
+				go connector.PostTargettedPodsToHub(workerSyncer.CurrentlyTargettedPods)
 			case pod, ok := <-workerSyncer.WorkerPodsChanges:
 				if !ok {
 					log.Debug().Msg("workerSyncer worker status changed channel closed, ending listener loop")
 					return
 				}
-				if err := connector.PostWorkerPodToHub(pod); err != nil {
-					log.Error().Err(err).Msg("Failed to POST Worker pod to Hub.")
-				}
+				go connector.PostWorkerPodToHub(pod)
 			case <-ctx.Done():
 				log.Debug().Msg("workerSyncer event listener loop exiting due to context done")
 				return
