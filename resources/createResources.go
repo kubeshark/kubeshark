@@ -9,12 +9,11 @@ import (
 	"github.com/kubeshark/kubeshark/errormessage"
 	"github.com/kubeshark/kubeshark/kubernetes"
 	"github.com/kubeshark/kubeshark/kubeshark"
-	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	core "k8s.io/api/core/v1"
 )
 
-func CreateHubResources(ctx context.Context, kubernetesProvider *kubernetes.Provider, serializedKubesharkConfig string, isNsRestrictedMode bool, kubesharkResourcesNamespace string, maxEntriesDBSizeBytes int64, hubResources models.Resources, imagePullPolicy core.PullPolicy, logLevel zerolog.Level, debug bool) (bool, error) {
+func CreateHubResources(ctx context.Context, kubernetesProvider *kubernetes.Provider, serializedKubesharkConfig string, isNsRestrictedMode bool, kubesharkResourcesNamespace string, maxEntriesDBSizeBytes int64, hubResources models.Resources, imagePullPolicy core.PullPolicy, debug bool) (bool, error) {
 	if !isNsRestrictedMode {
 		if err := createKubesharkNamespace(ctx, kubernetesProvider, kubesharkResourcesNamespace); err != nil {
 			return false, err
@@ -45,7 +44,6 @@ func CreateHubResources(ctx context.Context, kubernetesProvider *kubernetes.Prov
 		MaxEntriesDBSizeBytes: maxEntriesDBSizeBytes,
 		Resources:             hubResources,
 		ImagePullPolicy:       imagePullPolicy,
-		LogLevel:              logLevel,
 		Debug:                 debug,
 	}
 
@@ -57,7 +55,6 @@ func CreateHubResources(ctx context.Context, kubernetesProvider *kubernetes.Prov
 		MaxEntriesDBSizeBytes: maxEntriesDBSizeBytes,
 		Resources:             hubResources,
 		ImagePullPolicy:       imagePullPolicy,
-		LogLevel:              logLevel,
 		Debug:                 debug,
 	}
 

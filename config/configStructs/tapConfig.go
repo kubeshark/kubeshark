@@ -42,7 +42,6 @@ type TapConfig struct {
 	ProxyHost             string           `yaml:"proxy-host" default:"127.0.0.1"`
 	Namespaces            []string         `yaml:"namespaces"`
 	AllNamespaces         bool             `yaml:"all-namespaces" default:"false"`
-	IgnoredUserAgents     []string         `yaml:"ignored-user-agents"`
 	HumanMaxEntriesDBSize string           `yaml:"max-entries-db-size" default:"200MB"`
 	DryRun                bool             `yaml:"dry-run" default:"false"`
 	HubResources          models.Resources `yaml:"hub-resources"`

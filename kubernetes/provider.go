@@ -3,7 +3,6 @@ package kubernetes
 import (
 	"bytes"
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -11,12 +10,9 @@ import (
 	"path/filepath"
 	"regexp"
 
-	"github.com/kubeshark/base/pkg/api"
 	"github.com/kubeshark/base/pkg/models"
 	"github.com/kubeshark/kubeshark/docker"
 	"github.com/kubeshark/kubeshark/semver"
-	"github.com/kubeshark/kubeshark/utils"
-	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	auth "k8s.io/api/authorization/v1"
 	core "k8s.io/api/core/v1"
@@ -182,7 +178,6 @@ type PodOptions struct {
 	MaxEntriesDBSizeBytes int64
 	Resources             models.Resources
 	ImagePullPolicy       core.PullPolicy
-	LogLevel              zerolog.Level
 	Debug                 bool
 }
 
@@ -252,12 +247,6 @@ func (provider *Provider) BuildHubPod(opts *PodOptions, mountVolumeClaim bool, v
 			ImagePullPolicy: opts.ImagePullPolicy,
 			VolumeMounts:    volumeMounts,
 			Command:         command,
-			Env: []core.EnvVar{
-				{
-					Name:  utils.LogLevelEnvVar,
-					Value: opts.LogLevel.String(),
-				},
-			},
 			Resources: core.ResourceRequirements{
 				Limits: core.ResourceList{
 					"cpu":    cpuLimit,
@@ -711,7 +700,20 @@ func (provider *Provider) CreateConfigMap(ctx context.Context, namespace string,
 	return nil
 }
 
-func (provider *Provider) ApplyWorkerDaemonSet(ctx context.Context, namespace string, daemonSetName string, podImage string, workerPodName string, nodeNames []string, serviceAccountName string, resources models.Resources, imagePullPolicy core.PullPolicy, kubesharkApiFilteringOptions api.TrafficFilteringOptions, logLevel zerolog.Level, serviceMesh bool, tls bool, debug bool) error {
+func (provider *Provider) ApplyWorkerDaemonSet(
+	ctx context.Context,
+	namespace string,
+	daemonSetName string,
+	podImage string,
+	workerPodName string,
+	nodeNames []string,
+	serviceAccountName string,
+	resources models.Resources,
+	imagePullPolicy core.PullPolicy,
+	serviceMesh bool,
+	tls bool,
+	debug bool,
+) error {
 	log.Debug().
 		Int("node-count", len(nodeNames)).
 		Str("namespace", namespace).
@@ -722,11 +724,6 @@ func (provider *Provider) ApplyWorkerDaemonSet(ctx context.Context, namespace st
 
 	if len(nodeNames) == 0 {
 		return fmt.Errorf("DaemonSet %s must target at least 1 pod", daemonSetName)
-	}
-
-	kubesharkApiFilteringOptionsJsonStr, err := json.Marshal(kubesharkApiFilteringOptions)
-	if err != nil {
-		return err
 	}
 
 	command := []string{"./worker", "-i", "any", "-port", "8897"}
@@ -772,18 +769,7 @@ func (provider *Provider) ApplyWorkerDaemonSet(ctx context.Context, namespace st
 	workerContainer.WithSecurityContext(applyconfcore.SecurityContext().WithCapabilities(caps))
 
 	workerContainer.WithCommand(command...)
-	workerContainer.WithEnv(
-		applyconfcore.EnvVar().WithName(utils.LogLevelEnvVar).WithValue(logLevel.String()),
-		applyconfcore.EnvVar().WithName(utils.HostModeEnvVar).WithValue("1"),
-		applyconfcore.EnvVar().WithName(utils.KubesharkFilteringOptionsEnvVar).WithValue(string(kubesharkApiFilteringOptionsJsonStr)),
-	)
-	workerContainer.WithEnv(
-		applyconfcore.EnvVar().WithName(utils.NodeNameEnvVar).WithValueFrom(
-			applyconfcore.EnvVarSource().WithFieldRef(
-				applyconfcore.ObjectFieldSelector().WithAPIVersion("v1").WithFieldPath("spec.nodeName"),
-			),
-		),
-	)
+
 	cpuLimit, err := resource.ParseQuantity(resources.CpuLimit)
 	if err != nil {
 		return fmt.Errorf("invalid cpu limit for %s container", workerPodName)

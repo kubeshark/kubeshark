@@ -6,12 +6,10 @@ import (
 	"regexp"
 	"time"
 
-	"github.com/kubeshark/base/pkg/api"
 	"github.com/kubeshark/base/pkg/models"
 	"github.com/kubeshark/kubeshark/debounce"
 	"github.com/kubeshark/kubeshark/docker"
 	"github.com/kubeshark/kubeshark/utils"
-	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	v1 "k8s.io/api/core/v1"
 )
@@ -43,8 +41,6 @@ type WorkerSyncerConfig struct {
 	KubesharkResourcesNamespace   string
 	WorkerResources               models.Resources
 	ImagePullPolicy               v1.PullPolicy
-	LogLevel                      zerolog.Level
-	KubesharkApiFilteringOptions  api.TrafficFilteringOptions
 	KubesharkServiceAccountExists bool
 	ServiceMesh                   bool
 	Tls                           bool
@@ -366,8 +362,6 @@ func (workerSyncer *WorkerSyncer) updateWorkers() error {
 			serviceAccountName,
 			workerSyncer.config.WorkerResources,
 			workerSyncer.config.ImagePullPolicy,
-			workerSyncer.config.KubesharkApiFilteringOptions,
-			workerSyncer.config.LogLevel,
 			workerSyncer.config.ServiceMesh,
 			workerSyncer.config.Tls,
 			workerSyncer.config.Debug); err != nil {

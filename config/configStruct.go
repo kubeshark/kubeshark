@@ -1,15 +1,12 @@
 package config
 
 import (
-	"fmt"
 	"os"
 	"path"
 	"path/filepath"
 
 	"github.com/kubeshark/kubeshark/config/configStructs"
 	"github.com/kubeshark/kubeshark/kubeshark"
-	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/util/homedir"
 )
@@ -47,15 +44,6 @@ type ConfigStruct struct {
 	KubeContext        string                     `yaml:"kube-context"`
 	ConfigFilePath     string                     `yaml:"config-path,omitempty" readonly:""`
 	HeadlessMode       bool                       `yaml:"headless" default:"false"`
-	LogLevelStr        string                     `yaml:"log-level,omitempty" default:"info" readonly:""`
-}
-
-func (config *ConfigStruct) validate() error {
-	if _, err := zerolog.ParseLevel(config.LogLevelStr); err != nil {
-		return fmt.Errorf("%s is not a valid log level, err: %v", config.LogLevelStr, err)
-	}
-
-	return nil
 }
 
 func (config *ConfigStruct) SetDefaults() {
@@ -82,12 +70,4 @@ func (config *ConfigStruct) KubeConfigPath() string {
 
 	home := homedir.HomeDir()
 	return filepath.Join(home, ".kube", "config")
-}
-
-func (config *ConfigStruct) LogLevel() zerolog.Level {
-	logLevel, err := zerolog.ParseLevel(config.LogLevelStr)
-	if err != nil {
-		log.Error().Err(err).Str("log-level", config.LogLevelStr).Msg("Invalid log level")
-	}
-	return logLevel
 }

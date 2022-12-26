@@ -16,7 +16,6 @@ import (
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/kubeshark/base/pkg/api"
 	"github.com/kubeshark/base/pkg/models"
 	"github.com/kubeshark/kubeshark/cmd/goUtils"
 	"github.com/kubeshark/kubeshark/config"
@@ -82,7 +81,7 @@ func tap() {
 	}
 
 	log.Info().Msg("Waiting for the creation of Kubeshark resources...")
-	if state.kubesharkServiceAccountExists, err = resources.CreateHubResources(ctx, kubernetesProvider, serializedKubesharkConfig, config.Config.IsNsRestrictedMode(), config.Config.ResourcesNamespace, config.Config.Tap.MaxEntriesDBSizeBytes(), config.Config.Tap.HubResources, config.Config.ImagePullPolicy(), config.Config.LogLevel(), config.Config.Tap.Debug); err != nil {
+	if state.kubesharkServiceAccountExists, err = resources.CreateHubResources(ctx, kubernetesProvider, serializedKubesharkConfig, config.Config.IsNsRestrictedMode(), config.Config.ResourcesNamespace, config.Config.Tap.MaxEntriesDBSizeBytes(), config.Config.Tap.HubResources, config.Config.ImagePullPolicy(), config.Config.Tap.Debug); err != nil {
 		var statusError *k8serrors.StatusError
 		if errors.As(err, &statusError) && (statusError.ErrStatus.Reason == metav1.StatusReasonAlreadyExists) {
 			log.Info().Msg("Kubeshark is already running in this namespace, change the `kubeshark-resources-namespace` configuration or run `kubeshark clean` to remove the currently running Kubeshark instance")
@@ -141,15 +140,11 @@ func printTargettedPodsPreview(ctx context.Context, kubernetesProvider *kubernet
 
 func startWorkerSyncer(ctx context.Context, cancel context.CancelFunc, provider *kubernetes.Provider, targetNamespaces []string, startTime time.Time) error {
 	workerSyncer, err := kubernetes.CreateAndStartWorkerSyncer(ctx, provider, kubernetes.WorkerSyncerConfig{
-		TargetNamespaces:            targetNamespaces,
-		PodFilterRegex:              *config.Config.Tap.PodRegex(),
-		KubesharkResourcesNamespace: config.Config.ResourcesNamespace,
-		WorkerResources:             config.Config.Tap.WorkerResources,
-		ImagePullPolicy:             config.Config.ImagePullPolicy(),
-		LogLevel:                    config.Config.LogLevel(),
-		KubesharkApiFilteringOptions: api.TrafficFilteringOptions{
-			IgnoredUserAgents: config.Config.Tap.IgnoredUserAgents,
-		},
+		TargetNamespaces:              targetNamespaces,
+		PodFilterRegex:                *config.Config.Tap.PodRegex(),
+		KubesharkResourcesNamespace:   config.Config.ResourcesNamespace,
+		WorkerResources:               config.Config.Tap.WorkerResources,
+		ImagePullPolicy:               config.Config.ImagePullPolicy(),
 		KubesharkServiceAccountExists: state.kubesharkServiceAccountExists,
 		ServiceMesh:                   config.Config.Tap.ServiceMesh,
 		Tls:                           config.Config.Tap.Tls,
