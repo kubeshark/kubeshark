@@ -48,6 +48,7 @@ type WorkerSyncerConfig struct {
 	KubesharkServiceAccountExists bool
 	ServiceMesh                   bool
 	Tls                           bool
+	Debug                         bool
 }
 
 func CreateAndStartWorkerSyncer(ctx context.Context, kubernetesProvider *Provider, config WorkerSyncerConfig, startTime time.Time) (*WorkerSyncer, error) {
@@ -368,7 +369,8 @@ func (workerSyncer *WorkerSyncer) updateWorkers() error {
 			workerSyncer.config.KubesharkApiFilteringOptions,
 			workerSyncer.config.LogLevel,
 			workerSyncer.config.ServiceMesh,
-			workerSyncer.config.Tls); err != nil {
+			workerSyncer.config.Tls,
+			workerSyncer.config.Debug); err != nil {
 			return err
 		}
 

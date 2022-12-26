@@ -179,12 +179,11 @@ type PodOptions struct {
 	PodName               string
 	PodImage              string
 	ServiceAccountName    string
-	IsNamespaceRestricted bool
 	MaxEntriesDBSizeBytes int64
 	Resources             models.Resources
 	ImagePullPolicy       core.PullPolicy
 	LogLevel              zerolog.Level
-	Profiler              bool
+	Debug                 bool
 }
 
 func (provider *Provider) BuildHubPod(opts *PodOptions, mountVolumeClaim bool, volumeClaimName string) (*core.Pod, error) {
@@ -212,12 +211,8 @@ func (provider *Provider) BuildHubPod(opts *PodOptions, mountVolumeClaim bool, v
 		"./hub",
 	}
 
-	if opts.Profiler {
-		command = append(command, "--profiler")
-	}
-
-	if opts.IsNamespaceRestricted {
-		command = append(command, "--namespace", opts.Namespace)
+	if opts.Debug {
+		command = append(command, "-debug")
 	}
 
 	volumeMounts := []core.VolumeMount{
@@ -716,7 +711,7 @@ func (provider *Provider) CreateConfigMap(ctx context.Context, namespace string,
 	return nil
 }
 
-func (provider *Provider) ApplyWorkerDaemonSet(ctx context.Context, namespace string, daemonSetName string, podImage string, workerPodName string, nodeNames []string, serviceAccountName string, resources models.Resources, imagePullPolicy core.PullPolicy, kubesharkApiFilteringOptions api.TrafficFilteringOptions, logLevel zerolog.Level, serviceMesh bool, tls bool) error {
+func (provider *Provider) ApplyWorkerDaemonSet(ctx context.Context, namespace string, daemonSetName string, podImage string, workerPodName string, nodeNames []string, serviceAccountName string, resources models.Resources, imagePullPolicy core.PullPolicy, kubesharkApiFilteringOptions api.TrafficFilteringOptions, logLevel zerolog.Level, serviceMesh bool, tls bool, debug bool) error {
 	log.Debug().
 		Int("node-count", len(nodeNames)).
 		Str("namespace", namespace).
@@ -734,18 +729,22 @@ func (provider *Provider) ApplyWorkerDaemonSet(ctx context.Context, namespace st
 		return err
 	}
 
-	kubesharkCmd := []string{"./worker", "-i", "any", "-port", "8897"}
+	command := []string{"./worker", "-i", "any", "-port", "8897"}
+
+	if debug {
+		command = append(command, "-debug")
+	}
 
 	if serviceMesh {
-		kubesharkCmd = append(kubesharkCmd, "--servicemesh")
+		command = append(command, "-servicemesh")
 	}
 
 	if tls {
-		kubesharkCmd = append(kubesharkCmd, "--tls")
+		command = append(command, "-tls")
 	}
 
 	if serviceMesh || tls {
-		kubesharkCmd = append(kubesharkCmd, "--procfs", procfsMountPath)
+		command = append(command, "-procfs", procfsMountPath)
 	}
 
 	workerContainer := applyconfcore.Container()
@@ -772,7 +771,7 @@ func (provider *Provider) ApplyWorkerDaemonSet(ctx context.Context, namespace st
 
 	workerContainer.WithSecurityContext(applyconfcore.SecurityContext().WithCapabilities(caps))
 
-	workerContainer.WithCommand(kubesharkCmd...)
+	workerContainer.WithCommand(command...)
 	workerContainer.WithEnv(
 		applyconfcore.EnvVar().WithName(utils.LogLevelEnvVar).WithValue(logLevel.String()),
 		applyconfcore.EnvVar().WithName(utils.HostModeEnvVar).WithValue("1"),

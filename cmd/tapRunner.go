@@ -82,7 +82,7 @@ func tap() {
 	}
 
 	log.Info().Msg("Waiting for the creation of Kubeshark resources...")
-	if state.kubesharkServiceAccountExists, err = resources.CreateHubResources(ctx, kubernetesProvider, serializedKubesharkConfig, config.Config.IsNsRestrictedMode(), config.Config.ResourcesNamespace, config.Config.Tap.MaxEntriesDBSizeBytes(), config.Config.Tap.HubResources, config.Config.ImagePullPolicy(), config.Config.LogLevel(), config.Config.Tap.Profiler); err != nil {
+	if state.kubesharkServiceAccountExists, err = resources.CreateHubResources(ctx, kubernetesProvider, serializedKubesharkConfig, config.Config.IsNsRestrictedMode(), config.Config.ResourcesNamespace, config.Config.Tap.MaxEntriesDBSizeBytes(), config.Config.Tap.HubResources, config.Config.ImagePullPolicy(), config.Config.LogLevel(), config.Config.Tap.Debug); err != nil {
 		var statusError *k8serrors.StatusError
 		if errors.As(err, &statusError) && (statusError.ErrStatus.Reason == metav1.StatusReasonAlreadyExists) {
 			log.Info().Msg("Kubeshark is already running in this namespace, change the `kubeshark-resources-namespace` configuration or run `kubeshark clean` to remove the currently running Kubeshark instance")
@@ -153,6 +153,7 @@ func startWorkerSyncer(ctx context.Context, cancel context.CancelFunc, provider 
 		KubesharkServiceAccountExists: state.kubesharkServiceAccountExists,
 		ServiceMesh:                   config.Config.Tap.ServiceMesh,
 		Tls:                           config.Config.Tap.Tls,
+		Debug:                         config.Config.Tap.Debug,
 	}, startTime)
 
 	if err != nil {

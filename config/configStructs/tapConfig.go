@@ -18,9 +18,9 @@ const (
 	AllNamespacesLabel         = "all-namespaces"
 	HumanMaxEntriesDBSizeLabel = "max-entries-db-size"
 	DryRunLabel                = "dry-run"
-	ServiceMeshName            = "service-mesh"
-	TlsName                    = "tls"
-	ProfilerName               = "profiler"
+	ServiceMeshLabel           = "service-mesh"
+	TlsLabel                   = "tls"
+	DebugLabel                 = "debug"
 )
 
 type HubConfig struct {
@@ -50,7 +50,7 @@ type TapConfig struct {
 	ServiceMesh           bool             `yaml:"service-mesh" default:"true"`
 	Tls                   bool             `yaml:"tls" default:"true"`
 	PacketCapture         string           `yaml:"packet-capture" default:"libpcap"`
-	Profiler              bool             `yaml:"profiler" default:"false"`
+	Debug                 bool             `yaml:"debug" default:"false"`
 }
 
 func (config *TapConfig) PodRegex() *regexp.Regexp {

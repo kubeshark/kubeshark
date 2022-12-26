@@ -14,7 +14,7 @@ import (
 	core "k8s.io/api/core/v1"
 )
 
-func CreateHubResources(ctx context.Context, kubernetesProvider *kubernetes.Provider, serializedKubesharkConfig string, isNsRestrictedMode bool, kubesharkResourcesNamespace string, maxEntriesDBSizeBytes int64, hubResources models.Resources, imagePullPolicy core.PullPolicy, logLevel zerolog.Level, profiler bool) (bool, error) {
+func CreateHubResources(ctx context.Context, kubernetesProvider *kubernetes.Provider, serializedKubesharkConfig string, isNsRestrictedMode bool, kubesharkResourcesNamespace string, maxEntriesDBSizeBytes int64, hubResources models.Resources, imagePullPolicy core.PullPolicy, logLevel zerolog.Level, debug bool) (bool, error) {
 	if !isNsRestrictedMode {
 		if err := createKubesharkNamespace(ctx, kubernetesProvider, kubesharkResourcesNamespace); err != nil {
 			return false, err
@@ -42,12 +42,11 @@ func CreateHubResources(ctx context.Context, kubernetesProvider *kubernetes.Prov
 		PodName:               kubernetes.HubPodName,
 		PodImage:              docker.GetHubImage(),
 		ServiceAccountName:    serviceAccountName,
-		IsNamespaceRestricted: isNsRestrictedMode,
 		MaxEntriesDBSizeBytes: maxEntriesDBSizeBytes,
 		Resources:             hubResources,
 		ImagePullPolicy:       imagePullPolicy,
 		LogLevel:              logLevel,
-		Profiler:              profiler,
+		Debug:                 debug,
 	}
 
 	frontOpts := &kubernetes.PodOptions{
@@ -55,12 +54,11 @@ func CreateHubResources(ctx context.Context, kubernetesProvider *kubernetes.Prov
 		PodName:               kubernetes.FrontPodName,
 		PodImage:              docker.GetWorkerImage(),
 		ServiceAccountName:    serviceAccountName,
-		IsNamespaceRestricted: isNsRestrictedMode,
 		MaxEntriesDBSizeBytes: maxEntriesDBSizeBytes,
 		Resources:             hubResources,
 		ImagePullPolicy:       imagePullPolicy,
 		LogLevel:              logLevel,
-		Profiler:              profiler,
+		Debug:                 debug,
 	}
 
 	if err := createKubesharkHubPod(ctx, kubernetesProvider, opts); err != nil {
