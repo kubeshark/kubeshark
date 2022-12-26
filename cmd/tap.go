@@ -46,7 +46,8 @@ func init() {
 		log.Debug().Err(err).Send()
 	}
 
-	tapCmd.Flags().StringP(configStructs.TagLabel, "t", defaultTapConfig.Tag, "The tag of the Docker images that are going to be pulled.")
+	tapCmd.Flags().StringP(configStructs.DockerRegistryLabel, "r", defaultTapConfig.DockerRegistry, "The Docker registry that's hosting the images.")
+	tapCmd.Flags().StringP(configStructs.DockerTagLabel, "t", defaultTapConfig.DockerTag, "The tag of the Docker images that are going to be pulled.")
 	tapCmd.Flags().Uint16(configStructs.ProxyPortFrontLabel, defaultTapConfig.Front.SrcPort, "Provide a custom port for the front-end proxy/port-forward.")
 	tapCmd.Flags().Uint16(configStructs.ProxyPortHubLabel, defaultTapConfig.Hub.SrcPort, "Provide a custom port for the Hub proxy/port-forward.")
 	tapCmd.Flags().String(configStructs.ProxyHostLabel, defaultTapConfig.ProxyHost, "Provide a custom host for the proxy/port-forward.")

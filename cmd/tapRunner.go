@@ -42,7 +42,8 @@ var proxyDone bool
 
 func tap() {
 	state.startTime = time.Now()
-	docker.SetTag(config.Config.Tap.Tag)
+	docker.SetRegistry(config.Config.Tap.DockerRegistry)
+	docker.SetTag(config.Config.Tap.DockerTag)
 
 	connector = connect.NewConnector(kubernetes.GetLocalhostOnPort(config.Config.Tap.Hub.SrcPort), connect.DefaultRetries, connect.DefaultTimeout)
 

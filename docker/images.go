@@ -9,16 +9,16 @@ const (
 )
 
 var (
-	namespace = "kubeshark"
-	tag       = "latest"
+	registry = "docker.io/kubeshark"
+	tag      = "latest"
 )
 
-func GetNamespace() string {
-	return namespace
+func GetRegistry() string {
+	return registry
 }
 
-func SetNamespace(value string) {
-	namespace = value
+func SetRegistry(value string) {
+	registry = value
 }
 
 func GetTag() string {
@@ -30,7 +30,7 @@ func SetTag(value string) {
 }
 
 func getImage(image string) string {
-	return fmt.Sprintf("%s/%s:%s", namespace, image, tag)
+	return fmt.Sprintf("%s/%s:%s", registry, image, tag)
 }
 
 func GetHubImage() string {

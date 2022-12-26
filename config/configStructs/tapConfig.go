@@ -13,7 +13,8 @@ import (
 )
 
 const (
-	TagLabel                   = "tag"
+	DockerRegistryLabel        = "docker-registry"
+	DockerTagLabel             = "docker-tag"
 	ProxyPortFrontLabel        = "proxy-port-front"
 	ProxyPortHubLabel          = "proxy-port-hub"
 	ProxyHostLabel             = "proxy-host"
@@ -41,7 +42,8 @@ type FrontConfig struct {
 type TapConfig struct {
 	Hub               HubConfig   `yaml:"hub"`
 	Front             FrontConfig `yaml:"front"`
-	Tag               string      `yaml:"tag" default:"latest"`
+	DockerRegistry    string      `yaml:"docker-registry" default:"docker.io/kubeshark"`
+	DockerTag         string      `yaml:"docker-tag" default:"latest"`
 	PodRegexStr       string      `yaml:"regex" default:".*"`
 	ProxyHost         string      `yaml:"proxy-host" default:"127.0.0.1"`
 	Namespaces        []string    `yaml:"namespaces"`
