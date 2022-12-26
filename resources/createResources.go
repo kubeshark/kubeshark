@@ -41,8 +41,6 @@ func CreateHubResources(ctx context.Context, kubernetesProvider *kubernetes.Prov
 		Namespace:             kubesharkResourcesNamespace,
 		PodName:               kubernetes.HubPodName,
 		PodImage:              docker.GetHubImage(),
-		KratosImage:           "",
-		KetoImage:             "",
 		ServiceAccountName:    serviceAccountName,
 		IsNamespaceRestricted: isNsRestrictedMode,
 		MaxEntriesDBSizeBytes: maxEntriesDBSizeBytes,
@@ -56,8 +54,6 @@ func CreateHubResources(ctx context.Context, kubernetesProvider *kubernetes.Prov
 		Namespace:             kubesharkResourcesNamespace,
 		PodName:               kubernetes.FrontPodName,
 		PodImage:              docker.GetWorkerImage(),
-		KratosImage:           "",
-		KetoImage:             "",
 		ServiceAccountName:    serviceAccountName,
 		IsNamespaceRestricted: isNsRestrictedMode,
 		MaxEntriesDBSizeBytes: maxEntriesDBSizeBytes,
@@ -117,7 +113,7 @@ func createRBACIfNecessary(ctx context.Context, kubernetesProvider *kubernetes.P
 }
 
 func createKubesharkHubPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, opts *kubernetes.HubOptions) error {
-	pod, err := kubernetesProvider.BuildHubPod(opts, false, "", false)
+	pod, err := kubernetesProvider.BuildHubPod(opts, false, "")
 	if err != nil {
 		return err
 	}
@@ -129,7 +125,7 @@ func createKubesharkHubPod(ctx context.Context, kubernetesProvider *kubernetes.P
 }
 
 func createFrontPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, opts *kubernetes.HubOptions) error {
-	pod, err := kubernetesProvider.BuildFrontPod(opts, false, "", false)
+	pod, err := kubernetesProvider.BuildFrontPod(opts, false, "")
 	if err != nil {
 		return err
 	}

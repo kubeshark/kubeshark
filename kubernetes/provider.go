@@ -178,8 +178,6 @@ type HubOptions struct {
 	Namespace             string
 	PodName               string
 	PodImage              string
-	KratosImage           string
-	KetoImage             string
 	ServiceAccountName    string
 	IsNamespaceRestricted bool
 	MaxEntriesDBSizeBytes int64
@@ -189,7 +187,7 @@ type HubOptions struct {
 	Profiler              bool
 }
 
-func (provider *Provider) BuildHubPod(opts *HubOptions, mountVolumeClaim bool, volumeClaimName string, createAuthContainer bool) (*core.Pod, error) {
+func (provider *Provider) BuildHubPod(opts *HubOptions, mountVolumeClaim bool, volumeClaimName string) (*core.Pod, error) {
 	configMapVolume := &core.ConfigMapVolumeSource{}
 	configMapVolume.Name = ConfigMapName
 
@@ -278,68 +276,6 @@ func (provider *Provider) BuildHubPod(opts *HubOptions, mountVolumeClaim bool, v
 		},
 	}
 
-	if createAuthContainer {
-		containers = append(containers, core.Container{
-			Name:            "kratos",
-			Image:           opts.KratosImage,
-			ImagePullPolicy: opts.ImagePullPolicy,
-			VolumeMounts:    volumeMounts,
-			ReadinessProbe: &core.Probe{
-				FailureThreshold: 3,
-				ProbeHandler: core.ProbeHandler{
-					HTTPGet: &core.HTTPGetAction{
-						Path:   "/health/ready",
-						Port:   intstr.FromInt(4433),
-						Scheme: core.URISchemeHTTP,
-					},
-				},
-				PeriodSeconds:    1,
-				SuccessThreshold: 1,
-				TimeoutSeconds:   1,
-			},
-			Resources: core.ResourceRequirements{
-				Limits: core.ResourceList{
-					"cpu":    cpuLimit,
-					"memory": memLimit,
-				},
-				Requests: core.ResourceList{
-					"cpu":    cpuRequests,
-					"memory": memRequests,
-				},
-			},
-		})
-
-		containers = append(containers, core.Container{
-			Name:            "keto",
-			Image:           opts.KetoImage,
-			ImagePullPolicy: opts.ImagePullPolicy,
-			VolumeMounts:    volumeMounts,
-			ReadinessProbe: &core.Probe{
-				FailureThreshold: 3,
-				ProbeHandler: core.ProbeHandler{
-					HTTPGet: &core.HTTPGetAction{
-						Path:   "/health/ready",
-						Port:   intstr.FromInt(4466),
-						Scheme: core.URISchemeHTTP,
-					},
-				},
-				PeriodSeconds:    1,
-				SuccessThreshold: 1,
-				TimeoutSeconds:   1,
-			},
-			Resources: core.ResourceRequirements{
-				Limits: core.ResourceList{
-					"cpu":    cpuLimit,
-					"memory": memLimit,
-				},
-				Requests: core.ResourceList{
-					"cpu":    cpuRequests,
-					"memory": memRequests,
-				},
-			},
-		})
-	}
-
 	pod := &core.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: opts.PodName,
@@ -374,7 +310,7 @@ func (provider *Provider) BuildHubPod(opts *HubOptions, mountVolumeClaim bool, v
 	return pod, nil
 }
 
-func (provider *Provider) BuildFrontPod(opts *HubOptions, mountVolumeClaim bool, volumeClaimName string, createAuthContainer bool) (*core.Pod, error) {
+func (provider *Provider) BuildFrontPod(opts *HubOptions, mountVolumeClaim bool, volumeClaimName string) (*core.Pod, error) {
 	configMapVolume := &core.ConfigMapVolumeSource{}
 	configMapVolume.Name = ConfigMapName
 
