@@ -18,7 +18,7 @@
 		<a href="https://discord.gg/WkvRGMUcx7">
       <img alt="Discord" src="https://img.shields.io/discord/1042559155224973352?logo=Discord&style=flat-square&label=discord">
     </a>
-    <a href="https://join.slack.com/t/kubeshark/shared_invite/zt-1k3sybpq9-uAhFkuPJiJftKniqrGHGhg">
+    <a href="https://join.slack.com/t/kubeshark/shared_invite/zt-1m90td3n7-VHxN_~V5kVp80SfQW3SfpA">
       <img alt="Slack" src="https://img.shields.io/badge/slack-join_chat-green?logo=Slack&style=flat-square&label=slack">
     </a>
 </p>
