@@ -111,7 +111,6 @@ func finishTapExecution(kubernetesProvider *kubernetes.Provider) {
 func getTapConfig() *models.Config {
 	conf := models.Config{
 		MaxDBSizeBytes:     config.Config.Tap.MaxEntriesDBSizeBytes(),
-		InsertionFilter:    config.Config.Tap.GetInsertionFilter(),
 		PullPolicy:         config.Config.ImagePullPolicyStr,
 		WorkerResources:    config.Config.Tap.WorkerResources,
 		ResourcesNamespace: config.Config.ResourcesNamespace,
