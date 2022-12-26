@@ -34,7 +34,7 @@ func runOpen() {
 	if !exists {
 		log.Error().
 			Str("service", kubernetes.FrontServiceName).
-			Str("command", fmt.Sprintf("kubeshark %s", deployCmd.Use)).
+			Str("command", fmt.Sprintf("kubeshark %s", tapCmd.Use)).
 			Msg("Service not found! You should run the command first:")
 		cancel()
 		return

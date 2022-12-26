@@ -17,7 +17,7 @@ var (
 )
 
 func runKubesharkCheck() {
-	log.Info().Msg("Checking the deployment...")
+	log.Info().Msg("Checking the Kubeshark resources...")
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // cancel will be called when this function exits
@@ -48,8 +48,8 @@ func runKubesharkCheck() {
 	} else {
 		log.Error().
 			Str("command1", fmt.Sprintf("kubeshark %s", cleanCmd.Use)).
-			Str("command2", fmt.Sprintf("kubeshark %s", deployCmd.Use)).
-			Msg(fmt.Sprintf(utils.Red, "There are issues in your deployment! Run these commands:"))
+			Str("command2", fmt.Sprintf("kubeshark %s", tapCmd.Use)).
+			Msg(fmt.Sprintf(utils.Red, "There are issues in your Kubeshark resources! Run these commands:"))
 		os.Exit(1)
 	}
 }

@@ -26,7 +26,7 @@ const (
 	ProfilerName               = "profiler"
 )
 
-type DeployConfig struct {
+type TapConfig struct {
 	Tag               string   `yaml:"tag" default:"latest"`
 	PodRegexStr       string   `yaml:"regex" default:".*"`
 	ProxyPort         uint16   `yaml:"proxy-port" default:"8899"`
@@ -53,17 +53,17 @@ type DeployConfig struct {
 	Profiler              bool             `yaml:"profiler" default:"false"`
 }
 
-func (config *DeployConfig) PodRegex() *regexp.Regexp {
+func (config *TapConfig) PodRegex() *regexp.Regexp {
 	podRegex, _ := regexp.Compile(config.PodRegexStr)
 	return podRegex
 }
 
-func (config *DeployConfig) MaxEntriesDBSizeBytes() int64 {
+func (config *TapConfig) MaxEntriesDBSizeBytes() int64 {
 	maxEntriesDBSizeBytes, _ := utils.HumanReadableToBytes(config.HumanMaxEntriesDBSize)
 	return maxEntriesDBSizeBytes
 }
 
-func (config *DeployConfig) GetInsertionFilter() string {
+func (config *TapConfig) GetInsertionFilter() string {
 	insertionFilter := config.InsertionFilter
 	if fs.ValidPath(insertionFilter) {
 		if _, err := os.Stat(insertionFilter); err == nil {
@@ -87,7 +87,7 @@ func (config *DeployConfig) GetInsertionFilter() string {
 	return insertionFilter
 }
 
-func getRedactFilter(config *DeployConfig) string {
+func getRedactFilter(config *TapConfig) string {
 	if !config.EnableRedaction {
 		return ""
 	}
@@ -118,7 +118,7 @@ func getRedactFilter(config *DeployConfig) string {
 	return fmt.Sprintf("redact(\"%s\")", strings.Join(redactValues, "\",\""))
 }
 
-func (config *DeployConfig) Validate() error {
+func (config *TapConfig) Validate() error {
 	_, compileErr := regexp.Compile(config.PodRegexStr)
 	if compileErr != nil {
 		return fmt.Errorf("%s is not a valid regex %s", config.PodRegexStr, compileErr)

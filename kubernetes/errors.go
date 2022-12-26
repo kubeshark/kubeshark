@@ -1,20 +1,20 @@
 package kubernetes
 
-type K8sDeployManagerErrorReason string
+type K8sTapManagerErrorReason string
 
 const (
-	DeployManagerWorkerUpdateError K8sDeployManagerErrorReason = "WORKER_UPDATE_ERROR"
-	DeployManagerPodWatchError     K8sDeployManagerErrorReason = "POD_WATCH_ERROR"
-	DeployManagerPodListError      K8sDeployManagerErrorReason = "POD_LIST_ERROR"
+	TapManagerWorkerUpdateError K8sTapManagerErrorReason = "WORKER_UPDATE_ERROR"
+	TapManagerPodWatchError     K8sTapManagerErrorReason = "POD_WATCH_ERROR"
+	TapManagerPodListError      K8sTapManagerErrorReason = "POD_LIST_ERROR"
 )
 
-type K8sDeployManagerError struct {
-	OriginalError       error
-	DeployManagerReason K8sDeployManagerErrorReason
+type K8sTapManagerError struct {
+	OriginalError    error
+	TapManagerReason K8sTapManagerErrorReason
 }
 
-// K8sDeployManagerError implements the Error interface.
-func (e *K8sDeployManagerError) Error() string {
+// K8sTapManagerError implements the Error interface.
+func (e *K8sTapManagerError) Error() string {
 	return e.OriginalError.Error()
 }
 

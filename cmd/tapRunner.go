@@ -28,21 +28,21 @@ import (
 
 const cleanupTimeout = time.Minute
 
-type deployState struct {
+type tapState struct {
 	startTime                     time.Time
 	targetNamespaces              []string
 	kubesharkServiceAccountExists bool
 }
 
-var state deployState
+var state tapState
 var connector *connect.Connector
 var hubPodReady bool
 var frontPodReady bool
 var proxyDone bool
 
-func deploy() {
+func tap() {
 	state.startTime = time.Now()
-	docker.SetTag(config.Config.Deploy.Tag)
+	docker.SetTag(config.Config.Tap.Tag)
 
 	connector = connect.NewConnector(kubernetes.GetLocalhostOnPort(config.Config.Hub.PortForward.SrcPort), connect.DefaultRetries, connect.DefaultTimeout)
 
@@ -56,8 +56,8 @@ func deploy() {
 
 	state.targetNamespaces = getNamespaces(kubernetesProvider)
 
-	conf := getDeployConfig()
-	serializedKubesharkConfig, err := getSerializedDeployConfig(conf)
+	conf := getTapConfig()
+	serializedKubesharkConfig, err := getSerializedTapConfig(conf)
 	if err != nil {
 		log.Error().Err(errormessage.FormatError(err)).Msg("Error serializing Kubeshark config!")
 		return
@@ -76,12 +76,12 @@ func deploy() {
 		log.Error().Err(errormessage.FormatError(err)).Msg("Error listing pods!")
 	}
 
-	if config.Config.Deploy.DryRun {
+	if config.Config.Tap.DryRun {
 		return
 	}
 
-	log.Info().Msg("Waiting for Kubeshark deployment to finish...")
-	if state.kubesharkServiceAccountExists, err = resources.CreateHubResources(ctx, kubernetesProvider, serializedKubesharkConfig, config.Config.IsNsRestrictedMode(), config.Config.ResourcesNamespace, config.Config.Deploy.MaxEntriesDBSizeBytes(), config.Config.Deploy.HubResources, config.Config.ImagePullPolicy(), config.Config.LogLevel(), config.Config.Deploy.Profiler); err != nil {
+	log.Info().Msg("Waiting for the creation of Kubeshark resources...")
+	if state.kubesharkServiceAccountExists, err = resources.CreateHubResources(ctx, kubernetesProvider, serializedKubesharkConfig, config.Config.IsNsRestrictedMode(), config.Config.ResourcesNamespace, config.Config.Tap.MaxEntriesDBSizeBytes(), config.Config.Tap.HubResources, config.Config.ImagePullPolicy(), config.Config.LogLevel(), config.Config.Tap.Profiler); err != nil {
 		var statusError *k8serrors.StatusError
 		if errors.As(err, &statusError) && (statusError.ErrStatus.Reason == metav1.StatusReasonAlreadyExists) {
 			log.Info().Msg("Kubeshark is already running in this namespace, change the `kubeshark-resources-namespace` configuration or run `kubeshark clean` to remove the currently running Kubeshark instance")
@@ -93,7 +93,7 @@ func deploy() {
 		return
 	}
 
-	defer finishDeployExecution(kubernetesProvider)
+	defer finishTapExecution(kubernetesProvider)
 
 	go goUtils.HandleExcWrapper(watchHubEvents, ctx, kubernetesProvider, cancel)
 	go goUtils.HandleExcWrapper(watchHubPod, ctx, kubernetesProvider, cancel)
@@ -103,16 +103,16 @@ func deploy() {
 	utils.WaitForFinish(ctx, cancel)
 }
 
-func finishDeployExecution(kubernetesProvider *kubernetes.Provider) {
+func finishTapExecution(kubernetesProvider *kubernetes.Provider) {
 	finishKubesharkExecution(kubernetesProvider, config.Config.IsNsRestrictedMode(), config.Config.ResourcesNamespace)
 }
 
-func getDeployConfig() *models.Config {
+func getTapConfig() *models.Config {
 	conf := models.Config{
-		MaxDBSizeBytes:     config.Config.Deploy.MaxEntriesDBSizeBytes(),
-		InsertionFilter:    config.Config.Deploy.GetInsertionFilter(),
+		MaxDBSizeBytes:     config.Config.Tap.MaxEntriesDBSizeBytes(),
+		InsertionFilter:    config.Config.Tap.GetInsertionFilter(),
 		PullPolicy:         config.Config.ImagePullPolicyStr,
-		WorkerResources:    config.Config.Deploy.WorkerResources,
+		WorkerResources:    config.Config.Tap.WorkerResources,
 		ResourcesNamespace: config.Config.ResourcesNamespace,
 		DatabasePath:       models.DataDirPath,
 	}
@@ -126,7 +126,7 @@ The alternative would be to wait for Hub to be ready and then query it for the p
 the arguably worse drawback of taking a relatively very long time before the user sees which pods are targeted, if any.
 */
 func printTargettedPodsPreview(ctx context.Context, kubernetesProvider *kubernetes.Provider, namespaces []string) error {
-	if matchingPods, err := kubernetesProvider.ListAllRunningPodsMatchingRegex(ctx, config.Config.Deploy.PodRegex(), namespaces); err != nil {
+	if matchingPods, err := kubernetesProvider.ListAllRunningPodsMatchingRegex(ctx, config.Config.Tap.PodRegex(), namespaces); err != nil {
 		return err
 	} else {
 		if len(matchingPods) == 0 {
@@ -142,17 +142,17 @@ func printTargettedPodsPreview(ctx context.Context, kubernetesProvider *kubernet
 func startWorkerSyncer(ctx context.Context, cancel context.CancelFunc, provider *kubernetes.Provider, targetNamespaces []string, startTime time.Time) error {
 	workerSyncer, err := kubernetes.CreateAndStartWorkerSyncer(ctx, provider, kubernetes.WorkerSyncerConfig{
 		TargetNamespaces:            targetNamespaces,
-		PodFilterRegex:              *config.Config.Deploy.PodRegex(),
+		PodFilterRegex:              *config.Config.Tap.PodRegex(),
 		KubesharkResourcesNamespace: config.Config.ResourcesNamespace,
-		WorkerResources:             config.Config.Deploy.WorkerResources,
+		WorkerResources:             config.Config.Tap.WorkerResources,
 		ImagePullPolicy:             config.Config.ImagePullPolicy(),
 		LogLevel:                    config.Config.LogLevel(),
 		KubesharkApiFilteringOptions: api.TrafficFilteringOptions{
-			IgnoredUserAgents: config.Config.Deploy.IgnoredUserAgents,
+			IgnoredUserAgents: config.Config.Tap.IgnoredUserAgents,
 		},
 		KubesharkServiceAccountExists: state.kubesharkServiceAccountExists,
-		ServiceMesh:                   config.Config.Deploy.ServiceMesh,
-		Tls:                           config.Config.Deploy.Tls,
+		ServiceMesh:                   config.Config.Tap.ServiceMesh,
+		Tls:                           config.Config.Tap.Tls,
 	}, startTime)
 
 	if err != nil {
@@ -167,9 +167,9 @@ func startWorkerSyncer(ctx context.Context, cancel context.CancelFunc, provider 
 					log.Debug().Msg("workerSyncer err channel closed, ending listener loop")
 					return
 				}
-				log.Error().Msg(getK8sDeployManagerErrorText(syncerErr))
+				log.Error().Msg(getK8sTapManagerErrorText(syncerErr))
 				cancel()
-			case _, ok := <-workerSyncer.DeployPodChangesOut:
+			case _, ok := <-workerSyncer.TapPodChangesOut:
 				if !ok {
 					log.Debug().Msg("workerSyncer pod changes channel closed, ending listener loop")
 					return
@@ -203,16 +203,16 @@ func printNoPodsFoundSuggestion(targetNamespaces []string) {
 	log.Warn().Msg(fmt.Sprintf("Did not find any currently running pods that match the regex argument, kubeshark will automatically target matching pods if any are created later%s", suggestionStr))
 }
 
-func getK8sDeployManagerErrorText(err kubernetes.K8sDeployManagerError) string {
-	switch err.DeployManagerReason {
-	case kubernetes.DeployManagerPodListError:
+func getK8sTapManagerErrorText(err kubernetes.K8sTapManagerError) string {
+	switch err.TapManagerReason {
+	case kubernetes.TapManagerPodListError:
 		return fmt.Sprintf("Failed to update currently targetted pods: %v", err.OriginalError)
-	case kubernetes.DeployManagerPodWatchError:
+	case kubernetes.TapManagerPodWatchError:
 		return fmt.Sprintf("Error occured in K8s pod watch: %v", err.OriginalError)
-	case kubernetes.DeployManagerWorkerUpdateError:
+	case kubernetes.TapManagerWorkerUpdateError:
 		return fmt.Sprintf("Error updating worker: %v", err.OriginalError)
 	default:
-		return fmt.Sprintf("Unknown error occured in K8s deploy manager: %v", err.OriginalError)
+		return fmt.Sprintf("Unknown error occured in K8s tap manager: %v", err.OriginalError)
 	}
 }
 
@@ -470,10 +470,10 @@ func postFrontStarted(ctx context.Context, kubernetesProvider *kubernetes.Provid
 }
 
 func getNamespaces(kubernetesProvider *kubernetes.Provider) []string {
-	if config.Config.Deploy.AllNamespaces {
+	if config.Config.Tap.AllNamespaces {
 		return []string{kubernetes.K8sAllNamespaces}
-	} else if len(config.Config.Deploy.Namespaces) > 0 {
-		return utils.Unique(config.Config.Deploy.Namespaces)
+	} else if len(config.Config.Tap.Namespaces) > 0 {
+		return utils.Unique(config.Config.Tap.Namespaces)
 	} else {
 		currentNamespace, err := kubernetesProvider.CurrentNamespace()
 		if err != nil {

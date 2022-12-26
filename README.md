@@ -79,7 +79,7 @@ kubeshark tap "(catalo*|front-end*)"
 
 ### Specify the Namespace
 
-By default, Kubeshark is deployed into the `default` namespace.
+By default, Kubeshark targets the `default` namespace.
 To specify a different namespace:
 
 ```
@@ -88,8 +88,8 @@ kubeshark tap -n sock-shop
 
 ### Specify All Namespaces
 
-The default deployment strategy of Kubeshark waits for the new pods
-to be created. To simply deploy to all existing namespaces run:
+The default strategy of Kubeshark waits for the new pods
+to be created. To simply tap all existing namespaces run:
 
 ```
 kubeshark tap -A

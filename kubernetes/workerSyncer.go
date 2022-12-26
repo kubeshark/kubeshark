@@ -30,9 +30,9 @@ type WorkerSyncer struct {
 	CurrentlyTargettedPods []v1.Pod
 	config                 WorkerSyncerConfig
 	kubernetesProvider     *Provider
-	DeployPodChangesOut    chan TargettedPodChangeEvent
+	TapPodChangesOut       chan TargettedPodChangeEvent
 	WorkerPodsChanges      chan *v1.Pod
-	ErrorOut               chan K8sDeployManagerError
+	ErrorOut               chan K8sTapManagerError
 	nodeToTargettedPodMap  models.NodeToPodsMap
 	targettedNodes         []string
 }
@@ -57,9 +57,9 @@ func CreateAndStartWorkerSyncer(ctx context.Context, kubernetesProvider *Provide
 		CurrentlyTargettedPods: make([]v1.Pod, 0),
 		config:                 config,
 		kubernetesProvider:     kubernetesProvider,
-		DeployPodChangesOut:    make(chan TargettedPodChangeEvent, 100),
+		TapPodChangesOut:       make(chan TargettedPodChangeEvent, 100),
 		WorkerPodsChanges:      make(chan *v1.Pod, 100),
-		ErrorOut:               make(chan K8sDeployManagerError, 100),
+		ErrorOut:               make(chan K8sTapManagerError, 100),
 	}
 
 	if err, _ := syncer.updateCurrentlyTargettedPods(); err != nil {
@@ -187,9 +187,9 @@ func (workerSyncer *WorkerSyncer) watchPodsForTargetting() {
 	handleChangeInPods := func() {
 		err, changeFound := workerSyncer.updateCurrentlyTargettedPods()
 		if err != nil {
-			workerSyncer.ErrorOut <- K8sDeployManagerError{
-				OriginalError:       err,
-				DeployManagerReason: DeployManagerPodListError,
+			workerSyncer.ErrorOut <- K8sTapManagerError{
+				OriginalError:    err,
+				TapManagerReason: TapManagerPodListError,
 			}
 		}
 
@@ -198,9 +198,9 @@ func (workerSyncer *WorkerSyncer) watchPodsForTargetting() {
 			return
 		}
 		if err := workerSyncer.updateWorkers(); err != nil {
-			workerSyncer.ErrorOut <- K8sDeployManagerError{
-				OriginalError:       err,
-				DeployManagerReason: DeployManagerWorkerUpdateError,
+			workerSyncer.ErrorOut <- K8sTapManagerError{
+				OriginalError:    err,
+				TapManagerReason: TapManagerWorkerUpdateError,
 			}
 		}
 	}
@@ -294,9 +294,9 @@ func (workerSyncer *WorkerSyncer) watchPodsForTargetting() {
 func (workerSyncer *WorkerSyncer) handleErrorInWatchLoop(err error, restartWorkersDebouncer *debounce.Debouncer) {
 	log.Error().Err(err).Msg("While watching pods, got an error! Stopping \"restart workers debouncer\"")
 	restartWorkersDebouncer.Cancel()
-	workerSyncer.ErrorOut <- K8sDeployManagerError{
-		OriginalError:       err,
-		DeployManagerReason: DeployManagerPodWatchError,
+	workerSyncer.ErrorOut <- K8sTapManagerError{
+		OriginalError:    err,
+		TapManagerReason: TapManagerPodWatchError,
 	}
 }
 
@@ -315,7 +315,7 @@ func (workerSyncer *WorkerSyncer) updateCurrentlyTargettedPods() (err error, cha
 		if len(addedPods) > 0 || len(removedPods) > 0 {
 			workerSyncer.CurrentlyTargettedPods = podsToTarget
 			workerSyncer.nodeToTargettedPodMap = GetNodeHostToTargettedPodsMap(workerSyncer.CurrentlyTargettedPods)
-			workerSyncer.DeployPodChangesOut <- TargettedPodChangeEvent{
+			workerSyncer.TapPodChangesOut <- TargettedPodChangeEvent{
 				Added:   addedPods,
 				Removed: removedPods,
 			}
