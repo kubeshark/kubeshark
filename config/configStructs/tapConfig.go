@@ -14,7 +14,9 @@ import (
 
 const (
 	TagLabel                   = "tag"
-	ProxyPortLabel             = "proxy-port"
+	ProxyPortFrontLabel        = "proxy-port-front"
+	ProxyPortHubLabel          = "proxy-port-hub"
+	ProxyHostLabel             = "proxy-host"
 	NamespacesLabel            = "namespaces"
 	AllNamespacesLabel         = "all-namespaces"
 	EnableRedactionLabel       = "redact"
@@ -26,15 +28,26 @@ const (
 	ProfilerName               = "profiler"
 )
 
+type HubConfig struct {
+	SrcPort uint16 `yaml:"src-port" default:"8898"`
+	DstPort uint16 `yaml:"dst-port" default:"80"`
+}
+
+type FrontConfig struct {
+	SrcPort uint16 `yaml:"src-port" default:"8899"`
+	DstPort uint16 `yaml:"dst-port" default:"80"`
+}
+
 type TapConfig struct {
-	Tag               string   `yaml:"tag" default:"latest"`
-	PodRegexStr       string   `yaml:"regex" default:".*"`
-	ProxyPort         uint16   `yaml:"proxy-port" default:"8899"`
-	ProxyHost         string   `yaml:"proxy-host" default:"127.0.0.1"`
-	Namespaces        []string `yaml:"namespaces"`
-	AllNamespaces     bool     `yaml:"all-namespaces" default:"false"`
-	IgnoredUserAgents []string `yaml:"ignored-user-agents"`
-	EnableRedaction   bool     `yaml:"redact" default:"false"`
+	Hub               HubConfig   `yaml:"hub"`
+	Front             FrontConfig `yaml:"front"`
+	Tag               string      `yaml:"tag" default:"latest"`
+	PodRegexStr       string      `yaml:"regex" default:".*"`
+	ProxyHost         string      `yaml:"proxy-host" default:"127.0.0.1"`
+	Namespaces        []string    `yaml:"namespaces"`
+	AllNamespaces     bool        `yaml:"all-namespaces" default:"false"`
+	IgnoredUserAgents []string    `yaml:"ignored-user-agents"`
+	EnableRedaction   bool        `yaml:"redact" default:"false"`
 	RedactPatterns    struct {
 		RequestHeaders     []string `yaml:"request-headers"`
 		ResponseHeaders    []string `yaml:"response-headers"`

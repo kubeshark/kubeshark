@@ -44,7 +44,7 @@ func tap() {
 	state.startTime = time.Now()
 	docker.SetTag(config.Config.Tap.Tag)
 
-	connector = connect.NewConnector(kubernetes.GetLocalhostOnPort(config.Config.Hub.PortForward.SrcPort), connect.DefaultRetries, connect.DefaultTimeout)
+	connector = connect.NewConnector(kubernetes.GetLocalhostOnPort(config.Config.Tap.Hub.SrcPort), connect.DefaultRetries, connect.DefaultTimeout)
 
 	kubernetesProvider, err := getKubernetesProviderForCli()
 	if err != nil {
@@ -443,21 +443,21 @@ func watchHubEvents(ctx context.Context, kubernetesProvider *kubernetes.Provider
 }
 
 func postHubStarted(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc) {
-	startProxyReportErrorIfAny(kubernetesProvider, ctx, cancel, kubernetes.HubServiceName, config.Config.Hub.PortForward.SrcPort, config.Config.Hub.PortForward.DstPort, "/echo")
+	startProxyReportErrorIfAny(kubernetesProvider, ctx, cancel, kubernetes.HubServiceName, configStructs.ProxyPortFrontLabel, config.Config.Tap.Hub.SrcPort, config.Config.Tap.Hub.DstPort, "/echo")
 
 	if err := startWorkerSyncer(ctx, cancel, kubernetesProvider, state.targetNamespaces, state.startTime); err != nil {
 		log.Error().Err(errormessage.FormatError(err)).Msg("Error starting kubeshark worker syncer")
 		cancel()
 	}
 
-	url := kubernetes.GetLocalhostOnPort(config.Config.Hub.PortForward.SrcPort)
+	url := kubernetes.GetLocalhostOnPort(config.Config.Tap.Hub.SrcPort)
 	log.Info().Str("url", url).Msg(fmt.Sprintf(utils.Green, "Hub is available at:"))
 }
 
 func postFrontStarted(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc) {
-	startProxyReportErrorIfAny(kubernetesProvider, ctx, cancel, kubernetes.FrontServiceName, config.Config.Front.PortForward.SrcPort, config.Config.Front.PortForward.DstPort, "")
+	startProxyReportErrorIfAny(kubernetesProvider, ctx, cancel, kubernetes.FrontServiceName, configStructs.ProxyPortHubLabel, config.Config.Tap.Front.SrcPort, config.Config.Tap.Front.DstPort, "")
 
-	url := kubernetes.GetLocalhostOnPort(config.Config.Front.PortForward.SrcPort)
+	url := kubernetes.GetLocalhostOnPort(config.Config.Tap.Front.SrcPort)
 	log.Info().Str("url", url).Msg(fmt.Sprintf(utils.Green, "Kubeshark is available at:"))
 
 	if !config.Config.HeadlessMode {

@@ -12,14 +12,14 @@ func ServerConnection(kubernetesProvider *kubernetes.Provider) bool {
 
 	var connectedToHub, connectedToFront bool
 
-	if err := checkProxy(kubernetes.GetLocalhostOnPort(config.Config.Hub.PortForward.SrcPort), "/echo", kubernetesProvider); err != nil {
+	if err := checkProxy(kubernetes.GetLocalhostOnPort(config.Config.Tap.Hub.SrcPort), "/echo", kubernetesProvider); err != nil {
 		log.Error().Err(err).Msg("Couldn't connect to Hub using proxy!")
 	} else {
 		connectedToHub = true
 		log.Info().Msg("Connected successfully to Hub using proxy.")
 	}
 
-	if err := checkProxy(kubernetes.GetLocalhostOnPort(config.Config.Front.PortForward.SrcPort), "", kubernetesProvider); err != nil {
+	if err := checkProxy(kubernetes.GetLocalhostOnPort(config.Config.Tap.Front.SrcPort), "", kubernetesProvider); err != nil {
 		log.Error().Err(err).Msg("Couldn't connect to Front using proxy!")
 	} else {
 		connectedToFront = true

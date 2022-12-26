@@ -11,7 +11,6 @@ import (
 
 	"github.com/kubeshark/base/pkg/models"
 	"github.com/kubeshark/kubeshark/config"
-	"github.com/kubeshark/kubeshark/config/configStructs"
 	"github.com/kubeshark/kubeshark/errormessage"
 	"github.com/kubeshark/kubeshark/internal/connect"
 	"github.com/kubeshark/kubeshark/kubernetes"
@@ -21,12 +20,12 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func startProxyReportErrorIfAny(kubernetesProvider *kubernetes.Provider, ctx context.Context, cancel context.CancelFunc, serviceName string, srcPort uint16, dstPort uint16, healthCheck string) {
+func startProxyReportErrorIfAny(kubernetesProvider *kubernetes.Provider, ctx context.Context, cancel context.CancelFunc, serviceName string, proxyPortLabel string, srcPort uint16, dstPort uint16, healthCheck string) {
 	httpServer, err := kubernetes.StartProxy(kubernetesProvider, config.Config.Tap.ProxyHost, srcPort, dstPort, config.Config.ResourcesNamespace, serviceName, cancel)
 	if err != nil {
 		log.Error().
 			Err(errormessage.FormatError(err)).
-			Msg(fmt.Sprintf("Error occured while running k8s proxy. Try setting different port by using --%s", configStructs.ProxyPortLabel))
+			Msg(fmt.Sprintf("Error occured while running k8s proxy. Try setting different port by using --%s", proxyPortLabel))
 		cancel()
 		return
 	}
@@ -45,7 +44,7 @@ func startProxyReportErrorIfAny(kubernetesProvider *kubernetes.Provider, ctx con
 			log.Error().
 				Str("pod-regex", podRegex.String()).
 				Err(errormessage.FormatError(err)).
-				Msg(fmt.Sprintf("Error occured while running port forward. Try setting different port by using --%s", configStructs.ProxyPortLabel))
+				Msg(fmt.Sprintf("Error occured while running port forward. Try setting different port by using --%s", proxyPortLabel))
 			cancel()
 			return
 		}

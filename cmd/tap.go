@@ -47,7 +47,9 @@ func init() {
 	}
 
 	tapCmd.Flags().StringP(configStructs.TagLabel, "t", defaultTapConfig.Tag, "The tag of the Docker images that are going to be pulled.")
-	tapCmd.Flags().Uint16P(configStructs.ProxyPortLabel, "p", defaultTapConfig.ProxyPort, "Provide a custom port for the web interface webserver.")
+	tapCmd.Flags().Uint16(configStructs.ProxyPortFrontLabel, defaultTapConfig.Front.SrcPort, "Provide a custom port for the front-end proxy/port-forward.")
+	tapCmd.Flags().Uint16(configStructs.ProxyPortHubLabel, defaultTapConfig.Hub.SrcPort, "Provide a custom port for the Hub proxy/port-forward.")
+	tapCmd.Flags().String(configStructs.ProxyHostLabel, defaultTapConfig.ProxyHost, "Provide a custom host for the proxy/port-forward.")
 	tapCmd.Flags().StringSliceP(configStructs.NamespacesLabel, "n", defaultTapConfig.Namespaces, "Namespaces selector.")
 	tapCmd.Flags().BoolP(configStructs.AllNamespacesLabel, "A", defaultTapConfig.AllNamespaces, "Tap all namespaces.")
 	tapCmd.Flags().Bool(configStructs.EnableRedactionLabel, defaultTapConfig.EnableRedaction, "Enables redaction of potentially sensitive request/response headers and body values.")
