@@ -37,7 +37,7 @@ func CreateHubResources(ctx context.Context, kubernetesProvider *kubernetes.Prov
 		serviceAccountName = ""
 	}
 
-	opts := &kubernetes.HubOptions{
+	opts := &kubernetes.PodOptions{
 		Namespace:             kubesharkResourcesNamespace,
 		PodName:               kubernetes.HubPodName,
 		PodImage:              docker.GetHubImage(),
@@ -50,7 +50,7 @@ func CreateHubResources(ctx context.Context, kubernetesProvider *kubernetes.Prov
 		Profiler:              profiler,
 	}
 
-	frontOpts := &kubernetes.HubOptions{
+	frontOpts := &kubernetes.PodOptions{
 		Namespace:             kubesharkResourcesNamespace,
 		PodName:               kubernetes.FrontPodName,
 		PodImage:              docker.GetWorkerImage(),
@@ -112,7 +112,7 @@ func createRBACIfNecessary(ctx context.Context, kubernetesProvider *kubernetes.P
 	return true, nil
 }
 
-func createKubesharkHubPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, opts *kubernetes.HubOptions) error {
+func createKubesharkHubPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, opts *kubernetes.PodOptions) error {
 	pod, err := kubernetesProvider.BuildHubPod(opts, false, "")
 	if err != nil {
 		return err
@@ -124,7 +124,7 @@ func createKubesharkHubPod(ctx context.Context, kubernetesProvider *kubernetes.P
 	return nil
 }
 
-func createFrontPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, opts *kubernetes.HubOptions) error {
+func createFrontPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, opts *kubernetes.PodOptions) error {
 	pod, err := kubernetesProvider.BuildFrontPod(opts, false, "")
 	if err != nil {
 		return err

@@ -174,7 +174,7 @@ func (provider *Provider) CreateNamespace(ctx context.Context, name string) (*co
 	return provider.clientSet.CoreV1().Namespaces().Create(ctx, namespaceSpec, metav1.CreateOptions{})
 }
 
-type HubOptions struct {
+type PodOptions struct {
 	Namespace             string
 	PodName               string
 	PodImage              string
@@ -187,7 +187,7 @@ type HubOptions struct {
 	Profiler              bool
 }
 
-func (provider *Provider) BuildHubPod(opts *HubOptions, mountVolumeClaim bool, volumeClaimName string) (*core.Pod, error) {
+func (provider *Provider) BuildHubPod(opts *PodOptions, mountVolumeClaim bool, volumeClaimName string) (*core.Pod, error) {
 	configMapVolume := &core.ConfigMapVolumeSource{}
 	configMapVolume.Name = ConfigMapName
 
@@ -310,7 +310,7 @@ func (provider *Provider) BuildHubPod(opts *HubOptions, mountVolumeClaim bool, v
 	return pod, nil
 }
 
-func (provider *Provider) BuildFrontPod(opts *HubOptions, mountVolumeClaim bool, volumeClaimName string) (*core.Pod, error) {
+func (provider *Provider) BuildFrontPod(opts *PodOptions, mountVolumeClaim bool, volumeClaimName string) (*core.Pod, error) {
 	configMapVolume := &core.ConfigMapVolumeSource{}
 	configMapVolume.Name = ConfigMapName
 
