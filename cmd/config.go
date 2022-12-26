@@ -13,7 +13,7 @@ import (
 
 var configCmd = &cobra.Command{
 	Use:   "config",
-	Short: "Generate config with default values",
+	Short: "Generate Kubeshark config with default values",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		configWithDefaults, err := config.GetConfigWithDefaults()
 		if err != nil {
