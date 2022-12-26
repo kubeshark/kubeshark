@@ -6,7 +6,7 @@ require (
 	github.com/creasty/defaults v1.5.2
 	github.com/docker/go-units v0.4.0
 	github.com/google/go-github/v37 v37.0.0
-	github.com/kubeshark/base v0.1.7
+	github.com/kubeshark/base v0.4.0
 	github.com/rs/zerolog v1.28.0
 	github.com/spf13/cobra v1.3.0
 	github.com/spf13/pflag v1.0.5
@@ -54,7 +54,6 @@ require (
 	github.com/inconshreveable/mousetrap v1.0.0 // indirect
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
-	github.com/kubeshark/gopacket v1.1.20 // indirect
 	github.com/liggitt/tabwriter v0.0.0-20181228230101-89fcab3d43de // indirect
 	github.com/mailru/easyjson v0.7.7 // indirect
 	github.com/mattn/go-colorable v0.1.13 // indirect
