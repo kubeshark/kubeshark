@@ -13,7 +13,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func runOpen() {
+func runProxy() {
 	kubernetesProvider, err := getKubernetesProviderForCli()
 	if err != nil {
 		return
