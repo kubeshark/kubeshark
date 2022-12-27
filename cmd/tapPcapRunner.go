@@ -153,7 +153,7 @@ func createAndStartContainers(
 		return
 	}
 
-	cmdWorker := []string{"-i", "any", "-port", fmt.Sprintf("%d", config.Config.Tap.Worker.DstPort)}
+	cmdWorker := []string{"-f", "./import", "-port", fmt.Sprintf("%d", config.Config.Tap.Worker.DstPort)}
 	if config.DebugMode {
 		cmdWorker = append(cmdWorker, fmt.Sprintf("-%s", config.DebugFlag))
 	}
@@ -167,11 +167,11 @@ func createAndStartContainers(
 		return
 	}
 
-	if err = cli.ContainerStart(ctx, respWorker.ID, types.ContainerStartOptions{}); err != nil {
+	if err = cli.CopyToContainer(ctx, respWorker.ID, "/app/import", pcapReader, types.CopyToContainerOptions{}); err != nil {
 		return
 	}
 
-	if err = cli.CopyToContainer(ctx, respWorker.ID, "/app/import", pcapReader, types.CopyToContainerOptions{}); err != nil {
+	if err = cli.ContainerStart(ctx, respWorker.ID, types.ContainerStartOptions{}); err != nil {
 		return
 	}
 
