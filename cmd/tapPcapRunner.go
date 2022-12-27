@@ -90,7 +90,7 @@ func createAndStartContainers(
 	imageFront string,
 	imageHub string,
 	imageWorker string,
-	pcapReader io.Reader,
+	tarReader io.Reader,
 ) (
 	respFront container.ContainerCreateCreatedBody,
 	respHub container.ContainerCreateCreatedBody,
@@ -167,7 +167,7 @@ func createAndStartContainers(
 		return
 	}
 
-	if err = cli.CopyToContainer(ctx, respWorker.ID, "/app/import", pcapReader, types.CopyToContainerOptions{}); err != nil {
+	if err = cli.CopyToContainer(ctx, respWorker.ID, "/app/import", tarReader, types.CopyToContainerOptions{}); err != nil {
 		return
 	}
 
@@ -222,7 +222,7 @@ func stopAndRemoveContainers(
 	return
 }
 
-func pcap(pcapPath string) {
+func pcap(tarPath string) {
 	docker.SetRegistry(config.Config.Tap.DockerRegistry)
 	docker.SetTag(config.Config.Tap.DockerTag)
 
@@ -244,9 +244,13 @@ func pcap(pcapPath string) {
 		return
 	}
 
-	pcapFile, err := os.Open(pcapPath)
-	defer pcapFile.Close()
-	pcapReader := bufio.NewReader(pcapFile)
+	tarFile, err := os.Open(tarPath)
+	if err != nil {
+		log.Error().Err(err).Send()
+		return
+	}
+	defer tarFile.Close()
+	tarReader := bufio.NewReader(tarFile)
 
 	respFront, respHub, respWorker, workerIPAddr, err := createAndStartContainers(
 		ctx,
@@ -254,7 +258,7 @@ func pcap(pcapPath string) {
 		imageFront,
 		imageHub,
 		imageWorker,
-		pcapReader,
+		tarReader,
 	)
 	if err != nil {
 		log.Error().Err(err).Send()
