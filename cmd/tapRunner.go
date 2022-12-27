@@ -42,6 +42,11 @@ func tap() {
 	state.startTime = time.Now()
 	docker.SetRegistry(config.Config.Tap.DockerRegistry)
 	docker.SetTag(config.Config.Tap.DockerTag)
+	log.Info().Str("registry", docker.GetRegistry()).Str("tag", docker.GetTag()).Msg("Using Docker:")
+	if config.Config.Tap.Pcap != "" {
+		pcap(config.Config.Tap.Pcap)
+		return
+	}
 
 	connector = connect.NewConnector(kubernetes.GetLocalhostOnPort(config.Config.Tap.Hub.SrcPort), connect.DefaultRetries, connect.DefaultTimeout)
 

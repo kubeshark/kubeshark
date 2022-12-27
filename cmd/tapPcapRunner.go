@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"os"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
@@ -83,7 +84,14 @@ func pullImages(ctx context.Context, cli *client.Client, imageFront string, imag
 	return nil
 }
 
-func createAndStartContainers(ctx context.Context, cli *client.Client, imageFront string, imageHub string, imageWorker string) (
+func createAndStartContainers(
+	ctx context.Context,
+	cli *client.Client,
+	imageFront string,
+	imageHub string,
+	imageWorker string,
+	pcapReader io.Reader,
+) (
 	respFront container.ContainerCreateCreatedBody,
 	respHub container.ContainerCreateCreatedBody,
 	respWorker container.ContainerCreateCreatedBody,
@@ -163,6 +171,10 @@ func createAndStartContainers(ctx context.Context, cli *client.Client, imageFron
 		return
 	}
 
+	if err = cli.CopyToContainer(ctx, respWorker.ID, "/app/import", pcapReader, types.CopyToContainerOptions{}); err != nil {
+		return
+	}
+
 	var containerWorker types.ContainerJSON
 	containerWorker, err = cli.ContainerInspect(ctx, respWorker.ID)
 	if err != nil {
@@ -210,8 +222,9 @@ func stopAndRemoveContainers(
 	return
 }
 
-func pcap() {
-	log.Info().Msg("Starting Docker containers...")
+func pcap(pcapPath string) {
+	docker.SetRegistry(config.Config.Tap.DockerRegistry)
+	docker.SetTag(config.Config.Tap.DockerTag)
 
 	ctx := context.Background()
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
@@ -231,7 +244,18 @@ func pcap() {
 		return
 	}
 
-	respFront, respHub, respWorker, workerIPAddr, err := createAndStartContainers(ctx, cli, imageFront, imageHub, imageWorker)
+	pcapFile, err := os.Open(pcapPath)
+	defer pcapFile.Close()
+	pcapReader := bufio.NewReader(pcapFile)
+
+	respFront, respHub, respWorker, workerIPAddr, err := createAndStartContainers(
+		ctx,
+		cli,
+		imageFront,
+		imageHub,
+		imageWorker,
+		pcapReader,
+	)
 	if err != nil {
 		log.Error().Err(err).Send()
 		return

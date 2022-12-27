@@ -18,6 +18,7 @@ const (
 	AllNamespacesLabel         = "all-namespaces"
 	HumanMaxEntriesDBSizeLabel = "max-entries-db-size"
 	DryRunLabel                = "dry-run"
+	PcapLabel                  = "pcap"
 	ServiceMeshLabel           = "service-mesh"
 	TlsLabel                   = "tls"
 	DebugLabel                 = "debug"
@@ -50,6 +51,7 @@ type TapConfig struct {
 	AllNamespaces         bool             `yaml:"all-namespaces" default:"false"`
 	HumanMaxEntriesDBSize string           `yaml:"max-entries-db-size" default:"200MB"`
 	DryRun                bool             `yaml:"dry-run" default:"false"`
+	Pcap                  string           `yaml:"pcap" default:""`
 	HubResources          models.Resources `yaml:"hub-resources"`
 	WorkerResources       models.Resources `yaml:"worker-resources"`
 	ServiceMesh           bool             `yaml:"service-mesh" default:"true"`
