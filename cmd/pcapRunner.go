@@ -19,57 +19,47 @@ import (
 	v1 "k8s.io/api/core/v1"
 )
 
-func pcap() {
-	log.Info().Msg("Starting Docker containers...")
-
-	ctx := context.Background()
-	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
-	if err != nil {
-		log.Error().Err(err).Send()
-		return
-	}
-	defer cli.Close()
-
-	imageFront := docker.GetFrontImage()
-	imageHub := docker.GetHubImage()
-	imageWorker := docker.GetWorkerImage()
-
+func pullImages(ctx context.Context, cli *client.Client, imageFront string, imageHub string, imageWorker string) error {
 	readerFront, err := cli.ImagePull(ctx, imageFront, types.ImagePullOptions{})
 	if err != nil {
-		log.Error().Err(err).Send()
-		return
+		return err
 	}
 	defer readerFront.Close()
 	_, err = io.Copy(os.Stdout, readerFront)
 	if err != nil {
-		log.Error().Err(err).Send()
-		return
+		return err
 	}
 
 	readerHub, err := cli.ImagePull(ctx, imageHub, types.ImagePullOptions{})
 	if err != nil {
-		log.Error().Err(err).Send()
-		return
+		return err
 	}
 	defer readerHub.Close()
 	_, err = io.Copy(os.Stdout, readerHub)
 	if err != nil {
-		log.Error().Err(err).Send()
-		return
+		return err
 	}
 
 	readerWorker, err := cli.ImagePull(ctx, imageWorker, types.ImagePullOptions{})
 	if err != nil {
-		log.Error().Err(err).Send()
-		return
+		return err
 	}
 	defer readerWorker.Close()
 	_, err = io.Copy(os.Stdout, readerWorker)
 	if err != nil {
-		log.Error().Err(err).Send()
-		return
+		return err
 	}
 
+	return nil
+}
+
+func createAndStartContainers(ctx context.Context, cli *client.Client, imageFront string, imageHub string, imageWorker string) (
+	respFront container.ContainerCreateCreatedBody,
+	respHub container.ContainerCreateCreatedBody,
+	respWorker container.ContainerCreateCreatedBody,
+	workerIPAddr string,
+	err error,
+) {
 	hostIP := "0.0.0.0"
 
 	hostConfigFront := &container.HostConfig{
@@ -83,17 +73,15 @@ func pcap() {
 		},
 	}
 
-	respFront, err := cli.ContainerCreate(ctx, &container.Config{
+	respFront, err = cli.ContainerCreate(ctx, &container.Config{
 		Image: imageFront,
 		Tty:   false,
 	}, hostConfigFront, nil, nil, "kubeshark-front")
 	if err != nil {
-		log.Error().Err(err).Send()
 		return
 	}
 
-	if err := cli.ContainerStart(ctx, respFront.ID, types.ContainerStartOptions{}); err != nil {
-		log.Error().Err(err).Send()
+	if err = cli.ContainerStart(ctx, respFront.ID, types.ContainerStartOptions{}); err != nil {
 		return
 	}
 
@@ -113,19 +101,17 @@ func pcap() {
 		cmdHub = append(cmdHub, fmt.Sprintf("-%s", config.DebugFlag))
 	}
 
-	respHub, err := cli.ContainerCreate(ctx, &container.Config{
+	respHub, err = cli.ContainerCreate(ctx, &container.Config{
 		Image:        imageHub,
 		Cmd:          cmdHub,
 		Tty:          false,
 		ExposedPorts: nat.PortSet{nat.Port(fmt.Sprintf("%d/tcp", config.Config.Tap.Hub.DstPort)): {}},
 	}, hostConfigHub, nil, nil, "kubeshark-hub")
 	if err != nil {
-		log.Error().Err(err).Send()
 		return
 	}
 
-	if err := cli.ContainerStart(ctx, respHub.ID, types.ContainerStartOptions{}); err != nil {
-		log.Error().Err(err).Send()
+	if err = cli.ContainerStart(ctx, respHub.ID, types.ContainerStartOptions{}); err != nil {
 		return
 	}
 
@@ -134,22 +120,88 @@ func pcap() {
 		cmdWorker = append(cmdWorker, fmt.Sprintf("-%s", config.DebugFlag))
 	}
 
-	respWorker, err := cli.ContainerCreate(ctx, &container.Config{
+	respWorker, err = cli.ContainerCreate(ctx, &container.Config{
 		Image: imageWorker,
 		Cmd:   cmdWorker,
 		Tty:   false,
 	}, nil, nil, nil, "kubeshark-worker")
 	if err != nil {
+		return
+	}
+
+	if err = cli.ContainerStart(ctx, respWorker.ID, types.ContainerStartOptions{}); err != nil {
+		return
+	}
+
+	var containerWorker types.ContainerJSON
+	containerWorker, err = cli.ContainerInspect(ctx, respWorker.ID)
+	if err != nil {
+		return
+	}
+
+	workerIPAddr = containerWorker.NetworkSettings.IPAddress
+
+	return
+}
+
+func stopAndRemoveContainers(
+	ctx context.Context,
+	cli *client.Client,
+	respFront container.ContainerCreateCreatedBody,
+	respHub container.ContainerCreateCreatedBody,
+	respWorker container.ContainerCreateCreatedBody,
+) (err error) {
+	err = cli.ContainerStop(ctx, respFront.ID, nil)
+	if err != nil {
+		return
+	}
+	err = cli.ContainerStop(ctx, respHub.ID, nil)
+	if err != nil {
+		return
+	}
+	err = cli.ContainerStop(ctx, respWorker.ID, nil)
+	if err != nil {
+		return
+	}
+
+	err = cli.ContainerRemove(ctx, respFront.ID, types.ContainerRemoveOptions{})
+	if err != nil {
+		return
+	}
+	err = cli.ContainerRemove(ctx, respHub.ID, types.ContainerRemoveOptions{})
+	if err != nil {
+		return
+	}
+	err = cli.ContainerRemove(ctx, respWorker.ID, types.ContainerRemoveOptions{})
+	if err != nil {
+		return
+	}
+
+	return
+}
+
+func pcap() {
+	log.Info().Msg("Starting Docker containers...")
+
+	ctx := context.Background()
+	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
+	if err != nil {
+		log.Error().Err(err).Send()
+		return
+	}
+	defer cli.Close()
+
+	imageFront := docker.GetFrontImage()
+	imageHub := docker.GetHubImage()
+	imageWorker := docker.GetWorkerImage()
+
+	err = pullImages(ctx, cli, imageFront, imageHub, imageWorker)
+	if err != nil {
 		log.Error().Err(err).Send()
 		return
 	}
 
-	if err := cli.ContainerStart(ctx, respWorker.ID, types.ContainerStartOptions{}); err != nil {
-		log.Error().Err(err).Send()
-		return
-	}
-
-	containerWorker, err := cli.ContainerInspect(ctx, respWorker.ID)
+	respFront, respHub, respWorker, workerIPAddr, err := createAndStartContainers(ctx, cli, imageFront, imageHub, imageWorker)
 	if err != nil {
 		log.Error().Err(err).Send()
 		return
@@ -160,7 +212,7 @@ func pcap() {
 			NodeName: "docker",
 		},
 		Status: v1.PodStatus{
-			PodIP: containerWorker.NetworkSettings.IPAddress,
+			PodIP: workerIPAddr,
 			Phase: v1.PodRunning,
 			ContainerStatuses: []v1.ContainerStatus{
 				{
@@ -188,28 +240,7 @@ func pcap() {
 	defer cancel()
 	utils.WaitForFinish(ctxC, cancel)
 
-	err = cli.ContainerStop(ctx, respFront.ID, nil)
-	if err != nil {
-		log.Error().Err(err).Send()
-	}
-	err = cli.ContainerStop(ctx, respHub.ID, nil)
-	if err != nil {
-		log.Error().Err(err).Send()
-	}
-	err = cli.ContainerStop(ctx, respWorker.ID, nil)
-	if err != nil {
-		log.Error().Err(err).Send()
-	}
-
-	err = cli.ContainerRemove(ctx, respFront.ID, types.ContainerRemoveOptions{})
-	if err != nil {
-		log.Error().Err(err).Send()
-	}
-	err = cli.ContainerRemove(ctx, respHub.ID, types.ContainerRemoveOptions{})
-	if err != nil {
-		log.Error().Err(err).Send()
-	}
-	err = cli.ContainerRemove(ctx, respWorker.ID, types.ContainerRemoveOptions{})
+	err = stopAndRemoveContainers(ctx, cli, respFront, respHub, respWorker)
 	if err != nil {
 		log.Error().Err(err).Send()
 	}
