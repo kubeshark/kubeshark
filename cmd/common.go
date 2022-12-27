@@ -21,7 +21,7 @@ import (
 )
 
 func startProxyReportErrorIfAny(kubernetesProvider *kubernetes.Provider, ctx context.Context, cancel context.CancelFunc, serviceName string, proxyPortLabel string, srcPort uint16, dstPort uint16, healthCheck string) {
-	httpServer, err := kubernetes.StartProxy(kubernetesProvider, config.Config.Tap.ProxyHost, srcPort, dstPort, config.Config.ResourcesNamespace, serviceName, cancel)
+	httpServer, err := kubernetes.StartProxy(kubernetesProvider, config.Config.Tap.ProxyHost, srcPort, config.Config.ResourcesNamespace, serviceName, cancel)
 	if err != nil {
 		log.Error().
 			Err(errormessage.FormatError(err)).

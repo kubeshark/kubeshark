@@ -23,9 +23,14 @@ const (
 	DebugLabel                 = "debug"
 )
 
+type WorkerConfig struct {
+	SrcPort uint16 `yaml:"src-port" default:"8897"`
+	DstPort uint16 `yaml:"dst-port" default:"8897"`
+}
+
 type HubConfig struct {
 	SrcPort uint16 `yaml:"src-port" default:"8898"`
-	DstPort uint16 `yaml:"dst-port" default:"80"`
+	DstPort uint16 `yaml:"dst-port" default:"8898"`
 }
 
 type FrontConfig struct {
@@ -34,6 +39,7 @@ type FrontConfig struct {
 }
 
 type TapConfig struct {
+	Worker                WorkerConfig     `yaml:"worker"`
 	Hub                   HubConfig        `yaml:"hub"`
 	Front                 FrontConfig      `yaml:"front"`
 	DockerRegistry        string           `yaml:"docker-registry" default:"docker.io/kubeshark"`

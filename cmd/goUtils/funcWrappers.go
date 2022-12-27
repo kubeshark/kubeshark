@@ -2,7 +2,6 @@ package goUtils
 
 import (
 	"reflect"
-	"runtime/debug"
 
 	"github.com/rs/zerolog/log"
 )
@@ -10,10 +9,9 @@ import (
 func HandleExcWrapper(fn interface{}, params ...interface{}) (result []reflect.Value) {
 	defer func() {
 		if panicMessage := recover(); panicMessage != nil {
-			stack := debug.Stack()
 			log.Fatal().
+				Stack().
 				Interface("msg", panicMessage).
-				Interface("stack", stack).
 				Msg("Unhandled panic!")
 		}
 	}()

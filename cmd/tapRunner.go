@@ -442,7 +442,7 @@ func postHubStarted(ctx context.Context, kubernetesProvider *kubernetes.Provider
 	startProxyReportErrorIfAny(kubernetesProvider, ctx, cancel, kubernetes.HubServiceName, configStructs.ProxyPortFrontLabel, config.Config.Tap.Hub.SrcPort, config.Config.Tap.Hub.DstPort, "/echo")
 
 	if err := startWorkerSyncer(ctx, cancel, kubernetesProvider, state.targetNamespaces, state.startTime); err != nil {
-		log.Error().Err(errormessage.FormatError(err)).Msg("Error starting kubeshark worker syncer")
+		log.Error().Err(errormessage.FormatError(err)).Msg("Error starting worker syncer")
 		cancel()
 	}
 

@@ -66,14 +66,15 @@ func CreateHubResources(ctx context.Context, kubernetesProvider *kubernetes.Prov
 		return kubesharkServiceAccountExists, err
 	}
 
-	_, err = kubernetesProvider.CreateService(ctx, kubesharkResourcesNamespace, kubernetes.HubServiceName, kubernetes.HubServiceName, 80, int32(config.Config.Tap.Hub.DstPort), int32(config.Config.Tap.Hub.SrcPort))
+	// TODO: Why the port values need to be 80?
+	_, err = kubernetesProvider.CreateService(ctx, kubesharkResourcesNamespace, kubernetes.HubServiceName, kubernetes.HubServiceName, 80, 80)
 	if err != nil {
 		return kubesharkServiceAccountExists, err
 	}
 
 	log.Info().Str("service", kubernetes.HubServiceName).Msg("Successfully created a service.")
 
-	_, err = kubernetesProvider.CreateService(ctx, kubesharkResourcesNamespace, kubernetes.FrontServiceName, kubernetes.FrontServiceName, 80, int32(config.Config.Tap.Front.DstPort), int32(config.Config.Tap.Front.SrcPort))
+	_, err = kubernetesProvider.CreateService(ctx, kubesharkResourcesNamespace, kubernetes.FrontServiceName, kubernetes.FrontServiceName, 80, int32(config.Config.Tap.Front.DstPort))
 	if err != nil {
 		return kubesharkServiceAccountExists, err
 	}

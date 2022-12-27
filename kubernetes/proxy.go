@@ -21,12 +21,11 @@ import (
 const k8sProxyApiPrefix = "/"
 const kubesharkServicePort = 80
 
-func StartProxy(kubernetesProvider *Provider, proxyHost string, srcPort uint16, dstPort uint16, kubesharkNamespace string, kubesharkServiceName string, cancel context.CancelFunc) (*http.Server, error) {
+func StartProxy(kubernetesProvider *Provider, proxyHost string, srcPort uint16, kubesharkNamespace string, kubesharkServiceName string, cancel context.CancelFunc) (*http.Server, error) {
 	log.Info().
 		Str("namespace", kubesharkNamespace).
 		Str("service", kubesharkServiceName).
 		Int("src-port", int(srcPort)).
-		Int("dst-port", int(dstPort)).
 		Msg("Starting proxy...")
 
 	filter := &proxy.FilterServer{

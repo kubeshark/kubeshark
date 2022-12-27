@@ -389,7 +389,7 @@ func (provider *Provider) CreatePod(ctx context.Context, namespace string, podSp
 	return provider.clientSet.CoreV1().Pods(namespace).Create(ctx, podSpec, metav1.CreateOptions{})
 }
 
-func (provider *Provider) CreateService(ctx context.Context, namespace string, serviceName string, appLabelValue string, targetPort int, port int32, nodePort int32) (*core.Service, error) {
+func (provider *Provider) CreateService(ctx context.Context, namespace string, serviceName string, appLabelValue string, targetPort int, port int32) (*core.Service, error) {
 	service := core.Service{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: serviceName,
