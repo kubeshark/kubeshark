@@ -32,7 +32,7 @@ func init() {
 
 	rootCmd.PersistentFlags().StringSlice(config.SetCommandName, []string{}, fmt.Sprintf("Override values using --%s", config.SetCommandName))
 	rootCmd.PersistentFlags().String(config.ConfigFilePathCommandName, defaultConfig.ConfigFilePath, fmt.Sprintf("Override config file path using --%s", config.ConfigFilePathCommandName))
-	rootCmd.PersistentFlags().BoolP("debug", "d", false, "Enable debug mode.")
+	rootCmd.PersistentFlags().BoolP(config.DebugFlag, "d", false, "Enable debug mode.")
 }
 
 // Execute adds all child commands to the root command and sets flags appropriately.

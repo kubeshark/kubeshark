@@ -108,9 +108,14 @@ func pcap() {
 		},
 	}
 
+	cmdHub := []string{"-port", fmt.Sprintf("%d", config.Config.Tap.Hub.DstPort)}
+	if config.DebugMode {
+		cmdHub = append(cmdHub, fmt.Sprintf("-%s", config.DebugFlag))
+	}
+
 	respHub, err := cli.ContainerCreate(ctx, &container.Config{
 		Image:        imageHub,
-		Cmd:          []string{"-port", fmt.Sprintf("%d", config.Config.Tap.Hub.DstPort), "-debug"},
+		Cmd:          cmdHub,
 		Tty:          false,
 		ExposedPorts: nat.PortSet{nat.Port(fmt.Sprintf("%d/tcp", config.Config.Tap.Hub.DstPort)): {}},
 	}, hostConfigHub, nil, nil, "kubeshark-hub")
@@ -124,9 +129,14 @@ func pcap() {
 		return
 	}
 
+	cmdWorker := []string{"-i", "any", "-port", fmt.Sprintf("%d", config.Config.Tap.Worker.DstPort)}
+	if config.DebugMode {
+		cmdWorker = append(cmdWorker, fmt.Sprintf("-%s", config.DebugFlag))
+	}
+
 	respWorker, err := cli.ContainerCreate(ctx, &container.Config{
 		Image: imageWorker,
-		Cmd:   []string{"-i", "any", "-port", fmt.Sprintf("%d", config.Config.Tap.Worker.DstPort), "-debug"},
+		Cmd:   cmdWorker,
 		Tty:   false,
 	}, nil, nil, nil, "kubeshark-worker")
 	if err != nil {
