@@ -1,10 +1,11 @@
 package cmd
 
 import (
+	"bufio"
 	"context"
+	"encoding/json"
 	"fmt"
 	"io"
-	"os"
 
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
@@ -19,36 +20,65 @@ import (
 	v1 "k8s.io/api/core/v1"
 )
 
+func logPullingImage(image string, reader io.ReadCloser) {
+	scanner := bufio.NewScanner(reader)
+	for scanner.Scan() {
+		text := scanner.Text()
+		var data map[string]interface{}
+		if err := json.Unmarshal([]byte(text), &data); err != nil {
+			log.Error().Err(err).Send()
+			continue
+		}
+
+		var id string
+		if val, ok := data["id"]; ok {
+			id = val.(string)
+		}
+
+		var status string
+		if val, ok := data["status"]; ok {
+			status = val.(string)
+		}
+
+		var progress string
+		if val, ok := data["progress"]; ok {
+			progress = val.(string)
+		}
+
+		e := log.Info()
+		if image != "" {
+			e = e.Str("image", image)
+		}
+
+		if progress != "" {
+			e = e.Str("progress", progress)
+		}
+
+		e.Msg(fmt.Sprintf("[%-12s] %-18s", id, status))
+	}
+}
+
 func pullImages(ctx context.Context, cli *client.Client, imageFront string, imageHub string, imageWorker string) error {
 	readerFront, err := cli.ImagePull(ctx, imageFront, types.ImagePullOptions{})
 	if err != nil {
 		return err
 	}
 	defer readerFront.Close()
-	_, err = io.Copy(os.Stdout, readerFront)
-	if err != nil {
-		return err
-	}
+	logPullingImage(imageFront, readerFront)
 
 	readerHub, err := cli.ImagePull(ctx, imageHub, types.ImagePullOptions{})
 	if err != nil {
 		return err
 	}
 	defer readerHub.Close()
-	_, err = io.Copy(os.Stdout, readerHub)
-	if err != nil {
-		return err
-	}
+	logPullingImage(imageHub, readerHub)
 
 	readerWorker, err := cli.ImagePull(ctx, imageWorker, types.ImagePullOptions{})
 	if err != nil {
 		return err
 	}
 	defer readerWorker.Close()
-	_, err = io.Copy(os.Stdout, readerWorker)
-	if err != nil {
-		return err
-	}
+	logPullingImage(imageWorker, readerWorker)
 
 	return nil
 }

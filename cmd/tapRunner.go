@@ -17,7 +17,6 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/kubeshark/base/pkg/models"
-	"github.com/kubeshark/kubeshark/cmd/goUtils"
 	"github.com/kubeshark/kubeshark/config"
 	"github.com/kubeshark/kubeshark/config/configStructs"
 	"github.com/kubeshark/kubeshark/errormessage"
@@ -95,9 +94,9 @@ func tap() {
 
 	defer finishTapExecution(kubernetesProvider)
 
-	go goUtils.HandleExcWrapper(watchHubEvents, ctx, kubernetesProvider, cancel)
-	go goUtils.HandleExcWrapper(watchHubPod, ctx, kubernetesProvider, cancel)
-	go goUtils.HandleExcWrapper(watchFrontPod, ctx, kubernetesProvider, cancel)
+	go watchHubEvents(ctx, kubernetesProvider, cancel)
+	go watchHubPod(ctx, kubernetesProvider, cancel)
+	go watchFrontPod(ctx, kubernetesProvider, cancel)
 
 	// block until exit signal or error
 	utils.WaitForTermination(ctx, cancel)
