@@ -10,7 +10,6 @@ import (
 
 	"github.com/kubeshark/kubeshark/utils"
 
-	"github.com/kubeshark/kubeshark/config"
 	"github.com/rs/zerolog/log"
 	core "k8s.io/api/core/v1"
 	v1 "k8s.io/api/core/v1"
@@ -28,7 +27,7 @@ const DefaultTimeout = 2 * time.Second
 func NewConnector(url string, retries int, timeout time.Duration) *Connector {
 	return &Connector{
 		url:     url,
-		retries: config.GetIntEnvConfig(config.HubRetries, retries),
+		retries: retries,
 		client: &http.Client{
 			Timeout: timeout,
 		},
@@ -64,6 +63,7 @@ func (connector *Connector) isReachable(path string) (bool, error) {
 }
 
 func (connector *Connector) PostWorkerPodToHub(pod *v1.Pod) {
+	// TODO: This request is responsible for proxy_server.go:147] Error while proxying request: context canceled log
 	postWorkerUrl := fmt.Sprintf("%s/pods/worker", connector.url)
 
 	if podMarshalled, err := json.Marshal(pod); err != nil {

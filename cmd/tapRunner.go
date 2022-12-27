@@ -84,7 +84,7 @@ func tap() {
 	if state.kubesharkServiceAccountExists, err = resources.CreateHubResources(ctx, kubernetesProvider, serializedKubesharkConfig, config.Config.IsNsRestrictedMode(), config.Config.ResourcesNamespace, config.Config.Tap.MaxEntriesDBSizeBytes(), config.Config.Tap.HubResources, config.Config.ImagePullPolicy(), config.Config.Tap.Debug); err != nil {
 		var statusError *k8serrors.StatusError
 		if errors.As(err, &statusError) && (statusError.ErrStatus.Reason == metav1.StatusReasonAlreadyExists) {
-			log.Info().Msg("Kubeshark is already running in this namespace, change the `kubeshark-resources-namespace` configuration or run `kubeshark clean` to remove the currently running Kubeshark instance")
+			log.Warn().Msg("Kubeshark is already running in this namespace, change the `kubeshark-resources-namespace` configuration or run `kubeshark clean` to remove the currently running Kubeshark instance")
 		} else {
 			defer resources.CleanUpKubesharkResources(ctx, cancel, kubernetesProvider, config.Config.IsNsRestrictedMode(), config.Config.ResourcesNamespace)
 			log.Error().Err(errormessage.FormatError(err)).Msg("Error creating resources!")
@@ -214,8 +214,7 @@ func watchHubPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, c
 	eventChan, errorChan := kubernetes.FilteredWatch(ctx, podWatchHelper, []string{config.Config.ResourcesNamespace}, podWatchHelper)
 	isPodReady := false
 
-	hubTimeoutSec := config.GetIntEnvConfig(config.HubTimeoutSec, 120)
-	timeAfter := time.After(time.Duration(hubTimeoutSec) * time.Second)
+	timeAfter := time.After(120 * time.Second)
 	for {
 		select {
 		case wEvent, ok := <-eventChan:
@@ -295,8 +294,7 @@ func watchFrontPod(ctx context.Context, kubernetesProvider *kubernetes.Provider,
 	eventChan, errorChan := kubernetes.FilteredWatch(ctx, podWatchHelper, []string{config.Config.ResourcesNamespace}, podWatchHelper)
 	isPodReady := false
 
-	hubTimeoutSec := config.GetIntEnvConfig(config.HubTimeoutSec, 120)
-	timeAfter := time.After(time.Duration(hubTimeoutSec) * time.Second)
+	timeAfter := time.After(120 * time.Second)
 	for {
 		select {
 		case wEvent, ok := <-eventChan:
