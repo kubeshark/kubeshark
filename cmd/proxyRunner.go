@@ -64,7 +64,7 @@ func runProxy() {
 
 	okToOpen(url)
 
-	utils.WaitForFinish(ctx, cancel)
+	utils.WaitForTermination(ctx, cancel)
 }
 
 func okToOpen(url string) {

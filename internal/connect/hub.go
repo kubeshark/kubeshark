@@ -80,7 +80,7 @@ func (connector *Connector) PostWorkerPodToHub(pod *v1.Pod) {
 				ok = true
 				log.Debug().Interface("worker-pod", pod).Msg("Reported worker pod to Hub:")
 			}
-			time.Sleep(1 * time.Second)
+			time.Sleep(time.Second)
 		}
 	}
 }
@@ -102,7 +102,7 @@ func (connector *Connector) PostTargettedPodsToHub(pods []core.Pod) {
 				ok = true
 				log.Debug().Int("pod-count", len(pods)).Msg("Reported targetted pods to Hub:")
 			}
-			time.Sleep(1 * time.Second)
+			time.Sleep(time.Second)
 		}
 	}
 }

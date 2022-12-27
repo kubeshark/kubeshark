@@ -238,7 +238,7 @@ func pcap() {
 
 	ctxC, cancel := context.WithCancel(context.Background())
 	defer cancel()
-	utils.WaitForFinish(ctxC, cancel)
+	utils.WaitForTermination(ctxC, cancel)
 
 	err = stopAndRemoveContainers(ctx, cli, respFront, respHub, respWorker)
 	if err != nil {

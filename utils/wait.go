@@ -9,7 +9,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func WaitForFinish(ctx context.Context, cancel context.CancelFunc) {
+func WaitForTermination(ctx context.Context, cancel context.CancelFunc) {
 	log.Debug().Msg("Waiting to finish...")
 	sigChan := make(chan os.Signal, 1)
 	signal.Notify(sigChan, syscall.SIGINT, syscall.SIGTERM, syscall.SIGQUIT)

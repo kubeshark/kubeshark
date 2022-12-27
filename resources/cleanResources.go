@@ -71,7 +71,7 @@ func cleanUpNonRestrictedMode(ctx context.Context, cancel context.CancelFunc, ku
 func waitUntilNamespaceDeleted(ctx context.Context, cancel context.CancelFunc, kubernetesProvider *kubernetes.Provider, kubesharkResourcesNamespace string) {
 	// Call cancel if a terminating signal was received. Allows user to skip the wait.
 	go func() {
-		utils.WaitForFinish(ctx, cancel)
+		utils.WaitForTermination(ctx, cancel)
 	}()
 
 	if err := kubernetesProvider.WaitUtilNamespaceDeleted(ctx, kubesharkResourcesNamespace); err != nil {

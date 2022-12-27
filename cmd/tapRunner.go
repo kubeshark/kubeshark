@@ -100,7 +100,7 @@ func tap() {
 	go goUtils.HandleExcWrapper(watchFrontPod, ctx, kubernetesProvider, cancel)
 
 	// block until exit signal or error
-	utils.WaitForFinish(ctx, cancel)
+	utils.WaitForTermination(ctx, cancel)
 }
 
 func finishTapExecution(kubernetesProvider *kubernetes.Provider) {
