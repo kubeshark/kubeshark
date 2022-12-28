@@ -40,8 +40,8 @@ var proxyDone bool
 
 func tap() {
 	state.startTime = time.Now()
-	docker.SetRegistry(config.Config.Tap.DockerRegistry)
-	docker.SetTag(config.Config.Tap.DockerTag)
+	docker.SetRegistry(config.Config.Tap.Docker.Registry)
+	docker.SetTag(config.Config.Tap.Docker.Tag)
 	log.Info().Str("registry", docker.GetRegistry()).Str("tag", docker.GetTag()).Msg("Using Docker:")
 	if config.Config.Tap.Pcap != "" {
 		pcap(config.Config.Tap.Pcap)

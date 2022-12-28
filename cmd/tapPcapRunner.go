@@ -228,8 +228,8 @@ func stopAndRemoveContainers(
 }
 
 func pcap(tarPath string) {
-	docker.SetRegistry(config.Config.Tap.DockerRegistry)
-	docker.SetTag(config.Config.Tap.DockerTag)
+	docker.SetRegistry(config.Config.Tap.Docker.Registry)
+	docker.SetTag(config.Config.Tap.Docker.Tag)
 
 	ctx := context.Background()
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())

@@ -46,10 +46,14 @@ type ProxyConfig struct {
 	Host   string       `yaml:"host" default:"127.0.0.1"`
 }
 
+type DockerConfig struct {
+	Registry string `yaml:"registry" default:"docker.io/kubeshark"`
+	Tag      string `yaml:"tag" default:"latest"`
+}
+
 type TapConfig struct {
+	Docker                DockerConfig     `yaml:"docker"`
 	Proxy                 ProxyConfig      `yaml:"proxy"`
-	DockerRegistry        string           `yaml:"docker-registry" default:"docker.io/kubeshark"`
-	DockerTag             string           `yaml:"docker-tag" default:"latest"`
 	PodRegexStr           string           `yaml:"regex" default:".*"`
 	Namespaces            []string         `yaml:"namespaces"`
 	AllNamespaces         bool             `yaml:"all-namespaces" default:"false"`
