@@ -1,32 +1,11 @@
 package config_test
 
 import (
-	"fmt"
 	"reflect"
 	"strings"
-	"testing"
 
 	"github.com/kubeshark/kubeshark/config"
-	"gopkg.in/yaml.v3"
 )
-
-func TestConfigWriteIgnoresReadonlyFields(t *testing.T) {
-	var readonlyFields []string
-
-	configElem := reflect.ValueOf(&config.ConfigStruct{}).Elem()
-	getFieldsWithReadonlyTag(configElem, &readonlyFields)
-
-	configWithDefaults, _ := config.GetConfigWithDefaults()
-	configWithDefaultsBytes, _ := yaml.Marshal(configWithDefaults)
-	for _, readonlyField := range readonlyFields {
-		t.Run(readonlyField, func(t *testing.T) {
-			readonlyFieldToCheck := fmt.Sprintf(" %s:", readonlyField)
-			if strings.Contains(string(configWithDefaultsBytes), readonlyFieldToCheck) {
-				t.Errorf("unexpected result - readonly field: %v, config: %v", readonlyField, configWithDefaults)
-			}
-		})
-	}
-}
 
 func getFieldsWithReadonlyTag(currentElem reflect.Value, readonlyFields *[]string) {
 	for i := 0; i < currentElem.NumField(); i++ {

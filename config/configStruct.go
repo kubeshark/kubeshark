@@ -33,7 +33,7 @@ type ConfigStruct struct {
 	Kube           KubeConfig                 `yaml:"kube"`
 	SelfNamespace  string                     `yaml:"selfnamespace" default:"kubeshark"`
 	DumpLogs       bool                       `yaml:"dumplogs" default:"false"`
-	ConfigFilePath string                     `yaml:"configpath" readonly:""`
+	ConfigFilePath string                     `yaml:"configpath,omitempty" readonly:""`
 	HeadlessMode   bool                       `yaml:"headless" default:"false"`
 }
 
