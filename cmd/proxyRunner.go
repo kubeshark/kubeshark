@@ -41,20 +41,20 @@ func runProxy() {
 		return
 	}
 
-	url := kubernetes.GetLocalhostOnPort(config.Config.Tap.Front.SrcPort)
+	url := kubernetes.GetLocalhostOnPort(config.Config.Tap.Proxy.Front.SrcPort)
 
 	response, err := http.Get(fmt.Sprintf("%s/", url))
 	if err == nil && response.StatusCode == 200 {
 		log.Info().
 			Str("service", kubernetes.FrontServiceName).
-			Int("port", int(config.Config.Tap.Front.SrcPort)).
+			Int("port", int(config.Config.Tap.Proxy.Front.SrcPort)).
 			Msg("Found a running service.")
 
 		okToOpen(url)
 		return
 	}
 	log.Info().Msg("Establishing connection to K8s cluster...")
-	startProxyReportErrorIfAny(kubernetesProvider, ctx, cancel, kubernetes.FrontServiceName, configStructs.ProxyPortFrontLabel, config.Config.Tap.Front.SrcPort, config.Config.Tap.Front.DstPort, "")
+	startProxyReportErrorIfAny(kubernetesProvider, ctx, cancel, kubernetes.FrontServiceName, configStructs.ProxyPortFrontLabel, config.Config.Tap.Proxy.Front.SrcPort, config.Config.Tap.Proxy.Front.DstPort, "")
 
 	connector := connect.NewConnector(url, connect.DefaultRetries, connect.DefaultTimeout)
 	if err := connector.TestConnection(""); err != nil {

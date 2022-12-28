@@ -102,10 +102,10 @@ func createAndStartContainers(
 
 	hostConfigFront := &container.HostConfig{
 		PortBindings: nat.PortMap{
-			nat.Port(fmt.Sprintf("%d/tcp", config.Config.Tap.Front.DstPort)): []nat.PortBinding{
+			nat.Port(fmt.Sprintf("%d/tcp", config.Config.Tap.Proxy.Front.DstPort)): []nat.PortBinding{
 				{
 					HostIP:   hostIP,
-					HostPort: fmt.Sprintf("%d", config.Config.Tap.Front.SrcPort),
+					HostPort: fmt.Sprintf("%d", config.Config.Tap.Proxy.Front.SrcPort),
 				},
 			},
 		},
@@ -130,16 +130,16 @@ func createAndStartContainers(
 
 	hostConfigHub := &container.HostConfig{
 		PortBindings: nat.PortMap{
-			nat.Port(fmt.Sprintf("%d/tcp", config.Config.Tap.Hub.DstPort)): []nat.PortBinding{
+			nat.Port(fmt.Sprintf("%d/tcp", config.Config.Tap.Proxy.Hub.DstPort)): []nat.PortBinding{
 				{
 					HostIP:   hostIP,
-					HostPort: fmt.Sprintf("%d", config.Config.Tap.Hub.SrcPort),
+					HostPort: fmt.Sprintf("%d", config.Config.Tap.Proxy.Hub.SrcPort),
 				},
 			},
 		},
 	}
 
-	cmdHub := []string{"-port", fmt.Sprintf("%d", config.Config.Tap.Hub.DstPort)}
+	cmdHub := []string{"-port", fmt.Sprintf("%d", config.Config.Tap.Proxy.Hub.DstPort)}
 	if config.DebugMode {
 		cmdHub = append(cmdHub, fmt.Sprintf("-%s", config.DebugFlag))
 	}
@@ -148,7 +148,7 @@ func createAndStartContainers(
 		Image:        imageHub,
 		Cmd:          cmdHub,
 		Tty:          false,
-		ExposedPorts: nat.PortSet{nat.Port(fmt.Sprintf("%d/tcp", config.Config.Tap.Hub.DstPort)): {}},
+		ExposedPorts: nat.PortSet{nat.Port(fmt.Sprintf("%d/tcp", config.Config.Tap.Proxy.Hub.DstPort)): {}},
 	}, hostConfigHub, nil, nil, "kubeshark-hub")
 	if err != nil {
 		return
@@ -158,7 +158,7 @@ func createAndStartContainers(
 		return
 	}
 
-	cmdWorker := []string{"-f", "./import", "-port", fmt.Sprintf("%d", config.Config.Tap.Worker.DstPort)}
+	cmdWorker := []string{"-f", "./import", "-port", fmt.Sprintf("%d", config.Config.Tap.Proxy.Worker.DstPort)}
 	if config.DebugMode {
 		cmdWorker = append(cmdWorker, fmt.Sprintf("-%s", config.DebugFlag))
 	}
@@ -285,14 +285,14 @@ func pcap(tarPath string) {
 		},
 	}
 
-	connector = connect.NewConnector(kubernetes.GetLocalhostOnPort(config.Config.Tap.Hub.SrcPort), connect.DefaultRetries, connect.DefaultTimeout)
+	connector = connect.NewConnector(kubernetes.GetLocalhostOnPort(config.Config.Tap.Proxy.Hub.SrcPort), connect.DefaultRetries, connect.DefaultTimeout)
 	connector.PostWorkerPodToHub(workerPod)
 
 	log.Info().
-		Str("url", kubernetes.GetLocalhostOnPort(config.Config.Tap.Hub.SrcPort)).
+		Str("url", kubernetes.GetLocalhostOnPort(config.Config.Tap.Proxy.Hub.SrcPort)).
 		Msg(fmt.Sprintf(utils.Green, "Hub is available at:"))
 
-	url := kubernetes.GetLocalhostOnPort(config.Config.Tap.Front.SrcPort)
+	url := kubernetes.GetLocalhostOnPort(config.Config.Tap.Proxy.Front.SrcPort)
 	log.Info().Str("url", url).Msg(fmt.Sprintf(utils.Green, "Kubeshark is available at:"))
 
 	if !config.Config.HeadlessMode {

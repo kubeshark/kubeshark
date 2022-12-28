@@ -18,24 +18,7 @@ const (
 )
 
 func CreateDefaultConfig() ConfigStruct {
-	config := ConfigStruct{}
-
-	config.Tap.Worker = configStructs.WorkerConfig{
-		SrcPort: 8897,
-		DstPort: 8897,
-	}
-
-	config.Tap.Hub = configStructs.HubConfig{
-		SrcPort: 8898,
-		DstPort: 8898,
-	}
-
-	config.Tap.Front = configStructs.FrontConfig{
-		SrcPort: 8899,
-		DstPort: 80,
-	}
-
-	return config
+	return ConfigStruct{}
 }
 
 type ConfigStruct struct {

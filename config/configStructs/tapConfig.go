@@ -39,14 +39,18 @@ type FrontConfig struct {
 	DstPort uint16 `yaml:"dst-port" default:"80"`
 }
 
+type ProxyConfig struct {
+	Worker WorkerConfig `yaml:"worker"`
+	Hub    HubConfig    `yaml:"hub"`
+	Front  FrontConfig  `yaml:"front"`
+	Host   string       `yaml:"host" default:"127.0.0.1"`
+}
+
 type TapConfig struct {
-	Worker                WorkerConfig     `yaml:"worker"`
-	Hub                   HubConfig        `yaml:"hub"`
-	Front                 FrontConfig      `yaml:"front"`
+	Proxy                 ProxyConfig      `yaml:"proxy"`
 	DockerRegistry        string           `yaml:"docker-registry" default:"docker.io/kubeshark"`
 	DockerTag             string           `yaml:"docker-tag" default:"latest"`
 	PodRegexStr           string           `yaml:"regex" default:".*"`
-	ProxyHost             string           `yaml:"proxy-host" default:"127.0.0.1"`
 	Namespaces            []string         `yaml:"namespaces"`
 	AllNamespaces         bool             `yaml:"all-namespaces" default:"false"`
 	HumanMaxEntriesDBSize string           `yaml:"max-entries-db-size" default:"200MB"`

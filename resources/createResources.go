@@ -74,7 +74,7 @@ func CreateHubResources(ctx context.Context, kubernetesProvider *kubernetes.Prov
 
 	log.Info().Str("service", kubernetes.HubServiceName).Msg("Successfully created a service.")
 
-	_, err = kubernetesProvider.CreateService(ctx, kubesharkResourcesNamespace, kubernetes.FrontServiceName, kubernetes.FrontServiceName, 80, int32(config.Config.Tap.Front.DstPort))
+	_, err = kubernetesProvider.CreateService(ctx, kubesharkResourcesNamespace, kubernetes.FrontServiceName, kubernetes.FrontServiceName, 80, int32(config.Config.Tap.Proxy.Front.DstPort))
 	if err != nil {
 		return kubesharkServiceAccountExists, err
 	}
