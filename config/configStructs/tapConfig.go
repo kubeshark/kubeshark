@@ -51,21 +51,25 @@ type DockerConfig struct {
 	Tag      string `yaml:"tag" default:"latest"`
 }
 
+type ResourcesConfig struct {
+	Worker models.Resources `yaml:"worker"`
+	Hub    models.Resources `yaml:"hub"`
+}
+
 type TapConfig struct {
-	Docker                DockerConfig     `yaml:"docker"`
-	Proxy                 ProxyConfig      `yaml:"proxy"`
-	PodRegexStr           string           `yaml:"regex" default:".*"`
-	Namespaces            []string         `yaml:"namespaces"`
-	AllNamespaces         bool             `yaml:"all-namespaces" default:"false"`
-	HumanMaxEntriesDBSize string           `yaml:"max-entries-db-size" default:"200MB"`
-	DryRun                bool             `yaml:"dry-run" default:"false"`
-	Pcap                  string           `yaml:"pcap" default:""`
-	HubResources          models.Resources `yaml:"hub-resources"`
-	WorkerResources       models.Resources `yaml:"worker-resources"`
-	ServiceMesh           bool             `yaml:"service-mesh" default:"true"`
-	Tls                   bool             `yaml:"tls" default:"true"`
-	PacketCapture         string           `yaml:"packet-capture" default:"libpcap"`
-	Debug                 bool             `yaml:"debug" default:"false"`
+	Docker                DockerConfig    `yaml:"docker"`
+	Proxy                 ProxyConfig     `yaml:"proxy"`
+	PodRegexStr           string          `yaml:"regex" default:".*"`
+	Namespaces            []string        `yaml:"namespaces"`
+	AllNamespaces         bool            `yaml:"all-namespaces" default:"false"`
+	HumanMaxEntriesDBSize string          `yaml:"max-entries-db-size" default:"200MB"`
+	DryRun                bool            `yaml:"dry-run" default:"false"`
+	Pcap                  string          `yaml:"pcap" default:""`
+	Resources             ResourcesConfig `yaml:"resources"`
+	ServiceMesh           bool            `yaml:"service-mesh" default:"true"`
+	Tls                   bool            `yaml:"tls" default:"true"`
+	PacketCapture         string          `yaml:"packet-capture" default:"libpcap"`
+	Debug                 bool            `yaml:"debug" default:"false"`
 }
 
 func (config *TapConfig) PodRegex() *regexp.Regexp {

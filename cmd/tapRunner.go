@@ -85,7 +85,7 @@ func tap() {
 	}
 
 	log.Info().Msg("Waiting for the creation of Kubeshark resources...")
-	if state.kubesharkServiceAccountExists, err = resources.CreateHubResources(ctx, kubernetesProvider, serializedKubesharkConfig, config.Config.IsNsRestrictedMode(), config.Config.ResourcesNamespace, config.Config.Tap.MaxEntriesDBSizeBytes(), config.Config.Tap.HubResources, config.Config.ImagePullPolicy(), config.Config.Tap.Debug); err != nil {
+	if state.kubesharkServiceAccountExists, err = resources.CreateHubResources(ctx, kubernetesProvider, serializedKubesharkConfig, config.Config.IsNsRestrictedMode(), config.Config.ResourcesNamespace, config.Config.Tap.MaxEntriesDBSizeBytes(), config.Config.Tap.Resources.Hub, config.Config.ImagePullPolicy(), config.Config.Tap.Debug); err != nil {
 		var statusError *k8serrors.StatusError
 		if errors.As(err, &statusError) && (statusError.ErrStatus.Reason == metav1.StatusReasonAlreadyExists) {
 			log.Warn().Msg("Kubeshark is already running in this namespace, change the `kubeshark-resources-namespace` configuration or run `kubeshark clean` to remove the currently running Kubeshark instance")
@@ -115,7 +115,7 @@ func getTapConfig() *models.Config {
 	conf := models.Config{
 		MaxDBSizeBytes:     config.Config.Tap.MaxEntriesDBSizeBytes(),
 		PullPolicy:         config.Config.ImagePullPolicyStr,
-		WorkerResources:    config.Config.Tap.WorkerResources,
+		WorkerResources:    config.Config.Tap.Resources.Worker,
 		ResourcesNamespace: config.Config.ResourcesNamespace,
 		DatabasePath:       models.DataDirPath,
 	}
@@ -147,7 +147,7 @@ func startWorkerSyncer(ctx context.Context, cancel context.CancelFunc, provider 
 		TargetNamespaces:              targetNamespaces,
 		PodFilterRegex:                *config.Config.Tap.PodRegex(),
 		KubesharkResourcesNamespace:   config.Config.ResourcesNamespace,
-		WorkerResources:               config.Config.Tap.WorkerResources,
+		WorkerResources:               config.Config.Tap.Resources.Worker,
 		ImagePullPolicy:               config.Config.ImagePullPolicy(),
 		KubesharkServiceAccountExists: state.kubesharkServiceAccountExists,
 		ServiceMesh:                   config.Config.Tap.ServiceMesh,
