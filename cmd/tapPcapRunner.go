@@ -114,6 +114,11 @@ func createAndStartContainers(
 	respFront, err = cli.ContainerCreate(ctx, &container.Config{
 		Image: imageFront,
 		Tty:   false,
+		Env: []string{
+			"REACT_APP_DEFAULT_FILTER= ",
+			"REACT_APP_HUB_HOST=localhost",
+			"REACT_APP_HUB_PORT=8898",
+		},
 	}, hostConfigFront, nil, nil, "kubeshark-front")
 	if err != nil {
 		return

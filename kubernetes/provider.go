@@ -345,8 +345,22 @@ func (provider *Provider) BuildFrontPod(opts *PodOptions, mountVolumeClaim bool,
 					"memory": memRequests,
 				},
 			},
-			Command:    []string{"nginx"},
-			Args:       []string{"-g", "daemon off;"},
+			Command: []string{"nginx"},
+			Args:    []string{"-g", "daemon off;"},
+			Env: []core.EnvVar{
+				{
+					Name:  "REACT_APP_DEFAULT_FILTER",
+					Value: " ",
+				},
+				{
+					Name:  "REACT_APP_HUB_HOST",
+					Value: "localhost",
+				},
+				{
+					Name:  "REACT_APP_HUB_PORT",
+					Value: "8898",
+				},
+			},
 			WorkingDir: models.DataDirPath,
 		},
 	}
