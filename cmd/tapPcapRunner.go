@@ -98,6 +98,8 @@ func createAndStartContainers(
 	workerIPAddr string,
 	err error,
 ) {
+	log.Info().Msg("Creating containers...")
+
 	hostIP := "0.0.0.0"
 
 	hostConfigFront := &container.HostConfig{
@@ -121,10 +123,6 @@ func createAndStartContainers(
 		},
 	}, hostConfigFront, nil, nil, "kubeshark-front")
 	if err != nil {
-		return
-	}
-
-	if err = cli.ContainerStart(ctx, respFront.ID, types.ContainerStartOptions{}); err != nil {
 		return
 	}
 
@@ -154,10 +152,6 @@ func createAndStartContainers(
 		return
 	}
 
-	if err = cli.ContainerStart(ctx, respHub.ID, types.ContainerStartOptions{}); err != nil {
-		return
-	}
-
 	cmdWorker := []string{"-f", "./import", "-port", fmt.Sprintf("%d", config.Config.Tap.Proxy.Worker.DstPort)}
 	if config.DebugMode {
 		cmdWorker = append(cmdWorker, fmt.Sprintf("-%s", config.DebugFlag))
@@ -173,6 +167,16 @@ func createAndStartContainers(
 	}
 
 	if err = cli.CopyToContainer(ctx, respWorker.ID, "/app/import", tarReader, types.CopyToContainerOptions{}); err != nil {
+		return
+	}
+
+	log.Info().Msg("Starting containers...")
+
+	if err = cli.ContainerStart(ctx, respFront.ID, types.ContainerStartOptions{}); err != nil {
+		return
+	}
+
+	if err = cli.ContainerStart(ctx, respHub.ID, types.ContainerStartOptions{}); err != nil {
 		return
 	}
 
@@ -198,6 +202,7 @@ func stopAndRemoveContainers(
 	respHub container.ContainerCreateCreatedBody,
 	respWorker container.ContainerCreateCreatedBody,
 ) (err error) {
+	log.Warn().Msg("Stopping containers...")
 	err = cli.ContainerStop(ctx, respFront.ID, nil)
 	if err != nil {
 		return
@@ -211,6 +216,7 @@ func stopAndRemoveContainers(
 		return
 	}
 
+	log.Warn().Msg("Removing containers...")
 	err = cli.ContainerRemove(ctx, respFront.ID, types.ContainerRemoveOptions{})
 	if err != nil {
 		return
