@@ -84,6 +84,33 @@ func pullImages(ctx context.Context, cli *client.Client, imageFront string, imag
 	return nil
 }
 
+func cleanUpOldContainers(
+	ctx context.Context,
+	cli *client.Client,
+	nameFront string,
+	nameHub string,
+	nameWorker string,
+) error {
+	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{})
+	if err != nil {
+		return err
+	}
+
+	for _, container := range containers {
+		f := fmt.Sprintf("/%s", nameFront)
+		h := fmt.Sprintf("/%s", nameHub)
+		w := fmt.Sprintf("/%s", nameWorker)
+		if utils.Contains(container.Names, f) || utils.Contains(container.Names, h) || utils.Contains(container.Names, w) {
+			err = cli.ContainerRemove(ctx, container.ID, types.ContainerRemoveOptions{Force: true})
+			if err != nil {
+				return err
+			}
+		}
+	}
+
+	return nil
+}
+
 func createAndStartContainers(
 	ctx context.Context,
 	cli *client.Client,
@@ -99,6 +126,15 @@ func createAndStartContainers(
 	err error,
 ) {
 	log.Info().Msg("Creating containers...")
+
+	nameFront := "kubeshark-front"
+	nameHub := "kubeshark-hub"
+	nameWorker := "kubeshark-worker"
+
+	err = cleanUpOldContainers(ctx, cli, nameFront, nameHub, nameWorker)
+	if err != nil {
+		return
+	}
 
 	hostIP := "0.0.0.0"
 
@@ -121,7 +157,7 @@ func createAndStartContainers(
 			"REACT_APP_HUB_HOST=localhost",
 			"REACT_APP_HUB_PORT=8898",
 		},
-	}, hostConfigFront, nil, nil, "kubeshark-front")
+	}, hostConfigFront, nil, nil, nameFront)
 	if err != nil {
 		return
 	}
@@ -147,7 +183,7 @@ func createAndStartContainers(
 		Cmd:          cmdHub,
 		Tty:          false,
 		ExposedPorts: nat.PortSet{nat.Port(fmt.Sprintf("%d/tcp", config.Config.Tap.Proxy.Hub.DstPort)): {}},
-	}, hostConfigHub, nil, nil, "kubeshark-hub")
+	}, hostConfigHub, nil, nil, nameHub)
 	if err != nil {
 		return
 	}
@@ -161,7 +197,7 @@ func createAndStartContainers(
 		Image: imageWorker,
 		Cmd:   cmdWorker,
 		Tty:   false,
-	}, nil, nil, nil, "kubeshark-worker")
+	}, nil, nil, nil, nameWorker)
 	if err != nil {
 		return
 	}
