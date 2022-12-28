@@ -22,7 +22,7 @@ func runProxy() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	exists, err := kubernetesProvider.DoesServiceExist(ctx, config.Config.ResourcesNamespace, kubernetes.FrontServiceName)
+	exists, err := kubernetesProvider.DoesServiceExist(ctx, config.Config.SelfNamespace, kubernetes.FrontServiceName)
 	if err != nil {
 		log.Error().
 			Str("service", "kubeshark").
@@ -54,7 +54,7 @@ func runProxy() {
 		return
 	}
 	log.Info().Msg("Establishing connection to K8s cluster...")
-	startProxyReportErrorIfAny(kubernetesProvider, ctx, cancel, kubernetes.FrontServiceName, configStructs.ProxyPortFrontLabel, config.Config.Tap.Proxy.Front.SrcPort, config.Config.Tap.Proxy.Front.DstPort, "")
+	startProxyReportErrorIfAny(kubernetesProvider, ctx, cancel, kubernetes.FrontServiceName, configStructs.ProxyFrontPortLabel, config.Config.Tap.Proxy.Front.SrcPort, config.Config.Tap.Proxy.Front.DstPort, "")
 
 	connector := connect.NewConnector(url, connect.DefaultRetries, connect.DefaultTimeout)
 	if err := connector.TestConnection(""); err != nil {

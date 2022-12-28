@@ -123,11 +123,11 @@ func initFlag(f *pflag.Flag) {
 	configElemValue := reflect.ValueOf(&Config).Elem()
 
 	var flagPath []string
-	if utils.Contains([]string{ConfigFilePathCommandName}, f.Name) {
-		flagPath = []string{f.Name}
-	} else {
-		flagPath = []string{cmdName, f.Name}
+	if !utils.Contains([]string{ConfigFilePathCommandName}, f.Name) {
+		flagPath = append(flagPath, cmdName)
 	}
+
+	flagPath = append(flagPath, strings.Split(f.Name, "-")...)
 
 	sliceValue, isSliceValue := f.Value.(pflag.SliceValue)
 	if !isSliceValue {

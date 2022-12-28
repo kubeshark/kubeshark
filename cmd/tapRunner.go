@@ -68,8 +68,8 @@ func tap() {
 	}
 
 	if config.Config.IsNsRestrictedMode() {
-		if len(state.targetNamespaces) != 1 || !utils.Contains(state.targetNamespaces, config.Config.ResourcesNamespace) {
-			log.Error().Msg(fmt.Sprintf("Kubeshark can't resolve IPs in other namespaces when running in namespace restricted mode. You can use the same namespace for --%s and --%s", configStructs.NamespacesLabel, config.ResourcesNamespaceConfigName))
+		if len(state.targetNamespaces) != 1 || !utils.Contains(state.targetNamespaces, config.Config.SelfNamespace) {
+			log.Error().Msg(fmt.Sprintf("Kubeshark can't resolve IPs in other namespaces when running in namespace restricted mode. You can use the same namespace for --%s and --%s", configStructs.NamespacesLabel, config.SelfNamespaceConfigName))
 			return
 		}
 	}
@@ -85,12 +85,12 @@ func tap() {
 	}
 
 	log.Info().Msg("Waiting for the creation of Kubeshark resources...")
-	if state.kubesharkServiceAccountExists, err = resources.CreateHubResources(ctx, kubernetesProvider, serializedKubesharkConfig, config.Config.IsNsRestrictedMode(), config.Config.ResourcesNamespace, config.Config.Tap.MaxEntriesDBSizeBytes(), config.Config.Tap.Resources.Hub, config.Config.ImagePullPolicy(), config.Config.Tap.Debug); err != nil {
+	if state.kubesharkServiceAccountExists, err = resources.CreateHubResources(ctx, kubernetesProvider, serializedKubesharkConfig, config.Config.IsNsRestrictedMode(), config.Config.SelfNamespace, config.Config.Tap.MaxEntriesDBSizeBytes(), config.Config.Tap.Resources.Hub, config.Config.ImagePullPolicy(), config.Config.Tap.Debug); err != nil {
 		var statusError *k8serrors.StatusError
 		if errors.As(err, &statusError) && (statusError.ErrStatus.Reason == metav1.StatusReasonAlreadyExists) {
 			log.Warn().Msg("Kubeshark is already running in this namespace, change the `kubeshark-resources-namespace` configuration or run `kubeshark clean` to remove the currently running Kubeshark instance")
 		} else {
-			defer resources.CleanUpKubesharkResources(ctx, cancel, kubernetesProvider, config.Config.IsNsRestrictedMode(), config.Config.ResourcesNamespace)
+			defer resources.CleanUpKubesharkResources(ctx, cancel, kubernetesProvider, config.Config.IsNsRestrictedMode(), config.Config.SelfNamespace)
 			log.Error().Err(errormessage.FormatError(err)).Msg("Error creating resources!")
 		}
 
@@ -108,15 +108,15 @@ func tap() {
 }
 
 func finishTapExecution(kubernetesProvider *kubernetes.Provider) {
-	finishKubesharkExecution(kubernetesProvider, config.Config.IsNsRestrictedMode(), config.Config.ResourcesNamespace)
+	finishKubesharkExecution(kubernetesProvider, config.Config.IsNsRestrictedMode(), config.Config.SelfNamespace)
 }
 
 func getTapConfig() *models.Config {
 	conf := models.Config{
 		MaxDBSizeBytes:     config.Config.Tap.MaxEntriesDBSizeBytes(),
-		PullPolicy:         config.Config.ImagePullPolicyStr,
+		PullPolicy:         config.Config.Tap.Docker.ImagePullPolicy,
 		WorkerResources:    config.Config.Tap.Resources.Worker,
-		ResourcesNamespace: config.Config.ResourcesNamespace,
+		ResourcesNamespace: config.Config.SelfNamespace,
 		DatabasePath:       models.DataDirPath,
 	}
 
@@ -146,7 +146,7 @@ func startWorkerSyncer(ctx context.Context, cancel context.CancelFunc, provider 
 	workerSyncer, err := kubernetes.CreateAndStartWorkerSyncer(ctx, provider, kubernetes.WorkerSyncerConfig{
 		TargetNamespaces:              targetNamespaces,
 		PodFilterRegex:                *config.Config.Tap.PodRegex(),
-		KubesharkResourcesNamespace:   config.Config.ResourcesNamespace,
+		SelfNamespace:                 config.Config.SelfNamespace,
 		WorkerResources:               config.Config.Tap.Resources.Worker,
 		ImagePullPolicy:               config.Config.ImagePullPolicy(),
 		KubesharkServiceAccountExists: state.kubesharkServiceAccountExists,
@@ -215,7 +215,7 @@ func getK8sTapManagerErrorText(err kubernetes.K8sTapManagerError) string {
 func watchHubPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc) {
 	podExactRegex := regexp.MustCompile(fmt.Sprintf("^%s$", kubernetes.HubPodName))
 	podWatchHelper := kubernetes.NewPodWatchHelper(kubernetesProvider, podExactRegex)
-	eventChan, errorChan := kubernetes.FilteredWatch(ctx, podWatchHelper, []string{config.Config.ResourcesNamespace}, podWatchHelper)
+	eventChan, errorChan := kubernetes.FilteredWatch(ctx, podWatchHelper, []string{config.Config.SelfNamespace}, podWatchHelper)
 	isPodReady := false
 
 	timeAfter := time.After(120 * time.Second)
@@ -271,7 +271,7 @@ func watchHubPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, c
 
 			log.Error().
 				Str("pod", kubernetes.HubPodName).
-				Str("namespace", config.Config.ResourcesNamespace).
+				Str("namespace", config.Config.SelfNamespace).
 				Err(err).
 				Msg("Failed creating pod.")
 			cancel()
@@ -295,7 +295,7 @@ func watchHubPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, c
 func watchFrontPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc) {
 	podExactRegex := regexp.MustCompile(fmt.Sprintf("^%s$", kubernetes.FrontPodName))
 	podWatchHelper := kubernetes.NewPodWatchHelper(kubernetesProvider, podExactRegex)
-	eventChan, errorChan := kubernetes.FilteredWatch(ctx, podWatchHelper, []string{config.Config.ResourcesNamespace}, podWatchHelper)
+	eventChan, errorChan := kubernetes.FilteredWatch(ctx, podWatchHelper, []string{config.Config.SelfNamespace}, podWatchHelper)
 	isPodReady := false
 
 	timeAfter := time.After(120 * time.Second)
@@ -350,7 +350,7 @@ func watchFrontPod(ctx context.Context, kubernetesProvider *kubernetes.Provider,
 
 			log.Error().
 				Str("pod", kubernetes.FrontPodName).
-				Str("namespace", config.Config.ResourcesNamespace).
+				Str("namespace", config.Config.SelfNamespace).
 				Err(err).
 				Msg("Failed creating pod.")
 			cancel()
@@ -374,7 +374,7 @@ func watchFrontPod(ctx context.Context, kubernetesProvider *kubernetes.Provider,
 func watchHubEvents(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc) {
 	podExactRegex := regexp.MustCompile(fmt.Sprintf("^%s", kubernetes.HubPodName))
 	eventWatchHelper := kubernetes.NewEventWatchHelper(kubernetesProvider, podExactRegex, "pod")
-	eventChan, errorChan := kubernetes.FilteredWatch(ctx, eventWatchHelper, []string{config.Config.ResourcesNamespace}, eventWatchHelper)
+	eventChan, errorChan := kubernetes.FilteredWatch(ctx, eventWatchHelper, []string{config.Config.SelfNamespace}, eventWatchHelper)
 	for {
 		select {
 		case wEvent, ok := <-eventChan:
@@ -441,7 +441,7 @@ func watchHubEvents(ctx context.Context, kubernetesProvider *kubernetes.Provider
 }
 
 func postHubStarted(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc) {
-	startProxyReportErrorIfAny(kubernetesProvider, ctx, cancel, kubernetes.HubServiceName, configStructs.ProxyPortFrontLabel, config.Config.Tap.Proxy.Hub.SrcPort, config.Config.Tap.Proxy.Hub.DstPort, "/echo")
+	startProxyReportErrorIfAny(kubernetesProvider, ctx, cancel, kubernetes.HubServiceName, configStructs.ProxyFrontPortLabel, config.Config.Tap.Proxy.Hub.SrcPort, config.Config.Tap.Proxy.Hub.DstPort, "/echo")
 
 	if err := startWorkerSyncer(ctx, cancel, kubernetesProvider, state.targetNamespaces, state.startTime); err != nil {
 		log.Error().Err(errormessage.FormatError(err)).Msg("Error starting worker syncer")
@@ -453,7 +453,7 @@ func postHubStarted(ctx context.Context, kubernetesProvider *kubernetes.Provider
 }
 
 func postFrontStarted(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc) {
-	startProxyReportErrorIfAny(kubernetesProvider, ctx, cancel, kubernetes.FrontServiceName, configStructs.ProxyPortHubLabel, config.Config.Tap.Proxy.Front.SrcPort, config.Config.Tap.Proxy.Front.DstPort, "")
+	startProxyReportErrorIfAny(kubernetesProvider, ctx, cancel, kubernetes.FrontServiceName, configStructs.ProxyHubPortLabel, config.Config.Tap.Proxy.Front.SrcPort, config.Config.Tap.Proxy.Front.DstPort, "")
 
 	url := kubernetes.GetLocalhostOnPort(config.Config.Tap.Proxy.Front.SrcPort)
 	log.Info().Str("url", url).Msg(fmt.Sprintf(utils.Green, "Kubeshark is available at:"))

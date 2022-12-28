@@ -12,26 +12,29 @@ import (
 )
 
 const (
-	ResourcesNamespaceConfigName = "resources-namespace"
-	ConfigFilePathCommandName    = "config-path"
-	KubeConfigPathConfigName     = "kube-config-path"
+	SelfNamespaceConfigName   = "selfnamespace"
+	ConfigFilePathCommandName = "configpath"
+	KubeConfigPathConfigName  = "kube-configpath"
 )
 
 func CreateDefaultConfig() ConfigStruct {
 	return ConfigStruct{}
 }
 
+type KubeConfig struct {
+	ConfigPathStr string `yaml:"configpath"`
+	Context       string `yaml:"context"`
+}
+
 type ConfigStruct struct {
-	Tap                configStructs.TapConfig    `yaml:"tap"`
-	Logs               configStructs.LogsConfig   `yaml:"logs"`
-	Config             configStructs.ConfigConfig `yaml:"config,omitempty"`
-	ImagePullPolicyStr string                     `yaml:"image-pull-policy" default:"Always"`
-	ResourcesNamespace string                     `yaml:"resources-namespace" default:"kubeshark"`
-	DumpLogs           bool                       `yaml:"dump-logs" default:"false"`
-	KubeConfigPathStr  string                     `yaml:"kube-config-path"`
-	KubeContext        string                     `yaml:"kube-context"`
-	ConfigFilePath     string                     `yaml:"config-path,omitempty" readonly:""`
-	HeadlessMode       bool                       `yaml:"headless" default:"false"`
+	Tap            configStructs.TapConfig    `yaml:"tap"`
+	Logs           configStructs.LogsConfig   `yaml:"logs"`
+	Config         configStructs.ConfigConfig `yaml:"config,omitempty"`
+	Kube           KubeConfig                 `yaml:"kube"`
+	SelfNamespace  string                     `yaml:"selfnamespace" default:"kubeshark"`
+	DumpLogs       bool                       `yaml:"dumplogs" default:"false"`
+	ConfigFilePath string                     `yaml:"configpath" readonly:""`
+	HeadlessMode   bool                       `yaml:"headless" default:"false"`
 }
 
 func (config *ConfigStruct) SetDefaults() {
@@ -39,16 +42,16 @@ func (config *ConfigStruct) SetDefaults() {
 }
 
 func (config *ConfigStruct) ImagePullPolicy() v1.PullPolicy {
-	return v1.PullPolicy(config.ImagePullPolicyStr)
+	return v1.PullPolicy(config.Tap.Docker.ImagePullPolicy)
 }
 
 func (config *ConfigStruct) IsNsRestrictedMode() bool {
-	return config.ResourcesNamespace != "kubeshark" // Notice "kubeshark" string must match the default KubesharkResourcesNamespace
+	return config.SelfNamespace != "kubeshark" // Notice "kubeshark" string must match the default SelfNamespace
 }
 
 func (config *ConfigStruct) KubeConfigPath() string {
-	if config.KubeConfigPathStr != "" {
-		return config.KubeConfigPathStr
+	if config.Kube.ConfigPathStr != "" {
+		return config.Kube.ConfigPathStr
 	}
 
 	envKubeConfigPath := os.Getenv("KUBECONFIG")

@@ -11,15 +11,15 @@ import (
 const (
 	DockerRegistryLabel        = "docker-registry"
 	DockerTagLabel             = "docker-tag"
-	ProxyPortFrontLabel        = "proxy-port-front"
-	ProxyPortHubLabel          = "proxy-port-hub"
+	ProxyFrontPortLabel        = "proxy-front-port"
+	ProxyHubPortLabel          = "proxy-hub-port"
 	ProxyHostLabel             = "proxy-host"
 	NamespacesLabel            = "namespaces"
-	AllNamespacesLabel         = "all-namespaces"
+	AllNamespacesLabel         = "allnamespaces"
 	HumanMaxEntriesDBSizeLabel = "max-entries-db-size"
-	DryRunLabel                = "dry-run"
+	DryRunLabel                = "dryrun"
 	PcapLabel                  = "pcap"
-	ServiceMeshLabel           = "service-mesh"
+	ServiceMeshLabel           = "servicemesh"
 	TlsLabel                   = "tls"
 	DebugLabel                 = "debug"
 )
@@ -47,8 +47,9 @@ type ProxyConfig struct {
 }
 
 type DockerConfig struct {
-	Registry string `yaml:"registry" default:"docker.io/kubeshark"`
-	Tag      string `yaml:"tag" default:"latest"`
+	Registry        string `yaml:"registry" default:"docker.io/kubeshark"`
+	Tag             string `yaml:"tag" default:"latest"`
+	ImagePullPolicy string `yaml:"imagepullpolicy" default:"Always"`
 }
 
 type ResourcesConfig struct {
@@ -61,14 +62,14 @@ type TapConfig struct {
 	Proxy                 ProxyConfig     `yaml:"proxy"`
 	PodRegexStr           string          `yaml:"regex" default:".*"`
 	Namespaces            []string        `yaml:"namespaces"`
-	AllNamespaces         bool            `yaml:"all-namespaces" default:"false"`
+	AllNamespaces         bool            `yaml:"allnamespaces" default:"false"`
 	HumanMaxEntriesDBSize string          `yaml:"max-entries-db-size" default:"200MB"`
-	DryRun                bool            `yaml:"dry-run" default:"false"`
+	DryRun                bool            `yaml:"dryrun" default:"false"`
 	Pcap                  string          `yaml:"pcap" default:""`
 	Resources             ResourcesConfig `yaml:"resources"`
-	ServiceMesh           bool            `yaml:"service-mesh" default:"true"`
+	ServiceMesh           bool            `yaml:"servicemesh" default:"true"`
 	Tls                   bool            `yaml:"tls" default:"true"`
-	PacketCapture         string          `yaml:"packet-capture" default:"libpcap"`
+	PacketCapture         string          `yaml:"packetcapture" default:"libpcap"`
 	Debug                 bool            `yaml:"debug" default:"false"`
 }
 

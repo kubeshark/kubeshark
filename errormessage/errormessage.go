@@ -19,9 +19,9 @@ func FormatError(err error) error {
 			"supply the required permission or control Kubeshark's access to namespaces by setting %s "+
 			"in the config file or setting the targetted namespace with --%s %s=<NAMEPSACE>",
 			err,
-			config.ResourcesNamespaceConfigName,
+			config.SelfNamespaceConfigName,
 			config.SetCommandName,
-			config.ResourcesNamespaceConfigName)
+			config.SelfNamespaceConfigName)
 	} else if syntaxError, isSyntaxError := asRegexSyntaxError(err); isSyntaxError {
 		errorNew = fmt.Errorf("regex %s is invalid: %w", syntaxError.Expr, err)
 	} else {

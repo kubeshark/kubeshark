@@ -12,20 +12,20 @@ import (
 func KubernetesResources(ctx context.Context, kubernetesProvider *kubernetes.Provider) bool {
 	log.Info().Str("procedure", "k8s-components").Msg("Checking:")
 
-	exist, err := kubernetesProvider.DoesNamespaceExist(ctx, config.Config.ResourcesNamespace)
-	allResourcesExist := checkResourceExist(config.Config.ResourcesNamespace, "namespace", exist, err)
+	exist, err := kubernetesProvider.DoesNamespaceExist(ctx, config.Config.SelfNamespace)
+	allResourcesExist := checkResourceExist(config.Config.SelfNamespace, "namespace", exist, err)
 
-	exist, err = kubernetesProvider.DoesConfigMapExist(ctx, config.Config.ResourcesNamespace, kubernetes.ConfigMapName)
+	exist, err = kubernetesProvider.DoesConfigMapExist(ctx, config.Config.SelfNamespace, kubernetes.ConfigMapName)
 	allResourcesExist = checkResourceExist(kubernetes.ConfigMapName, "config map", exist, err) && allResourcesExist
 
-	exist, err = kubernetesProvider.DoesServiceAccountExist(ctx, config.Config.ResourcesNamespace, kubernetes.ServiceAccountName)
+	exist, err = kubernetesProvider.DoesServiceAccountExist(ctx, config.Config.SelfNamespace, kubernetes.ServiceAccountName)
 	allResourcesExist = checkResourceExist(kubernetes.ServiceAccountName, "service account", exist, err) && allResourcesExist
 
 	if config.Config.IsNsRestrictedMode() {
-		exist, err = kubernetesProvider.DoesRoleExist(ctx, config.Config.ResourcesNamespace, kubernetes.RoleName)
+		exist, err = kubernetesProvider.DoesRoleExist(ctx, config.Config.SelfNamespace, kubernetes.RoleName)
 		allResourcesExist = checkResourceExist(kubernetes.RoleName, "role", exist, err) && allResourcesExist
 
-		exist, err = kubernetesProvider.DoesRoleBindingExist(ctx, config.Config.ResourcesNamespace, kubernetes.RoleBindingName)
+		exist, err = kubernetesProvider.DoesRoleBindingExist(ctx, config.Config.SelfNamespace, kubernetes.RoleBindingName)
 		allResourcesExist = checkResourceExist(kubernetes.RoleBindingName, "role binding", exist, err) && allResourcesExist
 	} else {
 		exist, err = kubernetesProvider.DoesClusterRoleExist(ctx, kubernetes.ClusterRoleName)
@@ -35,7 +35,7 @@ func KubernetesResources(ctx context.Context, kubernetesProvider *kubernetes.Pro
 		allResourcesExist = checkResourceExist(kubernetes.ClusterRoleBindingName, "cluster role binding", exist, err) && allResourcesExist
 	}
 
-	exist, err = kubernetesProvider.DoesServiceExist(ctx, config.Config.ResourcesNamespace, kubernetes.HubServiceName)
+	exist, err = kubernetesProvider.DoesServiceExist(ctx, config.Config.SelfNamespace, kubernetes.HubServiceName)
 	allResourcesExist = checkResourceExist(kubernetes.HubServiceName, "service", exist, err) && allResourcesExist
 
 	allResourcesExist = checkPodResourcesExist(ctx, kubernetesProvider) && allResourcesExist
@@ -44,7 +44,7 @@ func KubernetesResources(ctx context.Context, kubernetesProvider *kubernetes.Pro
 }
 
 func checkPodResourcesExist(ctx context.Context, kubernetesProvider *kubernetes.Provider) bool {
-	if pods, err := kubernetesProvider.ListPodsByAppLabel(ctx, config.Config.ResourcesNamespace, kubernetes.HubPodName); err != nil {
+	if pods, err := kubernetesProvider.ListPodsByAppLabel(ctx, config.Config.SelfNamespace, kubernetes.HubPodName); err != nil {
 		log.Error().
 			Str("name", kubernetes.HubPodName).
 			Err(err).
@@ -66,7 +66,7 @@ func checkPodResourcesExist(ctx context.Context, kubernetesProvider *kubernetes.
 		Str("name", kubernetes.HubPodName).
 		Msg("Pod is running.")
 
-	if pods, err := kubernetesProvider.ListPodsByAppLabel(ctx, config.Config.ResourcesNamespace, kubernetes.WorkerPodName); err != nil {
+	if pods, err := kubernetesProvider.ListPodsByAppLabel(ctx, config.Config.SelfNamespace, kubernetes.WorkerPodName); err != nil {
 		log.Error().
 			Str("name", kubernetes.WorkerPodName).
 			Err(err).

@@ -21,7 +21,7 @@ import (
 )
 
 func startProxyReportErrorIfAny(kubernetesProvider *kubernetes.Provider, ctx context.Context, cancel context.CancelFunc, serviceName string, proxyPortLabel string, srcPort uint16, dstPort uint16, healthCheck string) {
-	httpServer, err := kubernetes.StartProxy(kubernetesProvider, config.Config.Tap.Proxy.Host, srcPort, config.Config.ResourcesNamespace, serviceName, cancel)
+	httpServer, err := kubernetes.StartProxy(kubernetesProvider, config.Config.Tap.Proxy.Host, srcPort, config.Config.SelfNamespace, serviceName, cancel)
 	if err != nil {
 		log.Error().
 			Err(errormessage.FormatError(err)).
@@ -40,7 +40,7 @@ func startProxyReportErrorIfAny(kubernetesProvider *kubernetes.Provider, ctx con
 		}
 
 		podRegex, _ := regexp.Compile(kubernetes.HubPodName)
-		if _, err := kubernetes.NewPortForward(kubernetesProvider, config.Config.ResourcesNamespace, podRegex, srcPort, dstPort, ctx, cancel); err != nil {
+		if _, err := kubernetes.NewPortForward(kubernetesProvider, config.Config.SelfNamespace, podRegex, srcPort, dstPort, ctx, cancel); err != nil {
 			log.Error().
 				Str("pod-regex", podRegex.String()).
 				Err(errormessage.FormatError(err)).
@@ -62,7 +62,7 @@ func startProxyReportErrorIfAny(kubernetesProvider *kubernetes.Provider, ctx con
 }
 
 func getKubernetesProviderForCli() (*kubernetes.Provider, error) {
-	kubernetesProvider, err := kubernetes.NewProvider(config.Config.KubeConfigPath(), config.Config.KubeContext)
+	kubernetesProvider, err := kubernetes.NewProvider(config.Config.KubeConfigPath(), config.Config.Kube.Context)
 	if err != nil {
 		handleKubernetesProviderError(err)
 		return nil, err

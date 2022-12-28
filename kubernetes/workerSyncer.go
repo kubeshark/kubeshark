@@ -38,7 +38,7 @@ type WorkerSyncer struct {
 type WorkerSyncerConfig struct {
 	TargetNamespaces              []string
 	PodFilterRegex                regexp.Regexp
-	KubesharkResourcesNamespace   string
+	SelfNamespace                 string
 	WorkerResources               models.Resources
 	ImagePullPolicy               v1.PullPolicy
 	KubesharkServiceAccountExists bool
@@ -76,7 +76,7 @@ func CreateAndStartWorkerSyncer(ctx context.Context, kubernetesProvider *Provide
 func (workerSyncer *WorkerSyncer) watchWorkerPods() {
 	kubesharkResourceRegex := regexp.MustCompile(fmt.Sprintf("^%s.*", WorkerPodName))
 	podWatchHelper := NewPodWatchHelper(workerSyncer.kubernetesProvider, kubesharkResourceRegex)
-	eventChan, errorChan := FilteredWatch(workerSyncer.context, podWatchHelper, []string{workerSyncer.config.KubesharkResourcesNamespace}, podWatchHelper)
+	eventChan, errorChan := FilteredWatch(workerSyncer.context, podWatchHelper, []string{workerSyncer.config.SelfNamespace}, podWatchHelper)
 
 	for {
 		select {
@@ -120,7 +120,7 @@ func (workerSyncer *WorkerSyncer) watchWorkerPods() {
 func (workerSyncer *WorkerSyncer) watchWorkerEvents() {
 	kubesharkResourceRegex := regexp.MustCompile(fmt.Sprintf("^%s.*", WorkerPodName))
 	eventWatchHelper := NewEventWatchHelper(workerSyncer.kubernetesProvider, kubesharkResourceRegex, "pod")
-	eventChan, errorChan := FilteredWatch(workerSyncer.context, eventWatchHelper, []string{workerSyncer.config.KubesharkResourcesNamespace}, eventWatchHelper)
+	eventChan, errorChan := FilteredWatch(workerSyncer.context, eventWatchHelper, []string{workerSyncer.config.SelfNamespace}, eventWatchHelper)
 
 	for {
 		select {
@@ -149,7 +149,7 @@ func (workerSyncer *WorkerSyncer) watchWorkerEvents() {
 				Str("note", event.Note).
 				Msg("Watching events.")
 
-			pod, err1 := workerSyncer.kubernetesProvider.GetPod(workerSyncer.context, workerSyncer.config.KubesharkResourcesNamespace, event.Regarding.Name)
+			pod, err1 := workerSyncer.kubernetesProvider.GetPod(workerSyncer.context, workerSyncer.config.SelfNamespace, event.Regarding.Name)
 			if err1 != nil {
 				log.Error().Str("name", event.Regarding.Name).Msg("Couldn't get pod")
 				continue
@@ -354,7 +354,7 @@ func (workerSyncer *WorkerSyncer) updateWorkers() error {
 
 		if err := workerSyncer.kubernetesProvider.ApplyWorkerDaemonSet(
 			workerSyncer.context,
-			workerSyncer.config.KubesharkResourcesNamespace,
+			workerSyncer.config.SelfNamespace,
 			WorkerDaemonSetName,
 			image,
 			WorkerPodName,
@@ -372,7 +372,7 @@ func (workerSyncer *WorkerSyncer) updateWorkers() error {
 	} else {
 		if err := workerSyncer.kubernetesProvider.ResetWorkerDaemonSet(
 			workerSyncer.context,
-			workerSyncer.config.KubesharkResourcesNamespace,
+			workerSyncer.config.SelfNamespace,
 			WorkerDaemonSetName,
 			image,
 			WorkerPodName); err != nil {

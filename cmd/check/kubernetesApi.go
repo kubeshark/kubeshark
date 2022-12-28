@@ -10,7 +10,7 @@ import (
 func KubernetesApi() (*kubernetes.Provider, *semver.SemVersion, bool) {
 	log.Info().Str("procedure", "kubernetes-api").Msg("Checking:")
 
-	kubernetesProvider, err := kubernetes.NewProvider(config.Config.KubeConfigPath(), config.Config.KubeContext)
+	kubernetesProvider, err := kubernetes.NewProvider(config.Config.KubeConfigPath(), config.Config.Kube.Context)
 	if err != nil {
 		log.Error().Err(err).Msg("Can't initialize the client!")
 		return nil, nil, false
