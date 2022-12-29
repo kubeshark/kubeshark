@@ -19,12 +19,12 @@ import (
 )
 
 const k8sProxyApiPrefix = "/"
-const kubesharkServicePort = 80
+const selfServicePort = 80
 
-func StartProxy(kubernetesProvider *Provider, proxyHost string, srcPort uint16, kubesharkNamespace string, kubesharkServiceName string, cancel context.CancelFunc) (*http.Server, error) {
+func StartProxy(kubernetesProvider *Provider, proxyHost string, srcPort uint16, selfNamespace string, selfServiceName string, cancel context.CancelFunc) (*http.Server, error) {
 	log.Info().
-		Str("namespace", kubesharkNamespace).
-		Str("service", kubesharkServiceName).
+		Str("namespace", selfNamespace).
+		Str("service", selfServiceName).
 		Int("src-port", int(srcPort)).
 		Msg("Starting proxy...")
 
@@ -40,8 +40,8 @@ func StartProxy(kubernetesProvider *Provider, proxyHost string, srcPort uint16, 
 		return nil, err
 	}
 	mux := http.NewServeMux()
-	mux.Handle(k8sProxyApiPrefix, getRerouteHttpHandlerKubesharkAPI(proxyHandler, kubesharkNamespace, kubesharkServiceName))
-	mux.Handle("/static/", getRerouteHttpHandlerKubesharkStatic(proxyHandler, kubesharkNamespace, kubesharkServiceName))
+	mux.Handle(k8sProxyApiPrefix, getRerouteHttpHandlerSelfAPI(proxyHandler, selfNamespace, selfServiceName))
+	mux.Handle("/static/", getRerouteHttpHandlerSelfStatic(proxyHandler, selfNamespace, selfServiceName))
 
 	l, err := net.Listen("tcp", fmt.Sprintf("%s:%d", proxyHost, int(srcPort)))
 	if err != nil {
@@ -62,15 +62,15 @@ func StartProxy(kubernetesProvider *Provider, proxyHost string, srcPort uint16, 
 	return server, nil
 }
 
-func getKubesharkHubProxiedHostAndPath(kubesharkNamespace string, kubesharkServiceName string) string {
-	return fmt.Sprintf("/api/v1/namespaces/%s/services/%s:%d/proxy", kubesharkNamespace, kubesharkServiceName, kubesharkServicePort)
+func getSelfHubProxiedHostAndPath(selfNamespace string, selfServiceName string) string {
+	return fmt.Sprintf("/api/v1/namespaces/%s/services/%s:%d/proxy", selfNamespace, selfServiceName, selfServicePort)
 }
 
 func GetLocalhostOnPort(port uint16) string {
 	return fmt.Sprintf("http://localhost:%d", port)
 }
 
-func getRerouteHttpHandlerKubesharkAPI(proxyHandler http.Handler, kubesharkNamespace string, kubesharkServiceName string) http.Handler {
+func getRerouteHttpHandlerSelfAPI(proxyHandler http.Handler, selfNamespace string, selfServiceName string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")
 		w.Header().Set("Access-Control-Allow-Credentials", "true")
@@ -82,19 +82,19 @@ func getRerouteHttpHandlerKubesharkAPI(proxyHandler http.Handler, kubesharkNames
 			return
 		}
 
-		proxiedPath := getKubesharkHubProxiedHostAndPath(kubesharkNamespace, kubesharkServiceName)
+		proxiedPath := getSelfHubProxiedHostAndPath(selfNamespace, selfServiceName)
 
 		//avoid redirecting several times
 		if !strings.Contains(r.URL.Path, proxiedPath) {
-			r.URL.Path = fmt.Sprintf("%s%s", getKubesharkHubProxiedHostAndPath(kubesharkNamespace, kubesharkServiceName), r.URL.Path)
+			r.URL.Path = fmt.Sprintf("%s%s", getSelfHubProxiedHostAndPath(selfNamespace, selfServiceName), r.URL.Path)
 		}
 		proxyHandler.ServeHTTP(w, r)
 	})
 }
 
-func getRerouteHttpHandlerKubesharkStatic(proxyHandler http.Handler, kubesharkNamespace string, kubesharkServiceName string) http.Handler {
+func getRerouteHttpHandlerSelfStatic(proxyHandler http.Handler, selfNamespace string, selfServiceName string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		r.URL.Path = strings.Replace(r.URL.Path, "/static/", fmt.Sprintf("%s/static/", getKubesharkHubProxiedHostAndPath(kubesharkNamespace, kubesharkServiceName)), 1)
+		r.URL.Path = strings.Replace(r.URL.Path, "/static/", fmt.Sprintf("%s/static/", getSelfHubProxiedHostAndPath(selfNamespace, selfServiceName)), 1)
 		proxyHandler.ServeHTTP(w, r)
 	})
 }

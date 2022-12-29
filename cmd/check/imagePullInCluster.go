@@ -8,6 +8,7 @@ import (
 
 	"github.com/kubeshark/kubeshark/docker"
 	"github.com/kubeshark/kubeshark/kubernetes"
+	"github.com/kubeshark/kubeshark/misc"
 	"github.com/kubeshark/kubeshark/utils"
 	"github.com/rs/zerolog/log"
 	core "k8s.io/api/core/v1"
@@ -18,7 +19,7 @@ func ImagePullInCluster(ctx context.Context, kubernetesProvider *kubernetes.Prov
 	log.Info().Str("procedure", "image-pull-in-cluster").Msg("Checking:")
 
 	namespace := "default"
-	podName := "kubeshark-test"
+	podName := fmt.Sprintf("%s-test", misc.Program)
 
 	defer func() {
 		if err := kubernetesProvider.RemovePod(ctx, namespace, podName); err != nil {
@@ -40,7 +41,7 @@ func ImagePullInCluster(ctx context.Context, kubernetesProvider *kubernetes.Prov
 	}
 
 	if err := checkImagePulled(ctx, kubernetesProvider, namespace, podName); err != nil {
-		log.Printf("%v cluster is not able to pull kubeshark containers from docker hub, err: %v", fmt.Sprintf(utils.Red, "✗"), err)
+		log.Printf("%v cluster is not able to pull %s containers from docker hub, err: %v", misc.Program, fmt.Sprintf(utils.Red, "✗"), err)
 		log.Error().
 			Str("namespace", namespace).
 			Str("pod", podName).

@@ -88,25 +88,25 @@ func getKubernetesProviderForCli() (*kubernetes.Provider, error) {
 func handleKubernetesProviderError(err error) {
 	var clusterBehindProxyErr *kubernetes.ClusterBehindProxyError
 	if ok := errors.As(err, &clusterBehindProxyErr); ok {
-		log.Error().Msg(fmt.Sprintf("Cannot establish http-proxy connection to the Kubernetes cluster. If you’re using Lens or similar tool, please run kubeshark with regular kubectl config using --%v %v=$HOME/.kube/config flag", config.SetCommandName, config.KubeConfigPathConfigName))
+		log.Error().Msg(fmt.Sprintf("Cannot establish http-proxy connection to the Kubernetes cluster. If you’re using Lens or similar tool, please run '%s' with regular kubectl config using --%v %v=$HOME/.kube/config flag", misc.Program, config.SetCommandName, config.KubeConfigPathConfigName))
 	} else {
 		log.Error().Err(err).Send()
 	}
 }
 
-func finishKubesharkExecution(kubernetesProvider *kubernetes.Provider, isNsRestrictedMode bool, kubesharkResourcesNamespace string) {
+func finishSelfExecution(kubernetesProvider *kubernetes.Provider, isNsRestrictedMode bool, selfNamespace string) {
 	removalCtx, cancel := context.WithTimeout(context.Background(), cleanupTimeout)
 	defer cancel()
 	dumpLogsIfNeeded(removalCtx, kubernetesProvider)
-	resources.CleanUpKubesharkResources(removalCtx, cancel, kubernetesProvider, isNsRestrictedMode, kubesharkResourcesNamespace)
+	resources.CleanUpSelfResources(removalCtx, cancel, kubernetesProvider, isNsRestrictedMode, selfNamespace)
 }
 
 func dumpLogsIfNeeded(ctx context.Context, kubernetesProvider *kubernetes.Provider) {
 	if !config.Config.DumpLogs {
 		return
 	}
-	kubesharkDir := misc.GetDotFolderPath()
-	filePath := path.Join(kubesharkDir, fmt.Sprintf("kubeshark_logs_%s.zip", time.Now().Format("2006_01_02__15_04_05")))
+	dotDir := misc.GetDotFolderPath()
+	filePath := path.Join(dotDir, fmt.Sprintf("%s_logs_%s.zip", misc.Program, time.Now().Format("2006_01_02__15_04_05")))
 	if err := fsUtils.DumpLogs(ctx, kubernetesProvider, filePath); err != nil {
 		log.Error().Err(err).Msg("Failed to dump logs.")
 	}

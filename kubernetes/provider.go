@@ -11,6 +11,7 @@ import (
 	"regexp"
 
 	"github.com/kubeshark/kubeshark/docker"
+	"github.com/kubeshark/kubeshark/misc"
 	"github.com/kubeshark/kubeshark/semver"
 	"github.com/rs/zerolog/log"
 	auth "k8s.io/api/authorization/v1"
@@ -56,21 +57,21 @@ func NewProvider(kubeConfigPath string, contextName string) (*Provider, error) {
 	if err != nil {
 		if clientcmd.IsEmptyConfig(err) {
 			return nil, fmt.Errorf("couldn't find the kube config file, or file is empty (%s)\n"+
-				"you can set alternative kube config file path by adding the kube-config-path field to the kubeshark config file, err:  %w", kubeConfigPath, err)
+				"you can set alternative kube config file path by adding the kube-config-path field to the %s config file, err:  %w", kubeConfigPath, misc.Program, err)
 		}
 		if clientcmd.IsConfigurationInvalid(err) {
 			return nil, fmt.Errorf("invalid kube config file (%s)\n"+
-				"you can set alternative kube config file path by adding the kube-config-path field to the kubeshark config file, err:  %w", kubeConfigPath, err)
+				"you can set alternative kube config file path by adding the kube-config-path field to the %s config file, err:  %w", kubeConfigPath, misc.Program, err)
 		}
 
 		return nil, fmt.Errorf("error while using kube config (%s)\n"+
-			"you can set alternative kube config file path by adding the kube-config-path field to the kubeshark config file, err:  %w", kubeConfigPath, err)
+			"you can set alternative kube config file path by adding the kube-config-path field to the %s config file, err:  %w", kubeConfigPath, misc.Program, err)
 	}
 
 	clientSet, err := getClientSet(restClientConfig)
 	if err != nil {
 		return nil, fmt.Errorf("error while using kube config (%s)\n"+
-			"you can set alternative kube config file path by adding the kube-config-path field to the kubeshark config file, err:  %w", kubeConfigPath, err)
+			"you can set alternative kube config file path by adding the kube-config-path field to the %s config file, err:  %w", kubeConfigPath, misc.Program, err)
 	}
 
 	log.Debug().
@@ -83,8 +84,8 @@ func NewProvider(kubeConfigPath string, contextName string) (*Provider, error) {
 		clientSet:        clientSet,
 		kubernetesConfig: kubernetesConfig,
 		clientConfig:     *restClientConfig,
-		managedBy:        LabelValueKubeshark,
-		createdBy:        LabelValueKubeshark,
+		managedBy:        misc.Program,
+		createdBy:        misc.Program,
 	}, nil
 }
 
@@ -103,14 +104,14 @@ func NewProviderInCluster() (*Provider, error) {
 		clientSet:        clientSet,
 		kubernetesConfig: nil, // not relevant in cluster
 		clientConfig:     *restClientConfig,
-		managedBy:        LabelValueKubeshark,
-		createdBy:        LabelValueKubeshark,
+		managedBy:        misc.Program,
+		createdBy:        misc.Program,
 	}, nil
 }
 
 func (provider *Provider) CurrentNamespace() (string, error) {
 	if provider.kubernetesConfig == nil {
-		return "", errors.New("kubernetesConfig is nil, kubeshark cli will not work with in-cluster kubernetes config, use a kubeconfig file when initializing the Provider")
+		return "", errors.New("kubernetesConfig is nil, The CLI will not work with in-cluster kubernetes config, use a kubeconfig file when initializing the Provider")
 	}
 	ns, _, err := provider.kubernetesConfig.Namespace()
 	return ns, err
@@ -466,14 +467,14 @@ func (provider *Provider) doesResourceExist(resource interface{}, err error) (bo
 	return resource != nil, nil
 }
 
-func (provider *Provider) CreateKubesharkRBAC(ctx context.Context, namespace string, serviceAccountName string, clusterRoleName string, clusterRoleBindingName string, version string, resources []string) error {
+func (provider *Provider) CreateSelfRBAC(ctx context.Context, namespace string, serviceAccountName string, clusterRoleName string, clusterRoleBindingName string, version string, resources []string) error {
 	serviceAccount := &core.ServiceAccount{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: serviceAccountName,
 			Labels: map[string]string{
-				"kubeshark-cli-version": version,
-				LabelManagedBy:          provider.managedBy,
-				LabelCreatedBy:          provider.createdBy,
+				fmt.Sprintf("%s-cli-version", misc.Program): version,
+				LabelManagedBy: provider.managedBy,
+				LabelCreatedBy: provider.createdBy,
 			},
 		},
 	}
@@ -481,9 +482,9 @@ func (provider *Provider) CreateKubesharkRBAC(ctx context.Context, namespace str
 		ObjectMeta: metav1.ObjectMeta{
 			Name: clusterRoleName,
 			Labels: map[string]string{
-				"kubeshark-cli-version": version,
-				LabelManagedBy:          provider.managedBy,
-				LabelCreatedBy:          provider.createdBy,
+				fmt.Sprintf("%s-cli-version", misc.Program): version,
+				LabelManagedBy: provider.managedBy,
+				LabelCreatedBy: provider.createdBy,
 			},
 		},
 		Rules: []rbac.PolicyRule{
@@ -498,9 +499,9 @@ func (provider *Provider) CreateKubesharkRBAC(ctx context.Context, namespace str
 		ObjectMeta: metav1.ObjectMeta{
 			Name: clusterRoleBindingName,
 			Labels: map[string]string{
-				"kubeshark-cli-version": version,
-				LabelManagedBy:          provider.managedBy,
-				LabelCreatedBy:          provider.createdBy,
+				fmt.Sprintf("%s-cli-version", misc.Program): version,
+				LabelManagedBy: provider.managedBy,
+				LabelCreatedBy: provider.createdBy,
 			},
 		},
 		RoleRef: rbac.RoleRef{
@@ -531,14 +532,14 @@ func (provider *Provider) CreateKubesharkRBAC(ctx context.Context, namespace str
 	return nil
 }
 
-func (provider *Provider) CreateKubesharkRBACNamespaceRestricted(ctx context.Context, namespace string, serviceAccountName string, roleName string, roleBindingName string, version string) error {
+func (provider *Provider) CreateSelfRBACNamespaceRestricted(ctx context.Context, namespace string, serviceAccountName string, roleName string, roleBindingName string, version string) error {
 	serviceAccount := &core.ServiceAccount{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: serviceAccountName,
 			Labels: map[string]string{
-				"kubeshark-cli-version": version,
-				LabelManagedBy:          provider.managedBy,
-				LabelCreatedBy:          provider.createdBy,
+				fmt.Sprintf("%s-cli-version", misc.Program): version,
+				LabelManagedBy: provider.managedBy,
+				LabelCreatedBy: provider.createdBy,
 			},
 		},
 	}
@@ -546,9 +547,9 @@ func (provider *Provider) CreateKubesharkRBACNamespaceRestricted(ctx context.Con
 		ObjectMeta: metav1.ObjectMeta{
 			Name: roleName,
 			Labels: map[string]string{
-				"kubeshark-cli-version": version,
-				LabelManagedBy:          provider.managedBy,
-				LabelCreatedBy:          provider.createdBy,
+				fmt.Sprintf("%s-cli-version", misc.Program): version,
+				LabelManagedBy: provider.managedBy,
+				LabelCreatedBy: provider.createdBy,
 			},
 		},
 		Rules: []rbac.PolicyRule{
@@ -563,9 +564,9 @@ func (provider *Provider) CreateKubesharkRBACNamespaceRestricted(ctx context.Con
 		ObjectMeta: metav1.ObjectMeta{
 			Name: roleBindingName,
 			Labels: map[string]string{
-				"kubeshark-cli-version": version,
-				LabelManagedBy:          provider.managedBy,
-				LabelCreatedBy:          provider.createdBy,
+				fmt.Sprintf("%s-cli-version", misc.Program): version,
+				LabelManagedBy: provider.managedBy,
+				LabelCreatedBy: provider.createdBy,
 			},
 		},
 		RoleRef: rbac.RoleRef{
@@ -840,7 +841,7 @@ func (provider *Provider) ResetWorkerDaemonSet(ctx context.Context, namespace st
 	workerContainer.WithImage(podImage)
 
 	nodeSelectorRequirement := applyconfcore.NodeSelectorRequirement()
-	nodeSelectorRequirement.WithKey("kubeshark-non-existing-label")
+	nodeSelectorRequirement.WithKey(fmt.Sprintf("%s-non-existing-label", misc.Program))
 	nodeSelectorRequirement.WithOperator(core.NodeSelectorOpExists)
 	nodeSelectorTerm := applyconfcore.NodeSelectorTerm()
 	nodeSelectorTerm.WithMatchExpressions(nodeSelectorRequirement)

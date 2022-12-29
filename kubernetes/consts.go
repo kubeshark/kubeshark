@@ -1,26 +1,25 @@
 package kubernetes
 
 const (
-	KubesharkResourcesPrefix   = "kubeshark-"
-	FrontPodName               = KubesharkResourcesPrefix + "front"
+	SelfResourcesPrefix        = "kubeshark-"
+	FrontPodName               = SelfResourcesPrefix + "front"
 	FrontServiceName           = FrontPodName
-	HubPodName                 = KubesharkResourcesPrefix + "hub"
+	HubPodName                 = SelfResourcesPrefix + "hub"
 	HubServiceName             = HubPodName
-	ClusterRoleBindingName     = KubesharkResourcesPrefix + "cluster-role-binding"
-	ClusterRoleName            = KubesharkResourcesPrefix + "cluster-role"
+	ClusterRoleBindingName     = SelfResourcesPrefix + "cluster-role-binding"
+	ClusterRoleName            = SelfResourcesPrefix + "cluster-role"
 	K8sAllNamespaces           = ""
-	RoleBindingName            = KubesharkResourcesPrefix + "role-binding"
-	RoleName                   = KubesharkResourcesPrefix + "role"
-	ServiceAccountName         = KubesharkResourcesPrefix + "service-account"
-	WorkerDaemonSetName        = KubesharkResourcesPrefix + "worker-daemon-set"
-	WorkerPodName              = KubesharkResourcesPrefix + "worker"
-	ConfigMapName              = KubesharkResourcesPrefix + "config"
+	RoleBindingName            = SelfResourcesPrefix + "role-binding"
+	RoleName                   = SelfResourcesPrefix + "role"
+	ServiceAccountName         = SelfResourcesPrefix + "service-account"
+	WorkerDaemonSetName        = SelfResourcesPrefix + "worker-daemon-set"
+	WorkerPodName              = SelfResourcesPrefix + "worker"
+	ConfigMapName              = SelfResourcesPrefix + "config"
 	MinKubernetesServerVersion = "1.16.0"
 )
 
 const (
-	LabelPrefixApp      = "app.kubernetes.io/"
-	LabelManagedBy      = LabelPrefixApp + "managed-by"
-	LabelCreatedBy      = LabelPrefixApp + "created-by"
-	LabelValueKubeshark = "kubeshark"
+	LabelPrefixApp = "app.kubernetes.io/"
+	LabelManagedBy = LabelPrefixApp + "managed-by"
+	LabelCreatedBy = LabelPrefixApp + "created-by"
 )

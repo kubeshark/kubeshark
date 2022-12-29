@@ -16,6 +16,7 @@ import (
 	"github.com/kubeshark/kubeshark/docker"
 	"github.com/kubeshark/kubeshark/internal/connect"
 	"github.com/kubeshark/kubeshark/kubernetes"
+	"github.com/kubeshark/kubeshark/misc"
 	"github.com/kubeshark/kubeshark/utils"
 	"github.com/rs/zerolog/log"
 	v1 "k8s.io/api/core/v1"
@@ -127,9 +128,9 @@ func createAndStartContainers(
 ) {
 	log.Info().Msg("Creating containers...")
 
-	nameFront := "kubeshark-front"
-	nameHub := "kubeshark-hub"
-	nameWorker := "kubeshark-worker"
+	nameFront := fmt.Sprintf("%s-front", misc.Program)
+	nameHub := fmt.Sprintf("%s-hub", misc.Program)
+	nameWorker := fmt.Sprintf("%s-worker", misc.Program)
 
 	err = cleanUpOldContainers(ctx, cli, nameFront, nameHub, nameWorker)
 	if err != nil {
@@ -336,7 +337,7 @@ func pcap(tarPath string) {
 		Msg(fmt.Sprintf(utils.Green, "Hub is available at:"))
 
 	url := kubernetes.GetLocalhostOnPort(config.Config.Tap.Proxy.Front.SrcPort)
-	log.Info().Str("url", url).Msg(fmt.Sprintf(utils.Green, "Kubeshark is available at:"))
+	log.Info().Str("url", url).Msg(fmt.Sprintf(utils.Green, fmt.Sprintf("%s is available at:", misc.Software)))
 
 	if !config.Config.HeadlessMode {
 		utils.OpenBrowser(url)

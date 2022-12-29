@@ -9,6 +9,7 @@ import (
 	"github.com/kubeshark/kubeshark/config/configStructs"
 	"github.com/kubeshark/kubeshark/internal/connect"
 	"github.com/kubeshark/kubeshark/kubernetes"
+	"github.com/kubeshark/kubeshark/misc"
 	"github.com/kubeshark/kubeshark/utils"
 	"github.com/rs/zerolog/log"
 )
@@ -25,7 +26,7 @@ func runProxy() {
 	exists, err := kubernetesProvider.DoesServiceExist(ctx, config.Config.SelfNamespace, kubernetes.FrontServiceName)
 	if err != nil {
 		log.Error().
-			Str("service", "kubeshark").
+			Str("service", misc.Program).
 			Err(err).
 			Msg("Failed to found service!")
 		cancel()
@@ -35,7 +36,7 @@ func runProxy() {
 	if !exists {
 		log.Error().
 			Str("service", kubernetes.FrontServiceName).
-			Str("command", fmt.Sprintf("kubeshark %s", tapCmd.Use)).
+			Str("command", fmt.Sprintf("%s %s", misc.Program, tapCmd.Use)).
 			Msg("Service not found! You should run the command first:")
 		cancel()
 		return
@@ -68,7 +69,7 @@ func runProxy() {
 }
 
 func okToOpen(url string) {
-	log.Info().Str("url", url).Msg(fmt.Sprintf(utils.Green, "Kubeshark is available at:"))
+	log.Info().Str("url", url).Msg(fmt.Sprintf(utils.Green, fmt.Sprintf("%s is available at:", misc.Software)))
 
 	if !config.Config.HeadlessMode {
 		utils.OpenBrowser(url)

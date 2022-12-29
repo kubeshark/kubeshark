@@ -2,11 +2,13 @@ package cmd
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/creasty/defaults"
 	"github.com/kubeshark/kubeshark/config"
 	"github.com/kubeshark/kubeshark/config/configStructs"
 	"github.com/kubeshark/kubeshark/errormessage"
+	"github.com/kubeshark/kubeshark/misc"
 	"github.com/kubeshark/kubeshark/misc/fsUtils"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
@@ -44,5 +46,5 @@ func init() {
 		log.Debug().Err(err).Send()
 	}
 
-	logsCmd.Flags().StringP(configStructs.FileLogsName, "f", defaultLogsConfig.FileStr, "Path for zip file (default current <pwd>\\kubeshark_logs.zip)")
+	logsCmd.Flags().StringP(configStructs.FileLogsName, "f", defaultLogsConfig.FileStr, fmt.Sprintf("Path for zip file (default current <pwd>\\%s_logs.zip)", misc.Program))
 }

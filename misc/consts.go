@@ -1,11 +1,15 @@
 package misc
 
 import (
+	"fmt"
 	"os"
 	"path"
 )
 
 var (
+	Software       = "Kubeshark"
+	Program        = "kubeshark"
+	Website        = "https://kubeshark.co"
 	Ver            = "0.0"
 	Branch         = "develop"
 	GitCommitHash  = "" // this var is overridden using ldflags in makefile when building
@@ -19,5 +23,5 @@ func GetDotFolderPath() string {
 	if homeDirErr != nil {
 		return ""
 	}
-	return path.Join(home, ".kubeshark")
+	return path.Join(home, fmt.Sprintf(".%s", Program))
 }

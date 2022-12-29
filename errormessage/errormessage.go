@@ -6,6 +6,7 @@ import (
 	regexpsyntax "regexp/syntax"
 
 	"github.com/kubeshark/kubeshark/config"
+	"github.com/kubeshark/kubeshark/misc"
 
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 )
@@ -16,9 +17,10 @@ func FormatError(err error) error {
 	var errorNew error
 	if k8serrors.IsForbidden(err) {
 		errorNew = fmt.Errorf("insufficient permissions: %w. "+
-			"supply the required permission or control Kubeshark's access to namespaces by setting %s "+
+			"supply the required permission or control %s's access to namespaces by setting %s "+
 			"in the config file or setting the targetted namespace with --%s %s=<NAMEPSACE>",
 			err,
+			misc.Software,
 			config.SelfNamespaceConfigName,
 			config.SetCommandName,
 			config.SelfNamespaceConfigName)

@@ -2,6 +2,7 @@ package resources
 
 import (
 	"context"
+	"fmt"
 
 	"github.com/kubeshark/kubeshark/config"
 	"github.com/kubeshark/kubeshark/docker"
@@ -19,13 +20,13 @@ func CreateHubResources(ctx context.Context, kubernetesProvider *kubernetes.Prov
 		}
 	}
 
-	kubesharkServiceAccountExists, err := createRBACIfNecessary(ctx, kubernetesProvider, isNsRestrictedMode, selfNamespace, []string{"pods", "services", "endpoints"})
+	selfServiceAccountExists, err := createRBACIfNecessary(ctx, kubernetesProvider, isNsRestrictedMode, selfNamespace, []string{"pods", "services", "endpoints"})
 	if err != nil {
-		log.Warn().Err(errormessage.FormatError(err)).Msg("Failed to ensure the resources required for IP resolving. Kubeshark will not resolve target IPs to names.")
+		log.Warn().Err(errormessage.FormatError(err)).Msg(fmt.Sprintf("Failed to ensure the resources required for IP resolving. %s will not resolve target IPs to names.", misc.Software))
 	}
 
 	var serviceAccountName string
-	if kubesharkServiceAccountExists {
+	if selfServiceAccountExists {
 		serviceAccountName = kubernetes.ServiceAccountName
 	} else {
 		serviceAccountName = ""
@@ -51,30 +52,30 @@ func CreateHubResources(ctx context.Context, kubernetesProvider *kubernetes.Prov
 		Debug:              debug,
 	}
 
-	if err := createKubesharkHubPod(ctx, kubernetesProvider, opts); err != nil {
-		return kubesharkServiceAccountExists, err
+	if err := createSelfHubPod(ctx, kubernetesProvider, opts); err != nil {
+		return selfServiceAccountExists, err
 	}
 
 	if err := createFrontPod(ctx, kubernetesProvider, frontOpts); err != nil {
-		return kubesharkServiceAccountExists, err
+		return selfServiceAccountExists, err
 	}
 
 	// TODO: Why the port values need to be 80?
 	_, err = kubernetesProvider.CreateService(ctx, selfNamespace, kubernetes.HubServiceName, kubernetes.HubServiceName, 80, 80)
 	if err != nil {
-		return kubesharkServiceAccountExists, err
+		return selfServiceAccountExists, err
 	}
 
 	log.Info().Str("service", kubernetes.HubServiceName).Msg("Successfully created a service.")
 
 	_, err = kubernetesProvider.CreateService(ctx, selfNamespace, kubernetes.FrontServiceName, kubernetes.FrontServiceName, 80, int32(config.Config.Tap.Proxy.Front.DstPort))
 	if err != nil {
-		return kubesharkServiceAccountExists, err
+		return selfServiceAccountExists, err
 	}
 
 	log.Info().Str("service", kubernetes.FrontServiceName).Msg("Successfully created a service.")
 
-	return kubesharkServiceAccountExists, nil
+	return selfServiceAccountExists, nil
 }
 
 func createSelfNamespace(ctx context.Context, kubernetesProvider *kubernetes.Provider, selfNamespace string) error {
@@ -84,11 +85,11 @@ func createSelfNamespace(ctx context.Context, kubernetesProvider *kubernetes.Pro
 
 func createRBACIfNecessary(ctx context.Context, kubernetesProvider *kubernetes.Provider, isNsRestrictedMode bool, selfNamespace string, resources []string) (bool, error) {
 	if !isNsRestrictedMode {
-		if err := kubernetesProvider.CreateKubesharkRBAC(ctx, selfNamespace, kubernetes.ServiceAccountName, kubernetes.ClusterRoleName, kubernetes.ClusterRoleBindingName, misc.RBACVersion, resources); err != nil {
+		if err := kubernetesProvider.CreateSelfRBAC(ctx, selfNamespace, kubernetes.ServiceAccountName, kubernetes.ClusterRoleName, kubernetes.ClusterRoleBindingName, misc.RBACVersion, resources); err != nil {
 			return false, err
 		}
 	} else {
-		if err := kubernetesProvider.CreateKubesharkRBACNamespaceRestricted(ctx, selfNamespace, kubernetes.ServiceAccountName, kubernetes.RoleName, kubernetes.RoleBindingName, misc.RBACVersion); err != nil {
+		if err := kubernetesProvider.CreateSelfRBACNamespaceRestricted(ctx, selfNamespace, kubernetes.ServiceAccountName, kubernetes.RoleName, kubernetes.RoleBindingName, misc.RBACVersion); err != nil {
 			return false, err
 		}
 	}
@@ -96,7 +97,7 @@ func createRBACIfNecessary(ctx context.Context, kubernetesProvider *kubernetes.P
 	return true, nil
 }
 
-func createKubesharkHubPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, opts *kubernetes.PodOptions) error {
+func createSelfHubPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, opts *kubernetes.PodOptions) error {
 	pod, err := kubernetesProvider.BuildHubPod(opts)
 	if err != nil {
 		return err

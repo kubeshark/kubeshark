@@ -46,7 +46,7 @@ func (config *ConfigStruct) ImagePullPolicy() v1.PullPolicy {
 }
 
 func (config *ConfigStruct) IsNsRestrictedMode() bool {
-	return config.SelfNamespace != "kubeshark" // Notice "kubeshark" string must match the default SelfNamespace
+	return config.SelfNamespace != misc.Program // Notice "kubeshark" string must match the default SelfNamespace
 }
 
 func (config *ConfigStruct) KubeConfigPath() string {

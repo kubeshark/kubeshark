@@ -21,7 +21,7 @@ func CheckNewerVersion() {
 	log.Info().Msg("Checking for a newer version...")
 	start := time.Now()
 	client := github.NewClient(nil)
-	latestRelease, _, err := client.Repositories.GetLatestRelease(context.Background(), "kubeshark", "kubeshark")
+	latestRelease, _, err := client.Repositories.GetLatestRelease(context.Background(), misc.Program, misc.Program)
 	if err != nil {
 		log.Error().Msg("Failed to get latest release.")
 		return
@@ -72,9 +72,9 @@ func CheckNewerVersion() {
 	if greater {
 		var downloadCommand string
 		if runtime.GOOS == "windows" {
-			downloadCommand = fmt.Sprintf("curl -LO %v/kubeshark.exe", strings.Replace(*latestRelease.HTMLURL, "tag", "download", 1))
+			downloadCommand = fmt.Sprintf("curl -LO %v/%s.exe", strings.Replace(*latestRelease.HTMLURL, "tag", "download", 1), misc.Program)
 		} else {
-			downloadCommand = "sh <(curl -Ls https://kubeshark.co/install)"
+			downloadCommand = fmt.Sprintf("sh <(curl -Ls %s/install)", misc.Website)
 		}
 		msg := fmt.Sprintf("Update available! %v -> %v run:", misc.Ver, gitHubVersion)
 		log.Warn().Str("command", downloadCommand).Msg(fmt.Sprintf(utils.Yellow, msg))

@@ -2,11 +2,13 @@ package cmd
 
 import (
 	"errors"
+	"fmt"
 
 	"github.com/creasty/defaults"
 	"github.com/kubeshark/kubeshark/config"
 	"github.com/kubeshark/kubeshark/config/configStructs"
 	"github.com/kubeshark/kubeshark/errormessage"
+	"github.com/kubeshark/kubeshark/misc"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 )
@@ -32,7 +34,7 @@ var tapCmd = &cobra.Command{
 
 		log.Info().
 			Str("limit", config.Config.Tap.StorageLimit).
-			Msg("Kubeshark will store the traffic up to a limit. Oldest entries will be removed once the limit is reached.")
+			Msg(fmt.Sprintf("%s will store the traffic up to a limit. Oldest entries will be removed once the limit is reached.", misc.Software))
 
 		return nil
 	},
@@ -55,7 +57,7 @@ func init() {
 	tapCmd.Flags().BoolP(configStructs.AllNamespacesLabel, "A", defaultTapConfig.AllNamespaces, "Tap all namespaces.")
 	tapCmd.Flags().String(configStructs.StorageLimitLabel, defaultTapConfig.StorageLimit, "Override the default max entries db size.")
 	tapCmd.Flags().Bool(configStructs.DryRunLabel, defaultTapConfig.DryRun, "Preview of all pods matching the regex, without tapping them.")
-	tapCmd.Flags().StringP(configStructs.PcapLabel, "p", defaultTapConfig.Pcap, "Capture from a PCAP snapshot of Kubeshark (.tar.gz) using your Docker Daemon instead of Kubernetes.")
+	tapCmd.Flags().StringP(configStructs.PcapLabel, "p", defaultTapConfig.Pcap, fmt.Sprintf("Capture from a PCAP snapshot of %s (.tar.gz) using your Docker Daemon instead of Kubernetes.", misc.Software))
 	tapCmd.Flags().Bool(configStructs.ServiceMeshLabel, defaultTapConfig.ServiceMesh, "Capture the encrypted traffic if the cluster is configured with a service mesh and with mTLS.")
 	tapCmd.Flags().Bool(configStructs.TlsLabel, defaultTapConfig.Tls, "Capture the traffic that's encrypted with OpenSSL or Go crypto/tls libraries.")
 	tapCmd.Flags().Bool(configStructs.DebugLabel, defaultTapConfig.Debug, "Enable the debug mode.")

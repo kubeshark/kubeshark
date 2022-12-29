@@ -7,6 +7,7 @@ import (
 	"os"
 
 	"github.com/kubeshark/kubeshark/cmd/check"
+	"github.com/kubeshark/kubeshark/misc"
 	"github.com/kubeshark/kubeshark/utils"
 	"github.com/rs/zerolog/log"
 )
@@ -16,8 +17,8 @@ var (
 	embedFS embed.FS
 )
 
-func runKubesharkCheck() {
-	log.Info().Msg("Checking the Kubeshark resources...")
+func runCheck() {
+	log.Info().Msg(fmt.Sprintf("Checking the %s resources...", misc.Software))
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // cancel will be called when this function exits
@@ -47,9 +48,9 @@ func runKubesharkCheck() {
 		log.Info().Msg(fmt.Sprintf(utils.Green, "All checks are passed."))
 	} else {
 		log.Error().
-			Str("command1", fmt.Sprintf("kubeshark %s", cleanCmd.Use)).
-			Str("command2", fmt.Sprintf("kubeshark %s", tapCmd.Use)).
-			Msg(fmt.Sprintf(utils.Red, "There are issues in your Kubeshark resources! Run these commands:"))
+			Str("command1", fmt.Sprintf("%s %s", misc.Program, cleanCmd.Use)).
+			Str("command2", fmt.Sprintf("%s %s", misc.Program, tapCmd.Use)).
+			Msg(fmt.Sprintf(utils.Red, fmt.Sprintf("There are issues in your %s resources! Run these commands:", misc.Software)))
 		os.Exit(1)
 	}
 }

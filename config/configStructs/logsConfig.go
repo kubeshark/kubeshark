@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"os"
 	"path"
+
+	"github.com/kubeshark/kubeshark/misc"
 )
 
 const (
@@ -18,7 +20,7 @@ func (config *LogsConfig) Validate() error {
 	if config.FileStr == "" {
 		_, err := os.Getwd()
 		if err != nil {
-			return fmt.Errorf("failed to get PWD, %v (try using `kubeshark logs -f <full path dest zip file>)`", err)
+			return fmt.Errorf("failed to get PWD, %v (try using `%s logs -f <full path dest zip file>)`", err, misc.Program)
 		}
 	}
 
@@ -28,7 +30,7 @@ func (config *LogsConfig) Validate() error {
 func (config *LogsConfig) FilePath() string {
 	if config.FileStr == "" {
 		pwd, _ := os.Getwd()
-		return path.Join(pwd, "kubeshark_logs.zip")
+		return path.Join(pwd, fmt.Sprintf("%s_logs.zip", misc.Program))
 	}
 
 	return config.FileStr

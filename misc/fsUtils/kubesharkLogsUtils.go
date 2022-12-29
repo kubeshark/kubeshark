@@ -9,18 +9,19 @@ import (
 
 	"github.com/kubeshark/kubeshark/config"
 	"github.com/kubeshark/kubeshark/kubernetes"
+	"github.com/kubeshark/kubeshark/misc"
 	"github.com/rs/zerolog/log"
 )
 
 func DumpLogs(ctx context.Context, provider *kubernetes.Provider, filePath string) error {
-	podExactRegex := regexp.MustCompile("^" + kubernetes.KubesharkResourcesPrefix)
+	podExactRegex := regexp.MustCompile("^" + kubernetes.SelfResourcesPrefix)
 	pods, err := provider.ListAllPodsMatchingRegex(ctx, podExactRegex, []string{config.Config.SelfNamespace})
 	if err != nil {
 		return err
 	}
 
 	if len(pods) == 0 {
-		return fmt.Errorf("no kubeshark pods found in namespace %s", config.Config.SelfNamespace)
+		return fmt.Errorf("No %s pods found in namespace %s", misc.Software, config.Config.SelfNamespace)
 	}
 
 	newZipFile, err := os.Create(filePath)

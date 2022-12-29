@@ -5,16 +5,17 @@ import (
 
 	"github.com/creasty/defaults"
 	"github.com/kubeshark/kubeshark/config"
+	"github.com/kubeshark/kubeshark/misc"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 )
 
 var rootCmd = &cobra.Command{
 	Use:   "kubeshark",
-	Short: "Kubeshark: The Observability and Monitoring Tool For Kubernetes",
-	Long: `Kubeshark: The Observability and Monitoring Tool For Kubernetes
+	Short: fmt.Sprintf("%s: The Observability and Monitoring Tool For Kubernetes", misc.Software),
+	Long: fmt.Sprintf(`%s: The Observability and Monitoring Tool For Kubernetes
 An extensible Kubernetes-aware network sniffer and kernel tracer.
-For more info: https://kubeshark.co`,
+For more info: %s`, misc.Software, misc.Website),
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		if err := config.InitConfig(cmd); err != nil {
 			log.Fatal().Err(err).Send()

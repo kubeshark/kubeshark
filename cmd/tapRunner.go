@@ -9,6 +9,7 @@ import (
 
 	"github.com/kubeshark/kubeshark/docker"
 	"github.com/kubeshark/kubeshark/internal/connect"
+	"github.com/kubeshark/kubeshark/misc"
 	"github.com/kubeshark/kubeshark/resources"
 	"github.com/kubeshark/kubeshark/utils"
 
@@ -26,9 +27,9 @@ import (
 const cleanupTimeout = time.Minute
 
 type tapState struct {
-	startTime                     time.Time
-	targetNamespaces              []string
-	kubesharkServiceAccountExists bool
+	startTime                time.Time
+	targetNamespaces         []string
+	selfServiceAccountExists bool
 }
 
 var state tapState
@@ -61,7 +62,7 @@ func tap() {
 
 	if config.Config.IsNsRestrictedMode() {
 		if len(state.targetNamespaces) != 1 || !utils.Contains(state.targetNamespaces, config.Config.SelfNamespace) {
-			log.Error().Msg(fmt.Sprintf("Kubeshark can't resolve IPs in other namespaces when running in namespace restricted mode. You can use the same namespace for --%s and --%s", configStructs.NamespacesLabel, config.SelfNamespaceConfigName))
+			log.Error().Msg(fmt.Sprintf("%s can't resolve IPs in other namespaces when running in namespace restricted mode. You can use the same namespace for --%s and --%s", misc.Software, configStructs.NamespacesLabel, config.SelfNamespaceConfigName))
 			return
 		}
 	}
@@ -76,13 +77,13 @@ func tap() {
 		return
 	}
 
-	log.Info().Msg("Waiting for the creation of Kubeshark resources...")
-	if state.kubesharkServiceAccountExists, err = resources.CreateHubResources(ctx, kubernetesProvider, config.Config.IsNsRestrictedMode(), config.Config.SelfNamespace, config.Config.Tap.Resources.Hub, config.Config.ImagePullPolicy(), config.Config.Tap.Debug); err != nil {
+	log.Info().Msg(fmt.Sprintf("Waiting for the creation of %s resources...", misc.Software))
+	if state.selfServiceAccountExists, err = resources.CreateHubResources(ctx, kubernetesProvider, config.Config.IsNsRestrictedMode(), config.Config.SelfNamespace, config.Config.Tap.Resources.Hub, config.Config.ImagePullPolicy(), config.Config.Tap.Debug); err != nil {
 		var statusError *k8serrors.StatusError
 		if errors.As(err, &statusError) && (statusError.ErrStatus.Reason == metav1.StatusReasonAlreadyExists) {
-			log.Warn().Msg("Kubeshark is already running in this namespace, change the `kubeshark-resources-namespace` configuration or run `kubeshark clean` to remove the currently running Kubeshark instance")
+			log.Warn().Msg(fmt.Sprintf("%s is already running in this namespace, change the `selfnamespace` configuration or run `%s clean` to remove the currently running %s instance", misc.Software, misc.Program, misc.Software))
 		} else {
-			defer resources.CleanUpKubesharkResources(ctx, cancel, kubernetesProvider, config.Config.IsNsRestrictedMode(), config.Config.SelfNamespace)
+			defer resources.CleanUpSelfResources(ctx, cancel, kubernetesProvider, config.Config.IsNsRestrictedMode(), config.Config.SelfNamespace)
 			log.Error().Err(errormessage.FormatError(err)).Msg("Error creating resources!")
 		}
 
@@ -100,7 +101,7 @@ func tap() {
 }
 
 func finishTapExecution(kubernetesProvider *kubernetes.Provider) {
-	finishKubesharkExecution(kubernetesProvider, config.Config.IsNsRestrictedMode(), config.Config.SelfNamespace)
+	finishSelfExecution(kubernetesProvider, config.Config.IsNsRestrictedMode(), config.Config.SelfNamespace)
 }
 
 /*
@@ -124,15 +125,15 @@ func printTargettedPodsPreview(ctx context.Context, kubernetesProvider *kubernet
 
 func startWorkerSyncer(ctx context.Context, cancel context.CancelFunc, provider *kubernetes.Provider, targetNamespaces []string, startTime time.Time) error {
 	workerSyncer, err := kubernetes.CreateAndStartWorkerSyncer(ctx, provider, kubernetes.WorkerSyncerConfig{
-		TargetNamespaces:              targetNamespaces,
-		PodFilterRegex:                *config.Config.Tap.PodRegex(),
-		SelfNamespace:                 config.Config.SelfNamespace,
-		WorkerResources:               config.Config.Tap.Resources.Worker,
-		ImagePullPolicy:               config.Config.ImagePullPolicy(),
-		KubesharkServiceAccountExists: state.kubesharkServiceAccountExists,
-		ServiceMesh:                   config.Config.Tap.ServiceMesh,
-		Tls:                           config.Config.Tap.Tls,
-		Debug:                         config.Config.Tap.Debug,
+		TargetNamespaces:         targetNamespaces,
+		PodFilterRegex:           *config.Config.Tap.PodRegex(),
+		SelfNamespace:            config.Config.SelfNamespace,
+		WorkerResources:          config.Config.Tap.Resources.Worker,
+		ImagePullPolicy:          config.Config.ImagePullPolicy(),
+		SelfServiceAccountExists: state.selfServiceAccountExists,
+		ServiceMesh:              config.Config.Tap.ServiceMesh,
+		Tls:                      config.Config.Tap.Tls,
+		Debug:                    config.Config.Tap.Debug,
 	}, startTime)
 
 	if err != nil {
@@ -176,7 +177,7 @@ func printNoPodsFoundSuggestion(targetNamespaces []string) {
 	if !utils.Contains(targetNamespaces, kubernetes.K8sAllNamespaces) {
 		suggestionStr = ". You can also try selecting a different namespace with -n or target all namespaces with -A"
 	}
-	log.Warn().Msg(fmt.Sprintf("Did not find any currently running pods that match the regex argument, kubeshark will automatically target matching pods if any are created later%s", suggestionStr))
+	log.Warn().Msg(fmt.Sprintf("Did not find any currently running pods that match the regex argument, %s will automatically target matching pods if any are created later%s", misc.Software, suggestionStr))
 }
 
 func getK8sTapManagerErrorText(err kubernetes.K8sTapManagerError) string {
@@ -436,7 +437,7 @@ func postFrontStarted(ctx context.Context, kubernetesProvider *kubernetes.Provid
 	startProxyReportErrorIfAny(kubernetesProvider, ctx, cancel, kubernetes.FrontServiceName, configStructs.ProxyHubPortLabel, config.Config.Tap.Proxy.Front.SrcPort, config.Config.Tap.Proxy.Front.DstPort, "")
 
 	url := kubernetes.GetLocalhostOnPort(config.Config.Tap.Proxy.Front.SrcPort)
-	log.Info().Str("url", url).Msg(fmt.Sprintf(utils.Green, "Kubeshark is available at:"))
+	log.Info().Str("url", url).Msg(fmt.Sprintf(utils.Green, fmt.Sprintf("%s is available at:", misc.Software)))
 
 	if !config.Config.HeadlessMode {
 		utils.OpenBrowser(url)

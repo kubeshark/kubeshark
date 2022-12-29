@@ -9,6 +9,7 @@ import (
 	"github.com/kubeshark/base/pkg/models"
 	"github.com/kubeshark/kubeshark/debounce"
 	"github.com/kubeshark/kubeshark/docker"
+	"github.com/kubeshark/kubeshark/misc"
 	"github.com/kubeshark/kubeshark/utils"
 	"github.com/rs/zerolog/log"
 	v1 "k8s.io/api/core/v1"
@@ -36,15 +37,15 @@ type WorkerSyncer struct {
 }
 
 type WorkerSyncerConfig struct {
-	TargetNamespaces              []string
-	PodFilterRegex                regexp.Regexp
-	SelfNamespace                 string
-	WorkerResources               Resources
-	ImagePullPolicy               v1.PullPolicy
-	KubesharkServiceAccountExists bool
-	ServiceMesh                   bool
-	Tls                           bool
-	Debug                         bool
+	TargetNamespaces         []string
+	PodFilterRegex           regexp.Regexp
+	SelfNamespace            string
+	WorkerResources          Resources
+	ImagePullPolicy          v1.PullPolicy
+	SelfServiceAccountExists bool
+	ServiceMesh              bool
+	Tls                      bool
+	Debug                    bool
 }
 
 func CreateAndStartWorkerSyncer(ctx context.Context, kubernetesProvider *Provider, config WorkerSyncerConfig, startTime time.Time) (*WorkerSyncer, error) {
@@ -74,8 +75,8 @@ func CreateAndStartWorkerSyncer(ctx context.Context, kubernetesProvider *Provide
 }
 
 func (workerSyncer *WorkerSyncer) watchWorkerPods() {
-	kubesharkResourceRegex := regexp.MustCompile(fmt.Sprintf("^%s.*", WorkerPodName))
-	podWatchHelper := NewPodWatchHelper(workerSyncer.kubernetesProvider, kubesharkResourceRegex)
+	selfResourceRegex := regexp.MustCompile(fmt.Sprintf("^%s.*", WorkerPodName))
+	podWatchHelper := NewPodWatchHelper(workerSyncer.kubernetesProvider, selfResourceRegex)
 	eventChan, errorChan := FilteredWatch(workerSyncer.context, podWatchHelper, []string{workerSyncer.config.SelfNamespace}, podWatchHelper)
 
 	for {
@@ -88,7 +89,7 @@ func (workerSyncer *WorkerSyncer) watchWorkerPods() {
 
 			pod, err := wEvent.ToPod()
 			if err != nil {
-				log.Error().Str("pod", WorkerPodName).Err(err).Msg("While parsing Kubeshark resource!")
+				log.Error().Str("pod", WorkerPodName).Err(err).Msg(fmt.Sprintf("While parsing %s resource!", misc.Software))
 				continue
 			}
 
@@ -118,8 +119,8 @@ func (workerSyncer *WorkerSyncer) watchWorkerPods() {
 }
 
 func (workerSyncer *WorkerSyncer) watchWorkerEvents() {
-	kubesharkResourceRegex := regexp.MustCompile(fmt.Sprintf("^%s.*", WorkerPodName))
-	eventWatchHelper := NewEventWatchHelper(workerSyncer.kubernetesProvider, kubesharkResourceRegex, "pod")
+	selfResourceRegex := regexp.MustCompile(fmt.Sprintf("^%s.*", WorkerPodName))
+	eventWatchHelper := NewEventWatchHelper(workerSyncer.kubernetesProvider, selfResourceRegex, "pod")
 	eventChan, errorChan := FilteredWatch(workerSyncer.context, eventWatchHelper, []string{workerSyncer.config.SelfNamespace}, eventWatchHelper)
 
 	for {
@@ -341,7 +342,7 @@ func (workerSyncer *WorkerSyncer) updateWorkers() error {
 
 	if len(workerSyncer.nodeToTargettedPodMap) > 0 {
 		var serviceAccountName string
-		if workerSyncer.config.KubesharkServiceAccountExists {
+		if workerSyncer.config.SelfServiceAccountExists {
 			serviceAccountName = ServiceAccountName
 		} else {
 			serviceAccountName = ""

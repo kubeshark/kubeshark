@@ -6,20 +6,21 @@ import (
 
 	"github.com/kubeshark/kubeshark/errormessage"
 	"github.com/kubeshark/kubeshark/kubernetes"
+	"github.com/kubeshark/kubeshark/misc"
 	"github.com/kubeshark/kubeshark/utils"
 	"github.com/rs/zerolog/log"
 	"k8s.io/apimachinery/pkg/util/wait"
 )
 
-func CleanUpKubesharkResources(ctx context.Context, cancel context.CancelFunc, kubernetesProvider *kubernetes.Provider, isNsRestrictedMode bool, kubesharkResourcesNamespace string) {
-	log.Warn().Msg("Removing Kubeshark resources...")
+func CleanUpSelfResources(ctx context.Context, cancel context.CancelFunc, kubernetesProvider *kubernetes.Provider, isNsRestrictedMode bool, selfResourcesNamespace string) {
+	log.Warn().Msg(fmt.Sprintf("Removing %s resources...", misc.Software))
 
 	var leftoverResources []string
 
 	if isNsRestrictedMode {
-		leftoverResources = cleanUpRestrictedMode(ctx, kubernetesProvider, kubesharkResourcesNamespace)
+		leftoverResources = cleanUpRestrictedMode(ctx, kubernetesProvider, selfResourcesNamespace)
 	} else {
-		leftoverResources = cleanUpNonRestrictedMode(ctx, cancel, kubernetesProvider, kubesharkResourcesNamespace)
+		leftoverResources = cleanUpNonRestrictedMode(ctx, cancel, kubernetesProvider, selfResourcesNamespace)
 	}
 
 	if len(leftoverResources) > 0 {
@@ -31,14 +32,14 @@ func CleanUpKubesharkResources(ctx context.Context, cancel context.CancelFunc, k
 	}
 }
 
-func cleanUpNonRestrictedMode(ctx context.Context, cancel context.CancelFunc, kubernetesProvider *kubernetes.Provider, kubesharkResourcesNamespace string) []string {
+func cleanUpNonRestrictedMode(ctx context.Context, cancel context.CancelFunc, kubernetesProvider *kubernetes.Provider, selfResourcesNamespace string) []string {
 	leftoverResources := make([]string, 0)
 
-	if err := kubernetesProvider.RemoveNamespace(ctx, kubesharkResourcesNamespace); err != nil {
-		resourceDesc := fmt.Sprintf("Namespace %s", kubesharkResourcesNamespace)
+	if err := kubernetesProvider.RemoveNamespace(ctx, selfResourcesNamespace); err != nil {
+		resourceDesc := fmt.Sprintf("Namespace %s", selfResourcesNamespace)
 		handleDeletionError(err, resourceDesc, &leftoverResources)
 	} else {
-		defer waitUntilNamespaceDeleted(ctx, cancel, kubernetesProvider, kubesharkResourcesNamespace)
+		defer waitUntilNamespaceDeleted(ctx, cancel, kubernetesProvider, selfResourcesNamespace)
 	}
 
 	if resources, err := kubernetesProvider.ListManagedClusterRoles(ctx); err != nil {
@@ -68,98 +69,98 @@ func cleanUpNonRestrictedMode(ctx context.Context, cancel context.CancelFunc, ku
 	return leftoverResources
 }
 
-func waitUntilNamespaceDeleted(ctx context.Context, cancel context.CancelFunc, kubernetesProvider *kubernetes.Provider, kubesharkResourcesNamespace string) {
+func waitUntilNamespaceDeleted(ctx context.Context, cancel context.CancelFunc, kubernetesProvider *kubernetes.Provider, selfResourcesNamespace string) {
 	// Call cancel if a terminating signal was received. Allows user to skip the wait.
 	go func() {
 		utils.WaitForTermination(ctx, cancel)
 	}()
 
-	if err := kubernetesProvider.WaitUtilNamespaceDeleted(ctx, kubesharkResourcesNamespace); err != nil {
+	if err := kubernetesProvider.WaitUtilNamespaceDeleted(ctx, selfResourcesNamespace); err != nil {
 		switch {
 		case ctx.Err() == context.Canceled:
 			log.Printf("Do nothing. User interrupted the wait")
 			log.Warn().
-				Str("namespace", kubesharkResourcesNamespace).
+				Str("namespace", selfResourcesNamespace).
 				Msg("Did nothing. User interrupted the wait.")
 		case err == wait.ErrWaitTimeout:
 			log.Warn().
-				Str("namespace", kubesharkResourcesNamespace).
+				Str("namespace", selfResourcesNamespace).
 				Msg("Timed out while deleting the namespace.")
 		default:
 			log.Warn().
 				Err(errormessage.FormatError(err)).
-				Str("namespace", kubesharkResourcesNamespace).
+				Str("namespace", selfResourcesNamespace).
 				Msg("Unknown error while deleting the namespace.")
 		}
 	}
 }
 
-func cleanUpRestrictedMode(ctx context.Context, kubernetesProvider *kubernetes.Provider, kubesharkResourcesNamespace string) []string {
+func cleanUpRestrictedMode(ctx context.Context, kubernetesProvider *kubernetes.Provider, selfResourcesNamespace string) []string {
 	leftoverResources := make([]string, 0)
 
-	if err := kubernetesProvider.RemoveService(ctx, kubesharkResourcesNamespace, kubernetes.FrontServiceName); err != nil {
-		resourceDesc := fmt.Sprintf("Service %s in namespace %s", kubernetes.FrontServiceName, kubesharkResourcesNamespace)
+	if err := kubernetesProvider.RemoveService(ctx, selfResourcesNamespace, kubernetes.FrontServiceName); err != nil {
+		resourceDesc := fmt.Sprintf("Service %s in namespace %s", kubernetes.FrontServiceName, selfResourcesNamespace)
 		handleDeletionError(err, resourceDesc, &leftoverResources)
 	}
 
-	if err := kubernetesProvider.RemoveService(ctx, kubesharkResourcesNamespace, kubernetes.HubServiceName); err != nil {
-		resourceDesc := fmt.Sprintf("Service %s in namespace %s", kubernetes.HubServiceName, kubesharkResourcesNamespace)
+	if err := kubernetesProvider.RemoveService(ctx, selfResourcesNamespace, kubernetes.HubServiceName); err != nil {
+		resourceDesc := fmt.Sprintf("Service %s in namespace %s", kubernetes.HubServiceName, selfResourcesNamespace)
 		handleDeletionError(err, resourceDesc, &leftoverResources)
 	}
 
-	if err := kubernetesProvider.RemoveDaemonSet(ctx, kubesharkResourcesNamespace, kubernetes.WorkerDaemonSetName); err != nil {
-		resourceDesc := fmt.Sprintf("DaemonSet %s in namespace %s", kubernetes.WorkerDaemonSetName, kubesharkResourcesNamespace)
+	if err := kubernetesProvider.RemoveDaemonSet(ctx, selfResourcesNamespace, kubernetes.WorkerDaemonSetName); err != nil {
+		resourceDesc := fmt.Sprintf("DaemonSet %s in namespace %s", kubernetes.WorkerDaemonSetName, selfResourcesNamespace)
 		handleDeletionError(err, resourceDesc, &leftoverResources)
 	}
 
-	if err := kubernetesProvider.RemoveConfigMap(ctx, kubesharkResourcesNamespace, kubernetes.ConfigMapName); err != nil {
-		resourceDesc := fmt.Sprintf("ConfigMap %s in namespace %s", kubernetes.ConfigMapName, kubesharkResourcesNamespace)
+	if err := kubernetesProvider.RemoveConfigMap(ctx, selfResourcesNamespace, kubernetes.ConfigMapName); err != nil {
+		resourceDesc := fmt.Sprintf("ConfigMap %s in namespace %s", kubernetes.ConfigMapName, selfResourcesNamespace)
 		handleDeletionError(err, resourceDesc, &leftoverResources)
 	}
 
-	if resources, err := kubernetesProvider.ListManagedServiceAccounts(ctx, kubesharkResourcesNamespace); err != nil {
-		resourceDesc := fmt.Sprintf("ServiceAccounts in namespace %s", kubesharkResourcesNamespace)
+	if resources, err := kubernetesProvider.ListManagedServiceAccounts(ctx, selfResourcesNamespace); err != nil {
+		resourceDesc := fmt.Sprintf("ServiceAccounts in namespace %s", selfResourcesNamespace)
 		handleDeletionError(err, resourceDesc, &leftoverResources)
 	} else {
 		for _, resource := range resources.Items {
-			if err := kubernetesProvider.RemoveServiceAccount(ctx, kubesharkResourcesNamespace, resource.Name); err != nil {
-				resourceDesc := fmt.Sprintf("ServiceAccount %s in namespace %s", resource.Name, kubesharkResourcesNamespace)
+			if err := kubernetesProvider.RemoveServiceAccount(ctx, selfResourcesNamespace, resource.Name); err != nil {
+				resourceDesc := fmt.Sprintf("ServiceAccount %s in namespace %s", resource.Name, selfResourcesNamespace)
 				handleDeletionError(err, resourceDesc, &leftoverResources)
 			}
 		}
 	}
 
-	if resources, err := kubernetesProvider.ListManagedRoles(ctx, kubesharkResourcesNamespace); err != nil {
-		resourceDesc := fmt.Sprintf("Roles in namespace %s", kubesharkResourcesNamespace)
+	if resources, err := kubernetesProvider.ListManagedRoles(ctx, selfResourcesNamespace); err != nil {
+		resourceDesc := fmt.Sprintf("Roles in namespace %s", selfResourcesNamespace)
 		handleDeletionError(err, resourceDesc, &leftoverResources)
 	} else {
 		for _, resource := range resources.Items {
-			if err := kubernetesProvider.RemoveRole(ctx, kubesharkResourcesNamespace, resource.Name); err != nil {
-				resourceDesc := fmt.Sprintf("Role %s in namespace %s", resource.Name, kubesharkResourcesNamespace)
+			if err := kubernetesProvider.RemoveRole(ctx, selfResourcesNamespace, resource.Name); err != nil {
+				resourceDesc := fmt.Sprintf("Role %s in namespace %s", resource.Name, selfResourcesNamespace)
 				handleDeletionError(err, resourceDesc, &leftoverResources)
 			}
 		}
 	}
 
-	if resources, err := kubernetesProvider.ListManagedRoleBindings(ctx, kubesharkResourcesNamespace); err != nil {
-		resourceDesc := fmt.Sprintf("RoleBindings in namespace %s", kubesharkResourcesNamespace)
+	if resources, err := kubernetesProvider.ListManagedRoleBindings(ctx, selfResourcesNamespace); err != nil {
+		resourceDesc := fmt.Sprintf("RoleBindings in namespace %s", selfResourcesNamespace)
 		handleDeletionError(err, resourceDesc, &leftoverResources)
 	} else {
 		for _, resource := range resources.Items {
-			if err := kubernetesProvider.RemoveRoleBinding(ctx, kubesharkResourcesNamespace, resource.Name); err != nil {
-				resourceDesc := fmt.Sprintf("RoleBinding %s in namespace %s", resource.Name, kubesharkResourcesNamespace)
+			if err := kubernetesProvider.RemoveRoleBinding(ctx, selfResourcesNamespace, resource.Name); err != nil {
+				resourceDesc := fmt.Sprintf("RoleBinding %s in namespace %s", resource.Name, selfResourcesNamespace)
 				handleDeletionError(err, resourceDesc, &leftoverResources)
 			}
 		}
 	}
 
-	if err := kubernetesProvider.RemovePod(ctx, kubesharkResourcesNamespace, kubernetes.HubPodName); err != nil {
-		resourceDesc := fmt.Sprintf("Pod %s in namespace %s", kubernetes.HubPodName, kubesharkResourcesNamespace)
+	if err := kubernetesProvider.RemovePod(ctx, selfResourcesNamespace, kubernetes.HubPodName); err != nil {
+		resourceDesc := fmt.Sprintf("Pod %s in namespace %s", kubernetes.HubPodName, selfResourcesNamespace)
 		handleDeletionError(err, resourceDesc, &leftoverResources)
 	}
 
-	if err := kubernetesProvider.RemovePod(ctx, kubesharkResourcesNamespace, kubernetes.FrontPodName); err != nil {
-		resourceDesc := fmt.Sprintf("Pod %s in namespace %s", kubernetes.FrontPodName, kubesharkResourcesNamespace)
+	if err := kubernetesProvider.RemovePod(ctx, selfResourcesNamespace, kubernetes.FrontPodName); err != nil {
+		resourceDesc := fmt.Sprintf("Pod %s in namespace %s", kubernetes.FrontPodName, selfResourcesNamespace)
 		handleDeletionError(err, resourceDesc, &leftoverResources)
 	}
 

@@ -49,16 +49,16 @@ func getMinimizedContainerStatuses(fullPod core.Pod) []core.ContainerStatus {
 }
 
 func excludeSelfPods(pods []core.Pod) []core.Pod {
-	kubesharkPrefixRegex := regexp.MustCompile("^" + KubesharkResourcesPrefix)
+	selfPrefixRegex := regexp.MustCompile("^" + SelfResourcesPrefix)
 
-	nonKubesharkPods := make([]core.Pod, 0)
+	nonSelfPods := make([]core.Pod, 0)
 	for _, pod := range pods {
-		if !kubesharkPrefixRegex.MatchString(pod.Name) {
-			nonKubesharkPods = append(nonKubesharkPods, pod)
+		if !selfPrefixRegex.MatchString(pod.Name) {
+			nonSelfPods = append(nonSelfPods, pod)
 		}
 	}
 
-	return nonKubesharkPods
+	return nonSelfPods
 }
 
 func getPodArrayDiff(oldPods []core.Pod, newPods []core.Pod) (added []core.Pod, removed []core.Pod) {

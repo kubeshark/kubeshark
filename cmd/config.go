@@ -6,6 +6,7 @@ import (
 	"github.com/creasty/defaults"
 	"github.com/kubeshark/kubeshark/config"
 	"github.com/kubeshark/kubeshark/config/configStructs"
+	"github.com/kubeshark/kubeshark/misc"
 	"github.com/kubeshark/kubeshark/utils"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
@@ -13,7 +14,7 @@ import (
 
 var configCmd = &cobra.Command{
 	Use:   "config",
-	Short: "Generate Kubeshark config with default values",
+	Short: fmt.Sprintf("Generate %s config with default values", misc.Software),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		configWithDefaults, err := config.GetConfigWithDefaults()
 		if err != nil {

@@ -10,5 +10,5 @@ func performCleanCommand() {
 		return
 	}
 
-	finishKubesharkExecution(kubernetesProvider, config.Config.IsNsRestrictedMode(), config.Config.SelfNamespace)
+	finishSelfExecution(kubernetesProvider, config.Config.IsNsRestrictedMode(), config.Config.SelfNamespace)
 }
