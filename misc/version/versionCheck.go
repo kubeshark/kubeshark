@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"os"
 	"runtime"
 	"strings"
 	"time"
@@ -18,6 +19,10 @@ import (
 )
 
 func CheckNewerVersion() {
+	if os.Getenv("KUBESHARK_DISABLE_VERSION_CHECK") != "" {
+		return
+	}
+
 	log.Info().Msg("Checking for a newer version...")
 	start := time.Now()
 	client := github.NewClient(nil)
