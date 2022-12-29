@@ -312,8 +312,6 @@ func (provider *Provider) BuildFrontPod(opts *PodOptions, hubHost string, hubPor
 					"memory": memRequests,
 				},
 			},
-			Command: []string{"nginx"},
-			Args:    []string{"-g", "daemon off;"},
 			Env: []core.EnvVar{
 				{
 					Name:  "REACT_APP_DEFAULT_FILTER",
