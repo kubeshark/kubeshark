@@ -98,7 +98,7 @@ func createRBACIfNecessary(ctx context.Context, kubernetesProvider *kubernetes.P
 }
 
 func createKubesharkHubPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, opts *kubernetes.PodOptions) error {
-	pod, err := kubernetesProvider.BuildHubPod(opts, false, "")
+	pod, err := kubernetesProvider.BuildHubPod(opts)
 	if err != nil {
 		return err
 	}
@@ -110,7 +110,7 @@ func createKubesharkHubPod(ctx context.Context, kubernetesProvider *kubernetes.P
 }
 
 func createFrontPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, opts *kubernetes.PodOptions) error {
-	pod, err := kubernetesProvider.BuildFrontPod(opts, false, "")
+	pod, err := kubernetesProvider.BuildFrontPod(opts)
 	if err != nil {
 		return err
 	}

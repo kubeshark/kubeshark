@@ -180,7 +180,7 @@ type PodOptions struct {
 	Debug              bool
 }
 
-func (provider *Provider) BuildHubPod(opts *PodOptions, mountVolumeClaim bool, volumeClaimName string) (*core.Pod, error) {
+func (provider *Provider) BuildHubPod(opts *PodOptions) (*core.Pod, error) {
 	configMapVolume := &core.ConfigMapVolumeSource{}
 	configMapVolume.Name = ConfigMapName
 
@@ -209,42 +209,11 @@ func (provider *Provider) BuildHubPod(opts *PodOptions, mountVolumeClaim bool, v
 		command = append(command, "-debug")
 	}
 
-	volumeMounts := []core.VolumeMount{
-		{
-			Name:      ConfigMapName,
-			MountPath: models.ConfigDirPath,
-		},
-	}
-	volumes := []core.Volume{
-		{
-			Name: ConfigMapName,
-			VolumeSource: core.VolumeSource{
-				ConfigMap: configMapVolume,
-			},
-		},
-	}
-
-	if mountVolumeClaim {
-		volumes = append(volumes, core.Volume{
-			Name: volumeClaimName,
-			VolumeSource: core.VolumeSource{
-				PersistentVolumeClaim: &core.PersistentVolumeClaimVolumeSource{
-					ClaimName: volumeClaimName,
-				},
-			},
-		})
-		volumeMounts = append(volumeMounts, core.VolumeMount{
-			Name:      volumeClaimName,
-			MountPath: models.DataDirPath,
-		})
-	}
-
 	containers := []core.Container{
 		{
 			Name:            opts.PodName,
 			Image:           opts.PodImage,
 			ImagePullPolicy: opts.ImagePullPolicy,
-			VolumeMounts:    volumeMounts,
 			Command:         command,
 			Resources: core.ResourceRequirements{
 				Limits: core.ResourceList{
@@ -270,7 +239,6 @@ func (provider *Provider) BuildHubPod(opts *PodOptions, mountVolumeClaim bool, v
 		},
 		Spec: core.PodSpec{
 			Containers:                    containers,
-			Volumes:                       volumes,
 			DNSPolicy:                     core.DNSClusterFirstWithHostNet,
 			TerminationGracePeriodSeconds: new(int64),
 			Tolerations: []core.Toleration{
@@ -293,7 +261,7 @@ func (provider *Provider) BuildHubPod(opts *PodOptions, mountVolumeClaim bool, v
 	return pod, nil
 }
 
-func (provider *Provider) BuildFrontPod(opts *PodOptions, mountVolumeClaim bool, volumeClaimName string) (*core.Pod, error) {
+func (provider *Provider) BuildFrontPod(opts *PodOptions) (*core.Pod, error) {
 	configMapVolume := &core.ConfigMapVolumeSource{}
 	configMapVolume.Name = ConfigMapName
 
@@ -361,7 +329,6 @@ func (provider *Provider) BuildFrontPod(opts *PodOptions, mountVolumeClaim bool,
 					Value: "8898",
 				},
 			},
-			WorkingDir: models.DataDirPath,
 		},
 	}
 
@@ -688,30 +655,6 @@ func (provider *Provider) handleRemovalError(err error) error {
 	}
 
 	return err
-}
-
-func (provider *Provider) CreateConfigMap(ctx context.Context, namespace string, configMapName string, serializedKubesharkConfig string) error {
-	configMapData := make(map[string]string)
-	configMapData[models.ConfigFileName] = serializedKubesharkConfig
-
-	configMap := &core.ConfigMap{
-		TypeMeta: metav1.TypeMeta{
-			Kind:       "ConfigMap",
-			APIVersion: "v1",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name: configMapName,
-			Labels: map[string]string{
-				LabelManagedBy: provider.managedBy,
-				LabelCreatedBy: provider.createdBy,
-			},
-		},
-		Data: configMapData,
-	}
-	if _, err := provider.clientSet.CoreV1().ConfigMaps(namespace).Create(ctx, configMap, metav1.CreateOptions{}); err != nil {
-		return err
-	}
-	return nil
 }
 
 func (provider *Provider) ApplyWorkerDaemonSet(

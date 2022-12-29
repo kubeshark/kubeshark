@@ -2,14 +2,12 @@ package cmd
 
 import (
 	"context"
-	"encoding/json"
 	"errors"
 	"fmt"
 	"path"
 	"regexp"
 	"time"
 
-	"github.com/kubeshark/base/pkg/models"
 	"github.com/kubeshark/kubeshark/config"
 	"github.com/kubeshark/kubeshark/errormessage"
 	"github.com/kubeshark/kubeshark/internal/connect"
@@ -112,13 +110,4 @@ func dumpLogsIfNeeded(ctx context.Context, kubernetesProvider *kubernetes.Provid
 	if err := fsUtils.DumpLogs(ctx, kubernetesProvider, filePath); err != nil {
 		log.Error().Err(err).Msg("Failed to dump logs.")
 	}
-}
-
-func getSerializedTapConfig(conf *models.Config) (string, error) {
-	serializedConfig, err := json.Marshal(conf)
-	if err != nil {
-		return "", err
-	}
-
-	return string(serializedConfig), nil
 }
