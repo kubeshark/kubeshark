@@ -11,136 +11,6 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  docker-registry:
-    name: Push Docker image to Docker Hub
-    runs-on: ubuntu-latest
-
-    strategy:
-      max-parallel: 2
-      fail-fast: false
-      matrix:
-        target:
-          - amd64
-          - arm64v8
-
-    steps:
-      - name: Check out the repo
-        uses: actions/checkout@v2
-
-      - name: Determine versioning strategy
-        uses: haya14busa/action-cond@v1
-        id: condval
-        with:
-          cond: ${{ github.ref == 'refs/heads/main' }}
-          if_true: "stable"
-          if_false: "dev"
-
-      - name: Auto Increment Ver Action
-        uses: docker://igorgov/auto-inc-ver:v2.0.0
-        id: versioning
-        with:
-          mode: ${{ steps.condval.outputs.value }}
-          suffix: 'dev'
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Get version parameters
-        shell: bash
-        run: |
-          echo "##[set-output name=build_timestamp;]$(echo $(date +%s))"
-          echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
-        id: version_parameters
-
-      - name: Docker meta
-        id: meta
-        uses: docker/metadata-action@v3
-        with:
-          images: |
-            kubeshark/kubeshark
-          tags: |
-            type=raw,${{ steps.versioning.outputs.version }}
-            type=raw,value=latest,enable=${{ steps.condval.outputs.value == 'stable' }}
-            type=raw,value=dev-latest,enable=${{ steps.condval.outputs.value == 'dev' }}
-          flavor: |
-            latest=auto
-            prefix=
-            suffix=-${{ matrix.target }},onlatest=true
-
-      - name: Login to Docker Hub
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Build and push
-        uses: docker/build-push-action@v2
-        with:
-          context: .
-          push: true
-          tags: ${{ steps.meta.outputs.tags }}
-          labels: ${{ steps.meta.outputs.labels }}
-          build-args: |
-            TARGETARCH=${{ matrix.target }}
-            VER=${{ steps.versioning.outputs.version }}
-            BUILD_TIMESTAMP=${{ steps.version_parameters.outputs.build_timestamp }}
-            GIT_BRANCH=${{ steps.version_parameters.outputs.branch }}
-            COMMIT_HASH=${{ github.sha }}
-
-  docker-manifest:
-    name: Create and Push a Docker Manifest
-    runs-on: ubuntu-latest
-    needs: [docker-registry]
-    steps:
-      - name: Determine versioning strategy
-        uses: haya14busa/action-cond@v1
-        id: condval
-        with:
-          cond: ${{ github.ref == 'refs/heads/main' }}
-          if_true: "stable"
-          if_false: "dev"
-
-      - name: Auto Increment Ver Action
-        uses: docker://igorgov/auto-inc-ver:v2.0.0
-        id: versioning
-        with:
-          mode: ${{ steps.condval.outputs.value }}
-          suffix: 'dev'
-          github_token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Get version parameters
-        shell: bash
-        run: |
-          echo "##[set-output name=build_timestamp;]$(echo $(date +%s))"
-          echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
-        id: version_parameters
-
-      - name: Docker meta
-        id: meta
-        uses: docker/metadata-action@v3
-        with:
-          images: |
-            kubeshark/kubeshark
-          tags: |
-            type=raw,${{ steps.versioning.outputs.version }}
-            type=raw,value=latest,enable=${{ steps.condval.outputs.value == 'stable' }}
-            type=raw,value=dev-latest,enable=${{ steps.condval.outputs.value == 'dev' }}
-      - name: Login to Docker Hub
-        uses: docker/login-action@v2
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_TOKEN }}
-
-      - name: Create manifest
-        run: |
-          while IFS= read -r line; do
-            docker manifest create $line --amend $line-amd64 --amend $line-arm64v8
-          done <<< "${{ steps.meta.outputs.tags }}"
-
-      - name: Push manifest
-        run: |
-          while IFS= read -r line; do
-            docker manifest push $line
-          done <<< "${{ steps.meta.outputs.tags }}"
-
   cli:
     name: Build the CLI and publish
     runs-on: ubuntu-latest
@@ -202,7 +72,7 @@ jobs:
           tag: ${{ steps.versioning.outputs.version }}
           prerelease: ${{ github.ref != 'refs/heads/main' }}
           bodyFile: 'cli/bin/README.md'
-  
+
   goreleaser:
     runs-on: ubuntu-latest
     steps:
