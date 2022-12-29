@@ -319,7 +319,7 @@ func (provider *Provider) BuildFrontPod(opts *PodOptions, hubHost string, hubPor
 				},
 				{
 					Name:  "REACT_APP_HUB_HOST",
-					Value: hubHost,
+					Value: " ",
 				},
 				{
 					Name:  "REACT_APP_HUB_PORT",

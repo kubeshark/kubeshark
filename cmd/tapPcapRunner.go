@@ -155,7 +155,7 @@ func createAndStartContainers(
 		Tty:   false,
 		Env: []string{
 			"REACT_APP_DEFAULT_FILTER= ",
-			fmt.Sprintf("REACT_APP_HUB_HOST=%s", config.Config.Tap.Proxy.Host),
+			"REACT_APP_HUB_HOST= ",
 			fmt.Sprintf("REACT_APP_HUB_PORT=%d", config.Config.Tap.Proxy.Hub.SrcPort),
 		},
 	}, hostConfigFront, nil, nil, nameFront)
