@@ -10,7 +10,6 @@ import (
 	"path/filepath"
 	"regexp"
 
-	"github.com/kubeshark/base/pkg/models"
 	"github.com/kubeshark/kubeshark/docker"
 	"github.com/kubeshark/kubeshark/semver"
 	"github.com/rs/zerolog/log"
@@ -175,7 +174,7 @@ type PodOptions struct {
 	PodName            string
 	PodImage           string
 	ServiceAccountName string
-	Resources          models.Resources
+	Resources          Resources
 	ImagePullPolicy    core.PullPolicy
 	Debug              bool
 }
@@ -665,7 +664,7 @@ func (provider *Provider) ApplyWorkerDaemonSet(
 	workerPodName string,
 	nodeNames []string,
 	serviceAccountName string,
-	resources models.Resources,
+	resources Resources,
 	imagePullPolicy core.PullPolicy,
 	serviceMesh bool,
 	tls bool,

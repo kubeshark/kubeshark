@@ -39,7 +39,7 @@ type WorkerSyncerConfig struct {
 	TargetNamespaces              []string
 	PodFilterRegex                regexp.Regexp
 	SelfNamespace                 string
-	WorkerResources               models.Resources
+	WorkerResources               Resources
 	ImagePullPolicy               v1.PullPolicy
 	KubesharkServiceAccountExists bool
 	ServiceMesh                   bool

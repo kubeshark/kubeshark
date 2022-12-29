@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"regexp"
 
-	"github.com/kubeshark/base/pkg/models"
+	"github.com/kubeshark/kubeshark/kubernetes"
 	"github.com/kubeshark/kubeshark/utils"
 	"github.com/rs/zerolog/log"
 )
@@ -54,8 +54,8 @@ type DockerConfig struct {
 }
 
 type ResourcesConfig struct {
-	Worker models.Resources `yaml:"worker"`
-	Hub    models.Resources `yaml:"hub"`
+	Worker kubernetes.Resources `yaml:"worker"`
+	Hub    kubernetes.Resources `yaml:"hub"`
 }
 
 type TapConfig struct {

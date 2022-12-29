@@ -3,7 +3,6 @@ package resources
 import (
 	"context"
 
-	"github.com/kubeshark/base/pkg/models"
 	"github.com/kubeshark/kubeshark/config"
 	"github.com/kubeshark/kubeshark/docker"
 	"github.com/kubeshark/kubeshark/errormessage"
@@ -13,7 +12,7 @@ import (
 	core "k8s.io/api/core/v1"
 )
 
-func CreateHubResources(ctx context.Context, kubernetesProvider *kubernetes.Provider, isNsRestrictedMode bool, selfNamespace string, hubResources models.Resources, imagePullPolicy core.PullPolicy, debug bool) (bool, error) {
+func CreateHubResources(ctx context.Context, kubernetesProvider *kubernetes.Provider, isNsRestrictedMode bool, selfNamespace string, hubResources kubernetes.Resources, imagePullPolicy core.PullPolicy, debug bool) (bool, error) {
 	if !isNsRestrictedMode {
 		if err := createSelfNamespace(ctx, kubernetesProvider, selfNamespace); err != nil {
 			return false, err
