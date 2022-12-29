@@ -60,11 +60,14 @@ func startProxyReportErrorIfAny(kubernetesProvider *kubernetes.Provider, ctx con
 }
 
 func getKubernetesProviderForCli() (*kubernetes.Provider, error) {
-	kubernetesProvider, err := kubernetes.NewProvider(config.Config.KubeConfigPath(), config.Config.Kube.Context)
+	kubeConfigPath := config.Config.KubeConfigPath()
+	kubernetesProvider, err := kubernetes.NewProvider(kubeConfigPath, config.Config.Kube.Context)
 	if err != nil {
 		handleKubernetesProviderError(err)
 		return nil, err
 	}
+
+	log.Info().Str("path", kubeConfigPath).Msg("Using kubeconfig:")
 
 	if err := kubernetesProvider.ValidateNotProxy(); err != nil {
 		handleKubernetesProviderError(err)

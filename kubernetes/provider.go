@@ -1060,7 +1060,6 @@ func ValidateKubernetesVersion(serverVersionSemVer *semver.SemVersion) error {
 }
 
 func loadKubernetesConfiguration(kubeConfigPath string, context string) clientcmd.ClientConfig {
-	log.Info().Str("path", kubeConfigPath).Msg("Using kubeconfig:")
 	configPathList := filepath.SplitList(kubeConfigPath)
 	configLoadingRules := &clientcmd.ClientConfigLoadingRules{}
 	if len(configPathList) <= 1 {
