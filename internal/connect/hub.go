@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/kubeshark/kubeshark/config"
 	"github.com/kubeshark/kubeshark/utils"
 
 	"github.com/rs/zerolog/log"
@@ -79,6 +80,36 @@ func (connector *Connector) PostWorkerPodToHub(pod *v1.Pod) {
 			} else {
 				ok = true
 				log.Debug().Interface("worker-pod", pod).Msg("Reported worker pod to Hub:")
+				connector.PostStorageLimitToHub(config.Config.Tap.StorageLimitBytes())
+			}
+			time.Sleep(time.Second)
+		}
+	}
+}
+
+type postStorageLimit struct {
+	Limit int64 `json:"limit"`
+}
+
+func (connector *Connector) PostStorageLimitToHub(limit int64) {
+	payload := &postStorageLimit{
+		Limit: limit,
+	}
+	postStorageLimitUrl := fmt.Sprintf("%s/pcaps/set-storage-limit", connector.url)
+
+	if payloadMarshalled, err := json.Marshal(payload); err != nil {
+		log.Error().Err(err).Msg("Failed to marshal the storage limit:")
+	} else {
+		ok := false
+		for !ok {
+			if _, err = utils.Post(postStorageLimitUrl, "application/json", bytes.NewBuffer(payloadMarshalled), connector.client); err != nil {
+				if _, ok := err.(*url.Error); ok {
+					break
+				}
+				log.Debug().Err(err).Msg("Failed sending the storage limit to Hub:")
+			} else {
+				ok = true
+				log.Debug().Int("limit", int(limit)).Msg("Reported storage limit to Hub:")
 			}
 			time.Sleep(time.Second)
 		}

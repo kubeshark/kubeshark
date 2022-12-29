@@ -6,22 +6,23 @@ import (
 
 	"github.com/kubeshark/base/pkg/models"
 	"github.com/kubeshark/kubeshark/utils"
+	"github.com/rs/zerolog/log"
 )
 
 const (
-	DockerRegistryLabel        = "docker-registry"
-	DockerTagLabel             = "docker-tag"
-	ProxyFrontPortLabel        = "proxy-front-port"
-	ProxyHubPortLabel          = "proxy-hub-port"
-	ProxyHostLabel             = "proxy-host"
-	NamespacesLabel            = "namespaces"
-	AllNamespacesLabel         = "allnamespaces"
-	HumanMaxEntriesDBSizeLabel = "max-entries-db-size"
-	DryRunLabel                = "dryrun"
-	PcapLabel                  = "pcap"
-	ServiceMeshLabel           = "servicemesh"
-	TlsLabel                   = "tls"
-	DebugLabel                 = "debug"
+	DockerRegistryLabel = "docker-registry"
+	DockerTagLabel      = "docker-tag"
+	ProxyFrontPortLabel = "proxy-front-port"
+	ProxyHubPortLabel   = "proxy-hub-port"
+	ProxyHostLabel      = "proxy-host"
+	NamespacesLabel     = "namespaces"
+	AllNamespacesLabel  = "allnamespaces"
+	StorageLimitLabel   = "storagelimit"
+	DryRunLabel         = "dryrun"
+	PcapLabel           = "pcap"
+	ServiceMeshLabel    = "servicemesh"
+	TlsLabel            = "tls"
+	DebugLabel          = "debug"
 )
 
 type WorkerConfig struct {
@@ -58,19 +59,19 @@ type ResourcesConfig struct {
 }
 
 type TapConfig struct {
-	Docker                DockerConfig    `yaml:"docker"`
-	Proxy                 ProxyConfig     `yaml:"proxy"`
-	PodRegexStr           string          `yaml:"regex" default:".*"`
-	Namespaces            []string        `yaml:"namespaces"`
-	AllNamespaces         bool            `yaml:"allnamespaces" default:"false"`
-	HumanMaxEntriesDBSize string          `yaml:"max-entries-db-size" default:"200MB"`
-	DryRun                bool            `yaml:"dryrun" default:"false"`
-	Pcap                  string          `yaml:"pcap" default:""`
-	Resources             ResourcesConfig `yaml:"resources"`
-	ServiceMesh           bool            `yaml:"servicemesh" default:"true"`
-	Tls                   bool            `yaml:"tls" default:"true"`
-	PacketCapture         string          `yaml:"packetcapture" default:"libpcap"`
-	Debug                 bool            `yaml:"debug" default:"false"`
+	Docker        DockerConfig    `yaml:"docker"`
+	Proxy         ProxyConfig     `yaml:"proxy"`
+	PodRegexStr   string          `yaml:"regex" default:".*"`
+	Namespaces    []string        `yaml:"namespaces"`
+	AllNamespaces bool            `yaml:"allnamespaces" default:"false"`
+	StorageLimit  string          `yaml:"storagelimit" default:"200MB"`
+	DryRun        bool            `yaml:"dryrun" default:"false"`
+	Pcap          string          `yaml:"pcap" default:""`
+	Resources     ResourcesConfig `yaml:"resources"`
+	ServiceMesh   bool            `yaml:"servicemesh" default:"true"`
+	Tls           bool            `yaml:"tls" default:"true"`
+	PacketCapture string          `yaml:"packetcapture" default:"libpcap"`
+	Debug         bool            `yaml:"debug" default:"false"`
 }
 
 func (config *TapConfig) PodRegex() *regexp.Regexp {
@@ -78,9 +79,12 @@ func (config *TapConfig) PodRegex() *regexp.Regexp {
 	return podRegex
 }
 
-func (config *TapConfig) MaxEntriesDBSizeBytes() int64 {
-	maxEntriesDBSizeBytes, _ := utils.HumanReadableToBytes(config.HumanMaxEntriesDBSize)
-	return maxEntriesDBSizeBytes
+func (config *TapConfig) StorageLimitBytes() int64 {
+	storageLimitBytes, err := utils.HumanReadableToBytes(config.StorageLimit)
+	if err != nil {
+		log.Fatal().Err(err).Send()
+	}
+	return storageLimitBytes
 }
 
 func (config *TapConfig) Validate() error {
@@ -89,9 +93,9 @@ func (config *TapConfig) Validate() error {
 		return fmt.Errorf("%s is not a valid regex %s", config.PodRegexStr, compileErr)
 	}
 
-	_, parseHumanDataSizeErr := utils.HumanReadableToBytes(config.HumanMaxEntriesDBSize)
+	_, parseHumanDataSizeErr := utils.HumanReadableToBytes(config.StorageLimit)
 	if parseHumanDataSizeErr != nil {
-		return fmt.Errorf("Could not parse --%s value %s", HumanMaxEntriesDBSizeLabel, config.HumanMaxEntriesDBSize)
+		return fmt.Errorf("Could not parse --%s value %s", StorageLimitLabel, config.StorageLimit)
 	}
 
 	return nil

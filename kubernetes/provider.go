@@ -171,14 +171,13 @@ func (provider *Provider) CreateNamespace(ctx context.Context, name string) (*co
 }
 
 type PodOptions struct {
-	Namespace             string
-	PodName               string
-	PodImage              string
-	ServiceAccountName    string
-	MaxEntriesDBSizeBytes int64
-	Resources             models.Resources
-	ImagePullPolicy       core.PullPolicy
-	Debug                 bool
+	Namespace          string
+	PodName            string
+	PodImage           string
+	ServiceAccountName string
+	Resources          models.Resources
+	ImagePullPolicy    core.PullPolicy
+	Debug              bool
 }
 
 func (provider *Provider) BuildHubPod(opts *PodOptions, mountVolumeClaim bool, volumeClaimName string) (*core.Pod, error) {
@@ -318,6 +317,7 @@ func (provider *Provider) BuildFrontPod(opts *PodOptions, mountVolumeClaim bool,
 	volumeMounts := []core.VolumeMount{}
 	volumes := []core.Volume{}
 
+	// TODO: Get host and port from ProxyConfig
 	containers := []core.Container{
 		{
 			Name:            opts.PodName,

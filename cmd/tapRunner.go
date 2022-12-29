@@ -85,7 +85,7 @@ func tap() {
 	}
 
 	log.Info().Msg("Waiting for the creation of Kubeshark resources...")
-	if state.kubesharkServiceAccountExists, err = resources.CreateHubResources(ctx, kubernetesProvider, serializedKubesharkConfig, config.Config.IsNsRestrictedMode(), config.Config.SelfNamespace, config.Config.Tap.MaxEntriesDBSizeBytes(), config.Config.Tap.Resources.Hub, config.Config.ImagePullPolicy(), config.Config.Tap.Debug); err != nil {
+	if state.kubesharkServiceAccountExists, err = resources.CreateHubResources(ctx, kubernetesProvider, serializedKubesharkConfig, config.Config.IsNsRestrictedMode(), config.Config.SelfNamespace, config.Config.Tap.Resources.Hub, config.Config.ImagePullPolicy(), config.Config.Tap.Debug); err != nil {
 		var statusError *k8serrors.StatusError
 		if errors.As(err, &statusError) && (statusError.ErrStatus.Reason == metav1.StatusReasonAlreadyExists) {
 			log.Warn().Msg("Kubeshark is already running in this namespace, change the `kubeshark-resources-namespace` configuration or run `kubeshark clean` to remove the currently running Kubeshark instance")
@@ -112,8 +112,9 @@ func finishTapExecution(kubernetesProvider *kubernetes.Provider) {
 }
 
 func getTapConfig() *models.Config {
+	// TODO: Remove models.Config
 	conf := models.Config{
-		MaxDBSizeBytes:     config.Config.Tap.MaxEntriesDBSizeBytes(),
+		MaxDBSizeBytes:     config.Config.Tap.StorageLimitBytes(),
 		PullPolicy:         config.Config.Tap.Docker.ImagePullPolicy,
 		WorkerResources:    config.Config.Tap.Resources.Worker,
 		ResourcesNamespace: config.Config.SelfNamespace,

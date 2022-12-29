@@ -13,7 +13,7 @@ import (
 	core "k8s.io/api/core/v1"
 )
 
-func CreateHubResources(ctx context.Context, kubernetesProvider *kubernetes.Provider, serializedKubesharkConfig string, isNsRestrictedMode bool, kubesharkResourcesNamespace string, maxEntriesDBSizeBytes int64, hubResources models.Resources, imagePullPolicy core.PullPolicy, debug bool) (bool, error) {
+func CreateHubResources(ctx context.Context, kubernetesProvider *kubernetes.Provider, serializedKubesharkConfig string, isNsRestrictedMode bool, kubesharkResourcesNamespace string, hubResources models.Resources, imagePullPolicy core.PullPolicy, debug bool) (bool, error) {
 	if !isNsRestrictedMode {
 		if err := createKubesharkNamespace(ctx, kubernetesProvider, kubesharkResourcesNamespace); err != nil {
 			return false, err
@@ -37,25 +37,23 @@ func CreateHubResources(ctx context.Context, kubernetesProvider *kubernetes.Prov
 	}
 
 	opts := &kubernetes.PodOptions{
-		Namespace:             kubesharkResourcesNamespace,
-		PodName:               kubernetes.HubPodName,
-		PodImage:              docker.GetHubImage(),
-		ServiceAccountName:    serviceAccountName,
-		MaxEntriesDBSizeBytes: maxEntriesDBSizeBytes,
-		Resources:             hubResources,
-		ImagePullPolicy:       imagePullPolicy,
-		Debug:                 debug,
+		Namespace:          kubesharkResourcesNamespace,
+		PodName:            kubernetes.HubPodName,
+		PodImage:           docker.GetHubImage(),
+		ServiceAccountName: serviceAccountName,
+		Resources:          hubResources,
+		ImagePullPolicy:    imagePullPolicy,
+		Debug:              debug,
 	}
 
 	frontOpts := &kubernetes.PodOptions{
-		Namespace:             kubesharkResourcesNamespace,
-		PodName:               kubernetes.FrontPodName,
-		PodImage:              docker.GetWorkerImage(),
-		ServiceAccountName:    serviceAccountName,
-		MaxEntriesDBSizeBytes: maxEntriesDBSizeBytes,
-		Resources:             hubResources,
-		ImagePullPolicy:       imagePullPolicy,
-		Debug:                 debug,
+		Namespace:          kubesharkResourcesNamespace,
+		PodName:            kubernetes.FrontPodName,
+		PodImage:           docker.GetWorkerImage(),
+		ServiceAccountName: serviceAccountName,
+		Resources:          hubResources,
+		ImagePullPolicy:    imagePullPolicy,
+		Debug:              debug,
 	}
 
 	if err := createKubesharkHubPod(ctx, kubernetesProvider, opts); err != nil {

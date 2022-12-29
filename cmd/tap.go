@@ -31,7 +31,7 @@ var tapCmd = &cobra.Command{
 		}
 
 		log.Info().
-			Str("limit", config.Config.Tap.HumanMaxEntriesDBSize).
+			Str("limit", config.Config.Tap.StorageLimit).
 			Msg("Kubeshark will store the traffic up to a limit. Oldest entries will be removed once the limit is reached.")
 
 		return nil
@@ -53,7 +53,7 @@ func init() {
 	tapCmd.Flags().String(configStructs.ProxyHostLabel, defaultTapConfig.Proxy.Host, "Provide a custom host for the proxy/port-forward.")
 	tapCmd.Flags().StringSliceP(configStructs.NamespacesLabel, "n", defaultTapConfig.Namespaces, "Namespaces selector.")
 	tapCmd.Flags().BoolP(configStructs.AllNamespacesLabel, "A", defaultTapConfig.AllNamespaces, "Tap all namespaces.")
-	tapCmd.Flags().String(configStructs.HumanMaxEntriesDBSizeLabel, defaultTapConfig.HumanMaxEntriesDBSize, "Override the default max entries db size.")
+	tapCmd.Flags().String(configStructs.StorageLimitLabel, defaultTapConfig.StorageLimit, "Override the default max entries db size.")
 	tapCmd.Flags().Bool(configStructs.DryRunLabel, defaultTapConfig.DryRun, "Preview of all pods matching the regex, without tapping them.")
 	tapCmd.Flags().StringP(configStructs.PcapLabel, "p", defaultTapConfig.Pcap, "Capture from a PCAP snapshot of Kubeshark (.tar.gz) using your Docker Daemon instead of Kubernetes.")
 	tapCmd.Flags().Bool(configStructs.ServiceMeshLabel, defaultTapConfig.ServiceMesh, "Capture the encrypted traffic if the cluster is configured with a service mesh and with mTLS.")

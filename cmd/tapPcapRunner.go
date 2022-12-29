@@ -149,6 +149,7 @@ func createAndStartContainers(
 		},
 	}
 
+	// TODO: Get host and port from ProxyConfig
 	respFront, err = cli.ContainerCreate(ctx, &container.Config{
 		Image: imageFront,
 		Tty:   false,
