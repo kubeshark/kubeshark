@@ -261,7 +261,7 @@ func (provider *Provider) BuildHubPod(opts *PodOptions) (*core.Pod, error) {
 	return pod, nil
 }
 
-func (provider *Provider) BuildFrontPod(opts *PodOptions) (*core.Pod, error) {
+func (provider *Provider) BuildFrontPod(opts *PodOptions, hubHost string, hubPort string) (*core.Pod, error) {
 	configMapVolume := &core.ConfigMapVolumeSource{}
 	configMapVolume.Name = ConfigMapName
 
@@ -285,7 +285,6 @@ func (provider *Provider) BuildFrontPod(opts *PodOptions) (*core.Pod, error) {
 	volumeMounts := []core.VolumeMount{}
 	volumes := []core.Volume{}
 
-	// TODO: Get host and port from ProxyConfig
 	containers := []core.Container{
 		{
 			Name:            opts.PodName,
@@ -322,11 +321,11 @@ func (provider *Provider) BuildFrontPod(opts *PodOptions) (*core.Pod, error) {
 				},
 				{
 					Name:  "REACT_APP_HUB_HOST",
-					Value: "localhost",
+					Value: hubHost,
 				},
 				{
 					Name:  "REACT_APP_HUB_PORT",
-					Value: "8898",
+					Value: hubPort,
 				},
 			},
 		},
