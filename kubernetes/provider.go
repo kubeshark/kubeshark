@@ -315,7 +315,7 @@ func (provider *Provider) BuildFrontPod(opts *PodOptions, hubHost string, hubPor
 			Env: []core.EnvVar{
 				{
 					Name:  "REACT_APP_DEFAULT_FILTER",
-					Value: " ",
+					Value: "timestamp >= now()",
 				},
 				{
 					Name:  "REACT_APP_HUB_HOST",
