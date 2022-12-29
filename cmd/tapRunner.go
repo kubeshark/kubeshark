@@ -16,7 +16,6 @@ import (
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
-	"github.com/kubeshark/base/pkg/models"
 	"github.com/kubeshark/kubeshark/config"
 	"github.com/kubeshark/kubeshark/config/configStructs"
 	"github.com/kubeshark/kubeshark/errormessage"
@@ -60,13 +59,6 @@ func tap() {
 
 	state.targetNamespaces = getNamespaces(kubernetesProvider)
 
-	conf := getTapConfig()
-	serializedKubesharkConfig, err := getSerializedTapConfig(conf)
-	if err != nil {
-		log.Error().Err(errormessage.FormatError(err)).Msg("Error serializing Kubeshark config!")
-		return
-	}
-
 	if config.Config.IsNsRestrictedMode() {
 		if len(state.targetNamespaces) != 1 || !utils.Contains(state.targetNamespaces, config.Config.SelfNamespace) {
 			log.Error().Msg(fmt.Sprintf("Kubeshark can't resolve IPs in other namespaces when running in namespace restricted mode. You can use the same namespace for --%s and --%s", configStructs.NamespacesLabel, config.SelfNamespaceConfigName))
@@ -85,7 +77,7 @@ func tap() {
 	}
 
 	log.Info().Msg("Waiting for the creation of Kubeshark resources...")
-	if state.kubesharkServiceAccountExists, err = resources.CreateHubResources(ctx, kubernetesProvider, serializedKubesharkConfig, config.Config.IsNsRestrictedMode(), config.Config.SelfNamespace, config.Config.Tap.Resources.Hub, config.Config.ImagePullPolicy(), config.Config.Tap.Debug); err != nil {
+	if state.kubesharkServiceAccountExists, err = resources.CreateHubResources(ctx, kubernetesProvider, config.Config.IsNsRestrictedMode(), config.Config.SelfNamespace, config.Config.Tap.Resources.Hub, config.Config.ImagePullPolicy(), config.Config.Tap.Debug); err != nil {
 		var statusError *k8serrors.StatusError
 		if errors.As(err, &statusError) && (statusError.ErrStatus.Reason == metav1.StatusReasonAlreadyExists) {
 			log.Warn().Msg("Kubeshark is already running in this namespace, change the `kubeshark-resources-namespace` configuration or run `kubeshark clean` to remove the currently running Kubeshark instance")
@@ -109,19 +101,6 @@ func tap() {
 
 func finishTapExecution(kubernetesProvider *kubernetes.Provider) {
 	finishKubesharkExecution(kubernetesProvider, config.Config.IsNsRestrictedMode(), config.Config.SelfNamespace)
-}
-
-func getTapConfig() *models.Config {
-	// TODO: Remove models.Config
-	conf := models.Config{
-		MaxDBSizeBytes:     config.Config.Tap.StorageLimitBytes(),
-		PullPolicy:         config.Config.Tap.Docker.ImagePullPolicy,
-		WorkerResources:    config.Config.Tap.Resources.Worker,
-		ResourcesNamespace: config.Config.SelfNamespace,
-		DatabasePath:       models.DataDirPath,
-	}
-
-	return &conf
 }
 
 /*

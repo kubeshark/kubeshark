@@ -13,18 +13,14 @@ import (
 	core "k8s.io/api/core/v1"
 )
 
-func CreateHubResources(ctx context.Context, kubernetesProvider *kubernetes.Provider, serializedKubesharkConfig string, isNsRestrictedMode bool, kubesharkResourcesNamespace string, hubResources models.Resources, imagePullPolicy core.PullPolicy, debug bool) (bool, error) {
+func CreateHubResources(ctx context.Context, kubernetesProvider *kubernetes.Provider, isNsRestrictedMode bool, selfNamespace string, hubResources models.Resources, imagePullPolicy core.PullPolicy, debug bool) (bool, error) {
 	if !isNsRestrictedMode {
-		if err := createKubesharkNamespace(ctx, kubernetesProvider, kubesharkResourcesNamespace); err != nil {
+		if err := createSelfNamespace(ctx, kubernetesProvider, selfNamespace); err != nil {
 			return false, err
 		}
 	}
 
-	if err := createKubesharkConfigmap(ctx, kubernetesProvider, serializedKubesharkConfig, kubesharkResourcesNamespace); err != nil {
-		return false, err
-	}
-
-	kubesharkServiceAccountExists, err := createRBACIfNecessary(ctx, kubernetesProvider, isNsRestrictedMode, kubesharkResourcesNamespace, []string{"pods", "services", "endpoints"})
+	kubesharkServiceAccountExists, err := createRBACIfNecessary(ctx, kubernetesProvider, isNsRestrictedMode, selfNamespace, []string{"pods", "services", "endpoints"})
 	if err != nil {
 		log.Warn().Err(errormessage.FormatError(err)).Msg("Failed to ensure the resources required for IP resolving. Kubeshark will not resolve target IPs to names.")
 	}
@@ -37,7 +33,7 @@ func CreateHubResources(ctx context.Context, kubernetesProvider *kubernetes.Prov
 	}
 
 	opts := &kubernetes.PodOptions{
-		Namespace:          kubesharkResourcesNamespace,
+		Namespace:          selfNamespace,
 		PodName:            kubernetes.HubPodName,
 		PodImage:           docker.GetHubImage(),
 		ServiceAccountName: serviceAccountName,
@@ -47,7 +43,7 @@ func CreateHubResources(ctx context.Context, kubernetesProvider *kubernetes.Prov
 	}
 
 	frontOpts := &kubernetes.PodOptions{
-		Namespace:          kubesharkResourcesNamespace,
+		Namespace:          selfNamespace,
 		PodName:            kubernetes.FrontPodName,
 		PodImage:           docker.GetWorkerImage(),
 		ServiceAccountName: serviceAccountName,
@@ -65,14 +61,14 @@ func CreateHubResources(ctx context.Context, kubernetesProvider *kubernetes.Prov
 	}
 
 	// TODO: Why the port values need to be 80?
-	_, err = kubernetesProvider.CreateService(ctx, kubesharkResourcesNamespace, kubernetes.HubServiceName, kubernetes.HubServiceName, 80, 80)
+	_, err = kubernetesProvider.CreateService(ctx, selfNamespace, kubernetes.HubServiceName, kubernetes.HubServiceName, 80, 80)
 	if err != nil {
 		return kubesharkServiceAccountExists, err
 	}
 
 	log.Info().Str("service", kubernetes.HubServiceName).Msg("Successfully created a service.")
 
-	_, err = kubernetesProvider.CreateService(ctx, kubesharkResourcesNamespace, kubernetes.FrontServiceName, kubernetes.FrontServiceName, 80, int32(config.Config.Tap.Proxy.Front.DstPort))
+	_, err = kubernetesProvider.CreateService(ctx, selfNamespace, kubernetes.FrontServiceName, kubernetes.FrontServiceName, 80, int32(config.Config.Tap.Proxy.Front.DstPort))
 	if err != nil {
 		return kubesharkServiceAccountExists, err
 	}
@@ -82,23 +78,18 @@ func CreateHubResources(ctx context.Context, kubernetesProvider *kubernetes.Prov
 	return kubesharkServiceAccountExists, nil
 }
 
-func createKubesharkNamespace(ctx context.Context, kubernetesProvider *kubernetes.Provider, kubesharkResourcesNamespace string) error {
-	_, err := kubernetesProvider.CreateNamespace(ctx, kubesharkResourcesNamespace)
+func createSelfNamespace(ctx context.Context, kubernetesProvider *kubernetes.Provider, selfNamespace string) error {
+	_, err := kubernetesProvider.CreateNamespace(ctx, selfNamespace)
 	return err
 }
 
-func createKubesharkConfigmap(ctx context.Context, kubernetesProvider *kubernetes.Provider, serializedKubesharkConfig string, kubesharkResourcesNamespace string) error {
-	err := kubernetesProvider.CreateConfigMap(ctx, kubesharkResourcesNamespace, kubernetes.ConfigMapName, serializedKubesharkConfig)
-	return err
-}
-
-func createRBACIfNecessary(ctx context.Context, kubernetesProvider *kubernetes.Provider, isNsRestrictedMode bool, kubesharkResourcesNamespace string, resources []string) (bool, error) {
+func createRBACIfNecessary(ctx context.Context, kubernetesProvider *kubernetes.Provider, isNsRestrictedMode bool, selfNamespace string, resources []string) (bool, error) {
 	if !isNsRestrictedMode {
-		if err := kubernetesProvider.CreateKubesharkRBAC(ctx, kubesharkResourcesNamespace, kubernetes.ServiceAccountName, kubernetes.ClusterRoleName, kubernetes.ClusterRoleBindingName, kubeshark.RBACVersion, resources); err != nil {
+		if err := kubernetesProvider.CreateKubesharkRBAC(ctx, selfNamespace, kubernetes.ServiceAccountName, kubernetes.ClusterRoleName, kubernetes.ClusterRoleBindingName, kubeshark.RBACVersion, resources); err != nil {
 			return false, err
 		}
 	} else {
-		if err := kubernetesProvider.CreateKubesharkRBACNamespaceRestricted(ctx, kubesharkResourcesNamespace, kubernetes.ServiceAccountName, kubernetes.RoleName, kubernetes.RoleBindingName, kubeshark.RBACVersion); err != nil {
+		if err := kubernetesProvider.CreateKubesharkRBACNamespaceRestricted(ctx, selfNamespace, kubernetes.ServiceAccountName, kubernetes.RoleName, kubernetes.RoleBindingName, kubeshark.RBACVersion); err != nil {
 			return false, err
 		}
 	}
