@@ -39,9 +39,9 @@ func (connector *Connector) TestConnection(path string) error {
 	retriesLeft := connector.retries
 	for retriesLeft > 0 {
 		if isReachable, err := connector.isReachable(path); err != nil || !isReachable {
-			log.Debug().Err(err).Msg("Hub is not ready yet!")
+			log.Debug().Str("url", connector.url).Err(err).Msg("Not ready yet!")
 		} else {
-			log.Debug().Msg("Connection test to Hub passed successfully.")
+			log.Debug().Str("url", connector.url).Msg("Connection test passed successfully.")
 			break
 		}
 		retriesLeft -= 1
@@ -49,7 +49,7 @@ func (connector *Connector) TestConnection(path string) error {
 	}
 
 	if retriesLeft == 0 {
-		return fmt.Errorf("Couldn't reach the Hub after %d retries!", connector.retries)
+		return fmt.Errorf("Couldn't reach the URL: %s after %d retries!", connector.url, connector.retries)
 	}
 	return nil
 }
