@@ -9,7 +9,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/kubeshark/kubeshark/kubeshark"
+	"github.com/kubeshark/kubeshark/misc"
 	"github.com/kubeshark/kubeshark/pkg/version"
 	"github.com/kubeshark/kubeshark/utils"
 	"github.com/rs/zerolog/log"
@@ -54,18 +54,18 @@ func CheckNewerVersion() {
 	gitHubVersion := string(data)
 	gitHubVersion = gitHubVersion[:len(gitHubVersion)-1]
 
-	greater, err := version.GreaterThen(gitHubVersion, kubeshark.Ver)
+	greater, err := version.GreaterThen(gitHubVersion, misc.Ver)
 	if err != nil {
 		log.Error().
 			Str("upstream-version", gitHubVersion).
-			Str("local-version", kubeshark.Ver).
+			Str("local-version", misc.Ver).
 			Msg("Version is invalid!")
 		return
 	}
 
 	log.Debug().
 		Str("upstream-version", gitHubVersion).
-		Str("local-version", kubeshark.Ver).
+		Str("local-version", misc.Ver).
 		Dur("elapsed-time", time.Since(start)).
 		Msg("Finished version validation.")
 
@@ -76,7 +76,7 @@ func CheckNewerVersion() {
 		} else {
 			downloadCommand = "sh <(curl -Ls https://kubeshark.co/install)"
 		}
-		msg := fmt.Sprintf("Update available! %v -> %v run:", kubeshark.Ver, gitHubVersion)
+		msg := fmt.Sprintf("Update available! %v -> %v run:", misc.Ver, gitHubVersion)
 		log.Warn().Str("command", downloadCommand).Msg(fmt.Sprintf(utils.Yellow, msg))
 	}
 }

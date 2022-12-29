@@ -1,4 +1,4 @@
-package kubeshark
+package misc
 
 import (
 	"os"
@@ -14,7 +14,7 @@ var (
 	Platform       = ""
 )
 
-func GetKubesharkFolderPath() string {
+func GetDotFolderPath() string {
 	home, homeDirErr := os.UserHomeDir()
 	if homeDirErr != nil {
 		return ""

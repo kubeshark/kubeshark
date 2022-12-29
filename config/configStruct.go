@@ -6,7 +6,7 @@ import (
 	"path/filepath"
 
 	"github.com/kubeshark/kubeshark/config/configStructs"
-	"github.com/kubeshark/kubeshark/kubeshark"
+	"github.com/kubeshark/kubeshark/misc"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/util/homedir"
 )
@@ -38,7 +38,7 @@ type ConfigStruct struct {
 }
 
 func (config *ConfigStruct) SetDefaults() {
-	config.ConfigFilePath = path.Join(kubeshark.GetKubesharkFolderPath(), "config.yaml")
+	config.ConfigFilePath = path.Join(misc.GetDotFolderPath(), "config.yaml")
 }
 
 func (config *ConfigStruct) ImagePullPolicy() v1.PullPolicy {

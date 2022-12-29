@@ -10,7 +10,7 @@ import (
 	"strings"
 
 	"github.com/creasty/defaults"
-	"github.com/kubeshark/kubeshark/kubeshark/version"
+	"github.com/kubeshark/kubeshark/misc/version"
 	"github.com/kubeshark/kubeshark/utils"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"

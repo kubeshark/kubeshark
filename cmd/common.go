@@ -12,8 +12,8 @@ import (
 	"github.com/kubeshark/kubeshark/errormessage"
 	"github.com/kubeshark/kubeshark/internal/connect"
 	"github.com/kubeshark/kubeshark/kubernetes"
-	"github.com/kubeshark/kubeshark/kubeshark"
-	"github.com/kubeshark/kubeshark/kubeshark/fsUtils"
+	"github.com/kubeshark/kubeshark/misc"
+	"github.com/kubeshark/kubeshark/misc/fsUtils"
 	"github.com/kubeshark/kubeshark/resources"
 	"github.com/rs/zerolog/log"
 )
@@ -105,7 +105,7 @@ func dumpLogsIfNeeded(ctx context.Context, kubernetesProvider *kubernetes.Provid
 	if !config.Config.DumpLogs {
 		return
 	}
-	kubesharkDir := kubeshark.GetKubesharkFolderPath()
+	kubesharkDir := misc.GetDotFolderPath()
 	filePath := path.Join(kubesharkDir, fmt.Sprintf("kubeshark_logs_%s.zip", time.Now().Format("2006_01_02__15_04_05")))
 	if err := fsUtils.DumpLogs(ctx, kubernetesProvider, filePath); err != nil {
 		log.Error().Err(err).Msg("Failed to dump logs.")

@@ -7,7 +7,7 @@ import (
 	"github.com/kubeshark/kubeshark/docker"
 	"github.com/kubeshark/kubeshark/errormessage"
 	"github.com/kubeshark/kubeshark/kubernetes"
-	"github.com/kubeshark/kubeshark/kubeshark"
+	"github.com/kubeshark/kubeshark/misc"
 	"github.com/rs/zerolog/log"
 	core "k8s.io/api/core/v1"
 )
@@ -84,11 +84,11 @@ func createSelfNamespace(ctx context.Context, kubernetesProvider *kubernetes.Pro
 
 func createRBACIfNecessary(ctx context.Context, kubernetesProvider *kubernetes.Provider, isNsRestrictedMode bool, selfNamespace string, resources []string) (bool, error) {
 	if !isNsRestrictedMode {
-		if err := kubernetesProvider.CreateKubesharkRBAC(ctx, selfNamespace, kubernetes.ServiceAccountName, kubernetes.ClusterRoleName, kubernetes.ClusterRoleBindingName, kubeshark.RBACVersion, resources); err != nil {
+		if err := kubernetesProvider.CreateKubesharkRBAC(ctx, selfNamespace, kubernetes.ServiceAccountName, kubernetes.ClusterRoleName, kubernetes.ClusterRoleBindingName, misc.RBACVersion, resources); err != nil {
 			return false, err
 		}
 	} else {
-		if err := kubernetesProvider.CreateKubesharkRBACNamespaceRestricted(ctx, selfNamespace, kubernetes.ServiceAccountName, kubernetes.RoleName, kubernetes.RoleBindingName, kubeshark.RBACVersion); err != nil {
+		if err := kubernetesProvider.CreateKubesharkRBACNamespaceRestricted(ctx, selfNamespace, kubernetes.ServiceAccountName, kubernetes.RoleName, kubernetes.RoleBindingName, misc.RBACVersion); err != nil {
 			return false, err
 		}
 	}
