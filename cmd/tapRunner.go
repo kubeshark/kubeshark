@@ -48,6 +48,10 @@ func tap() {
 		return
 	}
 
+	log.Info().
+		Str("limit", config.Config.Tap.StorageLimit).
+		Msg(fmt.Sprintf("%s will store the traffic up to a limit (per node). Oldest TCP streams will be removed once the limit is reached.", misc.Software))
+
 	connector = connect.NewConnector(kubernetes.GetLocalhostOnPort(config.Config.Tap.Proxy.Hub.SrcPort), connect.DefaultRetries, connect.DefaultTimeout)
 
 	kubernetesProvider, err := getKubernetesProviderForCli()
