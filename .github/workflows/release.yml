@@ -13,7 +13,6 @@ jobs:
   cli:
     name: Build the CLI and publish
     runs-on: ubuntu-latest
-    needs: [docker-manifest]
     steps:
       - name: Set up Go 1.17
         uses: actions/setup-go@v2
