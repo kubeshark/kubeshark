@@ -28,7 +28,7 @@ jobs:
         with:
           cond: ${{ github.ref == 'refs/heads/main' }}
           if_true: "stable"
-          if_false: "dev"
+          if_false: "stable"
 
       - name: Auto Increment Ver Action
         uses: docker://igorgov/auto-inc-ver:v2.0.0
@@ -44,6 +44,9 @@ jobs:
           echo "##[set-output name=build_timestamp;]$(echo $(date +%s))"
           echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
         id: version_parameters
+
+      - name: Build
+        run: make build-all
 
       - name: Log the version into a .txt file
         shell: bash
