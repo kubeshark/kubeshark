@@ -31,12 +31,12 @@ jobs:
           echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
 
       - name: Build
-        run: make build-all
+        run: make build-all VER='${{ steps.version.outputs.version }}' BUILD_TIMESTAMP='${{ steps.version.outputs.build_timestamp }}'
 
       - name: Log the version into a .txt file
         shell: bash
         run: |
-          echo '${{ steps.versioning.outputs.version }}' >> bin/version.txt
+          echo '${{ steps.version.outputs.tag }}' >> bin/version.txt
 
       - name: Release
         uses: ncipollo/release-action@v1
