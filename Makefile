@@ -11,7 +11,7 @@ GIT_VERSION=$(shell git branch --show-current | tr '[:upper:]' '[:lower:]')
 BUILD_TIMESTAMP=$(shell date +%s)
 export VER?=0.0
 
-help: ## This help.
+help:
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
 build-debug:  ## Build for debuging.
