@@ -23,7 +23,7 @@ build: ## Build.
 	${MAKE} build-base
 
 build-base: ## Build binary (select the platform via GOOS / GOARCH env variables).
-	go build ${GCLFAGS} -ldflags="${LDFLAGS_EXT} \
+	CGO_ENABLED=0 go build ${GCLFAGS} -ldflags="${LDFLAGS_EXT} \
 					-X 'github.com/kubeshark/kubeshark/misc.GitCommitHash=$(COMMIT_HASH)' \
 					-X 'github.com/kubeshark/kubeshark/misc.Branch=$(GIT_BRANCH)' \
 					-X 'github.com/kubeshark/kubeshark/misc.BuildTimestamp=$(BUILD_TIMESTAMP)' \
