@@ -724,6 +724,14 @@ func (provider *Provider) ApplyWorkerDaemonSet(
 
 	workerContainer.WithCommand(command...)
 
+	if debug {
+		workerContainer.WithEnv(
+			applyconfcore.EnvVar().WithName("MEMORY_PROFILING_ENABLED").WithValue("true"),
+			applyconfcore.EnvVar().WithName("MEMORY_PROFILING_INTERVAL_SECONDS").WithValue("10"),
+			applyconfcore.EnvVar().WithName("MEMORY_USAGE_INTERVAL_MILLISECONDS").WithValue("500"),
+		)
+	}
+
 	cpuLimit, err := resource.ParseQuantity(resources.CpuLimit)
 	if err != nil {
 		return fmt.Errorf("invalid cpu limit for %s container", workerPodName)
