@@ -11,7 +11,7 @@ GIT_VERSION=$(shell git branch --show-current | tr '[:upper:]' '[:lower:]')
 BUILD_TIMESTAMP=$(shell date +%s)
 export VER?=0.0
 
-help:
+help: ## Print this help message.
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
 build-debug:  ## Build for debuging.
@@ -19,7 +19,7 @@ build-debug:  ## Build for debuging.
 	${MAKE} build-base
 
 build: ## Build.
-	export LDFLAGS_EXT='-s -w'
+	export LDFLAGS_EXT='-extldflags=-static -s -w'
 	${MAKE} build-base
 
 build-base: ## Build binary (select the platform via GOOS / GOARCH env variables).
