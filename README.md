@@ -24,9 +24,9 @@
 </p>
 
 <p>
-<p align="center">
-Mizu (by UP9) is now Kubeshark, read more about it <a href="https://www.kubeshark.co/mizu-is-now-kubeshark">here</a>.
-</p>
+<p align="center"><b>
+V38.0 is out with distributed PCAP storage, TCP streams, Historic Traffic Snapshot and so much more. Read more about it <a href="https://kubeshark.co/pcap-or-it-didnt-happen">here</a>.
+	</b></p>
 
 Kubeshark, the API Traffic Viewer for kubernetes, provides deep visibility and monitoring of all API traffic and payloads going in, out and across containers and pods inside a Kubernetes cluster.
 
