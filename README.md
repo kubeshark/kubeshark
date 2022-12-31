@@ -25,7 +25,7 @@
 
 <p>
 <p align="center"><b>
-V38.0 is out with distributed PCAP storage, TCP streams, Historic Traffic Snapshot and so much more. Read more about it <a href="https://kubeshark.co/pcap-or-it-didnt-happen">here</a>.
+V38.0 is out with PCAP export, TCP streams, Historic Traffic Snapshot and so much more. Read more about it <a href="https://kubeshark.co/pcap-or-it-didnt-happen">here</a>.
 	</b></p>
 
 Kubeshark, the API Traffic Viewer for kubernetes, provides deep visibility and monitoring of all API traffic and payloads going in, out and across containers and pods inside a Kubernetes cluster.
