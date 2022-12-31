@@ -47,7 +47,7 @@ kubeshark tap -A
 ```
 kubeshark tap -n sock-shop "(catalo*|front-end*)"
 ```
-Running any of the :point_up: above commands will open a local [Web UI](https://docs.kubeshark.com/en/ui) immediately showing Kubernetes trafic streaming in real time.
+Running any of the :point_up: above commands will open a local [Web UI](https://docs.kubeshark.co/en/ui) immediately showing Kubernetes trafic streaming in real time.
 
 ## Documentation
 
