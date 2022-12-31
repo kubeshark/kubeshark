@@ -28,78 +28,30 @@
 <a href="https://github.com/kubeshark/kubeshark/releases/latest">V38</a> is out with <a href="https://docs.kubeshark.co/en/pcap">PCAP</a>, <a href="https://docs.kubeshark.co/en/tcp">TCP streams</a>, <a href="https://docs.kubeshark.co/en/history">Historic Traffic Snapshot</a> and so much more. Read about it <a href="https://kubeshark.co/pcap-or-it-didnt-happen">here</a>.
 	</b></p>
 
-Kubeshark, the API Traffic Viewer for kubernetes, provides deep visibility and monitoring of all API traffic and payloads going in, out and across containers and pods inside a Kubernetes cluster.
-
-Think of a combination of Chrome Dev Tools, TCPDump and Wireshark, re-invented for Kubernetes.
+**Kubeshark** is an API Traffic Viewer for [Kubernetes](https://kubernetes.io/) providing deep visibility and monitoring of all API traffic and payloads going in, out and across containers and Pods inside a Kubernetes cluster.
 
 ![Simple UI](https://github.com/kubeshark/assets/raw/master/png/kubeshark-ui.png)
 
-## Download
+Think [TCPDump](https://en.wikipedia.org/wiki/Tcpdump) and [Wireshark](https://www.wireshark.org/) re-invented for Kubernetes
 
-Kubeshark uses a ~45MB pre-compiled executable binary to communicate with the Kubernetes API. We recommend downloading the `kubeshark` CLI by using one of these options:
+## Getting Started
 
-- Choose the right binary, download and use directly from [the latest stable release](https://github.com/kubeshark/kubeshark/releases/latest).
-
-- Use the shell script below :point_down: to automatically download the right binary for your operating system and CPU architecture:
-
-```shell
-sh <(curl -Ls https://kubeshark.co/install)
-```
-
-- Compile it from source using `make` command then use `./bin/kubeshark__` executable.
-
-## Run
-
-Use the `kubeshark` CLI to capture and view streaming API traffic in real time.
+Download **Kubeshark**'s binary distribution [latest release](https://github.com/kubeshark/kubeshark/releases/latest) and run following one of these examples:
 
 ```shell
 kubeshark tap
 ```
-
-### Troubleshooting Installation
-If something doesn't work or simply to play it safe prior to installing;
-
-> Make sure you have access to https://hub.docker.com/
-
-> Make sure `kubeshark` executable in your `PATH`.
-
-### Select Pods
-
-#### Monitoring a Specific Pod:
-
-```shell
-kubeshark tap catalogue-b87b45784-sxc8q
-```
-
-#### Monitoring a Set of Pods Using Regex:
-
-```shell
-kubeshark tap "(catalo*|front-end*)"
-```
-
-### Specify the Namespace
-
-By default, Kubeshark targets the `default` namespace.
-To specify a different namespace:
-
-```
-kubeshark tap -n sock-shop
-```
-
-### Specify All Namespaces
-
-The default strategy of Kubeshark waits for the new pods
-to be created. To simply tap all existing namespaces run:
-
 ```
 kubeshark tap -A
 ```
+```
+kubeshark tap -n sock-shop "(catalo*|front-end*)"
+```
+Running any of the :point_up: above commands will open a local [Web UI](https://docs.kubeshark.com/en/ui) immediately showing Kubernetes trafic streaming in real time.
 
 ## Documentation
 
-Visit our documentation website: [docs.kubeshark.co](https://docs.kubeshark.co)
-
-The documentation resources are open-source and can be found on GitHub: [kubeshark/docs](https://github.com/kubeshark/docs)
+To learn more, read the [documentation](https://docs.kubeshark.co).
 
 ## Contributing
 
