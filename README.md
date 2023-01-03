@@ -49,6 +49,17 @@ kubeshark tap -n sock-shop "(catalo*|front-end*)"
 ```
 Running any of the :point_up: above commands will open a local [Web UI](https://docs.kubeshark.co/en/ui) immediately showing Kubernetes trafic streaming in real time.
 
+## Homebrew
+MacOS and GNU/Linux users available way to install via [Homebrew](https://brew.sh/):
+
+```bash
+# Tap a new formula:
+brew tap kubeshark/kubeshark
+
+# Installation:
+brew install kubeshark
+```
+
 ## Documentation
 
 To learn more, read the [documentation](https://docs.kubeshark.co).
