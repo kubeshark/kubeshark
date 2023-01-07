@@ -23,10 +23,11 @@
     </a>
 </p>
 
-<p>
-<p align="center"><b>
-<a href="https://github.com/kubeshark/kubeshark/releases/latest">V38</a> is out with <a href="https://docs.kubeshark.co/en/pcap">PCAP</a>, <a href="https://docs.kubeshark.co/en/tcp">TCP streams</a>, <a href="https://docs.kubeshark.co/en/history">Historic Traffic Snapshot</a> and so much more. Read about it <a href="https://kubeshark.co/pcap-or-it-didnt-happen">here</a>.
-	</b></p>
+<p align="center">
+  <b>
+    <a href="https://github.com/kubeshark/kubeshark/releases/tag/38.1">Version 38.1</a> is out with <a href="https://docs.kubeshark.co/en/pcap_export_import">PCAP export and import</a>, <a href="https://docs.kubeshark.co/en/tcp_streams">TCP streams</a> and so much more. Read about it <a href="https://kubeshark.co/pcap-or-it-didnt-happen">here</a>.
+  </b>
+</p>
 
 **Kubeshark** is an API Traffic Viewer for [Kubernetes](https://kubernetes.io/) providing deep visibility and monitoring of all API traffic and payloads going in, out and across containers and Pods inside a Kubernetes cluster.
 
@@ -41,24 +42,34 @@ Download **Kubeshark**'s binary distribution [latest release](https://github.com
 ```shell
 kubeshark tap
 ```
-```
+
+```shell
 kubeshark tap -A
 ```
-```
+
+```shell
 kubeshark tap -n sock-shop "(catalo*|front-end*)"
 ```
-Running any of the :point_up: above commands will open a local [Web UI](https://docs.kubeshark.co/en/ui) immediately showing Kubernetes trafic streaming in real time.
 
-## Homebrew
-MacOS and GNU/Linux users available way to install via [Homebrew](https://brew.sh/):
+Running any of the :point_up: above commands will open the [Web UI](https://docs.kubeshark.co/en/ui) in your browser which streams the traffic in your Kubernetes cluster in real-time.
 
-```bash
-# Tap a new formula:
+### Homebrew
+
+[Homebrew](https://brew.sh/) :beer: users can add Kubeshark formulae with:
+
+```shell
 brew tap kubeshark/kubeshark
+```
 
-# Installation:
+and install Kubeshark CLI with:
+
+```shell
 brew install kubeshark
 ```
+
+## Building From Source
+
+Clone this repository and run `make` command to build it. After the build is complete, the executable can be found at `./bin/kubeshark__`.
 
 ## Documentation
 
@@ -66,7 +77,7 @@ To learn more, read the [documentation](https://docs.kubeshark.co).
 
 ## Contributing
 
-We ❤️ pull requests! See [CONTRIBUTING.md](CONTRIBUTING.md) for the contribution guide.
+We :heart: pull requests! See [CONTRIBUTING.md](CONTRIBUTING.md) for the contribution guide.
 
 ## Code of Conduct
 
