@@ -25,11 +25,11 @@
 
 <p align="center">
   <b>
-    <a href="https://github.com/kubeshark/kubeshark/releases/tag/38.1">Version 38.1</a> is out with <a href="https://docs.kubeshark.co/en/pcap_export_import">PCAP export and import</a>, <a href="https://docs.kubeshark.co/en/tcp_streams">TCP streams</a> and so much more. Read about it <a href="https://kubeshark.co/pcap-or-it-didnt-happen">here</a>.
+    <a href="https://github.com/kubeshark/kubeshark/releases/tag/38.1">Version 38.1</a> is out with <a href="https://docs.kubeshark.co/en/pcap_export_import">PCAP export/import</a>, <a href="https://docs.kubeshark.co/en/tcp_streams">TCP streams</a> and so much more. Read about it <a href="https://kubeshark.co/pcap-or-it-didnt-happen">here</a>.
   </b>
 </p>
 
-**Kubeshark** is an API Traffic Viewer for [Kubernetes](https://kubernetes.io/) providing deep visibility and monitoring of all API traffic and payloads going in, out and across containers and Pods inside a Kubernetes cluster.
+**Kubeshark** is an API Traffic Viewer for [**Kubernetes**](https://kubernetes.io/) providing deep visibility and monitoring of all API traffic and payloads going in, out and across containers and Pods inside a Kubernetes cluster.
 
 ![Simple UI](https://github.com/kubeshark/assets/raw/master/png/kubeshark-ui.png)
 
