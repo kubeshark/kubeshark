@@ -45,6 +45,15 @@ func (config *ConfigStruct) ImagePullPolicy() v1.PullPolicy {
 	return v1.PullPolicy(config.Tap.Docker.ImagePullPolicy)
 }
 
+func (config *ConfigStruct) ImagePullSecrets() []v1.LocalObjectReference {
+	var ref []v1.LocalObjectReference
+	for _, name := range config.Tap.Docker.ImagePullSecrets {
+		ref = append(ref, v1.LocalObjectReference{Name: name})
+	}
+
+	return ref
+}
+
 func (config *ConfigStruct) IsNsRestrictedMode() bool {
 	return config.SelfNamespace != misc.Program // Notice "kubeshark" string must match the default SelfNamespace
 }

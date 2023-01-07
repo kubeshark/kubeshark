@@ -10,19 +10,21 @@ import (
 )
 
 const (
-	DockerRegistryLabel = "docker-registry"
-	DockerTagLabel      = "docker-tag"
-	ProxyFrontPortLabel = "proxy-front-port"
-	ProxyHubPortLabel   = "proxy-hub-port"
-	ProxyHostLabel      = "proxy-host"
-	NamespacesLabel     = "namespaces"
-	AllNamespacesLabel  = "allnamespaces"
-	StorageLimitLabel   = "storagelimit"
-	DryRunLabel         = "dryrun"
-	PcapLabel           = "pcap"
-	ServiceMeshLabel    = "servicemesh"
-	TlsLabel            = "tls"
-	DebugLabel          = "debug"
+	DockerRegistryLabel    = "docker-registry"
+	DockerTagLabel         = "docker-tag"
+	DockerImagePullPolicy  = "docker-imagepullpolicy"
+	DockerImagePullSecrets = "docker-imagepullsecrets"
+	ProxyFrontPortLabel    = "proxy-front-port"
+	ProxyHubPortLabel      = "proxy-hub-port"
+	ProxyHostLabel         = "proxy-host"
+	NamespacesLabel        = "namespaces"
+	AllNamespacesLabel     = "allnamespaces"
+	StorageLimitLabel      = "storagelimit"
+	DryRunLabel            = "dryrun"
+	PcapLabel              = "pcap"
+	ServiceMeshLabel       = "servicemesh"
+	TlsLabel               = "tls"
+	DebugLabel             = "debug"
 )
 
 type WorkerConfig struct {
@@ -48,9 +50,10 @@ type ProxyConfig struct {
 }
 
 type DockerConfig struct {
-	Registry        string `yaml:"registry" default:"docker.io/kubeshark"`
-	Tag             string `yaml:"tag" default:"latest"`
-	ImagePullPolicy string `yaml:"imagepullpolicy" default:"Always"`
+	Registry         string   `yaml:"registry" default:"docker.io/kubeshark"`
+	Tag              string   `yaml:"tag" default:"latest"`
+	ImagePullPolicy  string   `yaml:"imagepullpolicy" default:"Always"`
+	ImagePullSecrets []string `yaml:"imagepullsecrets"`
 }
 
 type ResourcesConfig struct {

@@ -42,6 +42,7 @@ type WorkerSyncerConfig struct {
 	SelfNamespace            string
 	WorkerResources          Resources
 	ImagePullPolicy          v1.PullPolicy
+	ImagePullSecrets         []v1.LocalObjectReference
 	SelfServiceAccountExists bool
 	ServiceMesh              bool
 	Tls                      bool
@@ -363,6 +364,7 @@ func (workerSyncer *WorkerSyncer) updateWorkers() error {
 			serviceAccountName,
 			workerSyncer.config.WorkerResources,
 			workerSyncer.config.ImagePullPolicy,
+			workerSyncer.config.ImagePullSecrets,
 			workerSyncer.config.ServiceMesh,
 			workerSyncer.config.Tls,
 			workerSyncer.config.Debug); err != nil {

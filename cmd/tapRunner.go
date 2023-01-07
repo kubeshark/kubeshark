@@ -82,7 +82,7 @@ func tap() {
 	}
 
 	log.Info().Msg(fmt.Sprintf("Waiting for the creation of %s resources...", misc.Software))
-	if state.selfServiceAccountExists, err = resources.CreateHubResources(ctx, kubernetesProvider, config.Config.IsNsRestrictedMode(), config.Config.SelfNamespace, config.Config.Tap.Resources.Hub, config.Config.ImagePullPolicy(), config.Config.Tap.Debug); err != nil {
+	if state.selfServiceAccountExists, err = resources.CreateHubResources(ctx, kubernetesProvider, config.Config.IsNsRestrictedMode(), config.Config.SelfNamespace, config.Config.Tap.Resources.Hub, config.Config.ImagePullPolicy(), config.Config.ImagePullSecrets(), config.Config.Tap.Debug); err != nil {
 		var statusError *k8serrors.StatusError
 		if errors.As(err, &statusError) && (statusError.ErrStatus.Reason == metav1.StatusReasonAlreadyExists) {
 			log.Warn().Msg(fmt.Sprintf("%s is already running in this namespace, change the `selfnamespace` configuration or run `%s clean` to remove the currently running %s instance", misc.Software, misc.Program, misc.Software))
@@ -134,6 +134,7 @@ func startWorkerSyncer(ctx context.Context, cancel context.CancelFunc, provider 
 		SelfNamespace:            config.Config.SelfNamespace,
 		WorkerResources:          config.Config.Tap.Resources.Worker,
 		ImagePullPolicy:          config.Config.ImagePullPolicy(),
+		ImagePullSecrets:         config.Config.ImagePullSecrets(),
 		SelfServiceAccountExists: state.selfServiceAccountExists,
 		ServiceMesh:              config.Config.Tap.ServiceMesh,
 		Tls:                      config.Config.Tap.Tls,

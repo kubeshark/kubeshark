@@ -177,6 +177,7 @@ type PodOptions struct {
 	ServiceAccountName string
 	Resources          Resources
 	ImagePullPolicy    core.PullPolicy
+	ImagePullSecrets   []core.LocalObjectReference
 	Debug              bool
 }
 
@@ -251,6 +252,7 @@ func (provider *Provider) BuildHubPod(opts *PodOptions) (*core.Pod, error) {
 					Effect:   core.TaintEffectNoSchedule,
 				},
 			},
+			ImagePullSecrets: opts.ImagePullSecrets,
 		},
 	}
 
@@ -353,6 +355,7 @@ func (provider *Provider) BuildFrontPod(opts *PodOptions, hubHost string, hubPor
 					Effect:   core.TaintEffectNoSchedule,
 				},
 			},
+			ImagePullSecrets: opts.ImagePullSecrets,
 		},
 	}
 
@@ -664,6 +667,7 @@ func (provider *Provider) ApplyWorkerDaemonSet(
 	serviceAccountName string,
 	resources Resources,
 	imagePullPolicy core.PullPolicy,
+	imagePullSecrets []core.LocalObjectReference,
 	serviceMesh bool,
 	tls bool,
 	debug bool,
@@ -811,6 +815,12 @@ func (provider *Provider) ApplyWorkerDaemonSet(
 	podSpec.WithAffinity(affinity)
 	podSpec.WithTolerations(noExecuteToleration, noScheduleToleration)
 	podSpec.WithVolumes(procfsVolume, sysfsVolume)
+
+	localObjectReference := applyconfcore.LocalObjectReference()
+	for _, secret := range imagePullSecrets {
+		localObjectReference.WithName(secret.Name)
+	}
+	podSpec.WithImagePullSecrets(localObjectReference)
 
 	podTemplate := applyconfcore.PodTemplateSpec()
 	podTemplate.WithLabels(map[string]string{
