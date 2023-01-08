@@ -816,11 +816,13 @@ func (provider *Provider) ApplyWorkerDaemonSet(
 	podSpec.WithTolerations(noExecuteToleration, noScheduleToleration)
 	podSpec.WithVolumes(procfsVolume, sysfsVolume)
 
-	localObjectReference := applyconfcore.LocalObjectReference()
-	for _, secret := range imagePullSecrets {
-		localObjectReference.WithName(secret.Name)
+	if len(imagePullSecrets) > 0 {
+		localObjectReference := applyconfcore.LocalObjectReference()
+		for _, secret := range imagePullSecrets {
+			localObjectReference.WithName(secret.Name)
+		}
+		podSpec.WithImagePullSecrets(localObjectReference)
 	}
-	podSpec.WithImagePullSecrets(localObjectReference)
 
 	podTemplate := applyconfcore.PodTemplateSpec()
 	podTemplate.WithLabels(map[string]string{
