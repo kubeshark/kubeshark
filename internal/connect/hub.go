@@ -116,22 +116,22 @@ func (connector *Connector) PostStorageLimitToHub(limit int64) {
 	}
 }
 
-func (connector *Connector) PostTargettedPodsToHub(pods []core.Pod) {
-	postTargettedUrl := fmt.Sprintf("%s/pods/targetted", connector.url)
+func (connector *Connector) PostTargetedPodsToHub(pods []core.Pod) {
+	postTargetedUrl := fmt.Sprintf("%s/pods/targeted", connector.url)
 
 	if podsMarshalled, err := json.Marshal(pods); err != nil {
-		log.Error().Err(err).Msg("Failed to marshal the targetted pods:")
+		log.Error().Err(err).Msg("Failed to marshal the targeted pods:")
 	} else {
 		ok := false
 		for !ok {
-			if _, err = utils.Post(postTargettedUrl, "application/json", bytes.NewBuffer(podsMarshalled), connector.client); err != nil {
+			if _, err = utils.Post(postTargetedUrl, "application/json", bytes.NewBuffer(podsMarshalled), connector.client); err != nil {
 				if _, ok := err.(*url.Error); ok {
 					break
 				}
-				log.Debug().Err(err).Msg("Failed sending the targetted pods to Hub:")
+				log.Debug().Err(err).Msg("Failed sending the targeted pods to Hub:")
 			} else {
 				ok = true
-				log.Debug().Int("pod-count", len(pods)).Msg("Reported targetted pods to Hub:")
+				log.Debug().Int("pod-count", len(pods)).Msg("Reported targeted pods to Hub:")
 			}
 			time.Sleep(time.Second)
 		}

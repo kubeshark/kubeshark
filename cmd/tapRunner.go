@@ -71,9 +71,9 @@ func tap() {
 		}
 	}
 
-	log.Info().Strs("namespaces", state.targetNamespaces).Msg("Targetting pods in:")
+	log.Info().Strs("namespaces", state.targetNamespaces).Msg("Targeting pods in:")
 
-	if err := printTargettedPodsPreview(ctx, kubernetesProvider, state.targetNamespaces); err != nil {
+	if err := printTargetedPodsPreview(ctx, kubernetesProvider, state.targetNamespaces); err != nil {
 		log.Error().Err(errormessage.FormatError(err)).Msg("Error listing pods!")
 	}
 
@@ -113,15 +113,15 @@ This function is a bit problematic as it might be detached from the actual pods 
 The alternative would be to wait for Hub to be ready and then query it for the pods it listens to, this has
 the arguably worse drawback of taking a relatively very long time before the user sees which pods are targeted, if any.
 */
-func printTargettedPodsPreview(ctx context.Context, kubernetesProvider *kubernetes.Provider, namespaces []string) error {
+func printTargetedPodsPreview(ctx context.Context, kubernetesProvider *kubernetes.Provider, namespaces []string) error {
 	if matchingPods, err := kubernetesProvider.ListAllRunningPodsMatchingRegex(ctx, config.Config.Tap.PodRegex(), namespaces); err != nil {
 		return err
 	} else {
 		if len(matchingPods) == 0 {
 			printNoPodsFoundSuggestion(namespaces)
 		}
-		for _, targettedPod := range matchingPods {
-			log.Info().Msg(fmt.Sprintf("New pod: %s", fmt.Sprintf(utils.Green, targettedPod.Name)))
+		for _, targetedPod := range matchingPods {
+			log.Info().Msg(fmt.Sprintf("New pod: %s", fmt.Sprintf(utils.Green, targetedPod.Name)))
 		}
 		return nil
 	}
@@ -160,7 +160,7 @@ func startWorkerSyncer(ctx context.Context, cancel context.CancelFunc, provider 
 					log.Debug().Msg("workerSyncer pod changes channel closed, ending listener loop")
 					return
 				}
-				go connector.PostTargettedPodsToHub(workerSyncer.CurrentlyTargettedPods)
+				go connector.PostTargetedPodsToHub(workerSyncer.CurrentlyTargetedPods)
 			case pod, ok := <-workerSyncer.WorkerPodsChanges:
 				if !ok {
 					log.Debug().Msg("workerSyncer worker status changed channel closed, ending listener loop")
@@ -188,7 +188,7 @@ func printNoPodsFoundSuggestion(targetNamespaces []string) {
 func getK8sTapManagerErrorText(err kubernetes.K8sTapManagerError) string {
 	switch err.TapManagerReason {
 	case kubernetes.TapManagerPodListError:
-		return fmt.Sprintf("Failed to update currently targetted pods: %v", err.OriginalError)
+		return fmt.Sprintf("Failed to update currently targeted pods: %v", err.OriginalError)
 	case kubernetes.TapManagerPodWatchError:
 		return fmt.Sprintf("Error occured in K8s pod watch: %v", err.OriginalError)
 	case kubernetes.TapManagerWorkerUpdateError:

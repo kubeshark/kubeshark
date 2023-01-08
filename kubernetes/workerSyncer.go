@@ -17,23 +17,23 @@ import (
 
 const updateWorkersDelay = 5 * time.Second
 
-type TargettedPodChangeEvent struct {
+type TargetedPodChangeEvent struct {
 	Added   []v1.Pod
 	Removed []v1.Pod
 }
 
 // WorkerSyncer uses a k8s pod watch to update Worker daemonsets when targeted pods are removed or created
 type WorkerSyncer struct {
-	startTime              time.Time
-	context                context.Context
-	CurrentlyTargettedPods []v1.Pod
-	config                 WorkerSyncerConfig
-	kubernetesProvider     *Provider
-	TapPodChangesOut       chan TargettedPodChangeEvent
-	WorkerPodsChanges      chan *v1.Pod
-	ErrorOut               chan K8sTapManagerError
-	nodeToTargettedPodMap  models.NodeToPodsMap
-	targettedNodes         []string
+	startTime             time.Time
+	context               context.Context
+	CurrentlyTargetedPods []v1.Pod
+	config                WorkerSyncerConfig
+	kubernetesProvider    *Provider
+	TapPodChangesOut      chan TargetedPodChangeEvent
+	WorkerPodsChanges     chan *v1.Pod
+	ErrorOut              chan K8sTapManagerError
+	nodeToTargetedPodMap  models.NodeToPodsMap
+	targetedNodes         []string
 }
 
 type WorkerSyncerConfig struct {
@@ -51,17 +51,17 @@ type WorkerSyncerConfig struct {
 
 func CreateAndStartWorkerSyncer(ctx context.Context, kubernetesProvider *Provider, config WorkerSyncerConfig, startTime time.Time) (*WorkerSyncer, error) {
 	syncer := &WorkerSyncer{
-		startTime:              startTime.Truncate(time.Second), // Round down because k8s CreationTimestamp is given in 1 sec resolution.
-		context:                ctx,
-		CurrentlyTargettedPods: make([]v1.Pod, 0),
-		config:                 config,
-		kubernetesProvider:     kubernetesProvider,
-		TapPodChangesOut:       make(chan TargettedPodChangeEvent, 100),
-		WorkerPodsChanges:      make(chan *v1.Pod, 100),
-		ErrorOut:               make(chan K8sTapManagerError, 100),
+		startTime:             startTime.Truncate(time.Second), // Round down because k8s CreationTimestamp is given in 1 sec resolution.
+		context:               ctx,
+		CurrentlyTargetedPods: make([]v1.Pod, 0),
+		config:                config,
+		kubernetesProvider:    kubernetesProvider,
+		TapPodChangesOut:      make(chan TargetedPodChangeEvent, 100),
+		WorkerPodsChanges:     make(chan *v1.Pod, 100),
+		ErrorOut:              make(chan K8sTapManagerError, 100),
 	}
 
-	if err, _ := syncer.updateCurrentlyTargettedPods(); err != nil {
+	if err, _ := syncer.updateCurrentlyTargetedPods(); err != nil {
 		return nil, err
 	}
 
@@ -69,7 +69,7 @@ func CreateAndStartWorkerSyncer(ctx context.Context, kubernetesProvider *Provide
 		return nil, err
 	}
 
-	go syncer.watchPodsForTargetting()
+	go syncer.watchPodsForTargeting()
 	go syncer.watchWorkerEvents()
 	go syncer.watchWorkerPods()
 	return syncer, nil
@@ -179,12 +179,12 @@ func (workerSyncer *WorkerSyncer) watchWorkerEvents() {
 	}
 }
 
-func (workerSyncer *WorkerSyncer) watchPodsForTargetting() {
+func (workerSyncer *WorkerSyncer) watchPodsForTargeting() {
 	podWatchHelper := NewPodWatchHelper(workerSyncer.kubernetesProvider, &workerSyncer.config.PodFilterRegex)
 	eventChan, errorChan := FilteredWatch(workerSyncer.context, podWatchHelper, workerSyncer.config.TargetNamespaces, podWatchHelper)
 
 	handleChangeInPods := func() {
-		err, changeFound := workerSyncer.updateCurrentlyTargettedPods()
+		err, changeFound := workerSyncer.updateCurrentlyTargetedPods()
 		if err != nil {
 			workerSyncer.ErrorOut <- K8sTapManagerError{
 				OriginalError:    err,
@@ -299,22 +299,22 @@ func (workerSyncer *WorkerSyncer) handleErrorInWatchLoop(err error, restartWorke
 	}
 }
 
-func (workerSyncer *WorkerSyncer) updateCurrentlyTargettedPods() (err error, changesFound bool) {
+func (workerSyncer *WorkerSyncer) updateCurrentlyTargetedPods() (err error, changesFound bool) {
 	if matchingPods, err := workerSyncer.kubernetesProvider.ListAllRunningPodsMatchingRegex(workerSyncer.context, &workerSyncer.config.PodFilterRegex, workerSyncer.config.TargetNamespaces); err != nil {
 		return err, false
 	} else {
 		podsToTarget := excludeSelfPods(matchingPods)
-		addedPods, removedPods := getPodArrayDiff(workerSyncer.CurrentlyTargettedPods, podsToTarget)
+		addedPods, removedPods := getPodArrayDiff(workerSyncer.CurrentlyTargetedPods, podsToTarget)
 		for _, addedPod := range addedPods {
-			log.Info().Str("pod", addedPod.Name).Msg("Currently targetting:")
+			log.Info().Str("pod", addedPod.Name).Msg("Currently targeting:")
 		}
 		for _, removedPod := range removedPods {
-			log.Info().Str("pod", removedPod.Name).Msg("Pod is no longer running. Targetting is stopped.")
+			log.Info().Str("pod", removedPod.Name).Msg("Pod is no longer running. Targeting is stopped.")
 		}
 		if len(addedPods) > 0 || len(removedPods) > 0 {
-			workerSyncer.CurrentlyTargettedPods = podsToTarget
-			workerSyncer.nodeToTargettedPodMap = GetNodeHostToTargettedPodsMap(workerSyncer.CurrentlyTargettedPods)
-			workerSyncer.TapPodChangesOut <- TargettedPodChangeEvent{
+			workerSyncer.CurrentlyTargetedPods = podsToTarget
+			workerSyncer.nodeToTargetedPodMap = GetNodeHostToTargetedPodsMap(workerSyncer.CurrentlyTargetedPods)
+			workerSyncer.TapPodChangesOut <- TargetedPodChangeEvent{
 				Added:   addedPods,
 				Removed: removedPods,
 			}
@@ -325,14 +325,14 @@ func (workerSyncer *WorkerSyncer) updateCurrentlyTargettedPods() (err error, cha
 }
 
 func (workerSyncer *WorkerSyncer) updateWorkers() error {
-	nodesToTarget := make([]string, len(workerSyncer.nodeToTargettedPodMap))
+	nodesToTarget := make([]string, len(workerSyncer.nodeToTargetedPodMap))
 	i := 0
-	for node := range workerSyncer.nodeToTargettedPodMap {
+	for node := range workerSyncer.nodeToTargetedPodMap {
 		nodesToTarget[i] = node
 		i++
 	}
 
-	if utils.EqualStringSlices(nodesToTarget, workerSyncer.targettedNodes) {
+	if utils.EqualStringSlices(nodesToTarget, workerSyncer.targetedNodes) {
 		log.Debug().Msg("Skipping apply, DaemonSet is up to date")
 		return nil
 	}
@@ -341,7 +341,7 @@ func (workerSyncer *WorkerSyncer) updateWorkers() error {
 
 	image := docker.GetWorkerImage()
 
-	if len(workerSyncer.nodeToTargettedPodMap) > 0 {
+	if len(workerSyncer.nodeToTargetedPodMap) > 0 {
 		var serviceAccountName string
 		if workerSyncer.config.SelfServiceAccountExists {
 			serviceAccountName = ServiceAccountName
@@ -349,8 +349,8 @@ func (workerSyncer *WorkerSyncer) updateWorkers() error {
 			serviceAccountName = ""
 		}
 
-		nodeNames := make([]string, 0, len(workerSyncer.nodeToTargettedPodMap))
-		for nodeName := range workerSyncer.nodeToTargettedPodMap {
+		nodeNames := make([]string, 0, len(workerSyncer.nodeToTargetedPodMap))
+		for nodeName := range workerSyncer.nodeToTargetedPodMap {
 			nodeNames = append(nodeNames, nodeName)
 		}
 
@@ -371,7 +371,7 @@ func (workerSyncer *WorkerSyncer) updateWorkers() error {
 			return err
 		}
 
-		log.Debug().Int("worker-count", len(workerSyncer.nodeToTargettedPodMap)).Msg("Successfully created workers.")
+		log.Debug().Int("worker-count", len(workerSyncer.nodeToTargetedPodMap)).Msg("Successfully created workers.")
 	} else {
 		if err := workerSyncer.kubernetesProvider.ResetWorkerDaemonSet(
 			workerSyncer.context,
@@ -385,7 +385,7 @@ func (workerSyncer *WorkerSyncer) updateWorkers() error {
 		log.Debug().Msg("Successfully resetted Worker DaemonSet")
 	}
 
-	workerSyncer.targettedNodes = nodesToTarget
+	workerSyncer.targetedNodes = nodesToTarget
 
 	return nil
 }

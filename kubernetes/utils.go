@@ -8,19 +8,19 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func GetNodeHostToTargettedPodsMap(targettedPods []core.Pod) models.NodeToPodsMap {
-	nodeToTargettedPodsMap := make(models.NodeToPodsMap)
-	for _, pod := range targettedPods {
+func GetNodeHostToTargetedPodsMap(targetedPods []core.Pod) models.NodeToPodsMap {
+	nodeToTargetedPodsMap := make(models.NodeToPodsMap)
+	for _, pod := range targetedPods {
 		minimizedPod := getMinimizedPod(pod)
 
-		existingList := nodeToTargettedPodsMap[pod.Spec.NodeName]
+		existingList := nodeToTargetedPodsMap[pod.Spec.NodeName]
 		if existingList == nil {
-			nodeToTargettedPodsMap[pod.Spec.NodeName] = []core.Pod{minimizedPod}
+			nodeToTargetedPodsMap[pod.Spec.NodeName] = []core.Pod{minimizedPod}
 		} else {
-			nodeToTargettedPodsMap[pod.Spec.NodeName] = append(nodeToTargettedPodsMap[pod.Spec.NodeName], minimizedPod)
+			nodeToTargetedPodsMap[pod.Spec.NodeName] = append(nodeToTargetedPodsMap[pod.Spec.NodeName], minimizedPod)
 		}
 	}
-	return nodeToTargettedPodsMap
+	return nodeToTargetedPodsMap
 }
 
 func getMinimizedPod(fullPod core.Pod) core.Pod {
