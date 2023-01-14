@@ -28,18 +28,18 @@ const (
 )
 
 type WorkerConfig struct {
-	SrcPort uint16 `yaml:"src-port" default:"8897"`
-	DstPort uint16 `yaml:"dst-port" default:"8897"`
+	SrcPort uint16 `yaml:"port" default:"8897"`
+	DstPort uint16 `yaml:"srvport" default:"8897"`
 }
 
 type HubConfig struct {
-	SrcPort uint16 `yaml:"src-port" default:"8898"`
-	DstPort uint16 `yaml:"dst-port" default:"8898"`
+	SrcPort uint16 `yaml:"port" default:"8898"`
+	DstPort uint16 `yaml:"srvport" default:"8898"`
 }
 
 type FrontConfig struct {
-	SrcPort uint16 `yaml:"src-port" default:"8899"`
-	DstPort uint16 `yaml:"dst-port" default:"80"`
+	SrcPort uint16 `yaml:"port" default:"8899"`
+	DstPort uint16 `yaml:"srvport" default:"80"`
 }
 
 type ProxyConfig struct {
