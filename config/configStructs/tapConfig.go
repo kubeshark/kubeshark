@@ -34,7 +34,7 @@ type WorkerConfig struct {
 
 type HubConfig struct {
 	SrcPort uint16 `yaml:"port" default:"8898"`
-	DstPort uint16 `yaml:"srvport" default:"8898"`
+	DstPort uint16 `yaml:"srvport" default:"80"`
 }
 
 type FrontConfig struct {

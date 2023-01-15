@@ -18,31 +18,33 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func startProxyReportErrorIfAny(kubernetesProvider *kubernetes.Provider, ctx context.Context, cancel context.CancelFunc, serviceName string, proxyPortLabel string, srcPort uint16, dstPort uint16, healthCheck string) {
+func startProxyReportErrorIfAny(kubernetesProvider *kubernetes.Provider, ctx context.Context, cancel context.CancelFunc, serviceName string, podName string, proxyPortLabel string, srcPort uint16, dstPort uint16, healthCheck string) {
 	httpServer, err := kubernetes.StartProxy(kubernetesProvider, config.Config.Tap.Proxy.Host, srcPort, config.Config.SelfNamespace, serviceName, cancel)
 	if err != nil {
 		log.Error().
 			Err(errormessage.FormatError(err)).
-			Msg(fmt.Sprintf("Error occured while running k8s proxy. Try setting different port by using --%s", proxyPortLabel))
+			Msg(fmt.Sprintf("Error occured while running K8s proxy. Try setting different port using --%s", proxyPortLabel))
 		cancel()
 		return
 	}
 
 	connector := connect.NewConnector(kubernetes.GetLocalhostOnPort(srcPort), connect.DefaultRetries, connect.DefaultTimeout)
 	if err := connector.TestConnection(healthCheck); err != nil {
-		log.Error().Msg("Couldn't connect using proxy, stopping proxy and trying to create port-forward..")
+		log.Warn().
+			Str("service", serviceName).
+			Msg("Couldn't connect using proxy, stopping proxy and trying to create port-forward...")
 		if err := httpServer.Shutdown(ctx); err != nil {
 			log.Error().
 				Err(errormessage.FormatError(err)).
 				Msg("Error occurred while stopping proxy.")
 		}
 
-		podRegex, _ := regexp.Compile(kubernetes.HubPodName)
+		podRegex, _ := regexp.Compile(podName)
 		if _, err := kubernetes.NewPortForward(kubernetesProvider, config.Config.SelfNamespace, podRegex, srcPort, dstPort, ctx, cancel); err != nil {
 			log.Error().
 				Str("pod-regex", podRegex.String()).
 				Err(errormessage.FormatError(err)).
-				Msg(fmt.Sprintf("Error occured while running port forward. Try setting different port by using --%s", proxyPortLabel))
+				Msg(fmt.Sprintf("Error occured while running port forward. Try setting different port using --%s", proxyPortLabel))
 			cancel()
 			return
 		}

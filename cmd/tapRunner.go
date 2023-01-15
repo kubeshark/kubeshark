@@ -427,7 +427,17 @@ func watchHubEvents(ctx context.Context, kubernetesProvider *kubernetes.Provider
 }
 
 func postHubStarted(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc) {
-	startProxyReportErrorIfAny(kubernetesProvider, ctx, cancel, kubernetes.HubServiceName, configStructs.ProxyFrontPortLabel, config.Config.Tap.Proxy.Hub.SrcPort, config.Config.Tap.Proxy.Hub.DstPort, "/echo")
+	startProxyReportErrorIfAny(
+		kubernetesProvider,
+		ctx,
+		cancel,
+		kubernetes.HubServiceName,
+		kubernetes.HubPodName,
+		configStructs.ProxyHubPortLabel,
+		config.Config.Tap.Proxy.Hub.SrcPort,
+		config.Config.Tap.Proxy.Hub.DstPort,
+		"/echo",
+	)
 
 	if err := startWorkerSyncer(ctx, cancel, kubernetesProvider, state.targetNamespaces, state.startTime); err != nil {
 		log.Error().Err(errormessage.FormatError(err)).Msg("Error starting worker syncer")
@@ -439,7 +449,17 @@ func postHubStarted(ctx context.Context, kubernetesProvider *kubernetes.Provider
 }
 
 func postFrontStarted(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc) {
-	startProxyReportErrorIfAny(kubernetesProvider, ctx, cancel, kubernetes.FrontServiceName, configStructs.ProxyHubPortLabel, config.Config.Tap.Proxy.Front.SrcPort, config.Config.Tap.Proxy.Front.DstPort, "")
+	startProxyReportErrorIfAny(
+		kubernetesProvider,
+		ctx,
+		cancel,
+		kubernetes.FrontServiceName,
+		kubernetes.FrontPodName,
+		configStructs.ProxyFrontPortLabel,
+		config.Config.Tap.Proxy.Front.SrcPort,
+		config.Config.Tap.Proxy.Front.DstPort,
+		"",
+	)
 
 	url := kubernetes.GetLocalhostOnPort(config.Config.Tap.Proxy.Front.SrcPort)
 	log.Info().Str("url", url).Msg(fmt.Sprintf(utils.Green, fmt.Sprintf("%s is available at:", misc.Software)))
