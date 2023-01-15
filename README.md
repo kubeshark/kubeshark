@@ -25,7 +25,7 @@
 
 <p align="center">
   <b>
-    <a href="https://github.com/kubeshark/kubeshark/releases/latest">Version 38.2</a> is out with <a href="https://docs.kubeshark.co/en/pcap_export_import">PCAP</a> export, <a href="https://docs.kubeshark.co/en/dns">DNS</a>, <a href="https://docs.kubeshark.co/en/service_map">Identity-aware Service Map</a> and so much more. Read about it <a href="https://kubeshark.co/pcap-or-it-didnt-happen">here</a>.
+    <a href="https://github.com/kubeshark/kubeshark/releases/latest">V38.2</a> is out with <a href="https://docs.kubeshark.co/en/pcap_export_import">PCAP</a> export, <a href="https://docs.kubeshark.co/en/dns">DNS</a>, <a href="https://docs.kubeshark.co/en/service_map">Identity-aware Service Map</a> and so much more. Read about it <a href="https://kubeshark.co/pcap-or-it-didnt-happen">here</a>.
   </b>
 </p>
 
