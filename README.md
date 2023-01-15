@@ -25,11 +25,11 @@
 
 <p align="center">
   <b>
-    <a href="https://github.com/kubeshark/kubeshark/releases/latest">Version 38.2</a> is out with <a href="https://docs.kubeshark.co/en/pcap_export_import">PCAP</a>, <a href="https://docs.kubeshark.co/en/dns">DNS</a>, <a href="https://docs.kubeshark.co/en/service_map">Identity-aware Service Map</a>, <a href="https://docs.kubeshark.co/en/tcp_streams">TCP & UDP streams</a> and so much more. Read about it <a href="https://kubeshark.co/pcap-or-it-didnt-happen">here</a>.
+    <a href="https://github.com/kubeshark/kubeshark/releases/latest">Version 38.2</a> is out with <a href="https://docs.kubeshark.co/en/pcap_export_import">PCAP</a> export, <a href="https://docs.kubeshark.co/en/dns">DNS</a>, <a href="https://docs.kubeshark.co/en/service_map">Identity-aware Service Map</a> and so much more. Read about it <a href="https://kubeshark.co/pcap-or-it-didnt-happen">here</a>.
   </b>
 </p>
 
-**Kubeshark** is an API Traffic Viewer for [**Kubernetes**](https://kubernetes.io/) providing deep visibility and monitoring of all API traffic and payloads going in, out and across containers and Pods inside a Kubernetes cluster.
+**Kubeshark** is an API Traffic Viewer for [**Kubernetes**](https://kubernetes.io/) providing real-time visibility into Kubernetes’ internal network, capturing, dissecting and monitoring all traffic and payloads going in, out and across containers, pods, nodes and clusters.
 
 ![Simple UI](https://github.com/kubeshark/assets/raw/master/png/kubeshark-ui.png)
 
