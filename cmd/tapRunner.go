@@ -121,7 +121,7 @@ func printTargetedPodsPreview(ctx context.Context, kubernetesProvider *kubernete
 			printNoPodsFoundSuggestion(namespaces)
 		}
 		for _, targetedPod := range matchingPods {
-			log.Info().Msg(fmt.Sprintf("New pod: %s", fmt.Sprintf(utils.Green, targetedPod.Name)))
+			log.Info().Msg(fmt.Sprintf("New pod: %s", fmt.Sprintf(utils.Cyan, targetedPod.Name)))
 		}
 		return nil
 	}
@@ -215,9 +215,9 @@ func watchHubPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, c
 
 			switch wEvent.Type {
 			case kubernetes.EventAdded:
-				log.Info().Str("pod", kubernetes.HubPodName).Msg("Added pod.")
+				log.Info().Str("pod", kubernetes.HubPodName).Msg("Added:")
 			case kubernetes.EventDeleted:
-				log.Info().Str("pod", kubernetes.HubPodName).Msg("Removed pod.")
+				log.Info().Str("pod", kubernetes.HubPodName).Msg("Removed:")
 				cancel()
 				return
 			case kubernetes.EventModified:
@@ -295,9 +295,9 @@ func watchFrontPod(ctx context.Context, kubernetesProvider *kubernetes.Provider,
 
 			switch wEvent.Type {
 			case kubernetes.EventAdded:
-				log.Info().Str("pod", kubernetes.FrontPodName).Msg("Added pod.")
+				log.Info().Str("pod", kubernetes.FrontPodName).Msg("Added:")
 			case kubernetes.EventDeleted:
-				log.Info().Str("pod", kubernetes.FrontPodName).Msg("Removed pod.")
+				log.Info().Str("pod", kubernetes.FrontPodName).Msg("Removed:")
 				cancel()
 				return
 			case kubernetes.EventModified:

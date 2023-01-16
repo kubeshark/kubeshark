@@ -306,10 +306,10 @@ func (workerSyncer *WorkerSyncer) updateCurrentlyTargetedPods() (err error, chan
 		podsToTarget := excludeSelfPods(matchingPods)
 		addedPods, removedPods := getPodArrayDiff(workerSyncer.CurrentlyTargetedPods, podsToTarget)
 		for _, addedPod := range addedPods {
-			log.Info().Str("pod", addedPod.Name).Msg("Currently targeting:")
+			log.Info().Msg(fmt.Sprintf("Targeted pod: %s", fmt.Sprintf(utils.Green, addedPod.Name)))
 		}
 		for _, removedPod := range removedPods {
-			log.Info().Str("pod", removedPod.Name).Msg("Pod is no longer running. Targeting is stopped.")
+			log.Info().Msg(fmt.Sprintf("Untargeted pod: %s", fmt.Sprintf(utils.Red, removedPod.Name)))
 		}
 		if len(addedPods) > 0 || len(removedPods) > 0 {
 			workerSyncer.CurrentlyTargetedPods = podsToTarget
