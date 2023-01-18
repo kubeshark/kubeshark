@@ -10,6 +10,9 @@ assignees: ''
 **Describe the bug**
 A clear and concise description of what the bug is.
 
+**Provide more information**
+Running on EKS, AKS, GKE, Minikube, Rancher, OpenShift? Number of Nodes? CNI?
+
 **To Reproduce**
 Steps to reproduce the behavior:
 1. Run `kubeshark <command> ...`
