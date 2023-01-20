@@ -15,9 +15,6 @@ func KubernetesResources(ctx context.Context, kubernetesProvider *kubernetes.Pro
 	exist, err := kubernetesProvider.DoesNamespaceExist(ctx, config.Config.SelfNamespace)
 	allResourcesExist := checkResourceExist(config.Config.SelfNamespace, "namespace", exist, err)
 
-	exist, err = kubernetesProvider.DoesConfigMapExist(ctx, config.Config.SelfNamespace, kubernetes.ConfigMapName)
-	allResourcesExist = checkResourceExist(kubernetes.ConfigMapName, "config map", exist, err) && allResourcesExist
-
 	exist, err = kubernetesProvider.DoesServiceAccountExist(ctx, config.Config.SelfNamespace, kubernetes.ServiceAccountName)
 	allResourcesExist = checkResourceExist(kubernetes.ServiceAccountName, "service account", exist, err) && allResourcesExist
 

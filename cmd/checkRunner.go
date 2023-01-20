@@ -34,9 +34,6 @@ func runCheck() {
 	}
 
 	if checkPassed {
-		checkPassed = check.ImagePullInCluster(ctx, kubernetesProvider)
-	}
-	if checkPassed {
 		checkPassed = check.KubernetesResources(ctx, kubernetesProvider)
 	}
 

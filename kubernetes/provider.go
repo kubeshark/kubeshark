@@ -182,9 +182,6 @@ type PodOptions struct {
 }
 
 func (provider *Provider) BuildHubPod(opts *PodOptions) (*core.Pod, error) {
-	configMapVolume := &core.ConfigMapVolumeSource{}
-	configMapVolume.Name = ConfigMapName
-
 	cpuLimit, err := resource.ParseQuantity(opts.Resources.CpuLimit)
 	if err != nil {
 		return nil, fmt.Errorf("invalid cpu limit for %s container", opts.PodName)
@@ -264,9 +261,6 @@ func (provider *Provider) BuildHubPod(opts *PodOptions) (*core.Pod, error) {
 }
 
 func (provider *Provider) BuildFrontPod(opts *PodOptions, hubHost string, hubPort string) (*core.Pod, error) {
-	configMapVolume := &core.ConfigMapVolumeSource{}
-	configMapVolume.Name = ConfigMapName
-
 	cpuLimit, err := resource.ParseQuantity(opts.Resources.CpuLimit)
 	if err != nil {
 		return nil, fmt.Errorf("invalid cpu limit for %s container", opts.PodName)
@@ -417,11 +411,6 @@ func (provider *Provider) CanI(ctx context.Context, namespace string, resource s
 func (provider *Provider) DoesNamespaceExist(ctx context.Context, name string) (bool, error) {
 	namespaceResource, err := provider.clientSet.CoreV1().Namespaces().Get(ctx, name, metav1.GetOptions{})
 	return provider.doesResourceExist(namespaceResource, err)
-}
-
-func (provider *Provider) DoesConfigMapExist(ctx context.Context, namespace string, name string) (bool, error) {
-	configMapResource, err := provider.clientSet.CoreV1().ConfigMaps(namespace).Get(ctx, name, metav1.GetOptions{})
-	return provider.doesResourceExist(configMapResource, err)
 }
 
 func (provider *Provider) DoesServiceAccountExist(ctx context.Context, namespace string, name string) (bool, error) {

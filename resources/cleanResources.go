@@ -113,11 +113,6 @@ func cleanUpRestrictedMode(ctx context.Context, kubernetesProvider *kubernetes.P
 		handleDeletionError(err, resourceDesc, &leftoverResources)
 	}
 
-	if err := kubernetesProvider.RemoveConfigMap(ctx, selfResourcesNamespace, kubernetes.ConfigMapName); err != nil {
-		resourceDesc := fmt.Sprintf("ConfigMap %s in namespace %s", kubernetes.ConfigMapName, selfResourcesNamespace)
-		handleDeletionError(err, resourceDesc, &leftoverResources)
-	}
-
 	if resources, err := kubernetesProvider.ListManagedServiceAccounts(ctx, selfResourcesNamespace); err != nil {
 		resourceDesc := fmt.Sprintf("ServiceAccounts in namespace %s", selfResourcesNamespace)
 		handleDeletionError(err, resourceDesc, &leftoverResources)

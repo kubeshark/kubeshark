@@ -14,7 +14,6 @@ const (
 	ServiceAccountName         = SelfResourcesPrefix + "service-account"
 	WorkerDaemonSetName        = SelfResourcesPrefix + "worker-daemon-set"
 	WorkerPodName              = SelfResourcesPrefix + "worker"
-	ConfigMapName              = SelfResourcesPrefix + "config"
 	MinKubernetesServerVersion = "1.16.0"
 )
 
