@@ -64,7 +64,6 @@ func (connector *Connector) isReachable(path string) (bool, error) {
 }
 
 func (connector *Connector) PostWorkerPodToHub(pod *v1.Pod) {
-	// TODO: This request is responsible for proxy_server.go:147] Error while proxying request: context canceled log
 	postWorkerUrl := fmt.Sprintf("%s/pods/worker", connector.url)
 
 	if podMarshalled, err := json.Marshal(pod); err != nil {
