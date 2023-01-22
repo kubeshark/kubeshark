@@ -99,11 +99,13 @@ func handleKubernetesProviderError(err error) {
 	}
 }
 
-func finishSelfExecution(kubernetesProvider *kubernetes.Provider, isNsRestrictedMode bool, selfNamespace string) {
+func finishSelfExecution(kubernetesProvider *kubernetes.Provider, isNsRestrictedMode bool, selfNamespace string, withoutCleanup bool) {
 	removalCtx, cancel := context.WithTimeout(context.Background(), cleanupTimeout)
 	defer cancel()
 	dumpLogsIfNeeded(removalCtx, kubernetesProvider)
-	resources.CleanUpSelfResources(removalCtx, cancel, kubernetesProvider, isNsRestrictedMode, selfNamespace)
+	if !withoutCleanup {
+		resources.CleanUpSelfResources(removalCtx, cancel, kubernetesProvider, isNsRestrictedMode, selfNamespace)
+	}
 }
 
 func dumpLogsIfNeeded(ctx context.Context, kubernetesProvider *kubernetes.Provider) {

@@ -105,7 +105,7 @@ func tap() {
 }
 
 func finishTapExecution(kubernetesProvider *kubernetes.Provider) {
-	finishSelfExecution(kubernetesProvider, config.Config.IsNsRestrictedMode(), config.Config.SelfNamespace)
+	finishSelfExecution(kubernetesProvider, config.Config.IsNsRestrictedMode(), config.Config.SelfNamespace, true)
 }
 
 /*

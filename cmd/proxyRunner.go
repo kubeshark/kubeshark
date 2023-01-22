@@ -26,7 +26,7 @@ func runProxy() {
 	exists, err := kubernetesProvider.DoesServiceExist(ctx, config.Config.SelfNamespace, kubernetes.FrontServiceName)
 	if err != nil {
 		log.Error().
-			Str("service", misc.Program).
+			Str("service", kubernetes.FrontServiceName).
 			Err(err).
 			Msg("Failed to found service!")
 		cancel()
@@ -42,34 +42,96 @@ func runProxy() {
 		return
 	}
 
-	url := kubernetes.GetLocalhostOnPort(config.Config.Tap.Proxy.Front.SrcPort)
+	exists, err = kubernetesProvider.DoesServiceExist(ctx, config.Config.SelfNamespace, kubernetes.HubServiceName)
+	if err != nil {
+		log.Error().
+			Str("service", kubernetes.HubServiceName).
+			Err(err).
+			Msg("Failed to found service!")
+		cancel()
+		return
+	}
 
-	response, err := http.Get(fmt.Sprintf("%s/", url))
+	if !exists {
+		log.Error().
+			Str("service", kubernetes.HubServiceName).
+			Str("command", fmt.Sprintf("%s %s", misc.Program, tapCmd.Use)).
+			Msg("Service not found! You should run the command first:")
+		cancel()
+		return
+	}
+
+	var establishedProxy bool
+
+	hubUrl := kubernetes.GetLocalhostOnPort(config.Config.Tap.Proxy.Hub.SrcPort)
+	response, err := http.Get(fmt.Sprintf("%s/", hubUrl))
+	if err == nil && response.StatusCode == 200 {
+		log.Info().
+			Str("service", kubernetes.HubServiceName).
+			Int("port", int(config.Config.Tap.Proxy.Hub.SrcPort)).
+			Msg("Found a running service.")
+
+		okToOpen("Hub", hubUrl)
+	} else {
+		startProxyReportErrorIfAny(
+			kubernetesProvider,
+			ctx,
+			cancel,
+			kubernetes.HubServiceName,
+			kubernetes.HubPodName,
+			configStructs.ProxyHubPortLabel,
+			config.Config.Tap.Proxy.Hub.SrcPort,
+			config.Config.Tap.Proxy.Hub.DstPort,
+			"/echo",
+		)
+		connector := connect.NewConnector(hubUrl, connect.DefaultRetries, connect.DefaultTimeout)
+		if err := connector.TestConnection("/echo"); err != nil {
+			log.Error().Msg(fmt.Sprintf(utils.Red, "Couldn't connect to Hub."))
+			return
+		}
+
+		establishedProxy = true
+		okToOpen("Hub", hubUrl)
+	}
+
+	frontUrl := kubernetes.GetLocalhostOnPort(config.Config.Tap.Proxy.Front.SrcPort)
+	response, err = http.Get(fmt.Sprintf("%s/", frontUrl))
 	if err == nil && response.StatusCode == 200 {
 		log.Info().
 			Str("service", kubernetes.FrontServiceName).
 			Int("port", int(config.Config.Tap.Proxy.Front.SrcPort)).
 			Msg("Found a running service.")
 
-		okToOpen(url)
-		return
+		okToOpen("Front", frontUrl)
+	} else {
+		startProxyReportErrorIfAny(
+			kubernetesProvider,
+			ctx,
+			cancel,
+			kubernetes.FrontServiceName,
+			kubernetes.FrontPodName,
+			configStructs.ProxyFrontPortLabel,
+			config.Config.Tap.Proxy.Front.SrcPort,
+			config.Config.Tap.Proxy.Front.DstPort,
+			"",
+		)
+		connector := connect.NewConnector(frontUrl, connect.DefaultRetries, connect.DefaultTimeout)
+		if err := connector.TestConnection(""); err != nil {
+			log.Error().Msg(fmt.Sprintf(utils.Red, "Couldn't connect to Front."))
+			return
+		}
+
+		establishedProxy = true
+		okToOpen("Front", frontUrl)
 	}
-	log.Info().Msg("Establishing connection to K8s cluster...")
-	startProxyReportErrorIfAny(kubernetesProvider, ctx, cancel, kubernetes.FrontServiceName, kubernetes.FrontPodName, configStructs.ProxyFrontPortLabel, config.Config.Tap.Proxy.Front.SrcPort, config.Config.Tap.Proxy.Front.DstPort, "")
 
-	connector := connect.NewConnector(url, connect.DefaultRetries, connect.DefaultTimeout)
-	if err := connector.TestConnection(""); err != nil {
-		log.Error().Msg(fmt.Sprintf(utils.Red, "Couldn't connect to Front."))
-		return
+	if establishedProxy {
+		utils.WaitForTermination(ctx, cancel)
 	}
-
-	okToOpen(url)
-
-	utils.WaitForTermination(ctx, cancel)
 }
 
-func okToOpen(url string) {
-	log.Info().Str("url", url).Msg(fmt.Sprintf(utils.Green, fmt.Sprintf("%s is available at:", misc.Software)))
+func okToOpen(name string, url string) {
+	log.Info().Str("url", url).Msg(fmt.Sprintf(utils.Green, fmt.Sprintf("%s is available at:", name)))
 
 	if !config.Config.HeadlessMode {
 		utils.OpenBrowser(url)
