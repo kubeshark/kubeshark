@@ -135,19 +135,6 @@ func printNoPodsFoundSuggestion(targetNamespaces []string) {
 	log.Warn().Msg(fmt.Sprintf("Did not find any currently running pods that match the regex argument, %s will automatically target matching pods if any are created later%s", misc.Software, suggestionStr))
 }
 
-func getK8sTapManagerErrorText(err kubernetes.K8sTapManagerError) string {
-	switch err.TapManagerReason {
-	case kubernetes.TapManagerPodListError:
-		return fmt.Sprintf("Failed to update currently targeted pods: %v", err.OriginalError)
-	case kubernetes.TapManagerPodWatchError:
-		return fmt.Sprintf("Error occured in K8s pod watch: %v", err.OriginalError)
-	case kubernetes.TapManagerWorkerUpdateError:
-		return fmt.Sprintf("Error updating worker: %v", err.OriginalError)
-	default:
-		return fmt.Sprintf("Unknown error occured in K8s tap manager: %v", err.OriginalError)
-	}
-}
-
 func watchHubPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc) {
 	podExactRegex := regexp.MustCompile(fmt.Sprintf("^%s$", kubernetes.HubPodName))
 	podWatchHelper := kubernetes.NewPodWatchHelper(kubernetesProvider, podExactRegex)
