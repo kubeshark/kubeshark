@@ -104,6 +104,9 @@ func tap() {
 
 	// block until exit signal or error
 	utils.WaitForTermination(ctx, cancel)
+	log.Warn().
+		Str("command", fmt.Sprintf("%s proxy", misc.Program)).
+		Msg(fmt.Sprintf(utils.Yellow, "To re-establish a proxy/port-forward, run:"))
 }
 
 func finishTapExecution(kubernetesProvider *kubernetes.Provider) {
