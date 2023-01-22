@@ -29,6 +29,8 @@ func CreateWorkers(
 		serviceAccountName = ""
 	}
 
+	log.Info().Msg("Creating the worker DaemonSet...")
+
 	if err := kubernetesProvider.ApplyWorkerDaemonSet(
 		ctx,
 		namespace,
@@ -46,7 +48,7 @@ func CreateWorkers(
 		return err
 	}
 
-	log.Debug().Msg("Successfully created workers.")
+	log.Info().Msg("Successfully created the worker DaemonSet.")
 
 	return nil
 }
