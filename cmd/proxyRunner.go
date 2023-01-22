@@ -76,7 +76,6 @@ func runProxy() {
 		startProxyReportErrorIfAny(
 			kubernetesProvider,
 			ctx,
-			cancel,
 			kubernetes.HubServiceName,
 			kubernetes.HubPodName,
 			configStructs.ProxyHubPortLabel,
@@ -107,7 +106,6 @@ func runProxy() {
 		startProxyReportErrorIfAny(
 			kubernetesProvider,
 			ctx,
-			cancel,
 			kubernetes.FrontServiceName,
 			kubernetes.FrontPodName,
 			configStructs.ProxyFrontPortLabel,

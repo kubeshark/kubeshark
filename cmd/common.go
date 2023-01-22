@@ -18,13 +18,12 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func startProxyReportErrorIfAny(kubernetesProvider *kubernetes.Provider, ctx context.Context, cancel context.CancelFunc, serviceName string, podName string, proxyPortLabel string, srcPort uint16, dstPort uint16, healthCheck string) {
-	httpServer, err := kubernetes.StartProxy(kubernetesProvider, config.Config.Tap.Proxy.Host, srcPort, config.Config.SelfNamespace, serviceName, cancel)
+func startProxyReportErrorIfAny(kubernetesProvider *kubernetes.Provider, ctx context.Context, serviceName string, podName string, proxyPortLabel string, srcPort uint16, dstPort uint16, healthCheck string) {
+	httpServer, err := kubernetes.StartProxy(kubernetesProvider, config.Config.Tap.Proxy.Host, srcPort, config.Config.SelfNamespace, serviceName)
 	if err != nil {
 		log.Error().
 			Err(errormessage.FormatError(err)).
 			Msg(fmt.Sprintf("Error occured while running K8s proxy. Try setting different port using --%s", proxyPortLabel))
-		cancel()
 		return
 	}
 
@@ -40,12 +39,11 @@ func startProxyReportErrorIfAny(kubernetesProvider *kubernetes.Provider, ctx con
 		}
 
 		podRegex, _ := regexp.Compile(podName)
-		if _, err := kubernetes.NewPortForward(kubernetesProvider, config.Config.SelfNamespace, podRegex, srcPort, dstPort, ctx, cancel); err != nil {
+		if _, err := kubernetes.NewPortForward(kubernetesProvider, config.Config.SelfNamespace, podRegex, srcPort, dstPort, ctx); err != nil {
 			log.Error().
 				Str("pod-regex", podRegex.String()).
 				Err(errormessage.FormatError(err)).
 				Msg(fmt.Sprintf("Error occured while running port forward. Try setting different port using --%s", proxyPortLabel))
-			cancel()
 			return
 		}
 
@@ -55,7 +53,6 @@ func startProxyReportErrorIfAny(kubernetesProvider *kubernetes.Provider, ctx con
 				Str("service", serviceName).
 				Err(errormessage.FormatError(err)).
 				Msg("Couldn't connect to service.")
-			cancel()
 			return
 		}
 	}

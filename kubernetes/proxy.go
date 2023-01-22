@@ -21,7 +21,7 @@ import (
 const k8sProxyApiPrefix = "/"
 const selfServicePort = 80
 
-func StartProxy(kubernetesProvider *Provider, proxyHost string, srcPort uint16, selfNamespace string, selfServiceName string, cancel context.CancelFunc) (*http.Server, error) {
+func StartProxy(kubernetesProvider *Provider, proxyHost string, srcPort uint16, selfNamespace string, selfServiceName string) (*http.Server, error) {
 	log.Info().
 		Str("namespace", selfNamespace).
 		Str("service", selfServiceName).
@@ -55,7 +55,7 @@ func StartProxy(kubernetesProvider *Provider, proxyHost string, srcPort uint16, 
 	go func() {
 		if err := server.Serve(l); err != nil && err != http.ErrServerClosed {
 			log.Error().Err(err).Msg("While creating proxy!")
-			cancel()
+			return
 		}
 	}()
 
@@ -99,7 +99,7 @@ func getRerouteHttpHandlerSelfStatic(proxyHandler http.Handler, selfNamespace st
 	})
 }
 
-func NewPortForward(kubernetesProvider *Provider, namespace string, podRegex *regexp.Regexp, srcPort uint16, dstPort uint16, ctx context.Context, cancel context.CancelFunc) (*portforward.PortForwarder, error) {
+func NewPortForward(kubernetesProvider *Provider, namespace string, podRegex *regexp.Regexp, srcPort uint16, dstPort uint16, ctx context.Context) (*portforward.PortForwarder, error) {
 	pods, err := kubernetesProvider.ListAllRunningPodsMatchingRegex(ctx, podRegex, []string{namespace})
 	if err != nil {
 		return nil, err
@@ -132,7 +132,7 @@ func NewPortForward(kubernetesProvider *Provider, namespace string, podRegex *re
 	go func() {
 		if err = forwarder.ForwardPorts(); err != nil {
 			log.Error().Err(err).Msg("While Kubernetes port-forwarding!")
-			cancel()
+			return
 		}
 	}()
 

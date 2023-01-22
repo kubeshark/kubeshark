@@ -369,7 +369,6 @@ func postHubStarted(ctx context.Context, kubernetesProvider *kubernetes.Provider
 	startProxyReportErrorIfAny(
 		kubernetesProvider,
 		ctx,
-		cancel,
 		kubernetes.HubServiceName,
 		kubernetes.HubPodName,
 		configStructs.ProxyHubPortLabel,
@@ -404,7 +403,6 @@ func postFrontStarted(ctx context.Context, kubernetesProvider *kubernetes.Provid
 	startProxyReportErrorIfAny(
 		kubernetesProvider,
 		ctx,
-		cancel,
 		kubernetes.FrontServiceName,
 		kubernetes.FrontPodName,
 		configStructs.ProxyFrontPortLabel,
