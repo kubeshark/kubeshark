@@ -121,54 +121,10 @@ func printTargetedPodsPreview(ctx context.Context, kubernetesProvider *kubernete
 			printNoPodsFoundSuggestion(namespaces)
 		}
 		for _, targetedPod := range matchingPods {
-			log.Info().Msg(fmt.Sprintf("New pod: %s", fmt.Sprintf(utils.Cyan, targetedPod.Name)))
+			log.Info().Msg(fmt.Sprintf("Targeted pod: %s", fmt.Sprintf(utils.Green, targetedPod.Name)))
 		}
 		return nil
 	}
-}
-
-func startWorkerSyncer(ctx context.Context, cancel context.CancelFunc, provider *kubernetes.Provider, targetNamespaces []string, startTime time.Time) error {
-	workerSyncer, err := kubernetes.CreateAndStartWorkerSyncer(ctx, provider, kubernetes.WorkerSyncerConfig{
-		TargetNamespaces:         targetNamespaces,
-		PodFilterRegex:           *config.Config.Tap.PodRegex(),
-		SelfNamespace:            config.Config.SelfNamespace,
-		WorkerResources:          config.Config.Tap.Resources.Worker,
-		ImagePullPolicy:          config.Config.ImagePullPolicy(),
-		ImagePullSecrets:         config.Config.ImagePullSecrets(),
-		SelfServiceAccountExists: state.selfServiceAccountExists,
-		ServiceMesh:              config.Config.Tap.ServiceMesh,
-		Tls:                      config.Config.Tap.Tls,
-		Debug:                    config.Config.Tap.Debug,
-	}, startTime)
-
-	if err != nil {
-		return err
-	}
-
-	go func() {
-		for {
-			select {
-			case syncerErr, ok := <-workerSyncer.ErrorOut:
-				if !ok {
-					log.Debug().Msg("workerSyncer err channel closed, ending listener loop")
-					return
-				}
-				log.Error().Msg(getK8sTapManagerErrorText(syncerErr))
-				cancel()
-			case _, ok := <-workerSyncer.TapPodChangesOut:
-				if !ok {
-					log.Debug().Msg("workerSyncer pod changes channel closed, ending listener loop")
-					return
-				}
-				go connector.PostTargetedPodsToHub(workerSyncer.CurrentlyTargetedPods)
-			case <-ctx.Done():
-				log.Debug().Msg("workerSyncer event listener loop exiting due to context done")
-				return
-			}
-		}
-	}()
-
-	return nil
 }
 
 func printNoPodsFoundSuggestion(targetNamespaces []string) {
@@ -433,10 +389,23 @@ func postHubStarted(ctx context.Context, kubernetesProvider *kubernetes.Provider
 		"/echo",
 	)
 
-	if err := startWorkerSyncer(ctx, cancel, kubernetesProvider, state.targetNamespaces, state.startTime); err != nil {
-		log.Error().Err(errormessage.FormatError(err)).Msg("Error starting worker syncer")
-		cancel()
+	err := kubernetes.CreateWorkers(
+		kubernetesProvider,
+		state.selfServiceAccountExists,
+		ctx,
+		config.Config.SelfNamespace,
+		config.Config.Tap.Resources.Worker,
+		config.Config.ImagePullPolicy(),
+		config.Config.ImagePullSecrets(),
+		config.Config.Tap.ServiceMesh,
+		config.Config.Tap.Tls,
+		config.Config.Tap.Debug,
+	)
+	if err != nil {
+		log.Error().Err(err).Send()
 	}
+
+	connector.PostRegexToHub(config.Config.Tap.PodRegexStr, state.targetNamespaces)
 
 	url := kubernetes.GetLocalhostOnPort(config.Config.Tap.Proxy.Hub.SrcPort)
 	log.Info().Str("url", url).Msg(fmt.Sprintf(utils.Green, "Hub is available at:"))

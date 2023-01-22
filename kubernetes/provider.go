@@ -652,7 +652,6 @@ func (provider *Provider) ApplyWorkerDaemonSet(
 	daemonSetName string,
 	podImage string,
 	workerPodName string,
-	nodeNames []string,
 	serviceAccountName string,
 	resources Resources,
 	imagePullPolicy core.PullPolicy,
@@ -662,16 +661,11 @@ func (provider *Provider) ApplyWorkerDaemonSet(
 	debug bool,
 ) error {
 	log.Debug().
-		Int("node-count", len(nodeNames)).
 		Str("namespace", namespace).
 		Str("daemonset-name", daemonSetName).
 		Str("image", podImage).
 		Str("pod", workerPodName).
 		Msg("Applying worker DaemonSets.")
-
-	if len(nodeNames) == 0 {
-		return fmt.Errorf("DaemonSet %s must target at least 1 pod", daemonSetName)
-	}
 
 	command := []string{"./worker", "-i", "any", "-port", "8897"}
 
@@ -752,22 +746,7 @@ func (provider *Provider) ApplyWorkerDaemonSet(
 	workerResources := applyconfcore.ResourceRequirements().WithRequests(workerResourceRequests).WithLimits(workerResourceLimits)
 	workerContainer.WithResources(workerResources)
 
-	matchFields := make([]*applyconfcore.NodeSelectorTermApplyConfiguration, 0)
-	for _, nodeName := range nodeNames {
-		nodeSelectorRequirement := applyconfcore.NodeSelectorRequirement()
-		nodeSelectorRequirement.WithKey("metadata.name")
-		nodeSelectorRequirement.WithOperator(core.NodeSelectorOpIn)
-		nodeSelectorRequirement.WithValues(nodeName)
-
-		nodeSelectorTerm := applyconfcore.NodeSelectorTerm()
-		nodeSelectorTerm.WithMatchFields(nodeSelectorRequirement)
-		matchFields = append(matchFields, nodeSelectorTerm)
-	}
-
-	nodeSelector := applyconfcore.NodeSelector()
-	nodeSelector.WithNodeSelectorTerms(matchFields...)
 	nodeAffinity := applyconfcore.NodeAffinity()
-	nodeAffinity.WithRequiredDuringSchedulingIgnoredDuringExecution(nodeSelector)
 	affinity := applyconfcore.Affinity()
 	affinity.WithNodeAffinity(nodeAffinity)
 

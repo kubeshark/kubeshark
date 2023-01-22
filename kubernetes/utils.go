@@ -1,8 +1,6 @@
 package kubernetes
 
 import (
-	"regexp"
-
 	"github.com/kubeshark/base/pkg/models"
 	core "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -46,44 +44,6 @@ func getMinimizedContainerStatuses(fullPod core.Pod) []core.ContainerStatus {
 	}
 
 	return result
-}
-
-func excludeSelfPods(pods []core.Pod) []core.Pod {
-	selfPrefixRegex := regexp.MustCompile("^" + SelfResourcesPrefix)
-
-	nonSelfPods := make([]core.Pod, 0)
-	for _, pod := range pods {
-		if !selfPrefixRegex.MatchString(pod.Name) {
-			nonSelfPods = append(nonSelfPods, pod)
-		}
-	}
-
-	return nonSelfPods
-}
-
-func getPodArrayDiff(oldPods []core.Pod, newPods []core.Pod) (added []core.Pod, removed []core.Pod) {
-	added = getMissingPods(newPods, oldPods)
-	removed = getMissingPods(oldPods, newPods)
-
-	return added, removed
-}
-
-//returns pods present in pods1 array and missing in pods2 array
-func getMissingPods(pods1 []core.Pod, pods2 []core.Pod) []core.Pod {
-	missingPods := make([]core.Pod, 0)
-	for _, pod1 := range pods1 {
-		var found = false
-		for _, pod2 := range pods2 {
-			if pod1.UID == pod2.UID {
-				found = true
-				break
-			}
-		}
-		if !found {
-			missingPods = append(missingPods, pod1)
-		}
-	}
-	return missingPods
 }
 
 func GetPodInfosForPods(pods []core.Pod) []*models.PodInfo {

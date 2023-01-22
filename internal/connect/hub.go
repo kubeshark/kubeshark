@@ -12,7 +12,6 @@ import (
 	"github.com/kubeshark/kubeshark/utils"
 
 	"github.com/rs/zerolog/log"
-	core "k8s.io/api/core/v1"
 	v1 "k8s.io/api/core/v1"
 )
 
@@ -115,22 +114,32 @@ func (connector *Connector) PostStorageLimitToHub(limit int64) {
 	}
 }
 
-func (connector *Connector) PostTargetedPodsToHub(pods []core.Pod) {
-	postTargetedUrl := fmt.Sprintf("%s/pods/targeted", connector.url)
+type postRegexRequest struct {
+	Regex      string   `json:"regex"`
+	Namespaces []string `json:"namespaces"`
+}
 
-	if podsMarshalled, err := json.Marshal(pods); err != nil {
-		log.Error().Err(err).Msg("Failed to marshal the targeted pods:")
+func (connector *Connector) PostRegexToHub(regex string, namespaces []string) {
+	postRegexUrl := fmt.Sprintf("%s/pods/regex", connector.url)
+
+	payload := postRegexRequest{
+		Regex:      regex,
+		Namespaces: namespaces,
+	}
+
+	if payloadMarshalled, err := json.Marshal(payload); err != nil {
+		log.Error().Err(err).Msg("Failed to marshal the payload:")
 	} else {
 		ok := false
 		for !ok {
-			if _, err = utils.Post(postTargetedUrl, "application/json", bytes.NewBuffer(podsMarshalled), connector.client); err != nil {
+			if _, err = utils.Post(postRegexUrl, "application/json", bytes.NewBuffer(payloadMarshalled), connector.client); err != nil {
 				if _, ok := err.(*url.Error); ok {
 					break
 				}
-				log.Debug().Err(err).Msg("Failed sending the targeted pods to Hub:")
+				log.Debug().Err(err).Msg("Failed sending the payload to Hub:")
 			} else {
 				ok = true
-				log.Debug().Int("pod-count", len(pods)).Msg("Reported targeted pods to Hub:")
+				log.Debug().Str("regex", regex).Strs("namespaces", namespaces).Msg("Reported payload to Hub:")
 			}
 			time.Sleep(time.Second)
 		}
