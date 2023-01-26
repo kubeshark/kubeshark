@@ -71,7 +71,7 @@ func runProxy() {
 			Int("port", int(config.Config.Tap.Proxy.Hub.SrcPort)).
 			Msg("Found a running service.")
 
-		okToOpen("Hub", hubUrl)
+		okToOpen("Hub", hubUrl, true)
 	} else {
 		startProxyReportErrorIfAny(
 			kubernetesProvider,
@@ -90,7 +90,7 @@ func runProxy() {
 		}
 
 		establishedProxy = true
-		okToOpen("Hub", hubUrl)
+		okToOpen("Hub", hubUrl, true)
 	}
 
 	frontUrl := kubernetes.GetLocalhostOnPort(config.Config.Tap.Proxy.Front.SrcPort)
@@ -101,7 +101,7 @@ func runProxy() {
 			Int("port", int(config.Config.Tap.Proxy.Front.SrcPort)).
 			Msg("Found a running service.")
 
-		okToOpen("Front", frontUrl)
+		okToOpen("Kubeshark", frontUrl, false)
 	} else {
 		startProxyReportErrorIfAny(
 			kubernetesProvider,
@@ -120,7 +120,7 @@ func runProxy() {
 		}
 
 		establishedProxy = true
-		okToOpen("Front", frontUrl)
+		okToOpen("Kubeshark", frontUrl, false)
 	}
 
 	if establishedProxy {
@@ -128,10 +128,10 @@ func runProxy() {
 	}
 }
 
-func okToOpen(name string, url string) {
+func okToOpen(name string, url string, noBrowser bool) {
 	log.Info().Str("url", url).Msg(fmt.Sprintf(utils.Green, fmt.Sprintf("%s is available at:", name)))
 
-	if !config.Config.HeadlessMode {
+	if !config.Config.HeadlessMode && !noBrowser {
 		utils.OpenBrowser(url)
 	}
 }
