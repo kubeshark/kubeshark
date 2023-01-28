@@ -9,7 +9,7 @@ const (
 )
 
 var (
-	registry = "docker.io/kubeshark"
+	registry = "docker.io/kubeshark/"
 	tag      = "latest"
 )
 
@@ -30,7 +30,7 @@ func SetTag(value string) {
 }
 
 func getImage(image string) string {
-	return fmt.Sprintf("%s/%s:%s", registry, image, tag)
+	return fmt.Sprintf("%s%s:%s", registry, image, tag)
 }
 
 func GetHubImage() string {
