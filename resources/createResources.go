@@ -16,7 +16,7 @@ import (
 func CreateHubResources(ctx context.Context, kubernetesProvider *kubernetes.Provider, isNsRestrictedMode bool, selfNamespace string, hubResources kubernetes.Resources, imagePullPolicy core.PullPolicy, imagePullSecrets []core.LocalObjectReference, debug bool) (bool, error) {
 	if !isNsRestrictedMode {
 		if err := createSelfNamespace(ctx, kubernetesProvider, selfNamespace); err != nil {
-			return false, err
+			log.Debug().Err(err).Send()
 		}
 	}
 
