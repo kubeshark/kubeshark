@@ -48,7 +48,9 @@ func InitConfig(cmd *cobra.Command) error {
 		return nil
 	}
 
-	go version.CheckNewerVersion()
+	if cmd.Use != "edition" {
+		go version.CheckNewerVersion()
+	}
 
 	Config = CreateDefaultConfig()
 	cmdName = cmd.Name()
@@ -59,7 +61,7 @@ func InitConfig(cmd *cobra.Command) error {
 
 	configFilePathFlag := cmd.Flags().Lookup(ConfigFilePathCommandName)
 	configFilePath := configFilePathFlag.Value.String()
-	if err := loadConfigFile(configFilePath, &Config); err != nil {
+	if err := loadConfigFile(configFilePath, &Config, cmd.Use != "edition"); err != nil {
 		if configFilePathFlag.Changed || !os.IsNotExist(err) {
 			return fmt.Errorf("invalid config, %w\n"+
 				"you can regenerate the file by removing it (%v) and using `kubeshark config -r`", err, configFilePath)
@@ -99,7 +101,7 @@ func WriteConfig(config *ConfigStruct) error {
 	return nil
 }
 
-func loadConfigFile(configFilePath string, config *ConfigStruct) error {
+func loadConfigFile(configFilePath string, config *ConfigStruct, logPath bool) error {
 	reader, openErr := os.Open(configFilePath)
 	if openErr != nil {
 		return openErr
@@ -114,7 +116,9 @@ func loadConfigFile(configFilePath string, config *ConfigStruct) error {
 		return err
 	}
 
-	log.Info().Str("path", configFilePath).Msg("Found config file!")
+	if logPath {
+		log.Info().Str("path", configFilePath).Msg("Found config file!")
+	}
 
 	return nil
 }
