@@ -1,6 +1,9 @@
 package docker
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
 
 const (
 	hub    = "hub"
@@ -18,7 +21,11 @@ func GetRegistry() string {
 }
 
 func SetRegistry(value string) {
-	registry = value
+	if strings.HasPrefix(value, "docker.io/kubeshark") {
+		registry = "docker.io/kubeshark/"
+	} else {
+		registry = value
+	}
 }
 
 func GetTag() string {
