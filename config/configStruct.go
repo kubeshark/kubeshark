@@ -35,7 +35,6 @@ type ConfigStruct struct {
 	DumpLogs       bool                       `yaml:"dumplogs" default:"false"`
 	ConfigFilePath string                     `yaml:"configpath,omitempty" readonly:""`
 	HeadlessMode   bool                       `yaml:"headless" default:"false"`
-	Edition        string                     `yaml:"edition" default:"community"`
 }
 
 func (config *ConfigStruct) SetDefaults() {

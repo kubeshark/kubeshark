@@ -36,7 +36,7 @@ var configCmd = &cobra.Command{
 				return nil
 			}
 
-			log.Debug().Str("template", template).Msg("Printing template config...")
+			log.Debug().Str("template", template).Msg("Writing template config...")
 			fmt.Printf("%v", template)
 		}
 
