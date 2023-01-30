@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"strings"
 	"time"
 
 	"github.com/kubeshark/kubeshark/docker"
@@ -41,6 +42,9 @@ var proxyDone bool
 func tap() {
 	state.startTime = time.Now()
 	docker.SetRegistry(config.Config.Tap.Docker.Registry)
+	if config.Config.Edition != "community" && strings.HasPrefix(config.Config.Tap.Docker.Registry, "docker.io/kubeshark") {
+		docker.SetRegistry(docker.NonCommunityRegistry)
+	}
 	docker.SetTag(config.Config.Tap.Docker.Tag)
 	log.Info().Str("registry", docker.GetRegistry()).Str("tag", docker.GetTag()).Msg("Using Docker:")
 	if config.Config.Tap.Pcap != "" {
