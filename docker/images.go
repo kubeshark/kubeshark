@@ -12,9 +12,8 @@ const (
 )
 
 var (
-	registry             = "docker.io/kubeshark/"
-	tag                  = "latest"
-	NonCommunityRegistry = "public.ecr.aws/g4h6q0l5/kubeshark-"
+	registry = "docker.io/kubeshark/"
+	tag      = "latest"
 )
 
 func GetRegistry() string {
