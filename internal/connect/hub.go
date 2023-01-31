@@ -145,3 +145,33 @@ func (connector *Connector) PostRegexToHub(regex string, namespaces []string) {
 		}
 	}
 }
+
+type postLicenseRequest struct {
+	License string `json:"license"`
+}
+
+func (connector *Connector) PostLicense(license string) {
+	postLicenseUrl := fmt.Sprintf("%s/license", connector.url)
+
+	payload := postLicenseRequest{
+		License: license,
+	}
+
+	if payloadMarshalled, err := json.Marshal(payload); err != nil {
+		log.Error().Err(err).Msg("Failed to marshal the payload:")
+	} else {
+		ok := false
+		for !ok {
+			if _, err = utils.Post(postLicenseUrl, "application/json", bytes.NewBuffer(payloadMarshalled), connector.client); err != nil {
+				if _, ok := err.(*url.Error); ok {
+					break
+				}
+				log.Debug().Err(err).Msg("Failed sending the license to Hub:")
+			} else {
+				ok = true
+				log.Debug().Str("license", license).Msg("Reported license to Hub:")
+			}
+			time.Sleep(time.Second)
+		}
+	}
+}

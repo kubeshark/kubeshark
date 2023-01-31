@@ -398,6 +398,10 @@ func postHubStarted(ctx context.Context, kubernetesProvider *kubernetes.Provider
 
 	connector.PostRegexToHub(config.Config.Tap.PodRegexStr, state.targetNamespaces)
 
+	if config.Config.License != "" {
+		connector.PostLicense(config.Config.License)
+	}
+
 	url := kubernetes.GetLocalhostOnPort(config.Config.Tap.Proxy.Hub.SrcPort)
 	log.Info().Str("url", url).Msg(fmt.Sprintf(utils.Green, "Hub is available at:"))
 }
