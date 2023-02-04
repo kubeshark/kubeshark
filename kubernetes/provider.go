@@ -26,6 +26,7 @@ import (
 	"k8s.io/apimachinery/pkg/watch"
 	applyconfapp "k8s.io/client-go/applyconfigurations/apps/v1"
 	applyconfcore "k8s.io/client-go/applyconfigurations/core/v1"
+	v1 "k8s.io/client-go/applyconfigurations/core/v1"
 	applyconfmeta "k8s.io/client-go/applyconfigurations/meta/v1"
 	"k8s.io/client-go/kubernetes"
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
@@ -711,13 +712,16 @@ func (provider *Provider) ApplyWorkerDaemonSet(
 
 	workerContainer.WithCommand(command...)
 
+	var envvars []*v1.EnvVarApplyConfiguration
+	envvars = append(envvars, applyconfcore.EnvVar().WithName("GODEBUG").WithValue("netdns=go"))
+
 	if debug {
-		workerContainer.WithEnv(
-			applyconfcore.EnvVar().WithName("MEMORY_PROFILING_ENABLED").WithValue("true"),
-			applyconfcore.EnvVar().WithName("MEMORY_PROFILING_INTERVAL_SECONDS").WithValue("10"),
-			applyconfcore.EnvVar().WithName("MEMORY_USAGE_INTERVAL_MILLISECONDS").WithValue("500"),
-		)
+		envvars = append(envvars, applyconfcore.EnvVar().WithName("MEMORY_PROFILING_ENABLED").WithValue("true"))
+		envvars = append(envvars, applyconfcore.EnvVar().WithName("MEMORY_PROFILING_INTERVAL_SECONDS").WithValue("10"))
+		envvars = append(envvars, applyconfcore.EnvVar().WithName("MEMORY_USAGE_INTERVAL_MILLISECONDS").WithValue("500"))
 	}
+
+	workerContainer.WithEnv(envvars...)
 
 	cpuLimit, err := resource.ParseQuantity(resources.CpuLimit)
 	if err != nil {
