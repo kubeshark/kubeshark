@@ -12,8 +12,8 @@ import (
 )
 
 type ScriptingConfig struct {
-	Consts map[string]string `yaml:"consts"`
-	Source string            `yaml:"source" default:""`
+	Consts map[string]interface{} `yaml:"consts"`
+	Source string                 `yaml:"source" default:""`
 }
 
 type Script struct {

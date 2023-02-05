@@ -177,7 +177,7 @@ func (connector *Connector) PostLicense(license string) {
 	}
 }
 
-func (connector *Connector) PostConsts(consts map[string]string) {
+func (connector *Connector) PostConsts(consts map[string]interface{}) {
 	if len(consts) == 0 {
 		return
 	}
