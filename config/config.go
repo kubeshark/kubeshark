@@ -5,11 +5,13 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path/filepath"
 	"reflect"
 	"strconv"
 	"strings"
 
 	"github.com/creasty/defaults"
+	"github.com/kubeshark/kubeshark/misc"
 	"github.com/kubeshark/kubeshark/misc/version"
 	"github.com/kubeshark/kubeshark/utils"
 	"github.com/rs/zerolog"
@@ -100,14 +102,25 @@ func WriteConfig(config *ConfigStruct) error {
 }
 
 func loadConfigFile(configFilePath string, config *ConfigStruct) error {
-	reader, openErr := os.Open(configFilePath)
-	if openErr != nil {
-		return openErr
+	cwd, err := os.Getwd()
+	if err != nil {
+		return err
 	}
 
-	buf, readErr := io.ReadAll(reader)
-	if readErr != nil {
-		return readErr
+	cwdConfig := filepath.Join(cwd, fmt.Sprintf("%s.yaml", misc.Program))
+	reader, err := os.Open(cwdConfig)
+	if err != nil {
+		reader, err = os.Open(configFilePath)
+		if err != nil {
+			return err
+		}
+	} else {
+		configFilePath = cwdConfig
+	}
+
+	buf, err := io.ReadAll(reader)
+	if err != nil {
+		return err
 	}
 
 	if err := yaml.Unmarshal(buf, config); err != nil {
