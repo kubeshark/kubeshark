@@ -8,7 +8,7 @@ require (
 	github.com/docker/go-connections v0.4.0
 	github.com/docker/go-units v0.4.0
 	github.com/google/go-github/v37 v37.0.0
-	github.com/kubeshark/base v0.5.1
+	github.com/kubeshark/base v0.6.3
 	github.com/robertkrimen/otto v0.2.1
 	github.com/rs/zerolog v1.28.0
 	github.com/spf13/cobra v1.3.0
