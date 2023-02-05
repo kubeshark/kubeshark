@@ -15,15 +15,23 @@ help: ## Print this help message.
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
 build-debug:  ## Build for debuging.
+	export CGO_ENABLED=1
 	export GCLFAGS='-gcflags="all=-N -l"'
 	${MAKE} build-base
 
 build: ## Build.
+	export CGO_ENABLED=0
+	export LDFLAGS_EXT='-extldflags=-static -s -w'
+	${MAKE} build-base
+
+build-race: ## Build with -race flag.
+	export CGO_ENABLED=1
+	export GCLFAGS='-race'
 	export LDFLAGS_EXT='-extldflags=-static -s -w'
 	${MAKE} build-base
 
 build-base: ## Build binary (select the platform via GOOS / GOARCH env variables).
-	CGO_ENABLED=0 go build ${GCLFAGS} -ldflags="${LDFLAGS_EXT} \
+	go build ${GCLFAGS} -ldflags="${LDFLAGS_EXT} \
 					-X 'github.com/kubeshark/kubeshark/misc.GitCommitHash=$(COMMIT_HASH)' \
 					-X 'github.com/kubeshark/kubeshark/misc.Branch=$(GIT_BRANCH)' \
 					-X 'github.com/kubeshark/kubeshark/misc.BuildTimestamp=$(BUILD_TIMESTAMP)' \
@@ -33,6 +41,7 @@ build-base: ## Build binary (select the platform via GOOS / GOARCH env variables
 	cd bin && shasum -a 256 kubeshark_${SUFFIX} > kubeshark_${SUFFIX}.sha256
 
 build-all: ## Build for all supported platforms.
+	export CGO_ENABLED=0
 	echo "Compiling for every OS and Platform" && \
 	mkdir -p bin && sed s/_VER_/$(VER)/g RELEASE.md.TEMPLATE >  bin/README.md && \
 	$(MAKE) build GOOS=linux GOARCH=amd64 && \
