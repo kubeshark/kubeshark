@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"regexp"
+	"sync"
 	"time"
 
 	"github.com/kubeshark/kubeshark/docker"
@@ -34,11 +35,18 @@ type tapState struct {
 
 var state tapState
 var connector *connect.Connector
-var hubPodReady bool
-var frontPodReady bool
-var proxyDone bool
+
+type Readiness struct {
+	Hub   bool
+	Front bool
+	Proxy bool
+	sync.Mutex
+}
+
+var ready *Readiness
 
 func tap() {
+	ready = &Readiness{}
 	state.startTime = time.Now()
 	docker.SetRegistry(config.Config.Tap.Docker.Registry)
 	docker.SetTag(config.Config.Tap.Docker.Tag)
@@ -178,12 +186,23 @@ func watchHubPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, c
 
 				if modifiedPod.Status.Phase == core.PodRunning && !isPodReady {
 					isPodReady = true
-					hubPodReady = true
+
+					ready.Lock()
+					ready.Hub = true
+					ready.Unlock()
 					postHubStarted(ctx, kubernetesProvider, cancel)
 				}
 
+				ready.Lock()
+				proxyDone := ready.Proxy
+				hubPodReady := ready.Hub
+				frontPodReady := ready.Front
+				ready.Unlock()
+
 				if !proxyDone && hubPodReady && frontPodReady {
-					proxyDone = true
+					ready.Lock()
+					ready.Proxy = true
+					ready.Unlock()
 					postFrontStarted(ctx, kubernetesProvider, cancel)
 				}
 			case kubernetes.EventBookmark:
@@ -258,11 +277,21 @@ func watchFrontPod(ctx context.Context, kubernetesProvider *kubernetes.Provider,
 
 				if modifiedPod.Status.Phase == core.PodRunning && !isPodReady {
 					isPodReady = true
-					frontPodReady = true
+					ready.Lock()
+					ready.Front = true
+					ready.Unlock()
 				}
 
+				ready.Lock()
+				proxyDone := ready.Proxy
+				hubPodReady := ready.Hub
+				frontPodReady := ready.Front
+				ready.Unlock()
+
 				if !proxyDone && hubPodReady && frontPodReady {
-					proxyDone = true
+					ready.Lock()
+					ready.Proxy = true
+					ready.Unlock()
 					postFrontStarted(ctx, kubernetesProvider, cancel)
 				}
 			case kubernetes.EventBookmark:
