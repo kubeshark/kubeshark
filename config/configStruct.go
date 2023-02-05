@@ -27,15 +27,16 @@ type KubeConfig struct {
 }
 
 type ConfigStruct struct {
-	Tap            configStructs.TapConfig    `yaml:"tap"`
-	Logs           configStructs.LogsConfig   `yaml:"logs"`
-	Config         configStructs.ConfigConfig `yaml:"config,omitempty"`
-	Kube           KubeConfig                 `yaml:"kube"`
-	SelfNamespace  string                     `yaml:"selfnamespace" default:"kubeshark"`
-	DumpLogs       bool                       `yaml:"dumplogs" default:"false"`
-	ConfigFilePath string                     `yaml:"configpath,omitempty" readonly:""`
-	HeadlessMode   bool                       `yaml:"headless" default:"false"`
-	License        string                     `yaml:"license" default:""`
+	Tap            configStructs.TapConfig       `yaml:"tap"`
+	Logs           configStructs.LogsConfig      `yaml:"logs"`
+	Config         configStructs.ConfigConfig    `yaml:"config,omitempty"`
+	Kube           KubeConfig                    `yaml:"kube"`
+	SelfNamespace  string                        `yaml:"selfnamespace" default:"kubeshark"`
+	DumpLogs       bool                          `yaml:"dumplogs" default:"false"`
+	ConfigFilePath string                        `yaml:"configpath,omitempty" readonly:""`
+	HeadlessMode   bool                          `yaml:"headless" default:"false"`
+	License        string                        `yaml:"license" default:""`
+	Scripting      configStructs.ScriptingConfig `yaml:"scripting"`
 }
 
 func (config *ConfigStruct) SetDefaults() {

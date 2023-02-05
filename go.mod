@@ -9,6 +9,7 @@ require (
 	github.com/docker/go-units v0.4.0
 	github.com/google/go-github/v37 v37.0.0
 	github.com/kubeshark/base v0.5.1
+	github.com/robertkrimen/otto v0.2.1
 	github.com/rs/zerolog v1.28.0
 	github.com/spf13/cobra v1.3.0
 	github.com/spf13/pflag v1.0.5
@@ -92,6 +93,7 @@ require (
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/protobuf v1.27.1 // indirect
 	gopkg.in/inf.v0 v0.9.1 // indirect
+	gopkg.in/sourcemap.v1 v1.0.5 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
 	k8s.io/cli-runtime v0.23.3 // indirect
 	k8s.io/component-base v0.23.3 // indirect

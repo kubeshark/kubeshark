@@ -9,6 +9,7 @@ import (
 	"time"
 
 	"github.com/kubeshark/kubeshark/config"
+	"github.com/kubeshark/kubeshark/config/configStructs"
 	"github.com/kubeshark/kubeshark/utils"
 
 	"github.com/rs/zerolog/log"
@@ -170,6 +171,54 @@ func (connector *Connector) PostLicense(license string) {
 			} else {
 				ok = true
 				log.Debug().Str("license", license).Msg("Reported license to Hub:")
+			}
+			time.Sleep(time.Second)
+		}
+	}
+}
+
+func (connector *Connector) PostConsts(consts map[string]string) {
+	if len(consts) == 0 {
+		return
+	}
+
+	postConstsUrl := fmt.Sprintf("%s/scripts/consts", connector.url)
+
+	if payloadMarshalled, err := json.Marshal(consts); err != nil {
+		log.Error().Err(err).Msg("Failed to marshal the payload:")
+	} else {
+		ok := false
+		for !ok {
+			if _, err = utils.Post(postConstsUrl, "application/json", bytes.NewBuffer(payloadMarshalled), connector.client); err != nil {
+				if _, ok := err.(*url.Error); ok {
+					break
+				}
+				log.Debug().Err(err).Msg("Failed sending the constants to Hub:")
+			} else {
+				ok = true
+				log.Debug().Interface("consts", consts).Msg("Reported constants to Hub:")
+			}
+			time.Sleep(time.Second)
+		}
+	}
+}
+
+func (connector *Connector) PostScript(script *configStructs.Script) {
+	postScriptUrl := fmt.Sprintf("%s/scripts", connector.url)
+
+	if payloadMarshalled, err := json.Marshal(script); err != nil {
+		log.Error().Err(err).Msg("Failed to marshal the payload:")
+	} else {
+		ok := false
+		for !ok {
+			if _, err = utils.Post(postScriptUrl, "application/json", bytes.NewBuffer(payloadMarshalled), connector.client); err != nil {
+				if _, ok := err.(*url.Error); ok {
+					break
+				}
+				log.Debug().Err(err).Msg("Failed sending the script to Hub:")
+			} else {
+				ok = true
+				log.Debug().Interface("script", script).Msg("Reported script to Hub:")
 			}
 			time.Sleep(time.Second)
 		}

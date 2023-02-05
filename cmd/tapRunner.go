@@ -409,6 +409,7 @@ func postHubStarted(ctx context.Context, kubernetesProvider *kubernetes.Provider
 		"/echo",
 	)
 
+	// Create workers
 	err := kubernetes.CreateWorkers(
 		kubernetesProvider,
 		state.selfServiceAccountExists,
@@ -425,12 +426,28 @@ func postHubStarted(ctx context.Context, kubernetesProvider *kubernetes.Provider
 		log.Error().Err(err).Send()
 	}
 
+	// Pod regex
 	connector.PostRegexToHub(config.Config.Tap.PodRegexStr, state.targetNamespaces)
 
+	// License
 	if config.Config.License != "" {
 		connector.PostLicense(config.Config.License)
 	}
 
+	// Scripting
+	connector.PostConsts(config.Config.Scripting.Consts)
+
+	var scripts []*configStructs.Script
+	scripts, err = config.Config.Scripting.GetScripts()
+	if err != nil {
+		log.Error().Err(err).Send()
+	}
+
+	for _, script := range scripts {
+		connector.PostScript(script)
+	}
+
+	// Hub proxy URL
 	url := kubernetes.GetLocalhostOnPort(config.Config.Tap.Proxy.Hub.SrcPort)
 	log.Info().Str("url", url).Msg(fmt.Sprintf(utils.Green, "Hub is available at:"))
 }

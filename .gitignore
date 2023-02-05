@@ -56,4 +56,8 @@ cypress.env.json
 # Object files
 *.o
 
+# Binaries
 bin
+
+# Scripts
+scripts/
