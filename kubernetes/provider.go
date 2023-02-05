@@ -713,7 +713,9 @@ func (provider *Provider) ApplyWorkerDaemonSet(
 	workerContainer.WithCommand(command...)
 
 	var envvars []*v1.EnvVarApplyConfiguration
-	envvars = append(envvars, applyconfcore.EnvVar().WithName("GODEBUG").WithValue("netdns=go"))
+
+	// Worker build with -race flag requires the GODEBUG=netdns=go
+	// envvars = append(envvars, applyconfcore.EnvVar().WithName("GODEBUG").WithValue("netdns=go"))
 
 	if debug {
 		envvars = append(envvars, applyconfcore.EnvVar().WithName("MEMORY_PROFILING_ENABLED").WithValue("true"))
