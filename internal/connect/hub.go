@@ -8,7 +8,6 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/kubeshark/kubeshark/config"
 	"github.com/kubeshark/kubeshark/config/configStructs"
 	"github.com/kubeshark/kubeshark/utils"
 
@@ -71,7 +70,8 @@ func (connector *Connector) PostWorkerPodToHub(pod *v1.Pod) {
 	} else {
 		ok := false
 		for !ok {
-			if _, err = utils.Post(postWorkerUrl, "application/json", bytes.NewBuffer(podMarshalled), connector.client); err != nil {
+			var resp *http.Response
+			if resp, err = utils.Post(postWorkerUrl, "application/json", bytes.NewBuffer(podMarshalled), connector.client); err != nil || resp.StatusCode != http.StatusOK {
 				if _, ok := err.(*url.Error); ok {
 					break
 				}
@@ -79,7 +79,6 @@ func (connector *Connector) PostWorkerPodToHub(pod *v1.Pod) {
 			} else {
 				ok = true
 				log.Debug().Interface("worker-pod", pod).Msg("Reported worker pod to Hub:")
-				connector.PostStorageLimitToHub(config.Config.Tap.StorageLimitBytes())
 			}
 			time.Sleep(time.Second)
 		}
@@ -101,7 +100,8 @@ func (connector *Connector) PostStorageLimitToHub(limit int64) {
 	} else {
 		ok := false
 		for !ok {
-			if _, err = utils.Post(postStorageLimitUrl, "application/json", bytes.NewBuffer(payloadMarshalled), connector.client); err != nil {
+			var resp *http.Response
+			if resp, err = utils.Post(postStorageLimitUrl, "application/json", bytes.NewBuffer(payloadMarshalled), connector.client); err != nil || resp.StatusCode != http.StatusOK {
 				if _, ok := err.(*url.Error); ok {
 					break
 				}
@@ -133,7 +133,8 @@ func (connector *Connector) PostRegexToHub(regex string, namespaces []string) {
 	} else {
 		ok := false
 		for !ok {
-			if _, err = utils.Post(postRegexUrl, "application/json", bytes.NewBuffer(payloadMarshalled), connector.client); err != nil {
+			var resp *http.Response
+			if resp, err = utils.Post(postRegexUrl, "application/json", bytes.NewBuffer(payloadMarshalled), connector.client); err != nil || resp.StatusCode != http.StatusOK {
 				if _, ok := err.(*url.Error); ok {
 					break
 				}
@@ -163,7 +164,8 @@ func (connector *Connector) PostLicense(license string) {
 	} else {
 		ok := false
 		for !ok {
-			if _, err = utils.Post(postLicenseUrl, "application/json", bytes.NewBuffer(payloadMarshalled), connector.client); err != nil {
+			var resp *http.Response
+			if resp, err = utils.Post(postLicenseUrl, "application/json", bytes.NewBuffer(payloadMarshalled), connector.client); err != nil || resp.StatusCode != http.StatusOK {
 				if _, ok := err.(*url.Error); ok {
 					break
 				}
@@ -189,7 +191,8 @@ func (connector *Connector) PostConsts(consts map[string]interface{}) {
 	} else {
 		ok := false
 		for !ok {
-			if _, err = utils.Post(postConstsUrl, "application/json", bytes.NewBuffer(payloadMarshalled), connector.client); err != nil {
+			var resp *http.Response
+			if resp, err = utils.Post(postConstsUrl, "application/json", bytes.NewBuffer(payloadMarshalled), connector.client); err != nil || resp.StatusCode != http.StatusOK {
 				if _, ok := err.(*url.Error); ok {
 					break
 				}
@@ -211,7 +214,8 @@ func (connector *Connector) PostScript(script *configStructs.Script) {
 	} else {
 		ok := false
 		for !ok {
-			if _, err = utils.Post(postScriptUrl, "application/json", bytes.NewBuffer(payloadMarshalled), connector.client); err != nil {
+			var resp *http.Response
+			if resp, err = utils.Post(postScriptUrl, "application/json", bytes.NewBuffer(payloadMarshalled), connector.client); err != nil || resp.StatusCode != http.StatusOK {
 				if _, ok := err.(*url.Error); ok {
 					break
 				}
