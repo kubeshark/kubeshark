@@ -9,6 +9,7 @@ import (
 	"github.com/robertkrimen/otto/ast"
 	"github.com/robertkrimen/otto/file"
 	"github.com/robertkrimen/otto/parser"
+	"github.com/rs/zerolog/log"
 )
 
 type ScriptingConfig struct {
@@ -39,7 +40,8 @@ func (config *ScriptingConfig) GetScripts() (scripts []*Script, err error) {
 
 		filename := f.Name()
 		var body []byte
-		body, err = os.ReadFile(filepath.Join(config.Source, filename))
+		path := filepath.Join(config.Source, filename)
+		body, err = os.ReadFile(path)
 		if err != nil {
 			return
 		}
@@ -68,6 +70,8 @@ func (config *ScriptingConfig) GetScripts() (scripts []*Script, err error) {
 			Title: title,
 			Code:  code,
 		})
+
+		log.Info().Str("path", path).Msg("Found script:")
 	}
 
 	return
