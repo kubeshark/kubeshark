@@ -75,10 +75,10 @@ func (connector *Connector) PostWorkerPodToHub(pod *v1.Pod) {
 				if _, ok := err.(*url.Error); ok {
 					break
 				}
-				log.Debug().Err(err).Msg("Failed sending the Worker pod to Hub:")
+				log.Warn().Err(err).Msg("Failed sending the Worker pod to Hub:")
 			} else {
 				ok = true
-				log.Debug().Interface("worker-pod", pod).Msg("Reported worker pod to Hub:")
+				log.Info().Interface("worker-pod", pod).Msg("Reported worker pod to Hub:")
 			}
 			time.Sleep(time.Second)
 		}
@@ -105,10 +105,10 @@ func (connector *Connector) PostStorageLimitToHub(limit int64) {
 				if _, ok := err.(*url.Error); ok {
 					break
 				}
-				log.Debug().Err(err).Msg("Failed sending the storage limit to Hub:")
+				log.Warn().Err(err).Msg("Failed sending the storage limit to Hub:")
 			} else {
 				ok = true
-				log.Debug().Int("limit", int(limit)).Msg("Reported storage limit to Hub:")
+				log.Info().Int("limit", int(limit)).Msg("Reported storage limit to Hub:")
 			}
 			time.Sleep(time.Second)
 		}
@@ -129,7 +129,7 @@ func (connector *Connector) PostRegexToHub(regex string, namespaces []string) {
 	}
 
 	if payloadMarshalled, err := json.Marshal(payload); err != nil {
-		log.Error().Err(err).Msg("Failed to marshal the payload:")
+		log.Error().Err(err).Msg("Failed to marshal the pod regex:")
 	} else {
 		ok := false
 		for !ok {
@@ -138,10 +138,10 @@ func (connector *Connector) PostRegexToHub(regex string, namespaces []string) {
 				if _, ok := err.(*url.Error); ok {
 					break
 				}
-				log.Debug().Err(err).Msg("Failed sending the payload to Hub:")
+				log.Warn().Err(err).Msg("Failed sending the pod regex to Hub:")
 			} else {
 				ok = true
-				log.Debug().Str("regex", regex).Strs("namespaces", namespaces).Msg("Reported payload to Hub:")
+				log.Info().Str("regex", regex).Strs("namespaces", namespaces).Msg("Reported pod regex to Hub:")
 			}
 			time.Sleep(time.Second)
 		}
@@ -169,10 +169,10 @@ func (connector *Connector) PostLicense(license string) {
 				if _, ok := err.(*url.Error); ok {
 					break
 				}
-				log.Debug().Err(err).Msg("Failed sending the license to Hub:")
+				log.Warn().Err(err).Msg("Failed sending the license to Hub:")
 			} else {
 				ok = true
-				log.Debug().Str("license", license).Msg("Reported license to Hub:")
+				log.Info().Str("license", license).Msg("Reported license to Hub:")
 			}
 			time.Sleep(time.Second)
 		}
@@ -196,10 +196,10 @@ func (connector *Connector) PostConsts(consts map[string]interface{}) {
 				if _, ok := err.(*url.Error); ok {
 					break
 				}
-				log.Debug().Err(err).Msg("Failed sending the constants to Hub:")
+				log.Warn().Err(err).Msg("Failed sending the constants to Hub:")
 			} else {
 				ok = true
-				log.Debug().Interface("consts", consts).Msg("Reported constants to Hub:")
+				log.Info().Interface("consts", consts).Msg("Reported constants to Hub:")
 			}
 			time.Sleep(time.Second)
 		}
@@ -219,10 +219,10 @@ func (connector *Connector) PostScript(script *configStructs.Script) {
 				if _, ok := err.(*url.Error); ok {
 					break
 				}
-				log.Debug().Err(err).Msg("Failed sending the script to Hub:")
+				log.Warn().Err(err).Msg("Failed sending the script to Hub:")
 			} else {
 				ok = true
-				log.Debug().Interface("script", script).Msg("Reported script to Hub:")
+				log.Info().Interface("script", script).Msg("Reported script to Hub:")
 			}
 			time.Sleep(time.Second)
 		}
@@ -240,10 +240,10 @@ func (connector *Connector) PostScriptDone() {
 			if _, ok := err.(*url.Error); ok {
 				break
 			}
-			log.Debug().Err(err).Msg("Failed sending the POST script done to Hub:")
+			log.Warn().Err(err).Msg("Failed sending the POST script done to Hub.")
 		} else {
 			ok = true
-			log.Debug().Msg("Reported POST script done to Hub:")
+			log.Info().Msg("Reported POST script done to Hub:")
 		}
 		time.Sleep(time.Second)
 	}
