@@ -228,3 +228,23 @@ func (connector *Connector) PostScript(script *configStructs.Script) {
 		}
 	}
 }
+
+func (connector *Connector) PostScriptDone() {
+	postScripDonetUrl := fmt.Sprintf("%s/scripts/done", connector.url)
+
+	ok := false
+	var err error
+	for !ok {
+		var resp *http.Response
+		if resp, err = utils.Post(postScripDonetUrl, "application/json", nil, connector.client); err != nil || resp.StatusCode != http.StatusOK {
+			if _, ok := err.(*url.Error); ok {
+				break
+			}
+			log.Debug().Err(err).Msg("Failed sending the POST script done to Hub:")
+		} else {
+			ok = true
+			log.Debug().Msg("Reported POST script done to Hub:")
+		}
+		time.Sleep(time.Second)
+	}
+}

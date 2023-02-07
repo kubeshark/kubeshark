@@ -450,6 +450,8 @@ func postHubStarted(ctx context.Context, kubernetesProvider *kubernetes.Provider
 		connector.PostScript(script)
 	}
 
+	connector.PostScriptDone()
+
 	// Hub proxy URL
 	url := kubernetes.GetLocalhostOnPort(config.Config.Tap.Proxy.Hub.SrcPort)
 	log.Info().Str("url", url).Msg(fmt.Sprintf(utils.Green, "Hub is available at:"))
