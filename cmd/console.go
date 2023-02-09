@@ -5,6 +5,7 @@ import (
 	"net/url"
 	"os"
 	"os/signal"
+	"strings"
 	"time"
 
 	"github.com/creasty/defaults"
@@ -65,7 +66,11 @@ func runConsole() {
 				return
 			}
 
-			log.Info().Msg(string(message))
+			msg := string(message)
+			if strings.Contains(msg, ":ERROR]") {
+				msg = fmt.Sprintf(utils.Red, msg)
+			}
+			log.Info().Msg(msg)
 		}
 	}()
 
