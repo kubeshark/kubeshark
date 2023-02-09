@@ -15,8 +15,7 @@ import (
 
 var tapCmd = &cobra.Command{
 	Use:   "tap [POD REGEX]",
-	Short: "Capture the network traffic in your Kubernetes cluster.",
-	Long:  "Capture the network traffic in your Kubernetes cluster.",
+	Short: "Capture the network traffic in your Kubernetes cluster",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		tap()
 		return nil

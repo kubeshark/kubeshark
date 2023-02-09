@@ -9,7 +9,7 @@ import (
 
 var proxyCmd = &cobra.Command{
 	Use:   "proxy",
-	Short: "Open the web UI (front-end) in the browser via proxy/port-forward.",
+	Short: "Open the web UI (front-end) in the browser via proxy/port-forward",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		runProxy()
 		return nil
