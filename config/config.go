@@ -50,7 +50,9 @@ func InitConfig(cmd *cobra.Command) error {
 		return nil
 	}
 
-	go version.CheckNewerVersion()
+	if cmd.Use != "console" {
+		go version.CheckNewerVersion()
+	}
 
 	Config = CreateDefaultConfig()
 	cmdName = cmd.Name()
