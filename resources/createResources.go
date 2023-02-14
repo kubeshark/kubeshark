@@ -32,6 +32,23 @@ func CreateHubResources(ctx context.Context, kubernetesProvider *kubernetes.Prov
 		serviceAccountName = ""
 	}
 
+	// Create workers
+	err = kubernetes.CreateWorkers(
+		kubernetesProvider,
+		selfServiceAccountExists,
+		ctx,
+		config.Config.SelfNamespace,
+		config.Config.Tap.Resources.Worker,
+		config.Config.ImagePullPolicy(),
+		config.Config.ImagePullSecrets(),
+		config.Config.Tap.ServiceMesh,
+		config.Config.Tap.Tls,
+		config.Config.Tap.Debug,
+	)
+	if err != nil {
+		log.Error().Err(err).Send()
+	}
+
 	opts := &kubernetes.PodOptions{
 		Namespace:          selfNamespace,
 		PodName:            kubernetes.HubPodName,

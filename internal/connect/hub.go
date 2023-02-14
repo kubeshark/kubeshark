@@ -24,6 +24,7 @@ type Connector struct {
 
 const DefaultRetries = 3
 const DefaultTimeout = 2 * time.Second
+const DefaultSleep = 100 * time.Millisecond
 
 func NewConnector(url string, retries int, timeout time.Duration) *Connector {
 	return &Connector{
@@ -45,7 +46,7 @@ func (connector *Connector) TestConnection(path string) error {
 			break
 		}
 		retriesLeft -= 1
-		time.Sleep(time.Second)
+		time.Sleep(5 * DefaultSleep)
 	}
 
 	if retriesLeft == 0 {
@@ -81,7 +82,7 @@ func (connector *Connector) PostWorkerPodToHub(pod *v1.Pod) {
 				ok = true
 				log.Info().Interface("worker-pod", pod).Msg("Reported worker pod to Hub:")
 			}
-			time.Sleep(time.Second)
+			time.Sleep(DefaultSleep)
 		}
 	}
 }
@@ -111,7 +112,7 @@ func (connector *Connector) PostStorageLimitToHub(limit int64) {
 				ok = true
 				log.Info().Int("limit", int(limit)).Msg("Reported storage limit to Hub:")
 			}
-			time.Sleep(time.Second)
+			time.Sleep(DefaultSleep)
 		}
 	}
 }
@@ -144,7 +145,7 @@ func (connector *Connector) PostRegexToHub(regex string, namespaces []string) {
 				ok = true
 				log.Info().Str("regex", regex).Strs("namespaces", namespaces).Msg("Reported pod regex to Hub:")
 			}
-			time.Sleep(time.Second)
+			time.Sleep(DefaultSleep)
 		}
 	}
 }
@@ -175,7 +176,7 @@ func (connector *Connector) PostLicense(license string) {
 				ok = true
 				log.Info().Str("license", license).Msg("Reported license to Hub:")
 			}
-			time.Sleep(time.Second)
+			time.Sleep(DefaultSleep)
 		}
 	}
 }
@@ -202,7 +203,7 @@ func (connector *Connector) PostConsts(consts map[string]interface{}) {
 				ok = true
 				log.Info().Interface("consts", consts).Msg("Reported constants to Hub:")
 			}
-			time.Sleep(time.Second)
+			time.Sleep(DefaultSleep)
 		}
 	}
 }
@@ -241,7 +242,7 @@ func (connector *Connector) PostScript(script *misc.Script) (index int64, err er
 
 				log.Info().Int("index", int(index)).Interface("script", script).Msg("Created script on Hub:")
 			}
-			time.Sleep(time.Second)
+			time.Sleep(DefaultSleep)
 		}
 	}
 
@@ -283,7 +284,7 @@ func (connector *Connector) PutScript(script *misc.Script, index int64) (err err
 				ok = true
 				log.Info().Int("index", int(index)).Interface("script", script).Msg("Updated script on Hub:")
 			}
-			time.Sleep(time.Second)
+			time.Sleep(DefaultSleep)
 		}
 	}
 
@@ -321,7 +322,7 @@ func (connector *Connector) DeleteScript(index int64) (err error) {
 			ok = true
 			log.Info().Int("index", int(index)).Msg("Deleted script on Hub:")
 		}
-		time.Sleep(time.Second)
+		time.Sleep(DefaultSleep)
 	}
 
 	return
@@ -343,6 +344,6 @@ func (connector *Connector) PostScriptDone() {
 			ok = true
 			log.Info().Msg("Reported POST script done to Hub:")
 		}
-		time.Sleep(time.Second)
+		time.Sleep(DefaultSleep)
 	}
 }

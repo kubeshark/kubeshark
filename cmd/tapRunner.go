@@ -409,26 +409,6 @@ func postHubStarted(ctx context.Context, kubernetesProvider *kubernetes.Provider
 		"/echo",
 	)
 
-	// Create workers
-	err := kubernetes.CreateWorkers(
-		kubernetesProvider,
-		state.selfServiceAccountExists,
-		ctx,
-		config.Config.SelfNamespace,
-		config.Config.Tap.Resources.Worker,
-		config.Config.ImagePullPolicy(),
-		config.Config.ImagePullSecrets(),
-		config.Config.Tap.ServiceMesh,
-		config.Config.Tap.Tls,
-		config.Config.Tap.Debug,
-	)
-	if err != nil {
-		log.Error().Err(err).Send()
-	}
-
-	// Grace period
-	time.Sleep(time.Second)
-
 	// Storage limit
 	connector.PostStorageLimitToHub(config.Config.Tap.StorageLimitBytes())
 
@@ -443,8 +423,7 @@ func postHubStarted(ctx context.Context, kubernetesProvider *kubernetes.Provider
 	// Scripting
 	connector.PostConsts(config.Config.Scripting.Consts)
 
-	var scripts []*misc.Script
-	scripts, err = config.Config.Scripting.GetScripts()
+	scripts, err := config.Config.Scripting.GetScripts()
 	if err != nil {
 		log.Error().Err(err).Send()
 	}
