@@ -231,7 +231,7 @@ func (connector *Connector) PostScript(script *misc.Script) (index int64, err er
 					return
 				}
 
-				val, ok := j["key"]
+				val, ok := j["index"]
 				if !ok {
 					err = errors.New("Response does not contain `key` field!")
 					return
