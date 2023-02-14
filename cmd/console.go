@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"net/http"
 	"net/url"
 	"os"
 	"os/signal"
@@ -12,6 +13,7 @@ import (
 	"github.com/gorilla/websocket"
 	"github.com/kubeshark/kubeshark/config"
 	"github.com/kubeshark/kubeshark/config/configStructs"
+	"github.com/kubeshark/kubeshark/kubernetes"
 	"github.com/kubeshark/kubeshark/utils"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
@@ -39,6 +41,13 @@ func init() {
 }
 
 func runConsole() {
+	hubUrl := kubernetes.GetLocalhostOnPort(config.Config.Tap.Proxy.Hub.SrcPort)
+	response, err := http.Get(fmt.Sprintf("%s/echo", hubUrl))
+	if err != nil || response.StatusCode != 200 {
+		log.Info().Msg(fmt.Sprintf(utils.Yellow, "Couldn't connect to Hub. Establishing proxy..."))
+		runProxy(false)
+	}
+
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt)
 
@@ -52,6 +61,7 @@ func runConsole() {
 	c, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
 	if err != nil {
 		log.Error().Err(err).Send()
+		return
 	}
 	defer c.Close()
 
