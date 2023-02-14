@@ -3,12 +3,13 @@ package connect
 import (
 	"bytes"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"net/http"
 	"net/url"
 	"time"
 
-	"github.com/kubeshark/kubeshark/config/configStructs"
+	"github.com/kubeshark/kubeshark/misc"
 	"github.com/kubeshark/kubeshark/utils"
 
 	"github.com/rs/zerolog/log"
@@ -186,13 +187,13 @@ func (connector *Connector) PostConsts(consts map[string]interface{}) {
 
 	postConstsUrl := fmt.Sprintf("%s/scripts/consts", connector.url)
 
-	if payloadMarshalled, err := json.Marshal(consts); err != nil {
-		log.Error().Err(err).Msg("Failed to marshal the payload:")
+	if constsMarshalled, err := json.Marshal(consts); err != nil {
+		log.Error().Err(err).Msg("Failed to marshal the consts:")
 	} else {
 		ok := false
 		for !ok {
 			var resp *http.Response
-			if resp, err = utils.Post(postConstsUrl, "application/json", bytes.NewBuffer(payloadMarshalled), connector.client); err != nil || resp.StatusCode != http.StatusOK {
+			if resp, err = utils.Post(postConstsUrl, "application/json", bytes.NewBuffer(constsMarshalled), connector.client); err != nil || resp.StatusCode != http.StatusOK {
 				if _, ok := err.(*url.Error); ok {
 					break
 				}
@@ -206,27 +207,124 @@ func (connector *Connector) PostConsts(consts map[string]interface{}) {
 	}
 }
 
-func (connector *Connector) PostScript(script *configStructs.Script) {
+func (connector *Connector) PostScript(script *misc.Script) (index int64, err error) {
 	postScriptUrl := fmt.Sprintf("%s/scripts", connector.url)
 
-	if payloadMarshalled, err := json.Marshal(script); err != nil {
-		log.Error().Err(err).Msg("Failed to marshal the payload:")
+	var scriptMarshalled []byte
+	if scriptMarshalled, err = json.Marshal(script); err != nil {
+		log.Error().Err(err).Msg("Failed to marshal the script:")
 	} else {
 		ok := false
 		for !ok {
 			var resp *http.Response
-			if resp, err = utils.Post(postScriptUrl, "application/json", bytes.NewBuffer(payloadMarshalled), connector.client); err != nil || resp.StatusCode != http.StatusOK {
+			if resp, err = utils.Post(postScriptUrl, "application/json", bytes.NewBuffer(scriptMarshalled), connector.client); err != nil || resp.StatusCode != http.StatusOK {
 				if _, ok := err.(*url.Error); ok {
 					break
 				}
-				log.Warn().Err(err).Msg("Failed sending the script to Hub:")
+				log.Warn().Err(err).Msg("Failed creating script Hub:")
 			} else {
 				ok = true
-				log.Info().Interface("script", script).Msg("Reported script to Hub:")
+
+				var j map[string]interface{}
+				err = json.NewDecoder(resp.Body).Decode(&j)
+				if err != nil {
+					return
+				}
+
+				val, ok := j["key"]
+				if !ok {
+					err = errors.New("Response does not contain `key` field!")
+					return
+				}
+
+				index = int64(val.(float64))
+
+				log.Info().Int("index", int(index)).Interface("script", script).Msg("Created script on Hub:")
 			}
 			time.Sleep(time.Second)
 		}
 	}
+
+	return
+}
+
+func (connector *Connector) PutScript(script *misc.Script, index int64) (err error) {
+	putScriptUrl := fmt.Sprintf("%s/scripts/%d", connector.url, index)
+
+	var scriptMarshalled []byte
+	if scriptMarshalled, err = json.Marshal(script); err != nil {
+		log.Error().Err(err).Msg("Failed to marshal the script:")
+	} else {
+		ok := false
+		for !ok {
+			client := &http.Client{}
+
+			var req *http.Request
+			req, err = http.NewRequest(http.MethodPut, putScriptUrl, bytes.NewBuffer(scriptMarshalled))
+			if err != nil {
+				log.Error().Err(err).Send()
+				return
+			}
+			req.Header.Set("Content-Type", "application/json")
+
+			var resp *http.Response
+			resp, err = client.Do(req)
+			if err != nil {
+				log.Error().Err(err).Send()
+				return
+			}
+
+			if resp.StatusCode != http.StatusOK {
+				if _, ok := err.(*url.Error); ok {
+					break
+				}
+				log.Warn().Err(err).Msg("Failed updating script on Hub:")
+			} else {
+				ok = true
+				log.Info().Int("index", int(index)).Interface("script", script).Msg("Updated script on Hub:")
+			}
+			time.Sleep(time.Second)
+		}
+	}
+
+	return
+}
+
+func (connector *Connector) DeleteScript(index int64) (err error) {
+	deleteScriptUrl := fmt.Sprintf("%s/scripts/%d", connector.url, index)
+
+	ok := false
+	for !ok {
+		client := &http.Client{}
+
+		var req *http.Request
+		req, err = http.NewRequest(http.MethodDelete, deleteScriptUrl, nil)
+		if err != nil {
+			log.Error().Err(err).Send()
+			return
+		}
+		req.Header.Set("Content-Type", "application/json")
+
+		var resp *http.Response
+		resp, err = client.Do(req)
+		if err != nil {
+			log.Error().Err(err).Send()
+			return
+		}
+
+		if resp.StatusCode != http.StatusOK {
+			if _, ok := err.(*url.Error); ok {
+				break
+			}
+			log.Warn().Err(err).Msg("Failed deleting script on Hub:")
+		} else {
+			ok = true
+			log.Info().Int("index", int(index)).Msg("Deleted script on Hub:")
+		}
+		time.Sleep(time.Second)
+	}
+
+	return
 }
 
 func (connector *Connector) PostScriptDone() {

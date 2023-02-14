@@ -14,7 +14,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func runProxy() {
+func runProxy(block bool) {
 	kubernetesProvider, err := getKubernetesProviderForCli()
 	if err != nil {
 		return
@@ -64,7 +64,7 @@ func runProxy() {
 	var establishedProxy bool
 
 	hubUrl := kubernetes.GetLocalhostOnPort(config.Config.Tap.Proxy.Hub.SrcPort)
-	response, err := http.Get(fmt.Sprintf("%s/", hubUrl))
+	response, err := http.Get(fmt.Sprintf("%s/echo", hubUrl))
 	if err == nil && response.StatusCode == 200 {
 		log.Info().
 			Str("service", kubernetes.HubServiceName).
@@ -123,7 +123,7 @@ func runProxy() {
 		okToOpen("Kubeshark", frontUrl, false)
 	}
 
-	if establishedProxy {
+	if establishedProxy && block {
 		utils.WaitForTermination(ctx, cancel)
 	}
 }

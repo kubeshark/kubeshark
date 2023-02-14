@@ -1,0 +1,144 @@
+package cmd
+
+import (
+	"context"
+	"fmt"
+	"net/http"
+
+	"github.com/creasty/defaults"
+	"github.com/fsnotify/fsnotify"
+	"github.com/kubeshark/kubeshark/config"
+	"github.com/kubeshark/kubeshark/config/configStructs"
+	"github.com/kubeshark/kubeshark/internal/connect"
+	"github.com/kubeshark/kubeshark/kubernetes"
+	"github.com/kubeshark/kubeshark/misc"
+	"github.com/kubeshark/kubeshark/utils"
+	"github.com/rs/zerolog/log"
+	"github.com/spf13/cobra"
+)
+
+var scriptsCmd = &cobra.Command{
+	Use:   "scripts",
+	Short: "Watch the `scripting.source` directory for changes and update the scripts.",
+	RunE: func(cmd *cobra.Command, args []string) error {
+		runScripts()
+		return nil
+	},
+}
+
+func init() {
+	rootCmd.AddCommand(scriptsCmd)
+
+	defaultTapConfig := configStructs.TapConfig{}
+	if err := defaults.Set(&defaultTapConfig); err != nil {
+		log.Debug().Err(err).Send()
+	}
+
+	scriptsCmd.Flags().Uint16(configStructs.ProxyHubPortLabel, defaultTapConfig.Proxy.Hub.SrcPort, "Provide a custom port for the Hub.")
+	scriptsCmd.Flags().String(configStructs.ProxyHostLabel, defaultTapConfig.Proxy.Host, "Provide a custom host for the Hub.")
+}
+
+func runScripts() {
+	if config.Config.Scripting.Source == "" {
+		log.Error().Msg("`scripting.source` field is empty.")
+		return
+	}
+
+	hubUrl := kubernetes.GetLocalhostOnPort(config.Config.Tap.Proxy.Hub.SrcPort)
+	response, err := http.Get(fmt.Sprintf("%s/echo", hubUrl))
+	if err != nil || response.StatusCode != 200 {
+		log.Info().Msg(fmt.Sprintf(utils.Yellow, "Couldn't connect to Hub. Establishing proxy..."))
+		runProxy(false)
+	}
+
+	files := make(map[string]int64)
+
+	connector = connect.NewConnector(kubernetes.GetLocalhostOnPort(config.Config.Tap.Proxy.Hub.SrcPort), connect.DefaultRetries, connect.DefaultTimeout)
+
+	scripts, err := config.Config.Scripting.GetScripts()
+	if err != nil {
+		log.Error().Err(err).Send()
+		return
+	}
+
+	for _, script := range scripts {
+		index, err := connector.PostScript(script)
+		if err != nil {
+			log.Error().Err(err).Send()
+			return
+		}
+
+		files[script.Path] = index
+	}
+
+	watcher, err := fsnotify.NewWatcher()
+	if err != nil {
+		log.Error().Err(err).Send()
+		return
+	}
+	defer watcher.Close()
+
+	go func() {
+		for {
+			select {
+			// watch for events
+			case event := <-watcher.Events:
+				switch event.Op {
+				case fsnotify.Create:
+					script, err := misc.ReadScriptFile(event.Name)
+					if err != nil {
+						log.Error().Err(err).Send()
+						return
+					}
+
+					index, err := connector.PostScript(script)
+					if err != nil {
+						log.Error().Err(err).Send()
+						return
+					}
+
+					files[script.Path] = index
+
+				case fsnotify.Write:
+					index := files[event.Name]
+					script, err := misc.ReadScriptFile(event.Name)
+					if err != nil {
+						log.Error().Err(err).Send()
+						return
+					}
+
+					err = connector.PutScript(script, index)
+					if err != nil {
+						log.Error().Err(err).Send()
+						return
+					}
+
+				case fsnotify.Rename:
+					index := files[event.Name]
+					err := connector.DeleteScript(index)
+					if err != nil {
+						log.Error().Err(err).Send()
+						return
+					}
+
+				default:
+					// pass
+				}
+
+			// watch for errors
+			case err := <-watcher.Errors:
+				log.Error().Err(err).Send()
+			}
+		}
+	}()
+
+	if err := watcher.Add(config.Config.Scripting.Source); err != nil {
+		log.Error().Err(err).Send()
+	}
+
+	log.Info().Str("directory", config.Config.Scripting.Source).Msg("Watching files against changes:")
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	utils.WaitForTermination(ctx, cancel)
+}

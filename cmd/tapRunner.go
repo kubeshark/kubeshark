@@ -443,14 +443,17 @@ func postHubStarted(ctx context.Context, kubernetesProvider *kubernetes.Provider
 	// Scripting
 	connector.PostConsts(config.Config.Scripting.Consts)
 
-	var scripts []*configStructs.Script
+	var scripts []*misc.Script
 	scripts, err = config.Config.Scripting.GetScripts()
 	if err != nil {
 		log.Error().Err(err).Send()
 	}
 
 	for _, script := range scripts {
-		connector.PostScript(script)
+		_, err = connector.PostScript(script)
+		if err != nil {
+			log.Error().Err(err).Send()
+		}
 	}
 
 	connector.PostScriptDone()

@@ -3,12 +3,9 @@ package configStructs
 import (
 	"io/fs"
 	"io/ioutil"
-	"os"
 	"path/filepath"
 
-	"github.com/robertkrimen/otto/ast"
-	"github.com/robertkrimen/otto/file"
-	"github.com/robertkrimen/otto/parser"
+	"github.com/kubeshark/kubeshark/misc"
 	"github.com/rs/zerolog/log"
 )
 
@@ -17,12 +14,7 @@ type ScriptingConfig struct {
 	Source string                 `yaml:"source" default:""`
 }
 
-type Script struct {
-	Title string `json:"title"`
-	Code  string `json:"code"`
-}
-
-func (config *ScriptingConfig) GetScripts() (scripts []*Script, err error) {
+func (config *ScriptingConfig) GetScripts() (scripts []*misc.Script, err error) {
 	if config.Source == "" {
 		return
 	}
@@ -38,38 +30,13 @@ func (config *ScriptingConfig) GetScripts() (scripts []*Script, err error) {
 			continue
 		}
 
-		filename := f.Name()
-		var body []byte
-		path := filepath.Join(config.Source, filename)
-		body, err = os.ReadFile(path)
+		var script *misc.Script
+		path := filepath.Join(config.Source, f.Name())
+		script, err = misc.ReadScriptFile(path)
 		if err != nil {
 			return
 		}
-		content := string(body)
-
-		var program *ast.Program
-		program, err = parser.ParseFile(nil, filename, content, parser.StoreComments)
-		if err != nil {
-			return
-		}
-
-		var title string
-		code := content
-
-		var idx0 file.Idx
-		for node, comments := range program.Comments {
-			if (idx0 > 0 && node.Idx0() > idx0) || len(comments) == 0 {
-				continue
-			}
-			idx0 = node.Idx0()
-
-			title = comments[0].Text
-		}
-
-		scripts = append(scripts, &Script{
-			Title: title,
-			Code:  code,
-		})
+		scripts = append(scripts, script)
 
 		log.Info().Str("path", path).Msg("Found script:")
 	}
