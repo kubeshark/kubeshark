@@ -426,6 +426,9 @@ func postHubStarted(ctx context.Context, kubernetesProvider *kubernetes.Provider
 		log.Error().Err(err).Send()
 	}
 
+	// Grace period
+	time.Sleep(1 * time.Second)
+
 	// Storage limit
 	connector.PostStorageLimitToHub(config.Config.Tap.StorageLimitBytes())
 
