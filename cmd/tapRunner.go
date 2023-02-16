@@ -94,8 +94,9 @@ func tap() {
 		var statusError *k8serrors.StatusError
 		if errors.As(err, &statusError) && (statusError.ErrStatus.Reason == metav1.StatusReasonAlreadyExists) {
 			log.Info().Msg(fmt.Sprintf("%s is already running in this namespace, change the `selfnamespace` configuration or run `%s clean` to remove the currently running %s instance.", misc.Software, misc.Program, misc.Software))
-			connector.PostRegexToHub(config.Config.Tap.PodRegexStr, state.targetNamespaces)
-			log.Info().Msg("Updated the targeted pods. Exiting.")
+			postHubStarted(ctx, kubernetesProvider, cancel, true)
+			log.Info().Msg("Updated Hub about the changes in the config. Exiting.")
+			printProxyCommandSuggestion()
 		} else {
 			defer resources.CleanUpSelfResources(ctx, cancel, kubernetesProvider, config.Config.IsNsRestrictedMode(), config.Config.SelfNamespace)
 			log.Error().Err(errormessage.FormatError(err)).Msg("Error creating resources!")
@@ -112,6 +113,10 @@ func tap() {
 
 	// block until exit signal or error
 	utils.WaitForTermination(ctx, cancel)
+	printProxyCommandSuggestion()
+}
+
+func printProxyCommandSuggestion() {
 	log.Warn().
 		Str("command", fmt.Sprintf("%s proxy", misc.Program)).
 		Msg(fmt.Sprintf(utils.Yellow, "To re-establish a proxy/port-forward, run:"))
@@ -190,7 +195,7 @@ func watchHubPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, c
 					ready.Lock()
 					ready.Hub = true
 					ready.Unlock()
-					postHubStarted(ctx, kubernetesProvider, cancel)
+					postHubStarted(ctx, kubernetesProvider, cancel, false)
 				}
 
 				ready.Lock()
@@ -397,7 +402,7 @@ func watchHubEvents(ctx context.Context, kubernetesProvider *kubernetes.Provider
 	}
 }
 
-func postHubStarted(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc) {
+func postHubStarted(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc, update bool) {
 	startProxyReportErrorIfAny(
 		kubernetesProvider,
 		ctx,
@@ -409,25 +414,27 @@ func postHubStarted(ctx context.Context, kubernetesProvider *kubernetes.Provider
 		"/echo",
 	)
 
-	// Create workers
-	err := kubernetes.CreateWorkers(
-		kubernetesProvider,
-		state.selfServiceAccountExists,
-		ctx,
-		config.Config.SelfNamespace,
-		config.Config.Tap.Resources.Worker,
-		config.Config.ImagePullPolicy(),
-		config.Config.ImagePullSecrets(),
-		config.Config.Tap.ServiceMesh,
-		config.Config.Tap.Tls,
-		config.Config.Tap.Debug,
-	)
-	if err != nil {
-		log.Error().Err(err).Send()
-	}
+	if !update {
+		// Create workers
+		err := kubernetes.CreateWorkers(
+			kubernetesProvider,
+			state.selfServiceAccountExists,
+			ctx,
+			config.Config.SelfNamespace,
+			config.Config.Tap.Resources.Worker,
+			config.Config.ImagePullPolicy(),
+			config.Config.ImagePullSecrets(),
+			config.Config.Tap.ServiceMesh,
+			config.Config.Tap.Tls,
+			config.Config.Tap.Debug,
+		)
+		if err != nil {
+			log.Error().Err(err).Send()
+		}
 
-	// Grace period
-	time.Sleep(1 * time.Second)
+		// Grace period
+		time.Sleep(1 * time.Second)
+	}
 
 	// Storage limit
 	connector.PostStorageLimitToHub(config.Config.Tap.StorageLimitBytes())
@@ -457,9 +464,11 @@ func postHubStarted(ctx context.Context, kubernetesProvider *kubernetes.Provider
 
 	connector.PostScriptDone()
 
-	// Hub proxy URL
-	url := kubernetes.GetLocalhostOnPort(config.Config.Tap.Proxy.Hub.SrcPort)
-	log.Info().Str("url", url).Msg(fmt.Sprintf(utils.Green, "Hub is available at:"))
+	if !update {
+		// Hub proxy URL
+		url := kubernetes.GetLocalhostOnPort(config.Config.Tap.Proxy.Hub.SrcPort)
+		log.Info().Str("url", url).Msg(fmt.Sprintf(utils.Green, "Hub is available at:"))
+	}
 }
 
 func postFrontStarted(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc) {

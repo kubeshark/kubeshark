@@ -342,7 +342,7 @@ func (connector *Connector) PostScriptDone() {
 			log.Warn().Err(err).Msg("Failed sending the POST script done to Hub.")
 		} else {
 			ok = true
-			log.Info().Msg("Reported POST script done to Hub:")
+			log.Info().Msg("Reported POST script done to Hub.")
 		}
 		time.Sleep(DefaultSleep)
 	}
