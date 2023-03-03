@@ -10,7 +10,7 @@ import (
 )
 
 type ScriptingConfig struct {
-	Consts map[string]interface{} `yaml:"consts"`
+	Env    map[string]interface{} `yaml:"env"`
 	Source string                 `yaml:"source" default:""`
 }
 

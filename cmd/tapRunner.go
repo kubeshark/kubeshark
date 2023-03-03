@@ -448,7 +448,7 @@ func postHubStarted(ctx context.Context, kubernetesProvider *kubernetes.Provider
 	}
 
 	// Scripting
-	connector.PostConsts(config.Config.Scripting.Consts)
+	connector.PostEnv(config.Config.Scripting.Env)
 
 	scripts, err := config.Config.Scripting.GetScripts()
 	if err != nil {

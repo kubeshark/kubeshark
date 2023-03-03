@@ -181,27 +181,27 @@ func (connector *Connector) PostLicense(license string) {
 	}
 }
 
-func (connector *Connector) PostConsts(consts map[string]interface{}) {
-	if len(consts) == 0 {
+func (connector *Connector) PostEnv(env map[string]interface{}) {
+	if len(env) == 0 {
 		return
 	}
 
-	postConstsUrl := fmt.Sprintf("%s/scripts/consts", connector.url)
+	postEnvUrl := fmt.Sprintf("%s/scripts/env", connector.url)
 
-	if constsMarshalled, err := json.Marshal(consts); err != nil {
-		log.Error().Err(err).Msg("Failed to marshal the consts:")
+	if envMarshalled, err := json.Marshal(env); err != nil {
+		log.Error().Err(err).Msg("Failed to marshal the env:")
 	} else {
 		ok := false
 		for !ok {
 			var resp *http.Response
-			if resp, err = utils.Post(postConstsUrl, "application/json", bytes.NewBuffer(constsMarshalled), connector.client); err != nil || resp.StatusCode != http.StatusOK {
+			if resp, err = utils.Post(postEnvUrl, "application/json", bytes.NewBuffer(envMarshalled), connector.client); err != nil || resp.StatusCode != http.StatusOK {
 				if _, ok := err.(*url.Error); ok {
 					break
 				}
 				log.Warn().Err(err).Msg("Failed sending the constants to Hub:")
 			} else {
 				ok = true
-				log.Info().Interface("consts", consts).Msg("Reported constants to Hub:")
+				log.Info().Interface("env", env).Msg("Reported constants to Hub:")
 			}
 			time.Sleep(DefaultSleep)
 		}
