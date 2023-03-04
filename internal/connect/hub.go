@@ -198,10 +198,10 @@ func (connector *Connector) PostEnv(env map[string]interface{}) {
 				if _, ok := err.(*url.Error); ok {
 					break
 				}
-				log.Warn().Err(err).Msg("Failed sending the constants to Hub:")
+				log.Warn().Err(err).Msg("Failed sending the scripting environment variables to Hub:")
 			} else {
 				ok = true
-				log.Info().Interface("env", env).Msg("Reported constants to Hub:")
+				log.Info().Interface("env", env).Msg("Reported scripting environment variables to Hub:")
 			}
 			time.Sleep(DefaultSleep)
 		}
@@ -339,10 +339,10 @@ func (connector *Connector) PostScriptDone() {
 			if _, ok := err.(*url.Error); ok {
 				break
 			}
-			log.Warn().Err(err).Msg("Failed sending the POST script done to Hub.")
+			log.Warn().Err(err).Msg("Failed sending the POST scripts done to Hub.")
 		} else {
 			ok = true
-			log.Info().Msg("Reported POST script done to Hub.")
+			log.Info().Msg("Reported POST scripts done to Hub.")
 		}
 		time.Sleep(DefaultSleep)
 	}
