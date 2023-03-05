@@ -57,6 +57,14 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Version
+        id: version
+        shell: bash
+        run: |
+          echo "##[set-output name=tag;]$(echo ${GITHUB_REF#refs/*/})"
+          echo "##[set-output name=build_timestamp;]$(echo $(date +%s))"
+          echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
+
       - name: Fetch all tags
         run: git fetch --force --tags
 
@@ -73,3 +81,5 @@ jobs:
           args: release --rm-dist
         env:
           GITHUB_TOKEN: ${{ secrets.HOMEBREW_TOKEN }}
+          VER: ${{ steps.version.outputs.tag }}
+          BUILD_TIMESTAMP: ${{ steps.version.outputs.build_timestamp }}
