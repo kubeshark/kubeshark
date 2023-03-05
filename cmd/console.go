@@ -79,8 +79,10 @@ func runConsole() {
 			msg := string(message)
 			if strings.Contains(msg, ":ERROR]") {
 				msg = fmt.Sprintf(utils.Red, msg)
+				fmt.Fprintln(os.Stderr, msg)
+			} else {
+				fmt.Fprintln(os.Stdout, msg)
 			}
-			log.Info().Msg(msg)
 		}
 	}()
 
