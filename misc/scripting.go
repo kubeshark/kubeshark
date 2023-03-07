@@ -31,17 +31,18 @@ func ReadScriptFile(path string) (script *Script, err error) {
 	}
 
 	var title string
+	var titleIsSet bool
 	code := content
 
 	var idx0 file.Idx
 	for node, comments := range program.Comments {
-		if (idx0 > 0 && node.Idx0() > idx0) || len(comments) == 0 {
+		if (titleIsSet && node.Idx0() > idx0) || len(comments) == 0 {
 			continue
 		}
-		idx0 = node.Idx0()
 
+		idx0 = node.Idx0()
 		title = comments[0].Text
-		break
+		titleIsSet = true
 	}
 
 	script = &Script{
