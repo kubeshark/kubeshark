@@ -41,6 +41,7 @@ func ReadScriptFile(path string) (script *Script, err error) {
 		idx0 = node.Idx0()
 
 		title = comments[0].Text
+		break
 	}
 
 	script = &Script{
