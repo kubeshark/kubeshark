@@ -51,9 +51,13 @@ func runScripts() {
 		runProxy(false)
 	}
 
-	files := make(map[string]int64)
-
 	connector = connect.NewConnector(kubernetes.GetLocalhostOnPort(config.Config.Tap.Proxy.Hub.SrcPort), connect.DefaultRetries, connect.DefaultTimeout)
+
+	watchScripts(true)
+}
+
+func watchScripts(block bool) {
+	files := make(map[string]int64)
 
 	scripts, err := config.Config.Scripting.GetScripts()
 	if err != nil {
@@ -76,7 +80,9 @@ func runScripts() {
 		log.Error().Err(err).Send()
 		return
 	}
-	defer watcher.Close()
+	if block {
+		defer watcher.Close()
+	}
 
 	go func() {
 		for {
@@ -138,7 +144,9 @@ func runScripts() {
 
 	log.Info().Str("directory", config.Config.Scripting.Source).Msg("Watching files against changes:")
 
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
-	utils.WaitForTermination(ctx, cancel)
+	if block {
+		ctx, cancel := context.WithCancel(context.Background())
+		defer cancel()
+		utils.WaitForTermination(ctx, cancel)
+	}
 }

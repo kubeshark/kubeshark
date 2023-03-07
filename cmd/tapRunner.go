@@ -469,6 +469,10 @@ func postHubStarted(ctx context.Context, kubernetesProvider *kubernetes.Provider
 		url := kubernetes.GetLocalhostOnPort(config.Config.Tap.Proxy.Hub.SrcPort)
 		log.Info().Str("url", url).Msg(fmt.Sprintf(utils.Green, "Hub is available at:"))
 	}
+
+	if config.Config.Scripting.Source != "" && config.Config.Scripting.WatchScripts {
+		watchScripts(false)
+	}
 }
 
 func postFrontStarted(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc) {
