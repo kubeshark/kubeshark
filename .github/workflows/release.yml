@@ -26,9 +26,11 @@ jobs:
         id: version
         shell: bash
         run: |
-          echo "##[set-output name=tag;]$(echo ${GITHUB_REF#refs/*/})"
-          echo "##[set-output name=build_timestamp;]$(echo $(date +%s))"
-          echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
+          {
+            echo "tag=${GITHUB_REF#refs/*/}"
+            echo "build_timestamp=$(date +%s)"
+            echo "branch=${GITHUB_REF#refs/heads/}"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Build
         run: make build-all VER='${{ steps.version.outputs.tag }}' BUILD_TIMESTAMP='${{ steps.version.outputs.build_timestamp }}'
@@ -61,9 +63,11 @@ jobs:
         id: version
         shell: bash
         run: |
-          echo "##[set-output name=tag;]$(echo ${GITHUB_REF#refs/*/})"
-          echo "##[set-output name=build_timestamp;]$(echo $(date +%s))"
-          echo "##[set-output name=branch;]$(echo ${GITHUB_REF#refs/heads/})"
+          {
+            echo "tag=${GITHUB_REF#refs/*/}"
+            echo "build_timestamp=$(date +%s)"
+            echo "branch=${GITHUB_REF#refs/heads/}"
+          } >> "$GITHUB_OUTPUT"
 
       - name: Fetch all tags
         run: git fetch --force --tags
