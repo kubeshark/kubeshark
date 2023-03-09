@@ -93,7 +93,10 @@ func runLicenseRecieverServer() {
 		log.Info().Str("key", licenseKey).Msg("Received license:")
 
 		config.Config.License = licenseKey
-		config.WriteConfig(&config.Config)
+		err = config.WriteConfig(&config.Config)
+		if err != nil {
+			panic(err)
+		}
 
 		connector.PostLicense(config.Config.License)
 
