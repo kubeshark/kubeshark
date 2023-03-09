@@ -30,9 +30,10 @@ const (
 )
 
 var (
-	Config    ConfigStruct
-	DebugMode bool
-	cmdName   string
+	Config         ConfigStruct
+	DebugMode      bool
+	cmdName        string
+	ConfigFilePath string
 )
 
 func InitConfig(cmd *cobra.Command) error {
@@ -96,7 +97,7 @@ func WriteConfig(config *ConfigStruct) error {
 	}
 
 	data := []byte(template)
-	if err := os.WriteFile(Config.ConfigFilePath, data, 0644); err != nil {
+	if err := os.WriteFile(ConfigFilePath, data, 0644); err != nil {
 		return fmt.Errorf("failed writing config, err: %v", err)
 	}
 
@@ -129,6 +130,7 @@ func loadConfigFile(configFilePath string, config *ConfigStruct) error {
 		return err
 	}
 
+	ConfigFilePath = configFilePath
 	log.Info().Str("path", configFilePath).Msg("Found config file!")
 
 	return nil
