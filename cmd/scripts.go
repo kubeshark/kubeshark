@@ -19,7 +19,7 @@ import (
 
 var scriptsCmd = &cobra.Command{
 	Use:   "scripts",
-	Short: "Watch the `scripting.source` directory for changes and update the scripts.",
+	Short: "Watch the `scripting.source` directory for changes and update the scripts",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		runScripts()
 		return nil

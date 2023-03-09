@@ -19,7 +19,7 @@ import (
 
 var proCmd = &cobra.Command{
 	Use:   "pro",
-	Short: "Acquire a Pro license.",
+	Short: "Acquire a Pro license",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		acquireLicense()
 		return nil
