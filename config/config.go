@@ -51,7 +51,7 @@ func InitConfig(cmd *cobra.Command) error {
 		return nil
 	}
 
-	if cmd.Use != "console" {
+	if cmd.Use != "console" && cmd.Use != "pro" {
 		go version.CheckNewerVersion()
 	}
 

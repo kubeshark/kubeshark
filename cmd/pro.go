@@ -27,7 +27,7 @@ var proCmd = &cobra.Command{
 }
 
 const (
-	PRO_URL  = "https://master.d2hqi2yb1n0lz7.amplifyapp.com/"
+	PRO_URL  = "https://console.kubeshark.co"
 	PRO_PORT = 5252
 )
 
@@ -64,6 +64,20 @@ func acquireLicense() {
 	runLicenseRecieverServer()
 }
 
+func updateLicense(licenseKey string) {
+	config.Config.License = licenseKey
+	err := config.WriteConfig(&config.Config)
+	if err != nil {
+		panic(err)
+	}
+
+	connector.PostLicense(config.Config.License)
+
+	log.Info().Msg("Updated the license. Exiting.")
+
+	os.Exit(0)
+}
+
 func runLicenseRecieverServer() {
 	gin.SetMode(gin.ReleaseMode)
 	ginApp := gin.New()
@@ -92,20 +106,21 @@ func runLicenseRecieverServer() {
 
 		log.Info().Str("key", licenseKey).Msg("Received license:")
 
-		config.Config.License = licenseKey
-		err = config.WriteConfig(&config.Config)
-		if err != nil {
-			panic(err)
-		}
-
-		connector.PostLicense(config.Config.License)
-
-		log.Info().Msg("Updated the license.")
-
-		os.Exit(0)
+		updateLicense(licenseKey)
 	})
 
-	if err := ginApp.Run(fmt.Sprintf(":%d", PRO_PORT)); err != nil {
-		panic(err)
-	}
+	go func() {
+		if err := ginApp.Run(fmt.Sprintf(":%d", PRO_PORT)); err != nil {
+			panic(err)
+		}
+	}()
+
+	log.Info().Str("url", PRO_URL).Msg("Opened the login page in your browser:")
+
+	log.Info().Msg("Alternatively enter your license key:")
+
+	var licenseKey string
+	fmt.Scanf("%s", &licenseKey)
+
+	updateLicense(licenseKey)
 }
