@@ -5,6 +5,7 @@ import (
 	"io/ioutil"
 	"net/http"
 	"os"
+	"time"
 
 	"github.com/creasty/defaults"
 	"github.com/gin-gonic/gin"
@@ -71,11 +72,14 @@ func updateLicense(licenseKey string) {
 		panic(err)
 	}
 
-	connector.PostLicense(config.Config.License)
+	go func() {
+		connector.PostLicense(config.Config.License)
 
-	log.Info().Msg("Updated the license. Exiting.")
+		log.Info().Msg("Updated the license. Exiting.")
 
-	os.Exit(0)
+		time.Sleep(2 * time.Second)
+		os.Exit(0)
+	}()
 }
 
 func runLicenseRecieverServer() {
