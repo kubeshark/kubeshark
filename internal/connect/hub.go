@@ -79,7 +79,6 @@ func (connector *Connector) PostWorkerPodToHub(pod *v1.Pod) {
 				}
 				log.Warn().Err(err).Msg("Failed sending the Worker pod to Hub. Retrying...")
 			} else {
-				ok = true
 				log.Info().Interface("worker-pod", pod).Msg("Reported worker pod to Hub:")
 				return
 			}
@@ -110,7 +109,6 @@ func (connector *Connector) PostStorageLimitToHub(limit int64) {
 				}
 				log.Warn().Err(err).Msg("Failed sending the storage limit to Hub. Retrying...")
 			} else {
-				ok = true
 				log.Info().Int("limit", int(limit)).Msg("Reported storage limit to Hub:")
 				return
 			}
@@ -144,7 +142,6 @@ func (connector *Connector) PostRegexToHub(regex string, namespaces []string) {
 				}
 				log.Warn().Err(err).Msg("Failed sending the pod regex to Hub. Retrying...")
 			} else {
-				ok = true
 				log.Info().Str("regex", regex).Strs("namespaces", namespaces).Msg("Reported pod regex to Hub:")
 				return
 			}
@@ -176,7 +173,6 @@ func (connector *Connector) PostLicense(license string) {
 				}
 				log.Warn().Err(err).Msg("Failed sending the license to Hub. Retrying...")
 			} else {
-				ok = true
 				log.Info().Str("license", license).Msg("Reported license to Hub:")
 				return
 			}
@@ -204,7 +200,6 @@ func (connector *Connector) PostEnv(env map[string]interface{}) {
 				}
 				log.Warn().Err(err).Msg("Failed sending the scripting environment variables to Hub. Retrying...")
 			} else {
-				ok = true
 				log.Info().Interface("env", env).Msg("Reported scripting environment variables to Hub:")
 				return
 			}
@@ -229,7 +224,6 @@ func (connector *Connector) PostScript(script *misc.Script) (index int64, err er
 				}
 				log.Warn().Err(err).Msg("Failed creating script Hub:")
 			} else {
-				ok = true
 
 				var j map[string]interface{}
 				err = json.NewDecoder(resp.Body).Decode(&j)
@@ -287,7 +281,6 @@ func (connector *Connector) PutScript(script *misc.Script, index int64) (err err
 				}
 				log.Warn().Err(err).Msg("Failed updating script on Hub:")
 			} else {
-				ok = true
 				log.Info().Int("index", int(index)).Interface("script", script).Msg("Updated script on Hub:")
 				return
 			}
@@ -326,7 +319,6 @@ func (connector *Connector) DeleteScript(index int64) (err error) {
 			}
 			log.Warn().Err(err).Msg("Failed deleting script on Hub:")
 		} else {
-			ok = true
 			log.Info().Int("index", int(index)).Msg("Deleted script on Hub:")
 			return
 		}
@@ -349,7 +341,6 @@ func (connector *Connector) PostScriptDone() {
 			}
 			log.Warn().Err(err).Msg("Failed sending the POST scripts done to Hub. Retrying...")
 		} else {
-			ok = true
 			log.Info().Msg("Reported POST scripts done to Hub.")
 			return
 		}
