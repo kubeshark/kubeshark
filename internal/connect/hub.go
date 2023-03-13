@@ -24,7 +24,7 @@ type Connector struct {
 
 const DefaultRetries = 3
 const DefaultTimeout = 2 * time.Second
-const DefaultSleep = 10 * time.Millisecond
+const DefaultSleep = 100 * time.Millisecond
 
 func NewConnector(url string, retries int, timeout time.Duration) *Connector {
 	return &Connector{
