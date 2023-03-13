@@ -79,7 +79,7 @@ func (connector *Connector) PostWorkerPodToHub(pod *v1.Pod) {
 				}
 				log.Warn().Err(err).Msg("Failed sending the Worker pod to Hub. Retrying...")
 			} else {
-				log.Info().Interface("worker-pod", pod).Msg("Reported worker pod to Hub:")
+				log.Debug().Interface("worker-pod", pod).Msg("Reported worker pod to Hub:")
 				return
 			}
 			time.Sleep(DefaultSleep)
@@ -109,7 +109,7 @@ func (connector *Connector) PostStorageLimitToHub(limit int64) {
 				}
 				log.Warn().Err(err).Msg("Failed sending the storage limit to Hub. Retrying...")
 			} else {
-				log.Info().Int("limit", int(limit)).Msg("Reported storage limit to Hub:")
+				log.Debug().Int("limit", int(limit)).Msg("Reported storage limit to Hub:")
 				return
 			}
 			time.Sleep(DefaultSleep)
@@ -142,7 +142,7 @@ func (connector *Connector) PostRegexToHub(regex string, namespaces []string) {
 				}
 				log.Warn().Err(err).Msg("Failed sending the pod regex to Hub. Retrying...")
 			} else {
-				log.Info().Str("regex", regex).Strs("namespaces", namespaces).Msg("Reported pod regex to Hub:")
+				log.Debug().Str("regex", regex).Strs("namespaces", namespaces).Msg("Reported pod regex to Hub:")
 				return
 			}
 			time.Sleep(DefaultSleep)
@@ -173,7 +173,7 @@ func (connector *Connector) PostLicense(license string) {
 				}
 				log.Warn().Err(err).Msg("Failed sending the license to Hub. Retrying...")
 			} else {
-				log.Info().Str("license", license).Msg("Reported license to Hub:")
+				log.Debug().Str("license", license).Msg("Reported license to Hub:")
 				return
 			}
 			time.Sleep(DefaultSleep)
@@ -200,7 +200,7 @@ func (connector *Connector) PostEnv(env map[string]interface{}) {
 				}
 				log.Warn().Err(err).Msg("Failed sending the scripting environment variables to Hub. Retrying...")
 			} else {
-				log.Info().Interface("env", env).Msg("Reported scripting environment variables to Hub:")
+				log.Debug().Interface("env", env).Msg("Reported scripting environment variables to Hub:")
 				return
 			}
 			time.Sleep(DefaultSleep)
@@ -239,7 +239,7 @@ func (connector *Connector) PostScript(script *misc.Script) (index int64, err er
 
 				index = int64(val.(float64))
 
-				log.Info().Int("index", int(index)).Interface("script", script).Msg("Created script on Hub:")
+				log.Debug().Int("index", int(index)).Interface("script", script).Msg("Created script on Hub:")
 				return
 			}
 			time.Sleep(DefaultSleep)
@@ -281,7 +281,7 @@ func (connector *Connector) PutScript(script *misc.Script, index int64) (err err
 				}
 				log.Warn().Err(err).Msg("Failed updating script on Hub:")
 			} else {
-				log.Info().Int("index", int(index)).Interface("script", script).Msg("Updated script on Hub:")
+				log.Debug().Int("index", int(index)).Interface("script", script).Msg("Updated script on Hub:")
 				return
 			}
 			time.Sleep(DefaultSleep)
@@ -319,7 +319,7 @@ func (connector *Connector) DeleteScript(index int64) (err error) {
 			}
 			log.Warn().Err(err).Msg("Failed deleting script on Hub:")
 		} else {
-			log.Info().Int("index", int(index)).Msg("Deleted script on Hub:")
+			log.Debug().Int("index", int(index)).Msg("Deleted script on Hub:")
 			return
 		}
 		time.Sleep(DefaultSleep)
@@ -341,7 +341,7 @@ func (connector *Connector) PostScriptDone() {
 			}
 			log.Warn().Err(err).Msg("Failed sending the POST scripts done to Hub. Retrying...")
 		} else {
-			log.Info().Msg("Reported POST scripts done to Hub.")
+			log.Debug().Msg("Reported POST scripts done to Hub.")
 			return
 		}
 		time.Sleep(DefaultSleep)

@@ -39,7 +39,7 @@ func (config *ScriptingConfig) GetScripts() (scripts []*misc.Script, err error) 
 		}
 		scripts = append(scripts, script)
 
-		log.Info().Str("path", path).Msg("Found script:")
+		log.Debug().Str("path", path).Msg("Found script:")
 	}
 
 	return

@@ -142,7 +142,7 @@ func watchScripts(block bool) {
 		log.Error().Err(err).Send()
 	}
 
-	log.Info().Str("directory", config.Config.Scripting.Source).Msg("Watching files against changes:")
+	log.Info().Str("directory", config.Config.Scripting.Source).Msg("Watching scripts against changes:")
 
 	if block {
 		ctx, cancel := context.WithCancel(context.Background())

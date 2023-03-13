@@ -433,7 +433,7 @@ func postHubStarted(ctx context.Context, kubernetesProvider *kubernetes.Provider
 		}
 
 		// Grace period
-		log.Info().Msg("Please wait...")
+		log.Info().Msg("Waiting for worker containers...")
 		time.Sleep(5 * time.Second)
 	}
 
