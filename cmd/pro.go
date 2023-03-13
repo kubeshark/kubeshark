@@ -119,8 +119,6 @@ func runLicenseRecieverServer() {
 		}
 	}()
 
-	log.Info().Str("url", PRO_URL).Msg("Opened the login page in your browser:")
-
 	log.Info().Msg("Alternatively enter your license key:")
 
 	var licenseKey string
