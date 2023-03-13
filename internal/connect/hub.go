@@ -24,7 +24,7 @@ type Connector struct {
 
 const DefaultRetries = 3
 const DefaultTimeout = 2 * time.Second
-const DefaultSleep = 100 * time.Millisecond
+const DefaultSleep = 1 * time.Second
 
 func NewConnector(url string, retries int, timeout time.Duration) *Connector {
 	return &Connector{
@@ -77,10 +77,11 @@ func (connector *Connector) PostWorkerPodToHub(pod *v1.Pod) {
 				if _, ok := err.(*url.Error); ok {
 					break
 				}
-				log.Warn().Err(err).Msg("Failed sending the Worker pod to Hub:")
+				log.Warn().Err(err).Msg("Failed sending the Worker pod to Hub. Retrying...")
 			} else {
 				ok = true
 				log.Info().Interface("worker-pod", pod).Msg("Reported worker pod to Hub:")
+				return
 			}
 			time.Sleep(DefaultSleep)
 		}
@@ -107,10 +108,11 @@ func (connector *Connector) PostStorageLimitToHub(limit int64) {
 				if _, ok := err.(*url.Error); ok {
 					break
 				}
-				log.Warn().Err(err).Msg("Failed sending the storage limit to Hub:")
+				log.Warn().Err(err).Msg("Failed sending the storage limit to Hub. Retrying...")
 			} else {
 				ok = true
 				log.Info().Int("limit", int(limit)).Msg("Reported storage limit to Hub:")
+				return
 			}
 			time.Sleep(DefaultSleep)
 		}
@@ -140,10 +142,11 @@ func (connector *Connector) PostRegexToHub(regex string, namespaces []string) {
 				if _, ok := err.(*url.Error); ok {
 					break
 				}
-				log.Warn().Err(err).Msg("Failed sending the pod regex to Hub:")
+				log.Warn().Err(err).Msg("Failed sending the pod regex to Hub. Retrying...")
 			} else {
 				ok = true
 				log.Info().Str("regex", regex).Strs("namespaces", namespaces).Msg("Reported pod regex to Hub:")
+				return
 			}
 			time.Sleep(DefaultSleep)
 		}
@@ -171,10 +174,11 @@ func (connector *Connector) PostLicense(license string) {
 				if _, ok := err.(*url.Error); ok {
 					break
 				}
-				log.Warn().Err(err).Msg("Failed sending the license to Hub:")
+				log.Warn().Err(err).Msg("Failed sending the license to Hub. Retrying...")
 			} else {
 				ok = true
 				log.Info().Str("license", license).Msg("Reported license to Hub:")
+				return
 			}
 			time.Sleep(DefaultSleep)
 		}
@@ -198,10 +202,11 @@ func (connector *Connector) PostEnv(env map[string]interface{}) {
 				if _, ok := err.(*url.Error); ok {
 					break
 				}
-				log.Warn().Err(err).Msg("Failed sending the scripting environment variables to Hub:")
+				log.Warn().Err(err).Msg("Failed sending the scripting environment variables to Hub. Retrying...")
 			} else {
 				ok = true
 				log.Info().Interface("env", env).Msg("Reported scripting environment variables to Hub:")
+				return
 			}
 			time.Sleep(DefaultSleep)
 		}
@@ -241,6 +246,7 @@ func (connector *Connector) PostScript(script *misc.Script) (index int64, err er
 				index = int64(val.(float64))
 
 				log.Info().Int("index", int(index)).Interface("script", script).Msg("Created script on Hub:")
+				return
 			}
 			time.Sleep(DefaultSleep)
 		}
@@ -283,6 +289,7 @@ func (connector *Connector) PutScript(script *misc.Script, index int64) (err err
 			} else {
 				ok = true
 				log.Info().Int("index", int(index)).Interface("script", script).Msg("Updated script on Hub:")
+				return
 			}
 			time.Sleep(DefaultSleep)
 		}
@@ -321,6 +328,7 @@ func (connector *Connector) DeleteScript(index int64) (err error) {
 		} else {
 			ok = true
 			log.Info().Int("index", int(index)).Msg("Deleted script on Hub:")
+			return
 		}
 		time.Sleep(DefaultSleep)
 	}
@@ -339,10 +347,11 @@ func (connector *Connector) PostScriptDone() {
 			if _, ok := err.(*url.Error); ok {
 				break
 			}
-			log.Warn().Err(err).Msg("Failed sending the POST scripts done to Hub.")
+			log.Warn().Err(err).Msg("Failed sending the POST scripts done to Hub. Retrying...")
 		} else {
 			ok = true
 			log.Info().Msg("Reported POST scripts done to Hub.")
+			return
 		}
 		time.Sleep(DefaultSleep)
 	}

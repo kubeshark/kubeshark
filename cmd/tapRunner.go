@@ -433,7 +433,8 @@ func postHubStarted(ctx context.Context, kubernetesProvider *kubernetes.Provider
 		}
 
 		// Grace period
-		time.Sleep(1 * time.Second)
+		log.Info().Msg("Please wait...")
+		time.Sleep(5 * time.Second)
 	}
 
 	// Storage limit
