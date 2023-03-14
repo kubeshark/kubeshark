@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"regexp"
 
-	"github.com/kubeshark/kubeshark/kubernetes"
 	"github.com/kubeshark/kubeshark/utils"
 	"github.com/rs/zerolog/log"
 )
@@ -26,6 +25,13 @@ const (
 	TlsLabel               = "tls"
 	DebugLabel             = "debug"
 )
+
+type Resources struct {
+	CpuLimit       string `yaml:"cpu-limit" default:"750m"`
+	MemoryLimit    string `yaml:"memory-limit" default:"1Gi"`
+	CpuRequests    string `yaml:"cpu-requests" default:"50m"`
+	MemoryRequests string `yaml:"memory-requests" default:"50Mi"`
+}
 
 type WorkerConfig struct {
 	SrcPort uint16 `yaml:"port" default:"8897"`
@@ -57,8 +63,8 @@ type DockerConfig struct {
 }
 
 type ResourcesConfig struct {
-	Worker kubernetes.Resources `yaml:"worker"`
-	Hub    kubernetes.Resources `yaml:"hub"`
+	Worker Resources `yaml:"worker"`
+	Hub    Resources `yaml:"hub"`
 }
 
 type TapConfig struct {

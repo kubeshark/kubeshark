@@ -3,6 +3,7 @@ package kubernetes
 import (
 	"context"
 
+	"github.com/kubeshark/kubeshark/config/configStructs"
 	"github.com/kubeshark/kubeshark/docker"
 	"github.com/rs/zerolog/log"
 	core "k8s.io/api/core/v1"
@@ -13,7 +14,7 @@ func CreateWorkers(
 	selfServiceAccountExists bool,
 	ctx context.Context,
 	namespace string,
-	resources Resources,
+	resources configStructs.Resources,
 	imagePullPolicy core.PullPolicy,
 	imagePullSecrets []core.LocalObjectReference,
 	serviceMesh bool,

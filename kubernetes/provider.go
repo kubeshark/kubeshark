@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"regexp"
 
+	"github.com/kubeshark/kubeshark/config/configStructs"
 	"github.com/kubeshark/kubeshark/docker"
 	"github.com/kubeshark/kubeshark/misc"
 	"github.com/kubeshark/kubeshark/semver"
@@ -161,11 +162,8 @@ func (provider *Provider) WaitUtilNamespaceDeleted(ctx context.Context, name str
 func (provider *Provider) CreateNamespace(ctx context.Context, name string) (*core.Namespace, error) {
 	namespaceSpec := &core.Namespace{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: name,
-			Labels: map[string]string{
-				LabelManagedBy: provider.managedBy,
-				LabelCreatedBy: provider.createdBy,
-			},
+			Name:   name,
+			Labels: buildWithDefaultLabels(map[string]string{}, provider),
 		},
 	}
 	return provider.clientSet.CoreV1().Namespaces().Create(ctx, namespaceSpec, metav1.CreateOptions{})
@@ -176,7 +174,7 @@ type PodOptions struct {
 	PodName            string
 	PodImage           string
 	ServiceAccountName string
-	Resources          Resources
+	Resources          configStructs.Resources
 	ImagePullPolicy    core.PullPolicy
 	ImagePullSecrets   []core.LocalObjectReference
 	Debug              bool
@@ -230,11 +228,9 @@ func (provider *Provider) BuildHubPod(opts *PodOptions) (*core.Pod, error) {
 	pod := &core.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: opts.PodName,
-			Labels: map[string]string{
-				"app":          opts.PodName,
-				LabelManagedBy: provider.managedBy,
-				LabelCreatedBy: provider.createdBy,
-			},
+			Labels: buildWithDefaultLabels(map[string]string{
+				"app": opts.PodName,
+			}, provider),
 		},
 		Spec: core.PodSpec{
 			Containers:                    containers,
@@ -329,11 +325,9 @@ func (provider *Provider) BuildFrontPod(opts *PodOptions, hubHost string, hubPor
 	pod := &core.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: opts.PodName,
-			Labels: map[string]string{
-				"app":          opts.PodName,
-				LabelManagedBy: provider.managedBy,
-				LabelCreatedBy: provider.createdBy,
-			},
+			Labels: buildWithDefaultLabels(map[string]string{
+				"app": opts.PodName,
+			}, provider),
 		},
 		Spec: core.PodSpec{
 			Containers:                    containers,
@@ -368,11 +362,8 @@ func (provider *Provider) CreatePod(ctx context.Context, namespace string, podSp
 func (provider *Provider) CreateService(ctx context.Context, namespace string, serviceName string, appLabelValue string, targetPort int, port int32) (*core.Service, error) {
 	service := core.Service{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: serviceName,
-			Labels: map[string]string{
-				LabelManagedBy: provider.managedBy,
-				LabelCreatedBy: provider.createdBy,
-			},
+			Name:   serviceName,
+			Labels: buildWithDefaultLabels(map[string]string{}, provider),
 		},
 		Spec: core.ServiceSpec{
 			Ports: []core.ServicePort{
@@ -461,21 +452,17 @@ func (provider *Provider) CreateSelfRBAC(ctx context.Context, namespace string, 
 	serviceAccount := &core.ServiceAccount{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: serviceAccountName,
-			Labels: map[string]string{
+			Labels: buildWithDefaultLabels(map[string]string{
 				fmt.Sprintf("%s-cli-version", misc.Program): version,
-				LabelManagedBy: provider.managedBy,
-				LabelCreatedBy: provider.createdBy,
-			},
+			}, provider),
 		},
 	}
 	clusterRole := &rbac.ClusterRole{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: clusterRoleName,
-			Labels: map[string]string{
+			Labels: buildWithDefaultLabels(map[string]string{
 				fmt.Sprintf("%s-cli-version", misc.Program): version,
-				LabelManagedBy: provider.managedBy,
-				LabelCreatedBy: provider.createdBy,
-			},
+			}, provider),
 		},
 		Rules: []rbac.PolicyRule{
 			{
@@ -488,11 +475,9 @@ func (provider *Provider) CreateSelfRBAC(ctx context.Context, namespace string, 
 	clusterRoleBinding := &rbac.ClusterRoleBinding{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: clusterRoleBindingName,
-			Labels: map[string]string{
+			Labels: buildWithDefaultLabels(map[string]string{
 				fmt.Sprintf("%s-cli-version", misc.Program): version,
-				LabelManagedBy: provider.managedBy,
-				LabelCreatedBy: provider.createdBy,
-			},
+			}, provider),
 		},
 		RoleRef: rbac.RoleRef{
 			Name:     clusterRoleName,
@@ -526,21 +511,17 @@ func (provider *Provider) CreateSelfRBACNamespaceRestricted(ctx context.Context,
 	serviceAccount := &core.ServiceAccount{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: serviceAccountName,
-			Labels: map[string]string{
+			Labels: buildWithDefaultLabels(map[string]string{
 				fmt.Sprintf("%s-cli-version", misc.Program): version,
-				LabelManagedBy: provider.managedBy,
-				LabelCreatedBy: provider.createdBy,
-			},
+			}, provider),
 		},
 	}
 	role := &rbac.Role{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: roleName,
-			Labels: map[string]string{
+			Labels: buildWithDefaultLabels(map[string]string{
 				fmt.Sprintf("%s-cli-version", misc.Program): version,
-				LabelManagedBy: provider.managedBy,
-				LabelCreatedBy: provider.createdBy,
-			},
+			}, provider),
 		},
 		Rules: []rbac.PolicyRule{
 			{
@@ -553,11 +534,9 @@ func (provider *Provider) CreateSelfRBACNamespaceRestricted(ctx context.Context,
 	roleBinding := &rbac.RoleBinding{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: roleBindingName,
-			Labels: map[string]string{
+			Labels: buildWithDefaultLabels(map[string]string{
 				fmt.Sprintf("%s-cli-version", misc.Program): version,
-				LabelManagedBy: provider.managedBy,
-				LabelCreatedBy: provider.createdBy,
-			},
+			}, provider),
 		},
 		RoleRef: rbac.RoleRef{
 			Name:     roleName,
@@ -654,7 +633,7 @@ func (provider *Provider) ApplyWorkerDaemonSet(
 	podImage string,
 	workerPodName string,
 	serviceAccountName string,
-	resources Resources,
+	resources configStructs.Resources,
 	imagePullPolicy core.PullPolicy,
 	imagePullSecrets []core.LocalObjectReference,
 	serviceMesh bool,
@@ -799,11 +778,9 @@ func (provider *Provider) ApplyWorkerDaemonSet(
 	}
 
 	podTemplate := applyconfcore.PodTemplateSpec()
-	podTemplate.WithLabels(map[string]string{
-		"app":          workerPodName,
-		LabelManagedBy: provider.managedBy,
-		LabelCreatedBy: provider.createdBy,
-	})
+	podTemplate.WithLabels(buildWithDefaultLabels(map[string]string{
+		"app": workerPodName,
+	}, provider))
 	podTemplate.WithSpec(podSpec)
 
 	labelSelector := applyconfmeta.LabelSelector()
@@ -816,10 +793,7 @@ func (provider *Provider) ApplyWorkerDaemonSet(
 
 	daemonSet := applyconfapp.DaemonSet(daemonSetName, namespace)
 	daemonSet.
-		WithLabels(map[string]string{
-			LabelManagedBy: provider.managedBy,
-			LabelCreatedBy: provider.createdBy,
-		}).
+		WithLabels(buildWithDefaultLabels(map[string]string{}, provider)).
 		WithSpec(applyconfapp.DaemonSetSpec().WithSelector(labelSelector).WithTemplate(podTemplate))
 
 	_, err = provider.clientSet.AppsV1().DaemonSets(namespace).Apply(ctx, daemonSet, applyOptions)
@@ -848,11 +822,9 @@ func (provider *Provider) ResetWorkerDaemonSet(ctx context.Context, namespace st
 	podSpec.WithAffinity(affinity)
 
 	podTemplate := applyconfcore.PodTemplateSpec()
-	podTemplate.WithLabels(map[string]string{
-		"app":          workerPodName,
-		LabelManagedBy: provider.managedBy,
-		LabelCreatedBy: provider.createdBy,
-	})
+	podTemplate.WithLabels(buildWithDefaultLabels(map[string]string{
+		"app": workerPodName,
+	}, provider))
 	podTemplate.WithSpec(podSpec)
 
 	labelSelector := applyconfmeta.LabelSelector()
@@ -865,10 +837,7 @@ func (provider *Provider) ResetWorkerDaemonSet(ctx context.Context, namespace st
 
 	daemonSet := applyconfapp.DaemonSet(daemonSetName, namespace)
 	daemonSet.
-		WithLabels(map[string]string{
-			LabelManagedBy: provider.managedBy,
-			LabelCreatedBy: provider.createdBy,
-		}).
+		WithLabels(buildWithDefaultLabels(map[string]string{}, provider)).
 		WithSpec(applyconfapp.DaemonSetSpec().WithSelector(labelSelector).WithTemplate(podTemplate))
 
 	_, err := provider.clientSet.AppsV1().DaemonSets(namespace).Apply(ctx, daemonSet, applyOptions)

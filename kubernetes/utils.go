@@ -2,6 +2,7 @@ package kubernetes
 
 import (
 	"github.com/kubeshark/base/pkg/models"
+	"github.com/kubeshark/kubeshark/config"
 	core "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
@@ -52,4 +53,15 @@ func GetPodInfosForPods(pods []core.Pod) []*models.PodInfo {
 		podInfos = append(podInfos, &models.PodInfo{Name: pod.Name, Namespace: pod.Namespace, NodeName: pod.Spec.NodeName})
 	}
 	return podInfos
+}
+
+func buildWithDefaultLabels(labels map[string]string, provider *Provider) map[string]string {
+	labels["LabelManagedBy"] = provider.managedBy
+	labels["LabelCreatedBy"] = provider.createdBy
+
+	for k, v := range config.Config.CustomLabels {
+		labels[k] = v
+	}
+
+	return labels
 }
