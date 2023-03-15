@@ -37,7 +37,7 @@ type ConfigStruct struct {
 	HeadlessMode   bool                          `yaml:"headless" default:"false"`
 	License        string                        `yaml:"license" default:""`
 	Scripting      configStructs.ScriptingConfig `yaml:"scripting"`
-	CustomLabels   map[string]string             `yaml:"customLabels" default:"{}"`
+	ResourceLabels map[string]string             `yaml:"resourceLabels" default:"{}"`
 }
 
 func (config *ConfigStruct) SetDefaults() {
