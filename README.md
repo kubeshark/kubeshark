@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://raw.githubusercontent.com/kubeshark/assets/master/svg/kubeshark-logo.svg" alt="Kubeshark: Traffic viewer for Kubernetes." height="128px"/>
+  <img src="https://raw.githubusercontent.com/kubeshark/assets/master/svg/kubeshark-logo.svg" alt="Kubeshark: Traffic analyzer for Kubernetes." height="128px"/>
 </p>
 
 <p align="center">
@@ -25,11 +25,11 @@
 
 <p align="center">
   <b>
-    <a href="https://github.com/kubeshark/kubeshark/releases/latest">V38.2</a> is out with <a href="https://docs.kubeshark.co/en/pcap_export_import">PCAP</a> export, <a href="https://docs.kubeshark.co/en/dns">DNS</a>, <a href="https://docs.kubeshark.co/en/service_map">Identity-aware Service Map</a> and so much more. Read about it <a href="https://kubeshark.co/pcap-or-it-didnt-happen">here</a>.
+    <a href="https://github.com/kubeshark/kubeshark/releases/latest">V38.2</a> is out with PCAP export, <a href="https://docs.kubeshark.co/en/dns">DNS</a>, <a href="https://docs.kubeshark.co/en/service_map">Identity-aware Service Map</a> and so much more. Read about it <a href="https://kubeshark.co/pcap-or-it-didnt-happen">here</a>.
   </b>
 </p>
 
-**Kubeshark** is an API Traffic Analyzer for [**Kubernetes**](https://kubernetes.io/) providing real-time, protocol-level visibility into Kubernetes’ internal network, capturing, capturing and monitoring all traffic and payloads going in, out and across containers, pods, nodes and clusters.
+**Kubeshark** is an API Traffic Analyzer for [**Kubernetes**](https://kubernetes.io/) providing real-time, protocol-level visibility into Kubernetes’ internal network, capturing and monitoring all traffic and payloads going in, out and across containers, pods, nodes and clusters.
 
 ![Simple UI](https://github.com/kubeshark/assets/raw/master/png/kubeshark-ui.png)
 
