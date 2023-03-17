@@ -29,7 +29,7 @@
   </b>
 </p>
 
-**Kubeshark** is an API Traffic Viewer for [**Kubernetes**](https://kubernetes.io/) providing real-time, protocol-aware visibility into Kubernetes’ internal network, capturing, dissecting and monitoring all traffic and payloads going in, out and across containers, pods, nodes and clusters.
+**Kubeshark** is an API Traffic Analyzer for [**Kubernetes**](https://kubernetes.io/) providing real-time, protocol-level visibility into Kubernetes’ internal network, capturing, capturing and monitoring all traffic and payloads going in, out and across containers, pods, nodes and clusters.
 
 ![Simple UI](https://github.com/kubeshark/assets/raw/master/png/kubeshark-ui.png)
 
