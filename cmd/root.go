@@ -12,8 +12,8 @@ import (
 
 var rootCmd = &cobra.Command{
 	Use:   "kubeshark",
-	Short: fmt.Sprintf("%s: The API Traffic Viewer for Kubernetes", misc.Software),
-	Long: fmt.Sprintf(`%s: The API Traffic Viewer for Kubernetes
+	Short: fmt.Sprintf("%s: The API Traffic Analyzer for Kubernetes", misc.Software),
+	Long: fmt.Sprintf(`%s: The API Traffic Analyzer for Kubernetes
 An extensible Kubernetes-aware network sniffer and kernel tracer.
 For more info: %s`, misc.Software, misc.Website),
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
