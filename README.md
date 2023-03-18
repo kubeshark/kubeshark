@@ -23,11 +23,7 @@
     </a>
 </p>
 
-<p align="center">
-  <b>
-    <a href="https://github.com/kubeshark/kubeshark/releases/latest">V38.2</a> is out with PCAP export, <a href="https://docs.kubeshark.co/en/dns">DNS</a>, <a href="https://docs.kubeshark.co/en/service_map">Identity-aware Service Map</a> and so much more. Read about it <a href="https://kubeshark.co/pcap-or-it-didnt-happen">here</a>.
-  </b>
-</p>
+
 
 **Kubeshark** is an API Traffic Analyzer for [**Kubernetes**](https://kubernetes.io/) providing real-time, protocol-level visibility into Kubernetes’ internal network, capturing and monitoring all traffic and payloads going in, out and across containers, pods, nodes and clusters.
 
