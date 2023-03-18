@@ -45,11 +45,6 @@ func init() {
 }
 
 func acquireLicense() {
-	if config.Config.Scripting.Source == "" {
-		log.Error().Msg("`scripting.source` field is empty.")
-		return
-	}
-
 	hubUrl := kubernetes.GetLocalhostOnPort(config.Config.Tap.Proxy.Hub.SrcPort)
 	response, err := http.Get(fmt.Sprintf("%s/echo", hubUrl))
 	if err != nil || response.StatusCode != 200 {
