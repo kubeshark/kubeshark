@@ -14,13 +14,13 @@ jobs:
     name: Build and publish a new release
     runs-on: ubuntu-latest
     steps:
+      - name: Check out the repo
+        uses: actions/checkout@v3
+
       - name: Set up Go
         uses: actions/setup-go@v4
         with:
           go-version-file: 'go.mod'
-
-      - name: Check out the repo
-        uses: actions/checkout@v3
 
       - name: Version
         id: version
