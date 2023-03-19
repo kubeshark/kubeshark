@@ -45,7 +45,7 @@ func runConsole() {
 	response, err := http.Get(fmt.Sprintf("%s/echo", hubUrl))
 	if err != nil || response.StatusCode != 200 {
 		log.Info().Msg(fmt.Sprintf(utils.Yellow, "Couldn't connect to Hub. Establishing proxy..."))
-		runProxy(false)
+		runProxy(false, true)
 	}
 
 	interrupt := make(chan os.Signal, 1)

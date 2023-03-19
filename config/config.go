@@ -63,11 +63,11 @@ func InitConfig(cmd *cobra.Command) error {
 	}
 
 	configFilePathFlag := cmd.Flags().Lookup(ConfigFilePathCommandName)
-	configFilePath := configFilePathFlag.Value.String()
-	if err := loadConfigFile(configFilePath, &Config); err != nil {
+	ConfigFilePath = configFilePathFlag.Value.String()
+	if err := loadConfigFile(&Config); err != nil {
 		if configFilePathFlag.Changed || !os.IsNotExist(err) {
 			return fmt.Errorf("invalid config, %w\n"+
-				"you can regenerate the file by removing it (%v) and using `kubeshark config -r`", err, configFilePath)
+				"you can regenerate the file by removing it (%v) and using `kubeshark config -r`", err, ConfigFilePath)
 		}
 	}
 
@@ -104,7 +104,7 @@ func WriteConfig(config *ConfigStruct) error {
 	return nil
 }
 
-func loadConfigFile(configFilePath string, config *ConfigStruct) error {
+func loadConfigFile(config *ConfigStruct) error {
 	cwd, err := os.Getwd()
 	if err != nil {
 		return err
@@ -113,12 +113,12 @@ func loadConfigFile(configFilePath string, config *ConfigStruct) error {
 	cwdConfig := filepath.Join(cwd, fmt.Sprintf("%s.yaml", misc.Program))
 	reader, err := os.Open(cwdConfig)
 	if err != nil {
-		reader, err = os.Open(configFilePath)
+		reader, err = os.Open(ConfigFilePath)
 		if err != nil {
 			return err
 		}
 	} else {
-		configFilePath = cwdConfig
+		ConfigFilePath = cwdConfig
 	}
 
 	buf, err := io.ReadAll(reader)
@@ -130,8 +130,7 @@ func loadConfigFile(configFilePath string, config *ConfigStruct) error {
 		return err
 	}
 
-	ConfigFilePath = configFilePath
-	log.Info().Str("path", configFilePath).Msg("Found config file!")
+	log.Info().Str("path", ConfigFilePath).Msg("Found config file!")
 
 	return nil
 }

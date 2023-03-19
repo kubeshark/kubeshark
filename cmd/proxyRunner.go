@@ -14,7 +14,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func runProxy(block bool) {
+func runProxy(block bool, noBrowser bool) {
 	kubernetesProvider, err := getKubernetesProviderForCli()
 	if err != nil {
 		return
@@ -101,7 +101,7 @@ func runProxy(block bool) {
 			Int("port", int(config.Config.Tap.Proxy.Front.SrcPort)).
 			Msg("Found a running service.")
 
-		okToOpen("Kubeshark", frontUrl, false)
+		okToOpen("Kubeshark", frontUrl, noBrowser)
 	} else {
 		startProxyReportErrorIfAny(
 			kubernetesProvider,
@@ -120,7 +120,7 @@ func runProxy(block bool) {
 		}
 
 		establishedProxy = true
-		okToOpen("Kubeshark", frontUrl, false)
+		okToOpen("Kubeshark", frontUrl, noBrowser)
 	}
 
 	if establishedProxy && block {
