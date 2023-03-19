@@ -98,7 +98,9 @@ func runLicenseRecieverServer() {
 	ginApp.POST("/", func(c *gin.Context) {
 		data, err := ioutil.ReadAll(c.Request.Body)
 		if err != nil {
-			panic(err)
+			log.Error().Err(err).Send()
+			c.AbortWithStatus(http.StatusBadRequest)
+			return
 		}
 
 		licenseKey := string(data)
