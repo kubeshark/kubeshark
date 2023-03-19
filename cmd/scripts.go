@@ -48,7 +48,7 @@ func runScripts() {
 	response, err := http.Get(fmt.Sprintf("%s/echo", hubUrl))
 	if err != nil || response.StatusCode != 200 {
 		log.Info().Msg(fmt.Sprintf(utils.Yellow, "Couldn't connect to Hub. Establishing proxy..."))
-		runProxy(false)
+		runProxy(false, true)
 	}
 
 	connector = connect.NewConnector(kubernetes.GetLocalhostOnPort(config.Config.Tap.Proxy.Hub.SrcPort), connect.DefaultRetries, connect.DefaultTimeout)
