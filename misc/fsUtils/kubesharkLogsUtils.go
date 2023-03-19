@@ -73,10 +73,10 @@ func DumpLogs(ctx context.Context, provider *kubernetes.Provider, filePath strin
 		log.Debug().Str("namespace", config.Config.SelfNamespace).Msg("Successfully added events.")
 	}
 
-	if err := AddFileToZip(zipWriter, config.Config.ConfigFilePath); err != nil {
+	if err := AddFileToZip(zipWriter, config.ConfigFilePath); err != nil {
 		log.Error().Err(err).Msg("Failed write file!")
 	} else {
-		log.Debug().Str("file-path", config.Config.ConfigFilePath).Msg("Successfully added file.")
+		log.Debug().Str("file-path", config.ConfigFilePath).Msg("Successfully added file.")
 	}
 
 	log.Info().Str("path", filePath).Msg("You can find the ZIP file with all logs at:")

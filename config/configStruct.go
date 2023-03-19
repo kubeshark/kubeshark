@@ -2,7 +2,6 @@ package config
 
 import (
 	"os"
-	"path"
 	"path/filepath"
 
 	"github.com/kubeshark/kubeshark/config/configStructs"
@@ -12,9 +11,8 @@ import (
 )
 
 const (
-	SelfNamespaceConfigName   = "selfnamespace"
-	ConfigFilePathCommandName = "configpath"
-	KubeConfigPathConfigName  = "kube-configpath"
+	SelfNamespaceConfigName  = "selfnamespace"
+	KubeConfigPathConfigName = "kube-configpath"
 )
 
 func CreateDefaultConfig() ConfigStruct {
@@ -33,15 +31,10 @@ type ConfigStruct struct {
 	Kube           KubeConfig                    `yaml:"kube"`
 	SelfNamespace  string                        `yaml:"selfnamespace" default:"kubeshark"`
 	DumpLogs       bool                          `yaml:"dumplogs" default:"false"`
-	ConfigFilePath string                        `yaml:"configpath,omitempty" readonly:""`
 	HeadlessMode   bool                          `yaml:"headless" default:"false"`
 	License        string                        `yaml:"license" default:""`
 	Scripting      configStructs.ScriptingConfig `yaml:"scripting"`
 	ResourceLabels map[string]string             `yaml:"resourceLabels" default:"{}"`
-}
-
-func (config *ConfigStruct) SetDefaults() {
-	config.ConfigFilePath = path.Join(misc.GetDotFolderPath(), "config.yaml")
 }
 
 func (config *ConfigStruct) ImagePullPolicy() v1.PullPolicy {

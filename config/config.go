@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"path"
 	"path/filepath"
 	"reflect"
 	"strconv"
@@ -62,10 +63,9 @@ func InitConfig(cmd *cobra.Command) error {
 		return err
 	}
 
-	configFilePathFlag := cmd.Flags().Lookup(ConfigFilePathCommandName)
-	ConfigFilePath = configFilePathFlag.Value.String()
+	ConfigFilePath = path.Join(misc.GetDotFolderPath(), "config.yaml")
 	if err := loadConfigFile(&Config); err != nil {
-		if configFilePathFlag.Changed || !os.IsNotExist(err) {
+		if !os.IsNotExist(err) {
 			return fmt.Errorf("invalid config, %w\n"+
 				"you can regenerate the file by removing it (%v) and using `kubeshark config -r`", err, ConfigFilePath)
 		}
@@ -97,6 +97,14 @@ func WriteConfig(config *ConfigStruct) error {
 	}
 
 	data := []byte(template)
+
+	if _, err := os.Stat(ConfigFilePath); os.IsNotExist(err) {
+		err = os.MkdirAll(filepath.Dir(ConfigFilePath), 0700)
+		if err != nil {
+			return fmt.Errorf("failed creating directories, err: %v", err)
+		}
+	}
+
 	if err := os.WriteFile(ConfigFilePath, data, 0644); err != nil {
 		return fmt.Errorf("failed writing config, err: %v", err)
 	}
@@ -139,9 +147,7 @@ func initFlag(f *pflag.Flag) {
 	configElemValue := reflect.ValueOf(&Config).Elem()
 
 	var flagPath []string
-	if !utils.Contains([]string{ConfigFilePathCommandName}, f.Name) {
-		flagPath = append(flagPath, cmdName)
-	}
+	flagPath = append(flagPath, cmdName)
 
 	flagPath = append(flagPath, strings.Split(f.Name, "-")...)
 

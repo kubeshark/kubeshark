@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"fmt"
+	"path"
 
 	"github.com/creasty/defaults"
 	"github.com/kubeshark/kubeshark/config"
@@ -28,7 +29,7 @@ var configCmd = &cobra.Command{
 				return nil
 			}
 
-			log.Info().Str("config-path", config.Config.ConfigFilePath).Msg("Template file written to config path.")
+			log.Info().Str("config-path", config.ConfigFilePath).Msg("Template file written to config path.")
 		} else {
 			template, err := utils.PrettyYaml(configWithDefaults)
 			if err != nil {
@@ -52,5 +53,5 @@ func init() {
 		log.Debug().Err(err).Send()
 	}
 
-	configCmd.Flags().BoolP(configStructs.RegenerateConfigName, "r", defaultConfig.Config.Regenerate, fmt.Sprintf("Regenerate the config file with default values to path %s or to chosen path using --%s", defaultConfig.ConfigFilePath, config.ConfigFilePathCommandName))
+	configCmd.Flags().BoolP(configStructs.RegenerateConfigName, "r", defaultConfig.Config.Regenerate, fmt.Sprintf("Regenerate the config file with default values to path %s", path.Join(misc.GetDotFolderPath(), "config.yaml")))
 }

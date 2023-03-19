@@ -32,7 +32,6 @@ func init() {
 	}
 
 	rootCmd.PersistentFlags().StringSlice(config.SetCommandName, []string{}, fmt.Sprintf("Override values using --%s", config.SetCommandName))
-	rootCmd.PersistentFlags().String(config.ConfigFilePathCommandName, defaultConfig.ConfigFilePath, fmt.Sprintf("Override config file path using --%s", config.ConfigFilePathCommandName))
 	rootCmd.PersistentFlags().BoolP(config.DebugFlag, "d", false, "Enable debug mode")
 }
 
