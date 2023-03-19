@@ -64,7 +64,7 @@ func updateLicense(licenseKey string) {
 	config.Config.License = licenseKey
 	err := config.WriteConfig(&config.Config)
 	if err != nil {
-		panic(err)
+		log.Warn().Err(err).Send()
 	}
 
 	go func() {
