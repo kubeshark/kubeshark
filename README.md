@@ -27,7 +27,7 @@
   <b>
   <span>NEW: </span><a href="https://github.com/kubeshark/kubeshark/releases/tag/39.3">Version 39.3</a> is out, introducing
   <a href="https://docs.kubeshark.co/en/automation_scripting">Scripting</a>,
-  <a href="https://docs.kubeshark.co/en/automation_hooks">L4/L7 hooks</a>, and so much more ..
+  <a href="https://docs.kubeshark.co/en/automation_hooks">L4/L7 hooks</a>, and so much more...
   </b>
 </p>
 
