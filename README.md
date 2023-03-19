@@ -23,7 +23,13 @@
     </a>
 </p>
 
-
+<p align="center">
+  <b>
+  <span>NEW: </span><a href="https://github.com/kubeshark/kubeshark/releases/tag/39.2">Version 39.2</a> is out, introducing
+  <a href="https://docs.kubeshark.co/en/automation_scripting">Scripting</a>,
+  <a href="https://docs.kubeshark.co/en/automation_hooks">L4/L7 hooks</a>, and so much more ..
+  </b>
+</p>
 
 **Kubeshark** is an API Traffic Analyzer for [**Kubernetes**](https://kubernetes.io/) providing real-time, protocol-level visibility into Kubernetes’ internal network, capturing and monitoring all traffic and payloads going in, out and across containers, pods, nodes and clusters.
 
