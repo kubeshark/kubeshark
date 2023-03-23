@@ -94,13 +94,13 @@ func watchScripts(block bool) {
 					script, err := misc.ReadScriptFile(event.Name)
 					if err != nil {
 						log.Error().Err(err).Send()
-						return
+						continue
 					}
 
 					index, err := connector.PostScript(script)
 					if err != nil {
 						log.Error().Err(err).Send()
-						return
+						continue
 					}
 
 					files[script.Path] = index
@@ -110,13 +110,13 @@ func watchScripts(block bool) {
 					script, err := misc.ReadScriptFile(event.Name)
 					if err != nil {
 						log.Error().Err(err).Send()
-						return
+						continue
 					}
 
 					err = connector.PutScript(script, index)
 					if err != nil {
 						log.Error().Err(err).Send()
-						return
+						continue
 					}
 
 				case fsnotify.Rename:
@@ -124,7 +124,7 @@ func watchScripts(block bool) {
 					err := connector.DeleteScript(index)
 					if err != nil {
 						log.Error().Err(err).Send()
-						return
+						continue
 					}
 
 				default:
