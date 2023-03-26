@@ -11,7 +11,6 @@ import (
 )
 
 const (
-	SelfNamespaceConfigName  = "selfnamespace"
 	KubeConfigPathConfigName = "kube-configpath"
 )
 
@@ -29,7 +28,6 @@ type ConfigStruct struct {
 	Logs           configStructs.LogsConfig      `yaml:"logs"`
 	Config         configStructs.ConfigConfig    `yaml:"config,omitempty"`
 	Kube           KubeConfig                    `yaml:"kube"`
-	SelfNamespace  string                        `yaml:"selfnamespace" default:"kubeshark"`
 	DumpLogs       bool                          `yaml:"dumplogs" default:"false"`
 	HeadlessMode   bool                          `yaml:"headless" default:"false"`
 	License        string                        `yaml:"license" default:""`
@@ -51,7 +49,7 @@ func (config *ConfigStruct) ImagePullSecrets() []v1.LocalObjectReference {
 }
 
 func (config *ConfigStruct) IsNsRestrictedMode() bool {
-	return config.SelfNamespace != misc.Program // Notice "kubeshark" string must match the default SelfNamespace
+	return config.Tap.SelfNamespace != misc.Program // Notice "kubeshark" string must match the default SelfNamespace
 }
 
 func (config *ConfigStruct) KubeConfigPath() string {

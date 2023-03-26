@@ -18,6 +18,7 @@ const (
 	ProxyHostLabel         = "proxy-host"
 	NamespacesLabel        = "namespaces"
 	AllNamespacesLabel     = "allnamespaces"
+	SelfNamespaceLabel     = "selfnamespace"
 	StorageLimitLabel      = "storagelimit"
 	DryRunLabel            = "dryrun"
 	PcapLabel              = "pcap"
@@ -73,6 +74,7 @@ type TapConfig struct {
 	PodRegexStr   string          `yaml:"regex" default:".*"`
 	Namespaces    []string        `yaml:"namespaces"`
 	AllNamespaces bool            `yaml:"allnamespaces" default:"false"`
+	SelfNamespace string          `yaml:"selfnamespace" default:"kubeshark"`
 	StorageLimit  string          `yaml:"storagelimit" default:"200MB"`
 	DryRun        bool            `yaml:"dryrun" default:"false"`
 	Pcap          string          `yaml:"pcap" default:""`

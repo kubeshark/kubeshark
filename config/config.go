@@ -58,7 +58,7 @@ func InitConfig(cmd *cobra.Command) error {
 
 	Config = CreateDefaultConfig()
 	cmdName = cmd.Name()
-	if utils.Contains([]string{"console", "pro", "proxy", "scripts"}, cmdName) {
+	if utils.Contains([]string{"clean", "console", "pro", "proxy", "scripts"}, cmdName) {
 		cmdName = "tap"
 	}
 

@@ -3,7 +3,10 @@ package cmd
 import (
 	"fmt"
 
+	"github.com/creasty/defaults"
+	"github.com/kubeshark/kubeshark/config/configStructs"
 	"github.com/kubeshark/kubeshark/misc"
+	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 )
 
@@ -18,4 +21,11 @@ var cleanCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(cleanCmd)
+
+	defaultTapConfig := configStructs.TapConfig{}
+	if err := defaults.Set(&defaultTapConfig); err != nil {
+		log.Debug().Err(err).Send()
+	}
+
+	cleanCmd.Flags().StringP(configStructs.SelfNamespaceLabel, "s", defaultTapConfig.SelfNamespace, "Self-namespace of Kubeshark")
 }

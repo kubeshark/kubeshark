@@ -73,8 +73,8 @@ func tap() {
 	state.targetNamespaces = getNamespaces(kubernetesProvider)
 
 	if config.Config.IsNsRestrictedMode() {
-		if len(state.targetNamespaces) != 1 || !utils.Contains(state.targetNamespaces, config.Config.SelfNamespace) {
-			log.Error().Msg(fmt.Sprintf("%s can't resolve IPs in other namespaces when running in namespace restricted mode. You can use the same namespace for --%s and --%s", misc.Software, configStructs.NamespacesLabel, config.SelfNamespaceConfigName))
+		if len(state.targetNamespaces) != 1 || !utils.Contains(state.targetNamespaces, config.Config.Tap.SelfNamespace) {
+			log.Error().Msg(fmt.Sprintf("%s can't resolve IPs in other namespaces when running in namespace restricted mode. You can use the same namespace for --%s and --%s", misc.Software, configStructs.NamespacesLabel, configStructs.SelfNamespaceLabel))
 			return
 		}
 	}
@@ -90,7 +90,7 @@ func tap() {
 	}
 
 	log.Info().Msg(fmt.Sprintf("Waiting for the creation of %s resources...", misc.Software))
-	if state.selfServiceAccountExists, err = resources.CreateHubResources(ctx, kubernetesProvider, config.Config.IsNsRestrictedMode(), config.Config.SelfNamespace, config.Config.Tap.Resources.Hub, config.Config.ImagePullPolicy(), config.Config.ImagePullSecrets(), config.Config.Tap.Debug); err != nil {
+	if state.selfServiceAccountExists, err = resources.CreateHubResources(ctx, kubernetesProvider, config.Config.IsNsRestrictedMode(), config.Config.Tap.SelfNamespace, config.Config.Tap.Resources.Hub, config.Config.ImagePullPolicy(), config.Config.ImagePullSecrets(), config.Config.Tap.Debug); err != nil {
 		var statusError *k8serrors.StatusError
 		if errors.As(err, &statusError) && (statusError.ErrStatus.Reason == metav1.StatusReasonAlreadyExists) {
 			log.Info().Msg(fmt.Sprintf("%s is already running in this namespace, change the `selfnamespace` configuration or run `%s clean` to remove the currently running %s instance.", misc.Software, misc.Program, misc.Software))
@@ -98,7 +98,7 @@ func tap() {
 			log.Info().Msg("Updated Hub about the changes in the config. Exiting.")
 			printProxyCommandSuggestion()
 		} else {
-			defer resources.CleanUpSelfResources(ctx, cancel, kubernetesProvider, config.Config.IsNsRestrictedMode(), config.Config.SelfNamespace)
+			defer resources.CleanUpSelfResources(ctx, cancel, kubernetesProvider, config.Config.IsNsRestrictedMode(), config.Config.Tap.SelfNamespace)
 			log.Error().Err(errormessage.FormatError(err)).Msg("Error creating resources!")
 		}
 
@@ -123,7 +123,7 @@ func printProxyCommandSuggestion() {
 }
 
 func finishTapExecution(kubernetesProvider *kubernetes.Provider) {
-	finishSelfExecution(kubernetesProvider, config.Config.IsNsRestrictedMode(), config.Config.SelfNamespace, true)
+	finishSelfExecution(kubernetesProvider, config.Config.IsNsRestrictedMode(), config.Config.Tap.SelfNamespace, true)
 }
 
 /*
@@ -156,7 +156,7 @@ func printNoPodsFoundSuggestion(targetNamespaces []string) {
 func watchHubPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc) {
 	podExactRegex := regexp.MustCompile(fmt.Sprintf("^%s$", kubernetes.HubPodName))
 	podWatchHelper := kubernetes.NewPodWatchHelper(kubernetesProvider, podExactRegex)
-	eventChan, errorChan := kubernetes.FilteredWatch(ctx, podWatchHelper, []string{config.Config.SelfNamespace}, podWatchHelper)
+	eventChan, errorChan := kubernetes.FilteredWatch(ctx, podWatchHelper, []string{config.Config.Tap.SelfNamespace}, podWatchHelper)
 	isPodReady := false
 
 	timeAfter := time.After(120 * time.Second)
@@ -223,7 +223,7 @@ func watchHubPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, c
 
 			log.Error().
 				Str("pod", kubernetes.HubPodName).
-				Str("namespace", config.Config.SelfNamespace).
+				Str("namespace", config.Config.Tap.SelfNamespace).
 				Err(err).
 				Msg("Failed creating pod.")
 			cancel()
@@ -247,7 +247,7 @@ func watchHubPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, c
 func watchFrontPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc) {
 	podExactRegex := regexp.MustCompile(fmt.Sprintf("^%s$", kubernetes.FrontPodName))
 	podWatchHelper := kubernetes.NewPodWatchHelper(kubernetesProvider, podExactRegex)
-	eventChan, errorChan := kubernetes.FilteredWatch(ctx, podWatchHelper, []string{config.Config.SelfNamespace}, podWatchHelper)
+	eventChan, errorChan := kubernetes.FilteredWatch(ctx, podWatchHelper, []string{config.Config.Tap.SelfNamespace}, podWatchHelper)
 	isPodReady := false
 
 	timeAfter := time.After(120 * time.Second)
@@ -312,7 +312,7 @@ func watchFrontPod(ctx context.Context, kubernetesProvider *kubernetes.Provider,
 
 			log.Error().
 				Str("pod", kubernetes.FrontPodName).
-				Str("namespace", config.Config.SelfNamespace).
+				Str("namespace", config.Config.Tap.SelfNamespace).
 				Err(err).
 				Msg("Failed creating pod.")
 			cancel()
@@ -336,7 +336,7 @@ func watchFrontPod(ctx context.Context, kubernetesProvider *kubernetes.Provider,
 func watchHubEvents(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc) {
 	podExactRegex := regexp.MustCompile(fmt.Sprintf("^%s", kubernetes.HubPodName))
 	eventWatchHelper := kubernetes.NewEventWatchHelper(kubernetesProvider, podExactRegex, "pod")
-	eventChan, errorChan := kubernetes.FilteredWatch(ctx, eventWatchHelper, []string{config.Config.SelfNamespace}, eventWatchHelper)
+	eventChan, errorChan := kubernetes.FilteredWatch(ctx, eventWatchHelper, []string{config.Config.Tap.SelfNamespace}, eventWatchHelper)
 	for {
 		select {
 		case wEvent, ok := <-eventChan:
@@ -420,7 +420,7 @@ func postHubStarted(ctx context.Context, kubernetesProvider *kubernetes.Provider
 			kubernetesProvider,
 			state.selfServiceAccountExists,
 			ctx,
-			config.Config.SelfNamespace,
+			config.Config.Tap.SelfNamespace,
 			config.Config.Tap.Resources.Worker,
 			config.Config.ImagePullPolicy(),
 			config.Config.ImagePullSecrets(),

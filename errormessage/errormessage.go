@@ -6,6 +6,7 @@ import (
 	regexpsyntax "regexp/syntax"
 
 	"github.com/kubeshark/kubeshark/config"
+	"github.com/kubeshark/kubeshark/config/configStructs"
 	"github.com/kubeshark/kubeshark/misc"
 
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
@@ -21,9 +22,9 @@ func FormatError(err error) error {
 			"in the config file or setting the targeted namespace with --%s %s=<NAMEPSACE>",
 			err,
 			misc.Software,
-			config.SelfNamespaceConfigName,
+			configStructs.SelfNamespaceLabel,
 			config.SetCommandName,
-			config.SelfNamespaceConfigName)
+			configStructs.SelfNamespaceLabel)
 	} else if syntaxError, isSyntaxError := asRegexSyntaxError(err); isSyntaxError {
 		errorNew = fmt.Errorf("regex %s is invalid: %w", syntaxError.Expr, err)
 	} else {
