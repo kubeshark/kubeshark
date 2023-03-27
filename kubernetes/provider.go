@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"regexp"
 
+	"github.com/kubeshark/kubeshark/config"
 	"github.com/kubeshark/kubeshark/config/configStructs"
 	"github.com/kubeshark/kubeshark/docker"
 	"github.com/kubeshark/kubeshark/misc"
@@ -735,12 +736,19 @@ func (provider *Provider) ApplyWorkerDaemonSet(
 	affinity := applyconfcore.Affinity()
 	affinity.WithNodeAffinity(nodeAffinity)
 
+	var tolerations []*v1.TolerationApplyConfiguration
+
 	noExecuteToleration := applyconfcore.Toleration()
 	noExecuteToleration.WithOperator(core.TolerationOpExists)
 	noExecuteToleration.WithEffect(core.TaintEffectNoExecute)
+	tolerations = append(tolerations, noExecuteToleration)
+
 	noScheduleToleration := applyconfcore.Toleration()
 	noScheduleToleration.WithOperator(core.TolerationOpExists)
 	noScheduleToleration.WithEffect(core.TaintEffectNoSchedule)
+	if !config.Config.Tap.IgnoreTainted {
+		tolerations = append(tolerations, noScheduleToleration)
+	}
 
 	// Host procfs is needed inside the container because we need access to
 	//	the network namespaces of processes on the machine.
@@ -766,7 +774,7 @@ func (provider *Provider) ApplyWorkerDaemonSet(
 	}
 	podSpec.WithContainers(workerContainer)
 	podSpec.WithAffinity(affinity)
-	podSpec.WithTolerations(noExecuteToleration, noScheduleToleration)
+	podSpec.WithTolerations(tolerations...)
 	podSpec.WithVolumes(procfsVolume, sysfsVolume)
 
 	if len(imagePullSecrets) > 0 {

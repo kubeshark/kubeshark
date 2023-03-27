@@ -24,6 +24,7 @@ const (
 	PcapLabel              = "pcap"
 	ServiceMeshLabel       = "servicemesh"
 	TlsLabel               = "tls"
+	IgnoreTaintedLabel     = "ignoreTainted"
 	DebugLabel             = "debug"
 )
 
@@ -82,6 +83,7 @@ type TapConfig struct {
 	ServiceMesh   bool            `yaml:"servicemesh" default:"true"`
 	Tls           bool            `yaml:"tls" default:"true"`
 	PacketCapture string          `yaml:"packetcapture" default:"libpcap"`
+	IgnoreTainted bool            `yaml:"ignoreTainted" default:"false"`
 	Debug         bool            `yaml:"debug" default:"false"`
 }
 
