@@ -18,7 +18,6 @@ const (
 )
 
 const (
-	LabelPrefixApp = "app.kubernetes.io/"
-	LabelManagedBy = LabelPrefixApp + "managed-by"
-	LabelCreatedBy = LabelPrefixApp + "created-by"
+	LabelManagedBy = SelfResourcesPrefix + "managed-by"
+	LabelCreatedBy = SelfResourcesPrefix + "created-by"
 )
