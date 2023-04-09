@@ -62,3 +62,9 @@ test: ## Run cli tests.
 
 lint: ## Lint the source code.
 	golangci-lint run
+
+kubectl-view-all-resources: ## This command outputs all Kubernetes resources using YAML format and pipes it to VS Code
+	./kubectl.sh view-all-resources
+
+kubectl-view-kubeshark-resources: ## This command outputs all Kubernetes resources in "kubeshark" namespace using YAML format and pipes it to VS Code
+	./kubectl.sh view-kubeshark-resources
