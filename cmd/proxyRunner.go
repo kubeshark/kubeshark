@@ -15,7 +15,7 @@ import (
 )
 
 func runProxy(block bool, noBrowser bool) {
-	kubernetesProvider, err := getKubernetesProviderForCli()
+	kubernetesProvider, err := getKubernetesProviderForCli(false)
 	if err != nil {
 		return
 	}

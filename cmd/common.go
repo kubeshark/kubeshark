@@ -58,7 +58,7 @@ func startProxyReportErrorIfAny(kubernetesProvider *kubernetes.Provider, ctx con
 	}
 }
 
-func getKubernetesProviderForCli() (*kubernetes.Provider, error) {
+func getKubernetesProviderForCli(silent bool) (*kubernetes.Provider, error) {
 	kubeConfigPath := config.Config.KubeConfigPath()
 	kubernetesProvider, err := kubernetes.NewProvider(kubeConfigPath, config.Config.Kube.Context)
 	if err != nil {
@@ -66,7 +66,9 @@ func getKubernetesProviderForCli() (*kubernetes.Provider, error) {
 		return nil, err
 	}
 
-	log.Info().Str("path", kubeConfigPath).Msg("Using kubeconfig:")
+	if !silent {
+		log.Info().Str("path", kubeConfigPath).Msg("Using kubeconfig:")
+	}
 
 	if err := kubernetesProvider.ValidateNotProxy(); err != nil {
 		handleKubernetesProviderError(err)

@@ -23,6 +23,10 @@ type KubeConfig struct {
 	Context       string `yaml:"context"`
 }
 
+type ManifestsConfig struct {
+	Dump bool `yaml:"dump"`
+}
+
 type ConfigStruct struct {
 	Tap               configStructs.TapConfig       `yaml:"tap"`
 	Logs              configStructs.LogsConfig      `yaml:"logs"`
@@ -34,6 +38,7 @@ type ConfigStruct struct {
 	Scripting         configStructs.ScriptingConfig `yaml:"scripting"`
 	ResourceLabels    map[string]string             `yaml:"resourceLabels" default:"{}"`
 	NodeSelectorTerms []v1.NodeSelectorTerm         `yaml:"nodeSelectorTerms" default:"[]"`
+	Manifests         ManifestsConfig               `yaml:"manifests,omitempty"`
 }
 
 func (config *ConfigStruct) ImagePullPolicy() v1.PullPolicy {

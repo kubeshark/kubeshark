@@ -156,14 +156,20 @@ func (provider *Provider) WaitUtilNamespaceDeleted(ctx context.Context, name str
 	return err
 }
 
-func (provider *Provider) CreateNamespace(ctx context.Context, name string) (*core.Namespace, error) {
-	namespaceSpec := &core.Namespace{
+func (provider *Provider) BuildNamespace(name string) *core.Namespace {
+	return &core.Namespace{
+		TypeMeta: metav1.TypeMeta{
+			Kind: "Namespace",
+		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   name,
 			Labels: buildWithDefaultLabels(map[string]string{}, provider),
 		},
 	}
-	return provider.clientSet.CoreV1().Namespaces().Create(ctx, namespaceSpec, metav1.CreateOptions{})
+}
+
+func (provider *Provider) CreateNamespace(ctx context.Context, namespace *core.Namespace) (*core.Namespace, error) {
+	return provider.clientSet.CoreV1().Namespaces().Create(ctx, namespace, metav1.CreateOptions{})
 }
 
 type PodOptions struct {
@@ -223,6 +229,9 @@ func (provider *Provider) BuildHubPod(opts *PodOptions) (*core.Pod, error) {
 	}
 
 	pod := &core.Pod{
+		TypeMeta: metav1.TypeMeta{
+			Kind: "Pod",
+		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name: opts.PodName,
 			Labels: buildWithDefaultLabels(map[string]string{
@@ -230,6 +239,7 @@ func (provider *Provider) BuildHubPod(opts *PodOptions) (*core.Pod, error) {
 			}, provider),
 		},
 		Spec: core.PodSpec{
+			ServiceAccountName:            ServiceAccountName,
 			Containers:                    containers,
 			DNSPolicy:                     core.DNSClusterFirstWithHostNet,
 			TerminationGracePeriodSeconds: new(int64),
@@ -257,10 +267,6 @@ func (provider *Provider) BuildHubPod(opts *PodOptions) (*core.Pod, error) {
 		}
 	}
 
-	//define the service account only when it exists to prevent pod crash
-	if opts.ServiceAccountName != "" {
-		pod.Spec.ServiceAccountName = opts.ServiceAccountName
-	}
 	return pod, nil
 }
 
@@ -330,6 +336,9 @@ func (provider *Provider) BuildFrontPod(opts *PodOptions, hubHost string, hubPor
 	}
 
 	pod := &core.Pod{
+		TypeMeta: metav1.TypeMeta{
+			Kind: "Pod",
+		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name: opts.PodName,
 			Labels: buildWithDefaultLabels(map[string]string{
@@ -337,6 +346,7 @@ func (provider *Provider) BuildFrontPod(opts *PodOptions, hubHost string, hubPor
 			}, provider),
 		},
 		Spec: core.PodSpec{
+			ServiceAccountName:            ServiceAccountName,
 			Containers:                    containers,
 			Volumes:                       volumes,
 			DNSPolicy:                     core.DNSClusterFirstWithHostNet,
@@ -365,10 +375,6 @@ func (provider *Provider) BuildFrontPod(opts *PodOptions, hubHost string, hubPor
 		}
 	}
 
-	//define the service account only when it exists to prevent pod crash
-	if opts.ServiceAccountName != "" {
-		pod.Spec.ServiceAccountName = opts.ServiceAccountName
-	}
 	return pod, nil
 }
 
@@ -376,25 +382,54 @@ func (provider *Provider) CreatePod(ctx context.Context, namespace string, podSp
 	return provider.clientSet.CoreV1().Pods(namespace).Create(ctx, podSpec, metav1.CreateOptions{})
 }
 
-func (provider *Provider) CreateService(ctx context.Context, namespace string, serviceName string, appLabelValue string, targetPort int, port int32) (*core.Service, error) {
-	service := core.Service{
+func (provider *Provider) BuildHubService(namespace string) *core.Service {
+	return &core.Service{
+		TypeMeta: metav1.TypeMeta{
+			Kind: "Service",
+		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   serviceName,
+			Name:   HubServiceName,
 			Labels: buildWithDefaultLabels(map[string]string{}, provider),
 		},
 		Spec: core.ServiceSpec{
 			Ports: []core.ServicePort{
 				{
-					Name:       serviceName,
-					TargetPort: intstr.FromInt(targetPort),
-					Port:       port,
+					Name:       HubServiceName,
+					TargetPort: intstr.FromInt(80),
+					Port:       80,
 				},
 			},
 			Type:     core.ServiceTypeClusterIP,
-			Selector: map[string]string{"app": appLabelValue},
+			Selector: map[string]string{"app": HubServiceName},
 		},
 	}
-	return provider.clientSet.CoreV1().Services(namespace).Create(ctx, &service, metav1.CreateOptions{})
+}
+
+func (provider *Provider) BuildFrontService(namespace string) *core.Service {
+	return &core.Service{
+		TypeMeta: metav1.TypeMeta{
+			Kind: "Service",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:   FrontServiceName,
+			Labels: buildWithDefaultLabels(map[string]string{}, provider),
+		},
+		Spec: core.ServiceSpec{
+			Ports: []core.ServicePort{
+				{
+					Name:       FrontServiceName,
+					TargetPort: intstr.FromInt(80),
+					Port:       int32(config.Config.Tap.Proxy.Front.DstPort),
+				},
+			},
+			Type:     core.ServiceTypeClusterIP,
+			Selector: map[string]string{"app": FrontServiceName},
+		},
+	}
+}
+
+func (provider *Provider) CreateService(ctx context.Context, namespace string, service *core.Service) (*core.Service, error) {
+	return provider.clientSet.CoreV1().Services(namespace).Create(ctx, service, metav1.CreateOptions{})
 }
 
 func (provider *Provider) CanI(ctx context.Context, namespace string, resource string, verb string, group string) (bool, error) {
@@ -465,79 +500,29 @@ func (provider *Provider) doesResourceExist(resource interface{}, err error) (bo
 	return resource != nil, nil
 }
 
-func (provider *Provider) CreateSelfRBAC(ctx context.Context, namespace string, serviceAccountName string, clusterRoleName string, clusterRoleBindingName string, version string, resources []string) error {
-	serviceAccount := &core.ServiceAccount{
+func (provider *Provider) BuildServiceAccount() *core.ServiceAccount {
+	return &core.ServiceAccount{
+		TypeMeta: metav1.TypeMeta{
+			Kind: "ServiceAccount",
+		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name: serviceAccountName,
+			Name: ServiceAccountName,
 			Labels: buildWithDefaultLabels(map[string]string{
-				fmt.Sprintf("%s-cli-version", misc.Program): version,
+				fmt.Sprintf("%s-cli-version", misc.Program): misc.RBACVersion,
 			}, provider),
 		},
 	}
-	clusterRole := &rbac.ClusterRole{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: clusterRoleName,
-			Labels: buildWithDefaultLabels(map[string]string{
-				fmt.Sprintf("%s-cli-version", misc.Program): version,
-			}, provider),
-		},
-		Rules: []rbac.PolicyRule{
-			{
-				APIGroups: []string{"", "extensions", "apps"},
-				Resources: resources,
-				Verbs:     []string{"list", "get", "watch"},
-			},
-		},
-	}
-	clusterRoleBinding := &rbac.ClusterRoleBinding{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: clusterRoleBindingName,
-			Labels: buildWithDefaultLabels(map[string]string{
-				fmt.Sprintf("%s-cli-version", misc.Program): version,
-			}, provider),
-		},
-		RoleRef: rbac.RoleRef{
-			Name:     clusterRoleName,
-			Kind:     "ClusterRole",
-			APIGroup: "rbac.authorization.k8s.io",
-		},
-		Subjects: []rbac.Subject{
-			{
-				Kind:      "ServiceAccount",
-				Name:      serviceAccountName,
-				Namespace: namespace,
-			},
-		},
-	}
-	_, err := provider.clientSet.CoreV1().ServiceAccounts(namespace).Create(ctx, serviceAccount, metav1.CreateOptions{})
-	if err != nil && !k8serrors.IsAlreadyExists(err) {
-		return err
-	}
-	_, err = provider.clientSet.RbacV1().ClusterRoles().Create(ctx, clusterRole, metav1.CreateOptions{})
-	if err != nil && !k8serrors.IsAlreadyExists(err) {
-		return err
-	}
-	_, err = provider.clientSet.RbacV1().ClusterRoleBindings().Create(ctx, clusterRoleBinding, metav1.CreateOptions{})
-	if err != nil && !k8serrors.IsAlreadyExists(err) {
-		return err
-	}
-	return nil
 }
 
-func (provider *Provider) CreateSelfRBACNamespaceRestricted(ctx context.Context, namespace string, serviceAccountName string, roleName string, roleBindingName string, version string) error {
-	serviceAccount := &core.ServiceAccount{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: serviceAccountName,
-			Labels: buildWithDefaultLabels(map[string]string{
-				fmt.Sprintf("%s-cli-version", misc.Program): version,
-			}, provider),
+func (provider *Provider) BuildClusterRole() *rbac.ClusterRole {
+	return &rbac.ClusterRole{
+		TypeMeta: metav1.TypeMeta{
+			Kind: "ClusterRole",
 		},
-	}
-	role := &rbac.Role{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: roleName,
+			Name: ClusterRoleName,
 			Labels: buildWithDefaultLabels(map[string]string{
-				fmt.Sprintf("%s-cli-version", misc.Program): version,
+				fmt.Sprintf("%s-cli-version", misc.Program): misc.RBACVersion,
 			}, provider),
 		},
 		Rules: []rbac.PolicyRule{
@@ -548,35 +533,48 @@ func (provider *Provider) CreateSelfRBACNamespaceRestricted(ctx context.Context,
 			},
 		},
 	}
-	roleBinding := &rbac.RoleBinding{
+}
+
+func (provider *Provider) BuildClusterRoleBinding() *rbac.ClusterRoleBinding {
+	return &rbac.ClusterRoleBinding{
+		TypeMeta: metav1.TypeMeta{
+			Kind: "ClusterRoleBinding",
+		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name: roleBindingName,
+			Name: ServiceAccountName,
 			Labels: buildWithDefaultLabels(map[string]string{
-				fmt.Sprintf("%s-cli-version", misc.Program): version,
+				fmt.Sprintf("%s-cli-version", misc.Program): misc.RBACVersion,
 			}, provider),
 		},
 		RoleRef: rbac.RoleRef{
-			Name:     roleName,
-			Kind:     "Role",
+			Name:     ClusterRoleName,
+			Kind:     "ClusterRole",
 			APIGroup: "rbac.authorization.k8s.io",
 		},
 		Subjects: []rbac.Subject{
 			{
 				Kind:      "ServiceAccount",
-				Name:      serviceAccountName,
-				Namespace: namespace,
+				Name:      ServiceAccountName,
+				Namespace: config.Config.Tap.SelfNamespace,
 			},
 		},
 	}
+}
+
+func (provider *Provider) CreateSelfRBAC(ctx context.Context, namespace string) error {
+	serviceAccount := provider.BuildServiceAccount()
+	clusterRole := provider.BuildClusterRole()
+	clusterRoleBinding := provider.BuildClusterRoleBinding()
+
 	_, err := provider.clientSet.CoreV1().ServiceAccounts(namespace).Create(ctx, serviceAccount, metav1.CreateOptions{})
 	if err != nil && !k8serrors.IsAlreadyExists(err) {
 		return err
 	}
-	_, err = provider.clientSet.RbacV1().Roles(namespace).Create(ctx, role, metav1.CreateOptions{})
+	_, err = provider.clientSet.RbacV1().ClusterRoles().Create(ctx, clusterRole, metav1.CreateOptions{})
 	if err != nil && !k8serrors.IsAlreadyExists(err) {
 		return err
 	}
-	_, err = provider.clientSet.RbacV1().RoleBindings(namespace).Create(ctx, roleBinding, metav1.CreateOptions{})
+	_, err = provider.clientSet.RbacV1().ClusterRoleBindings().Create(ctx, clusterRoleBinding, metav1.CreateOptions{})
 	if err != nil && !k8serrors.IsAlreadyExists(err) {
 		return err
 	}
@@ -644,7 +642,6 @@ func (provider *Provider) handleRemovalError(err error) error {
 }
 
 func (provider *Provider) BuildWorkerDaemonSet(
-	ctx context.Context,
 	podImage string,
 	podName string,
 	serviceAccountName string,
@@ -798,6 +795,9 @@ func (provider *Provider) BuildWorkerDaemonSet(
 
 	// Pod
 	pod := core.Pod{
+		TypeMeta: metav1.TypeMeta{
+			Kind: "Pod",
+		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name: podName,
 			Labels: buildWithDefaultLabels(map[string]string{
@@ -805,6 +805,7 @@ func (provider *Provider) BuildWorkerDaemonSet(
 			}, provider),
 		},
 		Spec: core.PodSpec{
+			ServiceAccountName:            ServiceAccountName,
 			HostNetwork:                   true,
 			Containers:                    containers,
 			Volumes:                       []core.Volume{procfsVolume, sysfsVolume},
@@ -826,6 +827,9 @@ func (provider *Provider) BuildWorkerDaemonSet(
 	}
 
 	return &DaemonSet{
+		TypeMeta: metav1.TypeMeta{
+			Kind: "DaemonSet",
+		},
 		Spec: DaemonSetSpec{
 			Selector: metav1.LabelSelector{
 				MatchLabels: buildWithDefaultLabels(map[string]string{
@@ -859,7 +863,6 @@ func (provider *Provider) ApplyWorkerDaemonSet(
 		Msg("Applying worker DaemonSets.")
 
 	daemonSet, err := provider.BuildWorkerDaemonSet(
-		ctx,
 		podImage,
 		podName,
 		serviceAccountName,

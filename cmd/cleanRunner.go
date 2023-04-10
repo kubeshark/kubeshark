@@ -5,7 +5,7 @@ import (
 )
 
 func performCleanCommand() {
-	kubernetesProvider, err := getKubernetesProviderForCli()
+	kubernetesProvider, err := getKubernetesProviderForCli(false)
 	if err != nil {
 		return
 	}

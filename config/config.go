@@ -52,13 +52,23 @@ func InitConfig(cmd *cobra.Command) error {
 		return nil
 	}
 
-	if cmd.Use != "console" && cmd.Use != "pro" {
+	if !utils.Contains([]string{
+		"console",
+		"pro",
+		"manifests",
+	}, cmd.Use) {
 		go version.CheckNewerVersion()
 	}
 
 	Config = CreateDefaultConfig()
 	cmdName = cmd.Name()
-	if utils.Contains([]string{"clean", "console", "pro", "proxy", "scripts"}, cmdName) {
+	if utils.Contains([]string{
+		"clean",
+		"console",
+		"pro",
+		"proxy",
+		"scripts",
+	}, cmdName) {
 		cmdName = "tap"
 	}
 
@@ -67,7 +77,9 @@ func InitConfig(cmd *cobra.Command) error {
 	}
 
 	ConfigFilePath = path.Join(misc.GetDotFolderPath(), "config.yaml")
-	if err := loadConfigFile(&Config); err != nil {
+	if err := loadConfigFile(&Config, utils.Contains([]string{
+		"manifests",
+	}, cmd.Use)); err != nil {
 		if !os.IsNotExist(err) {
 			return fmt.Errorf("invalid config, %w\n"+
 				"you can regenerate the file by removing it (%v) and using `kubeshark config -r`", err, ConfigFilePath)
@@ -115,7 +127,7 @@ func WriteConfig(config *ConfigStruct) error {
 	return nil
 }
 
-func loadConfigFile(config *ConfigStruct) error {
+func loadConfigFile(config *ConfigStruct, silent bool) error {
 	cwd, err := os.Getwd()
 	if err != nil {
 		return err
@@ -141,7 +153,9 @@ func loadConfigFile(config *ConfigStruct) error {
 		return err
 	}
 
-	log.Info().Str("path", ConfigFilePath).Msg("Found config file!")
+	if !silent {
+		log.Info().Str("path", ConfigFilePath).Msg("Found config file!")
+	}
 
 	return nil
 }
