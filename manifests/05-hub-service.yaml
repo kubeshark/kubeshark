@@ -1,0 +1,17 @@
+kind: Service
+metadata:
+  creationTimestamp: null
+  labels:
+    kubeshark-created-by: kubeshark
+    kubeshark-managed-by: kubeshark
+  name: kubeshark-hub
+spec:
+  ports:
+    - name: kubeshark-hub
+      port: 80
+      targetPort: 80
+  selector:
+    app: kubeshark-hub
+  type: ClusterIP
+status:
+  loadBalancer: {}

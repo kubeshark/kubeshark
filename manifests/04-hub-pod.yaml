@@ -1,0 +1,31 @@
+kind: Pod
+metadata:
+  creationTimestamp: null
+  labels:
+    app: kubeshark-hub
+    kubeshark-created-by: kubeshark
+    kubeshark-managed-by: kubeshark
+  name: kubeshark-hub
+spec:
+  containers:
+    - command:
+        - ./hub
+      image: docker.io/kubeshark/hub:latest
+      imagePullPolicy: Always
+      name: kubeshark-hub
+      resources:
+        limits:
+          cpu: 750m
+          memory: 1Gi
+        requests:
+          cpu: 50m
+          memory: 50Mi
+  dnsPolicy: ClusterFirstWithHostNet
+  serviceAccountName: kubeshark-service-account
+  terminationGracePeriodSeconds: 0
+  tolerations:
+    - effect: NoExecute
+      operator: Exists
+    - effect: NoSchedule
+      operator: Exists
+status: {}

@@ -1,0 +1,75 @@
+kind: DaemonSet
+metadata:
+  creationTimestamp: null
+spec:
+  selector:
+    matchLabels:
+      app: kubeshark-worker
+      kubeshark-created-by: kubeshark
+      kubeshark-managed-by: kubeshark
+  template:
+    kind: Pod
+    metadata:
+      creationTimestamp: null
+      labels:
+        app: kubeshark-worker
+        kubeshark-created-by: kubeshark
+        kubeshark-managed-by: kubeshark
+      name: kubeshark-worker
+    spec:
+      containers:
+        - command:
+            - ./worker
+            - -i
+            - any
+            - -port
+            - "8897"
+            - -servicemesh
+            - -tls
+            - -procfs
+            - /hostproc
+          image: kubeshark-worker-daemon-set
+          imagePullPolicy: Always
+          name: kubeshark-worker
+          resources:
+            limits:
+              cpu: 750m
+              memory: 1Gi
+            requests:
+              cpu: 50m
+              memory: 50Mi
+          securityContext:
+            capabilities:
+              add:
+                - NET_RAW
+                - NET_ADMIN
+                - SYS_ADMIN
+                - SYS_PTRACE
+                - DAC_OVERRIDE
+                - SYS_RESOURCE
+              drop:
+                - ALL
+          volumeMounts:
+            - mountPath: /hostproc
+              name: proc
+              readOnly: true
+            - mountPath: /sys
+              name: sys
+              readOnly: true
+      dnsPolicy: ClusterFirstWithHostNet
+      hostNetwork: true
+      serviceAccountName: kubeshark-service-account
+      terminationGracePeriodSeconds: 0
+      tolerations:
+        - effect: NoExecute
+          operator: Exists
+        - effect: NoSchedule
+          operator: Exists
+      volumes:
+        - hostPath:
+            path: /proc
+          name: proc
+        - hostPath:
+            path: /sys
+          name: sys
+    status: {}

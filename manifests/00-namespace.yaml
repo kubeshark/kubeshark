@@ -1,0 +1,9 @@
+kind: Namespace
+metadata:
+  creationTimestamp: null
+  labels:
+    kubeshark-created-by: kubeshark
+    kubeshark-managed-by: kubeshark
+  name: kubeshark
+spec: {}
+status: {}

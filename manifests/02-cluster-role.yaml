@@ -1,0 +1,21 @@
+kind: ClusterRole
+metadata:
+  creationTimestamp: null
+  labels:
+    kubeshark-cli-version: v1
+    kubeshark-created-by: kubeshark
+    kubeshark-managed-by: kubeshark
+  name: kubeshark-cluster-role
+rules:
+  - apiGroups:
+      - ""
+      - extensions
+      - apps
+    resources:
+      - pods
+      - services
+      - endpoints
+    verbs:
+      - list
+      - get
+      - watch

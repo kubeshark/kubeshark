@@ -1,0 +1,17 @@
+kind: Service
+metadata:
+  creationTimestamp: null
+  labels:
+    kubeshark-created-by: kubeshark
+    kubeshark-managed-by: kubeshark
+  name: kubeshark-front
+spec:
+  ports:
+    - name: kubeshark-front
+      port: 80
+      targetPort: 80
+  selector:
+    app: kubeshark-front
+  type: ClusterIP
+status:
+  loadBalancer: {}
