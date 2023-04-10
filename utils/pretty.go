@@ -27,7 +27,7 @@ func PrettyJson(data interface{}) (string, error) {
 func PrettyYaml(data interface{}) (string, error) {
 	buffer := new(bytes.Buffer)
 	encoder := yaml.NewEncoder(buffer)
-	encoder.SetIndent(0)
+	encoder.SetIndent(2)
 
 	err := encoder.Encode(data)
 	if err != nil {
