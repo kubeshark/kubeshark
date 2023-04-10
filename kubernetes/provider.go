@@ -809,10 +809,7 @@ func (provider *Provider) BuildWorkerDaemonSet(
 	}
 
 	// Pod
-	pod := core.Pod{
-		TypeMeta: metav1.TypeMeta{
-			Kind: "Pod",
-		},
+	pod := DaemonSetPod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name:      podName,
 			Namespace: config.Config.Tap.SelfNamespace,
@@ -846,6 +843,13 @@ func (provider *Provider) BuildWorkerDaemonSet(
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "DaemonSet",
 			APIVersion: "apps/v1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      podName,
+			Namespace: config.Config.Tap.SelfNamespace,
+			Labels: buildWithDefaultLabels(map[string]string{
+				"app": podName,
+			}, provider),
 		},
 		Spec: DaemonSetSpec{
 			Selector: metav1.LabelSelector{

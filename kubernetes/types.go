@@ -9,9 +9,14 @@ import (
 	applyconfmeta "k8s.io/client-go/applyconfigurations/meta/v1"
 )
 
+type DaemonSetPod struct {
+	metav1.ObjectMeta `json:"metadata,omitempty" protobuf:"bytes,1,opt,name=metadata"`
+	Spec              core.PodSpec `json:"spec,omitempty" protobuf:"bytes,2,opt,name=spec"`
+}
+
 type DaemonSetSpec struct {
 	Selector metav1.LabelSelector `json:"selector,omitempty" protobuf:"bytes,1,opt,name=selector"`
-	Template core.Pod             `json:"template,omitempty" protobuf:"bytes,2,opt,name=template"`
+	Template DaemonSetPod         `json:"template,omitempty" protobuf:"bytes,2,opt,name=template"`
 }
 
 type DaemonSet struct {

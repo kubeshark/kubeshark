@@ -87,8 +87,8 @@ func runManifests() {
 	frontService := kubernetesProvider.BuildFrontService(config.Config.Tap.SelfNamespace)
 
 	workerDaemonSet, err := kubernetesProvider.BuildWorkerDaemonSet(
+		docker.GetWorkerImage(),
 		kubernetes.WorkerDaemonSetName,
-		kubernetes.WorkerPodName,
 		kubernetes.ServiceAccountName,
 		config.Config.Tap.Resources.Worker,
 		config.Config.ImagePullPolicy(),

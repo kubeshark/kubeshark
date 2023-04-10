@@ -2,21 +2,26 @@ apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   creationTimestamp: null
+  labels:
+    app: kubeshark-worker-daemon-set
+    kubeshark-created-by: kubeshark
+    kubeshark-managed-by: kubeshark
+  name: kubeshark-worker-daemon-set
+  namespace: kubeshark
 spec:
   selector:
     matchLabels:
-      app: kubeshark-worker
+      app: kubeshark-worker-daemon-set
       kubeshark-created-by: kubeshark
       kubeshark-managed-by: kubeshark
   template:
-    kind: Pod
     metadata:
       creationTimestamp: null
       labels:
-        app: kubeshark-worker
+        app: kubeshark-worker-daemon-set
         kubeshark-created-by: kubeshark
         kubeshark-managed-by: kubeshark
-      name: kubeshark-worker
+      name: kubeshark-worker-daemon-set
       namespace: kubeshark
     spec:
       containers:
@@ -30,9 +35,9 @@ spec:
             - -tls
             - -procfs
             - /hostproc
-          image: kubeshark-worker-daemon-set
+          image: docker.io/kubeshark/worker:latest
           imagePullPolicy: Always
-          name: kubeshark-worker
+          name: kubeshark-worker-daemon-set
           resources:
             limits:
               cpu: 750m
@@ -74,4 +79,3 @@ spec:
         - hostPath:
             path: /sys
           name: sys
-    status: {}
