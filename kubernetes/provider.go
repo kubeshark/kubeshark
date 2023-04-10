@@ -235,7 +235,8 @@ func (provider *Provider) BuildHubPod(opts *PodOptions) (*core.Pod, error) {
 			APIVersion: "v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name: opts.PodName,
+			Name:      opts.PodName,
+			Namespace: config.Config.Tap.SelfNamespace,
 			Labels: buildWithDefaultLabels(map[string]string{
 				"app": opts.PodName,
 			}, provider),
@@ -343,7 +344,8 @@ func (provider *Provider) BuildFrontPod(opts *PodOptions, hubHost string, hubPor
 			APIVersion: "v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name: opts.PodName,
+			Name:      opts.PodName,
+			Namespace: config.Config.Tap.SelfNamespace,
 			Labels: buildWithDefaultLabels(map[string]string{
 				"app": opts.PodName,
 			}, provider),
@@ -392,8 +394,9 @@ func (provider *Provider) BuildHubService(namespace string) *core.Service {
 			APIVersion: "v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   HubServiceName,
-			Labels: buildWithDefaultLabels(map[string]string{}, provider),
+			Name:      HubServiceName,
+			Namespace: config.Config.Tap.SelfNamespace,
+			Labels:    buildWithDefaultLabels(map[string]string{}, provider),
 		},
 		Spec: core.ServiceSpec{
 			Ports: []core.ServicePort{
@@ -416,8 +419,9 @@ func (provider *Provider) BuildFrontService(namespace string) *core.Service {
 			APIVersion: "v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:   FrontServiceName,
-			Labels: buildWithDefaultLabels(map[string]string{}, provider),
+			Name:      FrontServiceName,
+			Namespace: config.Config.Tap.SelfNamespace,
+			Labels:    buildWithDefaultLabels(map[string]string{}, provider),
 		},
 		Spec: core.ServiceSpec{
 			Ports: []core.ServicePort{
@@ -512,7 +516,8 @@ func (provider *Provider) BuildServiceAccount() *core.ServiceAccount {
 			APIVersion: "v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name: ServiceAccountName,
+			Name:      ServiceAccountName,
+			Namespace: config.Config.Tap.SelfNamespace,
 			Labels: buildWithDefaultLabels(map[string]string{
 				fmt.Sprintf("%s-cli-version", misc.Program): misc.RBACVersion,
 			}, provider),
@@ -524,10 +529,11 @@ func (provider *Provider) BuildClusterRole() *rbac.ClusterRole {
 	return &rbac.ClusterRole{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "ClusterRole",
-			APIVersion: "v1",
+			APIVersion: "rbac.authorization.k8s.io/v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name: ClusterRoleName,
+			Name:      ClusterRoleName,
+			Namespace: config.Config.Tap.SelfNamespace,
 			Labels: buildWithDefaultLabels(map[string]string{
 				fmt.Sprintf("%s-cli-version", misc.Program): misc.RBACVersion,
 			}, provider),
@@ -546,10 +552,11 @@ func (provider *Provider) BuildClusterRoleBinding() *rbac.ClusterRoleBinding {
 	return &rbac.ClusterRoleBinding{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "ClusterRoleBinding",
-			APIVersion: "v1",
+			APIVersion: "rbac.authorization.k8s.io/v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name: ServiceAccountName,
+			Name:      ServiceAccountName,
+			Namespace: config.Config.Tap.SelfNamespace,
 			Labels: buildWithDefaultLabels(map[string]string{
 				fmt.Sprintf("%s-cli-version", misc.Program): misc.RBACVersion,
 			}, provider),
@@ -807,7 +814,8 @@ func (provider *Provider) BuildWorkerDaemonSet(
 			Kind: "Pod",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name: podName,
+			Name:      podName,
+			Namespace: config.Config.Tap.SelfNamespace,
 			Labels: buildWithDefaultLabels(map[string]string{
 				"app": podName,
 			}, provider),
@@ -837,7 +845,7 @@ func (provider *Provider) BuildWorkerDaemonSet(
 	return &DaemonSet{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "DaemonSet",
-			APIVersion: "v1",
+			APIVersion: "apps/v1",
 		},
 		Spec: DaemonSetSpec{
 			Selector: metav1.LabelSelector{
