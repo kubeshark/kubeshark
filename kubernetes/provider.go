@@ -159,7 +159,8 @@ func (provider *Provider) WaitUtilNamespaceDeleted(ctx context.Context, name str
 func (provider *Provider) BuildNamespace(name string) *core.Namespace {
 	return &core.Namespace{
 		TypeMeta: metav1.TypeMeta{
-			Kind: "Namespace",
+			Kind:       "Namespace",
+			APIVersion: "v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   name,
@@ -230,7 +231,8 @@ func (provider *Provider) BuildHubPod(opts *PodOptions) (*core.Pod, error) {
 
 	pod := &core.Pod{
 		TypeMeta: metav1.TypeMeta{
-			Kind: "Pod",
+			Kind:       "Pod",
+			APIVersion: "v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name: opts.PodName,
@@ -337,7 +339,8 @@ func (provider *Provider) BuildFrontPod(opts *PodOptions, hubHost string, hubPor
 
 	pod := &core.Pod{
 		TypeMeta: metav1.TypeMeta{
-			Kind: "Pod",
+			Kind:       "Pod",
+			APIVersion: "v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name: opts.PodName,
@@ -385,7 +388,8 @@ func (provider *Provider) CreatePod(ctx context.Context, namespace string, podSp
 func (provider *Provider) BuildHubService(namespace string) *core.Service {
 	return &core.Service{
 		TypeMeta: metav1.TypeMeta{
-			Kind: "Service",
+			Kind:       "Service",
+			APIVersion: "v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   HubServiceName,
@@ -408,7 +412,8 @@ func (provider *Provider) BuildHubService(namespace string) *core.Service {
 func (provider *Provider) BuildFrontService(namespace string) *core.Service {
 	return &core.Service{
 		TypeMeta: metav1.TypeMeta{
-			Kind: "Service",
+			Kind:       "Service",
+			APIVersion: "v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name:   FrontServiceName,
@@ -503,7 +508,8 @@ func (provider *Provider) doesResourceExist(resource interface{}, err error) (bo
 func (provider *Provider) BuildServiceAccount() *core.ServiceAccount {
 	return &core.ServiceAccount{
 		TypeMeta: metav1.TypeMeta{
-			Kind: "ServiceAccount",
+			Kind:       "ServiceAccount",
+			APIVersion: "v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name: ServiceAccountName,
@@ -517,7 +523,8 @@ func (provider *Provider) BuildServiceAccount() *core.ServiceAccount {
 func (provider *Provider) BuildClusterRole() *rbac.ClusterRole {
 	return &rbac.ClusterRole{
 		TypeMeta: metav1.TypeMeta{
-			Kind: "ClusterRole",
+			Kind:       "ClusterRole",
+			APIVersion: "v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name: ClusterRoleName,
@@ -538,7 +545,8 @@ func (provider *Provider) BuildClusterRole() *rbac.ClusterRole {
 func (provider *Provider) BuildClusterRoleBinding() *rbac.ClusterRoleBinding {
 	return &rbac.ClusterRoleBinding{
 		TypeMeta: metav1.TypeMeta{
-			Kind: "ClusterRoleBinding",
+			Kind:       "ClusterRoleBinding",
+			APIVersion: "v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
 			Name: ServiceAccountName,
@@ -828,7 +836,8 @@ func (provider *Provider) BuildWorkerDaemonSet(
 
 	return &DaemonSet{
 		TypeMeta: metav1.TypeMeta{
-			Kind: "DaemonSet",
+			Kind:       "DaemonSet",
+			APIVersion: "v1",
 		},
 		Spec: DaemonSetSpec{
 			Selector: metav1.LabelSelector{
