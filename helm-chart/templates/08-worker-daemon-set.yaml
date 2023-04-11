@@ -9,6 +9,7 @@ metadata:
   name: '{{ .Values.tap.selfnamespace }}'
   namespace: kubeshark
 spec:
+  imagePullSecrets: '{{ .Values.tap.docker.imagepullsecrets }}'
   selector:
     matchLabels:
       app: kubeshark-worker-daemon-set
@@ -26,11 +27,13 @@ spec:
     spec:
       containers:
         - command:
-            - ./worker
+            - '{{ .Values.tap.debug | ternary "./worker -debug" "./worker" }}'
             - -i
             - any
             - -port
             - "8897"
+            - -packet-capture
+            - '{{ .Values.tap.packetcapture }}'
             - -servicemesh
             - -tls
             - -procfs

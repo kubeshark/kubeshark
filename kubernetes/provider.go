@@ -706,7 +706,15 @@ func (provider *Provider) BuildWorkerDaemonSet(
 	}
 
 	// Command
-	command := []string{"./worker", "-i", "any", "-port", "8897"}
+	command := []string{
+		"./worker",
+		"-i",
+		"any",
+		"-port",
+		"8897",
+		"-packet-capture",
+		config.Config.Tap.PacketCapture,
+	}
 	if debug {
 		command = append(command, "-debug")
 	}

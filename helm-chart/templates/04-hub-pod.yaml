@@ -11,12 +11,12 @@ metadata:
 spec:
   containers:
     - command:
-        - ./hub
+        - '{{ .Values.tap.debug | ternary "./hub -debug" "./hub" }}'
       env:
         - name: POD_REGEX
           value: '{{ .Values.tap.regex }}'
         - name: NAMESPACES
-          value: '{{ .Values.tap.namespaces }}'
+          value: '{{ .Values.tap.allnamespaces | ternary "" .Values.tap.namespaces | quote }}'
         - name: STORAGE_LIMIT
           value: '{{ .Values.tap.storagelimit }}'
         - name: LICENSE
@@ -32,6 +32,7 @@ spec:
           cpu: '{{ .Values.tap.resources.hub.cpu-requests }}'
           memory: '{{ .Values.tap.resources.hub.memory-requests }}'
   dnsPolicy: ClusterFirstWithHostNet
+  imagePullSecrets: '{{ .Values.tap.docker.imagepullsecrets }}'
   serviceAccountName: kubeshark-service-account
   terminationGracePeriodSeconds: 0
   tolerations:

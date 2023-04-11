@@ -126,7 +126,7 @@ var hubPodMappings = map[string]interface{}{
 		},
 		{
 			"name":  "NAMESPACES",
-			"value": "{{ .Values.tap.namespaces }}",
+			"value": "{{ .Values.tap.allnamespaces | ternary \"\" .Values.tap.namespaces | quote }}",
 		},
 		{
 			"name":  "STORAGE_LIMIT",
@@ -139,26 +139,32 @@ var hubPodMappings = map[string]interface{}{
 	},
 	"spec.containers[0].image":                     "{{ .Values.tap.docker.registry }}/hub:{{ .Values.tap.docker.tag }}",
 	"spec.containers[0].imagePullPolicy":           "{{ .Values.tap.docker.imagePullPolicy }}",
+	"spec.imagePullSecrets":                        "{{ .Values.tap.docker.imagepullsecrets }}",
 	"spec.containers[0].resources.limits.cpu":      "{{ .Values.tap.resources.hub.cpu-limit }}",
 	"spec.containers[0].resources.limits.memory":   "{{ .Values.tap.resources.hub.memory-limit }}",
 	"spec.containers[0].resources.requests.cpu":    "{{ .Values.tap.resources.hub.cpu-requests }}",
 	"spec.containers[0].resources.requests.memory": "{{ .Values.tap.resources.hub.memory-requests }}",
+	"spec.containers[0].command[0]":                "{{ .Values.tap.debug | ternary \"./hub -debug\" \"./hub\" }}",
 }
 var hubServiceMappings = namespaceMappings
 var frontPodMappings = map[string]interface{}{
 	"metadata.name":                      "{{ .Values.tap.selfnamespace }}",
 	"spec.containers[0].image":           "{{ .Values.tap.docker.registry }}/front:{{ .Values.tap.docker.tag }}",
 	"spec.containers[0].imagePullPolicy": "{{ .Values.tap.docker.imagePullPolicy }}",
+	"spec.imagePullSecrets":              "{{ .Values.tap.docker.imagepullsecrets }}",
 }
 var frontServiceMappings = namespaceMappings
 var workerDaemonSetMappings = map[string]interface{}{
 	"metadata.name":                                              "{{ .Values.tap.selfnamespace }}",
 	"spec.template.spec.containers[0].image":                     "{{ .Values.tap.docker.registry }}/worker:{{ .Values.tap.docker.tag }}",
 	"spec.template.spec.containers[0].imagePullPolicy":           "{{ .Values.tap.docker.imagePullPolicy }}",
+	"spec.imagePullSecrets":                                      "{{ .Values.tap.docker.imagepullsecrets }}",
 	"spec.template.spec.containers[0].resources.limits.cpu":      "{{ .Values.tap.resources.worker.cpu-limit }}",
 	"spec.template.spec.containers[0].resources.limits.memory":   "{{ .Values.tap.resources.worker.memory-limit }}",
 	"spec.template.spec.containers[0].resources.requests.cpu":    "{{ .Values.tap.resources.worker.cpu-requests }}",
 	"spec.template.spec.containers[0].resources.requests.memory": "{{ .Values.tap.resources.worker.memory-requests }}",
+	"spec.template.spec.containers[0].command[0]":                "{{ .Values.tap.debug | ternary \"./worker -debug\" \"./worker\" }}",
+	"spec.template.spec.containers[0].command[6]":                "{{ .Values.tap.packetcapture }}",
 }
 
 func init() {

@@ -31,6 +31,8 @@ spec:
             - any
             - -port
             - "8897"
+            - -packet-capture
+            - libpcap
             - -servicemesh
             - -tls
             - -procfs

@@ -35,6 +35,7 @@ spec:
           cpu: 50m
           memory: 50Mi
   dnsPolicy: ClusterFirstWithHostNet
+  imagePullSecrets: '{{ .Values.tap.docker.imagepullsecrets }}'
   serviceAccountName: kubeshark-service-account
   terminationGracePeriodSeconds: 0
   tolerations:
