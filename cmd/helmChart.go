@@ -6,6 +6,7 @@ import (
 	"sort"
 
 	"github.com/kubeshark/kubeshark/utils"
+	"github.com/otiai10/copy"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 )
@@ -57,8 +58,9 @@ func runHelmChart() {
 }
 
 func dumpHelmChart(objects map[string]interface{}) error {
-	folder := filepath.Join(".", "helm-chart/templates")
-	err := os.MkdirAll(folder, os.ModePerm)
+	folder := filepath.Join(".", "helm-chart")
+	templatesFolder := filepath.Join(folder, "templates")
+	err := os.MkdirAll(templatesFolder, os.ModePerm)
 	if err != nil {
 		return err
 	}
@@ -76,12 +78,21 @@ func dumpHelmChart(objects map[string]interface{}) error {
 			return err
 		}
 
-		path := filepath.Join(folder, filename)
+		path := filepath.Join(templatesFolder, filename)
 		err = os.WriteFile(path, []byte(manifest), 0644)
 		if err != nil {
 			return err
 		}
 		log.Info().Msgf("Helm chart template generated: %s", path)
+	}
+
+	licenseSrcPath := filepath.Join(".", "LICENSE")
+	licenseDstPath := filepath.Join(folder, "LICENSE")
+	err = copy.Copy(licenseSrcPath, licenseDstPath)
+	if err != nil {
+		log.Warn().Err(err).Str("path", licenseSrcPath).Msg("Couldn't find the license:")
+	} else {
+		log.Info().Msgf("Helm chart license copied: %s", licenseDstPath)
 	}
 
 	return nil

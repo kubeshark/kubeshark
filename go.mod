@@ -11,6 +11,7 @@ require (
 	github.com/gin-gonic/gin v1.7.7
 	github.com/google/go-github/v37 v37.0.0
 	github.com/gorilla/websocket v1.4.2
+	github.com/otiai10/copy v1.10.0
 	github.com/robertkrimen/otto v0.2.1
 	github.com/rs/zerolog v1.28.0
 	github.com/spf13/cobra v1.3.0
