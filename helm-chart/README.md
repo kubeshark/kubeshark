@@ -21,7 +21,7 @@ git clone git@github.com:kubeshark/kubeshark.git --depth 1
 cd kubeshark/helm-chart
 ```
 
-See the generated templates
+Render the templates
 
 ```shell
 helm template .
