@@ -29,11 +29,19 @@ const (
 	DebugLabel             = "debug"
 )
 
-type Resources struct {
-	CpuLimit       string `yaml:"cpu-limit" default:"750m"`
-	MemoryLimit    string `yaml:"memory-limit" default:"1Gi"`
-	CpuRequests    string `yaml:"cpu-requests" default:"50m"`
-	MemoryRequests string `yaml:"memory-requests" default:"50Mi"`
+type ResourceLimits struct {
+	CPU    string `yaml:"cpu" default:"750m"`
+	Memory string `yaml:"memory" default:"1Gi"`
+}
+
+type ResourceRequests struct {
+	CPU    string `yaml:"cpu" default:"50m"`
+	Memory string `yaml:"memory" default:"50Mi"`
+}
+
+type ResourceRequirements struct {
+	Limits   ResourceLimits   `json:"limits"`
+	Requests ResourceRequests `json:"requests"`
 }
 
 type WorkerConfig struct {
@@ -66,8 +74,8 @@ type DockerConfig struct {
 }
 
 type ResourcesConfig struct {
-	Worker Resources `yaml:"worker"`
-	Hub    Resources `yaml:"hub"`
+	Worker ResourceRequirements `yaml:"worker"`
+	Hub    ResourceRequirements `yaml:"hub"`
 }
 
 type TapConfig struct {

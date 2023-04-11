@@ -24,15 +24,19 @@ tap:
   pcap: ""
   resources:
     worker:
-      cpu-limit: 750m
-      memory-limit: 1Gi
-      cpu-requests: 50m
-      memory-requests: 50Mi
+      limits:
+        cpu: 750m
+        memory: 1Gi
+      requests:
+        cpu: 50m
+        memory: 50Mi
     hub:
-      cpu-limit: 750m
-      memory-limit: 1Gi
-      cpu-requests: 50m
-      memory-requests: 50Mi
+      limits:
+        cpu: 750m
+        memory: 1Gi
+      requests:
+        cpu: 50m
+        memory: 50Mi
   servicemesh: true
   tls: true
   packetcapture: libpcap

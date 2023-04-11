@@ -180,26 +180,26 @@ type PodOptions struct {
 	PodName            string
 	PodImage           string
 	ServiceAccountName string
-	Resources          configStructs.Resources
+	Resources          configStructs.ResourceRequirements
 	ImagePullPolicy    core.PullPolicy
 	ImagePullSecrets   []core.LocalObjectReference
 	Debug              bool
 }
 
 func (provider *Provider) BuildHubPod(opts *PodOptions) (*core.Pod, error) {
-	cpuLimit, err := resource.ParseQuantity(opts.Resources.CpuLimit)
+	cpuLimit, err := resource.ParseQuantity(opts.Resources.Limits.CPU)
 	if err != nil {
 		return nil, fmt.Errorf("invalid cpu limit for %s pod", opts.PodName)
 	}
-	memLimit, err := resource.ParseQuantity(opts.Resources.MemoryLimit)
+	memLimit, err := resource.ParseQuantity(opts.Resources.Limits.Memory)
 	if err != nil {
 		return nil, fmt.Errorf("invalid memory limit for %s pod", opts.PodName)
 	}
-	cpuRequests, err := resource.ParseQuantity(opts.Resources.CpuRequests)
+	cpuRequests, err := resource.ParseQuantity(opts.Resources.Requests.CPU)
 	if err != nil {
 		return nil, fmt.Errorf("invalid cpu request for %s pod", opts.PodName)
 	}
-	memRequests, err := resource.ParseQuantity(opts.Resources.MemoryRequests)
+	memRequests, err := resource.ParseQuantity(opts.Resources.Requests.Memory)
 	if err != nil {
 		return nil, fmt.Errorf("invalid memory request for %s pod", opts.PodName)
 	}
@@ -294,19 +294,19 @@ func (provider *Provider) BuildHubPod(opts *PodOptions) (*core.Pod, error) {
 }
 
 func (provider *Provider) BuildFrontPod(opts *PodOptions, hubHost string, hubPort string) (*core.Pod, error) {
-	cpuLimit, err := resource.ParseQuantity(opts.Resources.CpuLimit)
+	cpuLimit, err := resource.ParseQuantity(opts.Resources.Limits.CPU)
 	if err != nil {
 		return nil, fmt.Errorf("invalid cpu limit for %s pod", opts.PodName)
 	}
-	memLimit, err := resource.ParseQuantity(opts.Resources.MemoryLimit)
+	memLimit, err := resource.ParseQuantity(opts.Resources.Limits.Memory)
 	if err != nil {
 		return nil, fmt.Errorf("invalid memory limit for %s pod", opts.PodName)
 	}
-	cpuRequests, err := resource.ParseQuantity(opts.Resources.CpuRequests)
+	cpuRequests, err := resource.ParseQuantity(opts.Resources.Requests.CPU)
 	if err != nil {
 		return nil, fmt.Errorf("invalid cpu request for %s pod", opts.PodName)
 	}
-	memRequests, err := resource.ParseQuantity(opts.Resources.MemoryRequests)
+	memRequests, err := resource.ParseQuantity(opts.Resources.Requests.Memory)
 	if err != nil {
 		return nil, fmt.Errorf("invalid memory request for %s pod", opts.PodName)
 	}
@@ -680,7 +680,7 @@ func (provider *Provider) BuildWorkerDaemonSet(
 	podImage string,
 	podName string,
 	serviceAccountName string,
-	resources configStructs.Resources,
+	resources configStructs.ResourceRequirements,
 	imagePullPolicy core.PullPolicy,
 	imagePullSecrets []core.LocalObjectReference,
 	serviceMesh bool,
@@ -688,19 +688,19 @@ func (provider *Provider) BuildWorkerDaemonSet(
 	debug bool,
 ) (*DaemonSet, error) {
 	// Resource limits
-	cpuLimit, err := resource.ParseQuantity(resources.CpuLimit)
+	cpuLimit, err := resource.ParseQuantity(resources.Limits.CPU)
 	if err != nil {
 		return nil, fmt.Errorf("invalid cpu limit for %s pod", podName)
 	}
-	memLimit, err := resource.ParseQuantity(resources.MemoryLimit)
+	memLimit, err := resource.ParseQuantity(resources.Limits.Memory)
 	if err != nil {
 		return nil, fmt.Errorf("invalid memory limit for %s pod", podName)
 	}
-	cpuRequests, err := resource.ParseQuantity(resources.CpuRequests)
+	cpuRequests, err := resource.ParseQuantity(resources.Requests.CPU)
 	if err != nil {
 		return nil, fmt.Errorf("invalid cpu request for %s pod", podName)
 	}
-	memRequests, err := resource.ParseQuantity(resources.MemoryRequests)
+	memRequests, err := resource.ParseQuantity(resources.Requests.Memory)
 	if err != nil {
 		return nil, fmt.Errorf("invalid memory request for %s pod", podName)
 	}
@@ -897,7 +897,7 @@ func (provider *Provider) ApplyWorkerDaemonSet(
 	podImage string,
 	podName string,
 	serviceAccountName string,
-	resources configStructs.Resources,
+	resources configStructs.ResourceRequirements,
 	imagePullPolicy core.PullPolicy,
 	imagePullSecrets []core.LocalObjectReference,
 	serviceMesh bool,

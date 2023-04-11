@@ -14,7 +14,7 @@ func CreateWorkers(
 	selfServiceAccountExists bool,
 	ctx context.Context,
 	namespace string,
-	resources configStructs.Resources,
+	resources configStructs.ResourceRequirements,
 	imagePullPolicy core.PullPolicy,
 	imagePullSecrets []core.LocalObjectReference,
 	serviceMesh bool,

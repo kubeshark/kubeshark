@@ -43,11 +43,11 @@ spec:
           name: kubeshark-worker-daemon-set
           resources:
             limits:
-              cpu: '{{ .Values.tap.resources.worker.cpu-limit }}'
-              memory: '{{ .Values.tap.resources.worker.memory-limit }}'
+              cpu: '{{ .Values.tap.resources.worker.limits.cpu }}'
+              memory: '{{ .Values.tap.resources.worker.limits.memory }}'
             requests:
-              cpu: '{{ .Values.tap.resources.worker.cpu-requests }}'
-              memory: '{{ .Values.tap.resources.worker.memory-requests }}'
+              cpu: '{{ .Values.tap.resources.worker.requests.cpu }}'
+              memory: '{{ .Values.tap.resources.worker.requests.memory }}'
           securityContext:
             capabilities:
               add:

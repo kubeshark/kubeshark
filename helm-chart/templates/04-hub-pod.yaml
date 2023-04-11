@@ -26,11 +26,11 @@ spec:
       name: kubeshark-hub
       resources:
         limits:
-          cpu: '{{ .Values.tap.resources.hub.cpu-limit }}'
-          memory: '{{ .Values.tap.resources.hub.memory-limit }}'
+          cpu: '{{ .Values.tap.resources.hub.limits.cpu }}'
+          memory: '{{ .Values.tap.resources.hub.limits.memory }}'
         requests:
-          cpu: '{{ .Values.tap.resources.hub.cpu-requests }}'
-          memory: '{{ .Values.tap.resources.hub.memory-requests }}'
+          cpu: '{{ .Values.tap.resources.hub.requests.cpu }}'
+          memory: '{{ .Values.tap.resources.hub.requests.memory }}'
   dnsPolicy: ClusterFirstWithHostNet
   imagePullSecrets: '{{ .Values.tap.docker.imagepullsecrets }}'
   serviceAccountName: kubeshark-service-account
