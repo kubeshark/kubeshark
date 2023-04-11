@@ -280,11 +280,11 @@ func (provider *Provider) BuildHubPod(opts *PodOptions) (*core.Pod, error) {
 		},
 	}
 
-	if len(config.Config.NodeSelectorTerms) > 0 {
+	if len(config.Config.Tap.NodeSelectorTerms) > 0 {
 		pod.Spec.Affinity = &core.Affinity{
 			NodeAffinity: &core.NodeAffinity{
 				RequiredDuringSchedulingIgnoredDuringExecution: &core.NodeSelector{
-					NodeSelectorTerms: config.Config.NodeSelectorTerms,
+					NodeSelectorTerms: config.Config.Tap.NodeSelectorTerms,
 				},
 			},
 		}
@@ -390,11 +390,11 @@ func (provider *Provider) BuildFrontPod(opts *PodOptions, hubHost string, hubPor
 		},
 	}
 
-	if len(config.Config.NodeSelectorTerms) > 0 {
+	if len(config.Config.Tap.NodeSelectorTerms) > 0 {
 		pod.Spec.Affinity = &core.Affinity{
 			NodeAffinity: &core.NodeAffinity{
 				RequiredDuringSchedulingIgnoredDuringExecution: &core.NodeSelector{
-					NodeSelectorTerms: config.Config.NodeSelectorTerms,
+					NodeSelectorTerms: config.Config.Tap.NodeSelectorTerms,
 				},
 			},
 		}
@@ -849,11 +849,11 @@ func (provider *Provider) BuildWorkerDaemonSet(
 		},
 	}
 
-	if len(config.Config.NodeSelectorTerms) > 0 {
+	if len(config.Config.Tap.NodeSelectorTerms) > 0 {
 		pod.Spec.Affinity = &core.Affinity{
 			NodeAffinity: &core.NodeAffinity{
 				RequiredDuringSchedulingIgnoredDuringExecution: &core.NodeSelector{
-					NodeSelectorTerms: config.Config.NodeSelectorTerms,
+					NodeSelectorTerms: config.Config.Tap.NodeSelectorTerms,
 				},
 			},
 		}

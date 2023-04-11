@@ -28,17 +28,15 @@ type ManifestsConfig struct {
 }
 
 type ConfigStruct struct {
-	Tap               configStructs.TapConfig       `yaml:"tap"`
-	Logs              configStructs.LogsConfig      `yaml:"logs"`
-	Config            configStructs.ConfigConfig    `yaml:"config,omitempty"`
-	Kube              KubeConfig                    `yaml:"kube"`
-	DumpLogs          bool                          `yaml:"dumplogs" default:"false"`
-	HeadlessMode      bool                          `yaml:"headless" default:"false"`
-	License           string                        `yaml:"license" default:""`
-	Scripting         configStructs.ScriptingConfig `yaml:"scripting"`
-	ResourceLabels    map[string]string             `yaml:"resourceLabels" default:"{}"`
-	NodeSelectorTerms []v1.NodeSelectorTerm         `yaml:"nodeSelectorTerms" default:"[]"`
-	Manifests         ManifestsConfig               `yaml:"manifests,omitempty"`
+	Tap          configStructs.TapConfig       `yaml:"tap"`
+	Logs         configStructs.LogsConfig      `yaml:"logs"`
+	Config       configStructs.ConfigConfig    `yaml:"config,omitempty"`
+	Kube         KubeConfig                    `yaml:"kube"`
+	DumpLogs     bool                          `yaml:"dumplogs" default:"false"`
+	HeadlessMode bool                          `yaml:"headless" default:"false"`
+	License      string                        `yaml:"license" default:""`
+	Scripting    configStructs.ScriptingConfig `yaml:"scripting"`
+	Manifests    ManifestsConfig               `yaml:"manifests,omitempty"`
 }
 
 func (config *ConfigStruct) ImagePullPolicy() v1.PullPolicy {

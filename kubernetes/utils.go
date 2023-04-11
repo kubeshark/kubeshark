@@ -8,7 +8,7 @@ func buildWithDefaultLabels(labels map[string]string, provider *Provider) map[st
 	labels[LabelManagedBy] = provider.managedBy
 	labels[LabelCreatedBy] = provider.createdBy
 
-	for k, v := range config.Config.ResourceLabels {
+	for k, v := range config.Config.Tap.ResourceLabels {
 		labels[k] = v
 	}
 
