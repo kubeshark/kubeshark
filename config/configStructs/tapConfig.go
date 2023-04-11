@@ -6,6 +6,7 @@ import (
 
 	"github.com/kubeshark/kubeshark/utils"
 	"github.com/rs/zerolog/log"
+	v1 "k8s.io/api/core/v1"
 )
 
 const (
@@ -70,21 +71,23 @@ type ResourcesConfig struct {
 }
 
 type TapConfig struct {
-	Docker        DockerConfig    `yaml:"docker"`
-	Proxy         ProxyConfig     `yaml:"proxy"`
-	PodRegexStr   string          `yaml:"regex" default:".*"`
-	Namespaces    []string        `yaml:"namespaces"`
-	AllNamespaces bool            `yaml:"allnamespaces" default:"true"`
-	SelfNamespace string          `yaml:"selfnamespace" default:"kubeshark"`
-	StorageLimit  string          `yaml:"storagelimit" default:"200MB"`
-	DryRun        bool            `yaml:"dryrun" default:"false"`
-	Pcap          string          `yaml:"pcap" default:""`
-	Resources     ResourcesConfig `yaml:"resources"`
-	ServiceMesh   bool            `yaml:"servicemesh" default:"true"`
-	Tls           bool            `yaml:"tls" default:"true"`
-	PacketCapture string          `yaml:"packetcapture" default:"libpcap"`
-	IgnoreTainted bool            `yaml:"ignoreTainted" default:"false"`
-	Debug         bool            `yaml:"debug" default:"false"`
+	Docker            DockerConfig          `yaml:"docker"`
+	Proxy             ProxyConfig           `yaml:"proxy"`
+	PodRegexStr       string                `yaml:"regex" default:".*"`
+	Namespaces        []string              `yaml:"namespaces"`
+	AllNamespaces     bool                  `yaml:"allnamespaces" default:"true"`
+	SelfNamespace     string                `yaml:"selfnamespace" default:"kubeshark"`
+	StorageLimit      string                `yaml:"storagelimit" default:"200MB"`
+	DryRun            bool                  `yaml:"dryrun" default:"false"`
+	Pcap              string                `yaml:"pcap" default:""`
+	Resources         ResourcesConfig       `yaml:"resources"`
+	ServiceMesh       bool                  `yaml:"servicemesh" default:"true"`
+	Tls               bool                  `yaml:"tls" default:"true"`
+	PacketCapture     string                `yaml:"packetcapture" default:"libpcap"`
+	IgnoreTainted     bool                  `yaml:"ignoreTainted" default:"false"`
+	ResourceLabels    map[string]string     `yaml:"resourceLabels" default:"{}"`
+	NodeSelectorTerms []v1.NodeSelectorTerm `yaml:"nodeSelectorTerms" default:"[]"`
+	Debug             bool                  `yaml:"debug" default:"false"`
 }
 
 func (config *TapConfig) PodRegex() *regexp.Regexp {
