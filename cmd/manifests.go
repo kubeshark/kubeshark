@@ -13,6 +13,8 @@ import (
 	"github.com/kubeshark/kubeshark/utils"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
+	v1 "k8s.io/api/core/v1"
+	rbac "k8s.io/api/rbac/v1"
 )
 
 const manifestSeperator = "---"
@@ -38,65 +40,16 @@ func init() {
 }
 
 func runManifests() {
-	kubernetesProvider, err := getKubernetesProviderForCli(true)
-	if err != nil {
-		log.Error().Err(err).Send()
-		return
-	}
-
-	namespace := kubernetesProvider.BuildNamespace(config.Config.Tap.SelfNamespace)
-
-	serviceAccount := kubernetesProvider.BuildServiceAccount()
-
-	clusterRole := kubernetesProvider.BuildClusterRole()
-
-	clusterRoleBinding := kubernetesProvider.BuildClusterRoleBinding()
-
-	hubPod, err := kubernetesProvider.BuildHubPod(&kubernetes.PodOptions{
-		Namespace:          config.Config.Tap.SelfNamespace,
-		PodName:            kubernetes.HubPodName,
-		PodImage:           docker.GetHubImage(),
-		ServiceAccountName: kubernetes.ServiceAccountName,
-		Resources:          config.Config.Tap.Resources.Hub,
-		ImagePullPolicy:    config.Config.ImagePullPolicy(),
-		ImagePullSecrets:   config.Config.ImagePullSecrets(),
-		Debug:              config.Config.Tap.Debug,
-	})
-	if err != nil {
-		log.Error().Err(err).Send()
-		return
-	}
-
-	hubService := kubernetesProvider.BuildHubService(config.Config.Tap.SelfNamespace)
-
-	frontPod, err := kubernetesProvider.BuildFrontPod(&kubernetes.PodOptions{
-		Namespace:          config.Config.Tap.SelfNamespace,
-		PodName:            kubernetes.FrontPodName,
-		PodImage:           docker.GetHubImage(),
-		ServiceAccountName: kubernetes.ServiceAccountName,
-		Resources:          config.Config.Tap.Resources.Hub,
-		ImagePullPolicy:    config.Config.ImagePullPolicy(),
-		ImagePullSecrets:   config.Config.ImagePullSecrets(),
-		Debug:              config.Config.Tap.Debug,
-	}, config.Config.Tap.Proxy.Host, fmt.Sprintf("%d", config.Config.Tap.Proxy.Hub.SrcPort))
-	if err != nil {
-		log.Error().Err(err).Send()
-		return
-	}
-
-	frontService := kubernetesProvider.BuildFrontService(config.Config.Tap.SelfNamespace)
-
-	workerDaemonSet, err := kubernetesProvider.BuildWorkerDaemonSet(
-		docker.GetWorkerImage(),
-		kubernetes.WorkerDaemonSetName,
-		kubernetes.ServiceAccountName,
-		config.Config.Tap.Resources.Worker,
-		config.Config.ImagePullPolicy(),
-		config.Config.ImagePullSecrets(),
-		config.Config.Tap.ServiceMesh,
-		config.Config.Tap.Tls,
-		config.Config.Tap.Debug,
-	)
+	namespace,
+		serviceAccount,
+		clusterRole,
+		clusterRoleBinding,
+		hubPod,
+		hubService,
+		frontPod,
+		frontService,
+		workerDaemonSet,
+		err := generateManifests()
 	if err != nil {
 		log.Error().Err(err).Send()
 		return
@@ -131,6 +84,82 @@ func runManifests() {
 		log.Error().Err(err).Send()
 		return
 	}
+}
+
+func generateManifests() (
+	namespace *v1.Namespace,
+	serviceAccount *v1.ServiceAccount,
+	clusterRole *rbac.ClusterRole,
+	clusterRoleBinding *rbac.ClusterRoleBinding,
+	hubPod *v1.Pod,
+	hubService *v1.Service,
+	frontPod *v1.Pod,
+	frontService *v1.Service,
+	workerDaemonSet *kubernetes.DaemonSet,
+	err error,
+) {
+	var kubernetesProvider *kubernetes.Provider
+	kubernetesProvider, err = getKubernetesProviderForCli(true)
+	if err != nil {
+		return
+	}
+
+	namespace = kubernetesProvider.BuildNamespace(config.Config.Tap.SelfNamespace)
+
+	serviceAccount = kubernetesProvider.BuildServiceAccount()
+
+	clusterRole = kubernetesProvider.BuildClusterRole()
+
+	clusterRoleBinding = kubernetesProvider.BuildClusterRoleBinding()
+
+	hubPod, err = kubernetesProvider.BuildHubPod(&kubernetes.PodOptions{
+		Namespace:          config.Config.Tap.SelfNamespace,
+		PodName:            kubernetes.HubPodName,
+		PodImage:           docker.GetHubImage(),
+		ServiceAccountName: kubernetes.ServiceAccountName,
+		Resources:          config.Config.Tap.Resources.Hub,
+		ImagePullPolicy:    config.Config.ImagePullPolicy(),
+		ImagePullSecrets:   config.Config.ImagePullSecrets(),
+		Debug:              config.Config.Tap.Debug,
+	})
+	if err != nil {
+		return
+	}
+
+	hubService = kubernetesProvider.BuildHubService(config.Config.Tap.SelfNamespace)
+
+	frontPod, err = kubernetesProvider.BuildFrontPod(&kubernetes.PodOptions{
+		Namespace:          config.Config.Tap.SelfNamespace,
+		PodName:            kubernetes.FrontPodName,
+		PodImage:           docker.GetHubImage(),
+		ServiceAccountName: kubernetes.ServiceAccountName,
+		Resources:          config.Config.Tap.Resources.Hub,
+		ImagePullPolicy:    config.Config.ImagePullPolicy(),
+		ImagePullSecrets:   config.Config.ImagePullSecrets(),
+		Debug:              config.Config.Tap.Debug,
+	}, config.Config.Tap.Proxy.Host, fmt.Sprintf("%d", config.Config.Tap.Proxy.Hub.SrcPort))
+	if err != nil {
+		return
+	}
+
+	frontService = kubernetesProvider.BuildFrontService(config.Config.Tap.SelfNamespace)
+
+	workerDaemonSet, err = kubernetesProvider.BuildWorkerDaemonSet(
+		docker.GetWorkerImage(),
+		kubernetes.WorkerDaemonSetName,
+		kubernetes.ServiceAccountName,
+		config.Config.Tap.Resources.Worker,
+		config.Config.ImagePullPolicy(),
+		config.Config.ImagePullSecrets(),
+		config.Config.Tap.ServiceMesh,
+		config.Config.Tap.Tls,
+		config.Config.Tap.Debug,
+	)
+	if err != nil {
+		return
+	}
+
+	return
 }
 
 func dumpManifests(objects map[string]interface{}) error {
