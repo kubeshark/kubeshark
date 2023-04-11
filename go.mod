@@ -4,7 +4,7 @@ go 1.17
 
 require (
 	github.com/creasty/defaults v1.5.2
-	github.com/docker/docker v20.10.22+incompatible
+	github.com/docker/docker v20.10.24+incompatible
 	github.com/docker/go-connections v0.4.0
 	github.com/docker/go-units v0.4.0
 	github.com/fsnotify/fsnotify v1.5.1
