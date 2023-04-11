@@ -1,0 +1,54 @@
+tap:
+  docker:
+    registry: docker.io/kubeshark
+    tag: latest
+    imagepullpolicy: Always
+    imagepullsecrets: []
+  proxy:
+    worker:
+      port: 8897
+      srvport: 8897
+    hub:
+      port: 8898
+      srvport: 80
+    front:
+      port: 8899
+      srvport: 80
+    host: 127.0.0.1
+  regex: .*
+  namespaces: []
+  allnamespaces: true
+  selfnamespace: kubeshark
+  storagelimit: 200MB
+  dryrun: false
+  pcap: ""
+  resources:
+    worker:
+      cpu-limit: 750m
+      memory-limit: 1Gi
+      cpu-requests: 50m
+      memory-requests: 50Mi
+    hub:
+      cpu-limit: 750m
+      memory-limit: 1Gi
+      cpu-requests: 50m
+      memory-requests: 50Mi
+  servicemesh: true
+  tls: true
+  packetcapture: libpcap
+  ignoreTainted: false
+  resourceLabels: {}
+  nodeSelectorTerms: []
+  debug: false
+logs:
+  file: ""
+kube:
+  configpath: ""
+  context: ""
+dumplogs: false
+headless: false
+license: ""
+scripting:
+  env: {}
+  source: ""
+  watchScripts: true

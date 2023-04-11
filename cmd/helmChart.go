@@ -6,6 +6,7 @@ import (
 	"path/filepath"
 	"sort"
 
+	"github.com/kubeshark/kubeshark/config"
 	"github.com/kubeshark/kubeshark/kubernetes"
 	"github.com/kubeshark/kubeshark/misc"
 	"github.com/kubeshark/kubeshark/utils"
@@ -156,6 +157,7 @@ func dumpHelmChart(objects map[string]interface{}) error {
 	}
 	sort.Strings(filenames)
 
+	// Generate templates
 	for _, filename := range filenames {
 		manifest, err := utils.PrettyYamlOmitEmpty(objects[filename])
 		if err != nil {
@@ -170,6 +172,7 @@ func dumpHelmChart(objects map[string]interface{}) error {
 		log.Info().Msgf("Helm chart template generated: %s", path)
 	}
 
+	// Copy LICENSE
 	licenseSrcPath := filepath.Join(".", "LICENSE")
 	licenseDstPath := filepath.Join(folder, "LICENSE")
 	err = copy.Copy(licenseSrcPath, licenseDstPath)
@@ -179,6 +182,7 @@ func dumpHelmChart(objects map[string]interface{}) error {
 		log.Info().Msgf("Helm chart license copied: %s", licenseDstPath)
 	}
 
+	// Generate Chart.yaml
 	chartMetadata := Metadata{
 		APIVersion:  "v2",
 		Name:        misc.Program,
@@ -221,6 +225,18 @@ func dumpHelmChart(objects map[string]interface{}) error {
 		return err
 	}
 	log.Info().Msgf("Helm chart Chart.yaml generated: %s", path)
+
+	// Generate values.yaml
+	values, err := utils.PrettyYaml(config.Config)
+	if err != nil {
+		return err
+	}
+	path = filepath.Join(folder, "values.yaml")
+	err = os.WriteFile(path, []byte(values), 0644)
+	if err != nil {
+		return err
+	}
+	log.Info().Msgf("Helm chart values.yaml generated: %s", path)
 
 	return nil
 }
