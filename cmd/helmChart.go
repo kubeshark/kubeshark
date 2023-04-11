@@ -1,10 +1,13 @@
 package cmd
 
 import (
+	"fmt"
 	"os"
 	"path/filepath"
 	"sort"
 
+	"github.com/kubeshark/kubeshark/kubernetes"
+	"github.com/kubeshark/kubeshark/misc"
 	"github.com/kubeshark/kubeshark/utils"
 	"github.com/otiai10/copy"
 	"github.com/rs/zerolog/log"
@@ -18,6 +21,87 @@ var helmChartCmd = &cobra.Command{
 		runHelmChart()
 		return nil
 	},
+}
+
+// Maintainer describes a Chart maintainer.
+type Maintainer struct {
+	// Name is a user name or organization name
+	Name string `json:"name,omitempty"`
+	// Email is an optional email address to contact the named maintainer
+	Email string `json:"email,omitempty"`
+	// URL is an optional URL to an address for the named maintainer
+	URL string `json:"url,omitempty"`
+}
+
+// Metadata for a Chart file. This models the structure of a Chart.yaml file.
+type Metadata struct {
+	// The name of the chart. Required.
+	Name string `json:"name,omitempty"`
+	// The URL to a relevant project page, git repo, or contact person
+	Home string `json:"home,omitempty"`
+	// Source is the URL to the source code of this chart
+	Sources []string `json:"sources,omitempty"`
+	// A SemVer 2 conformant version string of the chart. Required.
+	Version string `json:"version,omitempty"`
+	// A one-sentence description of the chart
+	Description string `json:"description,omitempty"`
+	// A list of string keywords
+	Keywords []string `json:"keywords,omitempty"`
+	// A list of name and URL/email address combinations for the maintainer(s)
+	Maintainers []*Maintainer `json:"maintainers,omitempty"`
+	// The URL to an icon file.
+	Icon string `json:"icon,omitempty"`
+	// The API Version of this chart. Required.
+	APIVersion string `json:"apiVersion,omitempty"`
+	// The condition to check to enable chart
+	Condition string `json:"condition,omitempty"`
+	// The tags to check to enable chart
+	Tags string `json:"tags,omitempty"`
+	// The version of the application enclosed inside of this chart.
+	AppVersion string `json:"appVersion,omitempty"`
+	// Whether or not this chart is deprecated
+	Deprecated bool `json:"deprecated,omitempty"`
+	// Annotations are additional mappings uninterpreted by Helm,
+	// made available for inspection by other applications.
+	Annotations map[string]string `json:"annotations,omitempty"`
+	// KubeVersion is a SemVer constraint specifying the version of Kubernetes required.
+	KubeVersion string `json:"kubeVersion,omitempty"`
+	// Dependencies are a list of dependencies for a chart.
+	Dependencies []*Dependency `json:"dependencies,omitempty"`
+	// Specifies the chart type: application or library
+	Type string `json:"type,omitempty"`
+}
+
+// Dependency describes a chart upon which another chart depends.
+//
+// Dependencies can be used to express developer intent, or to capture the state
+// of a chart.
+type Dependency struct {
+	// Name is the name of the dependency.
+	//
+	// This must mach the name in the dependency's Chart.yaml.
+	Name string `json:"name"`
+	// Version is the version (range) of this chart.
+	//
+	// A lock file will always produce a single version, while a dependency
+	// may contain a semantic version range.
+	Version string `json:"version,omitempty"`
+	// The URL to the repository.
+	//
+	// Appending `index.yaml` to this string should result in a URL that can be
+	// used to fetch the repository index.
+	Repository string `json:"repository"`
+	// A yaml path that resolves to a boolean, used for enabling/disabling charts (e.g. subchart1.enabled )
+	Condition string `json:"condition,omitempty"`
+	// Tags can be used to group charts for enabling/disabling together
+	Tags []string `json:"tags,omitempty"`
+	// Enabled bool determines if chart should be loaded
+	Enabled bool `json:"enabled,omitempty"`
+	// ImportValues holds the mapping of source values to parent key to be imported. Each item can be a
+	// string or pair of child/parent sublist items.
+	ImportValues []interface{} `json:"import-values,omitempty"`
+	// Alias usable alias to be used for the chart
+	Alias string `json:"alias,omitempty"`
 }
 
 func init() {
@@ -94,6 +178,49 @@ func dumpHelmChart(objects map[string]interface{}) error {
 	} else {
 		log.Info().Msgf("Helm chart license copied: %s", licenseDstPath)
 	}
+
+	chartMetadata := Metadata{
+		APIVersion:  "v2",
+		Name:        misc.Program,
+		Description: misc.Description,
+		Home:        misc.Website,
+		Sources:     []string{"https://github.com/kubeshark/kubeshark/tree/master/helm-chart"},
+		Keywords: []string{
+			"kubeshark",
+			"packet capture",
+			"traffic capture",
+			"traffic analyzer",
+			"network sniffer",
+			"observability",
+			"devops",
+			"microservice",
+			"forensics",
+			"api",
+		},
+		Maintainers: []*Maintainer{
+			{
+				Name:  misc.Software,
+				Email: misc.Email,
+				URL:   misc.Website,
+			},
+		},
+		Version:     misc.Ver,
+		AppVersion:  misc.Ver,
+		KubeVersion: fmt.Sprintf(">= %s-0", kubernetes.MinKubernetesServerVersion),
+		Type:        "application",
+	}
+
+	chart, err := utils.PrettyYamlOmitEmpty(chartMetadata)
+	if err != nil {
+		return err
+	}
+
+	path := filepath.Join(folder, "Chart.yaml")
+	err = os.WriteFile(path, []byte(chart), 0644)
+	if err != nil {
+		return err
+	}
+	log.Info().Msgf("Helm chart Chart.yaml generated: %s", path)
 
 	return nil
 }

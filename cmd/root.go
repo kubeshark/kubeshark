@@ -12,10 +12,10 @@ import (
 
 var rootCmd = &cobra.Command{
 	Use:   "kubeshark",
-	Short: fmt.Sprintf("%s: The API Traffic Analyzer for Kubernetes", misc.Software),
-	Long: fmt.Sprintf(`%s: The API Traffic Analyzer for Kubernetes
+	Short: fmt.Sprintf("%s: %s", misc.Software, misc.Description),
+	Long: fmt.Sprintf(`%s: %s
 An extensible Kubernetes-aware network sniffer and kernel tracer.
-For more info: %s`, misc.Software, misc.Website),
+For more info: %s`, misc.Software, misc.Description, misc.Website),
 	PersistentPreRunE: func(cmd *cobra.Command, args []string) error {
 		if err := config.InitConfig(cmd); err != nil {
 			log.Fatal().Err(err).Send()
