@@ -6,8 +6,8 @@ metadata:
     app: kubeshark-hub
     kubeshark-created-by: kubeshark
     kubeshark-managed-by: kubeshark
-  name: '{{ .Values.tap.selfnamespace }}'
-  namespace: kubeshark
+  name: kubeshark-hub
+  namespace: '{{ .Values.tap.selfnamespace }}'
 spec:
   containers:
     - command:
@@ -16,7 +16,7 @@ spec:
         - name: POD_REGEX
           value: '{{ .Values.tap.regex }}'
         - name: NAMESPACES
-          value: '{{ .Values.tap.allnamespaces | ternary "" .Values.tap.namespaces | quote }}'
+          value: '{{ .Values.tap.allnamespaces | ternary "" .Values.tap.namespaces }}'
         - name: STORAGE_LIMIT
           value: '{{ .Values.tap.storagelimit }}'
         - name: LICENSE
@@ -32,7 +32,6 @@ spec:
           cpu: '{{ .Values.tap.resources.hub.requests.cpu }}'
           memory: '{{ .Values.tap.resources.hub.requests.memory }}'
   dnsPolicy: ClusterFirstWithHostNet
-  imagePullSecrets: '{{ .Values.tap.docker.imagepullsecrets }}'
   serviceAccountName: kubeshark-service-account
   terminationGracePeriodSeconds: 0
   tolerations:

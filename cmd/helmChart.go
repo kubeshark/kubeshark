@@ -111,14 +111,16 @@ type Dependency struct {
 var namespaceMappings = map[string]interface{}{
 	"metadata.name": "{{ .Values.tap.selfnamespace }}",
 }
-var serviceAccountMappings = namespaceMappings
-var clusterRoleMappings = namespaceMappings
+var serviceAccountMappings = map[string]interface{}{
+	"metadata.namespace": "{{ .Values.tap.selfnamespace }}",
+}
+var clusterRoleMappings = serviceAccountMappings
 var clusterRoleBindingMappings = map[string]interface{}{
-	"metadata.name":         "{{ .Values.tap.selfnamespace }}",
+	"metadata.namespace":    "{{ .Values.tap.selfnamespace }}",
 	"subjects[0].namespace": "{{ .Values.tap.selfnamespace }}",
 }
 var hubPodMappings = map[string]interface{}{
-	"metadata.name": "{{ .Values.tap.selfnamespace }}",
+	"metadata.namespace": "{{ .Values.tap.selfnamespace }}",
 	"spec.containers[0].env": []map[string]interface{}{
 		{
 			"name":  "POD_REGEX",
@@ -126,7 +128,7 @@ var hubPodMappings = map[string]interface{}{
 		},
 		{
 			"name":  "NAMESPACES",
-			"value": "{{ .Values.tap.allnamespaces | ternary \"\" .Values.tap.namespaces | quote }}",
+			"value": "{{ .Values.tap.allnamespaces | ternary \"\" .Values.tap.namespaces }}",
 		},
 		{
 			"name":  "STORAGE_LIMIT",
@@ -139,26 +141,23 @@ var hubPodMappings = map[string]interface{}{
 	},
 	"spec.containers[0].image":                     "{{ .Values.tap.docker.registry }}/hub:{{ .Values.tap.docker.tag }}",
 	"spec.containers[0].imagePullPolicy":           "{{ .Values.tap.docker.imagePullPolicy }}",
-	"spec.imagePullSecrets":                        "{{ .Values.tap.docker.imagepullsecrets }}",
 	"spec.containers[0].resources.limits.cpu":      "{{ .Values.tap.resources.hub.limits.cpu }}",
 	"spec.containers[0].resources.limits.memory":   "{{ .Values.tap.resources.hub.limits.memory }}",
 	"spec.containers[0].resources.requests.cpu":    "{{ .Values.tap.resources.hub.requests.cpu }}",
 	"spec.containers[0].resources.requests.memory": "{{ .Values.tap.resources.hub.requests.memory }}",
 	"spec.containers[0].command[0]":                "{{ .Values.tap.debug | ternary \"./hub -debug\" \"./hub\" }}",
 }
-var hubServiceMappings = namespaceMappings
+var hubServiceMappings = serviceAccountMappings
 var frontPodMappings = map[string]interface{}{
-	"metadata.name":                      "{{ .Values.tap.selfnamespace }}",
+	"metadata.namespace":                 "{{ .Values.tap.selfnamespace }}",
 	"spec.containers[0].image":           "{{ .Values.tap.docker.registry }}/front:{{ .Values.tap.docker.tag }}",
 	"spec.containers[0].imagePullPolicy": "{{ .Values.tap.docker.imagePullPolicy }}",
-	"spec.imagePullSecrets":              "{{ .Values.tap.docker.imagepullsecrets }}",
 }
-var frontServiceMappings = namespaceMappings
+var frontServiceMappings = serviceAccountMappings
 var workerDaemonSetMappings = map[string]interface{}{
-	"metadata.name":                                              "{{ .Values.tap.selfnamespace }}",
+	"metadata.namespace":                                         "{{ .Values.tap.selfnamespace }}",
 	"spec.template.spec.containers[0].image":                     "{{ .Values.tap.docker.registry }}/worker:{{ .Values.tap.docker.tag }}",
 	"spec.template.spec.containers[0].imagePullPolicy":           "{{ .Values.tap.docker.imagePullPolicy }}",
-	"spec.imagePullSecrets":                                      "{{ .Values.tap.docker.imagepullsecrets }}",
 	"spec.template.spec.containers[0].resources.limits.cpu":      "{{ .Values.tap.resources.worker.limits.cpu }}",
 	"spec.template.spec.containers[0].resources.limits.memory":   "{{ .Values.tap.resources.worker.limits.memory }}",
 	"spec.template.spec.containers[0].resources.requests.cpu":    "{{ .Values.tap.resources.worker.requests.cpu }}",

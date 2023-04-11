@@ -6,8 +6,8 @@ metadata:
     app: kubeshark-front
     kubeshark-created-by: kubeshark
     kubeshark-managed-by: kubeshark
-  name: '{{ .Values.tap.selfnamespace }}'
-  namespace: kubeshark
+  name: kubeshark-front
+  namespace: '{{ .Values.tap.selfnamespace }}'
 spec:
   containers:
     - env:
@@ -35,7 +35,6 @@ spec:
           cpu: 50m
           memory: 50Mi
   dnsPolicy: ClusterFirstWithHostNet
-  imagePullSecrets: '{{ .Values.tap.docker.imagepullsecrets }}'
   serviceAccountName: kubeshark-service-account
   terminationGracePeriodSeconds: 0
   tolerations:

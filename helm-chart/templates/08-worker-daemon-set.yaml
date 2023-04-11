@@ -6,10 +6,9 @@ metadata:
     app: kubeshark-worker-daemon-set
     kubeshark-created-by: kubeshark
     kubeshark-managed-by: kubeshark
-  name: '{{ .Values.tap.selfnamespace }}'
-  namespace: kubeshark
+  name: kubeshark-worker-daemon-set
+  namespace: '{{ .Values.tap.selfnamespace }}'
 spec:
-  imagePullSecrets: '{{ .Values.tap.docker.imagepullsecrets }}'
   selector:
     matchLabels:
       app: kubeshark-worker-daemon-set

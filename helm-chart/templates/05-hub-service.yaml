@@ -5,8 +5,8 @@ metadata:
   labels:
     kubeshark-created-by: kubeshark
     kubeshark-managed-by: kubeshark
-  name: '{{ .Values.tap.selfnamespace }}'
-  namespace: kubeshark
+  name: kubeshark-hub
+  namespace: '{{ .Values.tap.selfnamespace }}'
 spec:
   ports:
     - name: kubeshark-hub

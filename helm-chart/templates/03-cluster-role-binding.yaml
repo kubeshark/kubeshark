@@ -6,8 +6,8 @@ metadata:
     kubeshark-cli-version: v1
     kubeshark-created-by: kubeshark
     kubeshark-managed-by: kubeshark
-  name: '{{ .Values.tap.selfnamespace }}'
-  namespace: kubeshark
+  name: kubeshark-service-account
+  namespace: '{{ .Values.tap.selfnamespace }}'
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
