@@ -12,6 +12,13 @@ spec:
   containers:
     - command:
         - ./hub
+      env:
+        - name: POD_REGEX
+          value: .*
+        - name: NAMESPACES
+        - name: STORAGE_LIMIT
+          value: 200MB
+        - name: LICENSE
       image: docker.io/kubeshark/hub:latest
       imagePullPolicy: Always
       name: kubeshark-hub

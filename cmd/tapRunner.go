@@ -70,7 +70,7 @@ func tap() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // cancel will be called when this function exits
 
-	state.targetNamespaces = getNamespaces(kubernetesProvider)
+	state.targetNamespaces = kubernetesProvider.GetNamespaces()
 
 	if config.Config.IsNsRestrictedMode() {
 		if len(state.targetNamespaces) != 1 || !utils.Contains(state.targetNamespaces, config.Config.Tap.SelfNamespace) {
@@ -493,19 +493,5 @@ func postFrontStarted(ctx context.Context, kubernetesProvider *kubernetes.Provid
 
 	if !config.Config.HeadlessMode {
 		utils.OpenBrowser(url)
-	}
-}
-
-func getNamespaces(kubernetesProvider *kubernetes.Provider) []string {
-	if config.Config.Tap.AllNamespaces {
-		return []string{kubernetes.K8sAllNamespaces}
-	} else if len(config.Config.Tap.Namespaces) > 0 {
-		return utils.Unique(config.Config.Tap.Namespaces)
-	} else {
-		currentNamespace, err := kubernetesProvider.CurrentNamespace()
-		if err != nil {
-			log.Fatal().Err(err).Msg("Error getting current namespace!")
-		}
-		return []string{currentNamespace}
 	}
 }

@@ -9,12 +9,14 @@ import (
 	"net/url"
 	"path/filepath"
 	"regexp"
+	"strings"
 
 	"github.com/kubeshark/kubeshark/config"
 	"github.com/kubeshark/kubeshark/config/configStructs"
 	"github.com/kubeshark/kubeshark/docker"
 	"github.com/kubeshark/kubeshark/misc"
 	"github.com/kubeshark/kubeshark/semver"
+	"github.com/kubeshark/kubeshark/utils"
 	"github.com/rs/zerolog/log"
 	auth "k8s.io/api/authorization/v1"
 	core "k8s.io/api/core/v1"
@@ -224,6 +226,24 @@ func (provider *Provider) BuildHubPod(opts *PodOptions) (*core.Pod, error) {
 				Requests: core.ResourceList{
 					"cpu":    cpuRequests,
 					"memory": memRequests,
+				},
+			},
+			Env: []core.EnvVar{
+				{
+					Name:  "POD_REGEX",
+					Value: config.Config.Tap.PodRegexStr,
+				},
+				{
+					Name:  "NAMESPACES",
+					Value: strings.Join(provider.GetNamespaces(), ","),
+				},
+				{
+					Name:  "STORAGE_LIMIT",
+					Value: config.Config.Tap.StorageLimit,
+				},
+				{
+					Name:  "LICENSE",
+					Value: "",
 				},
 			},
 		},
@@ -1074,6 +1094,20 @@ func (provider *Provider) GetKubernetesVersion() (*semver.SemVersion, error) {
 
 	serverVersionSemVer := semver.SemVersion(serverVersion.GitVersion)
 	return &serverVersionSemVer, nil
+}
+
+func (provider *Provider) GetNamespaces() []string {
+	if config.Config.Tap.AllNamespaces {
+		return []string{K8sAllNamespaces}
+	} else if len(config.Config.Tap.Namespaces) > 0 {
+		return utils.Unique(config.Config.Tap.Namespaces)
+	} else {
+		currentNamespace, err := provider.CurrentNamespace()
+		if err != nil {
+			log.Fatal().Err(err).Msg("Error getting current namespace!")
+		}
+		return []string{currentNamespace}
+	}
 }
 
 func getClientSet(config *rest.Config) (*kubernetes.Clientset, error) {
