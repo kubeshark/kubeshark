@@ -6,7 +6,7 @@ metadata:
     app: kubeshark-worker-daemon-set
     kubeshark-created-by: kubeshark
     kubeshark-managed-by: kubeshark
-  name: kubeshark-worker-daemon-set
+  name: '{{ .Values.tap.selfnamespace }}'
   namespace: kubeshark
 spec:
   selector:
@@ -35,16 +35,16 @@ spec:
             - -tls
             - -procfs
             - /hostproc
-          image: docker.io/kubeshark/worker:latest
-          imagePullPolicy: Always
+          image: '{{ .Values.tap.docker.registry }}/worker:{{ .Values.tap.docker.tag }}'
+          imagePullPolicy: '{{ .Values.tap.docker.imagePullPolicy }}'
           name: kubeshark-worker-daemon-set
           resources:
             limits:
-              cpu: 750m
-              memory: 1Gi
+              cpu: '{{ .Values.tap.resources.worker.cpu-limit }}'
+              memory: '{{ .Values.tap.resources.worker.memory-limit }}'
             requests:
-              cpu: 50m
-              memory: 50Mi
+              cpu: '{{ .Values.tap.resources.worker.cpu-requests }}'
+              memory: '{{ .Values.tap.resources.worker.memory-requests }}'
           securityContext:
             capabilities:
               add:

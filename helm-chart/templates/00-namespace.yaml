@@ -5,6 +5,6 @@ metadata:
   labels:
     kubeshark-created-by: kubeshark
     kubeshark-managed-by: kubeshark
-  name: kubeshark
+  name: '{{ .Values.tap.selfnamespace }}'
 spec: {}
 status: {}

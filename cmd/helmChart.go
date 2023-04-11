@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"path/filepath"
@@ -10,6 +11,8 @@ import (
 	"github.com/kubeshark/kubeshark/kubernetes"
 	"github.com/kubeshark/kubeshark/misc"
 	"github.com/kubeshark/kubeshark/utils"
+	"github.com/ohler55/ojg/jp"
+	"github.com/ohler55/ojg/oj"
 	"github.com/otiai10/copy"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
@@ -105,6 +108,59 @@ type Dependency struct {
 	Alias string `json:"alias,omitempty"`
 }
 
+var namespaceMappings = map[string]interface{}{
+	"metadata.name": "{{ .Values.tap.selfnamespace }}",
+}
+var serviceAccountMappings = namespaceMappings
+var clusterRoleMappings = namespaceMappings
+var clusterRoleBindingMappings = map[string]interface{}{
+	"metadata.name":         "{{ .Values.tap.selfnamespace }}",
+	"subjects[0].namespace": "{{ .Values.tap.selfnamespace }}",
+}
+var hubPodMappings = map[string]interface{}{
+	"metadata.name": "{{ .Values.tap.selfnamespace }}",
+	"spec.containers[0].env": []map[string]interface{}{
+		{
+			"name":  "POD_REGEX",
+			"value": "{{ .Values.tap.regex }}",
+		},
+		{
+			"name":  "NAMESPACES",
+			"value": "{{ .Values.tap.namespaces }}",
+		},
+		{
+			"name":  "STORAGE_LIMIT",
+			"value": "{{ .Values.tap.storagelimit }}",
+		},
+		{
+			"name":  "LICENSE",
+			"value": "{{ .Values.license }}",
+		},
+	},
+	"spec.containers[0].image":                     "{{ .Values.tap.docker.registry }}/hub:{{ .Values.tap.docker.tag }}",
+	"spec.containers[0].imagePullPolicy":           "{{ .Values.tap.docker.imagePullPolicy }}",
+	"spec.containers[0].resources.limits.cpu":      "{{ .Values.tap.resources.hub.cpu-limit }}",
+	"spec.containers[0].resources.limits.memory":   "{{ .Values.tap.resources.hub.memory-limit }}",
+	"spec.containers[0].resources.requests.cpu":    "{{ .Values.tap.resources.hub.cpu-requests }}",
+	"spec.containers[0].resources.requests.memory": "{{ .Values.tap.resources.hub.memory-requests }}",
+}
+var hubServiceMappings = namespaceMappings
+var frontPodMappings = map[string]interface{}{
+	"metadata.name":                      "{{ .Values.tap.selfnamespace }}",
+	"spec.containers[0].image":           "{{ .Values.tap.docker.registry }}/front:{{ .Values.tap.docker.tag }}",
+	"spec.containers[0].imagePullPolicy": "{{ .Values.tap.docker.imagePullPolicy }}",
+}
+var frontServiceMappings = namespaceMappings
+var workerDaemonSetMappings = map[string]interface{}{
+	"metadata.name":                                              "{{ .Values.tap.selfnamespace }}",
+	"spec.template.spec.containers[0].image":                     "{{ .Values.tap.docker.registry }}/worker:{{ .Values.tap.docker.tag }}",
+	"spec.template.spec.containers[0].imagePullPolicy":           "{{ .Values.tap.docker.imagePullPolicy }}",
+	"spec.template.spec.containers[0].resources.limits.cpu":      "{{ .Values.tap.resources.worker.cpu-limit }}",
+	"spec.template.spec.containers[0].resources.limits.memory":   "{{ .Values.tap.resources.worker.memory-limit }}",
+	"spec.template.spec.containers[0].resources.requests.cpu":    "{{ .Values.tap.resources.worker.cpu-requests }}",
+	"spec.template.spec.containers[0].resources.requests.memory": "{{ .Values.tap.resources.worker.memory-requests }}",
+}
+
 func init() {
 	rootCmd.AddCommand(helmChartCmd)
 }
@@ -126,20 +182,62 @@ func runHelmChart() {
 	}
 
 	err = dumpHelmChart(map[string]interface{}{
-		"00-namespace.yaml":            namespace,
-		"01-service-account.yaml":      serviceAccount,
-		"02-cluster-role.yaml":         clusterRole,
-		"03-cluster-role-binding.yaml": clusterRoleBinding,
-		"04-hub-pod.yaml":              hubPod,
-		"05-hub-service.yaml":          hubService,
-		"06-front-pod.yaml":            frontPod,
-		"07-front-service.yaml":        frontService,
-		"08-worker-daemon-set.yaml":    workerDaemonSet,
+		"00-namespace.yaml":            template(namespace, namespaceMappings),
+		"01-service-account.yaml":      template(serviceAccount, serviceAccountMappings),
+		"02-cluster-role.yaml":         template(clusterRole, clusterRoleMappings),
+		"03-cluster-role-binding.yaml": template(clusterRoleBinding, clusterRoleBindingMappings),
+		"04-hub-pod.yaml":              template(hubPod, hubPodMappings),
+		"05-hub-service.yaml":          template(hubService, hubServiceMappings),
+		"06-front-pod.yaml":            template(frontPod, frontPodMappings),
+		"07-front-service.yaml":        template(frontService, frontServiceMappings),
+		"08-worker-daemon-set.yaml":    template(workerDaemonSet, workerDaemonSetMappings),
 	})
 	if err != nil {
 		log.Error().Err(err).Send()
 		return
 	}
+}
+
+func template(object interface{}, mappings map[string]interface{}) (template interface{}) {
+	var err error
+	var data []byte
+	data, err = json.Marshal(object)
+	if err != nil {
+		log.Error().Err(err).Send()
+		return
+	}
+
+	var obj interface{}
+	obj, err = oj.Parse(data)
+	if err != nil {
+		log.Error().Err(err).Send()
+		return
+	}
+
+	for path, value := range mappings {
+		var x jp.Expr
+		x, err = jp.ParseString(path)
+		if err != nil {
+			log.Error().Err(err).Send()
+			return
+		}
+
+		err = x.Set(obj, value)
+		if err != nil {
+			log.Error().Err(err).Send()
+			return
+		}
+	}
+
+	newJson := oj.JSON(obj)
+
+	err = json.Unmarshal([]byte(newJson), &template)
+	if err != nil {
+		log.Error().Err(err).Send()
+		return
+	}
+
+	return
 }
 
 func dumpHelmChart(objects map[string]interface{}) error {

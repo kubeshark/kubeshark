@@ -6,7 +6,7 @@ metadata:
     app: kubeshark-front
     kubeshark-created-by: kubeshark
     kubeshark-managed-by: kubeshark
-  name: kubeshark-front
+  name: '{{ .Values.tap.selfnamespace }}'
   namespace: kubeshark
 spec:
   containers:
@@ -17,8 +17,8 @@ spec:
           value: ' '
         - name: REACT_APP_HUB_PORT
           value: "8898"
-      image: docker.io/kubeshark/front:latest
-      imagePullPolicy: Always
+      image: '{{ .Values.tap.docker.registry }}/front:{{ .Values.tap.docker.tag }}'
+      imagePullPolicy: '{{ .Values.tap.docker.imagePullPolicy }}'
       name: kubeshark-front
       readinessProbe:
         failureThreshold: 3

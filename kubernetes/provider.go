@@ -448,7 +448,7 @@ func (provider *Provider) BuildFrontService(namespace string) *core.Service {
 				{
 					Name:       FrontServiceName,
 					TargetPort: intstr.FromInt(80),
-					Port:       int32(config.Config.Tap.Proxy.Front.DstPort),
+					Port:       80,
 				},
 			},
 			Type:     core.ServiceTypeClusterIP,
