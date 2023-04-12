@@ -575,7 +575,7 @@ func (provider *Provider) BuildClusterRoleBinding() *rbac.ClusterRoleBinding {
 			APIVersion: "rbac.authorization.k8s.io/v1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:      ServiceAccountName,
+			Name:      ClusterRoleBindingName,
 			Namespace: config.Config.Tap.SelfNamespace,
 			Labels: buildWithDefaultLabels(map[string]string{
 				fmt.Sprintf("%s-cli-version", misc.Program): misc.RBACVersion,

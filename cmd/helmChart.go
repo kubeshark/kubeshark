@@ -268,7 +268,7 @@ func dumpHelmChart(objects map[string]interface{}) error {
 		}
 
 		path := filepath.Join(templatesFolder, filename)
-		err = os.WriteFile(path, []byte(manifest), 0644)
+		err = os.WriteFile(path, []byte(manifestHeader+manifest), 0644)
 		if err != nil {
 			return err
 		}
