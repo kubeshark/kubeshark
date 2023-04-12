@@ -1,6 +1,6 @@
 # Helm Chart of Kubeshark
 
-## Officially (WIP)
+## Officially
 
 Add the Helm repo for Kubeshark:
 
