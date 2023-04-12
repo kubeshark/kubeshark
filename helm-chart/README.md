@@ -50,4 +50,4 @@ kubectl port-forward -n kubeshark service/kubeshark-hub 8898:80 & \
 kubectl port-forward -n kubeshark service/kubeshark-front 8899:80
 ```
 
-Visit [localhost:8899](http://localhost:8899/)
+Visit [localhost:8899](http://localhost:8899)

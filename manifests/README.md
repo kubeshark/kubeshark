@@ -2,6 +2,13 @@
 
 ## Apply
 
+Clone the repo:
+
+```shell
+git clone git@github.com:kubeshark/kubeshark.git --depth 1
+cd kubeshark/manifests
+```
+
 To apply the manifests, run:
 
 ```shell
@@ -25,4 +32,4 @@ kubectl port-forward -n kubeshark service/kubeshark-hub 8898:80 & \
 kubectl port-forward -n kubeshark service/kubeshark-front 8899:80
 ```
 
-Visit [localhost:8899](http://localhost:8899/)
+Visit [localhost:8899](http://localhost:8899)
