@@ -435,35 +435,36 @@ func postHubStarted(ctx context.Context, kubernetesProvider *kubernetes.Provider
 		// Grace period
 		log.Info().Msg("Waiting for worker containers...")
 		time.Sleep(5 * time.Second)
-	}
+	} else {
 
-	// Storage limit
-	connector.PostStorageLimitToHub(config.Config.Tap.StorageLimitBytes())
+		// Storage limit
+		connector.PostStorageLimitToHub(config.Config.Tap.StorageLimitBytes())
 
-	// Pod regex
-	connector.PostRegexToHub(config.Config.Tap.PodRegexStr, state.targetNamespaces)
+		// Pod regex
+		connector.PostRegexToHub(config.Config.Tap.PodRegexStr, state.targetNamespaces)
 
-	// License
-	if config.Config.License != "" {
-		connector.PostLicense(config.Config.License)
-	}
+		// License
+		if config.Config.License != "" {
+			connector.PostLicense(config.Config.License)
+		}
 
-	// Scripting
-	connector.PostEnv(config.Config.Scripting.Env)
+		// Scripting
+		connector.PostEnv(config.Config.Scripting.Env)
 
-	scripts, err := config.Config.Scripting.GetScripts()
-	if err != nil {
-		log.Error().Err(err).Send()
-	}
-
-	for _, script := range scripts {
-		_, err = connector.PostScript(script)
+		scripts, err := config.Config.Scripting.GetScripts()
 		if err != nil {
 			log.Error().Err(err).Send()
 		}
-	}
 
-	connector.PostScriptDone()
+		for _, script := range scripts {
+			_, err = connector.PostScript(script)
+			if err != nil {
+				log.Error().Err(err).Send()
+			}
+		}
+
+		connector.PostScriptDone()
+	}
 
 	if !update {
 		// Hub proxy URL

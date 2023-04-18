@@ -331,6 +331,11 @@ func pcap(tarPath string) {
 	connector = connect.NewConnector(kubernetes.GetLocalhostOnPort(config.Config.Tap.Proxy.Hub.SrcPort), connect.DefaultRetries, connect.DefaultTimeout)
 	connector.PostWorkerPodToHub(workerPod)
 
+	// License
+	if config.Config.License != "" {
+		connector.PostLicense(config.Config.License)
+	}
+
 	log.Info().
 		Str("url", kubernetes.GetLocalhostOnPort(config.Config.Tap.Proxy.Hub.SrcPort)).
 		Msg(fmt.Sprintf(utils.Green, "Hub is available at:"))

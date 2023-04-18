@@ -3,6 +3,7 @@ package kubernetes
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -212,6 +213,25 @@ func (provider *Provider) BuildHubPod(opts *PodOptions) (*core.Pod, error) {
 		command = append(command, "-debug")
 	}
 
+	// Scripting environment variables
+	scriptingEnvMarshalled, err := json.Marshal(config.Config.Scripting.Env)
+	if err != nil {
+		return nil, err
+	}
+
+	// Scripting scripts
+	scripts, err := config.Config.Scripting.GetScripts()
+	if err != nil {
+		return nil, err
+	}
+	if scripts == nil {
+		scripts = []*misc.Script{}
+	}
+	scriptsMarshalled, err := json.Marshal(scripts)
+	if err != nil {
+		return nil, err
+	}
+
 	containers := []core.Container{
 		{
 			Name:            opts.PodName,
@@ -244,6 +264,14 @@ func (provider *Provider) BuildHubPod(opts *PodOptions) (*core.Pod, error) {
 				{
 					Name:  "LICENSE",
 					Value: "",
+				},
+				{
+					Name:  "SCRIPTING_ENV",
+					Value: string(scriptingEnvMarshalled),
+				},
+				{
+					Name:  "SCRIPTING_SCRIPTS",
+					Value: string(scriptsMarshalled),
 				},
 			},
 		},
