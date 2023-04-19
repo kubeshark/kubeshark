@@ -18,7 +18,7 @@ tap:
   regex: .*
   namespaces: []
   selfnamespace: kubeshark
-  storagelimit: 300Mi
+  storagelimit: 200Mi
   dryrun: false
   pcap: ""
   resources:

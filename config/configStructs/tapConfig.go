@@ -81,7 +81,7 @@ type TapConfig struct {
 	PodRegexStr       string                `yaml:"regex" default:".*"`
 	Namespaces        []string              `yaml:"namespaces"`
 	SelfNamespace     string                `yaml:"selfnamespace" default:"kubeshark"`
-	StorageLimit      string                `yaml:"storagelimit" default:"300Mi"`
+	StorageLimit      string                `yaml:"storagelimit" default:"200Mi"`
 	DryRun            bool                  `yaml:"dryrun" default:"false"`
 	Pcap              string                `yaml:"pcap" default:""`
 	Resources         ResourcesConfig       `yaml:"resources"`
