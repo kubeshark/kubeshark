@@ -21,6 +21,10 @@ spec:
         - name: STORAGE_LIMIT
           value: 200MB
         - name: LICENSE
+        - name: SCRIPTING_ENV
+          value: '{}'
+        - name: SCRIPTING_SCRIPTS
+          value: '[]'
       image: docker.io/kubeshark/hub:latest
       imagePullPolicy: Always
       name: kubeshark-hub
