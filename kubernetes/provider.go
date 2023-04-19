@@ -249,10 +249,6 @@ func (provider *Provider) BuildHubPod(opts *PodOptions) (*core.Pod, error) {
 					Value: strings.Join(provider.GetNamespaces(), ","),
 				},
 				{
-					Name:  "STORAGE_LIMIT",
-					Value: config.Config.Tap.StorageLimit,
-				},
-				{
 					Name:  "LICENSE",
 					Value: "",
 				},
@@ -680,6 +676,11 @@ func (provider *Provider) RemoveService(ctx context.Context, namespace string, s
 	return provider.handleRemovalError(err)
 }
 
+func (provider *Provider) RemovePersistentVolumeClaim(ctx context.Context, namespace string, persistentVolumeClaimName string) error {
+	err := provider.clientSet.CoreV1().PersistentVolumeClaims(namespace).Delete(ctx, persistentVolumeClaimName, metav1.DeleteOptions{})
+	return provider.handleRemovalError(err)
+}
+
 func (provider *Provider) RemoveDaemonSet(ctx context.Context, namespace string, daemonSetName string) error {
 	err := provider.clientSet.AppsV1().DaemonSets(namespace).Delete(ctx, daemonSetName, metav1.DeleteOptions{})
 	return provider.handleRemovalError(err)
@@ -693,6 +694,38 @@ func (provider *Provider) handleRemovalError(err error) error {
 	}
 
 	return err
+}
+
+func (provider *Provider) BuildPersistentVolumeClaim() (*core.PersistentVolumeClaim, error) {
+	capacity, err := resource.ParseQuantity(config.Config.Tap.StorageLimit)
+	if err != nil {
+		return nil, fmt.Errorf("invalid capacity for the workers: %s", config.Config.Tap.StorageLimit)
+	}
+
+	storageClassName := "standard"
+
+	return &core.PersistentVolumeClaim{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "PersistentVolumeClaim",
+			APIVersion: "v1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      PersistentVolumeClaimName,
+			Namespace: config.Config.Tap.SelfNamespace,
+			Labels: buildWithDefaultLabels(map[string]string{
+				fmt.Sprintf("%s-cli-version", misc.Program): misc.RBACVersion,
+			}, provider),
+		},
+		Spec: core.PersistentVolumeClaimSpec{
+			Resources: core.ResourceRequirements{
+				Requests: core.ResourceList{
+					core.ResourceStorage: capacity,
+				},
+			},
+			AccessModes:      []core.PersistentVolumeAccessMode{core.ReadWriteMany},
+			StorageClassName: &storageClassName,
+		},
+	}, nil
 }
 
 func (provider *Provider) BuildWorkerDaemonSet(
@@ -813,14 +846,32 @@ func (provider *Provider) BuildWorkerDaemonSet(
 		ReadOnly:  true,
 	}
 
+	// Persistent volume and its mount
+	persistentVolume := core.Volume{
+		Name: PersistentVolumeName,
+		VolumeSource: core.VolumeSource{
+			PersistentVolumeClaim: &core.PersistentVolumeClaimVolumeSource{
+				ClaimName: PersistentVolumeClaimName,
+			},
+		},
+	}
+	persistentVolumeMount := core.VolumeMount{
+		Name:      PersistentVolumeName,
+		MountPath: PersistentVolumeHostPath,
+	}
+
 	// Containers
 	containers := []core.Container{
 		{
 			Name:            podName,
 			Image:           podImage,
 			ImagePullPolicy: imagePullPolicy,
-			VolumeMounts:    []core.VolumeMount{procfsVolumeMount, sysfsVolumeMount},
-			Command:         command,
+			VolumeMounts: []core.VolumeMount{
+				procfsVolumeMount,
+				sysfsVolumeMount,
+				persistentVolumeMount,
+			},
+			Command: command,
 			Resources: core.ResourceRequirements{
 				Limits: core.ResourceList{
 					"cpu":    cpuLimit,
@@ -865,10 +916,14 @@ func (provider *Provider) BuildWorkerDaemonSet(
 			}, provider),
 		},
 		Spec: core.PodSpec{
-			ServiceAccountName:            ServiceAccountName,
-			HostNetwork:                   true,
-			Containers:                    containers,
-			Volumes:                       []core.Volume{procfsVolume, sysfsVolume},
+			ServiceAccountName: ServiceAccountName,
+			HostNetwork:        true,
+			Containers:         containers,
+			Volumes: []core.Volume{
+				procfsVolume,
+				sysfsVolume,
+				persistentVolume,
+			},
 			DNSPolicy:                     core.DNSClusterFirstWithHostNet,
 			TerminationGracePeriodSeconds: new(int64),
 			Tolerations:                   tolerations,
@@ -907,6 +962,10 @@ func (provider *Provider) BuildWorkerDaemonSet(
 			Template: pod,
 		},
 	}, nil
+}
+
+func (provider *Provider) CreatePersistentVolumeClaim(ctx context.Context, namespace string, persistentVolumeClaim *core.PersistentVolumeClaim) (*core.PersistentVolumeClaim, error) {
+	return provider.clientSet.CoreV1().PersistentVolumeClaims(namespace).Create(ctx, persistentVolumeClaim, metav1.CreateOptions{})
 }
 
 func (provider *Provider) ApplyWorkerDaemonSet(

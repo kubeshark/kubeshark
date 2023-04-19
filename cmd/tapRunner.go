@@ -432,10 +432,6 @@ func postHubStarted(ctx context.Context, kubernetesProvider *kubernetes.Provider
 			log.Error().Err(err).Send()
 		}
 	} else {
-
-		// Storage limit
-		connector.PostStorageLimitToHub(config.Config.Tap.StorageLimitBytes())
-
 		// Pod regex
 		connector.PostRegexToHub(config.Config.Tap.PodRegexStr, state.targetNamespaces)
 

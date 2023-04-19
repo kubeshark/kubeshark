@@ -18,8 +18,6 @@ spec:
         - name: POD_REGEX
           value: .*
         - name: NAMESPACES
-        - name: STORAGE_LIMIT
-          value: 200MB
         - name: LICENSE
         - name: SCRIPTING_ENV
           value: '{}'

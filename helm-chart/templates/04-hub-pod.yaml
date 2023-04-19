@@ -19,8 +19,6 @@ spec:
           value: '{{ .Values.tap.regex }}'
         - name: NAMESPACES
           value: '{{ gt (len .Values.tap.namespaces) 0 | ternary (join "," .Values.tap.namespaces) "" }}'
-        - name: STORAGE_LIMIT
-          value: '{{ .Values.tap.storagelimit }}'
         - name: LICENSE
           value: '{{ .Values.license }}'
         - name: SCRIPTING_ENV

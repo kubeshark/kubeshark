@@ -111,7 +111,12 @@ func (d *DaemonSet) GenerateApplyConfiguration(name string, namespace string, po
 	// Volumes
 	for _, v := range p.Volumes {
 		volume := applyconfcore.Volume()
-		volume.WithName(v.Name).WithHostPath(applyconfcore.HostPathVolumeSource().WithPath(v.HostPath.Path))
+		if v.HostPath != nil {
+			volume.WithName(v.Name).WithHostPath(applyconfcore.HostPathVolumeSource().WithPath(v.HostPath.Path))
+		}
+		if v.PersistentVolumeClaim != nil {
+			volume.WithName(v.Name).WithPersistentVolumeClaim(applyconfcore.PersistentVolumeClaimVolumeSource().WithClaimName(v.PersistentVolumeClaim.ClaimName))
+		}
 		podSpec.WithVolumes(volume)
 	}
 

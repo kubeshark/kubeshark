@@ -4,8 +4,6 @@ import (
 	"fmt"
 	"regexp"
 
-	"github.com/kubeshark/kubeshark/utils"
-	"github.com/rs/zerolog/log"
 	v1 "k8s.io/api/core/v1"
 )
 
@@ -83,7 +81,7 @@ type TapConfig struct {
 	PodRegexStr       string                `yaml:"regex" default:".*"`
 	Namespaces        []string              `yaml:"namespaces"`
 	SelfNamespace     string                `yaml:"selfnamespace" default:"kubeshark"`
-	StorageLimit      string                `yaml:"storagelimit" default:"200MB"`
+	StorageLimit      string                `yaml:"storagelimit" default:"300Mi"`
 	DryRun            bool                  `yaml:"dryrun" default:"false"`
 	Pcap              string                `yaml:"pcap" default:""`
 	Resources         ResourcesConfig       `yaml:"resources"`
@@ -101,23 +99,10 @@ func (config *TapConfig) PodRegex() *regexp.Regexp {
 	return podRegex
 }
 
-func (config *TapConfig) StorageLimitBytes() int64 {
-	storageLimitBytes, err := utils.HumanReadableToBytes(config.StorageLimit)
-	if err != nil {
-		log.Fatal().Err(err).Send()
-	}
-	return storageLimitBytes
-}
-
 func (config *TapConfig) Validate() error {
 	_, compileErr := regexp.Compile(config.PodRegexStr)
 	if compileErr != nil {
 		return fmt.Errorf("%s is not a valid regex %s", config.PodRegexStr, compileErr)
-	}
-
-	_, parseHumanDataSizeErr := utils.HumanReadableToBytes(config.StorageLimit)
-	if parseHumanDataSizeErr != nil {
-		return fmt.Errorf("Could not parse --%s value %s", StorageLimitLabel, config.StorageLimit)
 	}
 
 	return nil

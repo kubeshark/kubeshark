@@ -14,6 +14,9 @@ const (
 	ServiceAccountName         = SelfResourcesPrefix + "service-account"
 	WorkerDaemonSetName        = SelfResourcesPrefix + "worker-daemon-set"
 	WorkerPodName              = SelfResourcesPrefix + "worker"
+	PersistentVolumeName       = SelfResourcesPrefix + "persistent-volume"
+	PersistentVolumeClaimName  = SelfResourcesPrefix + "persistent-volume-claim"
+	PersistentVolumeHostPath   = "/app/data"
 	MinKubernetesServerVersion = "1.16.0"
 )
 

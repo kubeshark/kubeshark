@@ -131,10 +131,6 @@ var hubPodMappings = map[string]interface{}{
 			"value": "{{ gt (len .Values.tap.namespaces) 0 | ternary (join \",\" .Values.tap.namespaces) \"\" }}",
 		},
 		{
-			"name":  "STORAGE_LIMIT",
-			"value": "{{ .Values.tap.storagelimit }}",
-		},
-		{
 			"name":  "LICENSE",
 			"value": "{{ .Values.license }}",
 		},
@@ -162,6 +158,10 @@ var frontPodMappings = map[string]interface{}{
 	"spec.containers[0].imagePullPolicy": "{{ .Values.tap.docker.imagePullPolicy }}",
 }
 var frontServiceMappings = serviceAccountMappings
+var persistentVolumeMappings = map[string]interface{}{
+	"metadata.namespace":              "{{ .Values.tap.selfnamespace }}",
+	"spec.resources.requests.storage": "{{ .Values.tap.storagelimit }}",
+}
 var workerDaemonSetMappings = map[string]interface{}{
 	"metadata.namespace":                                         "{{ .Values.tap.selfnamespace }}",
 	"spec.template.spec.containers[0].image":                     "{{ .Values.tap.docker.registry }}/worker:{{ .Values.tap.docker.tag }}",
@@ -187,6 +187,7 @@ func runHelmChart() {
 		hubService,
 		frontPod,
 		frontService,
+		persistentVolume,
 		workerDaemonSet,
 		err := generateManifests()
 	if err != nil {
@@ -203,7 +204,8 @@ func runHelmChart() {
 		"05-hub-service.yaml":          template(hubService, hubServiceMappings),
 		"06-front-pod.yaml":            template(frontPod, frontPodMappings),
 		"07-front-service.yaml":        template(frontService, frontServiceMappings),
-		"08-worker-daemon-set.yaml":    template(workerDaemonSet, workerDaemonSetMappings),
+		"08-persistent-volume.yaml":    template(persistentVolume, persistentVolumeMappings),
+		"09-worker-daemon-set.yaml":    template(workerDaemonSet, workerDaemonSetMappings),
 	})
 	if err != nil {
 		log.Error().Err(err).Send()

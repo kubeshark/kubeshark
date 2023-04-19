@@ -108,6 +108,11 @@ func cleanUpRestrictedMode(ctx context.Context, kubernetesProvider *kubernetes.P
 		handleDeletionError(err, resourceDesc, &leftoverResources)
 	}
 
+	if err := kubernetesProvider.RemovePersistentVolumeClaim(ctx, selfResourcesNamespace, kubernetes.PersistentVolumeClaimName); err != nil {
+		resourceDesc := fmt.Sprintf("Persistent Volume %s in namespace %s", kubernetes.PersistentVolumeClaimName, selfResourcesNamespace)
+		handleDeletionError(err, resourceDesc, &leftoverResources)
+	}
+
 	if err := kubernetesProvider.RemoveDaemonSet(ctx, selfResourcesNamespace, kubernetes.WorkerDaemonSetName); err != nil {
 		resourceDesc := fmt.Sprintf("DaemonSet %s in namespace %s", kubernetes.WorkerDaemonSetName, selfResourcesNamespace)
 		handleDeletionError(err, resourceDesc, &leftoverResources)
