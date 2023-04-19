@@ -138,6 +138,14 @@ var hubPodMappings = map[string]interface{}{
 			"name":  "LICENSE",
 			"value": "{{ .Values.license }}",
 		},
+		{
+			"name":  "SCRIPTING_ENV",
+			"value": "{}",
+		},
+		{
+			"name":  "SCRIPTING_SCRIPTS",
+			"value": "[]",
+		},
 	},
 	"spec.containers[0].image":                     "{{ .Values.tap.docker.registry }}/hub:{{ .Values.tap.docker.tag }}",
 	"spec.containers[0].imagePullPolicy":           "{{ .Values.tap.docker.imagePullPolicy }}",
