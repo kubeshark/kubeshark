@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"net/url"
@@ -109,14 +108,6 @@ func NewProviderInCluster() (*Provider, error) {
 		managedBy:        misc.Program,
 		createdBy:        misc.Program,
 	}, nil
-}
-
-func (provider *Provider) CurrentNamespace() (string, error) {
-	if provider.kubernetesConfig == nil {
-		return "", errors.New("kubernetesConfig is nil, The CLI will not work with in-cluster kubernetes config, use a kubeconfig file when initializing the Provider")
-	}
-	ns, _, err := provider.kubernetesConfig.Namespace()
-	return ns, err
 }
 
 func (provider *Provider) WaitUtilNamespaceDeleted(ctx context.Context, name string) error {
@@ -1133,16 +1124,10 @@ func (provider *Provider) GetKubernetesVersion() (*semver.SemVersion, error) {
 }
 
 func (provider *Provider) GetNamespaces() []string {
-	if config.Config.Tap.AllNamespaces {
-		return []string{K8sAllNamespaces}
-	} else if len(config.Config.Tap.Namespaces) > 0 {
+	if len(config.Config.Tap.Namespaces) > 0 {
 		return utils.Unique(config.Config.Tap.Namespaces)
 	} else {
-		currentNamespace, err := provider.CurrentNamespace()
-		if err != nil {
-			log.Fatal().Err(err).Msg("Error getting current namespace!")
-		}
-		return []string{currentNamespace}
+		return []string{K8sAllNamespaces}
 	}
 }
 

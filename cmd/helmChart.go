@@ -128,7 +128,7 @@ var hubPodMappings = map[string]interface{}{
 		},
 		{
 			"name":  "NAMESPACES",
-			"value": "{{ .Values.tap.allnamespaces | ternary \"\" .Values.tap.namespaces }}",
+			"value": "{{ gt (len .Values.tap.namespaces) 0 | ternary (join \",\" .Values.tap.namespaces) \"\" }}",
 		},
 		{
 			"name":  "STORAGE_LIMIT",

@@ -18,7 +18,6 @@ const (
 	ProxyHubPortLabel      = "proxy-hub-port"
 	ProxyHostLabel         = "proxy-host"
 	NamespacesLabel        = "namespaces"
-	AllNamespacesLabel     = "allnamespaces"
 	SelfNamespaceLabel     = "selfnamespace"
 	StorageLimitLabel      = "storagelimit"
 	DryRunLabel            = "dryrun"
@@ -83,7 +82,6 @@ type TapConfig struct {
 	Proxy             ProxyConfig           `yaml:"proxy"`
 	PodRegexStr       string                `yaml:"regex" default:".*"`
 	Namespaces        []string              `yaml:"namespaces"`
-	AllNamespaces     bool                  `yaml:"allnamespaces" default:"true"`
 	SelfNamespace     string                `yaml:"selfnamespace" default:"kubeshark"`
 	StorageLimit      string                `yaml:"storagelimit" default:"200MB"`
 	DryRun            bool                  `yaml:"dryrun" default:"false"`

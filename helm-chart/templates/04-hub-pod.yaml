@@ -18,7 +18,7 @@ spec:
         - name: POD_REGEX
           value: '{{ .Values.tap.regex }}'
         - name: NAMESPACES
-          value: '{{ .Values.tap.allnamespaces | ternary "" .Values.tap.namespaces }}'
+          value: '{{ gt (len .Values.tap.namespaces) 0 | ternary (join "," .Values.tap.namespaces) "" }}'
         - name: STORAGE_LIMIT
           value: '{{ .Values.tap.storagelimit }}'
         - name: LICENSE

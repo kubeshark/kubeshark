@@ -17,7 +17,6 @@ tap:
     host: 127.0.0.1
   regex: .*
   namespaces: []
-  allnamespaces: true
   selfnamespace: kubeshark
   storagelimit: 200MB
   dryrun: false
