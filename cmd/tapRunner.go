@@ -431,10 +431,6 @@ func postHubStarted(ctx context.Context, kubernetesProvider *kubernetes.Provider
 		if err != nil {
 			log.Error().Err(err).Send()
 		}
-
-		// Grace period
-		log.Info().Msg("Waiting for worker containers...")
-		time.Sleep(5 * time.Second)
 	} else {
 
 		// Storage limit
