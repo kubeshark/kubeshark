@@ -281,17 +281,8 @@ func (provider *Provider) BuildHubPod(opts *PodOptions) (*core.Pod, error) {
 			Containers:                    containers,
 			DNSPolicy:                     core.DNSClusterFirstWithHostNet,
 			TerminationGracePeriodSeconds: new(int64),
-			Tolerations: []core.Toleration{
-				{
-					Operator: core.TolerationOpExists,
-					Effect:   core.TaintEffectNoExecute,
-				},
-				{
-					Operator: core.TolerationOpExists,
-					Effect:   core.TaintEffectNoSchedule,
-				},
-			},
-			ImagePullSecrets: opts.ImagePullSecrets,
+			Tolerations:                   provider.BuildTolerations(),
+			ImagePullSecrets:              opts.ImagePullSecrets,
 		},
 	}
 
@@ -391,17 +382,8 @@ func (provider *Provider) BuildFrontPod(opts *PodOptions, hubHost string, hubPor
 			Volumes:                       volumes,
 			DNSPolicy:                     core.DNSClusterFirstWithHostNet,
 			TerminationGracePeriodSeconds: new(int64),
-			Tolerations: []core.Toleration{
-				{
-					Operator: core.TolerationOpExists,
-					Effect:   core.TaintEffectNoExecute,
-				},
-				{
-					Operator: core.TolerationOpExists,
-					Effect:   core.TaintEffectNoSchedule,
-				},
-			},
-			ImagePullSecrets: opts.ImagePullSecrets,
+			Tolerations:                   provider.BuildTolerations(),
+			ImagePullSecrets:              opts.ImagePullSecrets,
 		},
 	}
 
@@ -905,20 +887,6 @@ func (provider *Provider) BuildWorkerDaemonSet(
 		},
 	}
 
-	// Tolerations
-	tolerations := []core.Toleration{
-		{
-			Operator: core.TolerationOpExists,
-			Effect:   core.TaintEffectNoExecute,
-		},
-	}
-	if !config.Config.Tap.IgnoreTainted {
-		tolerations = append(tolerations, core.Toleration{
-			Operator: core.TolerationOpExists,
-			Effect:   core.TaintEffectNoSchedule,
-		})
-	}
-
 	// Pod
 	pod := DaemonSetPod{
 		ObjectMeta: metav1.ObjectMeta{
@@ -939,7 +907,7 @@ func (provider *Provider) BuildWorkerDaemonSet(
 			},
 			DNSPolicy:                     core.DNSClusterFirstWithHostNet,
 			TerminationGracePeriodSeconds: new(int64),
-			Tolerations:                   tolerations,
+			Tolerations:                   provider.BuildTolerations(),
 			ImagePullSecrets:              imagePullSecrets,
 		},
 	}
@@ -975,6 +943,24 @@ func (provider *Provider) BuildWorkerDaemonSet(
 			Template: pod,
 		},
 	}, nil
+}
+
+func (provider *Provider) BuildTolerations() []core.Toleration {
+	tolerations := []core.Toleration{
+		{
+			Operator: core.TolerationOpExists,
+			Effect:   core.TaintEffectNoExecute,
+		},
+	}
+
+	if !config.Config.Tap.IgnoreTainted {
+		tolerations = append(tolerations, core.Toleration{
+			Operator: core.TolerationOpExists,
+			Effect:   core.TaintEffectNoSchedule,
+		})
+	}
+
+	return tolerations
 }
 
 func (provider *Provider) CreatePersistentVolumeClaim(ctx context.Context, namespace string, persistentVolumeClaim *core.PersistentVolumeClaim) (*core.PersistentVolumeClaim, error) {
