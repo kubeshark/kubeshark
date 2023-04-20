@@ -19,6 +19,7 @@ tap:
   namespaces: []
   selfnamespace: kubeshark
   storagelimit: 200Mi
+  storageclass: standard
   dryrun: false
   pcap: ""
   resources:

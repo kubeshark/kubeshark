@@ -715,7 +715,7 @@ func (provider *Provider) BuildPersistentVolumeClaim() (*core.PersistentVolumeCl
 		return nil, fmt.Errorf("invalid capacity for the workers: %s", config.Config.Tap.StorageLimit)
 	}
 
-	storageClassName := "standard"
+	storageClassName := config.Config.Tap.StorageClass
 
 	return &core.PersistentVolumeClaim{
 		TypeMeta: metav1.TypeMeta{

@@ -162,6 +162,7 @@ var frontServiceMappings = serviceAccountMappings
 var persistentVolumeMappings = map[string]interface{}{
 	"metadata.namespace":              "{{ .Values.tap.selfnamespace }}",
 	"spec.resources.requests.storage": "{{ .Values.tap.storagelimit }}",
+	"spec.storageClassName":           "{{ .Values.tap.storageclass }}",
 }
 var workerDaemonSetMappings = map[string]interface{}{
 	"metadata.namespace":                                         "{{ .Values.tap.selfnamespace }}",

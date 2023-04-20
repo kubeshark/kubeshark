@@ -18,6 +18,7 @@ const (
 	NamespacesLabel        = "namespaces"
 	SelfNamespaceLabel     = "selfnamespace"
 	StorageLimitLabel      = "storagelimit"
+	StorageClassLabel      = "storageclass"
 	DryRunLabel            = "dryrun"
 	PcapLabel              = "pcap"
 	ServiceMeshLabel       = "servicemesh"
@@ -82,6 +83,7 @@ type TapConfig struct {
 	Namespaces        []string              `yaml:"namespaces"`
 	SelfNamespace     string                `yaml:"selfnamespace" default:"kubeshark"`
 	StorageLimit      string                `yaml:"storagelimit" default:"200Mi"`
+	StorageClass      string                `yaml:"storageclass" default:"standard"`
 	DryRun            bool                  `yaml:"dryrun" default:"false"`
 	Pcap              string                `yaml:"pcap" default:""`
 	Resources         ResourcesConfig       `yaml:"resources"`
