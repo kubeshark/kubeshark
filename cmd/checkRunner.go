@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"context"
-	"embed"
 	"fmt"
 	"os"
 
@@ -10,11 +9,6 @@ import (
 	"github.com/kubeshark/kubeshark/misc"
 	"github.com/kubeshark/kubeshark/utils"
 	"github.com/rs/zerolog/log"
-)
-
-var (
-	//go:embed permissionFiles
-	embedFS embed.FS
 )
 
 func runCheck() {
@@ -30,7 +24,7 @@ func runCheck() {
 	}
 
 	if checkPassed {
-		checkPassed = check.KubernetesPermissions(ctx, embedFS, kubernetesProvider)
+		checkPassed = check.KubernetesPermissions(ctx, kubernetesProvider)
 	}
 
 	if checkPassed {

@@ -2,48 +2,16 @@ package check
 
 import (
 	"context"
-	"embed"
 	"fmt"
 
-	"github.com/kubeshark/kubeshark/config"
 	"github.com/kubeshark/kubeshark/kubernetes"
 	"github.com/rs/zerolog/log"
 	rbac "k8s.io/api/rbac/v1"
-	"k8s.io/client-go/kubernetes/scheme"
 )
 
-func KubernetesPermissions(ctx context.Context, embedFS embed.FS, kubernetesProvider *kubernetes.Provider) bool {
+func KubernetesPermissions(ctx context.Context, kubernetesProvider *kubernetes.Provider) bool {
 	log.Info().Str("procedure", "kubernetes-permissions").Msg("Checking:")
-
-	var filePath string
-	if config.Config.IsNsRestrictedMode() {
-		filePath = "permissionFiles/permissions-ns-tap.yaml"
-	} else {
-		filePath = "permissionFiles/permissions-all-namespaces-tap.yaml"
-	}
-
-	data, err := embedFS.ReadFile(filePath)
-	if err != nil {
-		log.Error().Err(err).Msg("While checking Kubernetes permissions!")
-		return false
-	}
-
-	decode := scheme.Codecs.UniversalDeserializer().Decode
-	obj, _, err := decode(data, nil, nil)
-	if err != nil {
-		log.Error().Err(err).Msg("While checking Kubernetes permissions!")
-		return false
-	}
-
-	switch resource := obj.(type) {
-	case *rbac.Role:
-		return checkRulesPermissions(ctx, kubernetesProvider, resource.Rules, config.Config.Tap.SelfNamespace)
-	case *rbac.ClusterRole:
-		return checkRulesPermissions(ctx, kubernetesProvider, resource.Rules, "")
-	}
-
-	log.Error().Msg("While checking Kubernetes permissions! Resource of types 'Role' or 'ClusterRole' are not found in permission files.")
-	return false
+	return checkRulesPermissions(ctx, kubernetesProvider, kubernetesProvider.BuildClusterRole().Rules, "")
 }
 
 func checkRulesPermissions(ctx context.Context, kubernetesProvider *kubernetes.Provider, rules []rbac.PolicyRule, namespace string) bool {
