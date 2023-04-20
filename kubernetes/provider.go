@@ -575,9 +575,22 @@ func (provider *Provider) BuildClusterRole() *rbac.ClusterRole {
 		},
 		Rules: []rbac.PolicyRule{
 			{
-				APIGroups: []string{"", "extensions", "apps"},
-				Resources: []string{"pods", "services", "endpoints"},
-				Verbs:     []string{"list", "get", "watch"},
+				APIGroups: []string{
+					"",
+					"extensions",
+					"apps",
+				},
+				Resources: []string{
+					"pods",
+					"services",
+					"endpoints",
+					"persistentvolumeclaims",
+				},
+				Verbs: []string{
+					"list",
+					"get",
+					"watch",
+				},
 			},
 		},
 	}

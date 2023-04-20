@@ -19,6 +19,7 @@ rules:
       - pods
       - services
       - endpoints
+      - persistentvolumeclaims
     verbs:
       - list
       - get
