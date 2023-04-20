@@ -58,7 +58,7 @@ func startProxyReportErrorIfAny(kubernetesProvider *kubernetes.Provider, ctx con
 	}
 }
 
-func getKubernetesProviderForCli(silent bool) (*kubernetes.Provider, error) {
+func getKubernetesProviderForCli(silent bool, dontCheckVersion bool) (*kubernetes.Provider, error) {
 	kubeConfigPath := config.Config.KubeConfigPath()
 	kubernetesProvider, err := kubernetes.NewProvider(kubeConfigPath, config.Config.Kube.Context)
 	if err != nil {
@@ -75,15 +75,17 @@ func getKubernetesProviderForCli(silent bool) (*kubernetes.Provider, error) {
 		return nil, err
 	}
 
-	kubernetesVersion, err := kubernetesProvider.GetKubernetesVersion()
-	if err != nil {
-		handleKubernetesProviderError(err)
-		return nil, err
-	}
+	if !dontCheckVersion {
+		kubernetesVersion, err := kubernetesProvider.GetKubernetesVersion()
+		if err != nil {
+			handleKubernetesProviderError(err)
+			return nil, err
+		}
 
-	if err := kubernetes.ValidateKubernetesVersion(kubernetesVersion); err != nil {
-		handleKubernetesProviderError(err)
-		return nil, err
+		if err := kubernetes.ValidateKubernetesVersion(kubernetesVersion); err != nil {
+			handleKubernetesProviderError(err)
+			return nil, err
+		}
 	}
 
 	return kubernetesProvider, nil

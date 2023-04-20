@@ -18,7 +18,7 @@ var logsCmd = &cobra.Command{
 	Use:   "logs",
 	Short: "Create a ZIP file with logs for GitHub issues or troubleshooting",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		kubernetesProvider, err := getKubernetesProviderForCli(false)
+		kubernetesProvider, err := getKubernetesProviderForCli(false, false)
 		if err != nil {
 			return nil
 		}

@@ -104,7 +104,7 @@ func generateManifests() (
 	err error,
 ) {
 	var kubernetesProvider *kubernetes.Provider
-	kubernetesProvider, err = getKubernetesProviderForCli(true)
+	kubernetesProvider, err = getKubernetesProviderForCli(true, true)
 	if err != nil {
 		return
 	}

@@ -62,7 +62,7 @@ func tap() {
 
 	connector = connect.NewConnector(kubernetes.GetLocalhostOnPort(config.Config.Tap.Proxy.Hub.SrcPort), connect.DefaultRetries, connect.DefaultTimeout)
 
-	kubernetesProvider, err := getKubernetesProviderForCli(false)
+	kubernetesProvider, err := getKubernetesProviderForCli(false, false)
 	if err != nil {
 		return
 	}
