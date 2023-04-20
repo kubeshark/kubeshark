@@ -197,16 +197,16 @@ func runHelmChart() {
 	}
 
 	err = dumpHelmChart(map[string]interface{}{
-		"00-namespace.yaml":            template(namespace, namespaceMappings),
-		"01-service-account.yaml":      template(serviceAccount, serviceAccountMappings),
-		"02-cluster-role.yaml":         template(clusterRole, clusterRoleMappings),
-		"03-cluster-role-binding.yaml": template(clusterRoleBinding, clusterRoleBindingMappings),
-		"04-hub-pod.yaml":              template(hubPod, hubPodMappings),
-		"05-hub-service.yaml":          template(hubService, hubServiceMappings),
-		"06-front-pod.yaml":            template(frontPod, frontPodMappings),
-		"07-front-service.yaml":        template(frontService, frontServiceMappings),
-		"08-persistent-volume.yaml":    template(persistentVolume, persistentVolumeMappings),
-		"09-worker-daemon-set.yaml":    template(workerDaemonSet, workerDaemonSetMappings),
+		"00-namespace.yaml":               template(namespace, namespaceMappings),
+		"01-service-account.yaml":         template(serviceAccount, serviceAccountMappings),
+		"02-cluster-role.yaml":            template(clusterRole, clusterRoleMappings),
+		"03-cluster-role-binding.yaml":    template(clusterRoleBinding, clusterRoleBindingMappings),
+		"04-hub-pod.yaml":                 template(hubPod, hubPodMappings),
+		"05-hub-service.yaml":             template(hubService, hubServiceMappings),
+		"06-front-pod.yaml":               template(frontPod, frontPodMappings),
+		"07-front-service.yaml":           template(frontService, frontServiceMappings),
+		"08-persistent-volume-claim.yaml": template(persistentVolume, persistentVolumeMappings),
+		"09-worker-daemon-set.yaml":       template(workerDaemonSet, workerDaemonSetMappings),
 	})
 	if err != nil {
 		log.Error().Err(err).Send()

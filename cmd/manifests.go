@@ -60,16 +60,16 @@ func runManifests() {
 
 	if config.Config.Manifests.Dump {
 		err = dumpManifests(map[string]interface{}{
-			"00-namespace.yaml":            namespace,
-			"01-service-account.yaml":      serviceAccount,
-			"02-cluster-role.yaml":         clusterRole,
-			"03-cluster-role-binding.yaml": clusterRoleBinding,
-			"04-hub-pod.yaml":              hubPod,
-			"05-hub-service.yaml":          hubService,
-			"06-front-pod.yaml":            frontPod,
-			"07-front-service.yaml":        frontService,
-			"08-persistent-volume.yaml":    persistentVolume,
-			"09-worker-daemon-set.yaml":    workerDaemonSet,
+			"00-namespace.yaml":               namespace,
+			"01-service-account.yaml":         serviceAccount,
+			"02-cluster-role.yaml":            clusterRole,
+			"03-cluster-role-binding.yaml":    clusterRoleBinding,
+			"04-hub-pod.yaml":                 hubPod,
+			"05-hub-service.yaml":             hubService,
+			"06-front-pod.yaml":               frontPod,
+			"07-front-service.yaml":           frontService,
+			"08-persistent-volume-claim.yaml": persistentVolume,
+			"09-worker-daemon-set.yaml":       workerDaemonSet,
 		})
 	} else {
 		err = printManifests([]interface{}{
