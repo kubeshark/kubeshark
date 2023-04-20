@@ -10,6 +10,7 @@ import (
 	"github.com/kubeshark/kubeshark/config"
 	"github.com/kubeshark/kubeshark/docker"
 	"github.com/kubeshark/kubeshark/kubernetes"
+	"github.com/kubeshark/kubeshark/misc/fsUtils"
 	"github.com/kubeshark/kubeshark/utils"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
@@ -173,7 +174,13 @@ func generateManifests() (
 
 func dumpManifests(objects map[string]interface{}) error {
 	folder := filepath.Join(".", "manifests")
-	err := os.MkdirAll(folder, os.ModePerm)
+
+	err := fsUtils.RemoveFilesByExtension(folder, "yaml")
+	if err != nil {
+		return err
+	}
+
+	err = os.MkdirAll(folder, os.ModePerm)
 	if err != nil {
 		return err
 	}

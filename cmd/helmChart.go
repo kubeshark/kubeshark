@@ -10,6 +10,7 @@ import (
 	"github.com/kubeshark/kubeshark/config"
 	"github.com/kubeshark/kubeshark/kubernetes"
 	"github.com/kubeshark/kubeshark/misc"
+	"github.com/kubeshark/kubeshark/misc/fsUtils"
 	"github.com/kubeshark/kubeshark/utils"
 	"github.com/ohler55/ojg/jp"
 	"github.com/ohler55/ojg/oj"
@@ -258,7 +259,13 @@ func template(object interface{}, mappings map[string]interface{}) (template int
 func dumpHelmChart(objects map[string]interface{}) error {
 	folder := filepath.Join(".", "helm-chart")
 	templatesFolder := filepath.Join(folder, "templates")
-	err := os.MkdirAll(templatesFolder, os.ModePerm)
+
+	err := fsUtils.RemoveFilesByExtension(templatesFolder, "yaml")
+	if err != nil {
+		return err
+	}
+
+	err = os.MkdirAll(templatesFolder, os.ModePerm)
 	if err != nil {
 		return err
 	}
