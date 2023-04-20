@@ -9,10 +9,10 @@
     <a href="https://github.com/kubeshark/kubeshark/releases/latest">
         <img alt="GitHub Latest Release" src="https://img.shields.io/github/v/release/kubeshark/kubeshark?logo=GitHub&style=flat-square">
     </a>
-    <a href="https://hub.docker.com/r/kubeshark/kubeshark">
+    <a href="https://hub.docker.com/r/kubeshark/worker">
       <img alt="Docker pulls" src="https://img.shields.io/docker/pulls/kubeshark/kubeshark?color=%23099cec&logo=Docker&style=flat-square">
     </a>
-    <a href="https://hub.docker.com/r/kubeshark/kubeshark">
+    <a href="https://hub.docker.com/r/kubeshark/worker">
       <img alt="Image size" src="https://img.shields.io/docker/image-size/kubeshark/kubeshark/latest?logo=Docker&style=flat-square">
     </a>
 		<a href="https://discord.gg/WkvRGMUcx7">
