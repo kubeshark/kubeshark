@@ -46,10 +46,6 @@ kubeshark tap
 ```
 
 ```shell
-kubeshark tap -A
-```
-
-```shell
 kubeshark tap -n sock-shop "(catalo*|front-end*)"
 ```
 
