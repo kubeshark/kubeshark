@@ -20,7 +20,7 @@ spec:
         - name: REACT_APP_HUB_PORT
           value: "8898"
       image: '{{ .Values.tap.docker.registry }}/front:{{ .Values.tap.docker.tag }}'
-      imagePullPolicy: '{{ .Values.tap.docker.imagePullPolicy }}'
+      imagePullPolicy: '{{ .Values.tap.docker.imagepullpolicy }}'
       name: kubeshark-front
       readinessProbe:
         failureThreshold: 3

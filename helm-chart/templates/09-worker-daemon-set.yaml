@@ -40,7 +40,7 @@ spec:
             - -procfs
             - /hostproc
           image: '{{ .Values.tap.docker.registry }}/worker:{{ .Values.tap.docker.tag }}'
-          imagePullPolicy: '{{ .Values.tap.docker.imagePullPolicy }}'
+          imagePullPolicy: '{{ .Values.tap.docker.imagepullpolicy }}'
           name: kubeshark-worker-daemon-set
           resources:
             limits:

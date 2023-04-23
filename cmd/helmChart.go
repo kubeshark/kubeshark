@@ -145,7 +145,7 @@ var hubPodMappings = map[string]interface{}{
 		},
 	},
 	"spec.containers[0].image":                     "{{ .Values.tap.docker.registry }}/hub:{{ .Values.tap.docker.tag }}",
-	"spec.containers[0].imagePullPolicy":           "{{ .Values.tap.docker.imagePullPolicy }}",
+	"spec.containers[0].imagePullPolicy":           "{{ .Values.tap.docker.imagepullpolicy }}",
 	"spec.containers[0].resources.limits.cpu":      "{{ .Values.tap.resources.hub.limits.cpu }}",
 	"spec.containers[0].resources.limits.memory":   "{{ .Values.tap.resources.hub.limits.memory }}",
 	"spec.containers[0].resources.requests.cpu":    "{{ .Values.tap.resources.hub.requests.cpu }}",
@@ -156,7 +156,7 @@ var hubServiceMappings = serviceAccountMappings
 var frontPodMappings = map[string]interface{}{
 	"metadata.namespace":                 "{{ .Values.tap.selfnamespace }}",
 	"spec.containers[0].image":           "{{ .Values.tap.docker.registry }}/front:{{ .Values.tap.docker.tag }}",
-	"spec.containers[0].imagePullPolicy": "{{ .Values.tap.docker.imagePullPolicy }}",
+	"spec.containers[0].imagePullPolicy": "{{ .Values.tap.docker.imagepullpolicy }}",
 }
 var frontServiceMappings = serviceAccountMappings
 var persistentVolumeMappings = map[string]interface{}{
@@ -167,7 +167,7 @@ var persistentVolumeMappings = map[string]interface{}{
 var workerDaemonSetMappings = map[string]interface{}{
 	"metadata.namespace":                                         "{{ .Values.tap.selfnamespace }}",
 	"spec.template.spec.containers[0].image":                     "{{ .Values.tap.docker.registry }}/worker:{{ .Values.tap.docker.tag }}",
-	"spec.template.spec.containers[0].imagePullPolicy":           "{{ .Values.tap.docker.imagePullPolicy }}",
+	"spec.template.spec.containers[0].imagePullPolicy":           "{{ .Values.tap.docker.imagepullpolicy }}",
 	"spec.template.spec.containers[0].resources.limits.cpu":      "{{ .Values.tap.resources.worker.limits.cpu }}",
 	"spec.template.spec.containers[0].resources.limits.memory":   "{{ .Values.tap.resources.worker.limits.memory }}",
 	"spec.template.spec.containers[0].resources.requests.cpu":    "{{ .Values.tap.resources.worker.requests.cpu }}",
