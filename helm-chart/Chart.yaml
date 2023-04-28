@@ -22,4 +22,4 @@ name: kubeshark
 sources:
   - https://github.com/kubeshark/kubeshark/tree/master/helm-chart
 type: application
-version: "40.0"
+version: "0.1.0"
