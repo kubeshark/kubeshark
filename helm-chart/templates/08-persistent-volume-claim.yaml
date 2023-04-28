@@ -16,5 +16,7 @@ spec:
   resources:
     requests:
       storage: '{{ .Values.tap.storagelimit }}'
-  storageClassName: '{{ default "" .Values.tap.storageclass }}'
+{{- if .Values.storageClassName }}
+  storageClassName: {{ .Values.tap.storageclass  }}
+{{- end }}
 status: {}
