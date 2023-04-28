@@ -8,7 +8,7 @@ metadata:
     kubeshark-created-by: kubeshark
     kubeshark-managed-by: kubeshark
   name: kubeshark-hub
-  namespace: '{{ .Values.tap.selfnamespace }}'
+  namespace: '{{ default "kubeshark" .Release.Namespace }}'
 spec:
   ports:
     - name: kubeshark-hub

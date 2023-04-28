@@ -9,7 +9,7 @@ metadata:
     kubeshark-created-by: kubeshark
     kubeshark-managed-by: kubeshark
   name: kubeshark-worker-daemon-set
-  namespace: '{{ .Values.tap.selfnamespace }}'
+  namespace: '{{ default "kubeshark" .Release.Namespace }}'
 spec:
   selector:
     matchLabels:
@@ -24,7 +24,7 @@ spec:
         kubeshark-created-by: kubeshark
         kubeshark-managed-by: kubeshark
       name: kubeshark-worker-daemon-set
-      namespace: kubeshark
+      namespace: '{{ default "kubeshark" .Release.Namespace }}'
     spec:
       containers:
         - command:

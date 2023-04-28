@@ -9,7 +9,7 @@ metadata:
     kubeshark-created-by: kubeshark
     kubeshark-managed-by: kubeshark
   name: kubeshark-hub
-  namespace: '{{ .Values.tap.selfnamespace }}'
+  namespace: '{{ default "kubeshark" .Release.Namespace }}'
 spec:
   containers:
     - command:
@@ -18,7 +18,7 @@ spec:
         - name: POD_REGEX
           value: '{{ .Values.tap.regex }}'
         - name: NAMESPACES
-          value: '{{ gt (len .Values.tap.namespaces) 0 | ternary (join "," .Values.tap.namespaces) "" }}'
+          value: '{{ gt (len .Values.tap.namespaces ) 0 | ternary (join "," .Values.tap.namespaces) "" }}'
         - name: LICENSE
           value: '{{ .Values.license }}'
         - name: SCRIPTING_ENV

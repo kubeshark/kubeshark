@@ -9,7 +9,7 @@ metadata:
     kubeshark-created-by: kubeshark
     kubeshark-managed-by: kubeshark
   name: kubeshark-cluster-role-binding
-  namespace: '{{ .Values.tap.selfnamespace }}'
+  namespace: '{{ default "kubeshark" .Release.Namespace }}'
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -17,4 +17,4 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: kubeshark-service-account
-    namespace: '{{ .Values.tap.selfnamespace }}'
+    namespace: '{{ default "kubeshark" .Release.Namespace }}'
