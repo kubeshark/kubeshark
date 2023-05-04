@@ -250,7 +250,7 @@ func (provider *Provider) BuildHubPod(opts *PodOptions) (*core.Pod, error) {
 				},
 				{
 					Name:  "LICENSE",
-					Value: "",
+					Value: config.Config.License,
 				},
 				{
 					Name:  "SCRIPTING_ENV",
