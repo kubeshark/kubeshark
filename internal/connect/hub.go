@@ -151,6 +151,26 @@ func (connector *Connector) PostLicense(license string) {
 	}
 }
 
+func (connector *Connector) PostLicenseSingle(license string) {
+	postLicenseUrl := fmt.Sprintf("%s/license", connector.url)
+
+	payload := postLicenseRequest{
+		License: license,
+	}
+
+	if payloadMarshalled, err := json.Marshal(payload); err != nil {
+		log.Error().Err(err).Msg("Failed to marshal the payload:")
+	} else {
+		var resp *http.Response
+		if resp, err = utils.Post(postLicenseUrl, "application/json", bytes.NewBuffer(payloadMarshalled), connector.client); err != nil || resp.StatusCode != http.StatusOK {
+			log.Warn().Err(err).Msg("Failed sending the license to Hub.")
+		} else {
+			log.Debug().Str("license", license).Msg("Reported license to Hub:")
+			return
+		}
+	}
+}
+
 func (connector *Connector) PostEnv(env map[string]interface{}) {
 	if len(env) == 0 {
 		return

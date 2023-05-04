@@ -61,17 +61,19 @@ func acquireLicense() {
 }
 
 func updateLicense(licenseKey string) {
+	log.Info().Str("key", licenseKey).Msg("Received license:")
+
 	config.Config.License = licenseKey
 	err := config.WriteConfig(&config.Config)
 	if err != nil {
 		log.Error().Err(err).Send()
 	}
 
+	connector.PostLicenseSingle(config.Config.License)
+
+	log.Info().Msg("Updated the license. Exiting.")
+
 	go func() {
-		connector.PostLicense(config.Config.License)
-
-		log.Info().Msg("Updated the license. Exiting.")
-
 		time.Sleep(2 * time.Second)
 		os.Exit(0)
 	}()
@@ -104,8 +106,6 @@ func runLicenseRecieverServer() {
 		}
 
 		licenseKey := string(data)
-
-		log.Info().Str("key", licenseKey).Msg("Received license:")
 
 		updateLicense(licenseKey)
 	})
