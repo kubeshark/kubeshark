@@ -103,6 +103,8 @@ func generateManifests() (
 	workerDaemonSet *kubernetes.DaemonSet,
 	err error,
 ) {
+	config.Config.License = ""
+
 	var kubernetesProvider *kubernetes.Provider
 	kubernetesProvider, err = getKubernetesProviderForCli(true, true)
 	if err != nil {
