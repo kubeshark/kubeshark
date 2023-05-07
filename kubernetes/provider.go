@@ -855,18 +855,23 @@ func (provider *Provider) BuildWorkerDaemonSet(
 		MountPath: PersistentVolumeHostPath,
 	}
 
+	// VolumeMount(s)
+	volumeMounts := []core.VolumeMount{
+		procfsVolumeMount,
+		sysfsVolumeMount,
+	}
+	if config.Config.Tap.PersistentStorage {
+		volumeMounts = append(volumeMounts, persistentVolumeMount)
+	}
+
 	// Containers
 	containers := []core.Container{
 		{
 			Name:            podName,
 			Image:           podImage,
 			ImagePullPolicy: imagePullPolicy,
-			VolumeMounts: []core.VolumeMount{
-				procfsVolumeMount,
-				sysfsVolumeMount,
-				persistentVolumeMount,
-			},
-			Command: command,
+			VolumeMounts:    volumeMounts,
+			Command:         command,
 			Resources: core.ResourceRequirements{
 				Limits: core.ResourceList{
 					"cpu":    cpuLimit,
@@ -887,6 +892,15 @@ func (provider *Provider) BuildWorkerDaemonSet(
 		},
 	}
 
+	// Volume(s)
+	volumes := []core.Volume{
+		procfsVolume,
+		sysfsVolume,
+	}
+	if config.Config.Tap.PersistentStorage {
+		volumes = append(volumes, persistentVolume)
+	}
+
 	// Pod
 	pod := DaemonSetPod{
 		ObjectMeta: metav1.ObjectMeta{
@@ -897,14 +911,10 @@ func (provider *Provider) BuildWorkerDaemonSet(
 			}, provider),
 		},
 		Spec: core.PodSpec{
-			ServiceAccountName: ServiceAccountName,
-			HostNetwork:        true,
-			Containers:         containers,
-			Volumes: []core.Volume{
-				procfsVolume,
-				sysfsVolume,
-				persistentVolume,
-			},
+			ServiceAccountName:            ServiceAccountName,
+			HostNetwork:                   true,
+			Containers:                    containers,
+			Volumes:                       volumes,
 			DNSPolicy:                     core.DNSClusterFirstWithHostNet,
 			TerminationGracePeriodSeconds: new(int64),
 			Tolerations:                   provider.BuildTolerations(),

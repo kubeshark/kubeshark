@@ -18,6 +18,7 @@ tap:
   regex: .*
   namespaces: []
   selfnamespace: kubeshark
+  persistentstorage: false
   storagelimit: 200Mi
   storageclass: standard
   dryrun: false

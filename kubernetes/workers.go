@@ -3,6 +3,7 @@ package kubernetes
 import (
 	"context"
 
+	"github.com/kubeshark/kubeshark/config"
 	"github.com/kubeshark/kubeshark/config/configStructs"
 	"github.com/kubeshark/kubeshark/docker"
 	"github.com/rs/zerolog/log"
@@ -21,17 +22,19 @@ func CreateWorkers(
 	tls bool,
 	debug bool,
 ) error {
-	persistentVolumeClaim, err := kubernetesProvider.BuildPersistentVolumeClaim()
-	if err != nil {
-		return err
-	}
+	if config.Config.Tap.PersistentStorage {
+		persistentVolumeClaim, err := kubernetesProvider.BuildPersistentVolumeClaim()
+		if err != nil {
+			return err
+		}
 
-	if _, err = kubernetesProvider.CreatePersistentVolumeClaim(
-		ctx,
-		namespace,
-		persistentVolumeClaim,
-	); err != nil {
-		return err
+		if _, err = kubernetesProvider.CreatePersistentVolumeClaim(
+			ctx,
+			namespace,
+			persistentVolumeClaim,
+		); err != nil {
+			return err
+		}
 	}
 
 	image := docker.GetWorkerImage()
