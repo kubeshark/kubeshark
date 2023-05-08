@@ -259,7 +259,7 @@ func template(object interface{}, mappings map[string]interface{}) (template int
 }
 
 func handlePVCManifest(manifest string) string {
-	return fmt.Sprintf("{{- if .Values.tap.persistentstorage }}\n%s{{- end }}", manifest)
+	return fmt.Sprintf("{{- if .Values.tap.persistentstorage }}\n%s{{- end }}\n", manifest)
 }
 
 func handleDaemonSetManifest(manifest string) string {
