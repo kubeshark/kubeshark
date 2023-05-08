@@ -17,6 +17,7 @@ const (
 	ProxyHostLabel         = "proxy-host"
 	NamespacesLabel        = "namespaces"
 	SelfNamespaceLabel     = "selfnamespace"
+	PersistentStorageLabel = "persistentstorage"
 	StorageLimitLabel      = "storagelimit"
 	StorageClassLabel      = "storageclass"
 	DryRunLabel            = "dryrun"

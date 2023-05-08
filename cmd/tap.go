@@ -52,6 +52,7 @@ func init() {
 	tapCmd.Flags().String(configStructs.ProxyHostLabel, defaultTapConfig.Proxy.Host, "Provide a custom host for the proxy/port-forward")
 	tapCmd.Flags().StringSliceP(configStructs.NamespacesLabel, "n", defaultTapConfig.Namespaces, "Namespaces selector")
 	tapCmd.Flags().StringP(configStructs.SelfNamespaceLabel, "s", defaultTapConfig.SelfNamespace, "Self-namespace of Kubeshark")
+	tapCmd.Flags().Bool(configStructs.PersistentStorageLabel, defaultTapConfig.PersistentStorage, "Enable persistent storage (PersistentVolumeClaim)")
 	tapCmd.Flags().String(configStructs.StorageLimitLabel, defaultTapConfig.StorageLimit, "Override the default storage limit (per node)")
 	tapCmd.Flags().String(configStructs.StorageClassLabel, defaultTapConfig.StorageClass, "Override the default storage class of the PersistentVolumeClaim (per node)")
 	tapCmd.Flags().Bool(configStructs.DryRunLabel, defaultTapConfig.DryRun, "Preview of all pods matching the regex, without tapping them")
