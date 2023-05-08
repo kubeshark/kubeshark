@@ -104,6 +104,8 @@ func generateManifests() (
 	err error,
 ) {
 	config.Config.License = ""
+	persistentStorage := config.Config.Tap.PersistentStorage
+	config.Config.Tap.PersistentStorage = true
 
 	var kubernetesProvider *kubernetes.Provider
 	kubernetesProvider, err = getKubernetesProviderForCli(true, true)
@@ -170,6 +172,8 @@ func generateManifests() (
 	if err != nil {
 		return
 	}
+
+	config.Config.Tap.PersistentStorage = persistentStorage
 
 	return
 }

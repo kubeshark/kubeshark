@@ -6,6 +6,7 @@ import (
 	"os"
 	"path/filepath"
 	"sort"
+	"strings"
 
 	"github.com/kubeshark/kubeshark/config"
 	"github.com/kubeshark/kubeshark/kubernetes"
@@ -257,6 +258,34 @@ func template(object interface{}, mappings map[string]interface{}) (template int
 	return
 }
 
+func handlePVCManifest(manifest string) string {
+	return fmt.Sprintf("{{- if .Values.tap.persistentstorage }}\n%s{{- end }}", manifest)
+}
+
+func handleDaemonSetManifest(manifest string) string {
+	lines := strings.Split(manifest, "\n")
+
+	for i, line := range lines {
+		if strings.TrimSpace(line) == "- mountPath: /app/data" {
+			lines[i] = fmt.Sprintf("{{- if .Values.tap.persistentstorage }}\n%s", line)
+		}
+
+		if strings.TrimSpace(line) == "name: kubeshark-persistent-volume" {
+			lines[i] = fmt.Sprintf("%s\n{{- end }}", line)
+		}
+
+		if strings.TrimSpace(line) == "- name: kubeshark-persistent-volume" {
+			lines[i] = fmt.Sprintf("{{- if .Values.tap.persistentstorage }}\n%s", line)
+		}
+
+		if strings.TrimSpace(line) == "claimName: kubeshark-persistent-volume-claim" {
+			lines[i] = fmt.Sprintf("%s\n{{- end }}", line)
+		}
+	}
+
+	return strings.Join(lines, "\n")
+}
+
 func dumpHelmChart(objects map[string]interface{}) error {
 	folder := filepath.Join(".", "helm-chart")
 	templatesFolder := filepath.Join(folder, "templates")
@@ -283,6 +312,14 @@ func dumpHelmChart(objects map[string]interface{}) error {
 		manifest, err := utils.PrettyYamlOmitEmpty(objects[filename])
 		if err != nil {
 			return err
+		}
+
+		if filename == "08-persistent-volume-claim.yaml" {
+			manifest = handlePVCManifest(manifest)
+		}
+
+		if filename == "09-worker-daemon-set.yaml" {
+			manifest = handleDaemonSetManifest(manifest)
 		}
 
 		path := filepath.Join(templatesFolder, filename)
