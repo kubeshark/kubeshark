@@ -94,7 +94,7 @@ func createSelfHubPod(ctx context.Context, kubernetesProvider *kubernetes.Provid
 }
 
 func createFrontPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, opts *kubernetes.PodOptions) error {
-	pod, err := kubernetesProvider.BuildFrontPod(opts, config.Config.Tap.Proxy.Host, fmt.Sprintf("%d", config.Config.Tap.Proxy.Hub.SrcPort))
+	pod, err := kubernetesProvider.BuildFrontPod(opts, config.Config.Tap.Proxy.Host, fmt.Sprintf("%d", config.Config.Tap.Proxy.Hub.Port))
 	if err != nil {
 		return err
 	}

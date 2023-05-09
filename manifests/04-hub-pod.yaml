@@ -26,6 +26,9 @@ spec:
       image: docker.io/kubeshark/hub:latest
       imagePullPolicy: Always
       name: kubeshark-hub
+      ports:
+        - containerPort: 80
+          hostPort: 8898
       resources:
         limits:
           cpu: 750m

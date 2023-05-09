@@ -6,14 +6,13 @@ tap:
     imagepullsecrets: []
   proxy:
     worker:
-      port: 8897
       srvport: 8897
     hub:
       port: 8898
-      srvport: 80
+      srvport: 8898
     front:
       port: 8899
-      srvport: 80
+      srvport: 8899
     host: 127.0.0.1
   regex: .*
   namespaces: []

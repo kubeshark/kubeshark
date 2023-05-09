@@ -36,12 +36,12 @@ func init() {
 		log.Debug().Err(err).Send()
 	}
 
-	consoleCmd.Flags().Uint16(configStructs.ProxyHubPortLabel, defaultTapConfig.Proxy.Hub.SrcPort, "Provide a custom port for the Hub")
+	consoleCmd.Flags().Uint16(configStructs.ProxyHubPortLabel, defaultTapConfig.Proxy.Hub.Port, "Provide a custom port for the Hub")
 	consoleCmd.Flags().String(configStructs.ProxyHostLabel, defaultTapConfig.Proxy.Host, "Provide a custom host for the Hub")
 }
 
 func runConsole() {
-	hubUrl := kubernetes.GetLocalhostOnPort(config.Config.Tap.Proxy.Hub.SrcPort)
+	hubUrl := kubernetes.GetLocalhostOnPort(config.Config.Tap.Proxy.Hub.Port)
 	response, err := http.Get(fmt.Sprintf("%s/echo", hubUrl))
 	if err != nil || response.StatusCode != 200 {
 		log.Info().Msg(fmt.Sprintf(utils.Yellow, "Couldn't connect to Hub. Establishing proxy..."))
@@ -51,10 +51,10 @@ func runConsole() {
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt)
 
-	log.Info().Str("host", config.Config.Tap.Proxy.Host).Uint16("port", config.Config.Tap.Proxy.Hub.SrcPort).Msg("Connecting to:")
+	log.Info().Str("host", config.Config.Tap.Proxy.Host).Uint16("port", config.Config.Tap.Proxy.Hub.Port).Msg("Connecting to:")
 	u := url.URL{
 		Scheme: "ws",
-		Host:   fmt.Sprintf("%s:%d", config.Config.Tap.Proxy.Host, config.Config.Tap.Proxy.Hub.SrcPort),
+		Host:   fmt.Sprintf("%s:%d", config.Config.Tap.Proxy.Host, config.Config.Tap.Proxy.Hub.Port),
 		Path:   "/scripts/logs",
 	}
 

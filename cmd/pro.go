@@ -40,19 +40,19 @@ func init() {
 		log.Debug().Err(err).Send()
 	}
 
-	proCmd.Flags().Uint16(configStructs.ProxyHubPortLabel, defaultTapConfig.Proxy.Hub.SrcPort, "Provide a custom port for the Hub")
+	proCmd.Flags().Uint16(configStructs.ProxyHubPortLabel, defaultTapConfig.Proxy.Hub.Port, "Provide a custom port for the Hub")
 	proCmd.Flags().String(configStructs.ProxyHostLabel, defaultTapConfig.Proxy.Host, "Provide a custom host for the Hub")
 }
 
 func acquireLicense() {
-	hubUrl := kubernetes.GetLocalhostOnPort(config.Config.Tap.Proxy.Hub.SrcPort)
+	hubUrl := kubernetes.GetLocalhostOnPort(config.Config.Tap.Proxy.Hub.Port)
 	response, err := http.Get(fmt.Sprintf("%s/echo", hubUrl))
 	if err != nil || response.StatusCode != 200 {
 		log.Info().Msg(fmt.Sprintf(utils.Yellow, "Couldn't connect to Hub. Establishing proxy..."))
 		runProxy(false, true)
 	}
 
-	connector = connect.NewConnector(kubernetes.GetLocalhostOnPort(config.Config.Tap.Proxy.Hub.SrcPort), connect.DefaultRetries, connect.DefaultTimeout)
+	connector = connect.NewConnector(kubernetes.GetLocalhostOnPort(config.Config.Tap.Proxy.Hub.Port), connect.DefaultRetries, connect.DefaultTimeout)
 
 	log.Info().Str("url", PRO_URL).Msg("Opening in the browser:")
 	utils.OpenBrowser(PRO_URL)

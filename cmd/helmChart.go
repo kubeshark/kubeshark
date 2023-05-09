@@ -174,6 +174,7 @@ var workerDaemonSetMappings = map[string]interface{}{
 	"spec.template.spec.containers[0].resources.requests.cpu":    "{{ .Values.tap.resources.worker.requests.cpu }}",
 	"spec.template.spec.containers[0].resources.requests.memory": "{{ .Values.tap.resources.worker.requests.memory }}",
 	"spec.template.spec.containers[0].command[0]":                "{{ .Values.tap.debug | ternary \"./worker -debug\" \"./worker\" }}",
+	"spec.template.spec.containers[0].command[4]":                "{{ .Values.tap.proxy.worker.srvport }}",
 	"spec.template.spec.containers[0].command[6]":                "{{ .Values.tap.packetcapture }}",
 }
 

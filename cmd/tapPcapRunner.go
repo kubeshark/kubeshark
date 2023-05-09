@@ -13,6 +13,7 @@ import (
 	"github.com/docker/docker/client"
 	"github.com/docker/go-connections/nat"
 	"github.com/kubeshark/kubeshark/config"
+	"github.com/kubeshark/kubeshark/config/configStructs"
 	"github.com/kubeshark/kubeshark/docker"
 	"github.com/kubeshark/kubeshark/internal/connect"
 	"github.com/kubeshark/kubeshark/kubernetes"
@@ -141,10 +142,10 @@ func createAndStartContainers(
 
 	hostConfigFront := &container.HostConfig{
 		PortBindings: nat.PortMap{
-			nat.Port(fmt.Sprintf("%d/tcp", config.Config.Tap.Proxy.Front.DstPort)): []nat.PortBinding{
+			nat.Port(fmt.Sprintf("%d/tcp", configStructs.ContainerPort)): []nat.PortBinding{
 				{
 					HostIP:   hostIP,
-					HostPort: fmt.Sprintf("%d", config.Config.Tap.Proxy.Front.SrcPort),
+					HostPort: fmt.Sprintf("%d", config.Config.Tap.Proxy.Front.Port),
 				},
 			},
 		},
@@ -156,7 +157,7 @@ func createAndStartContainers(
 		Env: []string{
 			"REACT_APP_DEFAULT_FILTER= ",
 			"REACT_APP_HUB_HOST= ",
-			fmt.Sprintf("REACT_APP_HUB_PORT=%d", config.Config.Tap.Proxy.Hub.SrcPort),
+			fmt.Sprintf("REACT_APP_HUB_PORT=%d", config.Config.Tap.Proxy.Hub.Port),
 		},
 	}, hostConfigFront, nil, nil, nameFront)
 	if err != nil {
@@ -165,16 +166,16 @@ func createAndStartContainers(
 
 	hostConfigHub := &container.HostConfig{
 		PortBindings: nat.PortMap{
-			nat.Port(fmt.Sprintf("%d/tcp", config.Config.Tap.Proxy.Hub.DstPort)): []nat.PortBinding{
+			nat.Port(fmt.Sprintf("%d/tcp", config.Config.Tap.Proxy.Hub.SrvPort)): []nat.PortBinding{
 				{
 					HostIP:   hostIP,
-					HostPort: fmt.Sprintf("%d", config.Config.Tap.Proxy.Hub.SrcPort),
+					HostPort: fmt.Sprintf("%d", config.Config.Tap.Proxy.Hub.Port),
 				},
 			},
 		},
 	}
 
-	cmdHub := []string{"-port", fmt.Sprintf("%d", config.Config.Tap.Proxy.Hub.DstPort)}
+	cmdHub := []string{"-port", fmt.Sprintf("%d", config.Config.Tap.Proxy.Hub.SrvPort)}
 	if config.DebugMode {
 		cmdHub = append(cmdHub, fmt.Sprintf("-%s", config.DebugFlag))
 	}
@@ -183,13 +184,13 @@ func createAndStartContainers(
 		Image:        imageHub,
 		Cmd:          cmdHub,
 		Tty:          false,
-		ExposedPorts: nat.PortSet{nat.Port(fmt.Sprintf("%d/tcp", config.Config.Tap.Proxy.Hub.DstPort)): {}},
+		ExposedPorts: nat.PortSet{nat.Port(fmt.Sprintf("%d/tcp", config.Config.Tap.Proxy.Hub.SrvPort)): {}},
 	}, hostConfigHub, nil, nil, nameHub)
 	if err != nil {
 		return
 	}
 
-	cmdWorker := []string{"-f", "./import", "-port", fmt.Sprintf("%d", config.Config.Tap.Proxy.Worker.DstPort)}
+	cmdWorker := []string{"-f", "./import", "-port", fmt.Sprintf("%d", config.Config.Tap.Proxy.Worker.SrvPort)}
 	if config.DebugMode {
 		cmdWorker = append(cmdWorker, fmt.Sprintf("-%s", config.DebugFlag))
 	}
@@ -328,7 +329,7 @@ func pcap(tarPath string) {
 		},
 	}
 
-	connector = connect.NewConnector(kubernetes.GetLocalhostOnPort(config.Config.Tap.Proxy.Hub.SrcPort), connect.DefaultRetries, connect.DefaultTimeout)
+	connector = connect.NewConnector(kubernetes.GetLocalhostOnPort(config.Config.Tap.Proxy.Hub.Port), connect.DefaultRetries, connect.DefaultTimeout)
 	connector.PostWorkerPodToHub(workerPod)
 
 	// License
@@ -337,10 +338,10 @@ func pcap(tarPath string) {
 	}
 
 	log.Info().
-		Str("url", kubernetes.GetLocalhostOnPort(config.Config.Tap.Proxy.Hub.SrcPort)).
+		Str("url", kubernetes.GetLocalhostOnPort(config.Config.Tap.Proxy.Hub.Port)).
 		Msg(fmt.Sprintf(utils.Green, "Hub is available at:"))
 
-	url := kubernetes.GetLocalhostOnPort(config.Config.Tap.Proxy.Front.SrcPort)
+	url := kubernetes.GetLocalhostOnPort(config.Config.Tap.Proxy.Front.Port)
 	log.Info().Str("url", url).Msg(fmt.Sprintf(utils.Green, fmt.Sprintf("%s is available at:", misc.Software)))
 
 	if !config.Config.HeadlessMode {

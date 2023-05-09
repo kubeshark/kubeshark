@@ -63,12 +63,12 @@ func runProxy(block bool, noBrowser bool) {
 
 	var establishedProxy bool
 
-	hubUrl := kubernetes.GetLocalhostOnPort(config.Config.Tap.Proxy.Hub.SrcPort)
+	hubUrl := kubernetes.GetLocalhostOnPort(config.Config.Tap.Proxy.Hub.Port)
 	response, err := http.Get(fmt.Sprintf("%s/echo", hubUrl))
 	if err == nil && response.StatusCode == 200 {
 		log.Info().
 			Str("service", kubernetes.HubServiceName).
-			Int("port", int(config.Config.Tap.Proxy.Hub.SrcPort)).
+			Int("port", int(config.Config.Tap.Proxy.Hub.Port)).
 			Msg("Found a running service.")
 
 		okToOpen("Hub", hubUrl, true)
@@ -79,8 +79,8 @@ func runProxy(block bool, noBrowser bool) {
 			kubernetes.HubServiceName,
 			kubernetes.HubPodName,
 			configStructs.ProxyHubPortLabel,
-			config.Config.Tap.Proxy.Hub.SrcPort,
-			config.Config.Tap.Proxy.Hub.DstPort,
+			config.Config.Tap.Proxy.Hub.Port,
+			configStructs.ContainerPort,
 			"/echo",
 		)
 		connector := connect.NewConnector(hubUrl, connect.DefaultRetries, connect.DefaultTimeout)
@@ -93,12 +93,12 @@ func runProxy(block bool, noBrowser bool) {
 		okToOpen("Hub", hubUrl, true)
 	}
 
-	frontUrl := kubernetes.GetLocalhostOnPort(config.Config.Tap.Proxy.Front.SrcPort)
+	frontUrl := kubernetes.GetLocalhostOnPort(config.Config.Tap.Proxy.Front.Port)
 	response, err = http.Get(fmt.Sprintf("%s/", frontUrl))
 	if err == nil && response.StatusCode == 200 {
 		log.Info().
 			Str("service", kubernetes.FrontServiceName).
-			Int("port", int(config.Config.Tap.Proxy.Front.SrcPort)).
+			Int("port", int(config.Config.Tap.Proxy.Front.Port)).
 			Msg("Found a running service.")
 
 		okToOpen("Kubeshark", frontUrl, noBrowser)
@@ -109,8 +109,8 @@ func runProxy(block bool, noBrowser bool) {
 			kubernetes.FrontServiceName,
 			kubernetes.FrontPodName,
 			configStructs.ProxyFrontPortLabel,
-			config.Config.Tap.Proxy.Front.SrcPort,
-			config.Config.Tap.Proxy.Front.DstPort,
+			config.Config.Tap.Proxy.Front.Port,
+			configStructs.ContainerPort,
 			"",
 		)
 		connector := connect.NewConnector(frontUrl, connect.DefaultRetries, connect.DefaultTimeout)

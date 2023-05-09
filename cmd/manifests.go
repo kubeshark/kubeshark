@@ -146,7 +146,7 @@ func generateManifests() (
 		ImagePullPolicy:    config.Config.ImagePullPolicy(),
 		ImagePullSecrets:   config.Config.ImagePullSecrets(),
 		Debug:              config.Config.Tap.Debug,
-	}, config.Config.Tap.Proxy.Host, fmt.Sprintf("%d", config.Config.Tap.Proxy.Hub.SrcPort))
+	}, config.Config.Tap.Proxy.Host, fmt.Sprintf("%d", config.Config.Tap.Proxy.Hub.Port))
 	if err != nil {
 		return
 	}

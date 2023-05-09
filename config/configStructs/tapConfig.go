@@ -26,6 +26,8 @@ const (
 	TlsLabel               = "tls"
 	IgnoreTaintedLabel     = "ignoreTainted"
 	DebugLabel             = "debug"
+	ContainerPort          = 80
+	ContainerPortStr       = "80"
 )
 
 type ResourceLimits struct {
@@ -44,18 +46,17 @@ type ResourceRequirements struct {
 }
 
 type WorkerConfig struct {
-	SrcPort uint16 `yaml:"port" default:"8897"`
-	DstPort uint16 `yaml:"srvport" default:"8897"`
+	SrvPort uint16 `yaml:"srvport" default:"8897"`
 }
 
 type HubConfig struct {
-	SrcPort uint16 `yaml:"port" default:"8898"`
-	DstPort uint16 `yaml:"srvport" default:"80"`
+	Port    uint16 `yaml:"port" default:"8898"`
+	SrvPort uint16 `yaml:"srvport" default:"8898"`
 }
 
 type FrontConfig struct {
-	SrcPort uint16 `yaml:"port" default:"8899"`
-	DstPort uint16 `yaml:"srvport" default:"80"`
+	Port    uint16 `yaml:"port" default:"8899"`
+	SrvPort uint16 `yaml:"srvport" default:"8899"`
 }
 
 type ProxyConfig struct {

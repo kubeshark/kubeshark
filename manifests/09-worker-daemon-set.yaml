@@ -42,6 +42,9 @@ spec:
           image: docker.io/kubeshark/worker:latest
           imagePullPolicy: Always
           name: kubeshark-worker-daemon-set
+          ports:
+            - containerPort: 80
+              hostPort: 8897
           resources:
             limits:
               cpu: 750m

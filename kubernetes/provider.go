@@ -225,8 +225,12 @@ func (provider *Provider) BuildHubPod(opts *PodOptions) (*core.Pod, error) {
 
 	containers := []core.Container{
 		{
-			Name:            opts.PodName,
-			Image:           opts.PodImage,
+			Name:  opts.PodName,
+			Image: opts.PodImage,
+			Ports: []core.ContainerPort{{
+				HostPort:      int32(config.Config.Tap.Proxy.Hub.SrvPort),
+				ContainerPort: configStructs.ContainerPort,
+			}},
 			ImagePullPolicy: opts.ImagePullPolicy,
 			Command:         command,
 			Resources: core.ResourceRequirements{
@@ -322,15 +326,19 @@ func (provider *Provider) BuildFrontPod(opts *PodOptions, hubHost string, hubPor
 
 	containers := []core.Container{
 		{
-			Name:            opts.PodName,
-			Image:           docker.GetFrontImage(),
+			Name:  opts.PodName,
+			Image: docker.GetFrontImage(),
+			Ports: []core.ContainerPort{{
+				HostPort:      int32(config.Config.Tap.Proxy.Front.SrvPort),
+				ContainerPort: configStructs.ContainerPort,
+			}},
 			ImagePullPolicy: opts.ImagePullPolicy,
 			VolumeMounts:    volumeMounts,
 			ReadinessProbe: &core.Probe{
 				FailureThreshold: 3,
 				ProbeHandler: core.ProbeHandler{
 					TCPSocket: &core.TCPSocketAction{
-						Port: intstr.Parse("80"),
+						Port: intstr.Parse(configStructs.ContainerPortStr),
 					},
 				},
 				PeriodSeconds:    1,
@@ -419,8 +427,8 @@ func (provider *Provider) BuildHubService(namespace string) *core.Service {
 			Ports: []core.ServicePort{
 				{
 					Name:       HubServiceName,
-					TargetPort: intstr.FromInt(80),
-					Port:       80,
+					TargetPort: intstr.FromInt(configStructs.ContainerPort),
+					Port:       configStructs.ContainerPort,
 				},
 			},
 			Type:     core.ServiceTypeClusterIP,
@@ -444,8 +452,8 @@ func (provider *Provider) BuildFrontService(namespace string) *core.Service {
 			Ports: []core.ServicePort{
 				{
 					Name:       FrontServiceName,
-					TargetPort: intstr.FromInt(80),
-					Port:       80,
+					TargetPort: intstr.FromInt(configStructs.ContainerPort),
+					Port:       configStructs.ContainerPort,
 				},
 			},
 			Type:     core.ServiceTypeClusterIP,
@@ -758,7 +766,7 @@ func (provider *Provider) BuildWorkerDaemonSet(
 		"-i",
 		"any",
 		"-port",
-		"8897",
+		fmt.Sprintf("%d", config.Config.Tap.Proxy.Worker.SrvPort),
 		"-packet-capture",
 		config.Config.Tap.PacketCapture,
 	}
@@ -867,8 +875,12 @@ func (provider *Provider) BuildWorkerDaemonSet(
 	// Containers
 	containers := []core.Container{
 		{
-			Name:            podName,
-			Image:           podImage,
+			Name:  podName,
+			Image: podImage,
+			Ports: []core.ContainerPort{{
+				HostPort:      int32(config.Config.Tap.Proxy.Worker.SrvPort),
+				ContainerPort: configStructs.ContainerPort,
+			}},
 			ImagePullPolicy: imagePullPolicy,
 			VolumeMounts:    volumeMounts,
 			Command:         command,
