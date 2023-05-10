@@ -30,7 +30,7 @@ spec:
       name: kubeshark-hub
       ports:
         - containerPort: 80
-          hostPort: 8898
+          hostPort: {{ .Values.tap.proxy.hub.srvport }}
       resources:
         limits:
           cpu: '{{ .Values.tap.resources.hub.limits.cpu }}'

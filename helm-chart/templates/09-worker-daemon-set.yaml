@@ -43,8 +43,8 @@ spec:
           imagePullPolicy: '{{ .Values.tap.docker.imagepullpolicy }}'
           name: kubeshark-worker-daemon-set
           ports:
-            - containerPort: 80
-              hostPort: 8897
+            - containerPort: {{ .Values.tap.proxy.worker.srvport }}
+              hostPort: {{ .Values.tap.proxy.worker.srvport }}
           resources:
             limits:
               cpu: '{{ .Values.tap.resources.worker.limits.cpu }}'

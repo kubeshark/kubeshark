@@ -259,6 +259,30 @@ func template(object interface{}, mappings map[string]interface{}) (template int
 	return
 }
 
+func handleHubPod(manifest string) string {
+	lines := strings.Split(manifest, "\n")
+
+	for i, line := range lines {
+		if strings.HasPrefix(strings.TrimSpace(line), "hostPort:") {
+			lines[i] = "          hostPort: {{ .Values.tap.proxy.hub.srvport }}"
+		}
+	}
+
+	return strings.Join(lines, "\n")
+}
+
+func handleFrontPod(manifest string) string {
+	lines := strings.Split(manifest, "\n")
+
+	for i, line := range lines {
+		if strings.HasPrefix(strings.TrimSpace(line), "hostPort:") {
+			lines[i] = "          hostPort: {{ .Values.tap.proxy.front.srvport }}"
+		}
+	}
+
+	return strings.Join(lines, "\n")
+}
+
 func handlePVCManifest(manifest string) string {
 	return fmt.Sprintf("{{- if .Values.tap.persistentstorage }}\n%s{{- end }}\n", manifest)
 }
@@ -281,6 +305,14 @@ func handleDaemonSetManifest(manifest string) string {
 
 		if strings.TrimSpace(line) == "claimName: kubeshark-persistent-volume-claim" {
 			lines[i] = fmt.Sprintf("%s\n{{- end }}", line)
+		}
+
+		if strings.HasPrefix(strings.TrimSpace(line), "- containerPort:") {
+			lines[i] = "            - containerPort: {{ .Values.tap.proxy.worker.srvport }}"
+		}
+
+		if strings.HasPrefix(strings.TrimSpace(line), "hostPort:") {
+			lines[i] = "              hostPort: {{ .Values.tap.proxy.worker.srvport }}"
 		}
 	}
 
@@ -313,6 +345,14 @@ func dumpHelmChart(objects map[string]interface{}) error {
 		manifest, err := utils.PrettyYamlOmitEmpty(objects[filename])
 		if err != nil {
 			return err
+		}
+
+		if filename == "04-hub-pod.yaml" {
+			manifest = handleHubPod(manifest)
+		}
+
+		if filename == "06-front-pod.yaml" {
+			manifest = handleFrontPod(manifest)
 		}
 
 		if filename == "08-persistent-volume-claim.yaml" {

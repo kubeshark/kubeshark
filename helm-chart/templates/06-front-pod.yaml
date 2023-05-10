@@ -24,7 +24,7 @@ spec:
       name: kubeshark-front
       ports:
         - containerPort: 80
-          hostPort: 8899
+          hostPort: {{ .Values.tap.proxy.front.srvport }}
       readinessProbe:
         failureThreshold: 3
         periodSeconds: 1

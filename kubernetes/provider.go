@@ -879,7 +879,7 @@ func (provider *Provider) BuildWorkerDaemonSet(
 			Image: podImage,
 			Ports: []core.ContainerPort{{
 				HostPort:      int32(config.Config.Tap.Proxy.Worker.SrvPort),
-				ContainerPort: configStructs.ContainerPort,
+				ContainerPort: int32(config.Config.Tap.Proxy.Worker.SrvPort),
 			}},
 			ImagePullPolicy: imagePullPolicy,
 			VolumeMounts:    volumeMounts,

@@ -43,7 +43,7 @@ spec:
           imagePullPolicy: Always
           name: kubeshark-worker-daemon-set
           ports:
-            - containerPort: 80
+            - containerPort: 8897
               hostPort: 8897
           resources:
             limits:
