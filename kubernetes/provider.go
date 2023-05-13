@@ -577,6 +577,9 @@ func (provider *Provider) BuildIngress() *networking.Ingress {
 			Labels: buildWithDefaultLabels(map[string]string{
 				fmt.Sprintf("%s-cli-version", misc.Program): misc.RBACVersion,
 			}, provider),
+			Annotations: map[string]string{
+				"nginx.ingress.kubernetes.io/rewrite-target": "/$2",
+			},
 		},
 		Spec: networking.IngressSpec{
 			IngressClassName: &ingressClassName,
@@ -587,7 +590,7 @@ func (provider *Provider) BuildIngress() *networking.Ingress {
 						HTTP: &networking.HTTPIngressRuleValue{
 							Paths: []networking.HTTPIngressPath{
 								{
-									Path:     "/api",
+									Path:     "/api(/|$)(.*)",
 									PathType: &pathTypePrefix,
 									Backend: networking.IngressBackend{
 										Service: &networking.IngressServiceBackend{
