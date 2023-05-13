@@ -35,6 +35,11 @@ func CleanUpSelfResources(ctx context.Context, cancel context.CancelFunc, kubern
 func cleanUpNonRestrictedMode(ctx context.Context, cancel context.CancelFunc, kubernetesProvider *kubernetes.Provider, selfResourcesNamespace string) []string {
 	leftoverResources := make([]string, 0)
 
+	if err := kubernetesProvider.RemoveIngressClass(ctx, kubernetes.IngressClassName); err != nil {
+		resourceDesc := kubernetes.IngressClassName
+		handleDeletionError(err, resourceDesc, &leftoverResources)
+	}
+
 	if err := kubernetesProvider.RemoveNamespace(ctx, selfResourcesNamespace); err != nil {
 		resourceDesc := fmt.Sprintf("Namespace %s", selfResourcesNamespace)
 		handleDeletionError(err, resourceDesc, &leftoverResources)

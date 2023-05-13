@@ -177,6 +177,8 @@ var workerDaemonSetMappings = map[string]interface{}{
 	"spec.template.spec.containers[0].command[4]":                "{{ .Values.tap.proxy.worker.srvport }}",
 	"spec.template.spec.containers[0].command[6]":                "{{ .Values.tap.packetcapture }}",
 }
+var ingressClassMappings = serviceAccountMappings
+var ingressMappings = serviceAccountMappings
 
 func init() {
 	rootCmd.AddCommand(helmChartCmd)
@@ -193,6 +195,8 @@ func runHelmChart() {
 		frontService,
 		persistentVolume,
 		workerDaemonSet,
+		ingressClass,
+		ingress,
 		err := generateManifests()
 	if err != nil {
 		log.Error().Err(err).Send()
@@ -210,6 +214,8 @@ func runHelmChart() {
 		"07-front-service.yaml":           template(frontService, frontServiceMappings),
 		"08-persistent-volume-claim.yaml": template(persistentVolume, persistentVolumeMappings),
 		"09-worker-daemon-set.yaml":       template(workerDaemonSet, workerDaemonSetMappings),
+		"10-ingress-class.yaml":           template(ingressClass, ingressClassMappings),
+		"11-ingress.yaml":                 template(ingress, ingressMappings),
 	})
 	if err != nil {
 		log.Error().Err(err).Send()

@@ -58,20 +58,29 @@ func CreateHubResources(ctx context.Context, kubernetesProvider *kubernetes.Prov
 		return selfServiceAccountExists, err
 	}
 
-	// TODO: Why the port values need to be 80?
 	_, err = kubernetesProvider.CreateService(ctx, selfNamespace, kubernetesProvider.BuildHubService(selfNamespace))
 	if err != nil {
 		return selfServiceAccountExists, err
 	}
-
 	log.Info().Str("service", kubernetes.HubServiceName).Msg("Successfully created a service.")
 
 	_, err = kubernetesProvider.CreateService(ctx, selfNamespace, kubernetesProvider.BuildFrontService(selfNamespace))
 	if err != nil {
 		return selfServiceAccountExists, err
 	}
-
 	log.Info().Str("service", kubernetes.FrontServiceName).Msg("Successfully created a service.")
+
+	_, err = kubernetesProvider.CreateIngressClass(ctx, kubernetesProvider.BuildIngressClass())
+	if err != nil {
+		return selfServiceAccountExists, err
+	}
+	log.Info().Str("ingress-class", kubernetes.IngressClassName).Msg("Successfully created an ingress class.")
+
+	_, err = kubernetesProvider.CreateIngress(ctx, selfNamespace, kubernetesProvider.BuildIngress())
+	if err != nil {
+		return selfServiceAccountExists, err
+	}
+	log.Info().Str("ingress", kubernetes.IngressName).Msg("Successfully created an ingress.")
 
 	return selfServiceAccountExists, nil
 }

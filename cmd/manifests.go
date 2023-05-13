@@ -15,6 +15,7 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	v1 "k8s.io/api/core/v1"
+	networking "k8s.io/api/networking/v1"
 	rbac "k8s.io/api/rbac/v1"
 )
 
@@ -52,6 +53,8 @@ func runManifests() {
 		frontService,
 		persistentVolume,
 		workerDaemonSet,
+		ingressClass,
+		ingress,
 		err := generateManifests()
 	if err != nil {
 		log.Error().Err(err).Send()
@@ -70,6 +73,8 @@ func runManifests() {
 			"07-front-service.yaml":           frontService,
 			"08-persistent-volume-claim.yaml": persistentVolume,
 			"09-worker-daemon-set.yaml":       workerDaemonSet,
+			"10-ingress-class.yaml":           ingressClass,
+			"11-ingress.yaml":                 ingress,
 		})
 	} else {
 		err = printManifests([]interface{}{
@@ -101,6 +106,8 @@ func generateManifests() (
 	frontService *v1.Service,
 	persistentVolumeClaim *v1.PersistentVolumeClaim,
 	workerDaemonSet *kubernetes.DaemonSet,
+	ingressClass *networking.IngressClass,
+	ingress *networking.Ingress,
 	err error,
 ) {
 	config.Config.License = ""
@@ -172,6 +179,9 @@ func generateManifests() (
 	if err != nil {
 		return
 	}
+
+	ingressClass = kubernetesProvider.BuildIngressClass()
+	ingress = kubernetesProvider.BuildIngress()
 
 	config.Config.Tap.PersistentStorage = persistentStorage
 
