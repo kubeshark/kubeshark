@@ -602,7 +602,7 @@ func (provider *Provider) BuildIngress() *networking.Ingress {
 									},
 								},
 								{
-									Path:     "/",
+									Path:     "/()(.*)",
 									PathType: &pathTypePrefix,
 									Backend: networking.IngressBackend{
 										Service: &networking.IngressServiceBackend{
