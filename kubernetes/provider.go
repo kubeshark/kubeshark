@@ -325,6 +325,10 @@ func (provider *Provider) BuildFrontPod(opts *PodOptions, hubHost string, hubPor
 	volumeMounts := []core.VolumeMount{}
 	volumes := []core.Volume{}
 
+	if config.Config.Tap.Ingress.Enabled {
+		hubPort = "80/api"
+	}
+
 	containers := []core.Container{
 		{
 			Name:  opts.PodName,
@@ -583,9 +587,10 @@ func (provider *Provider) BuildIngress() *networking.Ingress {
 		},
 		Spec: networking.IngressSpec{
 			IngressClassName: &ingressClassName,
+			TLS:              config.Config.Tap.Ingress.TLS,
 			Rules: []networking.IngressRule{
 				{
-					Host: "ks.svc.cluster.local",
+					Host: config.Config.Tap.Ingress.Host,
 					IngressRuleValue: networking.IngressRuleValue{
 						HTTP: &networking.HTTPIngressRuleValue{
 							Paths: []networking.HTTPIngressPath{

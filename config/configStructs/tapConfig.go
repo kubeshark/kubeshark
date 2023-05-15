@@ -5,6 +5,7 @@ import (
 	"regexp"
 
 	v1 "k8s.io/api/core/v1"
+	networking "k8s.io/api/networking/v1"
 )
 
 const (
@@ -25,6 +26,7 @@ const (
 	ServiceMeshLabel       = "servicemesh"
 	TlsLabel               = "tls"
 	IgnoreTaintedLabel     = "ignoreTainted"
+	IngressEnabledLabel    = "ingress-enabled"
 	DebugLabel             = "debug"
 	ContainerPort          = 80
 	ContainerPortStr       = "80"
@@ -78,6 +80,12 @@ type ResourcesConfig struct {
 	Hub    ResourceRequirements `yaml:"hub"`
 }
 
+type IngressConfig struct {
+	Enabled bool                    `yaml:"enabled" default:"false"`
+	Host    string                  `yaml:"host" default:"ks.svc.cluster.local"`
+	TLS     []networking.IngressTLS `yaml:"tls"`
+}
+
 type TapConfig struct {
 	Docker            DockerConfig          `yaml:"docker"`
 	Proxy             ProxyConfig           `yaml:"proxy"`
@@ -96,6 +104,7 @@ type TapConfig struct {
 	IgnoreTainted     bool                  `yaml:"ignoreTainted" default:"false"`
 	ResourceLabels    map[string]string     `yaml:"resourceLabels" default:"{}"`
 	NodeSelectorTerms []v1.NodeSelectorTerm `yaml:"nodeSelectorTerms" default:"[]"`
+	Ingress           IngressConfig         `yaml:"ingress"`
 	Debug             bool                  `yaml:"debug" default:"false"`
 }
 
