@@ -3,6 +3,8 @@
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
+  annotations:
+    nginx.ingress.kubernetes.io/rewrite-target: /$2
   creationTimestamp: null
   labels:
     kubeshark-cli-version: v1
@@ -21,14 +23,14 @@ spec:
                 name: kubeshark-hub
                 port:
                   number: 80
-            path: /api
+            path: /api(/|$)(.*)
             pathType: Prefix
           - backend:
               service:
                 name: kubeshark-front
                 port:
                   number: 80
-            path: /
+            path: /()(.*)
             pathType: Prefix
 status:
   loadBalancer: {}

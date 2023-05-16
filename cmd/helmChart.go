@@ -178,7 +178,11 @@ var workerDaemonSetMappings = map[string]interface{}{
 	"spec.template.spec.containers[0].command[6]":                "{{ .Values.tap.packetcapture }}",
 }
 var ingressClassMappings = serviceAccountMappings
-var ingressMappings = serviceAccountMappings
+var ingressMappings = map[string]interface{}{
+	"metadata.namespace": "{{ .Values.tap.selfnamespace }}",
+	"spec.rules[0].host": "{{ .Values.tap.ingress.host }}",
+	"spec.tls":           "{{ .Values.tap.ingress.tls | toYaml }}",
+}
 
 func init() {
 	rootCmd.AddCommand(helmChartCmd)
@@ -325,6 +329,16 @@ func handleDaemonSetManifest(manifest string) string {
 	return strings.Join(lines, "\n")
 }
 
+func handleIngressClass(manifest string) string {
+	return fmt.Sprintf("{{- if .Values.tap.ingress.enabled }}\n%s{{- end }}\n", manifest)
+}
+
+func handleIngress(manifest string) string {
+	manifest = strings.Replace(manifest, "'{{ .Values.tap.ingress.tls | toYaml }}'", "{{ .Values.tap.ingress.tls | toYaml }}", 1)
+
+	return handleIngressClass(manifest)
+}
+
 func dumpHelmChart(objects map[string]interface{}) error {
 	folder := filepath.Join(".", "helm-chart")
 	templatesFolder := filepath.Join(folder, "templates")
@@ -367,6 +381,14 @@ func dumpHelmChart(objects map[string]interface{}) error {
 
 		if filename == "09-worker-daemon-set.yaml" {
 			manifest = handleDaemonSetManifest(manifest)
+		}
+
+		if filename == "10-ingress-class.yaml" {
+			manifest = handleIngressClass(manifest)
+		}
+
+		if filename == "11-ingress.yaml" {
+			manifest = handleIngress(manifest)
 		}
 
 		path := filepath.Join(templatesFolder, filename)
