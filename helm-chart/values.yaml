@@ -43,6 +43,10 @@ tap:
   ignoreTainted: false
   resourceLabels: {}
   nodeSelectorTerms: []
+  ingress:
+    enabled: false
+    host: ks.svc.cluster.local
+    tls: []
   debug: false
 logs:
   file: ""

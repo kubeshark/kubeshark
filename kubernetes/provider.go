@@ -20,6 +20,7 @@ import (
 	"github.com/rs/zerolog/log"
 	auth "k8s.io/api/authorization/v1"
 	core "k8s.io/api/core/v1"
+	networking "k8s.io/api/networking/v1"
 	rbac "k8s.io/api/rbac/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	"k8s.io/apimachinery/pkg/api/resource"
@@ -324,6 +325,10 @@ func (provider *Provider) BuildFrontPod(opts *PodOptions, hubHost string, hubPor
 	volumeMounts := []core.VolumeMount{}
 	volumes := []core.Volume{}
 
+	if config.Config.Tap.Ingress.Enabled {
+		hubPort = "80/api"
+	}
+
 	containers := []core.Container{
 		{
 			Name:  opts.PodName,
@@ -431,7 +436,7 @@ func (provider *Provider) BuildHubService(namespace string) *core.Service {
 					Port:       configStructs.ContainerPort,
 				},
 			},
-			Type:     core.ServiceTypeClusterIP,
+			Type:     core.ServiceTypeNodePort,
 			Selector: map[string]string{"app": HubServiceName},
 		},
 	}
@@ -456,10 +461,18 @@ func (provider *Provider) BuildFrontService(namespace string) *core.Service {
 					Port:       configStructs.ContainerPort,
 				},
 			},
-			Type:     core.ServiceTypeClusterIP,
+			Type:     core.ServiceTypeNodePort,
 			Selector: map[string]string{"app": FrontServiceName},
 		},
 	}
+}
+
+func (provider *Provider) CreateIngressClass(ctx context.Context, ingressClass *networking.IngressClass) (*networking.IngressClass, error) {
+	return provider.clientSet.NetworkingV1().IngressClasses().Create(ctx, ingressClass, metav1.CreateOptions{})
+}
+
+func (provider *Provider) CreateIngress(ctx context.Context, namespace string, ingress *networking.Ingress) (*networking.Ingress, error) {
+	return provider.clientSet.NetworkingV1().Ingresses(namespace).Create(ctx, ingress, metav1.CreateOptions{})
 }
 
 func (provider *Provider) CreateService(ctx context.Context, namespace string, service *core.Service) (*core.Service, error) {
@@ -534,6 +547,86 @@ func (provider *Provider) doesResourceExist(resource interface{}, err error) (bo
 	return resource != nil, nil
 }
 
+func (provider *Provider) BuildIngressClass() *networking.IngressClass {
+	return &networking.IngressClass{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "IngressClass",
+			APIVersion: "networking.k8s.io/v1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      IngressClassName,
+			Namespace: config.Config.Tap.SelfNamespace,
+			Labels: buildWithDefaultLabels(map[string]string{
+				fmt.Sprintf("%s-cli-version", misc.Program): misc.RBACVersion,
+			}, provider),
+		},
+		Spec: networking.IngressClassSpec{
+			Controller: "k8s.io/ingress-nginx",
+		},
+	}
+}
+
+func (provider *Provider) BuildIngress() *networking.Ingress {
+	pathTypePrefix := networking.PathTypePrefix
+	ingressClassName := IngressClassName
+
+	return &networking.Ingress{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "Ingress",
+			APIVersion: "networking.k8s.io/v1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:      IngressName,
+			Namespace: config.Config.Tap.SelfNamespace,
+			Labels: buildWithDefaultLabels(map[string]string{
+				fmt.Sprintf("%s-cli-version", misc.Program): misc.RBACVersion,
+			}, provider),
+			Annotations: map[string]string{
+				"nginx.ingress.kubernetes.io/rewrite-target": "/$2",
+			},
+		},
+		Spec: networking.IngressSpec{
+			IngressClassName: &ingressClassName,
+			TLS:              config.Config.Tap.Ingress.TLS,
+			Rules: []networking.IngressRule{
+				{
+					Host: config.Config.Tap.Ingress.Host,
+					IngressRuleValue: networking.IngressRuleValue{
+						HTTP: &networking.HTTPIngressRuleValue{
+							Paths: []networking.HTTPIngressPath{
+								{
+									Path:     "/api(/|$)(.*)",
+									PathType: &pathTypePrefix,
+									Backend: networking.IngressBackend{
+										Service: &networking.IngressServiceBackend{
+											Name: HubServiceName,
+											Port: networking.ServiceBackendPort{
+												Number: configStructs.ContainerPort,
+											},
+										},
+									},
+								},
+								{
+									Path:     "/()(.*)",
+									PathType: &pathTypePrefix,
+									Backend: networking.IngressBackend{
+										Service: &networking.IngressServiceBackend{
+											Name: FrontServiceName,
+											Port: networking.ServiceBackendPort{
+												Number: configStructs.ContainerPort,
+											},
+										},
+									},
+								},
+							},
+						},
+					},
+				},
+			},
+		},
+	}
+}
+
 func (provider *Provider) BuildServiceAccount() *core.ServiceAccount {
 	return &core.ServiceAccount{
 		TypeMeta: metav1.TypeMeta{
@@ -575,6 +668,7 @@ func (provider *Provider) BuildClusterRole() *rbac.ClusterRole {
 					"services",
 					"endpoints",
 					"persistentvolumeclaims",
+					"ingresses",
 				},
 				Verbs: []string{
 					"list",
@@ -632,6 +726,11 @@ func (provider *Provider) CreateSelfRBAC(ctx context.Context, namespace string) 
 		return err
 	}
 	return nil
+}
+
+func (provider *Provider) RemoveIngressClass(ctx context.Context, name string) error {
+	err := provider.clientSet.NetworkingV1().IngressClasses().Delete(ctx, name, metav1.DeleteOptions{})
+	return provider.handleRemovalError(err)
 }
 
 func (provider *Provider) RemoveNamespace(ctx context.Context, name string) error {
