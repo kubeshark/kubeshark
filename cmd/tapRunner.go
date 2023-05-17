@@ -113,7 +113,10 @@ func tap() {
 
 	// block until exit signal or error
 	utils.WaitForTermination(ctx, cancel)
-	printProxyCommandSuggestion()
+
+	if !config.Config.Tap.Ingress.Enabled {
+		printProxyCommandSuggestion()
+	}
 }
 
 func printProxyCommandSuggestion() {
@@ -458,7 +461,7 @@ func postHubStarted(ctx context.Context, kubernetesProvider *kubernetes.Provider
 		connector.PostScriptDone()
 	}
 
-	if !update {
+	if !update && !config.Config.Tap.Ingress.Enabled {
 		// Hub proxy URL
 		url := kubernetes.GetLocalhostOnPort(config.Config.Tap.Proxy.Hub.Port)
 		log.Info().Str("url", url).Msg(fmt.Sprintf(utils.Green, "Hub is available at:"))
@@ -481,7 +484,12 @@ func postFrontStarted(ctx context.Context, kubernetesProvider *kubernetes.Provid
 		"",
 	)
 
-	url := kubernetes.GetLocalhostOnPort(config.Config.Tap.Proxy.Front.Port)
+	var url string
+	if config.Config.Tap.Ingress.Enabled {
+		url = fmt.Sprintf("http://%s", config.Config.Tap.Ingress.Host)
+	} else {
+		url = kubernetes.GetLocalhostOnPort(config.Config.Tap.Proxy.Front.Port)
+	}
 	log.Info().Str("url", url).Msg(fmt.Sprintf(utils.Green, fmt.Sprintf("%s is available at:", misc.Software)))
 
 	if !config.Config.HeadlessMode {
