@@ -318,7 +318,6 @@ func watchFrontPod(ctx context.Context, kubernetesProvider *kubernetes.Provider,
 				Str("namespace", config.Config.Tap.SelfNamespace).
 				Err(err).
 				Msg("Failed creating pod.")
-			cancel()
 
 		case <-timeAfter:
 			if !isPodReady {
