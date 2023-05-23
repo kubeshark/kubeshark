@@ -265,6 +265,10 @@ func (provider *Provider) BuildHubPod(opts *PodOptions) (*core.Pod, error) {
 					Name:  "SCRIPTING_SCRIPTS",
 					Value: string(scriptsMarshalled),
 				},
+				{
+					Name:  "AUTH_APPROVED_DOMAINS",
+					Value: strings.Join(config.Config.Tap.Ingress.Auth.ApprovedDomains, ","),
+				},
 			},
 		},
 	}

@@ -80,10 +80,15 @@ type ResourcesConfig struct {
 	Hub    ResourceRequirements `yaml:"hub"`
 }
 
+type AuthConfig struct {
+	ApprovedDomains []string `yaml:"approvedDomains"`
+}
+
 type IngressConfig struct {
 	Enabled bool                    `yaml:"enabled" default:"false"`
 	Host    string                  `yaml:"host" default:"ks.svc.cluster.local"`
 	TLS     []networking.IngressTLS `yaml:"tls"`
+	Auth    AuthConfig              `yaml:"auth"`
 }
 
 type TapConfig struct {
