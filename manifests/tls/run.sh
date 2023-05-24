@@ -1,6 +1,6 @@
 #!/bin/bash
 
-__dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+__dir="$(cd -P -- "$(dirname -- "$0")" && pwd -P)"
 
 helm repo add jetstack https://charts.jetstack.io
 helm repo update
