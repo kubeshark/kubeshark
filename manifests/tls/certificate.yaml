@@ -7,6 +7,6 @@ spec:
   issuerRef:
     name: letsencrypt-prod
     kind: ClusterIssuer
-  secretName: cert-testing
+  secretName: cert-kubeshark
   dnsNames:
   - ks.svc.cluster.local
