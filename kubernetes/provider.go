@@ -587,6 +587,7 @@ func (provider *Provider) BuildIngress() *networking.Ingress {
 			}, provider),
 			Annotations: map[string]string{
 				"nginx.ingress.kubernetes.io/rewrite-target": "/$2",
+				"certmanager.k8s.io/cluster-issuer":          config.Config.Tap.Ingress.CertManager,
 			},
 		},
 		Spec: networking.IngressSpec{

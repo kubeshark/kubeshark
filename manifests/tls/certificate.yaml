@@ -1,0 +1,12 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: staging
+  namespace: default
+spec:
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  secretName: cert-testing
+  dnsNames:
+  - ks.svc.cluster.local

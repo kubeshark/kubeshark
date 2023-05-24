@@ -85,10 +85,11 @@ type AuthConfig struct {
 }
 
 type IngressConfig struct {
-	Enabled bool                    `yaml:"enabled" default:"false"`
-	Host    string                  `yaml:"host" default:"ks.svc.cluster.local"`
-	TLS     []networking.IngressTLS `yaml:"tls"`
-	Auth    AuthConfig              `yaml:"auth"`
+	Enabled     bool                    `yaml:"enabled" default:"false"`
+	Host        string                  `yaml:"host" default:"ks.svc.cluster.local"`
+	TLS         []networking.IngressTLS `yaml:"tls"`
+	Auth        AuthConfig              `yaml:"auth"`
+	CertManager string                  `yaml:"certManager" default:"letsencrypt-prod"`
 }
 
 type TapConfig struct {
