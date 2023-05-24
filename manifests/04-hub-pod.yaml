@@ -23,6 +23,7 @@ spec:
           value: '{}'
         - name: SCRIPTING_SCRIPTS
           value: '[]'
+        - name: AUTH_APPROVED_DOMAINS
       image: docker.io/kubeshark/hub:latest
       imagePullPolicy: Always
       name: kubeshark-hub
