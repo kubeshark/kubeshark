@@ -162,6 +162,20 @@ var frontPodMappings = map[string]interface{}{
 	"metadata.namespace":                 "{{ .Values.tap.selfnamespace }}",
 	"spec.containers[0].image":           "{{ .Values.tap.docker.registry }}/front:{{ .Values.tap.docker.tag }}",
 	"spec.containers[0].imagePullPolicy": "{{ .Values.tap.docker.imagepullpolicy }}",
+	"spec.containers[0].env": []map[string]interface{}{
+		{
+			"name":  "REACT_APP_DEFAULT_FILTER",
+			"value": " ",
+		},
+		{
+			"name":  "REACT_APP_HUB_HOST",
+			"value": " ",
+		},
+		{
+			"name":  "REACT_APP_HUB_PORT",
+			"value": "{{ .Values.tap.ingress.enabled | ternary \"80/api\" \"8898\" }}",
+		},
+	},
 }
 var frontServiceMappings = serviceAccountMappings
 var persistentVolumeMappings = map[string]interface{}{

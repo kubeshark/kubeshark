@@ -18,7 +18,7 @@ spec:
         - name: REACT_APP_HUB_HOST
           value: ' '
         - name: REACT_APP_HUB_PORT
-          value: "8898"
+          value: '{{ .Values.tap.ingress.enabled | ternary "80/api" "8898" }}'
       image: '{{ .Values.tap.docker.registry }}/front:{{ .Values.tap.docker.tag }}'
       imagePullPolicy: '{{ .Values.tap.docker.imagepullpolicy }}'
       name: kubeshark-front
