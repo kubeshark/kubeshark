@@ -44,7 +44,7 @@ func CheckNewerVersion() {
 		} else {
 			downloadCommand = fmt.Sprintf("sh <(curl -Ls %s/install)", misc.Website)
 		}
-		msg := fmt.Sprintf("There is a new release! %v -> %v run:", misc.Ver, latestVersion)
+		msg := fmt.Sprintf("There is a new release! %v -> %v Please upgrade to the latest release, as new releases are not always backward compatible. Run:", misc.Ver, latestVersion)
 		log.Warn().Str("command", downloadCommand).Msg(fmt.Sprintf(utils.Yellow, msg))
 	}
 }
