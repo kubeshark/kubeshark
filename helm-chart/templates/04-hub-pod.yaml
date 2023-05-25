@@ -25,6 +25,8 @@ spec:
           value: '{}'
         - name: SCRIPTING_SCRIPTS
           value: '[]'
+        - name: AUTH_APPROVED_DOMAINS
+          value: '{{ gt (len .Values.tap.ingress.auth.approvedDomains) 0 | ternary (join "," .Values.tap.ingress.auth.approvedDomains) "" }}'
       image: '{{ .Values.tap.docker.registry }}/hub:{{ .Values.tap.docker.tag }}'
       imagePullPolicy: '{{ .Values.tap.docker.imagepullpolicy }}'
       name: kubeshark-hub

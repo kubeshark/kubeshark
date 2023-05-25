@@ -70,17 +70,19 @@ func CreateHubResources(ctx context.Context, kubernetesProvider *kubernetes.Prov
 	}
 	log.Info().Str("service", kubernetes.FrontServiceName).Msg("Successfully created a service.")
 
-	_, err = kubernetesProvider.CreateIngressClass(ctx, kubernetesProvider.BuildIngressClass())
-	if err != nil {
-		return selfServiceAccountExists, err
-	}
-	log.Info().Str("ingress-class", kubernetes.IngressClassName).Msg("Successfully created an ingress class.")
+	if config.Config.Tap.Ingress.Enabled {
+		_, err = kubernetesProvider.CreateIngressClass(ctx, kubernetesProvider.BuildIngressClass())
+		if err != nil {
+			return selfServiceAccountExists, err
+		}
+		log.Info().Str("ingress-class", kubernetes.IngressClassName).Msg("Successfully created an ingress class.")
 
-	_, err = kubernetesProvider.CreateIngress(ctx, selfNamespace, kubernetesProvider.BuildIngress())
-	if err != nil {
-		return selfServiceAccountExists, err
+		_, err = kubernetesProvider.CreateIngress(ctx, selfNamespace, kubernetesProvider.BuildIngress())
+		if err != nil {
+			return selfServiceAccountExists, err
+		}
+		log.Info().Str("ingress", kubernetes.IngressName).Msg("Successfully created an ingress.")
 	}
-	log.Info().Str("ingress", kubernetes.IngressName).Msg("Successfully created an ingress.")
 
 	return selfServiceAccountExists, nil
 }

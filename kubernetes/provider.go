@@ -667,6 +667,7 @@ func (provider *Provider) BuildClusterRole() *rbac.ClusterRole {
 					"",
 					"extensions",
 					"apps",
+					"networking.k8s.io",
 				},
 				Resources: []string{
 					"pods",

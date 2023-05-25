@@ -144,6 +144,10 @@ var hubPodMappings = map[string]interface{}{
 			"name":  "SCRIPTING_SCRIPTS",
 			"value": "[]",
 		},
+		{
+			"name":  "AUTH_APPROVED_DOMAINS",
+			"value": "{{ gt (len .Values.tap.ingress.auth.approvedDomains) 0 | ternary (join \",\" .Values.tap.ingress.auth.approvedDomains) \"\" }}",
+		},
 	},
 	"spec.containers[0].image":                     "{{ .Values.tap.docker.registry }}/hub:{{ .Values.tap.docker.tag }}",
 	"spec.containers[0].imagePullPolicy":           "{{ .Values.tap.docker.imagepullpolicy }}",
@@ -180,6 +184,7 @@ var workerDaemonSetMappings = map[string]interface{}{
 var ingressClassMappings = serviceAccountMappings
 var ingressMappings = map[string]interface{}{
 	"metadata.namespace": "{{ .Values.tap.selfnamespace }}",
+	"metadata.annotations[\"certmanager.k8s.io/cluster-issuer\"]": "{{ .Values.tap.ingress.certManager }}",
 	"spec.rules[0].host": "{{ .Values.tap.ingress.host }}",
 	"spec.tls":           "{{ .Values.tap.ingress.tls | toYaml }}",
 }
