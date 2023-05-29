@@ -5,7 +5,7 @@ metadata:
 spec:
   acme:
     server: https://acme-v02.api.letsencrypt.org/directory
-    email: info@kubeshark.com
+    email: info@kubeshark.co
     privateKeySecretRef:
       name: letsencrypt-prod-key
     solvers:
