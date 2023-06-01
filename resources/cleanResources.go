@@ -87,7 +87,7 @@ func waitUntilNamespaceDeleted(ctx context.Context, cancel context.CancelFunc, k
 			log.Warn().
 				Str("namespace", selfResourcesNamespace).
 				Msg("Did nothing. User interrupted the wait.")
-		case err == wait.ErrWaitTimeout:
+		case wait.Interrupted(err):
 			log.Warn().
 				Str("namespace", selfResourcesNamespace).
 				Msg("Timed out while deleting the namespace.")

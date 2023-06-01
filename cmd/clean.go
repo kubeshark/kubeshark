@@ -5,6 +5,7 @@ import (
 
 	"github.com/creasty/defaults"
 	"github.com/kubeshark/kubeshark/config/configStructs"
+	"github.com/kubeshark/kubeshark/helm"
 	"github.com/kubeshark/kubeshark/misc"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
@@ -14,7 +15,8 @@ var cleanCmd = &cobra.Command{
 	Use:   "clean",
 	Short: fmt.Sprintf("Removes all %s resources", misc.Software),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		performCleanCommand()
+		helm := &helm.Helm{}
+		helm.Uninstall()
 		return nil
 	},
 }
