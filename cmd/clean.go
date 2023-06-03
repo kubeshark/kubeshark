@@ -15,8 +15,7 @@ var cleanCmd = &cobra.Command{
 	Use:   "clean",
 	Short: fmt.Sprintf("Removes all %s resources", misc.Software),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		helm := &helm.Helm{}
-		helm.Uninstall()
+		helm.NewHelmDefault().Uninstall()
 		return nil
 	},
 }

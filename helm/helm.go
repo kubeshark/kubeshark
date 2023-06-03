@@ -18,9 +18,31 @@ import (
 	"helm.sh/helm/v3/pkg/repo"
 )
 
+const ENV_HELM_DRIVER = "HELM_DRIVER"
+
 var settings = cli.New()
 
-type Helm struct{}
+type Helm struct {
+	repo             string
+	releaseName      string
+	releaseNamespace string
+}
+
+func NewHelm(repo string, releaseName string, releaseNamespace string) *Helm {
+	return &Helm{
+		repo:             repo,
+		releaseName:      releaseName,
+		releaseNamespace: releaseNamespace,
+	}
+}
+
+func NewHelmDefault() *Helm {
+	return &Helm{
+		repo:             "https://helm.kubeshark.co",
+		releaseName:      "kubeshark",
+		releaseNamespace: "default",
+	}
+}
 
 func parseOCIRef(chartRef string) (string, string, error) {
 	refTagRegexp := regexp.MustCompile(`^(oci://[^:]+(:[0-9]{1,5})?[^:]+):(.*)$`)
@@ -34,22 +56,20 @@ func parseOCIRef(chartRef string) (string, string, error) {
 	return chartRef, tag, nil
 }
 
-func (helm *Helm) Install() {
+func (h *Helm) Install() {
 	kubeConfigPath := config.Config.KubeConfigPath()
-	releaseName := "kubeshark"
-	releaseNamespace := "default"
 	actionConfig := new(action.Configuration)
-	if err := actionConfig.Init(kube.GetConfig(kubeConfigPath, "", releaseNamespace), releaseNamespace, os.Getenv("HELM_DRIVER"), func(format string, v ...interface{}) {
+	if err := actionConfig.Init(kube.GetConfig(kubeConfigPath, "", h.releaseNamespace), h.releaseNamespace, os.Getenv(ENV_HELM_DRIVER), func(format string, v ...interface{}) {
 		fmt.Printf(format+"\n", v)
 	}); err != nil {
 		panic(err)
 	}
 
 	client := action.NewInstall(actionConfig)
-	client.Namespace = releaseNamespace
-	client.ReleaseName = releaseName
+	client.Namespace = h.releaseNamespace
+	client.ReleaseName = h.releaseName
 
-	chartURL, err := repo.FindChartInRepoURL("https://helm.kubeshark.co", "kubeshark", "", "", "", "", getter.All(&cli.EnvSettings{}))
+	chartURL, err := repo.FindChartInRepoURL(h.repo, h.releaseName, "", "", "", "", getter.All(&cli.EnvSettings{}))
 	if err != nil {
 		panic(err)
 	}
@@ -119,12 +139,10 @@ func (helm *Helm) Install() {
 	fmt.Println("Successfully installed release: ", rel.Name)
 }
 
-func (helm *Helm) Uninstall() {
+func (h *Helm) Uninstall() {
 	kubeConfigPath := config.Config.KubeConfigPath()
-	releaseName := "kubeshark"
-	releaseNamespace := "default"
 	actionConfig := new(action.Configuration)
-	if err := actionConfig.Init(kube.GetConfig(kubeConfigPath, "", releaseNamespace), releaseNamespace, os.Getenv("HELM_DRIVER"), func(format string, v ...interface{}) {
+	if err := actionConfig.Init(kube.GetConfig(kubeConfigPath, "", h.releaseNamespace), h.releaseNamespace, os.Getenv(ENV_HELM_DRIVER), func(format string, v ...interface{}) {
 		fmt.Printf(format+"\n", v)
 	}); err != nil {
 		panic(err)
@@ -132,7 +150,7 @@ func (helm *Helm) Uninstall() {
 
 	client := action.NewUninstall(actionConfig)
 
-	resp, err := client.Run(releaseName)
+	resp, err := client.Run(h.releaseName)
 	if err != nil {
 		panic(err)
 	}
