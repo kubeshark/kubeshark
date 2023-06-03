@@ -1,20 +1,22 @@
 package helm
 
 import (
-	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
 
 	"github.com/kubeshark/kubeshark/config"
 	"github.com/pkg/errors"
+	"github.com/rs/zerolog/log"
 	"helm.sh/helm/v3/pkg/action"
+	"helm.sh/helm/v3/pkg/chart"
 	"helm.sh/helm/v3/pkg/chart/loader"
 	"helm.sh/helm/v3/pkg/cli"
 	"helm.sh/helm/v3/pkg/downloader"
 	"helm.sh/helm/v3/pkg/getter"
 	"helm.sh/helm/v3/pkg/kube"
 	"helm.sh/helm/v3/pkg/registry"
+	"helm.sh/helm/v3/pkg/release"
 	"helm.sh/helm/v3/pkg/repo"
 )
 
@@ -56,29 +58,29 @@ func parseOCIRef(chartRef string) (string, string, error) {
 	return chartRef, tag, nil
 }
 
-func (h *Helm) Install() {
+func (h *Helm) Install() (rel *release.Release, err error) {
 	kubeConfigPath := config.Config.KubeConfigPath()
 	actionConfig := new(action.Configuration)
-	if err := actionConfig.Init(kube.GetConfig(kubeConfigPath, "", h.releaseNamespace), h.releaseNamespace, os.Getenv(ENV_HELM_DRIVER), func(format string, v ...interface{}) {
-		fmt.Printf(format+"\n", v)
+	if err = actionConfig.Init(kube.GetConfig(kubeConfigPath, "", h.releaseNamespace), h.releaseNamespace, os.Getenv(ENV_HELM_DRIVER), func(format string, v ...interface{}) {
+		log.Info().Msgf(format, v...)
 	}); err != nil {
-		panic(err)
+		return
 	}
 
 	client := action.NewInstall(actionConfig)
 	client.Namespace = h.releaseNamespace
 	client.ReleaseName = h.releaseName
 
-	chartURL, err := repo.FindChartInRepoURL(h.repo, h.releaseName, "", "", "", "", getter.All(&cli.EnvSettings{}))
+	var chartURL string
+	chartURL, err = repo.FindChartInRepoURL(h.repo, h.releaseName, "", "", "", "", getter.All(&cli.EnvSettings{}))
 	if err != nil {
-		panic(err)
+		return
 	}
 
-	fmt.Printf("Chart URL: %+v\n", chartURL)
-
-	cp, err := client.ChartPathOptions.LocateChart(chartURL, settings)
+	var cp string
+	cp, err = client.ChartPathOptions.LocateChart(chartURL, settings)
 	if err != nil {
-		panic(err)
+		return
 	}
 
 	m := &downloader.Manager{
@@ -108,52 +110,65 @@ func (h *Helm) Install() {
 	repoPath := filepath.Dir(m.ChartPath)
 	err = os.MkdirAll(repoPath, os.ModePerm)
 	if err != nil {
-		panic(err)
+		return
 	}
 
 	version := ""
 	if registry.IsOCI(chartURL) {
 		chartURL, version, err = parseOCIRef(chartURL)
 		if err != nil {
-			panic(errors.Wrapf(err, "could not parse OCI reference"))
+			return
 		}
 		dl.Options = append(dl.Options,
 			getter.WithRegistryClient(m.RegistryClient),
 			getter.WithTagName(version))
 	}
 
+	log.Info().
+		Str("url", chartURL).
+		Str("repo-path", repoPath).
+		Msg("Downloading Helm chart:")
+
 	if _, _, err = dl.DownloadTo(chartURL, version, repoPath); err != nil {
-		panic(errors.Wrapf(err, "could not download %s", chartURL))
+		return
 	}
 
-	// chartPath := "./kubeshark-40.5.tgz"
-	chart, err := loader.Load(m.ChartPath)
+	var chart *chart.Chart
+	chart, err = loader.Load(m.ChartPath)
 	if err != nil {
-		panic(err)
+		return
 	}
 
-	rel, err := client.Run(chart, nil)
+	log.Info().
+		Str("release", chart.Metadata.Name).
+		Str("version", chart.Metadata.Version).
+		Strs("source", chart.Metadata.Sources).
+		Str("kube-version", chart.Metadata.KubeVersion).
+		Msg("Installing using Helm:")
+
+	rel, err = client.Run(chart, nil)
 	if err != nil {
-		panic(err)
+		return
 	}
-	fmt.Println("Successfully installed release: ", rel.Name)
+
+	return
 }
 
-func (h *Helm) Uninstall() {
+func (h *Helm) Uninstall() (resp *release.UninstallReleaseResponse, err error) {
 	kubeConfigPath := config.Config.KubeConfigPath()
 	actionConfig := new(action.Configuration)
-	if err := actionConfig.Init(kube.GetConfig(kubeConfigPath, "", h.releaseNamespace), h.releaseNamespace, os.Getenv(ENV_HELM_DRIVER), func(format string, v ...interface{}) {
-		fmt.Printf(format+"\n", v)
+	if err = actionConfig.Init(kube.GetConfig(kubeConfigPath, "", h.releaseNamespace), h.releaseNamespace, os.Getenv(ENV_HELM_DRIVER), func(format string, v ...interface{}) {
+		log.Info().Msgf(format, v...)
 	}); err != nil {
-		panic(err)
+		return
 	}
 
 	client := action.NewUninstall(actionConfig)
 
-	resp, err := client.Run(h.releaseName)
+	resp, err = client.Run(h.releaseName)
 	if err != nil {
-		panic(err)
+		return
 	}
 
-	fmt.Printf("%s: %s\n", resp.Info, resp.Release.Name)
+	return
 }

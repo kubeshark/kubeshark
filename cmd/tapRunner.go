@@ -87,7 +87,12 @@ func tap() {
 
 	log.Info().Msg(fmt.Sprintf("Waiting for the creation of %s resources...", misc.Software))
 
-	helm.NewHelmDefault().Install()
+	rel, err := helm.NewHelmDefault().Install()
+	if err != nil {
+		log.Error().Err(err).Send()
+	} else {
+		log.Info().Msgf("Installed the Helm release: %s", rel.Name)
+	}
 
 	defer finishTapExecution(kubernetesProvider)
 
