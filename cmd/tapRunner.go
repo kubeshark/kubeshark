@@ -8,8 +8,8 @@ import (
 	"time"
 
 	"github.com/kubeshark/kubeshark/docker"
-	"github.com/kubeshark/kubeshark/helm"
 	"github.com/kubeshark/kubeshark/internal/connect"
+	"github.com/kubeshark/kubeshark/kubernetes/helm"
 	"github.com/kubeshark/kubeshark/misc"
 	"github.com/kubeshark/kubeshark/utils"
 
