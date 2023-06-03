@@ -115,7 +115,7 @@ func printProxyCommandSuggestion() {
 }
 
 func finishTapExecution(kubernetesProvider *kubernetes.Provider) {
-	finishSelfExecution(kubernetesProvider, config.Config.IsNsRestrictedMode(), config.Config.Tap.SelfNamespace, true)
+	finishSelfExecution(kubernetesProvider, config.Config.IsNsRestrictedMode(), config.Config.Tap.SelfNamespace)
 }
 
 /*

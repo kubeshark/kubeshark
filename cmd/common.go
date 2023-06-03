@@ -14,7 +14,6 @@ import (
 	"github.com/kubeshark/kubeshark/kubernetes"
 	"github.com/kubeshark/kubeshark/misc"
 	"github.com/kubeshark/kubeshark/misc/fsUtils"
-	"github.com/kubeshark/kubeshark/resources"
 	"github.com/rs/zerolog/log"
 )
 
@@ -100,13 +99,10 @@ func handleKubernetesProviderError(err error) {
 	}
 }
 
-func finishSelfExecution(kubernetesProvider *kubernetes.Provider, isNsRestrictedMode bool, selfNamespace string, withoutCleanup bool) {
+func finishSelfExecution(kubernetesProvider *kubernetes.Provider, isNsRestrictedMode bool, selfNamespace string) {
 	removalCtx, cancel := context.WithTimeout(context.Background(), cleanupTimeout)
 	defer cancel()
 	dumpLogsIfNeeded(removalCtx, kubernetesProvider)
-	if !withoutCleanup {
-		resources.CleanUpSelfResources(removalCtx, cancel, kubernetesProvider, isNsRestrictedMode, selfNamespace)
-	}
 }
 
 func dumpLogsIfNeeded(ctx context.Context, kubernetesProvider *kubernetes.Provider) {
