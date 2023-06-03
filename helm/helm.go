@@ -1,6 +1,7 @@
 package helm
 
 import (
+	"encoding/json"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -146,7 +147,19 @@ func (h *Helm) Install() (rel *release.Release, err error) {
 		Str("kube-version", chart.Metadata.KubeVersion).
 		Msg("Installing using Helm:")
 
-	rel, err = client.Run(chart, nil)
+	var configMarshalled []byte
+	configMarshalled, err = json.Marshal(config.Config)
+	if err != nil {
+		return
+	}
+
+	var configUnmarshalled map[string]interface{}
+	err = json.Unmarshal(configMarshalled, &configUnmarshalled)
+	if err != nil {
+		return
+	}
+
+	rel, err = client.Run(chart, configUnmarshalled)
 	if err != nil {
 		return
 	}

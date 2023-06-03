@@ -19,7 +19,7 @@ var cleanCmd = &cobra.Command{
 		if err != nil {
 			log.Error().Err(err).Send()
 		} else {
-			log.Info().Msgf("Installed the Helm release: %s", resp.Release.Name)
+			log.Info().Msgf("Uninstalled the Helm release: %s", resp.Release.Name)
 		}
 		return nil
 	},

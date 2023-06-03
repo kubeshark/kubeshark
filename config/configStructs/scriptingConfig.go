@@ -10,9 +10,9 @@ import (
 )
 
 type ScriptingConfig struct {
-	Env          map[string]interface{} `yaml:"env"`
-	Source       string                 `yaml:"source" default:""`
-	WatchScripts bool                   `yaml:"watchScripts" default:"true"`
+	Env          map[string]interface{} `yaml:"env" json:"env"`
+	Source       string                 `yaml:"source" json:"source" default:""`
+	WatchScripts bool                   `yaml:"watchScripts" json:"watchScripts" default:"true"`
 }
 
 func (config *ScriptingConfig) GetScripts() (scripts []*misc.Script, err error) {

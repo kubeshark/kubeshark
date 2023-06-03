@@ -5,5 +5,5 @@ const (
 )
 
 type ConfigConfig struct {
-	Regenerate bool `yaml:"regenerate,omitempty" default:"false" readonly:""`
+	Regenerate bool `yaml:"regenerate,omitempty" json:"regenerate,omitempty" default:"false" readonly:""`
 }

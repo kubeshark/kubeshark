@@ -13,7 +13,7 @@ const (
 )
 
 type LogsConfig struct {
-	FileStr string `yaml:"file"`
+	FileStr string `yaml:"file" json:"file"`
 }
 
 func (config *LogsConfig) Validate() error {
