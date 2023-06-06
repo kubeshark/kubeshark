@@ -61,6 +61,7 @@ helm install kubeshark kubeshark/kubeshark \
   --set "tap.ingress.auth.approvedDomains={gmail.com}" \
   --set license=LICENSE_GOES_HERE
 ```
+You can get your license [here](https://console.kubeshark.co/).
 
 ## Installing with Persistent Storage Enabled
 
@@ -69,3 +70,4 @@ helm install kubeshark kubeshark/kubeshark \
   --set tap.persistentstorage=true \
   --set license=LICENSE_GOES_HERE
 ```
+You can get your license [here](https://console.kubeshark.co/).
