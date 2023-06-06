@@ -2,7 +2,7 @@ package configStructs
 
 import (
 	"io/fs"
-	"io/ioutil"
+	"os"
 	"path/filepath"
 
 	"github.com/kubeshark/kubeshark/misc"
@@ -10,9 +10,9 @@ import (
 )
 
 type ScriptingConfig struct {
-	Env          map[string]interface{} `yaml:"env"`
-	Source       string                 `yaml:"source" default:""`
-	WatchScripts bool                   `yaml:"watchScripts" default:"true"`
+	Env          map[string]interface{} `yaml:"env" json:"env"`
+	Source       string                 `yaml:"source" json:"source" default:""`
+	WatchScripts bool                   `yaml:"watchScripts" json:"watchScripts" default:"true"`
 }
 
 func (config *ScriptingConfig) GetScripts() (scripts []*misc.Script, err error) {
@@ -20,8 +20,8 @@ func (config *ScriptingConfig) GetScripts() (scripts []*misc.Script, err error) 
 		return
 	}
 
-	var files []fs.FileInfo
-	files, err = ioutil.ReadDir(config.Source)
+	var files []fs.DirEntry
+	files, err = os.ReadDir(config.Source)
 	if err != nil {
 		return
 	}

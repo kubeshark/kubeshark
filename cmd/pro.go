@@ -2,7 +2,7 @@ package cmd
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"os"
 	"time"
@@ -98,7 +98,7 @@ func runLicenseRecieverServer() {
 	})
 
 	ginApp.POST("/", func(c *gin.Context) {
-		data, err := ioutil.ReadAll(c.Request.Body)
+		data, err := io.ReadAll(c.Request.Body)
 		if err != nil {
 			log.Error().Err(err).Send()
 			c.AbortWithStatus(http.StatusBadRequest)

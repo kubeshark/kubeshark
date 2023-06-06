@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"context"
-	"errors"
 	"fmt"
 	"regexp"
 	"sync"
@@ -10,13 +9,11 @@ import (
 
 	"github.com/kubeshark/kubeshark/docker"
 	"github.com/kubeshark/kubeshark/internal/connect"
+	"github.com/kubeshark/kubeshark/kubernetes/helm"
 	"github.com/kubeshark/kubeshark/misc"
-	"github.com/kubeshark/kubeshark/resources"
 	"github.com/kubeshark/kubeshark/utils"
 
 	core "k8s.io/api/core/v1"
-	k8serrors "k8s.io/apimachinery/pkg/api/errors"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"github.com/kubeshark/kubeshark/config"
 	"github.com/kubeshark/kubeshark/config/configStructs"
@@ -28,9 +25,8 @@ import (
 const cleanupTimeout = time.Minute
 
 type tapState struct {
-	startTime                time.Time
-	targetNamespaces         []string
-	selfServiceAccountExists bool
+	startTime        time.Time
+	targetNamespaces []string
 }
 
 var state tapState
@@ -90,19 +86,12 @@ func tap() {
 	}
 
 	log.Info().Msg(fmt.Sprintf("Waiting for the creation of %s resources...", misc.Software))
-	if state.selfServiceAccountExists, err = resources.CreateHubResources(ctx, kubernetesProvider, config.Config.IsNsRestrictedMode(), config.Config.Tap.SelfNamespace, config.Config.Tap.Resources.Hub, config.Config.ImagePullPolicy(), config.Config.ImagePullSecrets(), config.Config.Tap.Debug); err != nil {
-		var statusError *k8serrors.StatusError
-		if errors.As(err, &statusError) && (statusError.ErrStatus.Reason == metav1.StatusReasonAlreadyExists) {
-			log.Info().Msg(fmt.Sprintf("%s is already running in this namespace, change the `selfnamespace` configuration or run `%s clean` to remove the currently running %s instance.", misc.Software, misc.Program, misc.Software))
-			postHubStarted(ctx, kubernetesProvider, cancel, true)
-			log.Info().Msg("Updated Hub about the changes in the config. Exiting.")
-			printProxyCommandSuggestion()
-		} else {
-			defer resources.CleanUpSelfResources(ctx, cancel, kubernetesProvider, config.Config.IsNsRestrictedMode(), config.Config.Tap.SelfNamespace)
-			log.Error().Err(errormessage.FormatError(err)).Msg("Error creating resources!")
-		}
 
-		return
+	rel, err := helm.NewHelmDefault().Install()
+	if err != nil {
+		log.Error().Err(err).Send()
+	} else {
+		log.Info().Msgf("Installed the Helm release: %s", rel.Name)
 	}
 
 	defer finishTapExecution(kubernetesProvider)
@@ -126,7 +115,7 @@ func printProxyCommandSuggestion() {
 }
 
 func finishTapExecution(kubernetesProvider *kubernetes.Provider) {
-	finishSelfExecution(kubernetesProvider, config.Config.IsNsRestrictedMode(), config.Config.Tap.SelfNamespace, true)
+	finishSelfExecution(kubernetesProvider, config.Config.IsNsRestrictedMode(), config.Config.Tap.SelfNamespace)
 }
 
 /*
@@ -416,24 +405,7 @@ func postHubStarted(ctx context.Context, kubernetesProvider *kubernetes.Provider
 		"/echo",
 	)
 
-	if !update {
-		// Create workers
-		err := kubernetes.CreateWorkers(
-			kubernetesProvider,
-			state.selfServiceAccountExists,
-			ctx,
-			config.Config.Tap.SelfNamespace,
-			config.Config.Tap.Resources.Worker,
-			config.Config.ImagePullPolicy(),
-			config.Config.ImagePullSecrets(),
-			config.Config.Tap.ServiceMesh,
-			config.Config.Tap.Tls,
-			config.Config.Tap.Debug,
-		)
-		if err != nil {
-			log.Error().Err(err).Send()
-		}
-	} else {
+	if update {
 		// Pod regex
 		connector.PostRegexToHub(config.Config.Tap.PodRegexStr, state.targetNamespaces)
 
