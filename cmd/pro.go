@@ -28,7 +28,7 @@ var proCmd = &cobra.Command{
 }
 
 const (
-	PRO_URL  = "https://console.kubeshark.co"
+	PRO_URL  = "https://console.kubeshark.co/cli"
 	PRO_PORT = 5252
 )
 
