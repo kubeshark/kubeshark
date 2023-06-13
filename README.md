@@ -3,9 +3,6 @@
 </p>
 
 <p align="center">
-    <a href="https://github.com/kubeshark/kubeshark/blob/main/LICENSE">
-        <img alt="GitHub License" src="https://img.shields.io/github/license/kubeshark/kubeshark?logo=GitHub&style=flat-square">
-    </a>
     <a href="https://github.com/kubeshark/kubeshark/releases/latest">
         <img alt="GitHub Latest Release" src="https://img.shields.io/github/v/release/kubeshark/kubeshark?logo=GitHub&style=flat-square">
     </a>
