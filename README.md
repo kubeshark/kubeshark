@@ -25,9 +25,11 @@
 
 <p align="center">
   <b>
-  <span>NEW: </span><a href="https://github.com/kubeshark/kubeshark/releases/tag/39.4">Version 39.4</a> is out, introducing
-  <a href="https://docs.kubeshark.co/en/automation_scripting">Scripting</a>,
-  <a href="https://docs.kubeshark.co/en/automation_hooks">L4/L7 hooks</a>, and so much more...
+  <span>NEW: Introducing </span>
+  <a href="https://docs.kubeshark.co/en/self_hosted">self-hosted Kubeshark</a>, with 
+  <a href="https://docs.kubeshark.co/en/install#helm">Helm</a>,
+  <a href="https://docs.kubeshark.co/en/self_hosted">Ingress & Authentication</a>. Read more about it 
+  <a href="https://kubeshark.co/self-hosting">here</a>.	  
   </b>
 </p>
 
