@@ -21,7 +21,7 @@ spec:
         - name: LICENSE
           value: '{{ .Values.license }}'
         - name: SCRIPTING_ENV
-          value: '{}'
+          value: '{{ .Values.scripting.env | toJson }}'
         - name: SCRIPTING_SCRIPTS
           value: '[]'
         - name: AUTH_APPROVED_DOMAINS

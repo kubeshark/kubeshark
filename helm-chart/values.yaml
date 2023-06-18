@@ -60,6 +60,7 @@ dumplogs: false
 headless: false
 license: ""
 scripting:
-  env: {}
+  env:
+    EXAMPLE: VALUE
   source: ""
   watchScripts: true
