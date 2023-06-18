@@ -9,6 +9,7 @@ import (
 	"net/url"
 	"time"
 
+	"github.com/kubeshark/kubeshark/config"
 	"github.com/kubeshark/kubeshark/misc"
 	"github.com/kubeshark/kubeshark/utils"
 
@@ -73,7 +74,7 @@ func (connector *Connector) PostWorkerPodToHub(pod *v1.Pod) {
 		ok := false
 		for !ok {
 			var resp *http.Response
-			if resp, err = utils.Post(postWorkerUrl, "application/json", bytes.NewBuffer(podMarshalled), connector.client); err != nil || resp.StatusCode != http.StatusOK {
+			if resp, err = utils.Post(postWorkerUrl, "application/json", bytes.NewBuffer(podMarshalled), connector.client, config.Config.License); err != nil || resp.StatusCode != http.StatusOK {
 				if _, ok := err.(*url.Error); ok {
 					break
 				}
@@ -106,7 +107,7 @@ func (connector *Connector) PostRegexToHub(regex string, namespaces []string) {
 		ok := false
 		for !ok {
 			var resp *http.Response
-			if resp, err = utils.Post(postRegexUrl, "application/json", bytes.NewBuffer(payloadMarshalled), connector.client); err != nil || resp.StatusCode != http.StatusOK {
+			if resp, err = utils.Post(postRegexUrl, "application/json", bytes.NewBuffer(payloadMarshalled), connector.client, config.Config.License); err != nil || resp.StatusCode != http.StatusOK {
 				if _, ok := err.(*url.Error); ok {
 					break
 				}
@@ -137,7 +138,7 @@ func (connector *Connector) PostLicense(license string) {
 		ok := false
 		for !ok {
 			var resp *http.Response
-			if resp, err = utils.Post(postLicenseUrl, "application/json", bytes.NewBuffer(payloadMarshalled), connector.client); err != nil || resp.StatusCode != http.StatusOK {
+			if resp, err = utils.Post(postLicenseUrl, "application/json", bytes.NewBuffer(payloadMarshalled), connector.client, config.Config.License); err != nil || resp.StatusCode != http.StatusOK {
 				if _, ok := err.(*url.Error); ok {
 					break
 				}
@@ -162,7 +163,7 @@ func (connector *Connector) PostLicenseSingle(license string) {
 		log.Error().Err(err).Msg("Failed to marshal the payload:")
 	} else {
 		var resp *http.Response
-		if resp, err = utils.Post(postLicenseUrl, "application/json", bytes.NewBuffer(payloadMarshalled), connector.client); err != nil || resp.StatusCode != http.StatusOK {
+		if resp, err = utils.Post(postLicenseUrl, "application/json", bytes.NewBuffer(payloadMarshalled), connector.client, config.Config.License); err != nil || resp.StatusCode != http.StatusOK {
 			log.Warn().Err(err).Msg("Failed sending the license to Hub.")
 		} else {
 			log.Debug().Str("license", license).Msg("Reported license to Hub:")
@@ -184,7 +185,7 @@ func (connector *Connector) PostEnv(env map[string]interface{}) {
 		ok := false
 		for !ok {
 			var resp *http.Response
-			if resp, err = utils.Post(postEnvUrl, "application/json", bytes.NewBuffer(envMarshalled), connector.client); err != nil || resp.StatusCode != http.StatusOK {
+			if resp, err = utils.Post(postEnvUrl, "application/json", bytes.NewBuffer(envMarshalled), connector.client, config.Config.License); err != nil || resp.StatusCode != http.StatusOK {
 				if _, ok := err.(*url.Error); ok {
 					break
 				}
@@ -208,7 +209,7 @@ func (connector *Connector) PostScript(script *misc.Script) (index int64, err er
 		ok := false
 		for !ok {
 			var resp *http.Response
-			if resp, err = utils.Post(postScriptUrl, "application/json", bytes.NewBuffer(scriptMarshalled), connector.client); err != nil || resp.StatusCode != http.StatusOK {
+			if resp, err = utils.Post(postScriptUrl, "application/json", bytes.NewBuffer(scriptMarshalled), connector.client, config.Config.License); err != nil || resp.StatusCode != http.StatusOK {
 				if _, ok := err.(*url.Error); ok {
 					break
 				}
@@ -257,6 +258,7 @@ func (connector *Connector) PutScript(script *misc.Script, index int64) (err err
 				return
 			}
 			req.Header.Set("Content-Type", "application/json")
+			req.Header.Set("License-Key", config.Config.License)
 
 			var resp *http.Response
 			resp, err = client.Do(req)
@@ -295,6 +297,7 @@ func (connector *Connector) DeleteScript(index int64) (err error) {
 			return
 		}
 		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("License-Key", config.Config.License)
 
 		var resp *http.Response
 		resp, err = client.Do(req)
@@ -325,7 +328,7 @@ func (connector *Connector) PostScriptDone() {
 	var err error
 	for !ok {
 		var resp *http.Response
-		if resp, err = utils.Post(postScripDonetUrl, "application/json", nil, connector.client); err != nil || resp.StatusCode != http.StatusOK {
+		if resp, err = utils.Post(postScripDonetUrl, "application/json", nil, connector.client, config.Config.License); err != nil || resp.StatusCode != http.StatusOK {
 			if _, ok := err.(*url.Error); ok {
 				break
 			}

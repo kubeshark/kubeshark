@@ -16,8 +16,15 @@ func Get(url string, client *http.Client) (*http.Response, error) {
 
 // Post - When err is nil, resp always contains a non-nil resp.Body.
 // Caller should close resp.Body when done reading from it.
-func Post(url, contentType string, body io.Reader, client *http.Client) (*http.Response, error) {
-	return checkError(client.Post(url, contentType, body))
+func Post(url, contentType string, body io.Reader, client *http.Client, licenseKey string) (*http.Response, error) {
+	req, err := http.NewRequest(http.MethodPost, url, body)
+	if err != nil {
+		return nil, err
+	}
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("License-Key", licenseKey)
+
+	return checkError(client.Do(req))
 }
 
 // Do - When err is nil, resp always contains a non-nil resp.Body.
