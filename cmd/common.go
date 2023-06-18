@@ -26,7 +26,7 @@ func startProxyReportErrorIfAny(kubernetesProvider *kubernetes.Provider, ctx con
 		return
 	}
 
-	connector := connect.NewConnector(kubernetes.GetLocalhostOnPort(srcPort), connect.DefaultRetries, connect.DefaultTimeout)
+	connector := connect.NewConnector(kubernetes.GetProxyOnPort(srcPort), connect.DefaultRetries, connect.DefaultTimeout)
 	if err := connector.TestConnection(healthCheck); err != nil {
 		log.Warn().
 			Str("service", serviceName).
@@ -46,7 +46,7 @@ func startProxyReportErrorIfAny(kubernetesProvider *kubernetes.Provider, ctx con
 			return
 		}
 
-		connector = connect.NewConnector(kubernetes.GetLocalhostOnPort(srcPort), connect.DefaultRetries, connect.DefaultTimeout)
+		connector = connect.NewConnector(kubernetes.GetProxyOnPort(srcPort), connect.DefaultRetries, connect.DefaultTimeout)
 		if err := connector.TestConnection(healthCheck); err != nil {
 			log.Error().
 				Str("service", serviceName).

@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/kubeshark/kubeshark/config"
 	"github.com/rs/zerolog/log"
 	"k8s.io/apimachinery/pkg/util/httpstream"
 	"k8s.io/client-go/tools/portforward"
@@ -66,8 +67,8 @@ func getSelfHubProxiedHostAndPath(selfNamespace string, selfServiceName string) 
 	return fmt.Sprintf("/api/v1/namespaces/%s/services/%s:%d/proxy", selfNamespace, selfServiceName, selfServicePort)
 }
 
-func GetLocalhostOnPort(port uint16) string {
-	return fmt.Sprintf("http://localhost:%d", port)
+func GetProxyOnPort(port uint16) string {
+	return fmt.Sprintf("http://%s:%d", config.Config.Tap.Proxy.Host, port)
 }
 
 func getRerouteHttpHandlerSelfAPI(proxyHandler http.Handler, selfNamespace string, selfServiceName string) http.Handler {

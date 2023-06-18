@@ -329,7 +329,7 @@ func pcap(tarPath string) {
 		},
 	}
 
-	connector = connect.NewConnector(kubernetes.GetLocalhostOnPort(config.Config.Tap.Proxy.Hub.Port), connect.DefaultRetries, connect.DefaultTimeout)
+	connector = connect.NewConnector(kubernetes.GetProxyOnPort(config.Config.Tap.Proxy.Hub.Port), connect.DefaultRetries, connect.DefaultTimeout)
 	connector.PostWorkerPodToHub(workerPod)
 
 	// License
@@ -338,10 +338,10 @@ func pcap(tarPath string) {
 	}
 
 	log.Info().
-		Str("url", kubernetes.GetLocalhostOnPort(config.Config.Tap.Proxy.Hub.Port)).
+		Str("url", kubernetes.GetProxyOnPort(config.Config.Tap.Proxy.Hub.Port)).
 		Msg(fmt.Sprintf(utils.Green, "Hub is available at:"))
 
-	url := kubernetes.GetLocalhostOnPort(config.Config.Tap.Proxy.Front.Port)
+	url := kubernetes.GetProxyOnPort(config.Config.Tap.Proxy.Front.Port)
 	log.Info().Str("url", url).Msg(fmt.Sprintf(utils.Green, fmt.Sprintf("%s is available at:", misc.Software)))
 
 	if !config.Config.HeadlessMode {

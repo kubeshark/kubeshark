@@ -63,7 +63,7 @@ func runProxy(block bool, noBrowser bool) {
 
 	var establishedProxy bool
 
-	hubUrl := kubernetes.GetLocalhostOnPort(config.Config.Tap.Proxy.Hub.Port)
+	hubUrl := kubernetes.GetProxyOnPort(config.Config.Tap.Proxy.Hub.Port)
 	response, err := http.Get(fmt.Sprintf("%s/echo", hubUrl))
 	if err == nil && response.StatusCode == 200 {
 		log.Info().
@@ -93,7 +93,7 @@ func runProxy(block bool, noBrowser bool) {
 		okToOpen("Hub", hubUrl, true)
 	}
 
-	frontUrl := kubernetes.GetLocalhostOnPort(config.Config.Tap.Proxy.Front.Port)
+	frontUrl := kubernetes.GetProxyOnPort(config.Config.Tap.Proxy.Front.Port)
 	response, err = http.Get(fmt.Sprintf("%s/", frontUrl))
 	if err == nil && response.StatusCode == 200 {
 		log.Info().

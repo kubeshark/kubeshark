@@ -41,7 +41,7 @@ func init() {
 }
 
 func runConsole() {
-	hubUrl := kubernetes.GetLocalhostOnPort(config.Config.Tap.Proxy.Hub.Port)
+	hubUrl := kubernetes.GetProxyOnPort(config.Config.Tap.Proxy.Hub.Port)
 	response, err := http.Get(fmt.Sprintf("%s/echo", hubUrl))
 	if err != nil || response.StatusCode != 200 {
 		log.Info().Msg(fmt.Sprintf(utils.Yellow, "Couldn't connect to Hub. Establishing proxy..."))
