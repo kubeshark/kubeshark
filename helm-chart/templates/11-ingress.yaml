@@ -33,7 +33,14 @@ spec:
                   number: 80
             path: /()(.*)
             pathType: Prefix
-  tls: {{ .Values.tap.ingress.tls | toYaml }}
+  tls:
+  {{- range .Values.tap.ingress.tls }}
+    - hosts:
+      {{- range .hosts }}
+        - {{ . | quote }}
+      {{- end }}
+      secretName: {{ .secretName }}
+  {{- end }}
 status:
   loadBalancer: {}
 {{- end }}
