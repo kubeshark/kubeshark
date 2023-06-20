@@ -90,6 +90,7 @@ func tap() {
 	rel, err := helm.NewHelmDefault().Install()
 	if err != nil {
 		log.Error().Err(err).Send()
+		return
 	} else {
 		log.Info().Msgf("Installed the Helm release: %s", rel.Name)
 	}

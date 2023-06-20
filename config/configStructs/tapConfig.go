@@ -81,7 +81,7 @@ type ResourcesConfig struct {
 }
 
 type AuthConfig struct {
-	ApprovedDomains []string `yaml:"approvedDomains" json:"approvedDomains"`
+	ApprovedDomains []string `yaml:"approvedDomains" json:"approvedDomains"  default:"[]"`
 }
 
 type IngressConfig struct {
@@ -96,7 +96,7 @@ type TapConfig struct {
 	Docker            DockerConfig          `yaml:"docker" json:"docker"`
 	Proxy             ProxyConfig           `yaml:"proxy" json:"proxy"`
 	PodRegexStr       string                `yaml:"regex" json:"regex" default:".*"`
-	Namespaces        []string              `yaml:"namespaces" json:"namespaces"`
+	Namespaces        []string              `yaml:"namespaces" json:"namespaces" default:"[]"`
 	SelfNamespace     string                `yaml:"selfnamespace" json:"selfnamespace" default:"kubeshark"`
 	PersistentStorage bool                  `yaml:"persistentstorage" json:"persistentstorage" default:"false"`
 	StorageLimit      string                `yaml:"storagelimit" json:"storagelimit" default:"200Mi"`
