@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"os"
 	"regexp"
 	"sync"
 	"time"
@@ -90,7 +91,7 @@ func tap() {
 	rel, err := helm.NewHelmDefault().Install()
 	if err != nil {
 		log.Error().Err(err).Send()
-		return
+		os.Exit(1)
 	} else {
 		log.Info().Msgf("Installed the Helm release: %s", rel.Name)
 	}
