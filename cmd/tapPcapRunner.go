@@ -6,8 +6,14 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net/url"
 	"os"
+	"strings"
 
+	"github.com/aws/aws-sdk-go-v2/aws"
+	awsConfig "github.com/aws/aws-sdk-go-v2/config"
+	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
+	"github.com/aws/aws-sdk-go-v2/service/s3"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
@@ -62,6 +68,7 @@ func logPullingImage(image string, reader io.ReadCloser) {
 }
 
 func pullImages(ctx context.Context, cli *client.Client, imageFront string, imageHub string, imageWorker string) error {
+	log.Info().Msg("Pulling images...")
 	readerFront, err := cli.ImagePull(ctx, imageFront, types.ImagePullOptions{})
 	if err != nil {
 		return err
@@ -271,7 +278,53 @@ func stopAndRemoveContainers(
 	return
 }
 
-func pcap(tarPath string) {
+func downloadTarFromS3(s3Url string) (tarPath string, err error) {
+	u, err := url.Parse(s3Url)
+	if err != nil {
+		return
+	}
+
+	var cfg aws.Config
+	cfg, err = awsConfig.LoadDefaultConfig(context.TODO())
+	if err != nil {
+		return
+	}
+
+	var file *os.File
+	file, err = os.CreateTemp(os.TempDir(), "kubeshark_s3_*.tar.gz")
+	if err != nil {
+		return
+	}
+
+	log.Info().Str("bucket", u.Host).Str("key", u.Path[1:]).Msg("Downloading from S3")
+
+	client := s3.NewFromConfig(cfg)
+	downloader := manager.NewDownloader(client)
+	_, err = downloader.Download(context.TODO(), file, &s3.GetObjectInput{
+		Bucket: aws.String(u.Host),
+		Key:    aws.String(u.Path[1:]),
+	})
+	if err != nil {
+		return
+	}
+
+	tarPath = file.Name()
+
+	return
+}
+
+func pcap(tarPath string) error {
+	if strings.HasPrefix(tarPath, "s3://") {
+		var err error
+		tarPath, err = downloadTarFromS3(tarPath)
+		if err != nil {
+			log.Error().Err(err).Msg("Failed downloading from S3")
+			return err
+		}
+	}
+
+	log.Info().Str("tar-path", tarPath).Msg("Openning")
+
 	docker.SetRegistry(config.Config.Tap.Docker.Registry)
 	docker.SetTag(config.Config.Tap.Docker.Tag)
 
@@ -279,7 +332,7 @@ func pcap(tarPath string) {
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
 		log.Error().Err(err).Send()
-		return
+		return err
 	}
 	defer cli.Close()
 
@@ -290,13 +343,13 @@ func pcap(tarPath string) {
 	err = pullImages(ctx, cli, imageFront, imageHub, imageWorker)
 	if err != nil {
 		log.Error().Err(err).Send()
-		return
+		return err
 	}
 
 	tarFile, err := os.Open(tarPath)
 	if err != nil {
 		log.Error().Err(err).Send()
-		return
+		return err
 	}
 	defer tarFile.Close()
 	tarReader := bufio.NewReader(tarFile)
@@ -311,7 +364,7 @@ func pcap(tarPath string) {
 	)
 	if err != nil {
 		log.Error().Err(err).Send()
-		return
+		return err
 	}
 
 	workerPod := &v1.Pod{
@@ -355,5 +408,8 @@ func pcap(tarPath string) {
 	err = stopAndRemoveContainers(ctx, cli, respFront, respHub, respWorker)
 	if err != nil {
 		log.Error().Err(err).Send()
+		return err
 	}
+
+	return nil
 }

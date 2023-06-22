@@ -49,7 +49,10 @@ func tap() {
 	docker.SetTag(config.Config.Tap.Docker.Tag)
 	log.Info().Str("registry", docker.GetRegistry()).Str("tag", docker.GetTag()).Msg("Using Docker:")
 	if config.Config.Tap.Pcap != "" {
-		pcap(config.Config.Tap.Pcap)
+		err := pcap(config.Config.Tap.Pcap)
+		if err != nil {
+			os.Exit(1)
+		}
 		return
 	}
 
