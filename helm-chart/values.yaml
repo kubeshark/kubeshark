@@ -42,7 +42,7 @@ tap:
   packetcapture: libpcap
   ignoretainted: false
   resourcelabels: {}
-  nodeSelectorTerms: []
+  nodeselectorterms: []
   ingress:
     enabled: false
     host: ks.svc.cluster.local
