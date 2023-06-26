@@ -5,8 +5,12 @@ metadata:
   creationTimestamp: null
   labels:
     app: kubeshark-worker-daemon-set
+    kubeshark-cli-version: v1
     kubeshark-created-by: kubeshark
     kubeshark-managed-by: kubeshark
+  {{- range $key, $value := .Values.tap.resourcelabels }}
+    {{ $key }}: {{ $value }}
+  {{- end }}
   name: kubeshark-worker-daemon-set
   namespace: '{{ .Values.tap.selfnamespace }}'
 spec:
@@ -15,6 +19,9 @@ spec:
       app: kubeshark-worker-daemon-set
       kubeshark-created-by: kubeshark
       kubeshark-managed-by: kubeshark
+    {{- range $key, $value := .Values.tap.resourcelabels }}
+      {{ $key }}: {{ $value }}
+    {{- end }}
   template:
     metadata:
       creationTimestamp: null
@@ -22,6 +29,9 @@ spec:
         app: kubeshark-worker-daemon-set
         kubeshark-created-by: kubeshark
         kubeshark-managed-by: kubeshark
+      {{- range $key, $value := .Values.tap.resourcelabels }}
+        {{ $key }}: {{ $value }}
+      {{- end }}
       name: kubeshark-worker-daemon-set
       namespace: kubeshark
     spec:

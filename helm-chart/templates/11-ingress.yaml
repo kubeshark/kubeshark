@@ -11,6 +11,9 @@ metadata:
     kubeshark-cli-version: v1
     kubeshark-created-by: kubeshark
     kubeshark-managed-by: kubeshark
+  {{- range $key, $value := .Values.tap.resourcelabels }}
+    {{ $key }}: {{ $value }}
+  {{- end }}
   name: kubeshark-ingress
   namespace: '{{ .Values.tap.selfnamespace }}'
 spec:
