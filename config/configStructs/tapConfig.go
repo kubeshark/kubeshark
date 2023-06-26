@@ -25,7 +25,7 @@ const (
 	PcapLabel              = "pcap"
 	ServiceMeshLabel       = "servicemesh"
 	TlsLabel               = "tls"
-	IgnoreTaintedLabel     = "ignoreTainted"
+	IgnoreTaintedLabel     = "ignoretainted"
 	IngressEnabledLabel    = "ingress-enabled"
 	DebugLabel             = "debug"
 	ContainerPort          = 80
@@ -107,7 +107,7 @@ type TapConfig struct {
 	ServiceMesh       bool                  `yaml:"servicemesh" json:"servicemesh" default:"true"`
 	Tls               bool                  `yaml:"tls" json:"tls" default:"true"`
 	PacketCapture     string                `yaml:"packetcapture" json:"packetcapture" default:"libpcap"`
-	IgnoreTainted     bool                  `yaml:"ignoreTainted" json:"ignoreTainted" default:"false"`
+	IgnoreTainted     bool                  `yaml:"ignoretainted" json:"ignoretainted" default:"false"`
 	ResourceLabels    map[string]string     `yaml:"resourceLabels" json:"resourceLabels" default:"{}"`
 	NodeSelectorTerms []v1.NodeSelectorTerm `yaml:"nodeSelectorTerms" json:"nodeSelectorTerms" default:"[]"`
 	Ingress           IngressConfig         `yaml:"ingress" json:"ingress"`

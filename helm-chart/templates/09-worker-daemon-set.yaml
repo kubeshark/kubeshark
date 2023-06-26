@@ -80,8 +80,10 @@ spec:
       tolerations:
         - effect: NoExecute
           operator: Exists
+{{- if not .Values.tap.ignoretainted }}
         - effect: NoSchedule
           operator: Exists
+{{- end }}
       volumes:
         - hostPath:
             path: /proc

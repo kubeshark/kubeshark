@@ -40,7 +40,7 @@ tap:
   servicemesh: true
   tls: true
   packetcapture: libpcap
-  ignoreTainted: false
+  ignoretainted: false
   resourceLabels: {}
   nodeSelectorTerms: []
   ingress:
