@@ -5,9 +5,6 @@ metadata:
   creationTimestamp: null
   labels:
     app: kubeshark-worker-daemon-set
-    kubeshark-cli-version: v1
-    kubeshark-created-by: kubeshark
-    kubeshark-managed-by: kubeshark
   {{- if .Values.tap.resourcelabels }}
     {{- toYaml .Values.tap.resourcelabels | nindent 4 }}
   {{- end }}
@@ -17,8 +14,6 @@ spec:
   selector:
     matchLabels:
       app: kubeshark-worker-daemon-set
-      kubeshark-created-by: kubeshark
-      kubeshark-managed-by: kubeshark
     {{- if .Values.tap.resourcelabels }}
       {{- toYaml .Values.tap.resourcelabels | nindent 6 }}
     {{- end }}
@@ -27,8 +22,6 @@ spec:
       creationTimestamp: null
       labels:
         app: kubeshark-worker-daemon-set
-        kubeshark-created-by: kubeshark
-        kubeshark-managed-by: kubeshark
       {{- if .Values.tap.resourcelabels }}
         {{- toYaml .Values.tap.resourcelabels | nindent 8 }}
       {{- end }}

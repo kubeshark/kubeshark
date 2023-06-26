@@ -5,8 +5,6 @@ metadata:
   creationTimestamp: null
   labels:
     app: kubeshark-front
-    kubeshark-created-by: kubeshark
-    kubeshark-managed-by: kubeshark
   {{- if .Values.tap.resourcelabels }}
     {{- toYaml .Values.tap.resourcelabels | nindent 4 }}
   {{- end }}

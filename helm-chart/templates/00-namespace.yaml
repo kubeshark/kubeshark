@@ -4,9 +4,6 @@ kind: Namespace
 metadata:
   creationTimestamp: null
   labels:
-    kubeshark-cli-version: v1
-    kubeshark-created-by: kubeshark
-    kubeshark-managed-by: kubeshark
   {{- if .Values.tap.resourcelabels }}
     {{- toYaml .Values.tap.resourcelabels | nindent 4 }}
   {{- end }}
