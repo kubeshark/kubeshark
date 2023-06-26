@@ -23,3 +23,4 @@ sources:
   - https://github.com/kubeshark/kubeshark/tree/master/helm-chart
 type: application
 version: "41.1"
+icon: https://raw.githubusercontent.com/kubeshark/assets/master/logo/vector/logo.svg
