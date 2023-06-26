@@ -8,8 +8,8 @@ metadata:
     kubeshark-cli-version: v1
     kubeshark-created-by: kubeshark
     kubeshark-managed-by: kubeshark
-  {{- range $key, $value := .Values.tap.resourcelabels }}
-    {{ $key }}: {{ $value }}
+  {{- if .Values.tap.resourcelabels }}
+    {{- toYaml .Values.tap.resourcelabels | nindent 4 }}
   {{- end }}
   name: kubeshark-worker-daemon-set
   namespace: '{{ .Values.tap.selfnamespace }}'
@@ -19,8 +19,8 @@ spec:
       app: kubeshark-worker-daemon-set
       kubeshark-created-by: kubeshark
       kubeshark-managed-by: kubeshark
-    {{- range $key, $value := .Values.tap.resourcelabels }}
-      {{ $key }}: {{ $value }}
+    {{- if .Values.tap.resourcelabels }}
+      {{- toYaml .Values.tap.resourcelabels | nindent 6 }}
     {{- end }}
   template:
     metadata:
@@ -29,8 +29,8 @@ spec:
         app: kubeshark-worker-daemon-set
         kubeshark-created-by: kubeshark
         kubeshark-managed-by: kubeshark
-      {{- range $key, $value := .Values.tap.resourcelabels }}
-        {{ $key }}: {{ $value }}
+      {{- if .Values.tap.resourcelabels }}
+        {{- toYaml .Values.tap.resourcelabels | nindent 8 }}
       {{- end }}
       name: kubeshark-worker-daemon-set
       namespace: kubeshark
@@ -99,7 +99,7 @@ spec:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
             nodeSelectorTerms:
-              {{ .Values.tap.nodeselectorterms | toJson }}
+              {{- toYaml .Values.tap.nodeselectorterms | nindent 12 }}
 {{- end }}
       volumes:
         - hostPath:
