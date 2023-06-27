@@ -11,5 +11,5 @@ metadata:
   name: kubeshark-ingress-class
   namespace: {{ .Values.tap.selfnamespace }}
 spec:
-  controller: k8s.io/ingress-nginx
+  controller: {{ .Values.tap.ingress.controller }}
 {{- end }}
