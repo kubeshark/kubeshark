@@ -69,5 +69,8 @@ kubectl-view-all-resources: ## This command outputs all Kubernetes resources usi
 kubectl-view-kubeshark-resources: ## This command outputs all Kubernetes resources in "kubeshark" namespace using YAML format and pipes it to VS Code
 	./kubectl.sh view-kubeshark-resources
 
+generate-helm-values: ## Generate the Helm values from config.yaml
+	./bin/kubeshark__ config > ./helm-chart/values.yaml
+
 generate-manifests: ## Generate the manifests from the Helm chart using default configuration
 	helm template ./helm-chart > ./manifests/complete.yaml
