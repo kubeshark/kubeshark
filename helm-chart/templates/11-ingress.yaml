@@ -14,7 +14,7 @@ metadata:
   name: kubeshark-ingress
   namespace: {{ .Values.tap.selfnamespace }}
 spec:
-  ingressClassName: kubeshark-ingress-class
+  ingressClassName: {{ .Values.tap.ingress.className }}
   rules:
     - host: {{ .Values.tap.ingress.host }}
       http:
