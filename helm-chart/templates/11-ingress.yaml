@@ -4,7 +4,7 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   annotations:
-    certmanager.k8s.io/cluster-issuer: '{{ .Values.tap.ingress.certmanager }}'
+    certmanager.k8s.io/cluster-issuer: {{ .Values.tap.ingress.certmanager }}
     nginx.ingress.kubernetes.io/rewrite-target: /$2
   creationTimestamp: null
   labels:
@@ -38,7 +38,9 @@ spec:
             path: /()(.*)
             pathType: Prefix
   tls:
+  {{- if gt (len .Values.tap.ingress.tls) 0}}
     {{- toYaml .Values.tap.ingress.tls | nindent 2 }}
+  {{- end }}
 status:
   loadBalancer: {}
 {{- end }}
