@@ -5,10 +5,8 @@ kind: Namespace
 metadata:
   creationTimestamp: null
   labels:
-    kubeshark-cli-version: v1
-    kubeshark-created-by: kubeshark
-    kubeshark-managed-by: kubeshark
-  name: 'kubeshark'
+  annotations:
+  name: kubeshark
 spec: {}
 status: {}
 ---
@@ -18,11 +16,9 @@ kind: ServiceAccount
 metadata:
   creationTimestamp: null
   labels:
-    kubeshark-cli-version: v1
-    kubeshark-created-by: kubeshark
-    kubeshark-managed-by: kubeshark
+  annotations:
   name: kubeshark-service-account
-  namespace: 'kubeshark'
+  namespace: kubeshark
 ---
 # Source: kubeshark/templates/02-cluster-role.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -30,11 +26,9 @@ kind: ClusterRole
 metadata:
   creationTimestamp: null
   labels:
-    kubeshark-cli-version: v1
-    kubeshark-created-by: kubeshark
-    kubeshark-managed-by: kubeshark
+  annotations:
   name: kubeshark-cluster-role
-  namespace: 'kubeshark'
+  namespace: kubeshark
 rules:
   - apiGroups:
       - ""
@@ -58,11 +52,9 @@ kind: ClusterRoleBinding
 metadata:
   creationTimestamp: null
   labels:
-    kubeshark-cli-version: v1
-    kubeshark-created-by: kubeshark
-    kubeshark-managed-by: kubeshark
+  annotations:
   name: kubeshark-cluster-role-binding
-  namespace: 'kubeshark'
+  namespace: kubeshark
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -70,7 +62,7 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: kubeshark-service-account
-    namespace: 'kubeshark'
+    namespace: kubeshark
 ---
 # Source: kubeshark/templates/05-hub-service.yaml
 apiVersion: v1
@@ -78,11 +70,9 @@ kind: Service
 metadata:
   creationTimestamp: null
   labels:
-    kubeshark-cli-version: v1
-    kubeshark-created-by: kubeshark
-    kubeshark-managed-by: kubeshark
+  annotations:
   name: kubeshark-hub
-  namespace: 'kubeshark'
+  namespace: kubeshark
 spec:
   ports:
     - name: kubeshark-hub
@@ -100,11 +90,9 @@ kind: Service
 metadata:
   creationTimestamp: null
   labels:
-    kubeshark-cli-version: v1
-    kubeshark-created-by: kubeshark
-    kubeshark-managed-by: kubeshark
+  annotations:
   name: kubeshark-front
-  namespace: 'kubeshark'
+  namespace: kubeshark
 spec:
   ports:
     - name: kubeshark-front
@@ -123,24 +111,18 @@ metadata:
   creationTimestamp: null
   labels:
     app: kubeshark-worker-daemon-set
-    kubeshark-cli-version: v1
-    kubeshark-created-by: kubeshark
-    kubeshark-managed-by: kubeshark
+  annotations:
   name: kubeshark-worker-daemon-set
-  namespace: 'kubeshark'
+  namespace: kubeshark
 spec:
   selector:
     matchLabels:
       app: kubeshark-worker-daemon-set
-      kubeshark-created-by: kubeshark
-      kubeshark-managed-by: kubeshark
   template:
     metadata:
       creationTimestamp: null
       labels:
         app: kubeshark-worker-daemon-set
-        kubeshark-created-by: kubeshark
-        kubeshark-managed-by: kubeshark
       name: kubeshark-worker-daemon-set
       namespace: kubeshark
     spec:
@@ -158,18 +140,18 @@ spec:
             - -procfs
             - /hostproc
           image: 'docker.io/kubeshark/worker:latest'
-          imagePullPolicy: 'Always'
+          imagePullPolicy: Always
           name: kubeshark-worker-daemon-set
           ports:
             - containerPort: 8897
               hostPort: 8897
           resources:
             limits:
-              cpu: '750m'
-              memory: '1Gi'
+              cpu: 750m
+              memory: 1Gi
             requests:
-              cpu: '50m'
-              memory: '50Mi'
+              cpu: 50m
+              memory: 50Mi
           securityContext:
             capabilities:
               add:
@@ -212,14 +194,13 @@ metadata:
   creationTimestamp: null
   labels:
     app: kubeshark-hub
-    kubeshark-created-by: kubeshark
-    kubeshark-managed-by: kubeshark
+  annotations:
   name: kubeshark-hub
-  namespace: 'kubeshark'
+  namespace: kubeshark
 spec:
   containers:
     - command:
-        - './hub'
+        - ./hub
       env:
         - name: POD_REGEX
           value: '.*'
@@ -234,18 +215,18 @@ spec:
         - name: AUTH_APPROVED_DOMAINS
           value: ''
       image: 'docker.io/kubeshark/hub:latest'
-      imagePullPolicy: 'Always'
+      imagePullPolicy: Always
       name: kubeshark-hub
       ports:
         - containerPort: 80
           hostPort: 8898
       resources:
         limits:
-          cpu: '750m'
-          memory: '1Gi'
+          cpu: 750m
+          memory: 1Gi
         requests:
-          cpu: '50m'
-          memory: '50Mi'
+          cpu: 50m
+          memory: 50Mi
   dnsPolicy: ClusterFirstWithHostNet
   serviceAccountName: kubeshark-service-account
   terminationGracePeriodSeconds: 0
@@ -263,10 +244,9 @@ metadata:
   creationTimestamp: null
   labels:
     app: kubeshark-front
-    kubeshark-created-by: kubeshark
-    kubeshark-managed-by: kubeshark
+  annotations:
   name: kubeshark-front
-  namespace: 'kubeshark'
+  namespace: kubeshark
 spec:
   containers:
     - env:
@@ -277,7 +257,7 @@ spec:
         - name: REACT_APP_HUB_PORT
           value: '8898'
       image: 'docker.io/kubeshark/front:latest'
-      imagePullPolicy: 'Always'
+      imagePullPolicy: Always
       name: kubeshark-front
       ports:
         - containerPort: 80
