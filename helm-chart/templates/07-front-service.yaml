@@ -8,7 +8,7 @@ metadata:
     {{- toYaml .Values.tap.resourcelabels | nindent 4 }}
   {{- end }}
   name: kubeshark-front
-  namespace: '{{ .Values.tap.selfnamespace }}'
+  namespace: {{ .Values.tap.selfnamespace }}
 spec:
   ports:
     - name: kubeshark-front

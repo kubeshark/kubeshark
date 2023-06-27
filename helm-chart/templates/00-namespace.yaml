@@ -7,6 +7,6 @@ metadata:
   {{- if .Values.tap.resourcelabels }}
     {{- toYaml .Values.tap.resourcelabels | nindent 4 }}
   {{- end }}
-  name: '{{ .Values.tap.selfnamespace }}'
+  name: {{ .Values.tap.selfnamespace }}
 spec: {}
 status: {}

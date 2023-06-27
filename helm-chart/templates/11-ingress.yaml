@@ -12,11 +12,11 @@ metadata:
     {{- toYaml .Values.tap.resourcelabels | nindent 4 }}
   {{- end }}
   name: kubeshark-ingress
-  namespace: '{{ .Values.tap.selfnamespace }}'
+  namespace: {{ .Values.tap.selfnamespace }}
 spec:
   ingressClassName: kubeshark-ingress-class
   rules:
-    - host: '{{ .Values.tap.ingress.host }}'
+    - host: {{ .Values.tap.ingress.host }}
       http:
         paths:
           - backend:

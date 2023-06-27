@@ -9,13 +9,13 @@ metadata:
     {{- toYaml .Values.tap.resourcelabels | nindent 4 }}
   {{- end }}
   name: kubeshark-persistent-volume-claim
-  namespace: '{{ .Values.tap.selfnamespace }}'
+  namespace: {{ .Values.tap.selfnamespace }}
 spec:
   accessModes:
     - ReadWriteMany
   resources:
     requests:
-      storage: '{{ .Values.tap.storagelimit }}'
-  storageClassName: '{{ .Values.tap.storageclass }}'
+      storage: {{ .Values.tap.storagelimit }}
+  storageClassName: {{ .Values.tap.storageclass }}
 status: {}
 {{- end }}

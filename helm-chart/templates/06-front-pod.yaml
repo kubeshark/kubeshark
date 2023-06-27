@@ -9,7 +9,7 @@ metadata:
     {{- toYaml .Values.tap.resourcelabels | nindent 4 }}
   {{- end }}
   name: kubeshark-front
-  namespace: '{{ .Values.tap.selfnamespace }}'
+  namespace: {{ .Values.tap.selfnamespace }}
 spec:
   containers:
     - env:
@@ -20,7 +20,7 @@ spec:
         - name: REACT_APP_HUB_PORT
           value: '{{ .Values.tap.ingress.enabled | ternary "80/api" "8898" }}'
       image: '{{ .Values.tap.docker.registry }}/front:{{ .Values.tap.docker.tag }}'
-      imagePullPolicy: '{{ .Values.tap.docker.imagepullpolicy }}'
+      imagePullPolicy: {{ .Values.tap.docker.imagepullpolicy }}
       name: kubeshark-front
       ports:
         - containerPort: 80

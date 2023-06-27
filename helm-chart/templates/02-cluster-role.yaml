@@ -8,7 +8,7 @@ metadata:
     {{- toYaml .Values.tap.resourcelabels | nindent 4 }}
   {{- end }}
   name: kubeshark-cluster-role
-  namespace: '{{ .Values.tap.selfnamespace }}'
+  namespace: {{ .Values.tap.selfnamespace }}
 rules:
   - apiGroups:
       - ""

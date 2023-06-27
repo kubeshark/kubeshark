@@ -9,7 +9,7 @@ metadata:
     {{- toYaml .Values.tap.resourcelabels | nindent 4 }}
   {{- end }}
   name: kubeshark-worker-daemon-set
-  namespace: '{{ .Values.tap.selfnamespace }}'
+  namespace: {{ .Values.tap.selfnamespace }}
 spec:
   selector:
     matchLabels:
@@ -42,18 +42,18 @@ spec:
             - -procfs
             - /hostproc
           image: '{{ .Values.tap.docker.registry }}/worker:{{ .Values.tap.docker.tag }}'
-          imagePullPolicy: '{{ .Values.tap.docker.imagepullpolicy }}'
+          imagePullPolicy: {{ .Values.tap.docker.imagepullpolicy }}
           name: kubeshark-worker-daemon-set
           ports:
             - containerPort: {{ .Values.tap.proxy.worker.srvport }}
               hostPort: {{ .Values.tap.proxy.worker.srvport }}
           resources:
             limits:
-              cpu: '{{ .Values.tap.resources.worker.limits.cpu }}'
-              memory: '{{ .Values.tap.resources.worker.limits.memory }}'
+              cpu: {{ .Values.tap.resources.worker.limits.cpu }}
+              memory: {{ .Values.tap.resources.worker.limits.memory }}
             requests:
-              cpu: '{{ .Values.tap.resources.worker.requests.cpu }}'
-              memory: '{{ .Values.tap.resources.worker.requests.memory }}'
+              cpu: {{ .Values.tap.resources.worker.requests.cpu }}
+              memory: {{ .Values.tap.resources.worker.requests.memory }}
           securityContext:
             capabilities:
               add:

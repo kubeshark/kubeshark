@@ -9,11 +9,11 @@ metadata:
     {{- toYaml .Values.tap.resourcelabels | nindent 4 }}
   {{- end }}
   name: kubeshark-hub
-  namespace: '{{ .Values.tap.selfnamespace }}'
+  namespace: {{ .Values.tap.selfnamespace }}
 spec:
   containers:
     - command:
-        - '{{ .Values.tap.debug | ternary "./hub -debug" "./hub" }}'
+        - {{ .Values.tap.debug | ternary "./hub -debug" "./hub" }}
       env:
         - name: POD_REGEX
           value: '{{ .Values.tap.regex }}'
@@ -28,18 +28,18 @@ spec:
         - name: AUTH_APPROVED_DOMAINS
           value: '{{ gt (len .Values.tap.ingress.auth.approvedDomains) 0 | ternary (join "," .Values.tap.ingress.auth.approvedDomains) "" }}'
       image: '{{ .Values.tap.docker.registry }}/hub:{{ .Values.tap.docker.tag }}'
-      imagePullPolicy: '{{ .Values.tap.docker.imagepullpolicy }}'
+      imagePullPolicy: {{ .Values.tap.docker.imagepullpolicy }}
       name: kubeshark-hub
       ports:
         - containerPort: 80
           hostPort: {{ .Values.tap.proxy.hub.srvport }}
       resources:
         limits:
-          cpu: '{{ .Values.tap.resources.hub.limits.cpu }}'
-          memory: '{{ .Values.tap.resources.hub.limits.memory }}'
+          cpu: {{ .Values.tap.resources.hub.limits.cpu }}
+          memory: {{ .Values.tap.resources.hub.limits.memory }}
         requests:
-          cpu: '{{ .Values.tap.resources.hub.requests.cpu }}'
-          memory: '{{ .Values.tap.resources.hub.requests.memory }}'
+          cpu: {{ .Values.tap.resources.hub.requests.cpu }}
+          memory: {{ .Values.tap.resources.hub.requests.memory }}
   dnsPolicy: ClusterFirstWithHostNet
   serviceAccountName: kubeshark-service-account
   terminationGracePeriodSeconds: 0

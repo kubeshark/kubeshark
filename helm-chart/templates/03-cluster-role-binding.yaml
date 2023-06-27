@@ -8,7 +8,7 @@ metadata:
     {{- toYaml .Values.tap.resourcelabels | nindent 4 }}
   {{- end }}
   name: kubeshark-cluster-role-binding
-  namespace: '{{ .Values.tap.selfnamespace }}'
+  namespace: {{ .Values.tap.selfnamespace }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -16,4 +16,4 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: kubeshark-service-account
-    namespace: '{{ .Values.tap.selfnamespace }}'
+    namespace: {{ .Values.tap.selfnamespace }}
