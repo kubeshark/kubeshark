@@ -13,7 +13,7 @@ metadata:
     {{- toYaml .Values.tap.annotations | nindent 4 }}
   {{- end }}
   name: kubeshark-ingress-class
-  namespace: {{ .Values.tap.selfnamespace }}
+  namespace: {{ .Release.Namespace }}
 spec:
   controller: {{ .Values.tap.ingress.controller }}
 {{- end }}

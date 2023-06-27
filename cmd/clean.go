@@ -33,5 +33,5 @@ func init() {
 		log.Debug().Err(err).Send()
 	}
 
-	cleanCmd.Flags().StringP(configStructs.SelfNamespaceLabel, "s", defaultTapConfig.SelfNamespace, "Self-namespace of Kubeshark")
+	cleanCmd.Flags().StringP(configStructs.ReleaseNamespaceLabel, "s", defaultTapConfig.ReleaseNamespace, "Self-namespace of Kubeshark")
 }

@@ -17,7 +17,7 @@ const (
 	ProxyHubPortLabel      = "proxy-hub-port"
 	ProxyHostLabel         = "proxy-host"
 	NamespacesLabel        = "namespaces"
-	SelfNamespaceLabel     = "selfnamespace"
+	ReleaseNamespaceLabel  = "releasenamespace"
 	PersistentStorageLabel = "persistentstorage"
 	StorageLimitLabel      = "storagelimit"
 	StorageClassLabel      = "storageclass"
@@ -99,7 +99,7 @@ type TapConfig struct {
 	Proxy             ProxyConfig           `yaml:"proxy" json:"proxy"`
 	PodRegexStr       string                `yaml:"regex" json:"regex" default:".*"`
 	Namespaces        []string              `yaml:"namespaces" json:"namespaces" default:"[]"`
-	SelfNamespace     string                `yaml:"selfnamespace" json:"selfnamespace" default:"kubeshark"`
+	ReleaseNamespace  string                `yaml:"releasenamespace" json:"releasenamespace" default:"default"`
 	PersistentStorage bool                  `yaml:"persistentstorage" json:"persistentstorage" default:"false"`
 	StorageLimit      string                `yaml:"storagelimit" json:"storagelimit" default:"200Mi"`
 	StorageClass      string                `yaml:"storageclass" json:"storageclass" default:"standard"`

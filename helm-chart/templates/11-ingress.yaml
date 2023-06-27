@@ -15,7 +15,7 @@ metadata:
     {{- toYaml .Values.tap.labels | nindent 4 }}
   {{- end }}
   name: kubeshark-ingress
-  namespace: {{ .Values.tap.selfnamespace }}
+  namespace: {{ .Release.Namespace }}
 spec:
   ingressClassName: {{ .Values.tap.ingress.classname }}
   rules:

@@ -12,7 +12,7 @@ metadata:
     {{- toYaml .Values.tap.annotations | nindent 4 }}
   {{- end }}
   name: kubeshark-cluster-role-binding
-  namespace: {{ .Values.tap.selfnamespace }}
+  namespace: {{ .Release.Namespace }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -20,4 +20,4 @@ roleRef:
 subjects:
   - kind: ServiceAccount
     name: kubeshark-service-account
-    namespace: {{ .Values.tap.selfnamespace }}
+    namespace: {{ .Release.Namespace }}

@@ -13,7 +13,7 @@ metadata:
     {{- toYaml .Values.tap.annotations | nindent 4 }}
   {{- end }}
   name: kubeshark-worker-daemon-set
-  namespace: {{ .Values.tap.selfnamespace }}
+  namespace: {{ .Release.Namespace }}
 spec:
   selector:
     matchLabels:
