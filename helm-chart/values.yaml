@@ -41,7 +41,7 @@ tap:
   tls: true
   packetcapture: libpcap
   ignoretainted: false
-  resourcelabels: {}
+  labels: {}
   nodeselectorterms: []
   ingress:
     enabled: false

@@ -5,8 +5,8 @@ kind: IngressClass
 metadata:
   creationTimestamp: null
   labels:
-  {{- if .Values.tap.resourcelabels }}
-    {{- toYaml .Values.tap.resourcelabels | nindent 4 }}
+  {{- if .Values.tap.labels }}
+    {{- toYaml .Values.tap.labels | nindent 4 }}
   {{- end }}
   name: kubeshark-ingress-class
   namespace: {{ .Values.tap.selfnamespace }}

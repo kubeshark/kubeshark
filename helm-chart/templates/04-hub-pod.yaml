@@ -5,8 +5,8 @@ metadata:
   creationTimestamp: null
   labels:
     app: kubeshark-hub
-  {{- if .Values.tap.resourcelabels }}
-    {{- toYaml .Values.tap.resourcelabels | nindent 4 }}
+  {{- if .Values.tap.labels }}
+    {{- toYaml .Values.tap.labels | nindent 4 }}
   {{- end }}
   name: kubeshark-hub
   namespace: {{ .Values.tap.selfnamespace }}
