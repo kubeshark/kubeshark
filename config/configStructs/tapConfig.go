@@ -81,17 +81,17 @@ type ResourcesConfig struct {
 }
 
 type AuthConfig struct {
-	ApprovedDomains []string `yaml:"approvedDomains" json:"approvedDomains"  default:"[]"`
+	ApprovedDomains []string `yaml:"approveddomains" json:"approveddomains"  default:"[]"`
 }
 
 type IngressConfig struct {
 	Enabled     bool                    `yaml:"enabled" json:"enabled" default:"false"`
-	ClassName   string                  `yaml:"className" json:"className" default:"kubeshark-ingress-class"`
+	ClassName   string                  `yaml:"classname" json:"classname" default:"kubeshark-ingress-class"`
 	Controller  string                  `yaml:"controller" json:"controller" default:"k8s.io/ingress-nginx"`
 	Host        string                  `yaml:"host" json:"host" default:"ks.svc.cluster.local"`
 	TLS         []networking.IngressTLS `yaml:"tls" json:"tls"`
 	Auth        AuthConfig              `yaml:"auth" json:"auth"`
-	CertManager string                  `yaml:"certManager" json:"certManager" default:"letsencrypt-prod"`
+	CertManager string                  `yaml:"certmanager" json:"certmanager" default:"letsencrypt-prod"`
 }
 
 type TapConfig struct {

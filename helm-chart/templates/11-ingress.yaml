@@ -4,7 +4,7 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   annotations:
-    certmanager.k8s.io/cluster-issuer: '{{ .Values.tap.ingress.certManager }}'
+    certmanager.k8s.io/cluster-issuer: '{{ .Values.tap.ingress.certmanager }}'
     nginx.ingress.kubernetes.io/rewrite-target: /$2
   creationTimestamp: null
   labels:
@@ -14,7 +14,7 @@ metadata:
   name: kubeshark-ingress
   namespace: {{ .Values.tap.selfnamespace }}
 spec:
-  ingressClassName: {{ .Values.tap.ingress.className }}
+  ingressClassName: {{ .Values.tap.ingress.classname }}
   rules:
     - host: {{ .Values.tap.ingress.host }}
       http:

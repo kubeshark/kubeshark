@@ -45,13 +45,13 @@ tap:
   nodeselectorterms: []
   ingress:
     enabled: false
-    className: kubeshark-ingress-class
+    classname: kubeshark-ingress-class
     controller: k8s.io/ingress-nginx
     host: ks.svc.cluster.local
     tls: []
     auth:
-      approvedDomains: []
-    certManager: letsencrypt-prod
+      approveddomains: []
+    certmanager: letsencrypt-prod
   debug: false
 logs:
   file: ""
