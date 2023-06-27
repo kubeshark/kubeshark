@@ -7,6 +7,10 @@ metadata:
   {{- if .Values.tap.labels }}
     {{- toYaml .Values.tap.labels | nindent 4 }}
   {{- end }}
+  annotations:
+  {{- if .Values.tap.annotations }}
+    {{- toYaml .Values.tap.annotations | nindent 4 }}
+  {{- end }}
   name: kubeshark-cluster-role
   namespace: {{ .Values.tap.selfnamespace }}
 rules:

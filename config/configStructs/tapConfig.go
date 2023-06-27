@@ -111,6 +111,7 @@ type TapConfig struct {
 	PacketCapture     string                `yaml:"packetcapture" json:"packetcapture" default:"libpcap"`
 	IgnoreTainted     bool                  `yaml:"ignoretainted" json:"ignoretainted" default:"false"`
 	Labels            map[string]string     `yaml:"labels" json:"labels" default:"{}"`
+	Annotations       map[string]string     `yaml:"annotations" json:"annotations" default:"{}"`
 	NodeSelectorTerms []v1.NodeSelectorTerm `yaml:"nodeselectorterms" json:"nodeselectorterms" default:"[]"`
 	Ingress           IngressConfig         `yaml:"ingress" json:"ingress"`
 	Debug             bool                  `yaml:"debug" json:"debug" default:"false"`

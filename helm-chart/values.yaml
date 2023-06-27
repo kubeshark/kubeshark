@@ -42,6 +42,7 @@ tap:
   packetcapture: libpcap
   ignoretainted: false
   labels: {}
+  annotations: {}
   nodeselectorterms: []
   ingress:
     enabled: false
