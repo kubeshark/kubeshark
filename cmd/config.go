@@ -17,13 +17,13 @@ var configCmd = &cobra.Command{
 	Use:   "config",
 	Short: fmt.Sprintf("Generate %s config with default values", misc.Software),
 	RunE: func(cmd *cobra.Command, args []string) error {
-		configWithDefaults, err := config.GetConfigWithDefaults()
-		if err != nil {
-			log.Error().Err(err).Msg("Failed generating config with defaults.")
-			return nil
-		}
-
 		if config.Config.Config.Regenerate {
+			configWithDefaults, err := config.GetConfigWithDefaults()
+			if err != nil {
+				log.Error().Err(err).Msg("Failed generating config with defaults.")
+				return nil
+			}
+
 			if err := config.WriteConfig(configWithDefaults); err != nil {
 				log.Error().Err(err).Msg("Failed generating config with defaults.")
 				return nil
@@ -31,7 +31,7 @@ var configCmd = &cobra.Command{
 
 			log.Info().Str("config-path", config.ConfigFilePath).Msg("Template file written to config path.")
 		} else {
-			template, err := utils.PrettyYaml(configWithDefaults)
+			template, err := utils.PrettyYaml(config.Config)
 			if err != nil {
 				log.Error().Err(err).Msg("Failed converting config with defaults to YAML.")
 				return nil
