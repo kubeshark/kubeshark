@@ -306,7 +306,23 @@ func downloadTarFromS3(s3Url string) (tarPath string, err error) {
 		return
 	}
 
-	if key == "" {
+	var file *os.File
+	file, err = os.CreateTemp(os.TempDir(), filepath.Base(key))
+	if err != nil {
+		return
+	}
+	defer file.Close()
+
+	log.Info().Str("bucket", bucket).Str("key", key).Msg("Downloading from S3")
+
+	downloader := manager.NewDownloader(client)
+	_, err = downloader.Download(context.TODO(), file, &s3.GetObjectInput{
+		Bucket: aws.String(bucket),
+		Key:    aws.String(key),
+	})
+	if err != nil {
+		log.Info().Err(err).Msg("S3 object is not found. Assuming URL is not a single object. Listing the objects in given folder or the bucket to download...")
+
 		var tempDirPath string
 		tempDirPath, err = os.MkdirTemp(os.TempDir(), "kubeshark_*")
 		if err != nil {
@@ -314,25 +330,30 @@ func downloadTarFromS3(s3Url string) (tarPath string, err error) {
 		}
 
 		for _, object := range listObjectsOutput.Contents {
-			key = *object.Key
-			fullPath := filepath.Join(tempDirPath, key)
+			objectKey := *object.Key
+			if !strings.HasPrefix(objectKey, key) {
+				continue
+			}
+
+			fullPath := filepath.Join(tempDirPath, objectKey)
 			err = os.MkdirAll(filepath.Dir(fullPath), os.ModePerm)
 			if err != nil {
 				return
 			}
 
-			var file *os.File
-			file, err = os.Create(fullPath)
+			var objectFile *os.File
+			objectFile, err = os.Create(fullPath)
 			if err != nil {
 				return
 			}
+			defer objectFile.Close()
 
-			log.Info().Str("bucket", bucket).Str("key", key).Msg("Downloading from S3")
+			log.Info().Str("bucket", bucket).Str("key", objectKey).Msg("Downloading from S3")
 
 			downloader := manager.NewDownloader(client)
-			_, err = downloader.Download(context.TODO(), file, &s3.GetObjectInput{
+			_, err = downloader.Download(context.TODO(), objectFile, &s3.GetObjectInput{
 				Bucket: aws.String(bucket),
-				Key:    aws.String(key),
+				Key:    aws.String(objectKey),
 			})
 			if err != nil {
 				return
@@ -340,26 +361,10 @@ func downloadTarFromS3(s3Url string) (tarPath string, err error) {
 		}
 
 		tarPath, err = tarDirectory(tempDirPath)
-	} else {
-		var file *os.File
-		file, err = os.CreateTemp(os.TempDir(), filepath.Base(key))
-		if err != nil {
-			return
-		}
-
-		log.Info().Str("bucket", bucket).Str("key", key).Msg("Downloading from S3")
-
-		downloader := manager.NewDownloader(client)
-		_, err = downloader.Download(context.TODO(), file, &s3.GetObjectInput{
-			Bucket: aws.String(bucket),
-			Key:    aws.String(key),
-		})
-		if err != nil {
-			return
-		}
-
-		tarPath = file.Name()
+		return
 	}
+
+	tarPath = file.Name()
 
 	return
 }
