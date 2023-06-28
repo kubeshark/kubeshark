@@ -307,7 +307,7 @@ func downloadTarFromS3(s3Url string) (tarPath string, err error) {
 	}
 
 	var file *os.File
-	file, err = os.CreateTemp(os.TempDir(), filepath.Base(key))
+	file, err = os.CreateTemp(os.TempDir(), fmt.Sprintf("%s_*.%s", strings.TrimSuffix(filepath.Base(key), filepath.Ext(key)), filepath.Ext(key)))
 	if err != nil {
 		return
 	}
