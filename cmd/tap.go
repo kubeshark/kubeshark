@@ -61,5 +61,4 @@ func init() {
 	tapCmd.Flags().Bool(configStructs.TlsLabel, defaultTapConfig.Tls, "Capture the traffic that's encrypted with OpenSSL or Go crypto/tls libraries")
 	tapCmd.Flags().Bool(configStructs.IgnoreTaintedLabel, defaultTapConfig.IgnoreTainted, "Ignore tainted pods while running Worker DaemonSet")
 	tapCmd.Flags().Bool(configStructs.IngressEnabledLabel, defaultTapConfig.Ingress.Enabled, "Enable Ingress")
-	tapCmd.Flags().Bool(configStructs.DebugLabel, defaultTapConfig.Debug, "Enable the debug mode")
 }
