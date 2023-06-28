@@ -103,7 +103,7 @@ func cleanUpOldContainers(
 	nameHub string,
 	nameWorker string,
 ) error {
-	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{})
+	containers, err := cli.ContainerList(ctx, types.ContainerListOptions{All: true})
 	if err != nil {
 		return err
 	}
