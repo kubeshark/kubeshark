@@ -1,13 +1,16 @@
 package cmd
 
 import (
+	"archive/tar"
 	"bufio"
+	"compress/gzip"
 	"context"
 	"encoding/json"
 	"fmt"
 	"io"
 	"net/url"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
@@ -284,33 +287,143 @@ func downloadTarFromS3(s3Url string) (tarPath string, err error) {
 		return
 	}
 
+	bucket := u.Host
+	key := u.Path[1:]
+
 	var cfg aws.Config
 	cfg, err = awsConfig.LoadDefaultConfig(context.TODO())
 	if err != nil {
 		return
 	}
 
-	var file *os.File
-	file, err = os.CreateTemp(os.TempDir(), "kubeshark_s3_*.tar.gz")
-	if err != nil {
-		return
-	}
-
-	log.Info().Str("bucket", u.Host).Str("key", u.Path[1:]).Msg("Downloading from S3")
-
 	client := s3.NewFromConfig(cfg)
-	downloader := manager.NewDownloader(client)
-	_, err = downloader.Download(context.TODO(), file, &s3.GetObjectInput{
-		Bucket: aws.String(u.Host),
-		Key:    aws.String(u.Path[1:]),
+
+	var listObjectsOutput *s3.ListObjectsV2Output
+	listObjectsOutput, err = client.ListObjectsV2(context.TODO(), &s3.ListObjectsV2Input{
+		Bucket: aws.String(bucket),
 	})
 	if err != nil {
 		return
 	}
 
-	tarPath = file.Name()
+	if key == "" {
+		var tempDirPath string
+		tempDirPath, err = os.MkdirTemp(os.TempDir(), "kubeshark_*")
+		if err != nil {
+			return
+		}
+
+		for _, object := range listObjectsOutput.Contents {
+			key = *object.Key
+			fullPath := filepath.Join(tempDirPath, key)
+			err = os.MkdirAll(filepath.Dir(fullPath), os.ModePerm)
+			if err != nil {
+				return
+			}
+
+			var file *os.File
+			file, err = os.Create(fullPath)
+			if err != nil {
+				return
+			}
+
+			log.Info().Str("bucket", bucket).Str("key", key).Msg("Downloading from S3")
+
+			downloader := manager.NewDownloader(client)
+			_, err = downloader.Download(context.TODO(), file, &s3.GetObjectInput{
+				Bucket: aws.String(bucket),
+				Key:    aws.String(key),
+			})
+			if err != nil {
+				return
+			}
+		}
+
+		tarPath, err = tarDirectory(tempDirPath)
+	} else {
+		var file *os.File
+		file, err = os.CreateTemp(os.TempDir(), filepath.Base(key))
+		if err != nil {
+			return
+		}
+
+		log.Info().Str("bucket", bucket).Str("key", key).Msg("Downloading from S3")
+
+		downloader := manager.NewDownloader(client)
+		_, err = downloader.Download(context.TODO(), file, &s3.GetObjectInput{
+			Bucket: aws.String(bucket),
+			Key:    aws.String(key),
+		})
+		if err != nil {
+			return
+		}
+
+		tarPath = file.Name()
+	}
 
 	return
+}
+
+func tarDirectory(dirPath string) (string, error) {
+	tarPath := fmt.Sprintf("%s.tar.gz", dirPath)
+
+	var file *os.File
+	file, err := os.Create(tarPath)
+	if err != nil {
+		return "", err
+	}
+	defer file.Close()
+
+	gzipWriter := gzip.NewWriter(file)
+	defer gzipWriter.Close()
+
+	tarWriter := tar.NewWriter(gzipWriter)
+	defer tarWriter.Close()
+
+	walker := func(path string, info os.FileInfo, err error) error {
+		if err != nil {
+			return err
+		}
+		if info.IsDir() {
+			return nil
+		}
+		file, err := os.Open(path)
+		if err != nil {
+			return err
+		}
+		defer file.Close()
+
+		stat, err := file.Stat()
+		if err != nil {
+			return err
+		}
+
+		header := &tar.Header{
+			Name:    path[len(dirPath)+1:],
+			Size:    stat.Size(),
+			Mode:    int64(stat.Mode()),
+			ModTime: stat.ModTime(),
+		}
+
+		err = tarWriter.WriteHeader(header)
+		if err != nil {
+			return err
+		}
+
+		_, err = io.Copy(tarWriter, file)
+		if err != nil {
+			return err
+		}
+
+		return nil
+	}
+
+	err = filepath.Walk(dirPath, walker)
+	if err != nil {
+		return "", err
+	}
+
+	return tarPath, nil
 }
 
 func pcap(tarPath string) error {
