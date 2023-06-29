@@ -301,6 +301,7 @@ func downloadTarFromS3(s3Url string) (tarPath string, err error) {
 	var listObjectsOutput *s3.ListObjectsV2Output
 	listObjectsOutput, err = client.ListObjectsV2(context.TODO(), &s3.ListObjectsV2Input{
 		Bucket: aws.String(bucket),
+		Prefix: aws.String(key),
 	})
 	if err != nil {
 		return
@@ -331,9 +332,6 @@ func downloadTarFromS3(s3Url string) (tarPath string, err error) {
 
 		for _, object := range listObjectsOutput.Contents {
 			objectKey := *object.Key
-			if !strings.HasPrefix(objectKey, key) {
-				continue
-			}
 
 			fullPath := filepath.Join(tempDirPath, objectKey)
 			err = os.MkdirAll(filepath.Dir(fullPath), os.ModePerm)
