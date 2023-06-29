@@ -12,11 +12,13 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 
 	"github.com/aws/aws-sdk-go-v2/aws"
 	awsConfig "github.com/aws/aws-sdk-go-v2/config"
 	"github.com/aws/aws-sdk-go-v2/feature/s3/manager"
 	"github.com/aws/aws-sdk-go-v2/service/s3"
+	s3Types "github.com/aws/aws-sdk-go-v2/service/s3/types"
 	"github.com/docker/docker/api/types"
 	"github.com/docker/docker/api/types/container"
 	"github.com/docker/docker/client"
@@ -330,33 +332,39 @@ func downloadTarFromS3(s3Url string) (tarPath string, err error) {
 			return
 		}
 
+		var wg sync.WaitGroup
 		for _, object := range listObjectsOutput.Contents {
-			objectKey := *object.Key
+			wg.Add(1)
+			go func(object s3Types.Object) {
+				defer wg.Done()
+				objectKey := *object.Key
 
-			fullPath := filepath.Join(tempDirPath, objectKey)
-			err = os.MkdirAll(filepath.Dir(fullPath), os.ModePerm)
-			if err != nil {
-				return
-			}
+				fullPath := filepath.Join(tempDirPath, objectKey)
+				err = os.MkdirAll(filepath.Dir(fullPath), os.ModePerm)
+				if err != nil {
+					return
+				}
 
-			var objectFile *os.File
-			objectFile, err = os.Create(fullPath)
-			if err != nil {
-				return
-			}
-			defer objectFile.Close()
+				var objectFile *os.File
+				objectFile, err = os.Create(fullPath)
+				if err != nil {
+					return
+				}
+				defer objectFile.Close()
 
-			log.Info().Str("bucket", bucket).Str("key", objectKey).Msg("Downloading from S3")
+				log.Info().Str("bucket", bucket).Str("key", objectKey).Msg("Downloading from S3")
 
-			downloader := manager.NewDownloader(client)
-			_, err = downloader.Download(context.TODO(), objectFile, &s3.GetObjectInput{
-				Bucket: aws.String(bucket),
-				Key:    aws.String(objectKey),
-			})
-			if err != nil {
-				return
-			}
+				downloader := manager.NewDownloader(client)
+				_, err = downloader.Download(context.TODO(), objectFile, &s3.GetObjectInput{
+					Bucket: aws.String(bucket),
+					Key:    aws.String(objectKey),
+				})
+				if err != nil {
+					return
+				}
+			}(object)
 		}
+		wg.Wait()
 
 		tarPath, err = tarDirectory(tempDirPath)
 		return
