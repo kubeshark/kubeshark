@@ -17,7 +17,7 @@ const (
 	ProxyHubPortLabel      = "proxy-hub-port"
 	ProxyHostLabel         = "proxy-host"
 	NamespacesLabel        = "namespaces"
-	ReleaseNamespaceLabel  = "releasenamespace"
+	ReleaseNamespaceLabel  = "release-namespace"
 	PersistentStorageLabel = "persistentstorage"
 	StorageLimitLabel      = "storagelimit"
 	StorageClassLabel      = "storageclass"
@@ -94,12 +94,18 @@ type IngressConfig struct {
 	CertManager string                  `yaml:"certmanager" json:"certmanager" default:"letsencrypt-prod"`
 }
 
+type ReleaseConfig struct {
+	Repo      string `yaml:"repo" json:"repo" default:"https://helm.kubeshark.co"`
+	Name      string `yaml:"name" json:"name" default:"kubeshark"`
+	Namespace string `yaml:"namespace" json:"namespace" default:"default"`
+}
+
 type TapConfig struct {
 	Docker            DockerConfig          `yaml:"docker" json:"docker"`
 	Proxy             ProxyConfig           `yaml:"proxy" json:"proxy"`
 	PodRegexStr       string                `yaml:"regex" json:"regex" default:".*"`
 	Namespaces        []string              `yaml:"namespaces" json:"namespaces" default:"[]"`
-	ReleaseNamespace  string                `yaml:"releasenamespace" json:"releasenamespace" default:"default"`
+	Release           ReleaseConfig         `yaml:"release" json:"release"`
 	PersistentStorage bool                  `yaml:"persistentstorage" json:"persistentstorage" default:"false"`
 	StorageLimit      string                `yaml:"storagelimit" json:"storagelimit" default:"200Mi"`
 	StorageClass      string                `yaml:"storageclass" json:"storageclass" default:"standard"`

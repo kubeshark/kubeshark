@@ -16,7 +16,10 @@ tap:
     host: 127.0.0.1
   regex: .*
   namespaces: []
-  releasenamespace: default
+  release:
+    repo: https://helm.kubeshark.co
+    name: kubeshark
+    namespace: default
   persistentstorage: false
   storagelimit: 200Mi
   storageclass: standard

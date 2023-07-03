@@ -15,13 +15,13 @@ import (
 
 func DumpLogs(ctx context.Context, provider *kubernetes.Provider, filePath string) error {
 	podExactRegex := regexp.MustCompile("^" + kubernetes.SelfResourcesPrefix)
-	pods, err := provider.ListAllPodsMatchingRegex(ctx, podExactRegex, []string{config.Config.Tap.ReleaseNamespace})
+	pods, err := provider.ListAllPodsMatchingRegex(ctx, podExactRegex, []string{config.Config.Tap.Release.Namespace})
 	if err != nil {
 		return err
 	}
 
 	if len(pods) == 0 {
-		return fmt.Errorf("No %s pods found in namespace %s", misc.Software, config.Config.Tap.ReleaseNamespace)
+		return fmt.Errorf("No %s pods found in namespace %s", misc.Software, config.Config.Tap.Release.Namespace)
 	}
 
 	newZipFile, err := os.Create(filePath)
@@ -60,17 +60,17 @@ func DumpLogs(ctx context.Context, provider *kubernetes.Provider, filePath strin
 		}
 	}
 
-	events, err := provider.GetNamespaceEvents(ctx, config.Config.Tap.ReleaseNamespace)
+	events, err := provider.GetNamespaceEvents(ctx, config.Config.Tap.Release.Namespace)
 	if err != nil {
 		log.Error().Err(err).Msg("Failed to get k8b events!")
 	} else {
-		log.Debug().Str("namespace", config.Config.Tap.ReleaseNamespace).Msg("Successfully read events.")
+		log.Debug().Str("namespace", config.Config.Tap.Release.Namespace).Msg("Successfully read events.")
 	}
 
-	if err := AddStrToZip(zipWriter, events, fmt.Sprintf("%s_events.log", config.Config.Tap.ReleaseNamespace)); err != nil {
+	if err := AddStrToZip(zipWriter, events, fmt.Sprintf("%s_events.log", config.Config.Tap.Release.Namespace)); err != nil {
 		log.Error().Err(err).Msg("Failed write logs!")
 	} else {
-		log.Debug().Str("namespace", config.Config.Tap.ReleaseNamespace).Msg("Successfully added events.")
+		log.Debug().Str("namespace", config.Config.Tap.Release.Namespace).Msg("Successfully added events.")
 	}
 
 	if err := AddFileToZip(zipWriter, config.ConfigFilePath); err != nil {

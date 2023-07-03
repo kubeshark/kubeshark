@@ -39,14 +39,6 @@ func NewHelm(repo string, releaseName string, releaseNamespace string) *Helm {
 	}
 }
 
-func NewHelmDefault() *Helm {
-	return &Helm{
-		repo:             "https://helm.kubeshark.co",
-		releaseName:      "kubeshark",
-		releaseNamespace: "default",
-	}
-}
-
 func parseOCIRef(chartRef string) (string, string, error) {
 	refTagRegexp := regexp.MustCompile(`^(oci://[^:]+(:[0-9]{1,5})?[^:]+):(.*)$`)
 	caps := refTagRegexp.FindStringSubmatch(chartRef)

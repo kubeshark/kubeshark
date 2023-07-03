@@ -5,7 +5,6 @@ import (
 	"path/filepath"
 
 	"github.com/kubeshark/kubeshark/config/configStructs"
-	"github.com/kubeshark/kubeshark/misc"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/util/homedir"
 )
@@ -50,10 +49,6 @@ func (config *ConfigStruct) ImagePullSecrets() []v1.LocalObjectReference {
 	}
 
 	return ref
-}
-
-func (config *ConfigStruct) IsNsRestrictedMode() bool {
-	return config.Tap.ReleaseNamespace != misc.Program // Notice "kubeshark" string must match the default ReleaseNamespace
 }
 
 func (config *ConfigStruct) KubeConfigPath() string {

@@ -51,7 +51,7 @@ func init() {
 	tapCmd.Flags().Uint16(configStructs.ProxyHubPortLabel, defaultTapConfig.Proxy.Hub.Port, "Provide a custom port for the Hub proxy/port-forward")
 	tapCmd.Flags().String(configStructs.ProxyHostLabel, defaultTapConfig.Proxy.Host, "Provide a custom host for the proxy/port-forward")
 	tapCmd.Flags().StringSliceP(configStructs.NamespacesLabel, "n", defaultTapConfig.Namespaces, "Namespaces selector")
-	tapCmd.Flags().StringP(configStructs.ReleaseNamespaceLabel, "s", defaultTapConfig.ReleaseNamespace, "Self-namespace of Kubeshark")
+	tapCmd.Flags().StringP(configStructs.ReleaseNamespaceLabel, "s", defaultTapConfig.Release.Namespace, "Release namespace of Kubeshark")
 	tapCmd.Flags().Bool(configStructs.PersistentStorageLabel, defaultTapConfig.PersistentStorage, "Enable persistent storage (PersistentVolumeClaim)")
 	tapCmd.Flags().String(configStructs.StorageLimitLabel, defaultTapConfig.StorageLimit, "Override the default storage limit (per node)")
 	tapCmd.Flags().String(configStructs.StorageClassLabel, defaultTapConfig.StorageClass, "Override the default storage class of the PersistentVolumeClaim (per node)")
