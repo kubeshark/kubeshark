@@ -34,8 +34,7 @@ spec:
     spec:
       containers:
         - command:
-            - ./worker
-            - {{ .Values.tap.debug | ternary "-debug" "" }}
+            - '{{ .Values.tap.debug | ternary "./worker -debug" "./worker" }}'
             - -i
             - any
             - -port
