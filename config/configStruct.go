@@ -53,7 +53,7 @@ func (config *ConfigStruct) ImagePullSecrets() []v1.LocalObjectReference {
 }
 
 func (config *ConfigStruct) IsNsRestrictedMode() bool {
-	return config.Tap.SelfNamespace != misc.Program // Notice "kubeshark" string must match the default ReleaseNamespace
+	return config.Tap.ReleaseNamespace != misc.Program // Notice "kubeshark" string must match the default ReleaseNamespace
 }
 
 func (config *ConfigStruct) KubeConfigPath() string {
