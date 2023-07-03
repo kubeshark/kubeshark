@@ -22,9 +22,9 @@ func FormatError(err error) error {
 			"in the config file or setting the targeted namespace with --%s %s=<NAMEPSACE>",
 			err,
 			misc.Software,
-			configStructs.ReleaseNamespaceLabel,
+			configStructs.SelfNamespaceLabel,
 			config.SetCommandName,
-			configStructs.ReleaseNamespaceLabel)
+			configStructs.SelfNamespaceLabel)
 	} else if syntaxError, isSyntaxError := asRegexSyntaxError(err); isSyntaxError {
 		errorNew = fmt.Errorf("regex %s is invalid: %w", syntaxError.Expr, err)
 	} else {

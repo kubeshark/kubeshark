@@ -118,7 +118,7 @@ func printProxyCommandSuggestion() {
 }
 
 func finishTapExecution(kubernetesProvider *kubernetes.Provider) {
-	finishSelfExecution(kubernetesProvider, config.Config.IsNsRestrictedMode(), config.Config.Tap.ReleaseNamespace)
+	finishSelfExecution(kubernetesProvider, config.Config.IsNsRestrictedMode(), config.Config.Tap.SelfNamespace)
 }
 
 /*
@@ -151,7 +151,7 @@ func printNoPodsFoundSuggestion(targetNamespaces []string) {
 func watchHubPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc) {
 	podExactRegex := regexp.MustCompile(fmt.Sprintf("^%s$", kubernetes.HubPodName))
 	podWatchHelper := kubernetes.NewPodWatchHelper(kubernetesProvider, podExactRegex)
-	eventChan, errorChan := kubernetes.FilteredWatch(ctx, podWatchHelper, []string{config.Config.Tap.ReleaseNamespace}, podWatchHelper)
+	eventChan, errorChan := kubernetes.FilteredWatch(ctx, podWatchHelper, []string{config.Config.Tap.SelfNamespace}, podWatchHelper)
 	isPodReady := false
 
 	timeAfter := time.After(120 * time.Second)
@@ -218,7 +218,7 @@ func watchHubPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, c
 
 			log.Error().
 				Str("pod", kubernetes.HubPodName).
-				Str("namespace", config.Config.Tap.ReleaseNamespace).
+				Str("namespace", config.Config.Tap.SelfNamespace).
 				Err(err).
 				Msg("Failed creating pod.")
 			cancel()
@@ -242,7 +242,7 @@ func watchHubPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, c
 func watchFrontPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc) {
 	podExactRegex := regexp.MustCompile(fmt.Sprintf("^%s$", kubernetes.FrontPodName))
 	podWatchHelper := kubernetes.NewPodWatchHelper(kubernetesProvider, podExactRegex)
-	eventChan, errorChan := kubernetes.FilteredWatch(ctx, podWatchHelper, []string{config.Config.Tap.ReleaseNamespace}, podWatchHelper)
+	eventChan, errorChan := kubernetes.FilteredWatch(ctx, podWatchHelper, []string{config.Config.Tap.SelfNamespace}, podWatchHelper)
 	isPodReady := false
 
 	timeAfter := time.After(120 * time.Second)
@@ -307,7 +307,7 @@ func watchFrontPod(ctx context.Context, kubernetesProvider *kubernetes.Provider,
 
 			log.Error().
 				Str("pod", kubernetes.FrontPodName).
-				Str("namespace", config.Config.Tap.ReleaseNamespace).
+				Str("namespace", config.Config.Tap.SelfNamespace).
 				Err(err).
 				Msg("Failed creating pod.")
 
@@ -330,7 +330,7 @@ func watchFrontPod(ctx context.Context, kubernetesProvider *kubernetes.Provider,
 func watchHubEvents(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc) {
 	podExactRegex := regexp.MustCompile(fmt.Sprintf("^%s", kubernetes.HubPodName))
 	eventWatchHelper := kubernetes.NewEventWatchHelper(kubernetesProvider, podExactRegex, "pod")
-	eventChan, errorChan := kubernetes.FilteredWatch(ctx, eventWatchHelper, []string{config.Config.Tap.ReleaseNamespace}, eventWatchHelper)
+	eventChan, errorChan := kubernetes.FilteredWatch(ctx, eventWatchHelper, []string{config.Config.Tap.SelfNamespace}, eventWatchHelper)
 	for {
 		select {
 		case wEvent, ok := <-eventChan:

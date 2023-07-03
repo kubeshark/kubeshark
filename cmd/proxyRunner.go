@@ -23,7 +23,7 @@ func runProxy(block bool, noBrowser bool) {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	exists, err := kubernetesProvider.DoesServiceExist(ctx, config.Config.Tap.ReleaseNamespace, kubernetes.FrontServiceName)
+	exists, err := kubernetesProvider.DoesServiceExist(ctx, config.Config.Tap.SelfNamespace, kubernetes.FrontServiceName)
 	if err != nil {
 		log.Error().
 			Str("service", kubernetes.FrontServiceName).
@@ -42,7 +42,7 @@ func runProxy(block bool, noBrowser bool) {
 		return
 	}
 
-	exists, err = kubernetesProvider.DoesServiceExist(ctx, config.Config.Tap.ReleaseNamespace, kubernetes.HubServiceName)
+	exists, err = kubernetesProvider.DoesServiceExist(ctx, config.Config.Tap.SelfNamespace, kubernetes.HubServiceName)
 	if err != nil {
 		log.Error().
 			Str("service", kubernetes.HubServiceName).

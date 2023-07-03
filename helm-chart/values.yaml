@@ -16,7 +16,7 @@ tap:
     host: 127.0.0.1
   regex: .*
   namespaces: []
-  releasenamespace: default
+  selfnamespace: default
   persistentstorage: false
   storagelimit: 200Mi
   storageclass: standard
