@@ -77,13 +77,6 @@ func tap() {
 
 	state.targetNamespaces = kubernetesProvider.GetNamespaces()
 
-	if config.Config.IsNsRestrictedMode() {
-		if len(state.targetNamespaces) != 1 || !utils.Contains(state.targetNamespaces, config.Config.Tap.ReleaseNamespace) {
-			log.Error().Msg(fmt.Sprintf("%s can't resolve IPs in other namespaces when running in namespace restricted mode. You can use the same namespace for --%s and --%s", misc.Software, configStructs.NamespacesLabel, configStructs.ReleaseNamespaceLabel))
-			return
-		}
-	}
-
 	log.Info().Strs("namespaces", state.targetNamespaces).Msg("Targeting pods in:")
 
 	if err := printTargetedPodsPreview(ctx, kubernetesProvider, state.targetNamespaces); err != nil {
