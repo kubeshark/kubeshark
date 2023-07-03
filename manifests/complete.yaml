@@ -117,7 +117,8 @@ spec:
     spec:
       containers:
         - command:
-            - './worker'
+            - ./worker
+            
             - -i
             - any
             - -port
@@ -187,6 +188,7 @@ spec:
   containers:
     - command:
         - ./hub
+        
       env:
         - name: POD_REGEX
           value: '.*'
