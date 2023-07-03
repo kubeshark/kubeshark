@@ -18,7 +18,7 @@ spec:
   containers:
     - command:
         - ./hub
-        - {{ .Values.tap.debug | ternary "-debug" "" }}
+        {{ .Values.tap.debug | ternary "- -debug" "" }}
       env:
         - name: POD_REGEX
           value: '{{ .Values.tap.regex }}'
