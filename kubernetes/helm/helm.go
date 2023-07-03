@@ -2,11 +2,14 @@ package helm
 
 import (
 	"encoding/json"
+	"fmt"
 	"os"
 	"path/filepath"
 	"regexp"
+	"strings"
 
 	"github.com/kubeshark/kubeshark/config"
+	"github.com/kubeshark/kubeshark/misc"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"helm.sh/helm/v3/pkg/action"
@@ -64,70 +67,74 @@ func (h *Helm) Install() (rel *release.Release, err error) {
 	client.Namespace = h.releaseNamespace
 	client.ReleaseName = h.releaseName
 
-	var chartURL string
-	chartURL, err = repo.FindChartInRepoURL(h.repo, h.releaseName, "", "", "", "", getter.All(&cli.EnvSettings{}))
-	if err != nil {
-		return
-	}
-
-	var cp string
-	cp, err = client.ChartPathOptions.LocateChart(chartURL, settings)
-	if err != nil {
-		return
-	}
-
-	m := &downloader.Manager{
-		Out:              os.Stdout,
-		ChartPath:        cp,
-		Keyring:          client.ChartPathOptions.Keyring,
-		SkipUpdate:       false,
-		Getters:          getter.All(settings),
-		RepositoryConfig: settings.RepositoryConfig,
-		RepositoryCache:  settings.RepositoryCache,
-		Debug:            settings.Debug,
-	}
-
-	dl := downloader.ChartDownloader{
-		Out:              m.Out,
-		Verify:           m.Verify,
-		Keyring:          m.Keyring,
-		RepositoryConfig: m.RepositoryConfig,
-		RepositoryCache:  m.RepositoryCache,
-		RegistryClient:   m.RegistryClient,
-		Getters:          m.Getters,
-		Options: []getter.Option{
-			getter.WithInsecureSkipVerifyTLS(false),
-		},
-	}
-
-	repoPath := filepath.Dir(m.ChartPath)
-	err = os.MkdirAll(repoPath, os.ModePerm)
-	if err != nil {
-		return
-	}
-
-	version := ""
-	if registry.IsOCI(chartURL) {
-		chartURL, version, err = parseOCIRef(chartURL)
+	chartPath := os.Getenv(fmt.Sprintf("%s_HELM_CHART_PATH", strings.ToUpper(misc.Program)))
+	if chartPath == "" {
+		var chartURL string
+		chartURL, err = repo.FindChartInRepoURL(h.repo, h.releaseName, "", "", "", "", getter.All(&cli.EnvSettings{}))
 		if err != nil {
 			return
 		}
-		dl.Options = append(dl.Options,
-			getter.WithRegistryClient(m.RegistryClient),
-			getter.WithTagName(version))
+
+		var cp string
+		cp, err = client.ChartPathOptions.LocateChart(chartURL, settings)
+		if err != nil {
+			return
+		}
+
+		m := &downloader.Manager{
+			Out:              os.Stdout,
+			ChartPath:        cp,
+			Keyring:          client.ChartPathOptions.Keyring,
+			SkipUpdate:       false,
+			Getters:          getter.All(settings),
+			RepositoryConfig: settings.RepositoryConfig,
+			RepositoryCache:  settings.RepositoryCache,
+			Debug:            settings.Debug,
+		}
+
+		dl := downloader.ChartDownloader{
+			Out:              m.Out,
+			Verify:           m.Verify,
+			Keyring:          m.Keyring,
+			RepositoryConfig: m.RepositoryConfig,
+			RepositoryCache:  m.RepositoryCache,
+			RegistryClient:   m.RegistryClient,
+			Getters:          m.Getters,
+			Options: []getter.Option{
+				getter.WithInsecureSkipVerifyTLS(false),
+			},
+		}
+
+		repoPath := filepath.Dir(m.ChartPath)
+		err = os.MkdirAll(repoPath, os.ModePerm)
+		if err != nil {
+			return
+		}
+
+		version := ""
+		if registry.IsOCI(chartURL) {
+			chartURL, version, err = parseOCIRef(chartURL)
+			if err != nil {
+				return
+			}
+			dl.Options = append(dl.Options,
+				getter.WithRegistryClient(m.RegistryClient),
+				getter.WithTagName(version))
+		}
+
+		log.Info().
+			Str("url", chartURL).
+			Str("repo-path", repoPath).
+			Msg("Downloading Helm chart:")
+
+		if _, _, err = dl.DownloadTo(chartURL, version, repoPath); err != nil {
+			return
+		}
+
+		chartPath = m.ChartPath
 	}
-
-	log.Info().
-		Str("url", chartURL).
-		Str("repo-path", repoPath).
-		Msg("Downloading Helm chart:")
-
-	if _, _, err = dl.DownloadTo(chartURL, version, repoPath); err != nil {
-		return
-	}
-
 	var chart *chart.Chart
-	chart, err = loader.Load(m.ChartPath)
+	chart, err = loader.Load(chartPath)
 	if err != nil {
 		return
 	}

@@ -16,7 +16,7 @@ import (
 )
 
 func CheckNewerVersion() {
-	if os.Getenv("KUBESHARK_DISABLE_VERSION_CHECK") != "" {
+	if os.Getenv(fmt.Sprintf("%s_DISABLE_VERSION_CHECK", strings.ToUpper(misc.Program))) != "" {
 		return
 	}
 
