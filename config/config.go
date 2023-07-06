@@ -56,6 +56,7 @@ func InitConfig(cmd *cobra.Command) error {
 		"console",
 		"pro",
 		"manifests",
+		"license",
 	}, cmd.Use) {
 		go version.CheckNewerVersion()
 	}
@@ -80,6 +81,7 @@ func InitConfig(cmd *cobra.Command) error {
 	ConfigFilePath = path.Join(misc.GetDotFolderPath(), "config.yaml")
 	if err := loadConfigFile(&Config, utils.Contains([]string{
 		"manifests",
+		"license",
 	}, cmd.Use)); err != nil {
 		if !os.IsNotExist(err) {
 			return fmt.Errorf("invalid config, %w\n"+
