@@ -52,11 +52,4 @@ spec:
     - effect: NoSchedule
       operator: Exists
 {{- end }}
-{{- if gt (len .Values.tap.nodeselectorterms) 0}}
-  affinity:
-    nodeAffinity:
-      requiredDuringSchedulingIgnoredDuringExecution:
-        nodeSelectorTerms:
-          {{- toYaml .Values.tap.nodeselectorterms | nindent 8 }}
-{{- end }}
 status: {}
