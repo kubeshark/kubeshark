@@ -57,8 +57,10 @@ func runConsole() {
 		Host:   fmt.Sprintf("%s:%d", config.Config.Tap.Proxy.Host, config.Config.Tap.Proxy.Hub.Port),
 		Path:   "/scripts/logs",
 	}
+	headers := http.Header{}
+	headers.Set("License-Key", config.Config.License)
 
-	c, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
+	c, _, err := websocket.DefaultDialer.Dial(u.String(), headers)
 	if err != nil {
 		log.Error().Err(err).Send()
 		return
