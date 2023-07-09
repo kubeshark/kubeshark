@@ -12,7 +12,6 @@ tap:
       srvport: 8898
     front:
       port: 8899
-      srvport: 8899
     host: 127.0.0.1
   regex: .*
   namespaces: []

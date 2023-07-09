@@ -57,8 +57,7 @@ type HubConfig struct {
 }
 
 type FrontConfig struct {
-	Port    uint16 `yaml:"port" json:"port" default:"8899"`
-	SrvPort uint16 `yaml:"srvport" json:"srvport" default:"8899"`
+	Port uint16 `yaml:"port" json:"port" default:"8899"`
 }
 
 type ProxyConfig struct {
