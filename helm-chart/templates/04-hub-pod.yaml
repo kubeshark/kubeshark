@@ -19,8 +19,6 @@ spec:
     - command:
         - ./hub
         {{ .Values.tap.debug | ternary "- -debug" "" }}
-        - -port
-        - '{{ .Values.tap.proxy.hub.srvport }}'
       env:
         - name: POD_REGEX
           value: '{{ .Values.tap.regex }}'
