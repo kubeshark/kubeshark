@@ -35,7 +35,6 @@ spec:
       containers:
         - command:
             - ./worker
-            {{ .Values.tap.debug | ternary "- -debug" "" }}
             - -i
             - any
             - -port
@@ -46,6 +45,7 @@ spec:
             - -tls
             - -procfs
             - /hostproc
+            {{ .Values.tap.debug | ternary "- -debug" "" }}
           image: '{{ .Values.tap.docker.registry }}/worker:{{ .Values.tap.docker.tag }}'
           imagePullPolicy: {{ .Values.tap.docker.imagepullpolicy }}
           name: kubeshark-worker-daemon-set
