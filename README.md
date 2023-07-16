@@ -22,11 +22,9 @@
 
 <p align="center">
   <b>
-  <span>NEW: Introducing </span>
-  <a href="https://docs.kubeshark.co/en/self_hosted">self-hosted Kubeshark</a>, with 
-  <a href="https://docs.kubeshark.co/en/install#helm">Helm</a>,
-  <a href="https://docs.kubeshark.co/en/self_hosted">Ingress & Authentication</a>. Read more about it 
-  <a href="https://kubeshark.co/self-hosting">here</a>.	  
+  <span>NEW: </span>
+  <a href="https://kubeshark.co/traffic-recording">Traffic Recording and Offline Investigation</a>, and  
+  <a href="https://kubeshark.co/self-hosting">Self-hosting with Ingress and Authentication</a>. 
   </b>
 </p>
 
