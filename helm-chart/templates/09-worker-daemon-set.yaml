@@ -39,8 +39,6 @@ spec:
             - any
             - -port
             - '{{ .Values.tap.proxy.worker.srvport }}'
-            - -packet-capture
-            - '{{ .Values.tap.packetcapture }}'
             - -servicemesh
             - -tls
             - -procfs
