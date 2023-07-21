@@ -1,53 +1,62 @@
----
-apiVersion: v1
-kind: Pod
+apiVersion: apps/v1
+kind: Deployment
 metadata:
-  creationTimestamp: null
   labels:
-    app: kubeshark-front
-  {{- if .Values.tap.labels }}
-    {{- toYaml .Values.tap.labels | nindent 4 }}
+    app:  {{ .Release.Name }}-front
+  {{- if .Values.front.labels }}
+    {{- toYaml .Values.front.labels | nindent 4 }}
   {{- end }}
   annotations:
-  {{- if .Values.tap.annotations }}
-    {{- toYaml .Values.tap.annotations | nindent 4 }}
+  {{- if .Values.front.annotations }}
+    {{- toYaml .Values.front.annotations | nindent 4 }}
   {{- end }}
-  name: kubeshark-front
-  namespace: {{ .Release.Namespace }}
+  name: {{ .Release.Name }}-front  # Update the Deployment name to include the release name
 spec:
-  containers:
-    - env:
-        - name: REACT_APP_DEFAULT_FILTER
-          value: ' '
-        - name: REACT_APP_HUB_HOST
-          value: ' '
-        - name: REACT_APP_HUB_PORT
-          value: '{{ .Values.tap.ingress.enabled | ternary "/api" (print ":" .Values.tap.proxy.hub.port) }}'
-      image: '{{ .Values.tap.docker.registry }}/front:{{ .Values.tap.docker.tag }}'
-      imagePullPolicy: {{ .Values.tap.docker.imagepullpolicy }}
-      name: kubeshark-front
-      readinessProbe:
-        failureThreshold: 3
-        periodSeconds: 1
-        successThreshold: 1
-        tcpSocket:
-          port: 80
-        timeoutSeconds: 1
-      resources:
-        limits:
-          cpu: 750m
-          memory: 1Gi
-        requests:
-          cpu: 50m
-          memory: 50Mi
-  dnsPolicy: ClusterFirstWithHostNet
-  serviceAccountName: kubeshark-service-account
-  terminationGracePeriodSeconds: 0
-  tolerations:
-    - effect: NoExecute
-      operator: Exists
-{{- if not .Values.tap.ignoretainted }}
-    - effect: NoSchedule
-      operator: Exists
+  replicas: {{ .Values.front.replicas }}   # Use the replicas variable from the values file
+  selector:
+    matchLabels:
+      app:  {{ .Release.Name }}-front
+  template:
+    metadata:
+      labels:
+        app:  {{ .Release.Name }}-front
+        {{- if .Values.front.labels }}
+{{ toYaml .Values.front.labels | nindent 8 }}
 {{- end }}
-status: {}
+      annotations:
+        {{- if .Values.front.annotations }}
+{{ toYaml .Values.front.annotations | nindent 8 }}
+{{- end }}
+    spec:
+      containers:
+        - env:
+            - name: REACT_APP_DEFAULT_FILTER
+              value: ' '
+            - name: REACT_APP_HUB_HOST
+              value: ' '
+            - name: REACT_APP_HUB_PORT
+              value: '{{ .Values.hub.service.port }}'   # Use the hubPort variable from the values file
+          image: '{{ .Values.front.image.registry }}/{{ .Values.front.image.name }}:{{ .Values.front.image.tag }}'  # Use the image variables from the values file
+          imagePullPolicy: {{ .Values.front.imagePullPolicy }}  # Use the imagePullPolicy variable from the values file
+          name: kubeshark-front
+          ports:
+            - containerPort: 80
+              name: http-frontend  # Expose port 80 in the container
+          readinessProbe:
+            failureThreshold: 3
+            periodSeconds: 1
+            successThreshold: 1
+            tcpSocket:
+              port: 80
+            timeoutSeconds: 1
+{{- if .Values.front.resources }}
+          resources:
+{{ toYaml .Values.front.resources | nindent 12 }}   # Use the resources variable from the values file
+{{- end }}
+{{- if .Values.front.tolerations }}
+      tolerations:
+{{ toYaml .Values.front.tolerations | nindent 8 }}   # Use the tolerations variable from the values file
+{{- end }}
+      dnsPolicy: ClusterFirstWithHostNet
+      serviceAccountName:  {{ .Release.Name }}-service-account
+      terminationGracePeriodSeconds: 0

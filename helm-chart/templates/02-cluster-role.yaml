@@ -1,18 +1,17 @@
+
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  creationTimestamp: null
+  {{- if .Values.rbac.labels }}
   labels:
-  {{- if .Values.tap.labels }}
-    {{- toYaml .Values.tap.labels | nindent 4 }}
+    {{- toYaml .Values.rbac.labels | nindent 4 }}
   {{- end }}
+  {{- if .Values.rbac.annotations }}
   annotations:
-  {{- if .Values.tap.annotations }}
-    {{- toYaml .Values.tap.annotations | nindent 4 }}
+    {{- toYaml .Values.rbac.annotations | nindent 4 }}
   {{- end }}
-  name: kubeshark-cluster-role
-  namespace: {{ .Release.Namespace }}
+  name: {{ .Release.Name }}-cluster-role
 rules:
   - apiGroups:
       - ""

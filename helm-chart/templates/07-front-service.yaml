@@ -3,23 +3,20 @@ apiVersion: v1
 kind: Service
 metadata:
   creationTimestamp: null
+  {{- if .Values.front.service.labels }}
   labels:
-  {{- if .Values.tap.labels }}
-    {{- toYaml .Values.tap.labels | nindent 4 }}
+    {{ toYaml .Values.front.service.labels | nindent 4 }}   # Use labels from .Values.front.service
   {{- end }}
+  {{- if .Values.front.service.annotations }}
   annotations:
-  {{- if .Values.tap.annotations }}
-    {{- toYaml .Values.tap.annotations | nindent 4 }}
+    {{ toYaml .Values.front.service.annotations | nindent 4 }}   # Use annotations from .Values.front.service
   {{- end }}
-  name: kubeshark-front
-  namespace: {{ .Release.Namespace }}
+  name: {{ .Release.Name }}-front # Update the Service name to include the release name
 spec:
   ports:
-    - name: kubeshark-front
-      port: 80
-      targetPort: 80
+    - name: http-frontend
+      port: {{ .Values.front.service.port }}   # Use the port variable from .Values.front.service
+      targetPort: http-frontend   # Keep the targetPort as 80, the container's static port
   selector:
-    app: kubeshark-front
-  type: NodePort
-status:
-  loadBalancer: {}
+    app: {{ .Release.Name }}-front
+  type: {{ .Values.front.service.type }}   # Use the service type variable from .Values.front.service

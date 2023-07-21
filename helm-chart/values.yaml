@@ -1,61 +1,122 @@
+# Configs for the worker-tap daemonset
 tap:
-  docker:
+  image:
     registry: docker.io/kubeshark
     tag: latest
-    imagepullpolicy: Always
-    imagepullsecrets: []
-  proxy:
-    worker:
-      srvport: 8897
-    hub:
-      port: 8898
-      srvport: 8898
-    front:
-      port: 8899
-    host: 127.0.0.1
-  regex: .*
-  namespaces: []
-  release:
-    repo: https://helm.kubeshark.co
-    name: kubeshark
-    namespace: default
-  persistentstorage: false
-  storagelimit: 200Mi
-  storageclass: standard
-  dryrun: false
-  pcap: ""
+    name: worker
+  imagepullpolicy: Always
+  port: 8897
+  persistence:
+    enabled: false
+    size: 200Mi
+    storageclass: standard
   resources:
-    worker:
-      limits:
-        cpu: 750m
-        memory: 1Gi
-      requests:
-        cpu: 50m
-        memory: 50Mi
-    hub:
-      limits:
-        cpu: 750m
-        memory: 1Gi
-      requests:
-        cpu: 50m
-        memory: 50Mi
-  servicemesh: true
-  tls: true
-  packetcapture: libpcap
-  ignoretainted: false
+    limits:
+      cpu: 750m
+      memory: 1Gi
+    requests:
+      cpu: 450m
+      memory: 150Mi
   labels: {}
   annotations: {}
+  tolerations: {}
   nodeselectorterms: []
-  ingress:
-    enabled: false
-    classname: kubeshark-ingress-class
-    controller: k8s.io/ingress-nginx
-    host: ks.svc.cluster.local
-    tls: []
-    auth:
-      approveddomains: []
-    certmanager: letsencrypt-prod
-  debug: false
+  
+  # these settings are used to configure the tap's capture settings
+  config:
+    proxy:
+      hub:
+        port: 8898
+        srvport: 8898
+      front:
+        port: 8899
+      host: 127.0.0.1
+    regex: .*
+    namespaces: []
+    servicemesh: true
+    tls: true
+    packetcapture: libpcap
+    debug: false
+  
+
+# Configs for the hub (aggregator service) and its service
+hub:
+  replicas: 1
+  labels: {}
+  annotations: {}
+  debug: false 
+  resources:
+    limits:
+      cpu: 750m
+      memory: 1Gi
+    requests:
+      cpu: 50m
+      memory: 50Mi
+  tolerations: []
+  image:
+    registry: "docker.io/kubeshark"
+    name: "hub"
+    tag: "latest"
+  imagePullPolicy: "IfNotPresent"
+  service:
+    labels: {}
+    annotations: {}
+    port: 80
+    type: ClusterIP
+
+# Configs for the web frontend and its service
+front:
+  replicas: 1
+  labels: {}
+  annotations: {}
+  image:
+    registry: "docker.io/kubeshark"
+    name: front
+    tag: "latest"
+  imagePullPolicy: "IfNotPresent"
+  resources:
+    limits:
+      cpu: 750m
+      memory: 1Gi
+    requests:
+      cpu: 50m
+      memory: 50Mi
+  tolerations: []
+  service:
+    labels: {}
+    annotations: {}
+    port: 80
+    type: ClusterIP
+
+# Ingress Configuration
+ingress:
+  enabled: false
+  className: "" # uses the generated ingressClass name by default. If a value is set, ingressClass.enabled should be false.
+  host: ks.svc.cluster.local
+  tls: []
+  # Example TLS Block for ingress
+  # - secretName: my-tls-secret
+  #   hosts:
+  #     - kubeshark.example.com
+  #     - analyzer.kubeshark.example.com
+  auth: # the domains in auth will be used to setup the 
+    approveddomains: []
+  certmanager: letsencrypt-prod
+  annotations: {}
+  labels: {}
+
+ingressClass:
+  enabled: false # if ingress.enabled is true and ingressClass.enabled is false, ingress.className must be set to an existing class.
+  controller: k8s.io/ingress-nginx
+  annotations: {}
+  labels: {}
+
+# rbac contains the values used for the serviceAccount, clusterRole and clusterRoleBinding
+rbac:
+  labels: {}
+  annotations: {}
+
+# General configs
 logs:
   file: ""
 kube:

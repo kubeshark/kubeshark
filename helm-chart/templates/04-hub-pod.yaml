@@ -1,55 +1,64 @@
----
-apiVersion: v1
-kind: Pod
+apiVersion: apps/v1
+kind: Deployment
 metadata:
-  creationTimestamp: null
   labels:
     app: kubeshark-hub
-  {{- if .Values.tap.labels }}
-    {{- toYaml .Values.tap.labels | nindent 4 }}
-  {{- end }}
+    {{- if .Values.hub.labels }}
+    {{- toYaml .Values.hub.labels | nindent 4 }}
+    {{- end }}
+  {{- if .Values.hub.annotations }}
   annotations:
-  {{- if .Values.tap.annotations }}
-    {{- toYaml .Values.tap.annotations | nindent 4 }}
+    {{- toYaml .Values.hub.annotations | nindent 4 }}
   {{- end }}
-  name: kubeshark-hub
-  namespace: {{ .Release.Namespace }}
+  name: {{ .Release.Name }}-hub  # Update the Deployment name to include the release name
 spec:
-  containers:
-    - command:
-        - ./hub
-        {{ .Values.tap.debug | ternary "- -debug" "" }}
-      env:
-        - name: POD_REGEX
-          value: '{{ .Values.tap.regex }}'
-        - name: NAMESPACES
-          value: '{{ gt (len .Values.tap.namespaces) 0 | ternary (join "," .Values.tap.namespaces) "" }}'
-        - name: LICENSE
-          value: '{{ .Values.license }}'
-        - name: SCRIPTING_ENV
-          value: '{{ .Values.scripting.env | toJson }}'
-        - name: SCRIPTING_SCRIPTS
-          value: '[]'
-        - name: AUTH_APPROVED_DOMAINS
-          value: '{{ gt (len .Values.tap.ingress.auth.approveddomains) 0 | ternary (join "," .Values.tap.ingress.auth.approveddomains) "" }}'
-      image: '{{ .Values.tap.docker.registry }}/hub:{{ .Values.tap.docker.tag }}'
-      imagePullPolicy: {{ .Values.tap.docker.imagepullpolicy }}
-      name: kubeshark-hub
-      resources:
-        limits:
-          cpu: {{ .Values.tap.resources.hub.limits.cpu }}
-          memory: {{ .Values.tap.resources.hub.limits.memory }}
-        requests:
-          cpu: {{ .Values.tap.resources.hub.requests.cpu }}
-          memory: {{ .Values.tap.resources.hub.requests.memory }}
-  dnsPolicy: ClusterFirstWithHostNet
-  serviceAccountName: kubeshark-service-account
-  terminationGracePeriodSeconds: 0
-  tolerations:
-    - effect: NoExecute
-      operator: Exists
-{{- if not .Values.tap.ignoretainted }}
-    - effect: NoSchedule
-      operator: Exists
-{{- end }}
-status: {}
+  replicas: {{ .Values.hub.replicas }}   # Use the replicas variable from the values file
+  selector:
+    matchLabels:
+      app: {{ .Release.Name }}-hub
+  template:
+    metadata:
+      labels:
+        app: {{ .Release.Name }}-hub
+        {{- if .Values.hub.labels }}
+          {{ toYaml .Values.hub.labels | nindent 8 }}
+        {{- end }}
+      {{- if .Values.hub.annotations }}
+      annotations:
+        {{ toYaml .Values.hub.annotations | nindent 8 }}
+      {{- end }}
+    spec:
+      containers:
+        - command:
+            - ./hub
+            {{ .Values.hub.debug | ternary "- -debug" "" }}
+          env:
+            - name: POD_REGEX
+              value: '{{ .Values.tap.regex }}'
+            - name: NAMESPACES
+              value: '{{ gt (len .Values.tap.config.namespaces) 0 | ternary (join "," .Values.tap.namespaces) "" }}'
+            - name: LICENSE
+              value: '{{ .Values.license }}'
+            - name: SCRIPTING_ENV
+              value: '{{ .Values.scripting.env | toJson }}'
+            - name: SCRIPTING_SCRIPTS
+              value: '[]'
+            - name: AUTH_APPROVED_DOMAINS
+              value: '{{ gt (len .Values.ingress.auth.approveddomains) 0 | ternary (join "," .Values.ingress.auth.approveddomains) "" }}'
+          image: '{{ .Values.hub.image.registry }}/{{ .Values.hub.image.name }}:{{ .Values.hub.image.tag }}'
+          imagePullPolicy: {{ .Values.hub.imagepullpolicy }}
+          name: kubeshark-hub
+          ports:
+            - containerPort: 80   # Expose port 80 in the container
+              name: http-api
+          {{- if .Values.hub.resources }}
+          resources:
+            {{ toYaml .Values.hub.resources | nindent 12 }}
+          {{- end }}
+      {{- if .Values.hub.tolerations }}
+      tolerations:
+        {{ toYaml .Values.hub.tolerations | nindent 8 }}
+      {{- end }}
+      dnsPolicy: ClusterFirstWithHostNet
+      serviceAccountName: {{ .Release.Name }}-service-account
+      terminationGracePeriodSeconds: 0

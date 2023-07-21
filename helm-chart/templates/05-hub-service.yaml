@@ -1,25 +1,20 @@
----
 apiVersion: v1
 kind: Service
 metadata:
-  creationTimestamp: null
+  {{- if .Values.hub.service.labels }}
   labels:
-  {{- if .Values.tap.labels }}
-    {{- toYaml .Values.tap.labels | nindent 4 }}
+    {{ toYaml .Values.hub.service.labels | nindent 4 }}
   {{- end }}
+  {{- if .Values.hub.service.annotations }}
   annotations:
-  {{- if .Values.tap.annotations }}
-    {{- toYaml .Values.tap.annotations | nindent 4 }}
+    {{ toYaml .Values.hub.service.annotations | nindent 4 }}
   {{- end }}
-  name: kubeshark-hub
-  namespace: {{ .Release.Namespace }}
+  name: {{ .Release.Name }}-hub
 spec:
   ports:
-    - name: kubeshark-hub
-      port: 80
-      targetPort: 80
+    - name: http-api
+      port: {{ .Values.hub.service.port }}
+      targetPort: http-api
   selector:
-    app: kubeshark-hub
-  type: NodePort
-status:
-  loadBalancer: {}
+    app: {{ .Release.Name }}-hub
+  type: {{ .Values.hub.service.type }} 

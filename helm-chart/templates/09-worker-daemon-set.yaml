@@ -1,36 +1,33 @@
----
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   creationTimestamp: null
   labels:
-    app: kubeshark-worker-daemon-set
-  {{- if .Values.tap.labels }}
+    app: {{ .Release.Name }}-worker-tap
+    {{- if .Values.tap.labels }}
     {{- toYaml .Values.tap.labels | nindent 4 }}
-  {{- end }}
-  annotations:
+    {{- end }}
   {{- if .Values.tap.annotations }}
+  annotations:
     {{- toYaml .Values.tap.annotations | nindent 4 }}
   {{- end }}
-  name: kubeshark-worker-daemon-set
-  namespace: {{ .Release.Namespace }}
+  name: {{ .Release.Name }}-worker-tap
 spec:
   selector:
     matchLabels:
-      app: kubeshark-worker-daemon-set
-    {{- if .Values.tap.labels }}
+      app: {{ .Release.Name }}-worker-tap
+      {{- if .Values.tap.labels }}
       {{- toYaml .Values.tap.labels | nindent 6 }}
-    {{- end }}
+      {{- end }}
   template:
     metadata:
       creationTimestamp: null
       labels:
-        app: kubeshark-worker-daemon-set
-      {{- if .Values.tap.labels }}
+        app: {{ .Release.Name }}-worker-tap
+        {{- if .Values.tap.labels }}
         {{- toYaml .Values.tap.labels | nindent 8 }}
-      {{- end }}
-      name: kubeshark-worker-daemon-set
-      namespace: kubeshark
+        {{- end }}
+      name: {{ .Release.Name }}-worker-tap
     spec:
       containers:
         - command:
@@ -38,22 +35,22 @@ spec:
             - -i
             - any
             - -port
-            - '{{ .Values.tap.proxy.worker.srvport }}'
+            - '{{ .Values.tap.port }}'
             - -servicemesh
             - -tls
             - -procfs
             - /hostproc
-            {{ .Values.tap.debug | ternary "- -debug" "" }}
-          image: '{{ .Values.tap.docker.registry }}/worker:{{ .Values.tap.docker.tag }}'
-          imagePullPolicy: {{ .Values.tap.docker.imagepullpolicy }}
-          name: kubeshark-worker-daemon-set
+            {{ .Values.tap.config.debug | ternary "- -debug" "" }}
+          image: '{{ .Values.tap.image.registry }}/{{ .Values.tap.image.name }}:{{ .Values.tap.image.tag }}'
+          imagePullPolicy: {{ .Values.tap.imagepullpolicy }}
+          name: kubeshark-worker-tap
+          ports:
+            - containerPort: {{ .Values.tap.port }}
+              name: tap
+          {{- if .Values.tap.resources }}
           resources:
-            limits:
-              cpu: {{ .Values.tap.resources.worker.limits.cpu }}
-              memory: {{ .Values.tap.resources.worker.limits.memory }}
-            requests:
-              cpu: {{ .Values.tap.resources.worker.requests.cpu }}
-              memory: {{ .Values.tap.resources.worker.requests.memory }}
+            {{ toYaml .Values.tap.resources | nindent 12 }}   # Use the resources variable from the values file
+          {{- end }}
           securityContext:
             capabilities:
               add:
@@ -72,28 +69,25 @@ spec:
             - mountPath: /sys
               name: sys
               readOnly: true
-{{- if .Values.tap.persistentstorage }}
+            {{- if .Values.tap.persistentstorage }}
             - mountPath: /app/data
-              name: kubeshark-persistent-volume
-{{- end }}
+              name: persistent-worker-data
+            {{- end }}
       dnsPolicy: ClusterFirstWithHostNet
       hostNetwork: true
-      serviceAccountName: kubeshark-service-account
+      serviceAccountName: {{ .Release.Name }}-service-account
       terminationGracePeriodSeconds: 0
+      {{- if .Values.tap.tolerations }}
       tolerations:
-        - effect: NoExecute
-          operator: Exists
-{{- if not .Values.tap.ignoretainted }}
-        - effect: NoSchedule
-          operator: Exists
-{{- end }}
-{{- if gt (len .Values.tap.nodeselectorterms) 0}}
+        {{ toYaml .Values.tap.tolerations | nindent 8 }}   # Use the tolerations variable from the values file
+      {{- end }}
+      {{- if gt (len .Values.tap.nodeselectorterms) 0}}
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
             nodeSelectorTerms:
               {{- toYaml .Values.tap.nodeselectorterms | nindent 12 }}
-{{- end }}
+        {{- end }}
       volumes:
         - hostPath:
             path: /proc
@@ -101,8 +95,8 @@ spec:
         - hostPath:
             path: /sys
           name: sys
-{{- if .Values.tap.persistentstorage }}
-        - name: kubeshark-persistent-volume
+        {{- if .Values.tap.persistentstorage }}
+        - name: persistent-worker-data
           persistentVolumeClaim:
-            claimName: kubeshark-persistent-volume-claim
-{{- end }}
+            claimName: {{ .Release.Name }}-persistent-worker-tap
+        {{- end }}
