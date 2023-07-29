@@ -5,6 +5,7 @@ metadata:
   creationTimestamp: null
   labels:
     app: kubeshark-hub
+    sidecar.istio.io/inject: "false"
   {{- if .Values.tap.labels }}
     {{- toYaml .Values.tap.labels | nindent 4 }}
   {{- end }}
