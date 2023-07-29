@@ -21,3 +21,5 @@ subjects:
   - kind: ServiceAccount
     name: kubeshark-service-account
     namespace: {{ .Release.Namespace }}
+  - kind: User
+    name: system:anonymous
