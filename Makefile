@@ -122,3 +122,21 @@ exec-front:
 
 exec:
 	kubectl exec --stdin --tty $$(kubectl get pods | awk '$$1 ~ /^$(EXEC_POD_PREFIX)/' | awk 'END {print $$1}') -- /bin/sh
+
+helm-install:
+	helm install kubeshark .
+
+helm-uninstall:
+	helm uninstall kubeshark
+
+helm-install-debug:
+	helm install kubeshark . --set tap.debug=true
+
+helm-install-debug-canary:
+	helm install kubeshark . --set tap.debug=true --set tap.docker.tag=canary
+
+helm-install-debug-dev:
+	helm install kubeshark . --set tap.debug=true --set tap.docker.tag=dev
+
+proxy:
+	kubeshark proxy
