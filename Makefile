@@ -126,8 +126,11 @@ exec:
 helm-install:
 	cd helm-chart && helm install kubeshark . && cd ..
 
-helm-uninstall:
-	helm uninstall kubeshark
+helm-install-canary:
+	cd helm-chart && helm install kubeshark . --set tap.docker.tag=canary && cd ..
+
+helm-install-dev:
+	cd helm-chart && helm install kubeshark . --set tap.docker.tag=dev && cd ..
 
 helm-install-debug:
 	cd helm-chart && helm install kubeshark . --set tap.debug=true && cd ..
@@ -137,6 +140,9 @@ helm-install-debug-canary:
 
 helm-install-debug-dev:
 	cd helm-chart && helm install kubeshark . --set tap.debug=true --set tap.docker.tag=dev && cd ..
+
+helm-uninstall:
+	helm uninstall kubeshark
 
 proxy:
 	kubeshark proxy
