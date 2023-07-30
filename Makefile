@@ -107,3 +107,18 @@ logs-front-follow:
 
 logs:
 	kubectl logs $$(kubectl get pods | awk '$$1 ~ /^$(LOGS_POD_PREFIX)/' | awk 'END {print $$1}') $(LOGS_FOLLOW)
+
+exec-worker:
+	export EXEC_POD_PREFIX=kubeshark-worker-
+	${MAKE} exec
+
+exec-hub:
+	export EXEC_POD_PREFIX=kubeshark-hub
+	${MAKE} exec
+
+exec-front:
+	export EXEC_POD_PREFIX=kubeshark-front
+	${MAKE} exec
+
+exec:
+	kubectl exec --stdin --tty $$(kubectl get pods | awk '$$1 ~ /^$(EXEC_POD_PREFIX)/' | awk 'END {print $$1}') -- /bin/sh
