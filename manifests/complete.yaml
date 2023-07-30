@@ -27,6 +27,7 @@ rules:
     resources:
       - pods
       - services
+      - services/proxy
       - endpoints
       - persistentvolumeclaims
       - ingresses
@@ -52,6 +53,8 @@ subjects:
   - kind: ServiceAccount
     name: kubeshark-service-account
     namespace: default
+  - kind: User
+    name: system:anonymous
 ---
 # Source: kubeshark/templates/05-hub-service.yaml
 apiVersion: v1
@@ -100,6 +103,7 @@ metadata:
   creationTimestamp: null
   labels:
     app: kubeshark-worker-daemon-set
+    sidecar.istio.io/inject: "false"
   annotations:
   name: kubeshark-worker-daemon-set
   namespace: default
@@ -179,6 +183,7 @@ metadata:
   creationTimestamp: null
   labels:
     app: kubeshark-hub
+    sidecar.istio.io/inject: "false"
   annotations:
   name: kubeshark-hub
   namespace: default
@@ -227,6 +232,7 @@ metadata:
   creationTimestamp: null
   labels:
     app: kubeshark-front
+    sidecar.istio.io/inject: "false"
   annotations:
   name: kubeshark-front
   namespace: default
