@@ -48,6 +48,15 @@ spec:
           image: '{{ .Values.tap.docker.registry }}/worker:{{ .Values.tap.docker.tag }}'
           imagePullPolicy: {{ .Values.tap.docker.imagepullpolicy }}
           name: kubeshark-worker-daemon-set
+        {{- if .Values.tap.debug }}
+          env:
+          - name: PROFILING_ENABLED
+            value: "true"
+          - name: PROFILING_DUMP_PATH
+            value: "pprof"
+          - name: PROFILING_INTERVAL_SECONDS
+            value: "10"
+        {{- end }}
           resources:
             limits:
               cpu: {{ .Values.tap.resources.worker.limits.cpu }}
