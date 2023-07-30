@@ -74,3 +74,36 @@ generate-helm-values: ## Generate the Helm values from config.yaml
 
 generate-manifests: ## Generate the manifests from the Helm chart using default configuration
 	helm template ./helm-chart > ./manifests/complete.yaml
+
+logs-worker:
+	export LOGS_POD_PREFIX=kubeshark-worker-
+	export LOGS_FOLLOW=
+	${MAKE} logs
+
+logs-worker-follow:
+	export LOGS_POD_PREFIX=kubeshark-worker-
+	export LOGS_FOLLOW=--follow
+	${MAKE} logs
+
+logs-hub:
+	export LOGS_POD_PREFIX=kubeshark-hub
+	export LOGS_FOLLOW=
+	${MAKE} logs
+
+logs-hub-follow:
+	export LOGS_POD_PREFIX=kubeshark-hub
+	export LOGS_FOLLOW=--follow
+	${MAKE} logs
+
+logs-front:
+	export LOGS_POD_PREFIX=kubeshark-front
+	export LOGS_FOLLOW=
+	${MAKE} logs
+
+logs-front-follow:
+	export LOGS_POD_PREFIX=kubeshark-front
+	export LOGS_FOLLOW=--follow
+	${MAKE} logs
+
+logs:
+	kubectl logs $$(kubectl get pods | awk '$$1 ~ /^$(LOGS_POD_PREFIX)/' | awk 'END {print $$1}') $(LOGS_FOLLOW)
