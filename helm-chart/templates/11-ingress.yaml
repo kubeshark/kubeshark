@@ -6,9 +6,7 @@ metadata:
   annotations:
     certmanager.k8s.io/cluster-issuer: {{ .Values.tap.ingress.certmanager }}
     nginx.ingress.kubernetes.io/rewrite-target: /$2
-  {{- if .Values.tap.annotations }}
-    {{- toYaml .Values.tap.annotations | nindent 4 }}
-  {{- end }}
+    {{- include "kubeshark.labels" . | nindent 4 }}
   creationTimestamp: null
   labels:
   {{- if .Values.tap.labels }}
