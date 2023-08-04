@@ -45,7 +45,7 @@ spec:
           cpu: {{ .Values.tap.resources.hub.requests.cpu }}
           memory: {{ .Values.tap.resources.hub.requests.memory }}
   dnsPolicy: ClusterFirstWithHostNet
-  serviceAccountName: kubeshark-service-account
+  serviceAccountName: {{ include "kubeshark.serviceAccountName" . }}
   terminationGracePeriodSeconds: 0
   tolerations:
     - effect: NoExecute

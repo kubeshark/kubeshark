@@ -84,7 +84,7 @@ spec:
 {{- end }}
       dnsPolicy: ClusterFirstWithHostNet
       hostNetwork: true
-      serviceAccountName: kubeshark-service-account
+      serviceAccountName: {{ include "kubeshark.serviceAccountName" . }}
       terminationGracePeriodSeconds: 0
       tolerations:
         - effect: NoExecute

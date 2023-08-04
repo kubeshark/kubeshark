@@ -16,5 +16,5 @@ roleRef:
   name: kubeshark-cluster-role
 subjects:
   - kind: ServiceAccount
-    name: kubeshark-service-account
+    name: {{ include "kubeshark.serviceAccountName" . }}
     namespace: {{ .Release.Namespace }}

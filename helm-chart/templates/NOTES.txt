@@ -9,7 +9,7 @@ warning:
 > Ingress option enabled but license not set. The application should not work as expected.
 > Get a lisence at https://console.kubeshark.co/
 {{- else }}
-You can now access the application through the following URL: 
+You can now access the application through the following URL:
 http{{ if .Values.tap.ingress.tls }}s{{ end }}://{{ .Values.tap.ingress.host }}
 {{- end -}}
 

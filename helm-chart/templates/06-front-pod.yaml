@@ -48,7 +48,7 @@ spec:
       configMap:
         name:  kubeshark-nginx-config
   dnsPolicy: ClusterFirstWithHostNet
-  serviceAccountName: kubeshark-service-account
+  serviceAccountName: {{ include "kubeshark.serviceAccountName" . }}
   terminationGracePeriodSeconds: 0
   tolerations:
     - effect: NoExecute

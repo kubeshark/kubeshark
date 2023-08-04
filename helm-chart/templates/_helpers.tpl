@@ -60,9 +60,9 @@ app.kubernetes.io/instance: {{ .Release.Name }}
 Create the name of the service account to use
 */}}
 {{- define "kubeshark.serviceAccountName" -}}
-{{- if .Values.serviceAccount.create }}
+{{- if and .Values.serviceAccount .Values.serviceAccount.create }}
 {{- default (include "kubeshark.fullname" .) .Values.serviceAccount.name }}
 {{- else }}
-{{- default "default" .Values.serviceAccount.name }}
+{{- printf "%s-service-account" .Release.Name }}
 {{- end }}
 {{- end }}
