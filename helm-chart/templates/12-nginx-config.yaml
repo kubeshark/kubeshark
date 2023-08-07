@@ -4,7 +4,6 @@ kind: ConfigMap
 metadata:
   name: kubeshark-nginx-config
   namespace: {{ .Release.Namespace }}
-  apiVersion: v1
 data:
   default.conf: |
     server {
