@@ -22,7 +22,6 @@ rules:
     resources:
       - pods
       - services
-      - services/proxy
       - endpoints
       - persistentvolumeclaims
       - ingresses
