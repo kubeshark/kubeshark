@@ -9,6 +9,31 @@ metadata:
   name: kubeshark-service-account
   namespace: default
 ---
+# Source: kubeshark/templates/12-nginx-config.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kubeshark-nginx-config
+  namespace: default
+  apiVersion: v1
+data:
+  default.conf: |
+    server {
+      listen 80;
+      listen [::]:80;
+      add_header Cache-Control no-cache;
+      location / {
+        root   /usr/share/nginx/html;
+        index  index.html index.htm;
+        try_files $uri $uri/ /index.html;
+        expires -1;
+      }
+      error_page   500 502 503 504  /50x.html;
+      location = /50x.html {
+        root   /usr/share/nginx/html;
+      }
+    }
+---
 # Source: kubeshark/templates/02-cluster-role.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -27,7 +52,6 @@ rules:
     resources:
       - pods
       - services
-      - services/proxy
       - endpoints
       - persistentvolumeclaims
       - ingresses
@@ -53,8 +77,6 @@ subjects:
   - kind: ServiceAccount
     name: kubeshark-service-account
     namespace: default
-  - kind: User
-    name: system:anonymous
 ---
 # Source: kubeshark/templates/05-hub-service.yaml
 apiVersion: v1
@@ -262,6 +284,15 @@ spec:
         requests:
           cpu: 50m
           memory: 50Mi
+      volumeMounts:
+        - name: nginx-config
+          mountPath: /etc/nginx/conf.d/default.conf
+          subPath: default.conf
+          readOnly: true
+  volumes:
+    - name: nginx-config
+      configMap:
+        name:  kubeshark-nginx-config
   dnsPolicy: ClusterFirstWithHostNet
   serviceAccountName: kubeshark-service-account
   terminationGracePeriodSeconds: 0
