@@ -46,14 +46,16 @@ tap:
   labels: {}
   annotations: {}
   nodeselectorterms: []
+  auth:
+    enabled: false
+    approvedemails: []
+    approveddomains: []
   ingress:
     enabled: false
     classname: kubeshark-ingress-class
     controller: k8s.io/ingress-nginx
     host: ks.svc.cluster.local
     tls: []
-    auth:
-      approveddomains: []
     certmanager: letsencrypt-prod
   debug: false
   ipv6: true

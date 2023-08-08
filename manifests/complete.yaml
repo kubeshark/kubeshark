@@ -15,7 +15,6 @@ kind: ConfigMap
 metadata:
   name: kubeshark-nginx-config
   namespace: default
-  apiVersion: v1
 data:
   default.conf: |
     server {
@@ -225,6 +224,10 @@ spec:
           value: '{}'
         - name: SCRIPTING_SCRIPTS
           value: '[]'
+        - name: AUTH_ENABLED
+          value: ''
+        - name: AUTH_APPROVED_EMAILS
+          value: ''
         - name: AUTH_APPROVED_DOMAINS
           value: ''
       image: 'docker.io/kubeshark/hub:latest'

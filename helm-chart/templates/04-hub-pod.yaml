@@ -31,8 +31,12 @@ spec:
           value: '{{ .Values.scripting.env | toJson }}'
         - name: SCRIPTING_SCRIPTS
           value: '[]'
+        - name: AUTH_ENABLED
+          value: '{{ .Values.tap.auth.enabled | ternary "true" "" }}'
+        - name: AUTH_APPROVED_EMAILS
+          value: '{{ gt (len .Values.tap.auth.approvedemails) 0 | ternary (join "," .Values.tap.auth.approvedemails) "" }}'
         - name: AUTH_APPROVED_DOMAINS
-          value: '{{ gt (len .Values.tap.ingress.auth.approveddomains) 0 | ternary (join "," .Values.tap.ingress.auth.approveddomains) "" }}'
+          value: '{{ gt (len .Values.tap.auth.approveddomains) 0 | ternary (join "," .Values.tap.auth.approveddomains) "" }}'
       image: '{{ .Values.tap.docker.registry }}/hub:{{ .Values.tap.docker.tag }}'
       imagePullPolicy: {{ .Values.tap.docker.imagepullpolicy }}
       name: kubeshark-hub

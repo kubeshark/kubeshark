@@ -80,6 +80,8 @@ type ResourcesConfig struct {
 }
 
 type AuthConfig struct {
+	Enabled         bool     `yaml:"enabled" json:"enabled" default:"false"`
+	ApprovedEmails  []string `yaml:"approvedemails" json:"approvedemails"  default:"[]"`
 	ApprovedDomains []string `yaml:"approveddomains" json:"approveddomains"  default:"[]"`
 }
 
@@ -89,7 +91,6 @@ type IngressConfig struct {
 	Controller  string                  `yaml:"controller" json:"controller" default:"k8s.io/ingress-nginx"`
 	Host        string                  `yaml:"host" json:"host" default:"ks.svc.cluster.local"`
 	TLS         []networking.IngressTLS `yaml:"tls" json:"tls"`
-	Auth        AuthConfig              `yaml:"auth" json:"auth"`
 	CertManager string                  `yaml:"certmanager" json:"certmanager" default:"letsencrypt-prod"`
 }
 
@@ -118,6 +119,7 @@ type TapConfig struct {
 	Labels            map[string]string     `yaml:"labels" json:"labels" default:"{}"`
 	Annotations       map[string]string     `yaml:"annotations" json:"annotations" default:"{}"`
 	NodeSelectorTerms []v1.NodeSelectorTerm `yaml:"nodeselectorterms" json:"nodeselectorterms" default:"[]"`
+	Auth              AuthConfig            `yaml:"auth" json:"auth"`
 	Ingress           IngressConfig         `yaml:"ingress" json:"ingress"`
 	Debug             bool                  `yaml:"debug" json:"debug" default:"false"`
 }
