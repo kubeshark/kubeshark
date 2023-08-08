@@ -57,8 +57,8 @@ tap:
     host: ks.svc.cluster.local
     tls: []
     certmanager: letsencrypt-prod
-  debug: false
   ipv6: true
+  debug: false
 logs:
   file: ""
 kube:

@@ -121,6 +121,7 @@ type TapConfig struct {
 	NodeSelectorTerms []v1.NodeSelectorTerm `yaml:"nodeselectorterms" json:"nodeselectorterms" default:"[]"`
 	Auth              AuthConfig            `yaml:"auth" json:"auth"`
 	Ingress           IngressConfig         `yaml:"ingress" json:"ingress"`
+	IPv6              bool                  `yaml:"ipv6" json:"ipv6" default:"true"`
 	Debug             bool                  `yaml:"debug" json:"debug" default:"false"`
 }
 
