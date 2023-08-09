@@ -4,6 +4,8 @@ kind: ConfigMap
 metadata:
   name: kubeshark-nginx-config
   namespace: {{ .Release.Namespace }}
+  labels:
+    {{- include "kubeshark.labels" . | nindent 4 }}
 data:
   default.conf: |
     server {
