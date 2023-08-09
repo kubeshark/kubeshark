@@ -44,7 +44,7 @@ app.kubernetes.io/managed-by: {{ .Release.Service }}
 {{ toYaml . }}
 {{- end }}
 {{- if .Values.tap.labels }}
-{{- toYaml .Values.tap.labels}}
+{{ toYaml .Values.tap.labels }}
 {{- end }}
 {{- end }}
 
