@@ -1,4 +1,4 @@
-Thank you for installing {{ .Chart.Name }}.
+Thank you for installing {{ title .Chart.Name }}.
 
 Your deployment has been successful. The release is named {{ .Release.Name }} and it has been deployed in the {{ .Release.Namespace }} namespace.
 
