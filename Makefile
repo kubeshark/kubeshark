@@ -116,6 +116,9 @@ logs:
 logs-kmm:
 	kubectl logs $$(kubectl get pods -n kmm-operator-system | awk '$$1 ~ /^kmm-operator-controller-manager-/' | awk 'END {print $$1}') -n kmm-operator-system
 
+ssh-node:
+	kubectl ssh node $$(kubectl get nodes | awk 'END {print $$1}')
+
 exec-worker:
 	export EXEC_POD_PREFIX=kubeshark-worker-
 	${MAKE} exec
