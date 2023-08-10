@@ -3,8 +3,12 @@
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  creationTimestamp: null
   labels:
+    helm.sh/chart: kubeshark-41.7
+    app.kubernetes.io/name: kubeshark
+    app.kubernetes.io/instance: kubeshark
+    app.kubernetes.io/version: "41.7"
+    app.kubernetes.io/managed-by: Helm
   annotations:
   name: kubeshark-service-account
   namespace: default
@@ -15,6 +19,12 @@ kind: ConfigMap
 metadata:
   name: kubeshark-nginx-config
   namespace: default
+  labels:
+    helm.sh/chart: kubeshark-41.7
+    app.kubernetes.io/name: kubeshark
+    app.kubernetes.io/instance: kubeshark
+    app.kubernetes.io/version: "41.7"
+    app.kubernetes.io/managed-by: Helm
 data:
   default.conf: |
     server {
@@ -37,8 +47,12 @@ data:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
-  creationTimestamp: null
   labels:
+    helm.sh/chart: kubeshark-41.7
+    app.kubernetes.io/name: kubeshark
+    app.kubernetes.io/instance: kubeshark
+    app.kubernetes.io/version: "41.7"
+    app.kubernetes.io/managed-by: Helm
   annotations:
   name: kubeshark-cluster-role
   namespace: default
@@ -63,8 +77,12 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
-  creationTimestamp: null
   labels:
+    helm.sh/chart: kubeshark-41.7
+    app.kubernetes.io/name: kubeshark
+    app.kubernetes.io/instance: kubeshark
+    app.kubernetes.io/version: "41.7"
+    app.kubernetes.io/managed-by: Helm
   annotations:
   name: kubeshark-cluster-role-binding
   namespace: default
@@ -81,8 +99,12 @@ subjects:
 apiVersion: v1
 kind: Service
 metadata:
-  creationTimestamp: null
   labels:
+    helm.sh/chart: kubeshark-41.7
+    app.kubernetes.io/name: kubeshark
+    app.kubernetes.io/instance: kubeshark
+    app.kubernetes.io/version: "41.7"
+    app.kubernetes.io/managed-by: Helm
   annotations:
   name: kubeshark-hub
   namespace: default
@@ -101,8 +123,12 @@ status:
 apiVersion: v1
 kind: Service
 metadata:
-  creationTimestamp: null
   labels:
+    helm.sh/chart: kubeshark-41.7
+    app.kubernetes.io/name: kubeshark
+    app.kubernetes.io/instance: kubeshark
+    app.kubernetes.io/version: "41.7"
+    app.kubernetes.io/managed-by: Helm
   annotations:
   name: kubeshark-front
   namespace: default
@@ -121,10 +147,14 @@ status:
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
-  creationTimestamp: null
   labels:
     app: kubeshark-worker-daemon-set
     sidecar.istio.io/inject: "false"
+    helm.sh/chart: kubeshark-41.7
+    app.kubernetes.io/name: kubeshark
+    app.kubernetes.io/instance: kubeshark
+    app.kubernetes.io/version: "41.7"
+    app.kubernetes.io/managed-by: Helm
   annotations:
   name: kubeshark-worker-daemon-set
   namespace: default
@@ -134,7 +164,6 @@ spec:
       app: kubeshark-worker-daemon-set
   template:
     metadata:
-      creationTimestamp: null
       labels:
         app: kubeshark-worker-daemon-set
       name: kubeshark-worker-daemon-set
@@ -201,10 +230,14 @@ spec:
 apiVersion: v1
 kind: Pod
 metadata:
-  creationTimestamp: null
   labels:
     app: kubeshark-hub
     sidecar.istio.io/inject: "false"
+    helm.sh/chart: kubeshark-41.7
+    app.kubernetes.io/name: kubeshark
+    app.kubernetes.io/instance: kubeshark
+    app.kubernetes.io/version: "41.7"
+    app.kubernetes.io/managed-by: Helm
   annotations:
   name: kubeshark-hub
   namespace: default
@@ -254,10 +287,14 @@ status: {}
 apiVersion: v1
 kind: Pod
 metadata:
-  creationTimestamp: null
   labels:
     app: kubeshark-front
     sidecar.istio.io/inject: "false"
+    helm.sh/chart: kubeshark-41.7
+    app.kubernetes.io/name: kubeshark
+    app.kubernetes.io/instance: kubeshark
+    app.kubernetes.io/version: "41.7"
+    app.kubernetes.io/managed-by: Helm
   annotations:
   name: kubeshark-front
   namespace: default
