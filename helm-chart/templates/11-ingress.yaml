@@ -9,11 +9,8 @@ metadata:
   {{- if .Values.tap.annotations }}
     {{- toYaml .Values.tap.annotations | nindent 4 }}
   {{- end }}
-  creationTimestamp: null
   labels:
-  {{- if .Values.tap.labels }}
-    {{- toYaml .Values.tap.labels | nindent 4 }}
-  {{- end }}
+    {{- include "kubeshark.labels" . | nindent 4 }}
   name: kubeshark-ingress
   namespace: {{ .Release.Namespace }}
 spec:

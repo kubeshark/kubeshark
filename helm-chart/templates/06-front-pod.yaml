@@ -2,13 +2,10 @@
 apiVersion: v1
 kind: Pod
 metadata:
-  creationTimestamp: null
   labels:
     app: kubeshark-front
     sidecar.istio.io/inject: "false"
-  {{- if .Values.tap.labels }}
-    {{- toYaml .Values.tap.labels | nindent 4 }}
-  {{- end }}
+    {{- include "kubeshark.labels" . | nindent 4 }}
   annotations:
   {{- if .Values.tap.annotations }}
     {{- toYaml .Values.tap.annotations | nindent 4 }}
@@ -51,7 +48,7 @@ spec:
       configMap:
         name:  kubeshark-nginx-config
   dnsPolicy: ClusterFirstWithHostNet
-  serviceAccountName: kubeshark-service-account
+  serviceAccountName: {{ include "kubeshark.serviceAccountName" . }}
   terminationGracePeriodSeconds: 0
   tolerations:
     - effect: NoExecute

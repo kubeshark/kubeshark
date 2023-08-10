@@ -2,13 +2,10 @@
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
-  creationTimestamp: null
   labels:
     app: kubeshark-worker-daemon-set
     sidecar.istio.io/inject: "false"
-  {{- if .Values.tap.labels }}
-    {{- toYaml .Values.tap.labels | nindent 4 }}
-  {{- end }}
+    {{- include "kubeshark.labels" . | nindent 4 }}
   annotations:
   {{- if .Values.tap.annotations }}
     {{- toYaml .Values.tap.annotations | nindent 4 }}
@@ -24,7 +21,6 @@ spec:
     {{- end }}
   template:
     metadata:
-      creationTimestamp: null
       labels:
         app: kubeshark-worker-daemon-set
       {{- if .Values.tap.labels }}
@@ -88,7 +84,7 @@ spec:
 {{- end }}
       dnsPolicy: ClusterFirstWithHostNet
       hostNetwork: true
-      serviceAccountName: kubeshark-service-account
+      serviceAccountName: {{ include "kubeshark.serviceAccountName" . }}
       terminationGracePeriodSeconds: 0
       tolerations:
         - effect: NoExecute

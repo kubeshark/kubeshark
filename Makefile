@@ -73,7 +73,7 @@ generate-helm-values: ## Generate the Helm values from config.yaml
 	./bin/kubeshark__ config > ./helm-chart/values.yaml
 
 generate-manifests: ## Generate the manifests from the Helm chart using default configuration
-	helm template ./helm-chart > ./manifests/complete.yaml
+	helm template kubeshark -n default ./helm-chart > ./manifests/complete.yaml
 
 logs-worker:
 	export LOGS_POD_PREFIX=kubeshark-worker-
