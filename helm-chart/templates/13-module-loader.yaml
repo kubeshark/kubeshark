@@ -23,4 +23,4 @@ spec:
             filesToSign:
               - /opt/lib/modules/5.10.0-23-amd64/pf_ring.ko
   selector:
-    node-role.kubernetes.io/worker: ""
+    beta.kubernetes.io/arch: amd64
