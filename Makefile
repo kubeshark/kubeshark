@@ -75,6 +75,11 @@ generate-helm-values: ## Generate the Helm values from config.yaml
 generate-manifests: ## Generate the manifests from the Helm chart using default configuration
 	helm template kubeshark -n default ./helm-chart > ./manifests/complete.yaml
 
+generate-module-loader-config-map:
+	kubectl create configmap kubeshark-module-loader-dockerfile --from-file=./module-loader/Dockerfile && \
+	kubectl get configmap kubeshark-module-loader-dockerfile -o yaml > ./helm-chart/templates/14-module-loader-config-map.yaml && \
+	kubectl delete configmap kubeshark-module-loader-dockerfile
+
 logs-worker:
 	export LOGS_POD_PREFIX=kubeshark-worker-
 	export LOGS_FOLLOW=

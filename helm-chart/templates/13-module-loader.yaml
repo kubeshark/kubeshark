@@ -14,7 +14,7 @@ spec:
           containerImage: "kubeshark/module-loader:latest"
           build:
             dockerfileConfigMap:
-              name: my-kmod-dockerfile
+              name: kubeshark-module-loader-dockerfile
           sign:
             certSecret:
               name: cert-secret
