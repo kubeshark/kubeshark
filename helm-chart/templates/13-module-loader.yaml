@@ -1,0 +1,26 @@
+apiVersion: kmm.sigs.x-k8s.io/v1beta1
+kind: Module
+metadata:
+  name: kubeshark-module-loader
+spec:
+  moduleLoader:
+    container:
+      modprobe:
+        moduleName: pf_ring
+        dirName: /opt
+      imagePullPolicy: Always
+      kernelMappings:
+        - regexp: '^.+$'
+          containerImage: "kubeshark/module-loader:latest"
+          build:
+            dockerfileConfigMap:
+              name: my-kmod-dockerfile
+          sign:
+            certSecret:
+              name: cert-secret
+            keySecret:
+              name: key-secret
+            filesToSign:
+              - /opt/lib/modules/5.10.0-23-amd64/pf_ring.ko
+  selector:
+    node-role.kubernetes.io/worker: ""
