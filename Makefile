@@ -113,6 +113,9 @@ logs-front-follow:
 logs:
 	kubectl logs $$(kubectl get pods | awk '$$1 ~ /^$(LOGS_POD_PREFIX)/' | awk 'END {print $$1}') $(LOGS_FOLLOW)
 
+logs-kmm:
+	kubectl logs $$(kubectl get pods -n kmm-operator-system | awk '$$1 ~ /^kmm-operator-controller-manager-/' | awk 'END {print $$1}') -n kmm-operator-system
+
 exec-worker:
 	export EXEC_POD_PREFIX=kubeshark-worker-
 	${MAKE} exec
