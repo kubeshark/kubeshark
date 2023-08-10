@@ -70,4 +70,4 @@ license: ""
 scripting:
   env: {}
   source: ""
-  watchScripts: true
+  watchscripts: true
