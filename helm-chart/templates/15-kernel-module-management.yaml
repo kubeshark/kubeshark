@@ -3258,12 +3258,7 @@ spec:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
             nodeSelectorTerms:
-            - matchExpressions:
-              - key: node-role.kubernetes.io/control-plane
-                operator: Exists
-            - matchExpressions:
-              - key: node-role.kubernetes.io/master
-                operator: Exists
+              {{- toYaml .Values.tap.nodeselectorterms | nindent 12 }}
       containers:
       - args:
         - --config=controller_manager_config.yaml
