@@ -4,6 +4,7 @@ kind: Service
 metadata:
   labels:
     {{- include "kubeshark.labels" . | nindent 4 }}
+    app.kubeshark.co/app: hub
   annotations:
   {{- if .Values.tap.annotations }}
     {{- toYaml .Values.tap.annotations | nindent 4 }}
