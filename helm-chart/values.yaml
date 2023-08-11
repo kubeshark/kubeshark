@@ -57,6 +57,8 @@ tap:
     host: ks.svc.cluster.local
     tls: []
     certmanager: letsencrypt-prod
+  kmm:
+    enabled: true
   ipv6: true
   debug: false
 logs:
@@ -71,5 +73,3 @@ scripting:
   env: {}
   source: ""
   watchscripts: true
-kmm:
-  enabled: true

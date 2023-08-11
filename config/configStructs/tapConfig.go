@@ -100,6 +100,10 @@ type ReleaseConfig struct {
 	Namespace string `yaml:"namespace" json:"namespace" default:"default"`
 }
 
+type KMMConfig struct {
+	Enabled bool `yaml:"enabled" json:"enabled" default:"true"`
+}
+
 type TapConfig struct {
 	Docker            DockerConfig          `yaml:"docker" json:"docker"`
 	Proxy             ProxyConfig           `yaml:"proxy" json:"proxy"`
@@ -121,6 +125,7 @@ type TapConfig struct {
 	NodeSelectorTerms []v1.NodeSelectorTerm `yaml:"nodeselectorterms" json:"nodeselectorterms" default:"[]"`
 	Auth              AuthConfig            `yaml:"auth" json:"auth"`
 	Ingress           IngressConfig         `yaml:"ingress" json:"ingress"`
+	KMM               KMMConfig             `yaml:"kmm" json:"kmm"`
 	IPv6              bool                  `yaml:"ipv6" json:"ipv6" default:"true"`
 	Debug             bool                  `yaml:"debug" json:"debug" default:"false"`
 }
