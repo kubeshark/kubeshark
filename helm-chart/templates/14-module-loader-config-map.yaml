@@ -6,7 +6,7 @@ metadata:
   labels:
     {{- include "kubeshark.labels" . | nindent 4 }}
 data:
-  Dockerfile: |
+  dockerfile: |
     ### Builder image
     ARG TARGETARCH=amd64
     FROM ${TARGETARCH}/debian:bullseye AS builder
