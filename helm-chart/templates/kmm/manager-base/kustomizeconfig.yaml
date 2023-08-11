@@ -1,0 +1,3 @@
+images:
+- path: spec/template/spec/containers/env/value
+  kind: Deployment

@@ -1,0 +1,103 @@
+---
+apiVersion: apiextensions.k8s.io/v1
+kind: CustomResourceDefinition
+metadata:
+  annotations:
+    controller-gen.kubebuilder.io/version: v0.12.0
+  name: preflightvalidations.kmm.sigs.x-k8s.io
+spec:
+  group: kmm.sigs.x-k8s.io
+  names:
+    kind: PreflightValidation
+    listKind: PreflightValidationList
+    plural: preflightvalidations
+    shortNames:
+    - pfv
+    singular: preflightvalidation
+  scope: Cluster
+  versions:
+  - name: v1beta1
+    schema:
+      openAPIV3Schema:
+        description: PreflightValidation initiates a preflight validations for all
+          Modules on the current Kubernetes cluster.
+        properties:
+          apiVersion:
+            description: 'APIVersion defines the versioned schema of this representation
+              of an object. Servers should convert recognized schemas to the latest
+              internal value, and may reject unrecognized values. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#resources'
+            type: string
+          kind:
+            description: 'Kind is a string value representing the REST resource this
+              object represents. Servers may infer this from the endpoint the client
+              submits requests to. Cannot be updated. In CamelCase. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#types-kinds'
+            type: string
+          metadata:
+            type: object
+          spec:
+            description: 'PreflightValidationSpec describes the desired state of the
+              resource, such as the kernel version that Module CRs need to be verified
+              against as well as the debug configuration of the logs More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#spec-and-status'
+            properties:
+              kernelVersion:
+                description: KernelVersion describes the kernel image that all Modules
+                  need to be checked against.
+                type: string
+              pushBuiltImage:
+                description: Boolean flag that determines whether images build during
+                  preflight must also be pushed to a defined repository
+                type: boolean
+            required:
+            - kernelVersion
+            type: object
+          status:
+            description: 'PreflightValidationStatus is the most recently observed
+              status of the PreflightValidation. It is populated by the system and
+              is read-only. More info: https://git.k8s.io/community/contributors/devel/sig-architecture/api-conventions.md#spec-and-status'
+            properties:
+              crStatuses:
+                additionalProperties:
+                  properties:
+                    lastTransitionTime:
+                      description: LastTransitionTime is the last time the CR status
+                        transitioned from one status to another. This should be when
+                        the underlying status changed.  If that is not known, then
+                        using the time when the API field changed is acceptable.
+                      format: date-time
+                      type: string
+                    statusReason:
+                      description: StatusReason contains a string describing the status
+                        source.
+                      type: string
+                    verificationStage:
+                      description: 'Current stage of the verification process: image
+                        (image existence verification), build(build process verification)'
+                      enum:
+                      - Image
+                      - Build
+                      - Sign
+                      - Requeued
+                      - Done
+                      type: string
+                    verificationStatus:
+                      description: 'Status of Module CR verification: true (verified),
+                        false (verification failed), error (error during verification
+                        process), unknown (verification has not started yet)'
+                      enum:
+                      - "True"
+                      - "False"
+                      type: string
+                  required:
+                  - lastTransitionTime
+                  - verificationStage
+                  - verificationStatus
+                  type: object
+                description: CRStatuses contain observations about each Module's preflight
+                  upgradability validation
+                type: object
+            type: object
+        type: object
+    served: true
+    storage: true
+    subresources:
+      status: {}

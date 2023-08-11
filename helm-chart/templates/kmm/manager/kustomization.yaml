@@ -1,0 +1,24 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+- ../manager-base
+
+patches:
+- path: manager_worker_image_patch.yaml
+
+images:
+- name: controller
+  newName: gcr.io/k8s-staging-kmm/kernel-module-management-operator
+  newTag: latest
+- name: worker
+  newName: gcr.io/k8s-staging-kmm/kernel-module-management-worker
+  newTag: latest
+
+configMapGenerator:
+- files:
+  - controller_manager_config.yaml
+  name: manager-config
+
+generatorOptions:
+  disableNameSuffixHash: true

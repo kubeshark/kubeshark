@@ -1,0 +1,17 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+- manager.yaml
+
+images:
+- name: signer
+  newName: gcr.io/k8s-staging-kmm/kernel-module-management-signimage
+  newTag: latest
+
+patches:
+- path: manager_auth_proxy_patch.yaml
+- path: manager_config_patch.yaml
+
+configurations:
+- kustomizeconfig.yaml

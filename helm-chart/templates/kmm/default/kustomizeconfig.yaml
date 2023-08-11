@@ -1,0 +1,4 @@
+namePrefix:
+- kind: Deployment
+  name: controller-manager
+  path: spec/template/spec/volumes/secret/secretName
