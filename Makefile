@@ -116,6 +116,9 @@ logs:
 logs-kmm:
 	kubectl logs $$(kubectl get pods -n kmm-operator-system | awk '$$1 ~ /^kmm-operator-controller-manager-/' | awk 'END {print $$1}') -n kmm-operator-system
 
+logs-kmm-loader:
+	kubectl logs $$(kubectl get pods | awk '$$1 ~ /^kubeshark-module-loader-build-/' | awk 'END {print $$1}')
+
 ssh-node:
 	kubectl ssh node $$(kubectl get nodes | awk 'END {print $$1}')
 
