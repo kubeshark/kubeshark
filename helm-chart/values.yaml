@@ -71,3 +71,5 @@ scripting:
   env: {}
   source: ""
   watchscripts: true
+kmm:
+  enabled: true
