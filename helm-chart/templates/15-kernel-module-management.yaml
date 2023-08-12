@@ -3258,7 +3258,7 @@ spec:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
             nodeSelectorTerms:
-              {{- toYaml .Values.tap.nodeselectorterms | nindent 12 }}
+              {{- toYaml .Values.tap.nodeselectorterms | nindent 14 }}
       containers:
       - args:
         - --config=controller_manager_config.yaml
