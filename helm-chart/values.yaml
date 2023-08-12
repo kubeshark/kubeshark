@@ -1,38 +1,76 @@
+config: {}
+dumplogs: false
+headless: false
+kube:
+  configpath: ""
+  context: ""
+license: ""
+logs:
+  file: ""
+manifests:
+  dump: false
+scripting:
+  env: null
+  source: ""
+  watchscripts: true
 tap:
+  annotations: {}
+  auth:
+    approveddomains: []
+    approvedemails: []
+    enabled: false
+  debug: false
   docker:
+    imagepullpolicy: Always
+    imagepullsecrets: null
     registry: docker.io/kubeshark
     tag: latest
-    imagepullpolicy: Always
-    imagepullsecrets: []
+  dryrun: false
+  ignoretainted: false
+  ingress:
+    certmanager: letsencrypt-prod
+    classname: kubeshark-ingress-class
+    controller: k8s.io/ingress-nginx
+    enabled: false
+    host: ks.svc.cluster.local
+    tls: null
+  ipv6: true
+  kmm:
+    enabled: true
+  labels: {}
+  namespaces: []
+  nodeselectorterms:
+    - matchExpressions:
+        - key: kubernetes.io/os
+          operator: In
+          values:
+            - linux
+  packetcapture: libpcap
+  pcap: ""
+  persistentstorage: false
   proxy:
-    worker:
-      srvport: 8897
-    hub:
-      port: 8898
-      srvport: 8898
     front:
       port: 8899
     host: 127.0.0.1
+    hub:
+      port: 8898
+      srvport: 8898
+    worker:
+      srvport: 8897
   regex: .*
-  namespaces: []
   release:
-    repo: https://helm.kubeshark.co
     name: kubeshark
     namespace: default
-  persistentstorage: false
-  storagelimit: 200Mi
-  storageclass: standard
-  dryrun: false
-  pcap: ""
+    repo: https://helm.kubeshark.co
   resources:
-    worker:
+    hub:
       limits:
         cpu: 750m
         memory: 1Gi
       requests:
         cpu: 50m
         memory: 50Mi
-    hub:
+    worker:
       limits:
         cpu: 750m
         memory: 1Gi
@@ -40,36 +78,6 @@ tap:
         cpu: 50m
         memory: 50Mi
   servicemesh: true
+  storageclass: standard
+  storagelimit: 200Mi
   tls: true
-  packetcapture: libpcap
-  ignoretainted: false
-  labels: {}
-  annotations: {}
-  nodeselectorterms: []
-  auth:
-    enabled: false
-    approvedemails: []
-    approveddomains: []
-  ingress:
-    enabled: false
-    classname: kubeshark-ingress-class
-    controller: k8s.io/ingress-nginx
-    host: ks.svc.cluster.local
-    tls: []
-    certmanager: letsencrypt-prod
-  kmm:
-    enabled: true
-  ipv6: true
-  debug: false
-logs:
-  file: ""
-kube:
-  configpath: ""
-  context: ""
-dumplogs: false
-headless: false
-license: ""
-scripting:
-  env: {}
-  source: ""
-  watchscripts: true

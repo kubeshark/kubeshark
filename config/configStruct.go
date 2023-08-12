@@ -14,7 +14,21 @@ const (
 )
 
 func CreateDefaultConfig() ConfigStruct {
-	return ConfigStruct{}
+	return ConfigStruct{
+		Tap: configStructs.TapConfig{
+			NodeSelectorTerms: []v1.NodeSelectorTerm{
+				{
+					MatchExpressions: []v1.NodeSelectorRequirement{
+						{
+							Key:      "kubernetes.io/os",
+							Operator: v1.NodeSelectorOpIn,
+							Values:   []string{"linux"},
+						},
+					},
+				},
+			},
+		},
+	}
 }
 
 type KubeConfig struct {
