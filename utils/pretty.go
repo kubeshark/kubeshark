@@ -7,11 +7,6 @@ import (
 	"gopkg.in/yaml.v3"
 )
 
-const (
-	empty = ""
-	tab   = "\t"
-)
-
 func PrettyYaml(data interface{}) (result string, err error) {
 	var marshalled []byte
 	marshalled, err = json.Marshal(data)
