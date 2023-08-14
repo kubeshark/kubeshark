@@ -3,7 +3,7 @@ apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   labels:
-    app: kubeshark-worker-daemon-set
+    app.kubeshark.co/app: worker
     sidecar.istio.io/inject: "false"
     {{- include "kubeshark.labels" . | nindent 4 }}
   annotations:
@@ -22,7 +22,7 @@ spec:
   template:
     metadata:
       labels:
-        app: kubeshark-worker-daemon-set
+        app.kubeshark.co/app: worker
       {{- if .Values.tap.labels }}
         {{- toYaml .Values.tap.labels | nindent 8 }}
       {{- end }}
