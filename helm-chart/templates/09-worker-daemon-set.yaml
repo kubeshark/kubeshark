@@ -65,6 +65,7 @@ spec:
                 - SYS_PTRACE
                 - DAC_OVERRIDE
                 - SYS_RESOURCE
+                - SYS_MODULE
               drop:
                 - ALL
           volumeMounts:
