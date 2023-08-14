@@ -36,7 +36,7 @@ tap:
     tls: null
   ipv6: true
   kmm:
-    enabled: true
+    enabled: false
   labels: {}
   namespaces: []
   nodeselectorterms:
