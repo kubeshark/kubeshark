@@ -24,9 +24,3 @@ sources:
 type: application
 version: "41.7"
 icon: https://raw.githubusercontent.com/kubeshark/assets/master/logo/vector/logo.svg
-dependencies:
-  - name: cert-manager
-    version: v1.11.0
-    repository: https://charts.jetstack.io
-    alias: cert-manager
-    condition: tap.kmm.enabled

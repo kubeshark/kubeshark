@@ -35,8 +35,6 @@ tap:
     host: ks.svc.cluster.local
     tls: null
   ipv6: true
-  kmm:
-    enabled: true
   labels: {}
   namespaces: []
   nodeselectorterms:
