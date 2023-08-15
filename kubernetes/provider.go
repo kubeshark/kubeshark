@@ -14,7 +14,6 @@ import (
 	"github.com/kubeshark/kubeshark/semver"
 	"github.com/kubeshark/kubeshark/utils"
 	"github.com/rs/zerolog/log"
-	auth "k8s.io/api/authorization/v1"
 	core "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -71,59 +70,9 @@ func NewProvider(kubeConfigPath string, contextName string) (*Provider, error) {
 	}, nil
 }
 
-func (provider *Provider) CanI(ctx context.Context, namespace string, resource string, verb string, group string) (bool, error) {
-	selfSubjectAccessReview := &auth.SelfSubjectAccessReview{
-		Spec: auth.SelfSubjectAccessReviewSpec{
-			ResourceAttributes: &auth.ResourceAttributes{
-				Namespace: namespace,
-				Resource:  resource,
-				Verb:      verb,
-				Group:     group,
-			},
-		},
-	}
-
-	response, err := provider.clientSet.AuthorizationV1().SelfSubjectAccessReviews().Create(ctx, selfSubjectAccessReview, metav1.CreateOptions{})
-	if err != nil {
-		return false, err
-	}
-
-	return response.Status.Allowed, nil
-}
-
-func (provider *Provider) DoesNamespaceExist(ctx context.Context, name string) (bool, error) {
-	namespaceResource, err := provider.clientSet.CoreV1().Namespaces().Get(ctx, name, metav1.GetOptions{})
-	return provider.doesResourceExist(namespaceResource, err)
-}
-
-func (provider *Provider) DoesServiceAccountExist(ctx context.Context, namespace string, name string) (bool, error) {
-	serviceAccountResource, err := provider.clientSet.CoreV1().ServiceAccounts(namespace).Get(ctx, name, metav1.GetOptions{})
-	return provider.doesResourceExist(serviceAccountResource, err)
-}
-
 func (provider *Provider) DoesServiceExist(ctx context.Context, namespace string, name string) (bool, error) {
 	serviceResource, err := provider.clientSet.CoreV1().Services(namespace).Get(ctx, name, metav1.GetOptions{})
 	return provider.doesResourceExist(serviceResource, err)
-}
-
-func (provider *Provider) DoesClusterRoleExist(ctx context.Context, name string) (bool, error) {
-	clusterRoleResource, err := provider.clientSet.RbacV1().ClusterRoles().Get(ctx, name, metav1.GetOptions{})
-	return provider.doesResourceExist(clusterRoleResource, err)
-}
-
-func (provider *Provider) DoesClusterRoleBindingExist(ctx context.Context, name string) (bool, error) {
-	clusterRoleBindingResource, err := provider.clientSet.RbacV1().ClusterRoleBindings().Get(ctx, name, metav1.GetOptions{})
-	return provider.doesResourceExist(clusterRoleBindingResource, err)
-}
-
-func (provider *Provider) DoesRoleExist(ctx context.Context, namespace string, name string) (bool, error) {
-	roleResource, err := provider.clientSet.RbacV1().Roles(namespace).Get(ctx, name, metav1.GetOptions{})
-	return provider.doesResourceExist(roleResource, err)
-}
-
-func (provider *Provider) DoesRoleBindingExist(ctx context.Context, namespace string, name string) (bool, error) {
-	roleBindingResource, err := provider.clientSet.RbacV1().RoleBindings(namespace).Get(ctx, name, metav1.GetOptions{})
-	return provider.doesResourceExist(roleBindingResource, err)
 }
 
 func (provider *Provider) doesResourceExist(resource interface{}, err error) (bool, error) {
@@ -176,24 +125,6 @@ func (provider *Provider) ListAllRunningPodsMatchingRegex(ctx context.Context, r
 		}
 	}
 	return matchingPods, nil
-}
-
-func (provider *Provider) ListPodsByAppLabel(ctx context.Context, namespaces string, labelName string) ([]core.Pod, error) {
-	pods, err := provider.clientSet.CoreV1().Pods(namespaces).List(ctx, metav1.ListOptions{LabelSelector: fmt.Sprintf("app=%s", labelName)})
-	if err != nil {
-		return nil, err
-	}
-
-	return pods.Items, err
-}
-
-func (provider *Provider) ListAllNamespaces(ctx context.Context) ([]core.Namespace, error) {
-	namespaces, err := provider.clientSet.CoreV1().Namespaces().List(ctx, metav1.ListOptions{})
-	if err != nil {
-		return nil, err
-	}
-
-	return namespaces.Items, err
 }
 
 func (provider *Provider) GetPodLogs(ctx context.Context, namespace string, podName string, containerName string) (string, error) {
