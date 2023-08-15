@@ -3,7 +3,7 @@ apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   labels:
-    app: kubeshark-worker-daemon-set
+    app.kubeshark.co/app: worker
     sidecar.istio.io/inject: "false"
     {{- include "kubeshark.labels" . | nindent 4 }}
   annotations:
@@ -15,17 +15,13 @@ metadata:
 spec:
   selector:
     matchLabels:
-      app: kubeshark-worker-daemon-set
-    {{- if .Values.tap.labels }}
-      {{- toYaml .Values.tap.labels | nindent 6 }}
-    {{- end }}
+      app.kubeshark.co/app: worker
+      {{- include "kubeshark.labels" . | nindent 6 }}
   template:
     metadata:
       labels:
-        app: kubeshark-worker-daemon-set
-      {{- if .Values.tap.labels }}
-        {{- toYaml .Values.tap.labels | nindent 8 }}
-      {{- end }}
+        app.kubeshark.co/app: worker
+        {{- include "kubeshark.labels" . | nindent 8 }}
       name: kubeshark-worker-daemon-set
       namespace: kubeshark
     spec:
