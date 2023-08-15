@@ -24,6 +24,7 @@ const selfServicePort = 80
 
 func StartProxy(kubernetesProvider *Provider, proxyHost string, srcPort uint16, selfNamespace string, selfServiceName string) (*http.Server, error) {
 	log.Info().
+		Str("proxy-host", proxyHost).
 		Str("namespace", selfNamespace).
 		Str("service", selfServiceName).
 		Int("src-port", int(srcPort)).
@@ -101,7 +102,7 @@ func getRerouteHttpHandlerSelfStatic(proxyHandler http.Handler, selfNamespace st
 }
 
 func NewPortForward(kubernetesProvider *Provider, namespace string, podRegex *regexp.Regexp, srcPort uint16, dstPort uint16, ctx context.Context) (*portforward.PortForwarder, error) {
-	pods, err := kubernetesProvider.ListAllRunningPodsMatchingRegex(ctx, podRegex, []string{namespace})
+	pods, err := kubernetesProvider.ListPodsByAppLabel(ctx, namespace, map[string]string{"app.kubeshark.co/app": "hub"})
 	if err != nil {
 		return nil, err
 	} else if len(pods) == 0 {
