@@ -16,7 +16,7 @@ spec:
       port: 80
       targetPort: 80
   selector:
-    app: kubeshark-front
-  type: NodePort
+    app.kubeshark.co/app: front
+  type: ClusterIP
 status:
   loadBalancer: {}
