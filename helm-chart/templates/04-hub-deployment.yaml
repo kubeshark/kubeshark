@@ -33,11 +33,18 @@ spec:
                 name: kubeshark-hub-config
             - secretRef:
                 name: kubeshark-hub-secret
-          env:
-            - name: POD_REGEX
-              value: '{{ .Values.tap.regex }}'
           image: '{{ .Values.tap.docker.registry }}/hub:{{ .Values.tap.docker.tag }}'
           imagePullPolicy: {{ .Values.tap.docker.imagepullpolicy }}
+          readinessProbe:
+            periodSeconds: 1
+            initialDelaySeconds: 3
+            tcpSocket:
+              port: 80
+          livenessProbe:
+            periodSeconds: 1
+            initialDelaySeconds: 3
+            tcpSocket:
+              port: 80
           resources:
             limits:
               cpu: {{ .Values.tap.resources.hub.limits.cpu }}

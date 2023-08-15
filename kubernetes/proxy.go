@@ -24,7 +24,7 @@ const selfServicePort = 80
 
 func StartProxy(kubernetesProvider *Provider, proxyHost string, srcPort uint16, selfNamespace string, selfServiceName string) (*http.Server, error) {
 	log.Info().
-		Str("proxyHost", proxyHost).
+		Str("proxy-host", proxyHost).
 		Str("namespace", selfNamespace).
 		Str("service", selfServiceName).
 		Int("src-port", int(srcPort)).

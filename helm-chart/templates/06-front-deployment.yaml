@@ -31,6 +31,12 @@ spec:
           image: '{{ .Values.tap.docker.registry }}/front:{{ .Values.tap.docker.tag }}'
           imagePullPolicy: {{ .Values.tap.docker.imagepullpolicy }}
           name: kubeshark-front
+          livenessProbe:
+            failureThreshold: 3
+            periodSeconds: 1
+            successThreshold: 1
+            tcpSocket:
+              port: 80
           readinessProbe:
             failureThreshold: 3
             periodSeconds: 1
