@@ -142,15 +142,6 @@ func (provider *Provider) ListPodsByAppLabel(ctx context.Context, namespaces str
 	return pods.Items, err
 }
 
-func (provider *Provider) ListAllNamespaces(ctx context.Context) ([]core.Namespace, error) {
-	namespaces, err := provider.clientSet.CoreV1().Namespaces().List(ctx, metav1.ListOptions{})
-	if err != nil {
-		return nil, err
-	}
-
-	return namespaces.Items, err
-}
-
 func (provider *Provider) GetPodLogs(ctx context.Context, namespace string, podName string, containerName string) (string, error) {
 	podLogOpts := core.PodLogOptions{Container: containerName}
 	req := provider.clientSet.CoreV1().Pods(namespace).GetLogs(podName, &podLogOpts)
