@@ -40,6 +40,9 @@ spec:
           image: '{{ .Values.tap.docker.registry }}/worker:{{ .Values.tap.docker.tag }}'
           imagePullPolicy: {{ .Values.tap.docker.imagepullpolicy }}
           name: kubeshark-worker-daemon-set
+          envFrom:
+            - secretRef:
+                name: kubeshark-hub-secret
         {{- if .Values.tap.debug }}
           env:
           - name: PROFILING_ENABLED
