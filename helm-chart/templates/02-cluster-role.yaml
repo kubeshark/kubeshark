@@ -15,13 +15,11 @@ rules:
       - ""
       - extensions
       - apps
-      - networking.k8s.io
     resources:
       - pods
       - services
       - endpoints
       - persistentvolumeclaims
-      - ingresses
     verbs:
       - list
       - get
