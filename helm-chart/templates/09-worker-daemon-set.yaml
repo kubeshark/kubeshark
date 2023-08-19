@@ -71,6 +71,16 @@ spec:
                 - SYS_MODULE
               drop:
                 - ALL
+          readinessProbe:
+            periodSeconds: 1
+            initialDelaySeconds: 1
+            tcpSocket:
+              port: {{ .Values.tap.proxy.worker.srvport }}
+          livenessProbe:
+            periodSeconds: 1
+            initialDelaySeconds: 1
+            tcpSocket:
+              port: {{ .Values.tap.proxy.worker.srvport }}
           volumeMounts:
             - mountPath: /hostproc
               name: proc
