@@ -13,7 +13,23 @@ metadata:
   name: kubeshark-service-account
   namespace: default
 ---
-# Source: kubeshark/templates/12-nginx-config.yaml
+# Source: kubeshark/templates/hub-secret.yaml
+kind: Secret
+apiVersion: v1
+metadata:
+  name: kubeshark-hub-secret
+  namespace: default
+  labels:
+    app.kubeshark.co/app: hub
+    helm.sh/chart: kubeshark-41.7
+    app.kubernetes.io/name: kubeshark
+    app.kubernetes.io/instance: kubeshark
+    app.kubernetes.io/version: "41.7"
+    app.kubernetes.io/managed-by: Helm
+stringData:
+    LICENSE: ''
+---
+# Source: kubeshark/templates/12-nginx-config-map.yaml
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -43,6 +59,28 @@ data:
       }
     }
 ---
+# Source: kubeshark/templates/hub-config.yaml
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: kubeshark-hub-config
+  namespace: default
+  labels:
+    app.kubeshark.co/app: hub
+    helm.sh/chart: kubeshark-41.7
+    app.kubernetes.io/name: kubeshark
+    app.kubernetes.io/instance: kubeshark
+    app.kubernetes.io/version: "41.7"
+    app.kubernetes.io/managed-by: Helm
+data:
+    POD_REGEX: '.*'
+    NAMESPACES: ''
+    SCRIPTING_ENV: 'null'
+    SCRIPTING_SCRIPTS: '[]'
+    AUTH_ENABLED: ''
+    AUTH_APPROVED_EMAILS: ''
+    AUTH_APPROVED_DOMAINS: ''
+---
 # Source: kubeshark/templates/02-cluster-role.yaml
 apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
@@ -61,13 +99,11 @@ rules:
       - ""
       - extensions
       - apps
-      - networking.k8s.io
     resources:
       - pods
       - services
       - endpoints
       - persistentvolumeclaims
-      - ingresses
     verbs:
       - list
       - get
@@ -100,6 +136,7 @@ apiVersion: v1
 kind: Service
 metadata:
   labels:
+    app.kubeshark.co/app: hub
     helm.sh/chart: kubeshark-41.7
     app.kubernetes.io/name: kubeshark
     app.kubernetes.io/instance: kubeshark
@@ -114,8 +151,8 @@ spec:
       port: 80
       targetPort: 80
   selector:
-    app: kubeshark-hub
-  type: NodePort
+    app.kubeshark.co/app: hub
+  type: ClusterIP
 status:
   loadBalancer: {}
 ---
@@ -138,8 +175,8 @@ spec:
       port: 80
       targetPort: 80
   selector:
-    app: kubeshark-front
-  type: NodePort
+    app.kubeshark.co/app: front
+  type: ClusterIP
 status:
   loadBalancer: {}
 ---
@@ -148,7 +185,7 @@ apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   labels:
-    app: kubeshark-worker-daemon-set
+    app.kubeshark.co/app: worker
     sidecar.istio.io/inject: "false"
     helm.sh/chart: kubeshark-41.7
     app.kubernetes.io/name: kubeshark
@@ -161,11 +198,21 @@ metadata:
 spec:
   selector:
     matchLabels:
-      app: kubeshark-worker-daemon-set
+      app.kubeshark.co/app: worker
+      helm.sh/chart: kubeshark-41.7
+      app.kubernetes.io/name: kubeshark
+      app.kubernetes.io/instance: kubeshark
+      app.kubernetes.io/version: "41.7"
+      app.kubernetes.io/managed-by: Helm
   template:
     metadata:
       labels:
-        app: kubeshark-worker-daemon-set
+        app.kubeshark.co/app: worker
+        helm.sh/chart: kubeshark-41.7
+        app.kubernetes.io/name: kubeshark
+        app.kubernetes.io/instance: kubeshark
+        app.kubernetes.io/version: "41.7"
+        app.kubernetes.io/managed-by: Helm
       name: kubeshark-worker-daemon-set
       namespace: kubeshark
     spec:
@@ -184,6 +231,9 @@ spec:
           image: 'docker.io/kubeshark/worker:latest'
           imagePullPolicy: Always
           name: kubeshark-worker-daemon-set
+          envFrom:
+            - secretRef:
+                name: kubeshark-hub-secret
           resources:
             limits:
               cpu: 750m
@@ -200,8 +250,19 @@ spec:
                 - SYS_PTRACE
                 - DAC_OVERRIDE
                 - SYS_RESOURCE
+                - SYS_MODULE
               drop:
                 - ALL
+          readinessProbe:
+            periodSeconds: 1
+            initialDelaySeconds: 1
+            tcpSocket:
+              port: 8897
+          livenessProbe:
+            periodSeconds: 1
+            initialDelaySeconds: 1
+            tcpSocket:
+              port: 8897
           volumeMounts:
             - mountPath: /hostproc
               name: proc
@@ -218,6 +279,15 @@ spec:
           operator: Exists
         - effect: NoSchedule
           operator: Exists
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+            - matchExpressions:
+              - key: kubernetes.io/os
+                operator: In
+                values:
+                - linux
       volumes:
         - hostPath:
             path: /proc
@@ -226,119 +296,126 @@ spec:
             path: /sys
           name: sys
 ---
-# Source: kubeshark/templates/04-hub-pod.yaml
-apiVersion: v1
-kind: Pod
+# Source: kubeshark/templates/04-hub-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
 metadata:
-  labels:
-    app: kubeshark-hub
-    sidecar.istio.io/inject: "false"
-    helm.sh/chart: kubeshark-41.7
-    app.kubernetes.io/name: kubeshark
-    app.kubernetes.io/instance: kubeshark
-    app.kubernetes.io/version: "41.7"
-    app.kubernetes.io/managed-by: Helm
-  annotations:
   name: kubeshark-hub
   namespace: default
-spec:
-  containers:
-    - command:
-        - ./hub
-        
-      env:
-        - name: POD_REGEX
-          value: '.*'
-        - name: NAMESPACES
-          value: ''
-        - name: LICENSE
-          value: ''
-        - name: SCRIPTING_ENV
-          value: '{}'
-        - name: SCRIPTING_SCRIPTS
-          value: '[]'
-        - name: AUTH_ENABLED
-          value: ''
-        - name: AUTH_APPROVED_EMAILS
-          value: ''
-        - name: AUTH_APPROVED_DOMAINS
-          value: ''
-      image: 'docker.io/kubeshark/hub:latest'
-      imagePullPolicy: Always
-      name: kubeshark-hub
-      resources:
-        limits:
-          cpu: 750m
-          memory: 1Gi
-        requests:
-          cpu: 50m
-          memory: 50Mi
-  dnsPolicy: ClusterFirstWithHostNet
-  serviceAccountName: kubeshark-service-account
-  terminationGracePeriodSeconds: 0
-  tolerations:
-    - effect: NoExecute
-      operator: Exists
-    - effect: NoSchedule
-      operator: Exists
-status: {}
----
-# Source: kubeshark/templates/06-front-pod.yaml
-apiVersion: v1
-kind: Pod
-metadata:
   labels:
-    app: kubeshark-front
-    sidecar.istio.io/inject: "false"
+    app.kubeshark.co/app: hub
     helm.sh/chart: kubeshark-41.7
     app.kubernetes.io/name: kubeshark
     app.kubernetes.io/instance: kubeshark
     app.kubernetes.io/version: "41.7"
     app.kubernetes.io/managed-by: Helm
   annotations:
+spec:
+  replicas: 1  # Set the desired number of replicas
+  selector:
+    matchLabels:
+      app.kubeshark.co/app: hub
+  template:
+    metadata:
+      labels:
+        app.kubeshark.co/app: hub
+        sidecar.istio.io/inject: "false"
+    spec:
+      dnsPolicy: ClusterFirstWithHostNet
+      serviceAccountName: kubeshark-service-account
+      containers:
+        - name: kubeshark-hub
+          command:
+            - ./hub
+            
+          envFrom:
+            - configMapRef:
+                name: kubeshark-hub-config
+            - secretRef:
+                name: kubeshark-hub-secret
+          image: 'docker.io/kubeshark/hub:latest'
+          imagePullPolicy: Always
+          readinessProbe:
+            periodSeconds: 1
+            initialDelaySeconds: 3
+            tcpSocket:
+              port: 80
+          livenessProbe:
+            periodSeconds: 1
+            initialDelaySeconds: 3
+            tcpSocket:
+              port: 80
+          resources:
+            limits:
+              cpu: 750m
+              memory: 1Gi
+            requests:
+              cpu: 50m
+              memory: 50Mi
+---
+# Source: kubeshark/templates/06-front-deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
   name: kubeshark-front
   namespace: default
+  labels:
+    app.kubeshark.co/app: front
+    helm.sh/chart: kubeshark-41.7
+    app.kubernetes.io/name: kubeshark
+    app.kubernetes.io/instance: kubeshark
+    app.kubernetes.io/version: "41.7"
+    app.kubernetes.io/managed-by: Helm
+  annotations:
 spec:
-  containers:
-    - env:
-        - name: REACT_APP_DEFAULT_FILTER
-          value: ' '
-        - name: REACT_APP_HUB_HOST
-          value: ' '
-        - name: REACT_APP_HUB_PORT
-          value: ':8898'
-      image: 'docker.io/kubeshark/front:latest'
-      imagePullPolicy: Always
-      name: kubeshark-front
-      readinessProbe:
-        failureThreshold: 3
-        periodSeconds: 1
-        successThreshold: 1
-        tcpSocket:
-          port: 80
-        timeoutSeconds: 1
-      resources:
-        limits:
-          cpu: 750m
-          memory: 1Gi
-        requests:
-          cpu: 50m
-          memory: 50Mi
-      volumeMounts:
+  replicas: 1  # Set the desired number of replicas
+  selector:
+    matchLabels:
+      app.kubeshark.co/app: front
+  template:
+    metadata:
+      labels:
+        app.kubeshark.co/app: front
+    spec:
+      containers:
+        - env:
+            - name: REACT_APP_DEFAULT_FILTER
+              value: ' '
+            - name: REACT_APP_HUB_HOST
+              value: ' '
+            - name: REACT_APP_HUB_PORT
+              value: ':8898'
+          image: 'docker.io/kubeshark/front:latest'
+          imagePullPolicy: Always
+          name: kubeshark-front
+          livenessProbe:
+            failureThreshold: 3
+            periodSeconds: 1
+            successThreshold: 1
+            tcpSocket:
+              port: 80
+          readinessProbe:
+            failureThreshold: 3
+            periodSeconds: 1
+            successThreshold: 1
+            tcpSocket:
+              port: 80
+            timeoutSeconds: 1
+          resources:
+            limits:
+              cpu: 750m
+              memory: 1Gi
+            requests:
+              cpu: 50m
+              memory: 50Mi
+          volumeMounts:
+            - name: nginx-config
+              mountPath: /etc/nginx/conf.d/default.conf
+              subPath: default.conf
+              readOnly: true
+      volumes:
         - name: nginx-config
-          mountPath: /etc/nginx/conf.d/default.conf
-          subPath: default.conf
-          readOnly: true
-  volumes:
-    - name: nginx-config
-      configMap:
-        name:  kubeshark-nginx-config
-  dnsPolicy: ClusterFirstWithHostNet
-  serviceAccountName: kubeshark-service-account
-  terminationGracePeriodSeconds: 0
-  tolerations:
-    - effect: NoExecute
-      operator: Exists
-    - effect: NoSchedule
-      operator: Exists
-status: {}
+          configMap:
+            name: kubeshark-nginx-config
+      dnsPolicy: ClusterFirstWithHostNet
+      serviceAccountName: kubeshark-service-account
