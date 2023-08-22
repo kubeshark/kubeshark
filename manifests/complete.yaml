@@ -13,11 +13,11 @@ metadata:
   name: kubeshark-service-account
   namespace: default
 ---
-# Source: kubeshark/templates/hub-secret.yaml
+# Source: kubeshark/templates/14-secret.yaml
 kind: Secret
 apiVersion: v1
 metadata:
-  name: kubeshark-hub-secret
+  name: kubeshark-secret
   namespace: default
   labels:
     app.kubeshark.co/app: hub
@@ -33,7 +33,7 @@ stringData:
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: kubeshark-nginx-config
+  name: kubeshark-nginx-config-map
   namespace: default
   labels:
     helm.sh/chart: kubeshark-41.7
@@ -59,11 +59,11 @@ data:
       }
     }
 ---
-# Source: kubeshark/templates/hub-config.yaml
+# Source: kubeshark/templates/13-config-map.yaml
 kind: ConfigMap
 apiVersion: v1
 metadata:
-  name: kubeshark-hub-config
+  name: kubeshark-config-map
   namespace: default
   labels:
     app.kubeshark.co/app: hub
@@ -233,7 +233,7 @@ spec:
           name: kubeshark-worker-daemon-set
           envFrom:
             - secretRef:
-                name: kubeshark-hub-secret
+                name: kubeshark-secret
           resources:
             limits:
               cpu: 750m
@@ -330,9 +330,9 @@ spec:
             
           envFrom:
             - configMapRef:
-                name: kubeshark-hub-config
+                name: kubeshark-config-map
             - secretRef:
-                name: kubeshark-hub-secret
+                name: kubeshark-secret
           image: 'docker.io/kubeshark/hub:latest'
           imagePullPolicy: Always
           readinessProbe:
@@ -416,6 +416,6 @@ spec:
       volumes:
         - name: nginx-config
           configMap:
-            name: kubeshark-nginx-config
+            name: kubeshark-nginx-config-map
       dnsPolicy: ClusterFirstWithHostNet
       serviceAccountName: kubeshark-service-account

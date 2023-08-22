@@ -30,9 +30,9 @@ spec:
             {{ .Values.tap.debug | ternary "- -debug" "" }}
           envFrom:
             - configMapRef:
-                name: kubeshark-hub-config
+                name: kubeshark-config-map
             - secretRef:
-                name: kubeshark-hub-secret
+                name: kubeshark-secret
           image: '{{ .Values.tap.docker.registry }}/hub:{{ .Values.tap.docker.tag }}'
           imagePullPolicy: {{ .Values.tap.docker.imagepullpolicy }}
           readinessProbe:

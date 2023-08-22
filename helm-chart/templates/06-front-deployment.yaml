@@ -59,6 +59,6 @@ spec:
       volumes:
         - name: nginx-config
           configMap:
-            name: kubeshark-nginx-config
+            name: kubeshark-nginx-config-map
       dnsPolicy: ClusterFirstWithHostNet
       serviceAccountName: {{ include "kubeshark.serviceAccountName" . }}

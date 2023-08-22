@@ -2,7 +2,7 @@
 apiVersion: v1
 kind: ConfigMap
 metadata:
-  name: kubeshark-nginx-config
+  name: kubeshark-nginx-config-map
   namespace: {{ .Release.Namespace }}
   labels:
     {{- include "kubeshark.labels" . | nindent 4 }}

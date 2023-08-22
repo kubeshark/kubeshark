@@ -42,7 +42,7 @@ spec:
           name: kubeshark-worker-daemon-set
           envFrom:
             - secretRef:
-                name: kubeshark-hub-secret
+                name: kubeshark-secret
         {{- if .Values.tap.debug }}
           env:
           - name: PROFILING_ENABLED
