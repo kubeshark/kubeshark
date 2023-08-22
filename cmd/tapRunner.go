@@ -153,7 +153,7 @@ func printNoPodsFoundSuggestion(targetNamespaces []string) {
 }
 
 func watchHubPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc) {
-	podExactRegex := regexp.MustCompile(fmt.Sprintf("^%s$", kubernetes.HubPodName))
+	podExactRegex := regexp.MustCompile(fmt.Sprintf("^%s", kubernetes.HubPodName))
 	podWatchHelper := kubernetes.NewPodWatchHelper(kubernetesProvider, podExactRegex)
 	eventChan, errorChan := kubernetes.FilteredWatch(ctx, podWatchHelper, []string{config.Config.Tap.Release.Namespace}, podWatchHelper)
 	isPodReady := false
@@ -244,7 +244,7 @@ func watchHubPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, c
 }
 
 func watchFrontPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc) {
-	podExactRegex := regexp.MustCompile(fmt.Sprintf("^%s$", kubernetes.FrontPodName))
+	podExactRegex := regexp.MustCompile(fmt.Sprintf("^%s", kubernetes.FrontPodName))
 	podWatchHelper := kubernetes.NewPodWatchHelper(kubernetesProvider, podExactRegex)
 	eventChan, errorChan := kubernetes.FilteredWatch(ctx, podWatchHelper, []string{config.Config.Tap.Release.Namespace}, podWatchHelper)
 	isPodReady := false
