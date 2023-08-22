@@ -75,11 +75,6 @@ generate-helm-values: ## Generate the Helm values from config.yaml
 generate-manifests: ## Generate the manifests from the Helm chart using default configuration
 	helm template kubeshark -n default ./helm-chart > ./manifests/complete.yaml
 
-generate-module-loader-config-map:
-	kubectl create configmap kubeshark-module-loader-dockerfile --from-file=./module-loader/Dockerfile && \
-	kubectl get configmap kubeshark-module-loader-dockerfile -o yaml > ./helm-chart/templates/14-module-loader-config-map.yaml && \
-	kubectl delete configmap kubeshark-module-loader-dockerfile
-
 logs-worker:
 	export LOGS_POD_PREFIX=kubeshark-worker-
 	export LOGS_FOLLOW=
@@ -112,12 +107,6 @@ logs-front-follow:
 
 logs:
 	kubectl logs $$(kubectl get pods | awk '$$1 ~ /^$(LOGS_POD_PREFIX)/' | awk 'END {print $$1}') $(LOGS_FOLLOW)
-
-logs-kmm:
-	kubectl logs $$(kubectl get pods -n kmm-operator-system | awk '$$1 ~ /^kmm-operator-controller-manager-/' | awk 'END {print $$1}') -n kmm-operator-system
-
-logs-kmm-loader:
-	kubectl logs $$(kubectl get pods | awk '$$1 ~ /^kubeshark-module-loader-build-/' | awk 'END {print $$1}')
 
 ssh-node:
 	kubectl ssh node $$(kubectl get nodes | awk 'END {print $$1}')
