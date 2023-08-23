@@ -149,3 +149,6 @@ helm-uninstall:
 
 proxy:
 	kubeshark proxy
+
+port-forward-worker:
+	kubectl port-forward $$(kubectl get pods | awk '$$1 ~ /^$(LOGS_POD_PREFIX)/' | awk 'END {print $$1}') $(LOGS_FOLLOW) 8897:8897
