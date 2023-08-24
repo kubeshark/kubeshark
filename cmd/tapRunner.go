@@ -107,7 +107,7 @@ func tap() {
 	go watchHubPod(ctx, kubernetesProvider, cancel)
 	go watchFrontPod(ctx, kubernetesProvider, cancel)
 	if !config.Config.Tap.NoTelemetry {
-		// todo: add telemtry routine here
+		log.Info().Msg("Starting Telemetry...")
 	}
 
 	// block until exit signal or error
