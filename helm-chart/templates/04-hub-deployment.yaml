@@ -41,14 +41,14 @@ spec:
             successThreshold: 1
             initialDelaySeconds: 3
             tcpSocket:
-              port: {{ .Values.tap.proxy.hub.srvport }}
+              port: 80
           livenessProbe:
             periodSeconds: 1
             failureThreshold: 3
             successThreshold: 1
             initialDelaySeconds: 3
             tcpSocket:
-              port: {{ .Values.tap.proxy.hub.srvport }}
+              port: 80
           resources:
             limits:
               cpu: {{ .Values.tap.resources.hub.limits.cpu }}
