@@ -37,14 +37,18 @@ spec:
           imagePullPolicy: {{ .Values.tap.docker.imagepullpolicy }}
           readinessProbe:
             periodSeconds: 1
+            failureThreshold: 3
+            successThreshold: 1
             initialDelaySeconds: 3
             tcpSocket:
-              port: 80
+              port: {{ .Values.tap.proxy.hub.srvport }}
           livenessProbe:
             periodSeconds: 1
+            failureThreshold: 3
+            successThreshold: 1
             initialDelaySeconds: 3
             tcpSocket:
-              port: 80
+              port: {{ .Values.tap.proxy.hub.srvport }}
           resources:
             limits:
               cpu: {{ .Values.tap.resources.hub.limits.cpu }}

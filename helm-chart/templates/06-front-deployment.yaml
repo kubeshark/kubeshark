@@ -32,15 +32,17 @@ spec:
           imagePullPolicy: {{ .Values.tap.docker.imagepullpolicy }}
           name: kubeshark-front
           livenessProbe:
-            failureThreshold: 3
             periodSeconds: 1
+            failureThreshold: 3
             successThreshold: 1
+            initialDelaySeconds: 3
             tcpSocket:
               port: 80
           readinessProbe:
-            failureThreshold: 3
             periodSeconds: 1
+            failureThreshold: 3
             successThreshold: 1
+            initialDelaySeconds: 3
             tcpSocket:
               port: 80
             timeoutSeconds: 1

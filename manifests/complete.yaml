@@ -255,12 +255,16 @@ spec:
                 - ALL
           readinessProbe:
             periodSeconds: 1
-            initialDelaySeconds: 1
+            failureThreshold: 3
+            successThreshold: 1
+            initialDelaySeconds: 5
             tcpSocket:
               port: 8897
           livenessProbe:
             periodSeconds: 1
-            initialDelaySeconds: 1
+            failureThreshold: 3
+            successThreshold: 1
+            initialDelaySeconds: 5
             tcpSocket:
               port: 8897
           volumeMounts:
@@ -337,14 +341,18 @@ spec:
           imagePullPolicy: Always
           readinessProbe:
             periodSeconds: 1
+            failureThreshold: 3
+            successThreshold: 1
             initialDelaySeconds: 3
             tcpSocket:
-              port: 80
+              port: 8898
           livenessProbe:
             periodSeconds: 1
+            failureThreshold: 3
+            successThreshold: 1
             initialDelaySeconds: 3
             tcpSocket:
-              port: 80
+              port: 8898
           resources:
             limits:
               cpu: 750m
@@ -389,15 +397,17 @@ spec:
           imagePullPolicy: Always
           name: kubeshark-front
           livenessProbe:
-            failureThreshold: 3
             periodSeconds: 1
+            failureThreshold: 3
             successThreshold: 1
+            initialDelaySeconds: 3
             tcpSocket:
               port: 80
           readinessProbe:
-            failureThreshold: 3
             periodSeconds: 1
+            failureThreshold: 3
             successThreshold: 1
+            initialDelaySeconds: 3
             tcpSocket:
               port: 80
             timeoutSeconds: 1
