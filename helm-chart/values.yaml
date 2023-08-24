@@ -43,6 +43,7 @@ tap:
           operator: In
           values:
             - linux
+  notelemetry: false
   packetcapture: libpcap
   pcap: ""
   persistentstorage: false
