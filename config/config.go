@@ -28,6 +28,7 @@ const (
 	FieldNameTag   = "yaml"
 	ReadonlyTag    = "readonly"
 	DebugFlag      = "debug"
+	TelemetryFlag  = "no-telemetry"
 )
 
 var (
