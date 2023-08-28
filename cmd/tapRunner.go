@@ -75,6 +75,8 @@ func tap() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel() // cancel will be called when this function exits
 
+	log.Info().Bool("enabled", !config.Config.Tap.NoTelemetry).Msg("Telemetry")
+
 	state.targetNamespaces = kubernetesProvider.GetNamespaces()
 
 	log.Info().Strs("namespaces", state.targetNamespaces).Msg("Targeting pods in:")
@@ -106,9 +108,6 @@ func tap() {
 	go watchHubEvents(ctx, kubernetesProvider, cancel)
 	go watchHubPod(ctx, kubernetesProvider, cancel)
 	go watchFrontPod(ctx, kubernetesProvider, cancel)
-	if !config.Config.Tap.NoTelemetry {
-		log.Info().Msg("Starting Telemetry...")
-	}
 
 	// block until exit signal or error
 	utils.WaitForTermination(ctx, cancel)
