@@ -28,7 +28,8 @@ spec:
           command:
             - ./hub
             {{ .Values.tap.debug | ternary "- -debug" "" }}
-            {{ .Values.tap.notelemetry | ternary "- -no-telemetry" "" }}
+            - e
+            - TELEMETRY_DISABLED={{ .Values.tap.notelemetry }}
           envFrom:
             - configMapRef:
                 name: kubeshark-config-map
