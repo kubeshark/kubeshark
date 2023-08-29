@@ -33,7 +33,7 @@ spec:
             - -port
             - '{{ .Values.tap.proxy.worker.srvport }}'
             - -servicemesh
-            - -tls
+            {{ .Values.tap.tls | ternary "- -tls" "" }}
             - -procfs
             - /hostproc
             {{ .Values.tap.debug | ternary "- -debug" "" }}
