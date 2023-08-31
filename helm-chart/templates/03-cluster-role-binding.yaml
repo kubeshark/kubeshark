@@ -25,6 +25,10 @@ metadata:
   name: kubeshark-self-secrets-role-binding
   labels:
     {{- include "kubeshark.labels" . | nindent 4 }}
+  annotations:
+  {{- if .Values.tap.annotations }}
+    {{- toYaml .Values.tap.annotations | nindent 4 }}
+  {{- end }}
   namespace: {{ .Release.Namespace }}
 subjects:
   - kind: ServiceAccount
