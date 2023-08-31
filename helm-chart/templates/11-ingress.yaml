@@ -5,6 +5,9 @@ kind: Ingress
 metadata:
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /$2
+{{- if .Values.tap.annotations }}
+    {{- toYaml .Values.tap.annotations | nindent 4 }}
+{{- end }}
   {{- if .Values.tap.ingress.annotations }}
     {{- toYaml .Values.tap.ingress.annotations | nindent 4 }}
   {{- end }}
