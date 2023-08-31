@@ -32,5 +32,5 @@ subjects:
     namespace: {{ .Release.Namespace }}
 roleRef:
   kind: Role
-  name: kubeshark-role
+  name: kubeshark-self-secrets-role
   apiGroup: rbac.authorization.k8s.io
