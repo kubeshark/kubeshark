@@ -22,7 +22,7 @@ subjects:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: update-secrets
+  name: kubeshark-self-secrets-role-binding
   labels:
     {{- include "kubeshark.labels" . | nindent 4 }}
   namespace: {{ .Release.Namespace }}
