@@ -27,6 +27,7 @@ const (
 	TlsLabel               = "tls"
 	IgnoreTaintedLabel     = "ignoretainted"
 	IngressEnabledLabel    = "ingress-enabled"
+	TelemetryEnabledLabel  = "telemetry-enabled"
 	DebugLabel             = "debug"
 	ContainerPort          = 80
 	ContainerPortStr       = "80"
@@ -100,6 +101,10 @@ type ReleaseConfig struct {
 	Namespace string `yaml:"namespace" json:"namespace" default:"default"`
 }
 
+type TelemetryConfig struct {
+	Enabled bool `yaml:"enabled" json:"enabled" default:"true"`
+}
+
 type TapConfig struct {
 	Docker            DockerConfig          `yaml:"docker" json:"docker"`
 	Proxy             ProxyConfig           `yaml:"proxy" json:"proxy"`
@@ -123,6 +128,7 @@ type TapConfig struct {
 	Ingress           IngressConfig         `yaml:"ingress" json:"ingress"`
 	IPv6              bool                  `yaml:"ipv6" json:"ipv6" default:"true"`
 	Debug             bool                  `yaml:"debug" json:"debug" default:"false"`
+	Telemetry         TelemetryConfig       `yaml:"telemetry" json:"telemetry"`
 }
 
 func (config *TapConfig) PodRegex() *regexp.Regexp {

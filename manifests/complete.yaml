@@ -80,6 +80,7 @@ data:
     AUTH_ENABLED: ''
     AUTH_APPROVED_EMAILS: ''
     AUTH_APPROVED_DOMAINS: ''
+    TELEMETRY_DISABLED: ''
 ---
 # Source: kubeshark/templates/02-cluster-role.yaml
 apiVersion: rbac.authorization.k8s.io/v1

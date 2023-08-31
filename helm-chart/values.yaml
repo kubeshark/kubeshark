@@ -78,4 +78,6 @@ tap:
   servicemesh: true
   storageclass: standard
   storagelimit: 200Mi
+  telemetry:
+    enabled: true
   tls: true
