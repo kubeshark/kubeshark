@@ -41,7 +41,7 @@ rules:
       - "v1"
       - ""
     resourceNames:
-      - kubeshark-hub-secret
+      - kubeshark-secret
     resources:
       - secrets
     verbs:
