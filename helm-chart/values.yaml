@@ -29,7 +29,7 @@ tap:
   ignoretainted: false
   ingress:
     enabled: false
-    # ingressClassName: nginx
+    classname: ""
     host: kubeshark.local
     annotations: {}
     tls: []
