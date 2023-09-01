@@ -87,7 +87,7 @@ type AuthConfig struct {
 
 type IngressConfig struct {
 	Enabled     bool                    `yaml:"enabled" json:"enabled" default:"false"`
-	ClassName   string                  `yaml:"ingressClassName" json:"ingressClassName" default:"kubeshark-ingress-class"`
+	ClassName   string                  `yaml:"classname" json:"classname" default:""`
 	Host        string                  `yaml:"host" json:"host" default:"ks.svc.cluster.local"`
 	TLS         []networking.IngressTLS `yaml:"tls" json:"tls" default:"[]"`
 	Annotations map[string]string       `yaml:"annotations" json:"annotations" default:"{}"`
