@@ -13,7 +13,7 @@ metadata:
   name: kubeshark-service-account
   namespace: default
 ---
-# Source: kubeshark/templates/14-secret.yaml
+# Source: kubeshark/templates/13-secret.yaml
 kind: Secret
 apiVersion: v1
 metadata:
@@ -29,7 +29,7 @@ metadata:
 stringData:
     LICENSE: ''
 ---
-# Source: kubeshark/templates/12-nginx-config-map.yaml
+# Source: kubeshark/templates/11-nginx-config-map.yaml
 apiVersion: v1
 kind: ConfigMap
 metadata:
@@ -59,7 +59,7 @@ data:
       }
     }
 ---
-# Source: kubeshark/templates/13-config-map.yaml
+# Source: kubeshark/templates/12-config-map.yaml
 kind: ConfigMap
 apiVersion: v1
 metadata:
@@ -131,6 +131,55 @@ subjects:
   - kind: ServiceAccount
     name: kubeshark-service-account
     namespace: default
+---
+# Source: kubeshark/templates/02-cluster-role.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  labels:
+    helm.sh/chart: kubeshark-50.2
+    app.kubernetes.io/name: kubeshark
+    app.kubernetes.io/instance: kubeshark
+    app.kubernetes.io/version: "50.2"
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+  name: kubeshark-self-secrets-role
+  namespace: default
+rules:
+  - apiGroups:
+      - "v1"
+      - ""
+    resourceNames:
+      - kubeshark-secret
+    resources:
+      - secrets
+    verbs:
+      - get
+      - watch
+      - update
+      - patch
+---
+# Source: kubeshark/templates/03-cluster-role-binding.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: kubeshark-self-secrets-role-binding
+  labels:
+    helm.sh/chart: kubeshark-50.2
+    app.kubernetes.io/name: kubeshark
+    app.kubernetes.io/instance: kubeshark
+    app.kubernetes.io/version: "50.2"
+    app.kubernetes.io/managed-by: Helm
+  annotations:
+  namespace: default
+subjects:
+  - kind: ServiceAccount
+    name: kubeshark-service-account
+    namespace: default
+roleRef:
+  kind: Role
+  name: kubeshark-self-secrets-role
+  apiGroup: rbac.authorization.k8s.io
 ---
 # Source: kubeshark/templates/05-hub-service.yaml
 apiVersion: v1

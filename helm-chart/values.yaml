@@ -28,10 +28,10 @@ tap:
   dryrun: false
   ignoretainted: false
   ingress:
-    enabled: false
-    classname: ""
-    host: kubeshark.local
     annotations: {}
+    classname: ""
+    enabled: false
+    host: ks.svc.cluster.local
     tls: []
   ipv6: true
   labels: {}
