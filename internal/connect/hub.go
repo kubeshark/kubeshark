@@ -5,8 +5,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"net/http"
 	"net/url"
+	"os"
 	"time"
 
 	"github.com/kubeshark/kubeshark/config"
@@ -338,5 +340,42 @@ func (connector *Connector) PostScriptDone() {
 			return
 		}
 		time.Sleep(DefaultSleep)
+	}
+}
+
+func (connector *Connector) PostPcapsMerge(out *os.File) {
+	postEnvUrl := fmt.Sprintf("%s/pcaps/merge", connector.url)
+
+	if envMarshalled, err := json.Marshal(map[string]string{"query": ""}); err != nil {
+		log.Error().Err(err).Msg("Failed to marshal the env:")
+	} else {
+		ok := false
+		for !ok {
+			var resp *http.Response
+			if resp, err = utils.Post(postEnvUrl, "application/json", bytes.NewBuffer(envMarshalled), connector.client, config.Config.License); err != nil || resp.StatusCode != http.StatusOK {
+				if _, ok := err.(*url.Error); ok {
+					break
+				}
+				log.Warn().Err(err).Msg("Failed exported PCAP download. Retrying...")
+			} else {
+				defer resp.Body.Close()
+
+				// Check server response
+				if resp.StatusCode != http.StatusOK {
+					log.Error().Str("status", resp.Status).Err(err).Msg("Failed exported PCAP download.")
+					return
+				}
+
+				// Writer the body to file
+				_, err = io.Copy(out, resp.Body)
+				if err != nil {
+					log.Error().Err(err).Msg("Failed writing PCAP export:")
+					return
+				}
+				log.Info().Str("path", out.Name()).Msg("Downloaded exported PCAP:")
+				return
+			}
+			time.Sleep(DefaultSleep)
+		}
 	}
 }

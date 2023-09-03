@@ -77,6 +77,11 @@ func tap() {
 
 	state.targetNamespaces = kubernetesProvider.GetNamespaces()
 
+	log.Info().
+		Bool("enabled", config.Config.Tap.Telemetry.Enabled).
+		Str("notice", "Telemetry can be disabled by setting the flag: --telemetry-enabled=false").
+		Msg("Telemetry")
+
 	log.Info().Strs("namespaces", state.targetNamespaces).Msg("Targeting pods in:")
 
 	if err := printTargetedPodsPreview(ctx, kubernetesProvider, state.targetNamespaces); err != nil {

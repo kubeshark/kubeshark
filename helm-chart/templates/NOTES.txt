@@ -2,6 +2,10 @@ Thank you for installing {{ title .Chart.Name }}.
 
 Your deployment has been successful. The release is named {{ .Release.Name }} and it has been deployed in the {{ .Release.Namespace }} namespace.
 
+{{- if .Values.tap.telemetry.enabled }}
+Notice: Telemetry is enabled. Kubeshark will collect usage statistics.
+{{ end }}
+
 {{- if .Values.tap.ingress.enabled }}
 
 {{ if not .Values.license -}}
