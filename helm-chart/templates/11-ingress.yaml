@@ -4,17 +4,21 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   annotations:
-    certmanager.k8s.io/cluster-issuer: {{ .Values.tap.ingress.certmanager }}
     nginx.ingress.kubernetes.io/rewrite-target: /$2
-  {{- if .Values.tap.annotations }}
+{{- if .Values.tap.annotations }}
     {{- toYaml .Values.tap.annotations | nindent 4 }}
+{{- end }}
+  {{- if .Values.tap.ingress.annotations }}
+    {{- toYaml .Values.tap.ingress.annotations | nindent 4 }}
   {{- end }}
   labels:
     {{- include "kubeshark.labels" . | nindent 4 }}
   name: kubeshark-ingress
   namespace: {{ .Release.Namespace }}
 spec:
+  {{- if .Values.tap.ingress.classname }}
   ingressClassName: {{ .Values.tap.ingress.classname }}
+  {{- end }}
   rules:
     - host: {{ .Values.tap.ingress.host }}
       http:
@@ -24,17 +28,17 @@ spec:
                 name: kubeshark-hub
                 port:
                   number: 80
-            path: /api(/|$)(.*)
+            path: /api
             pathType: Prefix
           - backend:
               service:
                 name: kubeshark-front
                 port:
                   number: 80
-            path: /()(.*)
+            path: /
             pathType: Prefix
+  {{- if .Values.tap.ingress.tls }}
   tls:
-  {{- if gt (len .Values.tap.ingress.tls) 0}}
     {{- toYaml .Values.tap.ingress.tls | nindent 2 }}
   {{- end }}
 status:

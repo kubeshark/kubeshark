@@ -28,12 +28,11 @@ tap:
   dryrun: false
   ignoretainted: false
   ingress:
-    certmanager: letsencrypt-prod
-    classname: kubeshark-ingress-class
-    controller: k8s.io/ingress-nginx
     enabled: false
-    host: ks.svc.cluster.local
-    tls: null
+    classname: ""
+    host: kubeshark.local
+    annotations: {}
+    tls: []
   ipv6: true
   labels: {}
   namespaces: []

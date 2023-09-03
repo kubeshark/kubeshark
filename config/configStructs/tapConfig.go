@@ -88,11 +88,10 @@ type AuthConfig struct {
 
 type IngressConfig struct {
 	Enabled     bool                    `yaml:"enabled" json:"enabled" default:"false"`
-	ClassName   string                  `yaml:"classname" json:"classname" default:"kubeshark-ingress-class"`
-	Controller  string                  `yaml:"controller" json:"controller" default:"k8s.io/ingress-nginx"`
+	ClassName   string                  `yaml:"classname" json:"classname" default:""`
 	Host        string                  `yaml:"host" json:"host" default:"ks.svc.cluster.local"`
-	TLS         []networking.IngressTLS `yaml:"tls" json:"tls"`
-	CertManager string                  `yaml:"certmanager" json:"certmanager" default:"letsencrypt-prod"`
+	TLS         []networking.IngressTLS `yaml:"tls" json:"tls" default:"[]"`
+	Annotations map[string]string       `yaml:"annotations" json:"annotations" default:"{}"`
 }
 
 type ReleaseConfig struct {
