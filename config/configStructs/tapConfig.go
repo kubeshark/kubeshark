@@ -27,6 +27,7 @@ const (
 	TlsLabel               = "tls"
 	IgnoreTaintedLabel     = "ignoretainted"
 	IngressEnabledLabel    = "ingress-enabled"
+	TelemetryEnabledLabel  = "telemetry-enabled"
 	DebugLabel             = "debug"
 	ContainerPort          = 80
 	ContainerPortStr       = "80"
@@ -87,17 +88,20 @@ type AuthConfig struct {
 
 type IngressConfig struct {
 	Enabled     bool                    `yaml:"enabled" json:"enabled" default:"false"`
-	ClassName   string                  `yaml:"classname" json:"classname" default:"kubeshark-ingress-class"`
-	Controller  string                  `yaml:"controller" json:"controller" default:"k8s.io/ingress-nginx"`
+	ClassName   string                  `yaml:"classname" json:"classname" default:""`
 	Host        string                  `yaml:"host" json:"host" default:"ks.svc.cluster.local"`
-	TLS         []networking.IngressTLS `yaml:"tls" json:"tls"`
-	CertManager string                  `yaml:"certmanager" json:"certmanager" default:"letsencrypt-prod"`
+	TLS         []networking.IngressTLS `yaml:"tls" json:"tls" default:"[]"`
+	Annotations map[string]string       `yaml:"annotations" json:"annotations" default:"{}"`
 }
 
 type ReleaseConfig struct {
 	Repo      string `yaml:"repo" json:"repo" default:"https://helm.kubeshark.co"`
 	Name      string `yaml:"name" json:"name" default:"kubeshark"`
 	Namespace string `yaml:"namespace" json:"namespace" default:"default"`
+}
+
+type TelemetryConfig struct {
+	Enabled bool `yaml:"enabled" json:"enabled" default:"true"`
 }
 
 type TapConfig struct {
@@ -123,6 +127,7 @@ type TapConfig struct {
 	Ingress           IngressConfig         `yaml:"ingress" json:"ingress"`
 	IPv6              bool                  `yaml:"ipv6" json:"ipv6" default:"true"`
 	Debug             bool                  `yaml:"debug" json:"debug" default:"false"`
+	Telemetry         TelemetryConfig       `yaml:"telemetry" json:"telemetry"`
 }
 
 func (config *TapConfig) PodRegex() *regexp.Regexp {

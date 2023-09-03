@@ -14,3 +14,4 @@ data:
     AUTH_ENABLED: '{{ .Values.tap.auth.enabled | ternary "true" "" }}'
     AUTH_APPROVED_EMAILS: '{{ gt (len .Values.tap.auth.approvedemails) 0 | ternary (join "," .Values.tap.auth.approvedemails) "" }}'
     AUTH_APPROVED_DOMAINS: '{{ gt (len .Values.tap.auth.approveddomains) 0 | ternary (join "," .Values.tap.auth.approveddomains) "" }}'
+    TELEMETRY_DISABLED: '{{ not .Values.tap.telemetry.enabled | ternary "true" "" }}'
