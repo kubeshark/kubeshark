@@ -4,7 +4,7 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   annotations:
-    nginx.ingress.kubernetes.io/rewrite-target: /$2
+    nginx.org/websocket-services: "kubeshark-front"
 {{- if .Values.tap.annotations }}
     {{- toYaml .Values.tap.annotations | nindent 4 }}
 {{- end }}
@@ -23,13 +23,6 @@ spec:
     - host: {{ .Values.tap.ingress.host }}
       http:
         paths:
-          - backend:
-              service:
-                name: kubeshark-hub
-                port:
-                  number: 80
-            path: /api
-            pathType: Prefix
           - backend:
               service:
                 name: kubeshark-front

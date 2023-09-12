@@ -18,5 +18,3 @@ spec:
   selector:
     app.kubeshark.co/app: front
   type: ClusterIP
-status:
-  loadBalancer: {}
