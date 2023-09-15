@@ -72,6 +72,10 @@ func GetProxyOnPort(port uint16) string {
 	return fmt.Sprintf("http://%s:%d", config.Config.Tap.Proxy.Host, port)
 }
 
+func GetHubUrl() string {
+	return fmt.Sprintf("%s/api", GetProxyOnPort(config.Config.Tap.Proxy.Hub.Port))
+}
+
 func getRerouteHttpHandlerSelfAPI(proxyHandler http.Handler, selfNamespace string, selfServiceName string) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		w.Header().Set("Access-Control-Allow-Origin", "*")

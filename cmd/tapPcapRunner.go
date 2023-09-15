@@ -506,7 +506,7 @@ func pcap(tarPath string) error {
 		},
 	}
 
-	connector = connect.NewConnector(kubernetes.GetProxyOnPort(config.Config.Tap.Proxy.Hub.Port), connect.DefaultRetries, connect.DefaultTimeout)
+	connector = connect.NewConnector(kubernetes.GetHubUrl(), connect.DefaultRetries, connect.DefaultTimeout)
 	connector.PostWorkerPodToHub(workerPod)
 
 	// License
@@ -515,7 +515,7 @@ func pcap(tarPath string) error {
 	}
 
 	log.Info().
-		Str("url", kubernetes.GetProxyOnPort(config.Config.Tap.Proxy.Hub.Port)).
+		Str("url", kubernetes.GetHubUrl()).
 		Msg(fmt.Sprintf(utils.Green, "Hub is available at:"))
 
 	url := kubernetes.GetProxyOnPort(config.Config.Tap.Proxy.Front.Port)
