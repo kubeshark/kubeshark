@@ -23,6 +23,8 @@ data:
         proxy_set_header   Host $http_host;
         proxy_set_header Upgrade websocket;
         proxy_set_header Connection Upgrade;
+        proxy_set_header  Authorization $http_authorization;
+        proxy_pass_header Authorization;
         proxy_connect_timeout 4s;
         proxy_read_timeout 120s;
         proxy_send_timeout 12s;
