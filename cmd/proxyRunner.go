@@ -63,38 +63,8 @@ func runProxy(block bool, noBrowser bool) {
 
 	var establishedProxy bool
 
-	hubUrl := kubernetes.GetProxyOnPort(config.Config.Tap.Proxy.Hub.Port)
-	response, err := http.Get(fmt.Sprintf("%s/echo", hubUrl))
-	if err == nil && response.StatusCode == 200 {
-		log.Info().
-			Str("service", kubernetes.HubServiceName).
-			Int("port", int(config.Config.Tap.Proxy.Hub.Port)).
-			Msg("Found a running service.")
-
-		okToOpen("Hub", hubUrl, true)
-	} else {
-		startProxyReportErrorIfAny(
-			kubernetesProvider,
-			ctx,
-			kubernetes.HubServiceName,
-			kubernetes.HubPodName,
-			configStructs.ProxyHubPortLabel,
-			config.Config.Tap.Proxy.Hub.Port,
-			configStructs.ContainerPort,
-			"/echo",
-		)
-		connector := connect.NewConnector(hubUrl, connect.DefaultRetries, connect.DefaultTimeout)
-		if err := connector.TestConnection("/echo"); err != nil {
-			log.Error().Msg(fmt.Sprintf(utils.Red, "Couldn't connect to Hub."))
-			return
-		}
-
-		establishedProxy = true
-		okToOpen("Hub", hubUrl, true)
-	}
-
 	frontUrl := kubernetes.GetProxyOnPort(config.Config.Tap.Proxy.Front.Port)
-	response, err = http.Get(fmt.Sprintf("%s/", frontUrl))
+	response, err := http.Get(fmt.Sprintf("%s/", frontUrl))
 	if err == nil && response.StatusCode == 200 {
 		log.Info().
 			Str("service", kubernetes.FrontServiceName).

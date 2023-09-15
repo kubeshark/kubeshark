@@ -36,13 +36,13 @@ func init() {
 		log.Debug().Err(err).Send()
 	}
 
-	consoleCmd.Flags().Uint16(configStructs.ProxyHubPortLabel, defaultTapConfig.Proxy.Hub.Port, "Provide a custom port for the Hub")
-	consoleCmd.Flags().String(configStructs.ProxyHostLabel, defaultTapConfig.Proxy.Host, "Provide a custom host for the Hub")
+	consoleCmd.Flags().Uint16(configStructs.ProxyFrontPortLabel, defaultTapConfig.Proxy.Front.Port, "Provide a custom port for the Kubeshark")
+	consoleCmd.Flags().String(configStructs.ProxyHostLabel, defaultTapConfig.Proxy.Host, "Provide a custom host for the Kubeshark")
 	consoleCmd.Flags().StringP(configStructs.ReleaseNamespaceLabel, "s", defaultTapConfig.Release.Namespace, "Release namespace of Kubeshark")
 }
 
 func runConsole() {
-	hubUrl := kubernetes.GetProxyOnPort(config.Config.Tap.Proxy.Hub.Port)
+	hubUrl := kubernetes.GetHubUrl()
 	response, err := http.Get(fmt.Sprintf("%s/echo", hubUrl))
 	if err != nil || response.StatusCode != 200 {
 		log.Info().Msg(fmt.Sprintf(utils.Yellow, "Couldn't connect to Hub. Establishing proxy..."))
@@ -52,10 +52,10 @@ func runConsole() {
 	interrupt := make(chan os.Signal, 1)
 	signal.Notify(interrupt, os.Interrupt)
 
-	log.Info().Str("host", config.Config.Tap.Proxy.Host).Uint16("port", config.Config.Tap.Proxy.Hub.Port).Msg("Connecting to:")
+	log.Info().Str("host", config.Config.Tap.Proxy.Host).Str("url", hubUrl).Msg("Connecting to:")
 	u := url.URL{
 		Scheme: "ws",
-		Host:   fmt.Sprintf("%s:%d", config.Config.Tap.Proxy.Host, config.Config.Tap.Proxy.Hub.Port),
+		Host:   fmt.Sprintf("%s:%d/api", config.Config.Tap.Proxy.Host, config.Config.Tap.Proxy.Front.Port),
 		Path:   "/scripts/logs",
 	}
 	headers := http.Header{}

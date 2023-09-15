@@ -27,7 +27,7 @@ spec:
             - name: REACT_APP_HUB_HOST
               value: ' '
             - name: REACT_APP_HUB_PORT
-              value: '{{ .Values.tap.ingress.enabled | ternary "/api" (print ":" .Values.tap.proxy.hub.port) }}'
+              value: '{{ .Values.tap.ingress.enabled | ternary "/api" (print ":" .Values.tap.proxy.front.port "/api") }}'
           image: '{{ .Values.tap.docker.registry }}/front:{{ .Values.tap.docker.tag }}'
           imagePullPolicy: {{ .Values.tap.docker.imagepullpolicy }}
           name: kubeshark-front

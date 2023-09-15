@@ -19,5 +19,3 @@ spec:
   selector:
     app.kubeshark.co/app: hub
   type: ClusterIP
-status:
-  loadBalancer: {}
