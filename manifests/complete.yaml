@@ -46,12 +46,30 @@ data:
     server {
       listen 80;
       listen [::]:80;
-      add_header Cache-Control no-cache;
+      access_log /dev/stdout;
+      error_log /dev/stdout;
+
+      location /api {
+        rewrite ^/api(.*)$ $1 break;
+        proxy_pass http://kubeshark-hub;
+        proxy_set_header   X-Forwarded-For $remote_addr;
+        proxy_set_header   Host $http_host;
+        proxy_set_header Upgrade websocket;
+        proxy_set_header Connection Upgrade;
+        proxy_set_header  Authorization $http_authorization;
+        proxy_pass_header Authorization;
+        proxy_connect_timeout 4s;
+        proxy_read_timeout 120s;
+        proxy_send_timeout 12s;
+        proxy_pass_request_headers      on;
+      }
+
       location / {
         root   /usr/share/nginx/html;
         index  index.html index.htm;
         try_files $uri $uri/ /index.html;
         expires -1;
+        add_header Cache-Control no-cache;
       }
       error_page   500 502 503 504  /50x.html;
       location = /50x.html {
@@ -203,8 +221,6 @@ spec:
   selector:
     app.kubeshark.co/app: hub
   type: ClusterIP
-status:
-  loadBalancer: {}
 ---
 # Source: kubeshark/templates/07-front-service.yaml
 apiVersion: v1
@@ -227,8 +243,6 @@ spec:
   selector:
     app.kubeshark.co/app: front
   type: ClusterIP
-status:
-  loadBalancer: {}
 ---
 # Source: kubeshark/templates/09-worker-daemon-set.yaml
 apiVersion: apps/v1
@@ -442,7 +456,7 @@ spec:
             - name: REACT_APP_HUB_HOST
               value: ' '
             - name: REACT_APP_HUB_PORT
-              value: ':8898'
+              value: ':8899/api'
           image: 'docker.io/kubeshark/front:latest'
           imagePullPolicy: Always
           name: kubeshark-front
