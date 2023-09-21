@@ -12,6 +12,7 @@ require (
 	github.com/docker/go-connections v0.4.0
 	github.com/fsnotify/fsnotify v1.6.0
 	github.com/gin-gonic/gin v1.9.1
+	github.com/goccy/go-yaml v1.11.2
 	github.com/google/go-github/v37 v37.0.0
 	github.com/gorilla/websocket v1.4.2
 	github.com/pkg/errors v0.9.1
@@ -19,7 +20,6 @@ require (
 	github.com/rs/zerolog v1.28.0
 	github.com/spf13/cobra v1.6.1
 	github.com/spf13/pflag v1.0.5
-	gopkg.in/yaml.v3 v3.0.1
 	helm.sh/helm/v3 v3.12.0
 	k8s.io/api v0.27.1
 	k8s.io/apimachinery v0.27.1
@@ -162,6 +162,7 @@ require (
 	golang.org/x/text v0.9.0 // indirect
 	golang.org/x/time v0.0.0-20220210224613-90d013bbcef8 // indirect
 	golang.org/x/tools v0.7.0 // indirect
+	golang.org/x/xerrors v0.0.0-20220907171357-04be3eba64a2 // indirect
 	google.golang.org/appengine v1.6.7 // indirect
 	google.golang.org/genproto v0.0.0-20230306155012-7f2fa6fef1f4 // indirect
 	google.golang.org/grpc v1.53.0 // indirect
@@ -169,6 +170,7 @@ require (
 	gopkg.in/inf.v0 v0.9.1 // indirect
 	gopkg.in/sourcemap.v1 v1.0.5 // indirect
 	gopkg.in/yaml.v2 v2.4.0 // indirect
+	gopkg.in/yaml.v3 v3.0.1 // indirect
 	k8s.io/apiextensions-apiserver v0.27.1 // indirect
 	k8s.io/apiserver v0.27.1 // indirect
 	k8s.io/cli-runtime v0.27.1 // indirect

@@ -4,7 +4,7 @@ import (
 	"bytes"
 	"encoding/json"
 
-	"gopkg.in/yaml.v3"
+	"github.com/goccy/go-yaml"
 )
 
 func PrettyYaml(data interface{}) (result string, err error) {
@@ -21,8 +21,7 @@ func PrettyYaml(data interface{}) (result string, err error) {
 	}
 
 	buffer := new(bytes.Buffer)
-	encoder := yaml.NewEncoder(buffer)
-	encoder.SetIndent(2)
+	encoder := yaml.NewEncoder(buffer, yaml.Indent(2))
 
 	err = encoder.Encode(unmarshalled)
 	if err != nil {
