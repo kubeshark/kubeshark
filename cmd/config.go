@@ -18,7 +18,12 @@ var configCmd = &cobra.Command{
 	Short: fmt.Sprintf("Generate %s config with default values", misc.Software),
 	RunE: func(cmd *cobra.Command, args []string) error {
 		if config.Config.Config.Regenerate {
-			if err := config.WriteConfig(&config.Config); err != nil {
+			defaultConfig := config.CreateDefaultConfig()
+			if err := defaults.Set(&defaultConfig); err != nil {
+				log.Error().Err(err).Send()
+				return nil
+			}
+			if err := config.WriteConfig(&defaultConfig); err != nil {
 				log.Error().Err(err).Msg("Failed generating config with defaults.")
 				return nil
 			}
