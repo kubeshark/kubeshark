@@ -10,7 +10,7 @@ data:
     POD_REGEX: '{{ .Values.tap.regex }}'
     NAMESPACES: '{{ gt (len .Values.tap.namespaces) 0 | ternary (join "," .Values.tap.namespaces) "" }}'
     SCRIPTING_ENV: '{{ .Values.scripting.env | toJson }}'
-    SCRIPTING_SCRIPTS: '[]'
+    SCRIPTING_SCRIPTS: '{}'
     AUTH_ENABLED: '{{ .Values.tap.auth.enabled | ternary "true" "" }}'
     AUTH_APPROVED_EMAILS: '{{ gt (len .Values.tap.auth.approvedemails) 0 | ternary (join "," .Values.tap.auth.approvedemails) "" }}'
     AUTH_APPROVED_DOMAINS: '{{ gt (len .Values.tap.auth.approveddomains) 0 | ternary (join "," .Values.tap.auth.approveddomains) "" }}'

@@ -69,7 +69,16 @@ func updateLicense(licenseKey string) {
 		log.Error().Err(err).Send()
 	}
 
-	connector.PostLicenseSingle(config.Config.License)
+	kubernetesProvider, err := getKubernetesProviderForCli(false, false)
+	if err != nil {
+		log.Error().Err(err).Send()
+		return
+	}
+	err = kubernetes.SetSecret(kubernetesProvider, "LICENSE", config.Config.License)
+	if err != nil {
+		log.Error().Err(err).Send()
+		return
+	}
 
 	log.Info().Msg("Updated the license. Exiting.")
 

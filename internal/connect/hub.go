@@ -90,39 +90,6 @@ func (connector *Connector) PostWorkerPodToHub(pod *v1.Pod) {
 	}
 }
 
-type postRegexRequest struct {
-	Regex      string   `json:"regex"`
-	Namespaces []string `json:"namespaces"`
-}
-
-func (connector *Connector) PostRegexToHub(regex string, namespaces []string) {
-	postRegexUrl := fmt.Sprintf("%s/pods/regex", connector.url)
-
-	payload := postRegexRequest{
-		Regex:      regex,
-		Namespaces: namespaces,
-	}
-
-	if payloadMarshalled, err := json.Marshal(payload); err != nil {
-		log.Error().Err(err).Msg("Failed to marshal the pod regex:")
-	} else {
-		ok := false
-		for !ok {
-			var resp *http.Response
-			if resp, err = utils.Post(postRegexUrl, "application/json", bytes.NewBuffer(payloadMarshalled), connector.client, config.Config.License); err != nil || resp.StatusCode != http.StatusOK {
-				if _, ok := err.(*url.Error); ok {
-					break
-				}
-				log.Warn().Err(err).Msg("Failed sending the pod regex to Hub. Retrying...")
-			} else {
-				log.Debug().Str("regex", regex).Strs("namespaces", namespaces).Msg("Reported pod regex to Hub:")
-				return
-			}
-			time.Sleep(DefaultSleep)
-		}
-	}
-}
-
 type postLicenseRequest struct {
 	License string `json:"license"`
 }
@@ -147,53 +114,6 @@ func (connector *Connector) PostLicense(license string) {
 				log.Warn().Err(err).Msg("Failed sending the license to Hub. Retrying...")
 			} else {
 				log.Debug().Str("license", license).Msg("Reported license to Hub:")
-				return
-			}
-			time.Sleep(DefaultSleep)
-		}
-	}
-}
-
-func (connector *Connector) PostLicenseSingle(license string) {
-	postLicenseUrl := fmt.Sprintf("%s/license", connector.url)
-
-	payload := postLicenseRequest{
-		License: license,
-	}
-
-	if payloadMarshalled, err := json.Marshal(payload); err != nil {
-		log.Error().Err(err).Msg("Failed to marshal the payload:")
-	} else {
-		var resp *http.Response
-		if resp, err = utils.Post(postLicenseUrl, "application/json", bytes.NewBuffer(payloadMarshalled), connector.client, config.Config.License); err != nil || resp.StatusCode != http.StatusOK {
-			log.Warn().Err(err).Msg("Failed sending the license to Hub.")
-		} else {
-			log.Debug().Str("license", license).Msg("Reported license to Hub:")
-			return
-		}
-	}
-}
-
-func (connector *Connector) PostEnv(env map[string]interface{}) {
-	if len(env) == 0 {
-		return
-	}
-
-	postEnvUrl := fmt.Sprintf("%s/scripts/env", connector.url)
-
-	if envMarshalled, err := json.Marshal(env); err != nil {
-		log.Error().Err(err).Msg("Failed to marshal the env:")
-	} else {
-		ok := false
-		for !ok {
-			var resp *http.Response
-			if resp, err = utils.Post(postEnvUrl, "application/json", bytes.NewBuffer(envMarshalled), connector.client, config.Config.License); err != nil || resp.StatusCode != http.StatusOK {
-				if _, ok := err.(*url.Error); ok {
-					break
-				}
-				log.Warn().Err(err).Msg("Failed sending the scripting environment variables to Hub. Retrying...")
-			} else {
-				log.Debug().Interface("env", env).Msg("Reported scripting environment variables to Hub:")
 				return
 			}
 			time.Sleep(DefaultSleep)
@@ -321,26 +241,6 @@ func (connector *Connector) DeleteScript(index int64) (err error) {
 	}
 
 	return
-}
-
-func (connector *Connector) PostScriptDone() {
-	postScripDonetUrl := fmt.Sprintf("%s/scripts/done", connector.url)
-
-	ok := false
-	var err error
-	for !ok {
-		var resp *http.Response
-		if resp, err = utils.Post(postScripDonetUrl, "application/json", nil, connector.client, config.Config.License); err != nil || resp.StatusCode != http.StatusOK {
-			if _, ok := err.(*url.Error); ok {
-				break
-			}
-			log.Warn().Err(err).Msg("Failed sending the POST scripts done to Hub. Retrying...")
-		} else {
-			log.Debug().Msg("Reported POST scripts done to Hub.")
-			return
-		}
-		time.Sleep(DefaultSleep)
-	}
 }
 
 func (connector *Connector) PostPcapsMerge(out *os.File) {

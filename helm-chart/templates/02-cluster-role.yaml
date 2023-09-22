@@ -38,14 +38,15 @@ metadata:
   namespace: {{ .Release.Namespace }}
 rules:
   - apiGroups:
-      - "v1"
       - ""
+      - "v1"
     resourceNames:
       - kubeshark-secret
+      - kubeshark-config-map
     resources:
       - secrets
+      - configmaps
     verbs:
       - get
       - watch
       - update
-      - patch
