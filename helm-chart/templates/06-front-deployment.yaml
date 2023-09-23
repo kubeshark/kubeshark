@@ -1,8 +1,6 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "kubeshark.fullname" . }}-front
-  namespace: {{ .Release.Namespace }}
   labels:
     app.kubeshark.co/app: front
     {{- include "kubeshark.labels" . | nindent 4 }}
@@ -10,15 +8,19 @@ metadata:
   {{- if .Values.tap.annotations }}
     {{- toYaml .Values.tap.annotations | nindent 4 }}
   {{- end }}
+  name: {{ include "kubeshark.fullname" . }}-front
+  namespace: {{ .Release.Namespace }}
 spec:
   replicas: 1  # Set the desired number of replicas
   selector:
     matchLabels:
       app.kubeshark.co/app: front
+      {{- include "kubeshark.labels" . | nindent 6 }}
   template:
     metadata:
       labels:
         app.kubeshark.co/app: front
+        {{- include "kubeshark.labels" . | nindent 8 }}
     spec:
       containers:
         - env:
