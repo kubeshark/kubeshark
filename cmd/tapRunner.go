@@ -69,6 +69,7 @@ func tap() {
 
 	kubernetesProvider, err := getKubernetesProviderForCli(false, false)
 	if err != nil {
+		log.Error().Err(err).Send()
 		return
 	}
 
@@ -199,7 +200,7 @@ func watchHubPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, c
 					ready.Lock()
 					ready.Hub = true
 					ready.Unlock()
-					postHubStarted(ctx, kubernetesProvider, cancel, false)
+					postHubStarted(ctx, kubernetesProvider, cancel)
 				}
 
 				ready.Lock()
@@ -405,35 +406,7 @@ func watchHubEvents(ctx context.Context, kubernetesProvider *kubernetes.Provider
 	}
 }
 
-func postHubStarted(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc, update bool) {
-
-	if update {
-		// Pod regex
-		connector.PostRegexToHub(config.Config.Tap.PodRegexStr, state.targetNamespaces)
-
-		// License
-		if config.Config.License != "" {
-			connector.PostLicense(config.Config.License)
-		}
-
-		// Scripting
-		connector.PostEnv(config.Config.Scripting.Env)
-
-		scripts, err := config.Config.Scripting.GetScripts()
-		if err != nil {
-			log.Error().Err(err).Send()
-		}
-
-		for _, script := range scripts {
-			_, err = connector.PostScript(script)
-			if err != nil {
-				log.Error().Err(err).Send()
-			}
-		}
-
-		connector.PostScriptDone()
-	}
-
+func postHubStarted(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc) {
 	if config.Config.Scripting.Source != "" && config.Config.Scripting.WatchScripts {
 		watchScripts(false)
 	}

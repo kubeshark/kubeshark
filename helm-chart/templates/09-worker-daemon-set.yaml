@@ -33,13 +33,21 @@ spec:
             - -port
             - '{{ .Values.tap.proxy.worker.srvport }}'
             - -servicemesh
-            {{ .Values.tap.tls | ternary "- -tls" "" }}
             - -procfs
             - /hostproc
             {{ .Values.tap.debug | ternary "- -debug" "" }}
           image: '{{ .Values.tap.docker.registry }}/worker:{{ .Values.tap.docker.tag }}'
           imagePullPolicy: {{ .Values.tap.docker.imagepullpolicy }}
-          name: kubeshark-worker-daemon-set
+          name: sniffer
+          env:
+          - name: POD_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
+          - name: POD_NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
           envFrom:
             - secretRef:
                 name: kubeshark-secret
@@ -67,7 +75,6 @@ spec:
                 - SYS_ADMIN
                 - SYS_PTRACE
                 - DAC_OVERRIDE
-                - SYS_RESOURCE
                 - SYS_MODULE
               drop:
                 - ALL
@@ -92,10 +99,60 @@ spec:
             - mountPath: /sys
               name: sys
               readOnly: true
-{{- if .Values.tap.persistentstorage }}
+          {{- if .Values.tap.persistentstorage }}
             - mountPath: /app/data
               name: kubeshark-persistent-volume
-{{- end }}
+          {{- end }}
+      {{- if .Values.tap.tls }}
+        - command:
+            - ./tracer
+            - -procfs
+            - /hostproc
+            {{ .Values.tap.debug | ternary "- -debug" "" }}
+          image: '{{ .Values.tap.docker.registry }}/worker:{{ .Values.tap.docker.tag }}'
+          imagePullPolicy: {{ .Values.tap.docker.imagepullpolicy }}
+          name: tracer
+          env:
+          - name: POD_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
+          - name: POD_NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+          envFrom:
+            - secretRef:
+                name: kubeshark-secret
+          resources:
+            limits:
+              cpu: {{ .Values.tap.resources.worker.limits.cpu }}
+              memory: {{ .Values.tap.resources.worker.limits.memory }}
+            requests:
+              cpu: {{ .Values.tap.resources.worker.requests.cpu }}
+              memory: {{ .Values.tap.resources.worker.requests.memory }}
+          securityContext:
+            capabilities:
+              add:
+                - SYS_ADMIN
+                - SYS_PTRACE
+                - DAC_OVERRIDE
+                - SYS_RESOURCE
+                - SYS_MODULE
+              drop:
+                - ALL
+          volumeMounts:
+            - mountPath: /hostproc
+              name: proc
+              readOnly: true
+            - mountPath: /sys
+              name: sys
+              readOnly: true
+          {{- if .Values.tap.persistentstorage }}
+            - mountPath: /app/data
+              name: kubeshark-persistent-volume
+          {{- end }}
+      {{- end }}
       dnsPolicy: ClusterFirstWithHostNet
       hostNetwork: true
       serviceAccountName: {{ include "kubeshark.serviceAccountName" . }}

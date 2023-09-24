@@ -1,8 +1,7 @@
+---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: {{ include "kubeshark.fullname" . }}-hub
-  namespace: {{ .Release.Namespace }}
   labels:
     app.kubeshark.co/app: hub
     {{- include "kubeshark.labels" . | nindent 4 }}
@@ -10,16 +9,19 @@ metadata:
   {{- if .Values.tap.annotations }}
     {{- toYaml .Values.tap.annotations | nindent 4 }}
   {{- end }}
+  name: {{ include "kubeshark.fullname" . }}-hub
+  namespace: {{ .Release.Namespace }}
 spec:
   replicas: 1  # Set the desired number of replicas
   selector:
     matchLabels:
       app.kubeshark.co/app: hub
+      {{- include "kubeshark.labels" . | nindent 6 }}
   template:
     metadata:
       labels:
         app.kubeshark.co/app: hub
-        sidecar.istio.io/inject: "false"
+        {{- include "kubeshark.labels" . | nindent 8 }}
     spec:
       dnsPolicy: ClusterFirstWithHostNet
       serviceAccountName: {{ include "kubeshark.serviceAccountName" . }}
@@ -28,6 +30,15 @@ spec:
           command:
             - ./hub
             {{ .Values.tap.debug | ternary "- -debug" "" }}
+          env:
+          - name: POD_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
+          - name: POD_NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
           envFrom:
             - configMapRef:
                 name: kubeshark-config-map
