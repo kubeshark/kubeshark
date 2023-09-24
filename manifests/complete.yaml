@@ -94,7 +94,7 @@ data:
     POD_REGEX: '.*'
     NAMESPACES: ''
     SCRIPTING_ENV: '{}'
-    SCRIPTING_SCRIPTS: '[]'
+    SCRIPTING_SCRIPTS: '{}'
     AUTH_ENABLED: ''
     AUTH_APPROVED_EMAILS: ''
     AUTH_APPROVED_DOMAINS: ''
@@ -161,12 +161,12 @@ metadata:
     app.kubernetes.io/version: "50.4"
     app.kubernetes.io/managed-by: Helm
   annotations:
-  name: kubeshark-self-secrets-role
+  name: kubeshark-self-config-role
   namespace: default
 rules:
   - apiGroups:
       - ""
-      - "v1"
+      - v1
     resourceNames:
       - kubeshark-secret
       - kubeshark-config-map
@@ -182,7 +182,6 @@ rules:
 apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
-  name: kubeshark-self-secrets-role-binding
   labels:
     helm.sh/chart: kubeshark-50.4
     app.kubernetes.io/name: kubeshark
@@ -190,15 +189,16 @@ metadata:
     app.kubernetes.io/version: "50.4"
     app.kubernetes.io/managed-by: Helm
   annotations:
+  name: kubeshark-self-config-role-binding
   namespace: default
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: kubeshark-self-config-role
 subjects:
   - kind: ServiceAccount
     name: kubeshark-service-account
     namespace: default
-roleRef:
-  kind: Role
-  name: kubeshark-self-secrets-role
-  apiGroup: rbac.authorization.k8s.io
 ---
 # Source: kubeshark/templates/05-hub-service.yaml
 apiVersion: v1
@@ -435,19 +435,19 @@ spec:
   selector:
     matchLabels:
       app.kubeshark.co/app: hub
-      helm.sh/chart: kubeshark-50.3
+      helm.sh/chart: kubeshark-50.4
       app.kubernetes.io/name: kubeshark
       app.kubernetes.io/instance: kubeshark
-      app.kubernetes.io/version: "50.3"
+      app.kubernetes.io/version: "50.4"
       app.kubernetes.io/managed-by: Helm
   template:
     metadata:
       labels:
         app.kubeshark.co/app: hub
-        helm.sh/chart: kubeshark-50.3
+        helm.sh/chart: kubeshark-50.4
         app.kubernetes.io/name: kubeshark
         app.kubernetes.io/instance: kubeshark
-        app.kubernetes.io/version: "50.3"
+        app.kubernetes.io/version: "50.4"
         app.kubernetes.io/managed-by: Helm
     spec:
       dnsPolicy: ClusterFirstWithHostNet
@@ -514,19 +514,19 @@ spec:
   selector:
     matchLabels:
       app.kubeshark.co/app: front
-      helm.sh/chart: kubeshark-50.3
+      helm.sh/chart: kubeshark-50.4
       app.kubernetes.io/name: kubeshark
       app.kubernetes.io/instance: kubeshark
-      app.kubernetes.io/version: "50.3"
+      app.kubernetes.io/version: "50.4"
       app.kubernetes.io/managed-by: Helm
   template:
     metadata:
       labels:
         app.kubeshark.co/app: front
-        helm.sh/chart: kubeshark-50.3
+        helm.sh/chart: kubeshark-50.4
         app.kubernetes.io/name: kubeshark
         app.kubernetes.io/instance: kubeshark
-        app.kubernetes.io/version: "50.3"
+        app.kubernetes.io/version: "50.4"
         app.kubernetes.io/managed-by: Helm
     spec:
       containers:
