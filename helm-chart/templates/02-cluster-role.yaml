@@ -39,8 +39,10 @@ metadata:
 rules:
   - apiGroups:
       - ""
-      - extensions
-      - apps
+      - v1
+    resourceNames:
+      - kubeshark-secret
+      - kubeshark-config-map
     resources:
       - secrets
       - configmaps
