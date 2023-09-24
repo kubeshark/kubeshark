@@ -12,6 +12,7 @@ import (
 	"strings"
 
 	"github.com/creasty/defaults"
+	"github.com/goccy/go-yaml"
 	"github.com/kubeshark/kubeshark/misc"
 	"github.com/kubeshark/kubeshark/misc/version"
 	"github.com/kubeshark/kubeshark/utils"
@@ -19,7 +20,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
-	"gopkg.in/yaml.v3"
 )
 
 const (

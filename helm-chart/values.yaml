@@ -1,73 +1,38 @@
-config: {}
-dumplogs: false
-headless: false
-kube:
-  configpath: ""
-  context: ""
-license: ""
-logs:
-  file: ""
-manifests:
-  dump: false
-scripting:
-  env: null
-  source: ""
-  watchscripts: true
 tap:
-  annotations: {}
-  auth:
-    approveddomains: []
-    approvedemails: []
-    enabled: false
-  debug: false
   docker:
-    imagepullpolicy: Always
-    imagepullsecrets: null
     registry: docker.io/kubeshark
     tag: latest
-  dryrun: false
-  ignoretainted: false
-  ingress:
-    annotations: {}
-    classname: ""
-    enabled: false
-    host: ks.svc.cluster.local
-    tls: []
-  ipv6: true
-  labels: {}
-  namespaces: []
-  nodeselectorterms:
-    - matchExpressions:
-        - key: kubernetes.io/os
-          operator: In
-          values:
-            - linux
-  packetcapture: libpcap
-  pcap: ""
-  persistentstorage: false
+    imagepullpolicy: Always
+    imagepullsecrets: []
   proxy:
-    front:
-      port: 8899
-    host: 127.0.0.1
+    worker:
+      srvport: 8897
     hub:
       port: 8898
       srvport: 8898
-    worker:
-      srvport: 8897
+    front:
+      port: 8899
+    host: 127.0.0.1
   regex: .*
+  namespaces: []
   release:
+    repo: https://helm.kubeshark.co
     name: kubeshark
     namespace: default
-    repo: https://helm.kubeshark.co
+  persistentstorage: false
+  storagelimit: 200Mi
+  storageclass: standard
+  dryrun: false
+  pcap: ""
   resources:
-    hub:
+    worker:
       limits:
         cpu: 750m
         memory: 1Gi
       requests:
         cpu: 50m
         memory: 50Mi
-    worker:
+    hub:
       limits:
         cpu: 750m
         memory: 1Gi
@@ -75,8 +40,40 @@ tap:
         cpu: 50m
         memory: 50Mi
   servicemesh: true
-  storageclass: standard
-  storagelimit: 200Mi
+  tls: true
+  packetcapture: libpcap
+  ignoretainted: false
+  labels: {}
+  annotations: {}
+  nodeselectorterms:
+  - matchExpressions:
+    - key: kubernetes.io/os
+      operator: In
+      values:
+      - linux
+  auth:
+    enabled: false
+    approvedemails: []
+    approveddomains: []
+  ingress:
+    enabled: false
+    classname: ""
+    host: ks.svc.cluster.local
+    tls: []
+    annotations: {}
+  ipv6: true
+  debug: false
   telemetry:
     enabled: true
-  tls: true
+logs:
+  file: ""
+kube:
+  configpath: ""
+  context: ""
+dumplogs: false
+headless: false
+license: ""
+scripting:
+  env: {}
+  source: ""
+  watchscripts: true
