@@ -34,15 +34,13 @@ metadata:
   {{- if .Values.tap.annotations }}
     {{- toYaml .Values.tap.annotations | nindent 4 }}
   {{- end }}
-  name: kubeshark-self-secrets-role
+  name: kubeshark-self-config-role
   namespace: {{ .Release.Namespace }}
 rules:
   - apiGroups:
       - ""
-      - "v1"
-    resourceNames:
-      - kubeshark-secret
-      - kubeshark-config-map
+      - extensions
+      - apps
     resources:
       - secrets
       - configmaps
