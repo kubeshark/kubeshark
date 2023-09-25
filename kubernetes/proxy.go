@@ -106,7 +106,7 @@ func getRerouteHttpHandlerSelfStatic(proxyHandler http.Handler, selfNamespace st
 }
 
 func NewPortForward(kubernetesProvider *Provider, namespace string, podRegex *regexp.Regexp, srcPort uint16, dstPort uint16, ctx context.Context) (*portforward.PortForwarder, error) {
-	pods, err := kubernetesProvider.ListPodsByAppLabel(ctx, namespace, map[string]string{"app.kubeshark.co/app": "hub"})
+	pods, err := kubernetesProvider.ListPodsByAppLabel(ctx, namespace, map[string]string{"app.kubeshark.co/app": "front"})
 	if err != nil {
 		return nil, err
 	} else if len(pods) == 0 {

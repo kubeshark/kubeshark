@@ -74,13 +74,17 @@ func updateLicense(licenseKey string) {
 		log.Error().Err(err).Send()
 		return
 	}
-	err = kubernetes.SetSecret(kubernetesProvider, "LICENSE", config.Config.License)
+	updated, err := kubernetes.SetSecret(kubernetesProvider, kubernetes.SECRET_LICENSE, config.Config.License)
 	if err != nil {
 		log.Error().Err(err).Send()
 		return
 	}
 
-	log.Info().Msg("Updated the license. Exiting.")
+	if updated {
+		log.Info().Msg("Updated the license, exiting...")
+	} else {
+		log.Info().Msg("Exiting...")
+	}
 
 	go func() {
 		time.Sleep(2 * time.Second)

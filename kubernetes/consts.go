@@ -1,10 +1,10 @@
 package kubernetes
 
 const (
-	SelfResourcesPrefix        = "kubeshark-"
-	FrontPodName               = SelfResourcesPrefix + "front"
+	SELF_RESOURCES_PREFIX      = "kubeshark-"
+	FrontPodName               = SELF_RESOURCES_PREFIX + "front"
 	FrontServiceName           = FrontPodName
-	HubPodName                 = SelfResourcesPrefix + "hub"
+	HubPodName                 = SELF_RESOURCES_PREFIX + "hub"
 	HubServiceName             = HubPodName
 	K8sAllNamespaces           = ""
 	MinKubernetesServerVersion = "1.16.0"

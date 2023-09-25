@@ -2,9 +2,11 @@ package cmd
 
 import (
 	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"regexp"
+	"strings"
 	"sync"
 	"time"
 
@@ -101,17 +103,23 @@ func tap() {
 		config.Config.Tap.Release.Namespace,
 	).Install()
 	if err != nil {
-		log.Error().Err(err).Send()
-		os.Exit(1)
+		if err.Error() != "cannot re-use a name that is still in use" {
+			log.Error().Err(err).Send()
+			os.Exit(1)
+		}
+		log.Info().Msg("Found an existing installation, skipping Helm install...")
+
+		updateConfig(kubernetesProvider)
+		postFrontStarted(ctx, kubernetesProvider, cancel)
 	} else {
 		log.Info().Msgf("Installed the Helm release: %s", rel.Name)
+
+		go watchHubEvents(ctx, kubernetesProvider, cancel)
+		go watchHubPod(ctx, kubernetesProvider, cancel)
+		go watchFrontPod(ctx, kubernetesProvider, cancel)
 	}
 
 	defer finishTapExecution(kubernetesProvider)
-
-	go watchHubEvents(ctx, kubernetesProvider, cancel)
-	go watchHubPod(ctx, kubernetesProvider, cancel)
-	go watchFrontPod(ctx, kubernetesProvider, cancel)
 
 	// block until exit signal or error
 	utils.WaitForTermination(ctx, cancel)
@@ -435,4 +443,26 @@ func postFrontStarted(ctx context.Context, kubernetesProvider *kubernetes.Provid
 	if !config.Config.HeadlessMode {
 		utils.OpenBrowser(url)
 	}
+}
+
+func updateConfig(kubernetesProvider *kubernetes.Provider) {
+	_, _ = kubernetes.SetSecret(kubernetesProvider, kubernetes.SECRET_LICENSE, config.Config.License)
+	_, _ = kubernetes.SetConfig(kubernetesProvider, kubernetes.CONFIG_POD_REGEX, config.Config.Tap.PodRegexStr)
+	_, _ = kubernetes.SetConfig(kubernetesProvider, kubernetes.CONFIG_NAMESPACES, strings.Join(config.Config.Tap.Namespaces, ","))
+
+	data, err := json.Marshal(config.Config.Scripting.Env)
+	if err != nil {
+		log.Error().Str("config", kubernetes.CONFIG_SCRIPTING_ENV).Err(err).Send()
+		return
+	} else {
+		_, _ = kubernetes.SetConfig(kubernetesProvider, kubernetes.CONFIG_SCRIPTING_ENV, string(data))
+	}
+
+	authEnabled := ""
+	if config.Config.Tap.Auth.Enabled {
+		authEnabled = "true"
+	}
+	_, _ = kubernetes.SetConfig(kubernetesProvider, kubernetes.CONFIG_AUTH_ENABLED, authEnabled)
+	_, _ = kubernetes.SetConfig(kubernetesProvider, kubernetes.CONFIG_AUTH_APPROVED_EMAILS, strings.Join(config.Config.Tap.Auth.ApprovedEmails, ","))
+	_, _ = kubernetes.SetConfig(kubernetesProvider, kubernetes.CONFIG_AUTH_APPROVED_DOMAINS, strings.Join(config.Config.Tap.Auth.ApprovedDomains, ","))
 }

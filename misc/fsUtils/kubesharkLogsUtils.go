@@ -14,7 +14,7 @@ import (
 )
 
 func DumpLogs(ctx context.Context, provider *kubernetes.Provider, filePath string) error {
-	podExactRegex := regexp.MustCompile("^" + kubernetes.SelfResourcesPrefix)
+	podExactRegex := regexp.MustCompile("^" + kubernetes.SELF_RESOURCES_PREFIX)
 	pods, err := provider.ListAllPodsMatchingRegex(ctx, podExactRegex, []string{config.Config.Tap.Release.Namespace})
 	if err != nil {
 		return err
