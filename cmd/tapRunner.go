@@ -58,11 +58,6 @@ func tap() {
 		return
 	}
 
-	if !config.Config.Tap.PersistentStorage {
-		config.Config.Tap.StorageLimit = "200Mi"
-		log.Warn().Msg("Storage limit cannot be modified while persistentstorage is set to false!")
-	}
-
 	log.Info().
 		Str("limit", config.Config.Tap.StorageLimit).
 		Msg(fmt.Sprintf("%s will store the traffic up to a limit (per node). Oldest TCP/UDP streams will be removed once the limit is reached.", misc.Software))

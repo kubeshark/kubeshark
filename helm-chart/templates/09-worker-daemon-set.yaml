@@ -225,4 +225,7 @@ spec:
 {{- if .Values.tap.persistentstorage }}
           persistentVolumeClaim:
             claimName: kubeshark-persistent-volume-claim
+{{- else }}
+          emptyDir:
+            sizeLimit: {{ .Values.tap.storagelimit }}
 {{- end }}
