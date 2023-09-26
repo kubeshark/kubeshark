@@ -30,8 +30,6 @@ spec:
             - ./worker
             - -i
             - any
-            - -port
-            - '{{ .Values.tap.proxy.worker.srvport }}'
             - -servicemesh
             - -procfs
             - /hostproc
@@ -78,6 +76,56 @@ spec:
                 - SYS_MODULE
               drop:
                 - ALL
+          volumeMounts:
+            - mountPath: /hostproc
+              name: proc
+              readOnly: true
+            - mountPath: /sys
+              name: sys
+              readOnly: true
+            - mountPath: /app/data
+              name: data
+        - command:
+            - ./worker
+            - -server-mode
+            - -port
+            - '{{ .Values.tap.proxy.worker.srvport }}'
+            {{ .Values.tap.debug | ternary "- -debug" "" }}
+          image: '{{ .Values.tap.docker.registry }}/worker:{{ .Values.tap.docker.tag }}'
+          imagePullPolicy: {{ .Values.tap.docker.imagepullpolicy }}
+          name: server
+          env:
+          - name: POD_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
+          - name: POD_NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+          envFrom:
+            - secretRef:
+                name: kubeshark-secret
+        {{- if .Values.tap.debug }}
+          env:
+          - name: PROFILING_ENABLED
+            value: "true"
+          - name: PROFILING_DUMP_PATH
+            value: "pprof"
+          - name: PROFILING_INTERVAL_SECONDS
+            value: "60"
+        {{- end }}
+          resources:
+            limits:
+              cpu: {{ .Values.tap.resources.worker.limits.cpu }}
+              memory: {{ .Values.tap.resources.worker.limits.memory }}
+            requests:
+              cpu: {{ .Values.tap.resources.worker.requests.cpu }}
+              memory: {{ .Values.tap.resources.worker.requests.memory }}
+          securityContext:
+            capabilities:
+              drop:
+                - ALL
           readinessProbe:
             periodSeconds: 1
             failureThreshold: 3
@@ -99,10 +147,8 @@ spec:
             - mountPath: /sys
               name: sys
               readOnly: true
-          {{- if .Values.tap.persistentstorage }}
             - mountPath: /app/data
-              name: kubeshark-persistent-volume
-          {{- end }}
+              name: data
       {{- if .Values.tap.tls }}
         - command:
             - ./tracer
@@ -147,10 +193,8 @@ spec:
             - mountPath: /sys
               name: sys
               readOnly: true
-          {{- if .Values.tap.persistentstorage }}
             - mountPath: /app/data
-              name: kubeshark-persistent-volume
-          {{- end }}
+              name: data
       {{- end }}
       dnsPolicy: ClusterFirstWithHostNet
       hostNetwork: true
@@ -177,8 +221,8 @@ spec:
         - hostPath:
             path: /sys
           name: sys
+        - name: data
 {{- if .Values.tap.persistentstorage }}
-        - name: kubeshark-persistent-volume
           persistentVolumeClaim:
             claimName: kubeshark-persistent-volume-claim
 {{- end }}

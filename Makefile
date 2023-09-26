@@ -75,44 +75,75 @@ generate-helm-values: ## Generate the Helm values from config.yaml
 generate-manifests: ## Generate the manifests from the Helm chart using default configuration
 	helm template kubeshark -n default ./helm-chart > ./manifests/complete.yaml
 
-logs-worker:
+logs-sniffer:
 	export LOGS_POD_PREFIX=kubeshark-worker-
-	export LOGS_FOLLOW=
+	export LOGS_SUFFIX="-c sniffer"
 	${MAKE} logs
 
-logs-worker-follow:
+logs-sniffer-follow:
 	export LOGS_POD_PREFIX=kubeshark-worker-
-	export LOGS_FOLLOW=--follow
+	export LOGS_SUFFIX="-c sniffer --follow"
+	${MAKE} logs
+
+logs-server:
+	export LOGS_POD_PREFIX=kubeshark-worker-
+	export LOGS_SUFFIX="-c server"
+	${MAKE} logs
+
+logs-server-follow:
+	export LOGS_POD_PREFIX=kubeshark-worker-
+	export LOGS_SUFFIX="-c server --follow"
+	${MAKE} logs
+
+logs-tracer:
+	export LOGS_POD_PREFIX=kubeshark-worker-
+	export LOGS_SUFFIX="-c tracer"
+	${MAKE} logs
+
+logs-tracer-follow:
+	export LOGS_POD_PREFIX=kubeshark-worker-
+	export LOGS_SUFFIX="-c tracer --follow"
 	${MAKE} logs
 
 logs-hub:
 	export LOGS_POD_PREFIX=kubeshark-hub
-	export LOGS_FOLLOW=
+	export LOGS_SUFFIX=
 	${MAKE} logs
 
 logs-hub-follow:
 	export LOGS_POD_PREFIX=kubeshark-hub
-	export LOGS_FOLLOW=--follow
+	export LOGS_SUFFIX=--follow
 	${MAKE} logs
 
 logs-front:
 	export LOGS_POD_PREFIX=kubeshark-front
-	export LOGS_FOLLOW=
+	export LOGS_SUFFIX=
 	${MAKE} logs
 
 logs-front-follow:
 	export LOGS_POD_PREFIX=kubeshark-front
-	export LOGS_FOLLOW=--follow
+	export LOGS_SUFFIX=--follow
 	${MAKE} logs
 
 logs:
-	kubectl logs $$(kubectl get pods | awk '$$1 ~ /^$(LOGS_POD_PREFIX)/' | awk 'END {print $$1}') $(LOGS_FOLLOW)
+	kubectl logs $$(kubectl get pods | awk '$$1 ~ /^$(LOGS_POD_PREFIX)/' | awk 'END {print $$1}') $(LOGS_SUFFIX)
 
 ssh-node:
 	kubectl ssh node $$(kubectl get nodes | awk 'END {print $$1}')
 
-exec-worker:
+exec-sniffer:
 	export EXEC_POD_PREFIX=kubeshark-worker-
+	export EXEC_SUFFIX="-c sniffer"
+	${MAKE} exec
+
+exec-server:
+	export EXEC_POD_PREFIX=kubeshark-worker-
+	export EXEC_SUFFIX="-c server"
+	${MAKE} exec
+
+exec-tracer:
+	export EXEC_POD_PREFIX=kubeshark-worker-
+	export EXEC_SUFFIX="-c tracer"
 	${MAKE} exec
 
 exec-hub:
@@ -124,7 +155,7 @@ exec-front:
 	${MAKE} exec
 
 exec:
-	kubectl exec --stdin --tty $$(kubectl get pods | awk '$$1 ~ /^$(EXEC_POD_PREFIX)/' | awk 'END {print $$1}') -- /bin/sh
+	kubectl exec --stdin --tty $$(kubectl get pods | awk '$$1 ~ /^$(EXEC_POD_PREFIX)/' | awk 'END {print $$1}') $(EXEC_SUFFIX) -- /bin/sh
 
 helm-install:
 	cd helm-chart && helm install kubeshark . && cd ..
@@ -151,4 +182,4 @@ proxy:
 	kubeshark proxy
 
 port-forward-worker:
-	kubectl port-forward $$(kubectl get pods | awk '$$1 ~ /^$(LOGS_POD_PREFIX)/' | awk 'END {print $$1}') $(LOGS_FOLLOW) 8897:8897
+	kubectl port-forward $$(kubectl get pods | awk '$$1 ~ /^$(LOGS_POD_PREFIX)/' | awk 'END {print $$1}') $(LOGS_SUFFIX) 8897:8897
