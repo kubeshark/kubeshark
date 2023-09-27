@@ -34,8 +34,8 @@ const (
 )
 
 type ResourceLimits struct {
-	CPU    string `yaml:"cpu" json:"cpu" default:"750m"`
-	Memory string `yaml:"memory" json:"memory" default:"1Gi"`
+	CPU    string `yaml:"cpu" json:"cpu" default:"500m"`
+	Memory string `yaml:"memory" json:"memory" default:"500Mi"`
 }
 
 type ResourceRequests struct {
@@ -76,8 +76,10 @@ type DockerConfig struct {
 }
 
 type ResourcesConfig struct {
-	Worker ResourceRequirements `yaml:"worker" json:"worker"`
-	Hub    ResourceRequirements `yaml:"hub" json:"hub"`
+	Sniffer ResourceRequirements `yaml:"sniffer" json:"sniffer"`
+	Server  ResourceRequirements `yaml:"server" json:"server"`
+	Tracer  ResourceRequirements `yaml:"tracer" json:"tracer"`
+	Hub     ResourceRequirements `yaml:"hub" json:"hub"`
 }
 
 type AuthConfig struct {

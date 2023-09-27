@@ -60,11 +60,11 @@ spec:
         {{- end }}
           resources:
             limits:
-              cpu: {{ .Values.tap.resources.worker.limits.cpu }}
-              memory: {{ .Values.tap.resources.worker.limits.memory }}
+              cpu: {{ .Values.tap.resources.sniffer.limits.cpu }}
+              memory: {{ .Values.tap.resources.sniffer.limits.memory }}
             requests:
-              cpu: {{ .Values.tap.resources.worker.requests.cpu }}
-              memory: {{ .Values.tap.resources.worker.requests.memory }}
+              cpu: {{ .Values.tap.resources.sniffer.requests.cpu }}
+              memory: {{ .Values.tap.resources.sniffer.requests.memory }}
           securityContext:
             capabilities:
               add:
@@ -117,11 +117,11 @@ spec:
         {{- end }}
           resources:
             limits:
-              cpu: {{ .Values.tap.resources.worker.limits.cpu }}
-              memory: {{ .Values.tap.resources.worker.limits.memory }}
+              cpu: {{ .Values.tap.resources.server.limits.cpu }}
+              memory: {{ .Values.tap.resources.server.limits.memory }}
             requests:
-              cpu: {{ .Values.tap.resources.worker.requests.cpu }}
-              memory: {{ .Values.tap.resources.worker.requests.memory }}
+              cpu: {{ .Values.tap.resources.server.requests.cpu }}
+              memory: {{ .Values.tap.resources.server.requests.memory }}
           securityContext:
             capabilities:
               drop:
@@ -172,11 +172,11 @@ spec:
                 name: kubeshark-secret
           resources:
             limits:
-              cpu: {{ .Values.tap.resources.worker.limits.cpu }}
-              memory: {{ .Values.tap.resources.worker.limits.memory }}
+              cpu: {{ .Values.tap.resources.tracer.limits.cpu }}
+              memory: {{ .Values.tap.resources.tracer.limits.memory }}
             requests:
-              cpu: {{ .Values.tap.resources.worker.requests.cpu }}
-              memory: {{ .Values.tap.resources.worker.requests.memory }}
+              cpu: {{ .Values.tap.resources.tracer.requests.cpu }}
+              memory: {{ .Values.tap.resources.tracer.requests.memory }}
           securityContext:
             capabilities:
               add:
