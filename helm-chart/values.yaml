@@ -27,29 +27,29 @@ tap:
   resources:
     sniffer:
       limits:
-        cpu: 500m
-        memory: 500Mi
+        cpu: 250m
+        memory: 333Mi
       requests:
         cpu: 50m
         memory: 50Mi
     server:
       limits:
-        cpu: 500m
-        memory: 500Mi
+        cpu: 250m
+        memory: 333Mi
       requests:
         cpu: 50m
         memory: 50Mi
     tracer:
       limits:
-        cpu: 500m
-        memory: 500Mi
+        cpu: 250m
+        memory: 333Mi
       requests:
         cpu: 50m
         memory: 50Mi
     hub:
       limits:
-        cpu: 500m
-        memory: 500Mi
+        cpu: 250m
+        memory: 333Mi
       requests:
         cpu: 50m
         memory: 50Mi
