@@ -99,10 +99,8 @@ spec:
             - mountPath: /sys
               name: sys
               readOnly: true
-          {{- if .Values.tap.persistentstorage }}
             - mountPath: /app/data
-              name: kubeshark-persistent-volume
-          {{- end }}
+              name: data
       {{- if .Values.tap.tls }}
         - command:
             - ./tracer
@@ -124,13 +122,6 @@ spec:
           envFrom:
             - secretRef:
                 name: kubeshark-secret
-          resources:
-            limits:
-              cpu: {{ .Values.tap.resources.worker.limits.cpu }}
-              memory: {{ .Values.tap.resources.worker.limits.memory }}
-            requests:
-              cpu: {{ .Values.tap.resources.worker.requests.cpu }}
-              memory: {{ .Values.tap.resources.worker.requests.memory }}
           securityContext:
             capabilities:
               add:
@@ -147,10 +138,8 @@ spec:
             - mountPath: /sys
               name: sys
               readOnly: true
-          {{- if .Values.tap.persistentstorage }}
             - mountPath: /app/data
-              name: kubeshark-persistent-volume
-          {{- end }}
+              name: data
       {{- end }}
       dnsPolicy: ClusterFirstWithHostNet
       hostNetwork: true
@@ -177,8 +166,8 @@ spec:
         - hostPath:
             path: /sys
           name: sys
+        - name: data
 {{- if .Values.tap.persistentstorage }}
-        - name: kubeshark-persistent-volume
           persistentVolumeClaim:
             claimName: kubeshark-persistent-volume-claim
 {{- else }}
