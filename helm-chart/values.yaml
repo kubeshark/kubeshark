@@ -25,31 +25,17 @@ tap:
   dryrun: false
   pcap: ""
   resources:
-    sniffer:
+    worker:
       limits:
-        cpu: 500m
-        memory: 500Mi
-      requests:
-        cpu: 50m
-        memory: 50Mi
-    server:
-      limits:
-        cpu: 500m
-        memory: 500Mi
-      requests:
-        cpu: 50m
-        memory: 50Mi
-    tracer:
-      limits:
-        cpu: 500m
-        memory: 500Mi
+        cpu: 750m
+        memory: 1Gi
       requests:
         cpu: 50m
         memory: 50Mi
     hub:
       limits:
-        cpu: 500m
-        memory: 500Mi
+        cpu: 750m
+        memory: 1Gi
       requests:
         cpu: 50m
         memory: 50Mi
