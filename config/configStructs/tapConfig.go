@@ -34,8 +34,8 @@ const (
 )
 
 type ResourceLimits struct {
-	CPU    string `yaml:"cpu" json:"cpu" default:"250m"`
-	Memory string `yaml:"memory" json:"memory" default:"333Mi"`
+	CPU    string `yaml:"cpu" json:"cpu" default:"500m"`
+	Memory string `yaml:"memory" json:"memory" default:"500Mi"`
 }
 
 type ResourceRequests struct {
