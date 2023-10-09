@@ -125,6 +125,8 @@ spec:
           securityContext:
             capabilities:
               add:
+                - NET_RAW
+                - NET_ADMIN
                 - SYS_ADMIN
                 - SYS_PTRACE
                 - DAC_OVERRIDE
