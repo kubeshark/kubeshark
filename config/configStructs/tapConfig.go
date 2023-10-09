@@ -127,6 +127,7 @@ type TapConfig struct {
 	Ingress           IngressConfig         `yaml:"ingress" json:"ingress"`
 	IPv6              bool                  `yaml:"ipv6" json:"ipv6" default:"true"`
 	Debug             bool                  `yaml:"debug" json:"debug" default:"false"`
+	NoKernelModule    bool                  `yaml:"nokernelmodule" json:"nokernelmodule" default:"false"`
 	Telemetry         TelemetryConfig       `yaml:"telemetry" json:"telemetry"`
 }
 

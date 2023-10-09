@@ -36,6 +36,7 @@ spec:
             - -procfs
             - /hostproc
             {{ .Values.tap.debug | ternary "- -debug" "" }}
+            {{ .Values.tap.nokernelmodule | ternary "- -no-kernel-module" "" }}
           image: '{{ .Values.tap.docker.registry }}/worker:{{ .Values.tap.docker.tag }}'
           imagePullPolicy: {{ .Values.tap.docker.imagepullpolicy }}
           name: sniffer

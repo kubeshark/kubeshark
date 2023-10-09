@@ -286,9 +286,12 @@ spec:
             - ./worker
             - -i
             - any
+            - -port
+            - '8897'
             - -servicemesh
             - -procfs
             - /hostproc
+            
             
           image: 'docker.io/kubeshark/worker:latest'
           imagePullPolicy: Always
@@ -307,8 +310,8 @@ spec:
                 name: kubeshark-secret
           resources:
             limits:
-              cpu: 250m
-              memory: 333Mi
+              cpu: 750m
+              memory: 1Gi
             requests:
               cpu: 50m
               memory: 50Mi
@@ -321,47 +324,6 @@ spec:
                 - SYS_PTRACE
                 - DAC_OVERRIDE
                 - SYS_MODULE
-              drop:
-                - ALL
-          volumeMounts:
-            - mountPath: /hostproc
-              name: proc
-              readOnly: true
-            - mountPath: /sys
-              name: sys
-              readOnly: true
-            - mountPath: /app/data
-              name: data
-        - command:
-            - ./worker
-            - -server-mode
-            - -port
-            - '8897'
-            
-          image: 'docker.io/kubeshark/worker:latest'
-          imagePullPolicy: Always
-          name: server
-          env:
-          - name: POD_NAME
-            valueFrom:
-              fieldRef:
-                fieldPath: metadata.name
-          - name: POD_NAMESPACE
-            valueFrom:
-              fieldRef:
-                fieldPath: metadata.namespace
-          envFrom:
-            - secretRef:
-                name: kubeshark-secret
-          resources:
-            limits:
-              cpu: 250m
-              memory: 333Mi
-            requests:
-              cpu: 50m
-              memory: 50Mi
-          securityContext:
-            capabilities:
               drop:
                 - ALL
           readinessProbe:
@@ -407,16 +369,11 @@ spec:
           envFrom:
             - secretRef:
                 name: kubeshark-secret
-          resources:
-            limits:
-              cpu: 250m
-              memory: 333Mi
-            requests:
-              cpu: 50m
-              memory: 50Mi
           securityContext:
             capabilities:
               add:
+                - NET_RAW
+                - NET_ADMIN
                 - SYS_ADMIN
                 - SYS_PTRACE
                 - DAC_OVERRIDE
@@ -534,8 +491,8 @@ spec:
               port: 80
           resources:
             limits:
-              cpu: 250m
-              memory: 333Mi
+              cpu: 750m
+              memory: 1Gi
             requests:
               cpu: 50m
               memory: 50Mi
