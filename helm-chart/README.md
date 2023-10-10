@@ -72,3 +72,62 @@ Not all have IPV6 enabled, hence this has to be disabled as follows:
 helm install kubeshark kubeshark/kubeshark \
   --set tap.ipv6=false
 ```
+
+## Configuration
+
+| Parameter                                 | Description                                   | Default                                                 |
+|-------------------------------------------|-----------------------------------------------|---------------------------------------------------------|
+| `tap.docker.registry`                     | Docker registry URL                           | `docker.io/kubeshark`                                   |
+| `tap.docker.tag`                          | Docker image tag                              | `latest`                                                |
+| `tap.docker.imagePullPolicy`              | Kubernetes image pull policy                  | `Always`                                                |
+| `tap.docker.imagePullSecrets`             | Kubernetes secrets to pull Docker images      | `[]`                                                    |
+| `tap.proxy.worker.srvport`                | Worker service port                           | `8897`                                                  |
+| `tap.proxy.hub.port`                      | Hub service port                              | `8898`                                                  |
+| `tap.proxy.hub.srvport`                   | Hub service port (internal)                   | `8898`                                                  |
+| `tap.proxy.front.port`                    | Front-facing service port                     | `8899`                                                  |
+| `tap.proxy.host`                          | Host IP or DNS name for the proxy services    | `127.0.0.1`                                             |
+| `tap.namespaces`                          | List of namespaces to observe                 | `[]`                                                    |
+| `tap.release.repo`                        | URL for the Helm chart repository             | `https://helm.kubeshark.co`                             |
+| `tap.release.name`                        | Name for the release                          | `kubeshark`                                             |
+| `tap.release.namespace`                   | Namespace to install the chart                | `default`                                               |
+| `tap.persistentstorage`                   | Enable using persistent storage for the worker | `false`                                                |
+| `tap.storagelimit`                        | Limit for persistent storage                  | `200Mi`                                                 |
+| `tap.storageclass`                        | Storage class for persistent storage          | `standard`                                              |
+| `tap.dryrun`                              | Opt-out of collecting data                    | `false`                                                 |
+| `tap.pcap`                                |                                               | `""`                                                    |
+| `tap.resources.worker.limits.cpu`         | CPU limit for worker                          | `750m`                                                  |
+| `tap.resources.worker.limits.memory`      | Memory limit for worker                       | `1Gi`                                                   |
+| `tap.resources.worker.requests.cpu`       | CPU request for worker                        | `50m`                                                   |
+| `tap.resources.worker.requests.memory`    | Memory request for worker                     | `50Mi`                                                  |
+| `tap.resources.hub.limits.cpu`            | CPU limit for hub                             | `750m`                                                  |
+| `tap.resources.hub.limits.memory`         | Memory limit for hub                          | `1Gi`                                                   |
+| `tap.resources.hub.requests.cpu`          | CPU request for hub                           | `50m`                                                   |
+| `tap.resources.hub.requests.memory`       | Memory request for hub                        | `50Mi`                                                  |
+| `tap.servicemesh`                         | Enable integration with service mesh          | `true`                                                  |
+| `tap.tls`                                 | Listen to TLS traffic                         | `true`                                                  |
+| `tap.packetcapture`                       | Packet capture library to use (options available?) | `libpcap`                                          |
+| `tap.ignoretainted`                       | Whether to ignore tainted nodes               | `false`                                                 |
+| `tap.labels`                              | Kubernetes labels to apply to Tap components  | `{}`                                                    |
+| `tap.annotations`                         | Kubernetes annotations to apply to Tap components | `{}`                                                |
+| `tap.nodeselectorterms`                   | Node selector terms                           | `[{"matchExpressions":[{"key":"kubernetes.io/os","operator":"In","values":["linux"]}]}]` |
+| `tap.auth.enabled`                        | Enable authentication                         | `false`                                                 |
+| `tap.auth.approvedemails`                 | List of approved email addresses              | `[]`                                                    |
+| `tap.auth.approveddomains`                | List of approved email domains                | `[]`                                                    |
+| `tap.ingress.enabled`                     | Enable ingress                                | `false`                                                 |
+| `tap.ingress.classname`                   | Ingress class name                            | `""`                                                    |
+| `tap.ingress.host`                        | Host for the ingress                          | `ks.svc.cluster.local`                                  |
+| `tap.ingress.tls`                         | Ingress TLS configuration                     | `[]`                                                    |
+| `tap.ingress.annotations`                 | Ingress annotations                           | `{}`                                                    |
+| `tap.ipv6`                                | Allow support for IPv6                        | `true`                                                  |
+| `tap.debug`                               | Enable debug mode                             | `false`                                                 |
+| `tap.nokernelmodule`                      | Use TAP's eBPF instead of kernel module       | `false`                                                 |
+| `tap.telemetry.enabled`                   | Enable anonymous telemetry tracking           | `true`                                                  |
+| `logs.file`                               | Output file for the logs                      | `""`                                                    |
+| `kube.configpath`                         | Path to the Kubernetes config file            | `""`                                                    |
+| `kube.context`                            | Kubernetes context to use for the deployment  | `""`                                                    |
+| `dumplogs`                                | Enable dumping of logs to the console         | `false`                                                 |
+| `headless`                                | Enable running in headless mode               | `false`                                                 |
+| `license`                                 | License key for the Pro/Enterprise edition    | `""`                                                    |
+| `scripting.env`                           | Environment variables for scripted rules      | `{}`                                                    |
+| `scripting.source`                        | Source file for scripted rules                | `""`                                                    |
+| `scripting.watchscripts`                  | Enable watch mode for scripted rules          | `true`                                                  |
