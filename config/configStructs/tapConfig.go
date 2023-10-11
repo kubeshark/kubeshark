@@ -111,7 +111,7 @@ type TapConfig struct {
 	Namespaces        []string              `yaml:"namespaces" json:"namespaces" default:"[]"`
 	Release           ReleaseConfig         `yaml:"release" json:"release"`
 	PersistentStorage bool                  `yaml:"persistentstorage" json:"persistentstorage" default:"false"`
-	StorageLimit      string                `yaml:"storagelimit" json:"storagelimit" default:"200Mi"`
+	StorageLimit      string                `yaml:"storagelimit" json:"storagelimit" default:"500Mi"`
 	StorageClass      string                `yaml:"storageclass" json:"storageclass" default:"standard"`
 	DryRun            bool                  `yaml:"dryrun" json:"dryrun" default:"false"`
 	Pcap              string                `yaml:"pcap" json:"pcap" default:""`

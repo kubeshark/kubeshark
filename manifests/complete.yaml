@@ -416,7 +416,7 @@ spec:
           name: sys
         - name: data
           emptyDir:
-            sizeLimit: 200Mi
+            sizeLimit: 500Mi
 ---
 # Source: kubeshark/templates/04-hub-deployment.yaml
 apiVersion: apps/v1
