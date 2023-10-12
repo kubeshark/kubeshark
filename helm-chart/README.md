@@ -57,18 +57,9 @@ Visit [localhost:8899](http://localhost:8899)
 helm install kubeshark kubeshark/kubeshark \
   --set tap.ingress.enabled=true \
   --set tap.ingress.host=ks.svc.cluster.local \
-  --set "tap.ingress.approveddomains={gmail.com}" \
-  --set license=LICENSE_GOES_HERE
-```
-
-You can get your license [here](https://console.kubeshark.co/).
-
-## Installing with Persistent Storage Enabled
-
-```shell
-helm install kubeshark kubeshark/kubeshark \
-  --set tap.persistentstorage=true \
-  --set license=LICENSE_GOES_HERE
+  --set-json='tap.ingress.approveddomains=["gmail.com"]' \
+  --set license=LICENSE_GOES_HERE \
+  --set-json 'tap.annotations={ "eks.amazonaws.com/role-arn" : "arn:aws:iam::7...0:role/s3-role" }'
 ```
 
 You can get your license [here](https://console.kubeshark.co/).
