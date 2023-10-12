@@ -32,11 +32,17 @@ spec:
             - any
             - -port
             - '{{ .Values.tap.proxy.worker.srvport }}'
-            {{ .Values.tap.servicemesh | ternary "- -servicemesh" "" }}
+          {{- if .Values.tap.servicemesh }}
+            - -servicemesh
+          {{- end }}
             - -procfs
             - /hostproc
-            {{ .Values.tap.debug | ternary "- -debug" "" }}
-            {{ .Values.tap.nokernelmodule | ternary "- -no-kernel-module" "" }}
+          {{- if .Values.tap.debug }}
+            - -debug
+          {{- end }}
+          {{- if .Values.tap.nokernelmodule }}
+            - -no-kernel-module
+          {{- end }}
           image: '{{ .Values.tap.docker.registry }}/worker:{{ .Values.tap.docker.tag }}'
           imagePullPolicy: {{ .Values.tap.docker.imagepullpolicy }}
           name: sniffer
@@ -98,7 +104,9 @@ spec:
             - ./tracer
             - -procfs
             - /hostproc
-            {{ .Values.tap.debug | ternary "- -debug" "" }}
+          {{- if .Values.tap.debug }}
+            - -debug
+          {{- end }}
           image: '{{ .Values.tap.docker.registry }}/worker:{{ .Values.tap.docker.tag }}'
           imagePullPolicy: {{ .Values.tap.docker.imagepullpolicy }}
           name: tracer

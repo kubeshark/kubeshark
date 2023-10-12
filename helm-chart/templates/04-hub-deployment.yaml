@@ -29,7 +29,9 @@ spec:
         - name: kubeshark-hub
           command:
             - ./hub
-            {{ .Values.tap.debug | ternary "- -debug" "" }}
+          {{- if .Values.tap.debug }}
+            - -debug
+          {{- end }}
           env:
           - name: POD_NAME
             valueFrom:
