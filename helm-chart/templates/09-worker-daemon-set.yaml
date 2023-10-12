@@ -32,7 +32,7 @@ spec:
             - any
             - -port
             - '{{ .Values.tap.proxy.worker.srvport }}'
-            - -servicemesh
+            {{ .Values.tap.servicemesh | ternary "- -servicemesh" "" }}
             - -procfs
             - /hostproc
             {{ .Values.tap.debug | ternary "- -debug" "" }}
