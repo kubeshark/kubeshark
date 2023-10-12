@@ -52,15 +52,6 @@ spec:
           envFrom:
             - secretRef:
                 name: kubeshark-secret
-        {{- if .Values.tap.debug }}
-          env:
-          - name: PROFILING_ENABLED
-            value: "true"
-          - name: PROFILING_DUMP_PATH
-            value: "pprof"
-          - name: PROFILING_INTERVAL_SECONDS
-            value: "60"
-        {{- end }}
           resources:
             limits:
               cpu: {{ .Values.tap.resources.worker.limits.cpu }}
