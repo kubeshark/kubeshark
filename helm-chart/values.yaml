@@ -41,7 +41,6 @@ tap:
         memory: 50Mi
   servicemesh: true
   tls: true
-  packetcapture: libpcap
   ignoretainted: false
   labels: {}
   annotations: {}
