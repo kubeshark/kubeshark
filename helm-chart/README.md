@@ -125,7 +125,7 @@ helm install kubeshark kubeshark/kubeshark \
 | `logs.file`                               | Output file for the logs                      | `""`                                                    |
 | `kube.configpath`                         | Path to the `kubeconfig` file (`$HOME/.kube/config`)            | `""`                                                    |
 | `kube.context`                            | Kubernetes context to use for the deployment  | `""`                                                    |
-| `dumplogs`                                | Enable dumping of logs to the console         | `false`                                                 |
+| `dumplogs`                                | Enable dumping of logs         | `false`                                                 |
 | `headless`                                | Enable running in headless mode               | `false`                                                 |
 | `license`                                 | License key for the Pro/Enterprise edition    | `""`                                                    |
 | `scripting.env`                           | Environment variables for scripted rules      | `{}`                                                    |
