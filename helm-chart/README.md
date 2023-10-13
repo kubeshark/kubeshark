@@ -116,7 +116,7 @@ helm install kubeshark kubeshark/kubeshark \
 | `tap.ingress.classname`                   | Ingress class name                            | `""`                                                    |
 | `tap.ingress.host`                        | Host of the `Ingress`                          | `ks.svc.cluster.local`                                  |
 | `tap.ingress.tls`                         | `Ingress` TLS configuration                     | `[]`                                                    |
-| `tap.ingress.annotations`                 | Ingress annotations                           | `{}`                                                    |
+| `tap.ingress.annotations`                 | `Ingress` annotations                           | `{}`                                                    |
 | `tap.ipv6`                                | Allow support for IPv6                        | `true`                                                  |
 | `tap.debug`                               | Enable debug mode                             | `false`                                                 |
 | `tap.nokernelmodule`                      | Use TAP's eBPF instead of kernel module       | `false`                                                 |
