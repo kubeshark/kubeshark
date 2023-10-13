@@ -78,7 +78,7 @@ helm install kubeshark kubeshark/kubeshark \
 | Parameter                                 | Description                                   | Default                                                 |
 |-------------------------------------------|-----------------------------------------------|---------------------------------------------------------|
 | `tap.docker.registry`                     | Docker registry to pull from                           | `docker.io/kubeshark`                                   |
-| `tap.docker.tag`                          | Docker image tag                              | `latest`                                                |
+| `tap.docker.tag`                          | Tag of the Docker images                              | `latest`                                                |
 | `tap.docker.imagePullPolicy`              | Kubernetes image pull policy                  | `Always`                                                |
 | `tap.docker.imagePullSecrets`             | Kubernetes secrets to pull Docker images      | `[]`                                                    |
 | `tap.proxy.worker.srvport`                | Worker service port                           | `8897`                                                  |
