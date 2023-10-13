@@ -81,7 +81,7 @@ helm install kubeshark kubeshark/kubeshark \
 | `tap.docker.tag`                          | Tag of the Docker images                              | `latest`                                                |
 | `tap.docker.imagePullPolicy`              | Kubernetes image pull policy                  | `Always`                                                |
 | `tap.docker.imagePullSecrets`             | Kubernetes secrets to pull the images      | `[]`                                                    |
-| `tap.proxy.worker.srvport`                | Worker service port                           | `8897`                                                  |
+| `tap.proxy.worker.srvport`                | Worker server port                           | `8897`                                                  |
 | `tap.proxy.hub.port`                      | Hub service port                              | `8898`                                                  |
 | `tap.proxy.hub.srvport`                   | Hub service port (internal)                   | `8898`                                                  |
 | `tap.proxy.front.port`                    | Front-facing service port                     | `8899`                                                  |
