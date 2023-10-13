@@ -107,7 +107,7 @@ helm install kubeshark kubeshark/kubeshark \
 | `tap.tls`                                 | Capture the encrypted/TLS traffic from cryptography libraries like OpenSSL                         | `true`                                                  |
 | `tap.ignoretainted`                       | Whether to ignore tainted nodes               | `false`                                                 |
 | `tap.labels`                              | Kubernetes labels to apply to all Kubeshark resources  | `{}`                                                    |
-| `tap.annotations`                         | Kubernetes annotations to apply to Tap components | `{}`                                                |
+| `tap.annotations`                         | Kubernetes annotations to apply to all Kubeshark resources | `{}`                                                |
 | `tap.nodeselectorterms`                   | Node selector terms                           | `[{"matchExpressions":[{"key":"kubernetes.io/os","operator":"In","values":["linux"]}]}]` |
 | `tap.auth.enabled`                        | Enable authentication                         | `false`                                                 |
 | `tap.auth.approvedemails`                 | List of approved email addresses              | `[]`                                                    |
