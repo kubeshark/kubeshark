@@ -120,7 +120,7 @@ helm install kubeshark kubeshark/kubeshark \
 | `tap.ipv6`                                | Enable IPv6 support for the front-end                        | `true`                                                  |
 | `tap.debug`                               | Enable debug mode                             | `false`                                                 |
 | `tap.nokernelmodule`                      | Do not install `PF_RING` kernel module       | `false`                                                 |
-| `tap.telemetry.enabled`                   | Enable anonymous telemetry tracking           | `true`                                                  |
+| `tap.telemetry.enabled`                   | Enable anonymous usage statistics collection           | `true`                                                  |
 | `logs.file`                               | Output file for the logs                      | `""`                                                    |
 | `kube.configpath`                         | Path to the `kubeconfig` file (`$HOME/.kube/config`)            | `""`                                                    |
 | `kube.context`                            | Kubernetes context to use for the deployment  | `""`                                                    |
