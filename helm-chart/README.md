@@ -123,7 +123,7 @@ helm install kubeshark kubeshark/kubeshark \
 | `tap.nokernelmodule`                      | Use TAP's eBPF instead of kernel module       | `false`                                                 |
 | `tap.telemetry.enabled`                   | Enable anonymous telemetry tracking           | `true`                                                  |
 | `logs.file`                               | Output file for the logs                      | `""`                                                    |
-| `kube.configpath`                         | Path to the Kubernetes config file            | `""`                                                    |
+| `kube.configpath`                         | Path to the `kubeconfig` file (`$HOME/.kube/config`)            | `""`                                                    |
 | `kube.context`                            | Kubernetes context to use for the deployment  | `""`                                                    |
 | `dumplogs`                                | Enable dumping of logs to the console         | `false`                                                 |
 | `headless`                                | Enable running in headless mode               | `false`                                                 |
