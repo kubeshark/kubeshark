@@ -90,7 +90,7 @@ helm install kubeshark kubeshark/kubeshark \
 | `tap.release.repo`                        | URL of the Helm chart repository             | `https://helm.kubeshark.co`                             |
 | `tap.release.name`                        | Helm release name                          | `kubeshark`                                             |
 | `tap.release.namespace`                   | Helm release namespace                | `default`                                               |
-| `tap.persistentstorage`                   | Enable using persistent storage for the worker | `false`                                                |
+| `tap.persistentstorage`                   | Use `persistentVolumeClaim` instead of `emptyDir` | `false`                                                |
 | `tap.storagelimit`                        | Limit for persistent storage                  | `200Mi`                                                 |
 | `tap.storageclass`                        | Storage class for persistent storage          | `standard`                                              |
 | `tap.dryrun`                              | Opt-out of collecting data                    | `false`                                                 |
