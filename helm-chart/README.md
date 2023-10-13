@@ -128,6 +128,6 @@ helm install kubeshark kubeshark/kubeshark \
 | `dumplogs`                                | Enable dumping of logs         | `false`                                                 |
 | `headless`                                | Enable running in headless mode               | `false`                                                 |
 | `license`                                 | License key for the Pro/Enterprise edition    | `""`                                                    |
-| `scripting.env`                           | Environment variables for scripted rules      | `{}`                                                    |
+| `scripting.env`                           | Environment variables for the scripting      | `{}`                                                    |
 | `scripting.source`                        | Source file for scripted rules                | `""`                                                    |
 | `scripting.watchscripts`                  | Enable watch mode for scripted rules          | `true`                                                  |
