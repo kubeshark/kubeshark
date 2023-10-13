@@ -111,7 +111,7 @@ helm install kubeshark kubeshark/kubeshark \
 | `tap.nodeselectorterms`                   | Node selector terms                           | `[{"matchExpressions":[{"key":"kubernetes.io/os","operator":"In","values":["linux"]}]}]` |
 | `tap.auth.enabled`                        | Enable authentication                         | `false`                                                 |
 | `tap.auth.approvedemails`                 | List of approved email addresses for authentication              | `[]`                                                    |
-| `tap.auth.approveddomains`                | List of approved email domains                | `[]`                                                    |
+| `tap.auth.approveddomains`                | List of approved email domains for authentication                | `[]`                                                    |
 | `tap.ingress.enabled`                     | Enable ingress                                | `false`                                                 |
 | `tap.ingress.classname`                   | Ingress class name                            | `""`                                                    |
 | `tap.ingress.host`                        | Host for the ingress                          | `ks.svc.cluster.local`                                  |
