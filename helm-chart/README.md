@@ -87,7 +87,7 @@ helm install kubeshark kubeshark/kubeshark \
 | `tap.proxy.front.port`                    | Front-facing service port                     | `8899`                                                  |
 | `tap.proxy.host`                          | Proxy server's IP                                   | `127.0.0.1`                                             |
 | `tap.namespaces`                          | List of namespaces for the traffic capture                 | `[]`                                                    |
-| `tap.release.repo`                        | URL for the Helm chart repository             | `https://helm.kubeshark.co`                             |
+| `tap.release.repo`                        | URL of the Helm chart repository             | `https://helm.kubeshark.co`                             |
 | `tap.release.name`                        | Name for the release                          | `kubeshark`                                             |
 | `tap.release.namespace`                   | Namespace to install the chart                | `default`                                               |
 | `tap.persistentstorage`                   | Enable using persistent storage for the worker | `false`                                                |
