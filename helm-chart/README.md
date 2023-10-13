@@ -85,7 +85,7 @@ helm install kubeshark kubeshark/kubeshark \
 | `tap.proxy.hub.port`                      | Hub service port                              | `8898`                                                  |
 | `tap.proxy.hub.srvport`                   | Hub server port                   | `8898`                                                  |
 | `tap.proxy.front.port`                    | Front-facing service port                     | `8899`                                                  |
-| `tap.proxy.host`                          | Allowed IPs                                   | `127.0.0.1`                                             |
+| `tap.proxy.host`                          | Proxy server's IP                                   | `127.0.0.1`                                             |
 | `tap.namespaces`                          | List of namespaces to observe                 | `[]`                                                    |
 | `tap.release.repo`                        | URL for the Helm chart repository             | `https://helm.kubeshark.co`                             |
 | `tap.release.name`                        | Name for the release                          | `kubeshark`                                             |
