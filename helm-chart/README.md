@@ -119,7 +119,7 @@ helm install kubeshark kubeshark/kubeshark \
 | `tap.ingress.annotations`                 | `Ingress` annotations                           | `{}`                                                    |
 | `tap.ipv6`                                | Enable IPv6 support for the front-end                        | `true`                                                  |
 | `tap.debug`                               | Enable debug mode                             | `false`                                                 |
-| `tap.nokernelmodule`                      | Use TAP's eBPF instead of kernel module       | `false`                                                 |
+| `tap.nokernelmodule`                      | Do not install `PF_RING` kernel module       | `false`                                                 |
 | `tap.telemetry.enabled`                   | Enable anonymous telemetry tracking           | `true`                                                  |
 | `logs.file`                               | Output file for the logs                      | `""`                                                    |
 | `kube.configpath`                         | Path to the `kubeconfig` file (`$HOME/.kube/config`)            | `""`                                                    |
