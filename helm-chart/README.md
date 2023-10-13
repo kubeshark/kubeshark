@@ -105,7 +105,6 @@ helm install kubeshark kubeshark/kubeshark \
 | `tap.resources.hub.requests.memory`       | Memory request for hub                        | `50Mi`                                                  |
 | `tap.servicemesh`                         | Capture traffic from service meshes like Istio, Linkerd, Consul, etc.          | `true`                                                  |
 | `tap.tls`                                 | Capture the encrypted/TLS traffic from cryptography libraries like OpenSSL                         | `true`                                                  |
-| `tap.packetcapture`                       | Packet capture library to use (options available?) | `libpcap`                                          |
 | `tap.ignoretainted`                       | Whether to ignore tainted nodes               | `false`                                                 |
 | `tap.labels`                              | Kubernetes labels to apply to Tap components  | `{}`                                                    |
 | `tap.annotations`                         | Kubernetes annotations to apply to Tap components | `{}`                                                |
