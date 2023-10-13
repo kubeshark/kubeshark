@@ -130,4 +130,4 @@ helm install kubeshark kubeshark/kubeshark \
 | `license`                                 | License key for the Pro/Enterprise edition    | `""`                                                    |
 | `scripting.env`                           | Environment variables for the scripting      | `{}`                                                    |
 | `scripting.source`                        | Source directory of the scripts                | `""`                                                    |
-| `scripting.watchscripts`                  | Enable watch mode for scripted rules          | `true`                                                  |
+| `scripting.watchscripts`                  | Enable watch mode for the scripts in source directory          | `true`                                                  |
