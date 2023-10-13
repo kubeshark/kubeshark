@@ -92,7 +92,7 @@ helm install kubeshark kubeshark/kubeshark \
 | `tap.release.namespace`                   | Helm release namespace                | `default`                                               |
 | `tap.persistentstorage`                   | Use `persistentVolumeClaim` instead of `emptyDir` | `false`                                                |
 | `tap.storagelimit`                        | Limit of either the `emptyDir` or `persistentVolumeClaim`                  | `500Mi`                                                 |
-| `tap.storageclass`                        | Storage class for persistent storage          | `standard`                                              |
+| `tap.storageclass`                        | Storage class of the `PersistentVolumeClaim`          | `standard`                                              |
 | `tap.dryrun`                              | Opt-out of collecting data                    | `false`                                                 |
 | `tap.pcap`                                |                                               | `""`                                                    |
 | `tap.resources.worker.limits.cpu`         | CPU limit for worker                          | `750m`                                                  |
