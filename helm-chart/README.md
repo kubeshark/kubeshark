@@ -83,7 +83,7 @@ helm install kubeshark kubeshark/kubeshark \
 | `tap.docker.imagePullSecrets`             | Kubernetes secrets to pull the images      | `[]`                                                    |
 | `tap.proxy.worker.srvport`                | Worker server port                           | `8897`                                                  |
 | `tap.proxy.hub.port`                      | Hub service port                              | `8898`                                                  |
-| `tap.proxy.hub.srvport`                   | Hub service port (internal)                   | `8898`                                                  |
+| `tap.proxy.hub.srvport`                   | Hub server port                   | `8898`                                                  |
 | `tap.proxy.front.port`                    | Front-facing service port                     | `8899`                                                  |
 | `tap.proxy.host`                          | Allowed IPs                                   | `127.0.0.1`                                             |
 | `tap.namespaces`                          | List of namespaces to observe                 | `[]`                                                    |
