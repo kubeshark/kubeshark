@@ -103,7 +103,7 @@ helm install kubeshark kubeshark/kubeshark \
 | `tap.resources.hub.limits.memory`         | Memory limit for hub                          | `1Gi`                                                   |
 | `tap.resources.hub.requests.cpu`          | CPU request for hub                           | `50m`                                                   |
 | `tap.resources.hub.requests.memory`       | Memory request for hub                        | `50Mi`                                                  |
-| `tap.servicemesh`                         | Enable integration with service mesh          | `true`                                                  |
+| `tap.servicemesh`                         | Capture traffic from service meshes like Istio, Linkerd, Consul, etc.          | `true`                                                  |
 | `tap.tls`                                 | Listen to TLS traffic                         | `true`                                                  |
 | `tap.packetcapture`                       | Packet capture library to use (options available?) | `libpcap`                                          |
 | `tap.ignoretainted`                       | Whether to ignore tainted nodes               | `false`                                                 |
