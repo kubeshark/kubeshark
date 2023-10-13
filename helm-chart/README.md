@@ -106,7 +106,7 @@ helm install kubeshark kubeshark/kubeshark \
 | `tap.servicemesh`                         | Capture traffic from service meshes like Istio, Linkerd, Consul, etc.          | `true`                                                  |
 | `tap.tls`                                 | Capture the encrypted/TLS traffic from cryptography libraries like OpenSSL                         | `true`                                                  |
 | `tap.ignoretainted`                       | Whether to ignore tainted nodes               | `false`                                                 |
-| `tap.labels`                              | Kubernetes labels to apply to Tap components  | `{}`                                                    |
+| `tap.labels`                              | Kubernetes labels to apply to all Kubeshark resources  | `{}`                                                    |
 | `tap.annotations`                         | Kubernetes annotations to apply to Tap components | `{}`                                                |
 | `tap.nodeselectorterms`                   | Node selector terms                           | `[{"matchExpressions":[{"key":"kubernetes.io/os","operator":"In","values":["linux"]}]}]` |
 | `tap.auth.enabled`                        | Enable authentication                         | `false`                                                 |
