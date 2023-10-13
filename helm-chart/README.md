@@ -112,7 +112,7 @@ helm install kubeshark kubeshark/kubeshark \
 | `tap.auth.enabled`                        | Enable authentication                         | `false`                                                 |
 | `tap.auth.approvedemails`                 | List of approved email addresses for authentication              | `[]`                                                    |
 | `tap.auth.approveddomains`                | List of approved email domains for authentication                | `[]`                                                    |
-| `tap.ingress.enabled`                     | Enable ingress                                | `false`                                                 |
+| `tap.ingress.enabled`                     | Enable `Ingress`                                | `false`                                                 |
 | `tap.ingress.classname`                   | Ingress class name                            | `""`                                                    |
 | `tap.ingress.host`                        | Host of the `Ingress`                          | `ks.svc.cluster.local`                                  |
 | `tap.ingress.tls`                         | Ingress TLS configuration                     | `[]`                                                    |
