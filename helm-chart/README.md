@@ -63,13 +63,12 @@ tap:
   auth:
     enabled: true
     approvedemails:
-    - me@domain.com
-    - they@another-domain.com
+    - john.doe@example.com
     approveddomains: []
   ingress:
     enabled: true
     classname: "alb"
-    host: demo.mydomain.com
+    host: ks.example.com
     tls: []
     annotations:
       alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:us-east-1:7..8:certificate/b...65c
