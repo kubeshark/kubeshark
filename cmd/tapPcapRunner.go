@@ -25,7 +25,6 @@ import (
 	"github.com/docker/go-connections/nat"
 	"github.com/kubeshark/kubeshark/config"
 	"github.com/kubeshark/kubeshark/config/configStructs"
-	"github.com/kubeshark/kubeshark/docker"
 	"github.com/kubeshark/kubeshark/internal/connect"
 	"github.com/kubeshark/kubeshark/kubernetes"
 	"github.com/kubeshark/kubeshark/misc"
@@ -449,9 +448,6 @@ func pcap(tarPath string) error {
 
 	log.Info().Str("tar-path", tarPath).Msg("Openning")
 
-	docker.SetRegistry(config.Config.Tap.Docker.Registry)
-	docker.SetTag(config.Config.Tap.Docker.Tag)
-
 	ctx := context.Background()
 	cli, err := client.NewClientWithOpts(client.FromEnv, client.WithAPIVersionNegotiation())
 	if err != nil {
@@ -460,9 +456,9 @@ func pcap(tarPath string) error {
 	}
 	defer cli.Close()
 
-	imageFront := docker.GetFrontImage()
-	imageHub := docker.GetHubImage()
-	imageWorker := docker.GetWorkerImage()
+	imageFront := fmt.Sprintf("%s%s:%s", config.Config.Tap.Docker.Registry, "front", config.Config.Tap.Docker.Tag)
+	imageHub := fmt.Sprintf("%s%s:%s", config.Config.Tap.Docker.Registry, "hub", config.Config.Tap.Docker.Tag)
+	imageWorker := fmt.Sprintf("%s%s:%s", config.Config.Tap.Docker.Registry, "worker", config.Config.Tap.Docker.Tag)
 
 	err = pullImages(ctx, cli, imageFront, imageHub, imageWorker)
 	if err != nil {

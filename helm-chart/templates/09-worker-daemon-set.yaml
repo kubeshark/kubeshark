@@ -32,12 +32,18 @@ spec:
             - any
             - -port
             - '{{ .Values.tap.proxy.worker.srvport }}'
-            {{ .Values.tap.servicemesh | ternary "- -servicemesh" "" }}
+          {{- if .Values.tap.servicemesh }}
+            - -servicemesh
+          {{- end }}
             - -procfs
             - /hostproc
-            {{ .Values.tap.debug | ternary "- -debug" "" }}
-            {{ .Values.tap.nokernelmodule | ternary "- -no-kernel-module" "" }}
-          image: '{{ .Values.tap.docker.registry }}/worker:{{ .Values.tap.docker.tag }}'
+          {{- if .Values.tap.debug }}
+            - -debug
+          {{- end }}
+          {{- if .Values.tap.nokernelmodule }}
+            - -no-kernel-module
+          {{- end }}
+          image: '{{ .Values.tap.docker.registry }}/worker:{{ not (eq .Values.tap.docker.tag "") | ternary .Values.tap.docker.tag (printf "v%s" .Chart.Version) }}'
           imagePullPolicy: {{ .Values.tap.docker.imagepullpolicy }}
           name: sniffer
           env:
@@ -52,15 +58,6 @@ spec:
           envFrom:
             - secretRef:
                 name: kubeshark-secret
-        {{- if .Values.tap.debug }}
-          env:
-          - name: PROFILING_ENABLED
-            value: "true"
-          - name: PROFILING_DUMP_PATH
-            value: "pprof"
-          - name: PROFILING_INTERVAL_SECONDS
-            value: "60"
-        {{- end }}
           resources:
             limits:
               cpu: {{ .Values.tap.resources.worker.limits.cpu }}
@@ -107,8 +104,10 @@ spec:
             - ./tracer
             - -procfs
             - /hostproc
-            {{ .Values.tap.debug | ternary "- -debug" "" }}
-          image: '{{ .Values.tap.docker.registry }}/worker:{{ .Values.tap.docker.tag }}'
+          {{- if .Values.tap.debug }}
+            - -debug
+          {{- end }}
+          image: '{{ .Values.tap.docker.registry }}/worker:{{ not (eq .Values.tap.docker.tag "") | ternary .Values.tap.docker.tag (printf "v%s" .Chart.Version) }}'
           imagePullPolicy: {{ .Values.tap.docker.imagepullpolicy }}
           name: tracer
           env:
