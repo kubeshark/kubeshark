@@ -51,19 +51,49 @@ kubectl port-forward service/kubeshark-front 8899:80
 
 Visit [localhost:8899](http://localhost:8899)
 
-## Installing with Ingress Enabled
+## Installing with Ingress (EKS) and enable Auth
 
 ```shell
-helm install kubeshark kubeshark/kubeshark \
-  --set tap.ingress.enabled=true \
-  --set tap.ingress.host=ks.svc.cluster.local \
-  --set-json='tap.ingress.approveddomains=["gmail.com"]' \
-  --set license=LICENSE_GOES_HERE \
-  --set-json 'tap.annotations={ "eks.amazonaws.com/role-arn" : "arn:aws:iam::7...0:role/s3-role" }'
+helm install kubeshark kubeshark/kubeshark -f values.yaml
 ```
 
-You can get your license [here](https://console.kubeshark.co/).
+Set this `value.yaml`:
+```shell
+tap:
+  auth:
+    enabled: true
+    approvedemails:
+    - john.doe@example.com
+    approveddomains: []
+  ingress:
+    enabled: true
+    classname: "alb"
+    host: ks.example.com
+    tls: []
+    annotations:
+      alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:us-east-1:7..8:certificate/b...65c
+      alb.ingress.kubernetes.io/target-type: ip
+      alb.ingress.kubernetes.io/scheme: internet-facing
+```
 
+## Add a License
+
+When it's necessary, you can use:
+
+```shell
+--set license=YOUR_LICENSE_GOES_HERE
+```
+
+Get your license from Kubeshark's [Admin Console](https://console.kubeshark.co/).
+
+## Increase the Worker's Storage Limit
+
+For example, change from the default 500Mi to 1Gi:
+
+```shell
+--set tap.storagelimit=1Gi
+```
+ 
 ## Disabling IPV6
 
 Not all have IPV6 enabled, hence this has to be disabled as follows:
