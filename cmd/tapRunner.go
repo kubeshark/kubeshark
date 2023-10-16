@@ -10,7 +10,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/kubeshark/kubeshark/docker"
 	"github.com/kubeshark/kubeshark/internal/connect"
 	"github.com/kubeshark/kubeshark/kubernetes/helm"
 	"github.com/kubeshark/kubeshark/misc"
@@ -47,9 +46,7 @@ var ready *Readiness
 func tap() {
 	ready = &Readiness{}
 	state.startTime = time.Now()
-	docker.SetRegistry(config.Config.Tap.Docker.Registry)
-	docker.SetTag(config.Config.Tap.Docker.Tag)
-	log.Info().Str("registry", docker.GetRegistry()).Str("tag", docker.GetTag()).Msg("Using Docker:")
+	log.Info().Str("registry", config.Config.Tap.Docker.Registry).Str("tag", config.Config.Tap.Docker.Tag).Msg("Using Docker:")
 	if config.Config.Tap.Pcap != "" {
 		err := pcap(config.Config.Tap.Pcap)
 		if err != nil {
