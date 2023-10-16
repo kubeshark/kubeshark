@@ -43,7 +43,7 @@ spec:
           {{- if .Values.tap.nokernelmodule }}
             - -no-kernel-module
           {{- end }}
-          image: '{{ .Values.tap.docker.registry }}/worker:{{ .Values.tap.docker.tag }}'
+          image: '{{ .Values.tap.docker.registry }}/worker:{{ not (eq .Values.tap.docker.tag "") | ternary .Values.tap.docker.tag .Chart.Version }}'
           imagePullPolicy: {{ .Values.tap.docker.imagepullpolicy }}
           name: sniffer
           env:
@@ -107,7 +107,7 @@ spec:
           {{- if .Values.tap.debug }}
             - -debug
           {{- end }}
-          image: '{{ .Values.tap.docker.registry }}/worker:{{ .Values.tap.docker.tag }}'
+          image: '{{ .Values.tap.docker.registry }}/worker:{{ not (eq .Values.tap.docker.tag "") | ternary .Values.tap.docker.tag .Chart.Version }}'
           imagePullPolicy: {{ .Values.tap.docker.imagepullpolicy }}
           name: tracer
           env:

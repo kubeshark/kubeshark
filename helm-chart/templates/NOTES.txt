@@ -1,6 +1,9 @@
 Thank you for installing {{ title .Chart.Name }}.
 
-Your deployment has been successful. The release is named {{ .Release.Name }} and it has been deployed in the {{ .Release.Namespace }} namespace.
+Registry: {{ .Values.tap.docker.registry }}
+Tag: {{ not (eq .Values.tap.docker.tag "") | ternary .Values.tap.docker.tag .Chart.Version }}
+
+Your deployment has been successful. The release is named `{{ .Release.Name }}` and it has been deployed in the `{{ .Release.Namespace }}` namespace.
 
 {{- if .Values.tap.telemetry.enabled }}
 Notice: Telemetry is enabled. Kubeshark will collect anonymous usage statistics.

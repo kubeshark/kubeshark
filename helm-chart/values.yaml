@@ -1,7 +1,7 @@
 tap:
   docker:
     registry: docker.io/kubeshark
-    tag: latest
+    tag: ""
     imagepullpolicy: Always
     imagepullsecrets: []
   proxy:

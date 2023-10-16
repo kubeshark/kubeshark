@@ -70,7 +70,7 @@ type ProxyConfig struct {
 
 type DockerConfig struct {
 	Registry         string   `yaml:"registry" json:"registry" default:"docker.io/kubeshark"`
-	Tag              string   `yaml:"tag" json:"tag" default:"latest"`
+	Tag              string   `yaml:"tag" json:"tag" default:""`
 	ImagePullPolicy  string   `yaml:"imagepullpolicy" json:"imagepullpolicy" default:"Always"`
 	ImagePullSecrets []string `yaml:"imagepullsecrets" json:"imagepullsecrets"`
 }

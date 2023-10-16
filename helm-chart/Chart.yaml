@@ -1,5 +1,6 @@
 apiVersion: v2
-appVersion: "50.4"
+name: kubeshark
+version: "51.0.0"
 description: The API Traffic Analyzer for Kubernetes
 home: https://kubeshark.co
 keywords:
@@ -18,9 +19,7 @@ maintainers:
   - email: info@kubeshark.co
     name: Kubeshark
     url: https://kubeshark.co
-name: kubeshark
 sources:
   - https://github.com/kubeshark/kubeshark/tree/master/helm-chart
 type: application
-version: "50.4"
 icon: https://raw.githubusercontent.com/kubeshark/assets/master/logo/vector/logo.svg

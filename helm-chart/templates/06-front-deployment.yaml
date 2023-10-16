@@ -30,7 +30,7 @@ spec:
               value: ' '
             - name: REACT_APP_HUB_PORT
               value: '{{ .Values.tap.ingress.enabled | ternary "/api" (print ":" .Values.tap.proxy.front.port "/api") }}'
-          image: '{{ .Values.tap.docker.registry }}/front:{{ .Values.tap.docker.tag }}'
+          image: '{{ .Values.tap.docker.registry }}/front:{{ not (eq .Values.tap.docker.tag "") | ternary .Values.tap.docker.tag .Chart.Version }}'
           imagePullPolicy: {{ .Values.tap.docker.imagepullpolicy }}
           name: kubeshark-front
           livenessProbe:

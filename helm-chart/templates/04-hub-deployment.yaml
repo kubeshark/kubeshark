@@ -46,7 +46,7 @@ spec:
                 name: kubeshark-config-map
             - secretRef:
                 name: kubeshark-secret
-          image: '{{ .Values.tap.docker.registry }}/hub:{{ .Values.tap.docker.tag }}'
+          image: '{{ .Values.tap.docker.registry }}/hub:{{ not (eq .Values.tap.docker.tag "") | ternary .Values.tap.docker.tag .Chart.Version }}'
           imagePullPolicy: {{ .Values.tap.docker.imagepullpolicy }}
           readinessProbe:
             periodSeconds: 1
