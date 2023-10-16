@@ -51,7 +51,7 @@ kubectl port-forward service/kubeshark-front 8899:80
 
 Visit [localhost:8899](http://localhost:8899)
 
-## Installing with Ingress (EKS) and Auth Enabled
+## Installing with Ingress (EKS) and enable Auth
 
 ```shell
 helm install kubeshark kubeshark/kubeshark -f values.yaml
@@ -88,8 +88,10 @@ Get your license from Kubeshark's [Admin Console](https://console.kubeshark.co/)
 
 ## Increase the Worker's Storage Limit
 
+For example, change from the default 500Mi to 1Gi:
+
 ```shell
---set license=YOUR_LICENSE_GOES_HERE
+--set tap.storagelimit=1Gi
 ```
  
 ## Disabling IPV6
