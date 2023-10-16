@@ -79,7 +79,7 @@ tap:
 
 ## Add a License
 
-When nessesary, uou can use:
+When it's necessary, you can use:
 
 ```shell
 --set license=YOUR_LICENSE_GOES_HERE
