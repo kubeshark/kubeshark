@@ -23,8 +23,7 @@
 <p align="center">
   <b>
   <span>NEW: </span>
-  <a href="https://kubeshark.co/traffic-recording">Traffic Recording and Offline Investigation</a>, and  
-  <a href="https://kubeshark.co/self-hosting">Self-hosting with Ingress and Authentication</a>. 
+  <a href="https://github.com/kubeshark/kubeshark/releases/latest">v51.0.0</a> is out, with significantly improved performance and optimized resource utilization.
   </b>
 </p>
 
