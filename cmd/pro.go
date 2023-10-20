@@ -77,7 +77,6 @@ func updateLicense(licenseKey string) {
 	updated, err := kubernetes.SetSecret(kubernetesProvider, kubernetes.SECRET_LICENSE, config.Config.License)
 	if err != nil {
 		log.Error().Err(err).Send()
-		return
 	}
 
 	if updated {
@@ -125,7 +124,7 @@ func runLicenseRecieverServer() {
 
 	go func() {
 		if err := ginApp.Run(fmt.Sprintf(":%d", PRO_PORT)); err != nil {
-			panic(err)
+			log.Error().Err(err).Send()
 		}
 	}()
 
