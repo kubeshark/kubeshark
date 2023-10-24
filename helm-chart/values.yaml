@@ -20,7 +20,7 @@ tap:
     name: kubeshark
     namespace: default
   persistentstorage: false
-  storagelimit: 200Mi
+  storagelimit: 500Mi
   storageclass: standard
   dryrun: false
   pcap: ""
