@@ -88,7 +88,7 @@ Get your license from Kubeshark's [Admin Console](https://console.kubeshark.co/)
 
 ## Increase the Worker's Storage Limit
 
-For example, change from the default 500Mi to 1Gi:
+For example, change from the default 200Mi to 1Gi:
 
 ```shell
 --set tap.storagelimit=1Gi
@@ -121,7 +121,7 @@ helm install kubeshark kubeshark/kubeshark \
 | `tap.release.name`                        | Helm release name                          | `kubeshark`                                             |
 | `tap.release.namespace`                   | Helm release namespace                | `default`                                               |
 | `tap.persistentstorage`                   | Use `persistentVolumeClaim` instead of `emptyDir` | `false`                                                |
-| `tap.storagelimit`                        | Limit of either the `emptyDir` or `persistentVolumeClaim`                  | `500Mi`                                                 |
+| `tap.storagelimit`                        | Limit of either the `emptyDir` or `persistentVolumeClaim`                  | `200Mi`                                                 |
 | `tap.storageclass`                        | Storage class of the `PersistentVolumeClaim`          | `standard`                                              |
 | `tap.dryrun`                              | Preview of all pods matching the regex, without tapping them                    | `false`                                                 |
 | `tap.pcap`                                |                                               | `""`                                                    |
