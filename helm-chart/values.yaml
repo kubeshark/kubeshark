@@ -2,14 +2,14 @@ tap:
   docker:
     registry: docker.io/kubeshark
     tag: ""
-    imagepullpolicy: Always
-    imagepullsecrets: []
+    imagePullPolicy: Always
+    imagePullSecrets: []
   proxy:
     worker:
-      srvport: 8897
+      srvPort: 8897
     hub:
       port: 8898
-      srvport: 8898
+      srvPort: 8898
     front:
       port: 8899
     host: 127.0.0.1
@@ -19,10 +19,10 @@ tap:
     repo: https://helm.kubeshark.co
     name: kubeshark
     namespace: default
-  persistentstorage: false
-  storagelimit: 500Mi
-  storageclass: standard
-  dryrun: false
+  persistentStorage: false
+  storageLimit: 500Mi
+  storageClass: standard
+  dryRun: false
   pcap: ""
   resources:
     worker:
@@ -39,12 +39,12 @@ tap:
       requests:
         cpu: 50m
         memory: 50Mi
-  servicemesh: true
+  serviceMesh: true
   tls: true
-  ignoretainted: false
+  ignoreTainted: false
   labels: {}
   annotations: {}
-  nodeselectorterms:
+  nodeSelectorTerms:
   - matchExpressions:
     - key: kubernetes.io/os
       operator: In
@@ -52,28 +52,28 @@ tap:
       - linux
   auth:
     enabled: false
-    approvedemails: []
-    approveddomains: []
+    approvedEmails: []
+    approvedDomains: []
   ingress:
     enabled: false
-    classname: ""
+    className: ""
     host: ks.svc.cluster.local
     tls: []
     annotations: {}
   ipv6: true
   debug: false
-  nokernelmodule: false
+  noKernelModule: false
   telemetry:
     enabled: true
 logs:
   file: ""
 kube:
-  configpath: ""
+  configPath: ""
   context: ""
-dumplogs: false
+dumpLogs: false
 headless: false
 license: ""
 scripting:
   env: {}
   source: ""
-  watchscripts: true
+  watchScripts: true

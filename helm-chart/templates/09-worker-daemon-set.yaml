@@ -31,8 +31,8 @@ spec:
             - -i
             - any
             - -port
-            - '{{ .Values.tap.proxy.worker.srvport }}'
-          {{- if .Values.tap.servicemesh }}
+            - '{{ .Values.tap.proxy.worker.srvPort }}'
+          {{- if .Values.tap.serviceMesh }}
             - -servicemesh
           {{- end }}
             - -procfs
@@ -40,11 +40,11 @@ spec:
           {{- if .Values.tap.debug }}
             - -debug
           {{- end }}
-          {{- if .Values.tap.nokernelmodule }}
+          {{- if .Values.tap.noKernelModule }}
             - -no-kernel-module
           {{- end }}
           image: '{{ .Values.tap.docker.registry }}/worker:{{ not (eq .Values.tap.docker.tag "") | ternary .Values.tap.docker.tag (printf "v%s" .Chart.Version) }}'
-          imagePullPolicy: {{ .Values.tap.docker.imagepullpolicy }}
+          imagePullPolicy: {{ .Values.tap.docker.imagePullPolicy }}
           name: sniffer
           env:
           - name: POD_NAME
@@ -82,14 +82,14 @@ spec:
             successThreshold: 1
             initialDelaySeconds: 5
             tcpSocket:
-              port: {{ .Values.tap.proxy.worker.srvport }}
+              port: {{ .Values.tap.proxy.worker.srvPort }}
           livenessProbe:
             periodSeconds: 1
             failureThreshold: 3
             successThreshold: 1
             initialDelaySeconds: 5
             tcpSocket:
-              port: {{ .Values.tap.proxy.worker.srvport }}
+              port: {{ .Values.tap.proxy.worker.srvPort }}
           volumeMounts:
             - mountPath: /hostproc
               name: proc
@@ -108,7 +108,7 @@ spec:
             - -debug
           {{- end }}
           image: '{{ .Values.tap.docker.registry }}/worker:{{ not (eq .Values.tap.docker.tag "") | ternary .Values.tap.docker.tag (printf "v%s" .Chart.Version) }}'
-          imagePullPolicy: {{ .Values.tap.docker.imagepullpolicy }}
+          imagePullPolicy: {{ .Values.tap.docker.imagePullPolicy }}
           name: tracer
           env:
           - name: POD_NAME
@@ -150,16 +150,16 @@ spec:
       tolerations:
         - effect: NoExecute
           operator: Exists
-{{- if not .Values.tap.ignoretainted }}
+{{- if not .Values.tap.ignoreTainted }}
         - effect: NoSchedule
           operator: Exists
 {{- end }}
-{{- if gt (len .Values.tap.nodeselectorterms) 0}}
+{{- if gt (len .Values.tap.nodeSelectorTerms) 0}}
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
             nodeSelectorTerms:
-              {{- toYaml .Values.tap.nodeselectorterms | nindent 12 }}
+              {{- toYaml .Values.tap.nodeSelectorTerms | nindent 12 }}
 {{- end }}
       volumes:
         - hostPath:
@@ -169,10 +169,10 @@ spec:
             path: /sys
           name: sys
         - name: data
-{{- if .Values.tap.persistentstorage }}
+{{- if .Values.tap.persistentStorage }}
           persistentVolumeClaim:
             claimName: kubeshark-persistent-volume-claim
 {{- else }}
           emptyDir:
-            sizeLimit: {{ .Values.tap.storagelimit }}
+            sizeLimit: {{ .Values.tap.storageLimit }}
 {{- end }}

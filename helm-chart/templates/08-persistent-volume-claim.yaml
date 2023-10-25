@@ -1,5 +1,5 @@
 ---
-{{- if .Values.tap.persistentstorage }}
+{{- if .Values.tap.persistentStorage }}
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
@@ -16,7 +16,7 @@ spec:
     - ReadWriteMany
   resources:
     requests:
-      storage: {{ .Values.tap.storagelimit }}
-  storageClassName: {{ .Values.tap.storageclass }}
+      storage: {{ .Values.tap.storageLimit }}
+  storageClassName: {{ .Values.tap.storageClass }}
 status: {}
 {{- end }}

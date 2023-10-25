@@ -10,7 +10,7 @@ import (
 )
 
 const (
-	KubeConfigPathConfigName = "kube-configpath"
+	KubeConfigPathConfigName = "kube-configPath"
 )
 
 func CreateDefaultConfig() ConfigStruct {
@@ -32,7 +32,7 @@ func CreateDefaultConfig() ConfigStruct {
 }
 
 type KubeConfig struct {
-	ConfigPathStr string `yaml:"configpath" json:"configpath"`
+	ConfigPathStr string `yaml:"configPath" json:"configPath"`
 	Context       string `yaml:"context" json:"context"`
 }
 
@@ -45,7 +45,7 @@ type ConfigStruct struct {
 	Logs         configStructs.LogsConfig      `yaml:"logs" json:"logs"`
 	Config       configStructs.ConfigConfig    `yaml:"config,omitempty" json:"config,omitempty"`
 	Kube         KubeConfig                    `yaml:"kube" json:"kube"`
-	DumpLogs     bool                          `yaml:"dumplogs" json:"dumplogs" default:"false"`
+	DumpLogs     bool                          `yaml:"dumpLogs" json:"dumpLogs" default:"false"`
 	HeadlessMode bool                          `yaml:"headless" json:"headless" default:"false"`
 	License      string                        `yaml:"license" json:"license" default:""`
 	Scripting    configStructs.ScriptingConfig `yaml:"scripting" json:"scripting"`

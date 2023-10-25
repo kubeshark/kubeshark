@@ -47,7 +47,7 @@ spec:
             - secretRef:
                 name: kubeshark-secret
           image: '{{ .Values.tap.docker.registry }}/hub:{{ not (eq .Values.tap.docker.tag "") | ternary .Values.tap.docker.tag (printf "v%s" .Chart.Version) }}'
-          imagePullPolicy: {{ .Values.tap.docker.imagepullpolicy }}
+          imagePullPolicy: {{ .Values.tap.docker.imagePullPolicy }}
           readinessProbe:
             periodSeconds: 1
             failureThreshold: 3

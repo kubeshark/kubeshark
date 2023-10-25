@@ -11,21 +11,21 @@ import (
 const (
 	DockerRegistryLabel    = "docker-registry"
 	DockerTagLabel         = "docker-tag"
-	DockerImagePullPolicy  = "docker-imagepullpolicy"
-	DockerImagePullSecrets = "docker-imagepullsecrets"
+	DockerImagePullPolicy  = "docker-imagePullPolicy"
+	DockerImagePullSecrets = "docker-imagePullSecrets"
 	ProxyFrontPortLabel    = "proxy-front-port"
 	ProxyHubPortLabel      = "proxy-hub-port"
 	ProxyHostLabel         = "proxy-host"
 	NamespacesLabel        = "namespaces"
 	ReleaseNamespaceLabel  = "release-namespace"
-	PersistentStorageLabel = "persistentstorage"
-	StorageLimitLabel      = "storagelimit"
-	StorageClassLabel      = "storageclass"
-	DryRunLabel            = "dryrun"
+	PersistentStorageLabel = "persistentStorage"
+	StorageLimitLabel      = "storageLimit"
+	StorageClassLabel      = "storageClass"
+	DryRunLabel            = "dryRun"
 	PcapLabel              = "pcap"
-	ServiceMeshLabel       = "servicemesh"
+	ServiceMeshLabel       = "serviceMesh"
 	TlsLabel               = "tls"
-	IgnoreTaintedLabel     = "ignoretainted"
+	IgnoreTaintedLabel     = "ignoreTainted"
 	IngressEnabledLabel    = "ingress-enabled"
 	TelemetryEnabledLabel  = "telemetry-enabled"
 	DebugLabel             = "debug"
@@ -49,12 +49,12 @@ type ResourceRequirements struct {
 }
 
 type WorkerConfig struct {
-	SrvPort uint16 `yaml:"srvport" json:"srvport" default:"8897"`
+	SrvPort uint16 `yaml:"srvPort" json:"srvPort" default:"8897"`
 }
 
 type HubConfig struct {
 	Port    uint16 `yaml:"port" json:"port" default:"8898"`
-	SrvPort uint16 `yaml:"srvport" json:"srvport" default:"8898"`
+	SrvPort uint16 `yaml:"srvPort" json:"srvPort" default:"8898"`
 }
 
 type FrontConfig struct {
@@ -71,8 +71,8 @@ type ProxyConfig struct {
 type DockerConfig struct {
 	Registry         string   `yaml:"registry" json:"registry" default:"docker.io/kubeshark"`
 	Tag              string   `yaml:"tag" json:"tag" default:""`
-	ImagePullPolicy  string   `yaml:"imagepullpolicy" json:"imagepullpolicy" default:"Always"`
-	ImagePullSecrets []string `yaml:"imagepullsecrets" json:"imagepullsecrets"`
+	ImagePullPolicy  string   `yaml:"imagePullPolicy" json:"imagePullPolicy" default:"Always"`
+	ImagePullSecrets []string `yaml:"imagePullSecrets" json:"imagePullSecrets"`
 }
 
 type ResourcesConfig struct {
@@ -82,13 +82,13 @@ type ResourcesConfig struct {
 
 type AuthConfig struct {
 	Enabled         bool     `yaml:"enabled" json:"enabled" default:"false"`
-	ApprovedEmails  []string `yaml:"approvedemails" json:"approvedemails"  default:"[]"`
-	ApprovedDomains []string `yaml:"approveddomains" json:"approveddomains"  default:"[]"`
+	ApprovedEmails  []string `yaml:"approvedEmails" json:"approvedEmails"  default:"[]"`
+	ApprovedDomains []string `yaml:"approvedDomains" json:"approvedDomains"  default:"[]"`
 }
 
 type IngressConfig struct {
 	Enabled     bool                    `yaml:"enabled" json:"enabled" default:"false"`
-	ClassName   string                  `yaml:"classname" json:"classname" default:""`
+	ClassName   string                  `yaml:"className" json:"className" default:""`
 	Host        string                  `yaml:"host" json:"host" default:"ks.svc.cluster.local"`
 	TLS         []networking.IngressTLS `yaml:"tls" json:"tls" default:"[]"`
 	Annotations map[string]string       `yaml:"annotations" json:"annotations" default:"{}"`
@@ -110,23 +110,23 @@ type TapConfig struct {
 	PodRegexStr       string                `yaml:"regex" json:"regex" default:".*"`
 	Namespaces        []string              `yaml:"namespaces" json:"namespaces" default:"[]"`
 	Release           ReleaseConfig         `yaml:"release" json:"release"`
-	PersistentStorage bool                  `yaml:"persistentstorage" json:"persistentstorage" default:"false"`
-	StorageLimit      string                `yaml:"storagelimit" json:"storagelimit" default:"500Mi"`
-	StorageClass      string                `yaml:"storageclass" json:"storageclass" default:"standard"`
-	DryRun            bool                  `yaml:"dryrun" json:"dryrun" default:"false"`
+	PersistentStorage bool                  `yaml:"persistentStorage" json:"persistentStorage" default:"false"`
+	StorageLimit      string                `yaml:"storageLimit" json:"storageLimit" default:"500Mi"`
+	StorageClass      string                `yaml:"storageClass" json:"storageClass" default:"standard"`
+	DryRun            bool                  `yaml:"dryRun" json:"dryRun" default:"false"`
 	Pcap              string                `yaml:"pcap" json:"pcap" default:""`
 	Resources         ResourcesConfig       `yaml:"resources" json:"resources"`
-	ServiceMesh       bool                  `yaml:"servicemesh" json:"servicemesh" default:"true"`
+	ServiceMesh       bool                  `yaml:"serviceMesh" json:"serviceMesh" default:"true"`
 	Tls               bool                  `yaml:"tls" json:"tls" default:"true"`
-	IgnoreTainted     bool                  `yaml:"ignoretainted" json:"ignoretainted" default:"false"`
+	IgnoreTainted     bool                  `yaml:"ignoreTainted" json:"ignoreTainted" default:"false"`
 	Labels            map[string]string     `yaml:"labels" json:"labels" default:"{}"`
 	Annotations       map[string]string     `yaml:"annotations" json:"annotations" default:"{}"`
-	NodeSelectorTerms []v1.NodeSelectorTerm `yaml:"nodeselectorterms" json:"nodeselectorterms" default:"[]"`
+	NodeSelectorTerms []v1.NodeSelectorTerm `yaml:"nodeSelectorTerms" json:"nodeSelectorTerms" default:"[]"`
 	Auth              AuthConfig            `yaml:"auth" json:"auth"`
 	Ingress           IngressConfig         `yaml:"ingress" json:"ingress"`
 	IPv6              bool                  `yaml:"ipv6" json:"ipv6" default:"true"`
 	Debug             bool                  `yaml:"debug" json:"debug" default:"false"`
-	NoKernelModule    bool                  `yaml:"nokernelmodule" json:"nokernelmodule" default:"false"`
+	NoKernelModule    bool                  `yaml:"noKernelModule" json:"noKernelModule" default:"false"`
 	Telemetry         TelemetryConfig       `yaml:"telemetry" json:"telemetry"`
 }
 
