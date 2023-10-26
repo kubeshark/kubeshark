@@ -95,9 +95,10 @@ data:
     NAMESPACES: ''
     SCRIPTING_ENV: '{}'
     SCRIPTING_SCRIPTS: '{}'
-    AUTH_ENABLED: ''
+    AUTH_ENABLED: 'true'
     AUTH_APPROVED_EMAILS: ''
     AUTH_APPROVED_DOMAINS: ''
+    AUTH_APPROVED_TENANTS: ''
     TELEMETRY_DISABLED: ''
 ---
 # Source: kubeshark/templates/02-cluster-role.yaml

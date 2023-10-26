@@ -81,9 +81,10 @@ type ResourcesConfig struct {
 }
 
 type AuthConfig struct {
-	Enabled         bool     `yaml:"enabled" json:"enabled" default:"false"`
+	Enabled         bool     `yaml:"enabled" json:"enabled" default:"true"`
 	ApprovedEmails  []string `yaml:"approvedEmails" json:"approvedEmails"  default:"[]"`
 	ApprovedDomains []string `yaml:"approvedDomains" json:"approvedDomains"  default:"[]"`
+	ApprovedTenants []string `yaml:"approvedTenants" json:"approvedTenants"  default:"[]"`
 }
 
 type IngressConfig struct {

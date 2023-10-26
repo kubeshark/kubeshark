@@ -65,6 +65,7 @@ tap:
     approvedEmails:
     - john.doe@example.com
     approvedDomains: []
+    approvedTenants: []
   ingress:
     enabled: true
     className: "alb"

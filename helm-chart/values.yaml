@@ -51,9 +51,10 @@ tap:
       values:
       - linux
   auth:
-    enabled: false
+    enabled: true
     approvedEmails: []
     approvedDomains: []
+    approvedTenants: []
   ingress:
     enabled: false
     className: ""
