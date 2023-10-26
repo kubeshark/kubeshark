@@ -304,9 +304,6 @@ spec:
             valueFrom:
               fieldRef:
                 fieldPath: metadata.namespace
-          envFrom:
-            - secretRef:
-                name: kubeshark-secret
           resources:
             limits:
               cpu: 750m
@@ -364,9 +361,6 @@ spec:
             valueFrom:
               fieldRef:
                 fieldPath: metadata.namespace
-          envFrom:
-            - secretRef:
-                name: kubeshark-secret
           securityContext:
             capabilities:
               add:
@@ -465,11 +459,6 @@ spec:
             valueFrom:
               fieldRef:
                 fieldPath: metadata.namespace
-          envFrom:
-            - configMapRef:
-                name: kubeshark-config-map
-            - secretRef:
-                name: kubeshark-secret
           image: 'docker.io/kubeshark/hub:v51.0.14'
           imagePullPolicy: Always
           readinessProbe:

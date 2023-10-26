@@ -55,9 +55,6 @@ spec:
             valueFrom:
               fieldRef:
                 fieldPath: metadata.namespace
-          envFrom:
-            - secretRef:
-                name: kubeshark-secret
           resources:
             limits:
               cpu: {{ .Values.tap.resources.worker.limits.cpu }}
@@ -119,9 +116,6 @@ spec:
             valueFrom:
               fieldRef:
                 fieldPath: metadata.namespace
-          envFrom:
-            - secretRef:
-                name: kubeshark-secret
           securityContext:
             capabilities:
               add:
