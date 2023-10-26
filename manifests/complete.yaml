@@ -288,7 +288,7 @@ spec:
             - any
             - -port
             - '8897'
-            - -serviceMesh
+            - -servicemesh
             - -procfs
             - /hostproc
           image: 'docker.io/kubeshark/worker:v51.0.14'
