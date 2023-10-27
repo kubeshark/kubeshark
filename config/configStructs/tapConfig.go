@@ -81,7 +81,7 @@ type ResourcesConfig struct {
 }
 
 type AuthConfig struct {
-	Enabled         bool     `yaml:"enabled" json:"enabled" default:"true"`
+	Enabled         bool     `yaml:"enabled" json:"enabled" default:"false"`
 	ApprovedEmails  []string `yaml:"approvedEmails" json:"approvedEmails"  default:"[]"`
 	ApprovedDomains []string `yaml:"approvedDomains" json:"approvedDomains"  default:"[]"`
 	ApprovedTenants []string `yaml:"approvedTenants" json:"approvedTenants"  default:"[]"`

@@ -51,7 +51,7 @@ tap:
       values:
       - linux
   auth:
-    enabled: true
+    enabled: false
     approvedEmails: []
     approvedDomains: []
     approvedTenants: []
