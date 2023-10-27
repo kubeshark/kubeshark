@@ -525,6 +525,8 @@ spec:
               value: ' '
             - name: REACT_APP_HUB_PORT
               value: ':8899/api'
+            - name: REACT_APP_AUTH_ENABLED
+              value: 'false'
           image: 'docker.io/kubeshark/front:v51.0.14'
           imagePullPolicy: Always
           name: kubeshark-front
