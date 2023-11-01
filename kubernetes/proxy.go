@@ -73,7 +73,7 @@ func GetProxyOnPort(port uint16) string {
 }
 
 func GetHubUrl() string {
-	return fmt.Sprintf("%s/api", GetProxyOnPort(config.Config.Tap.Proxy.Hub.Port))
+	return fmt.Sprintf("%s/api", GetProxyOnPort(config.Config.Tap.Proxy.Front.Port))
 }
 
 func getRerouteHttpHandlerSelfAPI(proxyHandler http.Handler, selfNamespace string, selfServiceName string) http.Handler {
