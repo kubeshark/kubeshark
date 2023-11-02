@@ -9,7 +9,7 @@ metadata:
   {{- if .Values.tap.annotations }}
     {{- toYaml .Values.tap.annotations | nindent 4 }}
   {{- end }}
-  name: {{ include "kubeshark.fullname" . }}-hub
+  name: {{ include "kubeshark.name" . }}-hub
   namespace: {{ .Release.Namespace }}
 spec:
   replicas: 1  # Set the desired number of replicas
