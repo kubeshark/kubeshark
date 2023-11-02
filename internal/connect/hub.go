@@ -121,11 +121,21 @@ func (connector *Connector) PostLicense(license string) {
 	}
 }
 
+type postScriptRequest struct {
+	Title string `json:"title"`
+	Code  string `json:"code"`
+}
+
 func (connector *Connector) PostScript(script *misc.Script) (index int64, err error) {
 	postScriptUrl := fmt.Sprintf("%s/scripts", connector.url)
 
+	payload := postScriptRequest{
+		Title: script.Title,
+		Code:  script.Code,
+	}
+
 	var scriptMarshalled []byte
-	if scriptMarshalled, err = json.Marshal(script); err != nil {
+	if scriptMarshalled, err = json.Marshal(payload); err != nil {
 		log.Error().Err(err).Msg("Failed to marshal the script:")
 	} else {
 		ok := false
