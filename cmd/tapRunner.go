@@ -200,7 +200,6 @@ func watchHubPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, c
 					ready.Lock()
 					ready.Hub = true
 					ready.Unlock()
-					postHubStarted(ctx, kubernetesProvider, cancel)
 				}
 
 				ready.Lock()
@@ -406,12 +405,6 @@ func watchHubEvents(ctx context.Context, kubernetesProvider *kubernetes.Provider
 	}
 }
 
-func postHubStarted(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc) {
-	if config.Config.Scripting.Source != "" && config.Config.Scripting.WatchScripts {
-		watchScripts(false)
-	}
-}
-
 func postFrontStarted(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc) {
 	startProxyReportErrorIfAny(
 		kubernetesProvider,
@@ -434,6 +427,14 @@ func postFrontStarted(ctx context.Context, kubernetesProvider *kubernetes.Provid
 
 	if !config.Config.HeadlessMode {
 		utils.OpenBrowser(url)
+	}
+
+	for !ready.Hub {
+		time.Sleep(100 * time.Millisecond)
+	}
+
+	if config.Config.Scripting.Source != "" && config.Config.Scripting.WatchScripts {
+		watchScripts(false)
 	}
 }
 
