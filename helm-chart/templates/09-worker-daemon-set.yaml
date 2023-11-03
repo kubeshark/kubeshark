@@ -71,6 +71,7 @@ spec:
                 - SYS_PTRACE
                 - DAC_OVERRIDE
                 - SYS_MODULE
+                - CHECKPOINT_RESTORE
               drop:
                 - ALL
           readinessProbe:
@@ -125,6 +126,7 @@ spec:
                 - SYS_PTRACE
                 - DAC_OVERRIDE
                 - SYS_RESOURCE
+                - CHECKPOINT_RESTORE
               drop:
                 - ALL
           volumeMounts:
