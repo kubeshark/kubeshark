@@ -1,0 +1,23 @@
+apiVersion: route.openshift.io/v1
+kind: Route
+metadata:
+  annotations:
+    {{- if .Values.tap.annotations }}
+    {{- toYaml .Values.tap.annotations | nindent 4 }}
+    {{- end }}
+  labels:
+    {{- include "kubeshark.labels" . | nindent 4 }}
+  name: kubeshark-route
+  namespace: {{ .Release.Namespace }}
+spec:
+  host: {{ .Values.tap.ingress.host }}
+  to:
+    kind: Service
+    name: kubeshark-front
+  port:
+    targetPort: 80
+  tls:
+    termination: edge
+    {{- if .Values.tap.ingress.tls }}
+    {{- toYaml .Values.tap.ingress.tls | nindent 4 }}
+    {{- end }}
