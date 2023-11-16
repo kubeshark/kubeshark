@@ -154,11 +154,11 @@ port-forward-worker:
 	kubectl port-forward $$(kubectl get pods | awk '$$1 ~ /^$(LOGS_POD_PREFIX)/' | awk 'END {print $$1}') $(LOGS_FOLLOW) 8897:8897
 
 release:
-	@cd ../worker && git tag -d v$(VERSION); git tag v$(VERSION) && git push origin --tags
-	@cd ../hub && git tag -d v$(VERSION); git tag v$(VERSION) && git push origin --tags
-	@cd ../front && git tag -d v$(VERSION); git tag v$(VERSION) && git push origin --tags
+	@cd ../worker && git checkout master && git pull && git tag -d v$(VERSION); git tag v$(VERSION) && git push origin --tags
+	@cd ../hub && git checkout master && git pull && git tag -d v$(VERSION); git tag v$(VERSION) && git push origin --tags
+	@cd ../front && git checkout master && git pull && git tag -d v$(VERSION); git tag v$(VERSION) && git push origin --tags
 	@cd ../kubeshark && sed -i 's/^version:.*/version: "$(VERSION)"/' helm-chart/Chart.yaml
-	@git add -A . && git commit -m ":bookmark: Bump the Helm chart version to `$(VERSION)`" && git push
+	@git add -A . && git commit -m ":bookmark: Bump the Helm chart version to $(VERSION)" && git push
 	@git tag v$(VERSION) && git push origin --tags
 	@cd helm-chart && cp -r . ../../kubeshark.github.io/charts/chart
 	@cd ../../kubeshark.github.io/ && git add -A . && git commit -m ":sparkles: Update the Helm chart" && git push
