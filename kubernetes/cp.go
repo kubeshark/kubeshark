@@ -12,13 +12,13 @@ import (
 
 	"github.com/rs/zerolog/log"
 	v1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/tools/remotecommand"
-	"k8s.io/kubectl/pkg/scheme"
 )
 
 func CopyFromPod(ctx context.Context, provider *Provider, pod v1.Pod, srcPath string, dstPath string) error {
 	reader, outStream := io.Pipe()
-	cmdArr := []string{"tar", "cf", "-", srcPath}
+	cmdArr := []string{"/bin/sh", "-c", "tar", "cf", "-", srcPath}
 	req := provider.clientSet.RESTClient().
 		Get().
 		Prefix([]string{"api", "v1"}...).
@@ -26,14 +26,14 @@ func CopyFromPod(ctx context.Context, provider *Provider, pod v1.Pod, srcPath st
 		Resource("pods").
 		Name(pod.Name).
 		SubResource("exec").
+		Param("container", "sniffer").
 		VersionedParams(&v1.PodExecOptions{
-			Container: "sniffer",
-			Command:   cmdArr,
-			Stdin:     true,
-			Stdout:    true,
-			Stderr:    true,
-			TTY:       false,
-		}, scheme.ParameterCodec)
+			Command: cmdArr,
+			Stdin:   true,
+			Stdout:  true,
+			Stderr:  true,
+			TTY:     false,
+		}, metav1.ParameterCodec)
 
 	exec, err := remotecommand.NewSPDYExecutor(&provider.clientConfig, "POST", req.URL())
 	if err != nil {
@@ -47,7 +47,9 @@ func CopyFromPod(ctx context.Context, provider *Provider, pod v1.Pod, srcPath st
 			Stderr: os.Stderr,
 			Tty:    false,
 		})
-		log.Error().Err(err).Send()
+		if err != nil {
+			log.Error().Err(err).Send()
+		}
 	}()
 	prefix := getPrefix(srcPath)
 	prefix = path.Clean(prefix)
