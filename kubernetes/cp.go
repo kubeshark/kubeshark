@@ -2,6 +2,7 @@ package kubernetes
 
 import (
 	"archive/tar"
+	"bufio"
 	"context"
 	"fmt"
 	"io"
@@ -12,51 +13,95 @@ import (
 
 	"github.com/rs/zerolog/log"
 	v1 "k8s.io/api/core/v1"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes/scheme"
 	"k8s.io/client-go/tools/remotecommand"
 )
 
 func CopyFromPod(ctx context.Context, provider *Provider, pod v1.Pod, srcPath string, dstPath string) error {
-	reader, outStream := io.Pipe()
-	cmdArr := []string{"/bin/sh", "-c", "tar", "cf", "-", srcPath}
-	req := provider.clientSet.RESTClient().
-		Get().
-		Prefix([]string{"api", "v1"}...).
+	const containerName = "sniffer"
+	cmdArr := []string{"tar", "cf", "-", srcPath}
+	req := provider.clientSet.CoreV1().RESTClient().
+		Post().
 		Namespace(pod.Namespace).
 		Resource("pods").
 		Name(pod.Name).
 		SubResource("exec").
-		Param("container", "sniffer").
 		VersionedParams(&v1.PodExecOptions{
-			Command: cmdArr,
-			Stdin:   true,
-			Stdout:  true,
-			Stderr:  true,
-			TTY:     false,
-		}, metav1.ParameterCodec)
+			Container: containerName,
+			Command:   cmdArr,
+			Stdin:     true,
+			Stdout:    true,
+			Stderr:    true,
+			TTY:       false,
+		}, scheme.ParameterCodec)
 
 	exec, err := remotecommand.NewSPDYExecutor(&provider.clientConfig, "POST", req.URL())
 	if err != nil {
 		return err
 	}
+
+	reader, outStream := io.Pipe()
+	errReader, errStream := io.Pipe()
+	go logErrors(errReader)
 	go func() {
 		defer outStream.Close()
 		err = exec.StreamWithContext(ctx, remotecommand.StreamOptions{
 			Stdin:  os.Stdin,
 			Stdout: outStream,
-			Stderr: os.Stderr,
+			Stderr: errStream,
 			Tty:    false,
 		})
 		if err != nil {
 			log.Error().Err(err).Send()
 		}
 	}()
+
 	prefix := getPrefix(srcPath)
 	prefix = path.Clean(prefix)
 	prefix = stripPathShortcuts(prefix)
 	dstPath = path.Join(dstPath, path.Base(prefix))
 	err = untarAll(reader, dstPath, prefix)
+	// fo(reader)
 	return err
+}
+
+// func fo(fi io.Reader) {
+// 	fo, err := os.Create("output.tar")
+// 	if err != nil {
+// 		panic(err)
+// 	}
+
+// 	// make a buffer to keep chunks that are read
+// 	buf := make([]byte, 1024)
+// 	for {
+// 		// read a chunk
+// 		n, err := fi.Read(buf)
+// 		if err != nil && err != io.EOF {
+// 			panic(err)
+// 		}
+// 		if n == 0 {
+// 			break
+// 		}
+
+// 		// write a chunk
+// 		if _, err := fo.Write(buf[:n]); err != nil {
+// 			panic(err)
+// 		}
+// 	}
+// }
+
+func logErrors(reader io.Reader) {
+	r := bufio.NewReader(reader)
+	for {
+		msg, _, err := r.ReadLine()
+		log.Warn().Str("msg", string(msg)).Msg("SPDYExecutor:")
+		if err != nil {
+			if err != io.EOF {
+				log.Error().Err(err).Send()
+			}
+			return
+		}
+	}
 }
 
 func untarAll(reader io.Reader, destDir, prefix string) error {

@@ -382,7 +382,7 @@ func downloadTarFromKubeVolume(kubeUrl string, volume string) (tarPath string, e
 		return
 	}
 
-	srcPath := fmt.Sprintf("/%s/%s", volume, strings.TrimPrefix(tarPath, "kube://"))
+	srcPath := fmt.Sprintf("/app/%s/%s", volume, strings.TrimPrefix(tarPath, "kube://"))
 
 	var tempDirPath string
 	tempDirPath, err = os.MkdirTemp(os.TempDir(), "kubeshark_*")
@@ -493,7 +493,7 @@ func pcap(tarPath string) error {
 		var err error
 		tarPath, err = downloadTarFromKubeVolume(tarPath, "data")
 		if err != nil {
-			log.Error().Err(err).Msg("Failed downloading from S3")
+			log.Error().Err(err).Msg("Failed downloading from Kubeshark data volume")
 			return err
 		}
 	}
