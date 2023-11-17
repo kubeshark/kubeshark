@@ -169,6 +169,7 @@ func createAndStartContainers(
 			"REACT_APP_DEFAULT_FILTER= ",
 			"REACT_APP_HUB_HOST= ",
 			fmt.Sprintf("REACT_APP_HUB_PORT=:%d", config.Config.Tap.Proxy.Hub.Port),
+			"REACT_APP_AUTH_ENABLED=false",
 		},
 	}, hostConfigFront, nil, nil, nameFront)
 	if err != nil {
@@ -374,6 +375,48 @@ func downloadTarFromS3(s3Url string) (tarPath string, err error) {
 	return
 }
 
+func downloadTarFromKubeVolume(kubeUrl string, volume string) (tarPath string, err error) {
+	var kubernetesProvider *kubernetes.Provider
+	kubernetesProvider, err = getKubernetesProviderForCli(false, false)
+	if err != nil {
+		return
+	}
+
+	srcPath := fmt.Sprintf("/app/%s/%s", volume, strings.TrimPrefix(kubeUrl, "kube://"))
+
+	var tempDirPath string
+	tempDirPath, err = os.MkdirTemp(os.TempDir(), "kubeshark_*")
+	if err != nil {
+		return
+	}
+
+	ctx := context.Background()
+	var pods []v1.Pod
+	pods, err = kubernetesProvider.ListPodsByAppLabel(
+		ctx,
+		config.Config.Tap.Release.Namespace,
+		map[string]string{"app.kubeshark.co/app": "worker"},
+	)
+	if err != nil {
+		return
+	}
+
+	for _, pod := range pods {
+		nodeDir := filepath.Join(tempDirPath, pod.Spec.NodeName)
+		if err = os.MkdirAll(nodeDir, 0755); err != nil {
+			return
+		}
+
+		err = kubernetes.CopyFromPod(ctx, kubernetesProvider, pod, srcPath, nodeDir)
+		if err != nil {
+			return
+		}
+	}
+
+	tarPath, err = tarDirectory(tempDirPath)
+	return
+}
+
 func tarDirectory(dirPath string) (string, error) {
 	tarPath := fmt.Sprintf("%s.tar.gz", dirPath)
 
@@ -446,6 +489,15 @@ func pcap(tarPath string) error {
 		}
 	}
 
+	if strings.HasPrefix(tarPath, "kube://") {
+		var err error
+		tarPath, err = downloadTarFromKubeVolume(tarPath, "data")
+		if err != nil {
+			log.Error().Err(err).Msg("Failed downloading from Kubeshark data volume")
+			return err
+		}
+	}
+
 	log.Info().Str("tar-path", tarPath).Msg("Openning")
 
 	ctx := context.Background()
@@ -456,9 +508,18 @@ func pcap(tarPath string) error {
 	}
 	defer cli.Close()
 
-	imageFront := fmt.Sprintf("%s%s:%s", config.Config.Tap.Docker.Registry, "front", config.Config.Tap.Docker.Tag)
-	imageHub := fmt.Sprintf("%s%s:%s", config.Config.Tap.Docker.Registry, "hub", config.Config.Tap.Docker.Tag)
-	imageWorker := fmt.Sprintf("%s%s:%s", config.Config.Tap.Docker.Registry, "worker", config.Config.Tap.Docker.Tag)
+	tag := config.Config.Tap.Docker.Tag
+	if tag == "" {
+		if misc.Ver == "0.0.0" {
+			tag = "latest"
+		} else {
+			tag = misc.Ver
+		}
+	}
+
+	imageFront := fmt.Sprintf("%s/%s:%s", config.Config.Tap.Docker.Registry, "front", tag)
+	imageHub := fmt.Sprintf("%s/%s:%s", config.Config.Tap.Docker.Registry, "hub", tag)
+	imageWorker := fmt.Sprintf("%s/%s:%s", config.Config.Tap.Docker.Registry, "worker", tag)
 
 	err = pullImages(ctx, cli, imageFront, imageHub, imageWorker)
 	if err != nil {
@@ -502,7 +563,7 @@ func pcap(tarPath string) error {
 		},
 	}
 
-	connector = connect.NewConnector(kubernetes.GetHubUrl(), connect.DefaultRetries, connect.DefaultTimeout)
+	connector = connect.NewConnector(kubernetes.GetProxyOnPort(config.Config.Tap.Proxy.Hub.Port), connect.DefaultRetries, connect.DefaultTimeout)
 	connector.PostWorkerPodToHub(workerPod)
 
 	// License
@@ -511,7 +572,7 @@ func pcap(tarPath string) error {
 	}
 
 	log.Info().
-		Str("url", kubernetes.GetHubUrl()).
+		Str("url", kubernetes.GetProxyOnPort(config.Config.Tap.Proxy.Hub.Port)).
 		Msg(fmt.Sprintf(utils.Green, "Hub is available at:"))
 
 	url := kubernetes.GetProxyOnPort(config.Config.Tap.Proxy.Front.Port)
