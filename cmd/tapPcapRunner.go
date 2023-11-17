@@ -508,9 +508,18 @@ func pcap(tarPath string) error {
 	}
 	defer cli.Close()
 
-	imageFront := fmt.Sprintf("%s/%s:%s", config.Config.Tap.Docker.Registry, "front", config.Config.Tap.Docker.Tag)
-	imageHub := fmt.Sprintf("%s/%s:%s", config.Config.Tap.Docker.Registry, "hub", config.Config.Tap.Docker.Tag)
-	imageWorker := fmt.Sprintf("%s/%s:%s", config.Config.Tap.Docker.Registry, "worker", config.Config.Tap.Docker.Tag)
+	tag := config.Config.Tap.Docker.Tag
+	if tag == "" {
+		if misc.Ver == "0.0.0" {
+			tag = "latest"
+		} else {
+			tag = misc.Ver
+		}
+	}
+
+	imageFront := fmt.Sprintf("%s/%s:%s", config.Config.Tap.Docker.Registry, "front", tag)
+	imageHub := fmt.Sprintf("%s/%s:%s", config.Config.Tap.Docker.Registry, "hub", tag)
+	imageWorker := fmt.Sprintf("%s/%s:%s", config.Config.Tap.Docker.Registry, "worker", tag)
 
 	err = pullImages(ctx, cli, imageFront, imageHub, imageWorker)
 	if err != nil {
