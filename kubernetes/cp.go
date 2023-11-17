@@ -52,7 +52,7 @@ func CopyFromPod(ctx context.Context, provider *Provider, pod v1.Pod, srcPath st
 			Tty:    false,
 		})
 		if err != nil {
-			log.Error().Err(err).Send()
+			log.Error().Err(err).Msg("SPDYExecutor:")
 		}
 	}()
 

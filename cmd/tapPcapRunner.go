@@ -382,7 +382,7 @@ func downloadTarFromKubeVolume(kubeUrl string, volume string) (tarPath string, e
 		return
 	}
 
-	srcPath := fmt.Sprintf("/app/%s/%s", volume, strings.TrimPrefix(tarPath, "kube://"))
+	srcPath := fmt.Sprintf("/app/%s/%s", volume, strings.TrimPrefix(kubeUrl, "kube://"))
 
 	var tempDirPath string
 	tempDirPath, err = os.MkdirTemp(os.TempDir(), "kubeshark_*")
