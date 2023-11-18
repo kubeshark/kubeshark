@@ -42,7 +42,7 @@ func CopyFromPod(ctx context.Context, provider *Provider, pod v1.Pod, srcPath st
 
 	reader, outStream := io.Pipe()
 	errReader, errStream := io.Pipe()
-	go logErrors(errReader)
+	go logErrors(errReader, pod)
 	go func() {
 		defer outStream.Close()
 		err = exec.StreamWithContext(ctx, remotecommand.StreamOptions{
@@ -52,7 +52,7 @@ func CopyFromPod(ctx context.Context, provider *Provider, pod v1.Pod, srcPath st
 			Tty:    false,
 		})
 		if err != nil {
-			log.Error().Err(err).Msg("SPDYExecutor:")
+			log.Error().Err(err).Str("pod", pod.Name).Msg("SPDYExecutor:")
 		}
 	}()
 
@@ -90,11 +90,11 @@ func CopyFromPod(ctx context.Context, provider *Provider, pod v1.Pod, srcPath st
 // 	}
 // }
 
-func logErrors(reader io.Reader) {
+func logErrors(reader io.Reader, pod v1.Pod) {
 	r := bufio.NewReader(reader)
 	for {
 		msg, _, err := r.ReadLine()
-		log.Warn().Str("msg", string(msg)).Msg("SPDYExecutor:")
+		log.Warn().Str("pod", pod.Name).Str("msg", string(msg)).Msg("SPDYExecutor:")
 		if err != nil {
 			if err != io.EOF {
 				log.Error().Err(err).Send()
