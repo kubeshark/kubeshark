@@ -4,6 +4,7 @@ metadata:
   labels:
     {{- include "kubeshark.labels" . | nindent 4 }}
   annotations:
+    "helm.sh/hook": pre-install
   {{- if .Values.tap.annotations }}
     {{- toYaml .Values.tap.annotations | nindent 4 }}
   {{- end }}
