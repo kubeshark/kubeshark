@@ -1,3 +1,4 @@
+{{- if .Capabilities.APIVersions.Has "security.openshift.io/v1/SecurityContextConstraints" }}
 apiVersion: security.openshift.io/v1
 kind: SecurityContextConstraints
 metadata:
@@ -49,3 +50,4 @@ volumes:
   - ephemeral
 users:
   - system:serviceaccount:{{ .Release.Namespace }}:kubeshark-service-account
+{{- end }}
