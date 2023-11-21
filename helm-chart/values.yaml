@@ -23,7 +23,6 @@ tap:
   storageLimit: 500Mi
   storageClass: standard
   dryRun: false
-  pcap: ""
   resources:
     worker:
       limits:

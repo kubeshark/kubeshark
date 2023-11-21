@@ -47,13 +47,6 @@ func tap() {
 	ready = &Readiness{}
 	state.startTime = time.Now()
 	log.Info().Str("registry", config.Config.Tap.Docker.Registry).Str("tag", config.Config.Tap.Docker.Tag).Msg("Using Docker:")
-	if config.Config.Tap.Pcap != "" {
-		err := pcap(config.Config.Tap.Pcap)
-		if err != nil {
-			os.Exit(1)
-		}
-		return
-	}
 
 	log.Info().
 		Str("limit", config.Config.Tap.StorageLimit).

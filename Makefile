@@ -9,7 +9,7 @@ COMMIT_HASH=$(shell git rev-parse HEAD)
 GIT_BRANCH=$(shell git branch --show-current | tr '[:upper:]' '[:lower:]')
 GIT_VERSION=$(shell git branch --show-current | tr '[:upper:]' '[:lower:]')
 BUILD_TIMESTAMP=$(shell date +%s)
-export VER?=0.0
+export VER?=0.0.0
 
 help: ## Print this help message.
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -152,3 +152,14 @@ proxy:
 
 port-forward-worker:
 	kubectl port-forward $$(kubectl get pods | awk '$$1 ~ /^$(LOGS_POD_PREFIX)/' | awk 'END {print $$1}') $(LOGS_FOLLOW) 8897:8897
+
+release:
+	@cd ../worker && git checkout master && git pull && git tag -d v$(VERSION); git tag v$(VERSION) && git push origin --tags
+	@cd ../hub && git checkout master && git pull && git tag -d v$(VERSION); git tag v$(VERSION) && git push origin --tags
+	@cd ../front && git checkout master && git pull && git tag -d v$(VERSION); git tag v$(VERSION) && git push origin --tags
+	@cd ../kubeshark && sed -i 's/^version:.*/version: "$(VERSION)"/' helm-chart/Chart.yaml
+	@git add -A . && git commit -m ":bookmark: Bump the Helm chart version to $(VERSION)" && git push
+	@git tag v$(VERSION) && git push origin --tags
+	@cd helm-chart && cp -r . ../../kubeshark.github.io/charts/chart
+	@cd ../../kubeshark.github.io/ && git add -A . && git commit -m ":sparkles: Update the Helm chart" && git push
+	@cd ../kubeshark
