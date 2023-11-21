@@ -288,7 +288,7 @@ spec:
             - -i
             - any
             - -port
-            - '8897'
+            - '30001'
             - -servicemesh
             - -procfs
             - /hostproc
@@ -329,14 +329,14 @@ spec:
             successThreshold: 1
             initialDelaySeconds: 5
             tcpSocket:
-              port: 8897
+              port: 30001
           livenessProbe:
             periodSeconds: 1
             failureThreshold: 3
             successThreshold: 1
             initialDelaySeconds: 5
             tcpSocket:
-              port: 8897
+              port: 30001
           volumeMounts:
             - mountPath: /hostproc
               name: proc
