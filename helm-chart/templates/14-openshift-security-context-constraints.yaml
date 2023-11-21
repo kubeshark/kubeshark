@@ -1,0 +1,53 @@
+{{- if .Capabilities.APIVersions.Has "security.openshift.io/v1/SecurityContextConstraints" }}
+apiVersion: security.openshift.io/v1
+kind: SecurityContextConstraints
+metadata:
+  labels:
+    {{- include "kubeshark.labels" . | nindent 4 }}
+  annotations:
+    "helm.sh/hook": pre-install
+  {{- if .Values.tap.annotations }}
+    {{- toYaml .Values.tap.annotations | nindent 4 }}
+  {{- end }}
+  name: kubeshark-scc
+priority: 10
+allowPrivilegedContainer: true
+allowHostDirVolumePlugin: true
+allowHostNetwork: true
+allowHostPorts: true
+allowHostPID: true
+allowHostIPC: true
+readOnlyRootFilesystem: false
+requiredDropCapabilities:
+  - MKNOD
+allowedCapabilities:
+  - NET_RAW
+  - NET_ADMIN
+  - SYS_ADMIN
+  - SYS_PTRACE
+  - DAC_OVERRIDE
+  - SYS_RESOURCE
+  - CHECKPOINT_RESTORE
+  - SYS_MODULE
+runAsUser:
+  type: RunAsAny
+fsGroup:
+  type: MustRunAs
+seLinuxContext:
+  type: RunAsAny
+supplementalGroups:
+  type: RunAsAny
+seccompProfiles:
+- '*'
+volumes:
+  - configMap
+  - downwardAPI
+  - emptyDir
+  - persistentVolumeClaim
+  - secret
+  - hostPath
+  - projected
+  - ephemeral
+users:
+  - system:serviceaccount:{{ .Release.Namespace }}:kubeshark-service-account
+{{- end }}
