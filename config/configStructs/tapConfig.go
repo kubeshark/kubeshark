@@ -115,7 +115,6 @@ type TapConfig struct {
 	StorageLimit      string                `yaml:"storageLimit" json:"storageLimit" default:"500Mi"`
 	StorageClass      string                `yaml:"storageClass" json:"storageClass" default:"standard"`
 	DryRun            bool                  `yaml:"dryRun" json:"dryRun" default:"false"`
-	Pcap              string                `yaml:"pcap" json:"pcap" default:""`
 	Resources         ResourcesConfig       `yaml:"resources" json:"resources"`
 	ServiceMesh       bool                  `yaml:"serviceMesh" json:"serviceMesh" default:"true"`
 	Tls               bool                  `yaml:"tls" json:"tls" default:"true"`
