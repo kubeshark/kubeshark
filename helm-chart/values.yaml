@@ -2,18 +2,16 @@ tap:
   docker:
     registry: docker.io/kubeshark
     tag: ""
-    imagePullPolicy: Always
+    imagePullPolicy: IfNotPresent
     imagePullSecrets: []
   proxy:
     worker:
-      port: 30000
-      srvPort: 30000
+      srvPort: 8897
     hub:
-      port: 30001
-      srvPort: 30001
+      port: 8898
+      srvPort: 8898
     front:
-      port: 30002
-      srvPort: 30001
+      port: 8899
     host: 127.0.0.1
   regex: .*
   namespaces: []
