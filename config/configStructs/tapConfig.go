@@ -31,6 +31,8 @@ const (
 	DebugLabel             = "debug"
 	ContainerPort          = 80
 	ContainerPortStr       = "80"
+	PersistentStorageStaticLabel = "persistentStorageStatic"
+	EfsFileSytemIdAndPathLabel   = "efsFileSytemIdAndPath"
 )
 
 type ResourceLimits struct {
@@ -128,6 +130,8 @@ type TapConfig struct {
 	Debug             bool                  `yaml:"debug" json:"debug" default:"false"`
 	NoKernelModule    bool                  `yaml:"noKernelModule" json:"noKernelModule" default:"false"`
 	Telemetry         TelemetryConfig       `yaml:"telemetry" json:"telemetry"`
+	PersistentStorageStatic bool            `yaml:"persistentStorageStatic" json:"persistentStorageStatic" default:"false"`
+	EfsFileSytemIdAndPath   bool            `yaml:"efsFileSytemIdAndPath" json:"efsFileSytemIdAndPath" default:""`
 }
 
 func (config *TapConfig) PodRegex() *regexp.Regexp {
