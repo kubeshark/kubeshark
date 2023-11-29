@@ -1,0 +1,87 @@
+apiVersion: apps.kubeshark.co/v1alpha1
+kind: Kubeshark
+metadata:
+  name: kubeshark-sample
+spec:
+  # Default values copied from <project_dir>/helm-charts/kubeshark/values.yaml
+  dumpLogs: false
+  headless: false
+  kube:
+    configPath: ""
+    context: ""
+  license: ""
+  logs:
+    file: ""
+  scripting:
+    env: {}
+    source: ""
+    watchScripts: true
+  tap:
+    annotations: {}
+    auth:
+      approvedDomains: []
+      approvedEmails: []
+      approvedTenants: []
+      enabled: false
+    debug: false
+    docker:
+      imagePullPolicy: Always
+      imagePullSecrets: []
+      registry: docker.io/kubeshark
+      tag: ""
+    dryRun: false
+    ignoreTainted: false
+    ingress:
+      annotations: {}
+      className: ""
+      enabled: false
+      host: ks.svc.cluster.local
+      tls: []
+    ipv6: true
+    labels: {}
+    namespaces: []
+    noKernelModule: false
+    nodeSelectorTerms:
+    - matchExpressions:
+      - key: kubernetes.io/os
+        operator: In
+        values:
+        - linux
+    persistentStorage: false
+    proxy:
+      front:
+        port: 8899
+      host: 127.0.0.1
+      hub:
+        port: 8898
+        srvPort: 8898
+      worker:
+        srvPort: 30001
+    regex: .*
+    release:
+      name: kubeshark
+      namespace: default
+      repo: https://helm.kubeshark.co
+    resources:
+      hub:
+        limits:
+          cpu: 750m
+          memory: 1Gi
+        requests:
+          cpu: 50m
+          memory: 50Mi
+      worker:
+        limits:
+          cpu: 750m
+          memory: 1Gi
+        requests:
+          cpu: 50m
+          memory: 50Mi
+    serviceMesh: true
+    storageClass: standard
+    storageLimit: 500Mi
+    telemetry:
+      enabled: true
+    tls: true
+  
+  

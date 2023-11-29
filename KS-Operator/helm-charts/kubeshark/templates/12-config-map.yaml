@@ -1,0 +1,18 @@
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: kubeshark-config-map
+  namespace: {{ .Release.Namespace }}
+  labels:
+    app.kubeshark.co/app: hub
+    {{- include "kubeshark.labels" . | nindent 4 }}
+data:
+    POD_REGEX: '{{ .Values.tap.regex }}'
+    NAMESPACES: '{{ gt (len .Values.tap.namespaces) 0 | ternary (join "," .Values.tap.namespaces) "" }}'
+    SCRIPTING_ENV: '{{ .Values.scripting.env | toJson }}'
+    SCRIPTING_SCRIPTS: '{}'
+    AUTH_ENABLED: '{{ .Values.tap.auth.enabled | ternary "true" "" }}'
+    AUTH_APPROVED_EMAILS: '{{ gt (len .Values.tap.auth.approvedEmails) 0 | ternary (join "," .Values.tap.auth.approvedEmails) "" }}'
+    AUTH_APPROVED_DOMAINS: '{{ gt (len .Values.tap.auth.approvedDomains) 0 | ternary (join "," .Values.tap.auth.approvedDomains) "" }}'
+    AUTH_APPROVED_TENANTS: '{{ gt (len .Values.tap.auth.approvedTenants) 0 | ternary (join "," .Values.tap.auth.approvedTenants) "" }}'
+    TELEMETRY_DISABLED: '{{ not .Values.tap.telemetry.enabled | ternary "true" "" }}'

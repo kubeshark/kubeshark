@@ -1,0 +1,52 @@
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    {{- include "kubeshark.labels" . | nindent 4 }}
+  annotations:
+  {{- if .Values.tap.annotations }}
+    {{- toYaml .Values.tap.annotations | nindent 4 }}
+  {{- end }}
+  name: kubeshark-cluster-role
+  namespace: {{ .Release.Namespace }}
+rules:
+  - apiGroups:
+      - ""
+      - extensions
+      - apps
+    resources:
+      - pods
+      - services
+      - endpoints
+      - persistentvolumeclaims
+    verbs:
+      - list
+      - get
+      - watch
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  labels:
+    {{- include "kubeshark.labels" . | nindent 4 }}
+  annotations:
+  {{- if .Values.tap.annotations }}
+    {{- toYaml .Values.tap.annotations | nindent 4 }}
+  {{- end }}
+  name: kubeshark-self-config-role
+  namespace: {{ .Release.Namespace }}
+rules:
+  - apiGroups:
+      - ""
+      - v1
+    resourceNames:
+      - kubeshark-secret
+      - kubeshark-config-map
+    resources:
+      - secrets
+      - configmaps
+    verbs:
+      - get
+      - watch
+      - update

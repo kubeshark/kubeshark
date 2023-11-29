@@ -1,0 +1,70 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubeshark.co/app: front
+    {{- include "kubeshark.labels" . | nindent 4 }}
+  annotations:
+  {{- if .Values.tap.annotations }}
+    {{- toYaml .Values.tap.annotations | nindent 4 }}
+  {{- end }}
+  name: {{ include "kubeshark.name" . }}-front
+  namespace: {{ .Release.Namespace }}
+spec:
+  replicas: 1  # Set the desired number of replicas
+  selector:
+    matchLabels:
+      app.kubeshark.co/app: front
+      {{- include "kubeshark.labels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        app.kubeshark.co/app: front
+        {{- include "kubeshark.labels" . | nindent 8 }}
+    spec:
+      containers:
+        - env:
+            - name: REACT_APP_DEFAULT_FILTER
+              value: ' '
+            - name: REACT_APP_HUB_HOST
+              value: ' '
+            - name: REACT_APP_HUB_PORT
+              value: '{{ .Values.tap.ingress.enabled | ternary "/api" (print ":" .Values.tap.proxy.front.port "/api") }}'
+            - name: REACT_APP_AUTH_ENABLED
+              value: '{{ .Values.tap.auth.enabled }}'
+          image: '{{ .Values.tap.docker.registry }}/front:{{ not (eq .Values.tap.docker.tag "") | ternary .Values.tap.docker.tag (printf "v%s" .Chart.Version) }}'
+          imagePullPolicy: {{ .Values.tap.docker.imagePullPolicy }}
+          name: kubeshark-front
+          livenessProbe:
+            periodSeconds: 1
+            failureThreshold: 3
+            successThreshold: 1
+            initialDelaySeconds: 3
+            tcpSocket:
+              port: 80
+          readinessProbe:
+            periodSeconds: 1
+            failureThreshold: 3
+            successThreshold: 1
+            initialDelaySeconds: 3
+            tcpSocket:
+              port: 80
+            timeoutSeconds: 1
+          resources:
+            limits:
+              cpu: 750m
+              memory: 1Gi
+            requests:
+              cpu: 50m
+              memory: 50Mi
+          volumeMounts:
+            - name: nginx-config
+              mountPath: /etc/nginx/conf.d/default.conf
+              subPath: default.conf
+              readOnly: true
+      volumes:
+        - name: nginx-config
+          configMap:
+            name: kubeshark-nginx-config-map
+      dnsPolicy: ClusterFirstWithHostNet
+      serviceAccountName: {{ include "kubeshark.serviceAccountName" . }}

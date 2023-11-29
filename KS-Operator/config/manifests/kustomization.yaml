@@ -1,0 +1,7 @@
+# These resources constitute the fully configured set of manifests
+# used to generate the 'manifests/' directory in a bundle.
+resources:
+- bases/ks-operator.clusterserviceversion.yaml
+- ../default
+- ../samples
+- ../scorecard

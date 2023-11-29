@@ -1,0 +1,79 @@
+tap:
+  docker:
+    registry: docker.io/kubeshark
+    tag: ""
+    imagePullPolicy: Always
+    imagePullSecrets: []
+  proxy:
+    worker:
+      srvPort: 30001
+    hub:
+      port: 8898
+      srvPort: 8898
+    front:
+      port: 8899
+    host: 127.0.0.1
+  regex: .*
+  namespaces: []
+  release:
+    repo: https://helm.kubeshark.co
+    name: kubeshark
+    namespace: default
+  persistentStorage: false
+  storageLimit: 500Mi
+  storageClass: standard
+  dryRun: false
+  resources:
+    worker:
+      limits:
+        cpu: 750m
+        memory: 1Gi
+      requests:
+        cpu: 50m
+        memory: 50Mi
+    hub:
+      limits:
+        cpu: 750m
+        memory: 1Gi
+      requests:
+        cpu: 50m
+        memory: 50Mi
+  serviceMesh: true
+  tls: true
+  ignoreTainted: false
+  labels: {}
+  annotations: {}
+  nodeSelectorTerms:
+  - matchExpressions:
+    - key: kubernetes.io/os
+      operator: In
+      values:
+      - linux
+  auth:
+    enabled: false
+    approvedEmails: []
+    approvedDomains: []
+    approvedTenants: []
+  ingress:
+    enabled: false
+    className: ""
+    host: ks.svc.cluster.local
+    tls: []
+    annotations: {}
+  ipv6: true
+  debug: false
+  noKernelModule: false
+  telemetry:
+    enabled: true
+logs:
+  file: ""
+kube:
+  configPath: ""
+  context: ""
+dumpLogs: false
+headless: false
+license: ""
+scripting:
+  env: {}
+  source: ""
+  watchScripts: true

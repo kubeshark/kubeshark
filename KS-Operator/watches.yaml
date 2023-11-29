@@ -1,0 +1,6 @@
+# Use the 'create api' subcommand to add watches to this file.
+- group: apps.kubeshark.co
+  version: v1alpha1
+  kind: Kubeshark
+  chart: helm-charts/kubeshark
+#+kubebuilder:scaffold:watch

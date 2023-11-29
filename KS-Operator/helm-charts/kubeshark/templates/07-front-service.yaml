@@ -1,0 +1,20 @@
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    {{- include "kubeshark.labels" . | nindent 4 }}
+  annotations:
+  {{- if .Values.tap.annotations }}
+    {{- toYaml .Values.tap.annotations | nindent 4 }}
+  {{- end }}
+  name: kubeshark-front
+  namespace: {{ .Release.Namespace }}
+spec:
+  ports:
+    - name: kubeshark-front
+      port: 80
+      targetPort: 80
+  selector:
+    app.kubeshark.co/app: front
+  type: ClusterIP

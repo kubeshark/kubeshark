@@ -1,0 +1,27 @@
+Thank you for installing {{ title .Chart.Name }}.
+
+Registry: {{ .Values.tap.docker.registry }}
+Tag: {{ not (eq .Values.tap.docker.tag "") | ternary .Values.tap.docker.tag (printf "v%s" .Chart.Version) }}
+
+Your deployment has been successful. The release is named `{{ .Release.Name }}` and it has been deployed in the `{{ .Release.Namespace }}` namespace.
+
+{{- if .Values.tap.telemetry.enabled }}
+Notice: Telemetry is enabled. Kubeshark will collect anonymous usage statistics.
+{{ end }}
+
+{{- if .Values.tap.ingress.enabled }}
+
+You can now access the application through the following URL:
+http{{ if .Values.tap.ingress.tls }}s{{ end }}://{{ .Values.tap.ingress.host }}
+
+{{- else }}
+To access the application, follow these steps:
+
+1. Perform port forwarding with the following commands:
+
+    kubectl port-forward -n {{ .Release.Namespace }} service/kubeshark-front 8899:80
+
+2. Once port forwarding is done, you can access the application by visiting the following URL in your web browser:
+    http://0.0.0.0:8899
+
+{{ end }}

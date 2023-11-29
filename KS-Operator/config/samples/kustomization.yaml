@@ -1,0 +1,4 @@
+## Append samples of your project ##
+resources:
+- apps_v1alpha1_kubeshark.yaml
+#+kubebuilder:scaffold:manifestskustomizesamples

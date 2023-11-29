@@ -1,0 +1,66 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app.kubeshark.co/app: hub
+    {{- include "kubeshark.labels" . | nindent 4 }}
+  annotations:
+  {{- if .Values.tap.annotations }}
+    {{- toYaml .Values.tap.annotations | nindent 4 }}
+  {{- end }}
+  name: {{ include "kubeshark.name" . }}-hub
+  namespace: {{ .Release.Namespace }}
+spec:
+  replicas: 1  # Set the desired number of replicas
+  selector:
+    matchLabels:
+      app.kubeshark.co/app: hub
+      {{- include "kubeshark.labels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        app.kubeshark.co/app: hub
+        {{- include "kubeshark.labels" . | nindent 8 }}
+    spec:
+      dnsPolicy: ClusterFirstWithHostNet
+      serviceAccountName: {{ include "kubeshark.serviceAccountName" . }}
+      containers:
+        - name: kubeshark-hub
+          command:
+            - ./hub
+          {{- if .Values.tap.debug }}
+            - -debug
+          {{- end }}
+          env:
+          - name: POD_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
+          - name: POD_NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+          image: '{{ .Values.tap.docker.registry }}/hub:{{ not (eq .Values.tap.docker.tag "") | ternary .Values.tap.docker.tag (printf "v%s" .Chart.Version) }}'
+          imagePullPolicy: {{ .Values.tap.docker.imagePullPolicy }}
+          readinessProbe:
+            periodSeconds: 1
+            failureThreshold: 3
+            successThreshold: 1
+            initialDelaySeconds: 3
+            tcpSocket:
+              port: 80
+          livenessProbe:
+            periodSeconds: 1
+            failureThreshold: 3
+            successThreshold: 1
+            initialDelaySeconds: 3
+            tcpSocket:
+              port: 80
+          resources:
+            limits:
+              cpu: {{ .Values.tap.resources.hub.limits.cpu }}
+              memory: {{ .Values.tap.resources.hub.limits.memory }}
+            requests:
+              cpu: {{ .Values.tap.resources.hub.requests.cpu }}
+              memory: {{ .Values.tap.resources.hub.requests.memory }}

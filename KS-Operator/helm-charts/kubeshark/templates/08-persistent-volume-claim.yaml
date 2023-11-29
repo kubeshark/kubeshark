@@ -1,0 +1,22 @@
+---
+{{- if .Values.tap.persistentStorage }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  labels:
+    {{- include "kubeshark.labels" . | nindent 4 }}
+  annotations:
+  {{- if .Values.tap.annotations }}
+    {{- toYaml .Values.tap.annotations | nindent 4 }}
+  {{- end }}
+  name: kubeshark-persistent-volume-claim
+  namespace: {{ .Release.Namespace }}
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: {{ .Values.tap.storageLimit }}
+  storageClassName: {{ .Values.tap.storageClass }}
+status: {}
+{{- end }}

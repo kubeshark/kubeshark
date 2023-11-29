@@ -1,0 +1,174 @@
+---
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  labels:
+    app.kubeshark.co/app: worker
+    sidecar.istio.io/inject: "false"
+    {{- include "kubeshark.labels" . | nindent 4 }}
+  annotations:
+  {{- if .Values.tap.annotations }}
+    {{- toYaml .Values.tap.annotations | nindent 4 }}
+  {{- end }}
+  name: kubeshark-worker-daemon-set
+  namespace: {{ .Release.Namespace }}
+spec:
+  selector:
+    matchLabels:
+      app.kubeshark.co/app: worker
+      {{- include "kubeshark.labels" . | nindent 6 }}
+  template:
+    metadata:
+      labels:
+        app.kubeshark.co/app: worker
+        {{- include "kubeshark.labels" . | nindent 8 }}
+      name: kubeshark-worker-daemon-set
+      namespace: kubeshark
+    spec:
+      containers:
+        - command:
+            - ./worker
+            - -i
+            - any
+            - -port
+            - '{{ .Values.tap.proxy.worker.srvPort }}'
+          {{- if .Values.tap.serviceMesh }}
+            - -servicemesh
+          {{- end }}
+            - -procfs
+            - /hostproc
+          {{- if .Values.tap.debug }}
+            - -debug
+          {{- end }}
+          {{- if .Values.tap.noKernelModule }}
+            - -no-kernel-module
+          {{- end }}
+          image: '{{ .Values.tap.docker.registry }}/worker:{{ not (eq .Values.tap.docker.tag "") | ternary .Values.tap.docker.tag (printf "v%s" .Chart.Version) }}'
+          imagePullPolicy: {{ .Values.tap.docker.imagePullPolicy }}
+          name: sniffer
+          env:
+          - name: POD_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
+          - name: POD_NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+          resources:
+            limits:
+              cpu: {{ .Values.tap.resources.worker.limits.cpu }}
+              memory: {{ .Values.tap.resources.worker.limits.memory }}
+            requests:
+              cpu: {{ .Values.tap.resources.worker.requests.cpu }}
+              memory: {{ .Values.tap.resources.worker.requests.memory }}
+          securityContext:
+            capabilities:
+              add:
+                - NET_RAW
+                - NET_ADMIN
+                - SYS_ADMIN
+                - SYS_PTRACE
+                - DAC_OVERRIDE
+                - SYS_MODULE
+                - CHECKPOINT_RESTORE
+              drop:
+                - ALL
+          readinessProbe:
+            periodSeconds: 1
+            failureThreshold: 3
+            successThreshold: 1
+            initialDelaySeconds: 5
+            tcpSocket:
+              port: {{ .Values.tap.proxy.worker.srvPort }}
+          livenessProbe:
+            periodSeconds: 1
+            failureThreshold: 3
+            successThreshold: 1
+            initialDelaySeconds: 5
+            tcpSocket:
+              port: {{ .Values.tap.proxy.worker.srvPort }}
+          volumeMounts:
+            - mountPath: /hostproc
+              name: proc
+              readOnly: true
+            - mountPath: /sys
+              name: sys
+              readOnly: true
+            - mountPath: /app/data
+              name: data
+      {{- if .Values.tap.tls }}
+        - command:
+            - ./tracer
+            - -procfs
+            - /hostproc
+          {{- if .Values.tap.debug }}
+            - -debug
+          {{- end }}
+          image: '{{ .Values.tap.docker.registry }}/worker:{{ not (eq .Values.tap.docker.tag "") | ternary .Values.tap.docker.tag (printf "v%s" .Chart.Version) }}'
+          imagePullPolicy: {{ .Values.tap.docker.imagePullPolicy }}
+          name: tracer
+          env:
+          - name: POD_NAME
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.name
+          - name: POD_NAMESPACE
+            valueFrom:
+              fieldRef:
+                fieldPath: metadata.namespace
+          securityContext:
+            capabilities:
+              add:
+                - NET_RAW
+                - NET_ADMIN
+                - SYS_ADMIN
+                - SYS_PTRACE
+                - DAC_OVERRIDE
+                - SYS_RESOURCE
+                - CHECKPOINT_RESTORE
+              drop:
+                - ALL
+          volumeMounts:
+            - mountPath: /hostproc
+              name: proc
+              readOnly: true
+            - mountPath: /sys
+              name: sys
+              readOnly: true
+            - mountPath: /app/data
+              name: data
+      {{- end }}
+      dnsPolicy: ClusterFirstWithHostNet
+      hostNetwork: true
+      serviceAccountName: {{ include "kubeshark.serviceAccountName" . }}
+      terminationGracePeriodSeconds: 0
+      tolerations:
+        - effect: NoExecute
+          operator: Exists
+{{- if not .Values.tap.ignoreTainted }}
+        - effect: NoSchedule
+          operator: Exists
+{{- end }}
+{{- if gt (len .Values.tap.nodeSelectorTerms) 0}}
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              {{- toYaml .Values.tap.nodeSelectorTerms | nindent 12 }}
+{{- end }}
+      volumes:
+        - hostPath:
+            path: /proc
+          name: proc
+        - hostPath:
+            path: /sys
+          name: sys
+        - name: data
+{{- if .Values.tap.persistentStorage }}
+          persistentVolumeClaim:
+            claimName: kubeshark-persistent-volume-claim
+{{- else }}
+          emptyDir:
+            sizeLimit: {{ .Values.tap.storageLimit }}
+{{- end }}

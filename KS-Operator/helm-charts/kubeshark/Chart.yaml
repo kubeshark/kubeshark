@@ -1,0 +1,25 @@
+apiVersion: v2
+description: The API Traffic Analyzer for Kubernetes
+home: https://kubeshark.co
+icon: https://raw.githubusercontent.com/kubeshark/assets/master/logo/vector/logo.svg
+keywords:
+- kubeshark
+- packet capture
+- traffic capture
+- traffic analyzer
+- network sniffer
+- observability
+- devops
+- microservice
+- forensics
+- api
+kubeVersion: '>= 1.16.0-0'
+maintainers:
+- email: info@kubeshark.co
+  name: Kubeshark
+  url: https://kubeshark.co
+name: kubeshark
+sources:
+- https://github.com/kubeshark/kubeshark/tree/master/helm-chart
+type: application
+version: 51.0.39

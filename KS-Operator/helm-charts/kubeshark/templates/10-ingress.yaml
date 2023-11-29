@@ -1,0 +1,39 @@
+---
+{{- if .Values.tap.ingress.enabled }}
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  annotations:
+    nginx.org/websocket-services: "kubeshark-front"
+{{- if .Values.tap.annotations }}
+    {{- toYaml .Values.tap.annotations | nindent 4 }}
+{{- end }}
+  {{- if .Values.tap.ingress.annotations }}
+    {{- toYaml .Values.tap.ingress.annotations | nindent 4 }}
+  {{- end }}
+  labels:
+    {{- include "kubeshark.labels" . | nindent 4 }}
+  name: kubeshark-ingress
+  namespace: {{ .Release.Namespace }}
+spec:
+  {{- if .Values.tap.ingress.className }}
+  ingressClassName: {{ .Values.tap.ingress.className }}
+  {{- end }}
+  rules:
+    - host: {{ .Values.tap.ingress.host }}
+      http:
+        paths:
+          - backend:
+              service:
+                name: kubeshark-front
+                port:
+                  number: 80
+            path: /
+            pathType: Prefix
+  {{- if .Values.tap.ingress.tls }}
+  tls:
+    {{- toYaml .Values.tap.ingress.tls | nindent 2 }}
+  {{- end }}
+status:
+  loadBalancer: {}
+{{- end }}
