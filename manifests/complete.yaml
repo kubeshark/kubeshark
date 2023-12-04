@@ -314,12 +314,13 @@ spec:
           securityContext:
             capabilities:
               add:
+                # NET_RAW is required to listen the network traffic
                 - NET_RAW
+                # NET_ADMIN is required to listen the network traffic
                 - NET_ADMIN
-                - SYS_ADMIN
-                - SYS_PTRACE
-                - DAC_OVERRIDE
+                # SYS_MODULE is required to install kernel modules
                 - SYS_MODULE
+                # CHECKPOINT_RESTORE is required to readlink /proc/PID/exe (kernel > 5.9)
                 - CHECKPOINT_RESTORE
               drop:
                 - ALL
@@ -365,13 +366,14 @@ spec:
           securityContext:
             capabilities:
               add:
-                - NET_RAW
-                - NET_ADMIN
+                # SYS_ADMIN is required to read /proc/PID/net/ns + to install eBPF programs (kernel < 5.8)
                 - SYS_ADMIN
+                # SYS_PTRACE is required to set netns to other process + to open libssl.so of other process
                 - SYS_PTRACE
+                # DAC_OVERRIDE is required to read /proc/PID/environ
                 - DAC_OVERRIDE
+                # SYS_RESOURCE is required to change rlimits for eBPF
                 - SYS_RESOURCE
-                - CHECKPOINT_RESTORE
               drop:
                 - ALL
           volumeMounts:
