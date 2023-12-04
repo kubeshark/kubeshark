@@ -67,11 +67,10 @@ spec:
               add:
                 - NET_RAW
                 - NET_ADMIN
-                - SYS_ADMIN
-                - SYS_PTRACE
-                - DAC_OVERRIDE
+                {{- if not .Values.tap.noKernelModule }}
                 - SYS_MODULE
                 - CHECKPOINT_RESTORE
+                {{- end }}
               drop:
                 - ALL
           readinessProbe:
@@ -120,13 +119,10 @@ spec:
           securityContext:
             capabilities:
               add:
-                - NET_RAW
-                - NET_ADMIN
                 - SYS_ADMIN
                 - SYS_PTRACE
                 - DAC_OVERRIDE
                 - SYS_RESOURCE
-                - CHECKPOINT_RESTORE
               drop:
                 - ALL
           volumeMounts:
