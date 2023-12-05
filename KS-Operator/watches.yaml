@@ -1,3 +1,4 @@
+# Kubeshar Operator for kubeshark.co
 # Use the 'create api' subcommand to add watches to this file.
 - group: apps.kubeshark.co
   version: v1alpha1

@@ -1,3 +1,4 @@
+# Kubeshar Operator for kubeshark.co
 # Build the manager binary
 FROM quay.io/operator-framework/helm-operator:v1.32.0
 
