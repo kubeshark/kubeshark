@@ -41,7 +41,7 @@ Uninstall Kubeshark:
 helm uninstall kubeshark
 ```
 
-## Accesing
+## Accessing
 
 Do the port forwarding:
 
