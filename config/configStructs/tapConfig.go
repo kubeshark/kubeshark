@@ -129,9 +129,9 @@ type TapConfig struct {
 	IPv6              bool                  `yaml:"ipv6" json:"ipv6" default:"true"`
 	Debug             bool                  `yaml:"debug" json:"debug" default:"false"`
 	NoKernelModule    bool                  `yaml:"noKernelModule" json:"noKernelModule" default:"false"`
-	Telemetry         TelemetryConfig       `yaml:"telemetry" json:"telemetry"`
-	PersistentStorageStatic bool            `yaml:"persistentStorageStatic" json:"persistentStorageStatic" default:"false"`
-	EfsFileSytemIdAndPath   bool            `yaml:"efsFileSytemIdAndPath" json:"efsFileSytemIdAndPath" default:""`
+	Telemetry                         TelemetryConfig       `yaml:"telemetry" json:"telemetry"`
+	PersistentStorageStatic bool                             `yaml:"persistentStorageStatic" json:"persistentStorageStatic" default:"false"`
+	EfsFileSytemIdAndPath   bool                           `yaml:"efsFileSytemIdAndPath" json:"efsFileSytemIdAndPath" default:""`
 }
 
 func (config *TapConfig) PodRegex() *regexp.Regexp {
