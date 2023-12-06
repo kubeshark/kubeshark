@@ -30,7 +30,7 @@ const (
 	TelemetryEnabledLabel  = "telemetry-enabled"
 	DebugLabel             = "debug"
 	ContainerPort          = 80
-	ContainerPortStr       = "80"
+	ContainerPortStr             = "80"
 	PersistentStorageStaticLabel = "persistentStorageStatic"
 	EfsFileSytemIdAndPathLabel   = "efsFileSytemIdAndPath"
 )
