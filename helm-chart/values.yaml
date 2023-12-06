@@ -21,7 +21,7 @@ tap:
     namespace: default
   persistentStorage: false
   persistentStorageStatic: false
-  efsFileSytemIdAndPathLabel: ""
+  efsFileSytemIdAndPath: ""
   storageLimit: 500Mi
   storageClass: standard
   dryRun: false
