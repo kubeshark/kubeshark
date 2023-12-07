@@ -8,7 +8,6 @@ tap:
     worker:
       srvPort: 30001
     hub:
-      port: 8898
       srvPort: 8898
     front:
       port: 8899

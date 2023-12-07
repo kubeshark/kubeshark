@@ -53,7 +53,6 @@ type WorkerConfig struct {
 }
 
 type HubConfig struct {
-	Port    uint16 `yaml:"port" json:"port" default:"8898"`
 	SrvPort uint16 `yaml:"srvPort" json:"srvPort" default:"8898"`
 }
 
