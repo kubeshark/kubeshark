@@ -531,10 +531,6 @@ spec:
         - env:
             - name: REACT_APP_DEFAULT_FILTER
               value: ' '
-            - name: REACT_APP_HUB_HOST
-              value: ' '
-            - name: REACT_APP_HUB_PORT
-              value: ':8899/api'
             - name: REACT_APP_AUTH_ENABLED
               value: 'false'
           image: 'docker.io/kubeshark/front:v51.0.39'
