@@ -19,6 +19,8 @@ tap:
     name: kubeshark
     namespace: default
   persistentStorage: false
+  persistentStorageStatic: false
+  efsFileSytemIdAndPath: ""
   storageLimit: 500Mi
   storageClass: standard
   dryRun: false

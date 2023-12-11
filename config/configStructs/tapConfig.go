@@ -9,28 +9,30 @@ import (
 )
 
 const (
-	DockerRegistryLabel    = "docker-registry"
-	DockerTagLabel         = "docker-tag"
-	DockerImagePullPolicy  = "docker-imagePullPolicy"
-	DockerImagePullSecrets = "docker-imagePullSecrets"
-	ProxyFrontPortLabel    = "proxy-front-port"
-	ProxyHubPortLabel      = "proxy-hub-port"
-	ProxyHostLabel         = "proxy-host"
-	NamespacesLabel        = "namespaces"
-	ReleaseNamespaceLabel  = "release-namespace"
-	PersistentStorageLabel = "persistentStorage"
-	StorageLimitLabel      = "storageLimit"
-	StorageClassLabel      = "storageClass"
-	DryRunLabel            = "dryRun"
-	PcapLabel              = "pcap"
-	ServiceMeshLabel       = "serviceMesh"
-	TlsLabel               = "tls"
-	IgnoreTaintedLabel     = "ignoreTainted"
-	IngressEnabledLabel    = "ingress-enabled"
-	TelemetryEnabledLabel  = "telemetry-enabled"
-	DebugLabel             = "debug"
-	ContainerPort          = 80
-	ContainerPortStr       = "80"
+	DockerRegistryLabel          = "docker-registry"
+	DockerTagLabel               = "docker-tag"
+	DockerImagePullPolicy        = "docker-imagePullPolicy"
+	DockerImagePullSecrets       = "docker-imagePullSecrets"
+	ProxyFrontPortLabel          = "proxy-front-port"
+	ProxyHubPortLabel            = "proxy-hub-port"
+	ProxyHostLabel               = "proxy-host"
+	NamespacesLabel              = "namespaces"
+	ReleaseNamespaceLabel        = "release-namespace"
+	PersistentStorageLabel       = "persistentStorage"
+	PersistentStorageStaticLabel = "persistentStorageStatic"
+	EfsFileSytemIdAndPathLabel   = "efsFileSytemIdAndPath"
+	StorageLimitLabel            = "storageLimit"
+	StorageClassLabel            = "storageClass"
+	DryRunLabel                  = "dryRun"
+	PcapLabel                    = "pcap"
+	ServiceMeshLabel             = "serviceMesh"
+	TlsLabel                     = "tls"
+	IgnoreTaintedLabel           = "ignoreTainted"
+	IngressEnabledLabel          = "ingress-enabled"
+	TelemetryEnabledLabel        = "telemetry-enabled"
+	DebugLabel                   = "debug"
+	ContainerPort                = 80
+	ContainerPortStr             = "80"
 )
 
 type ResourceLimits struct {
@@ -105,28 +107,30 @@ type TelemetryConfig struct {
 }
 
 type TapConfig struct {
-	Docker            DockerConfig          `yaml:"docker" json:"docker"`
-	Proxy             ProxyConfig           `yaml:"proxy" json:"proxy"`
-	PodRegexStr       string                `yaml:"regex" json:"regex" default:".*"`
-	Namespaces        []string              `yaml:"namespaces" json:"namespaces" default:"[]"`
-	Release           ReleaseConfig         `yaml:"release" json:"release"`
-	PersistentStorage bool                  `yaml:"persistentStorage" json:"persistentStorage" default:"false"`
-	StorageLimit      string                `yaml:"storageLimit" json:"storageLimit" default:"500Mi"`
-	StorageClass      string                `yaml:"storageClass" json:"storageClass" default:"standard"`
-	DryRun            bool                  `yaml:"dryRun" json:"dryRun" default:"false"`
-	Resources         ResourcesConfig       `yaml:"resources" json:"resources"`
-	ServiceMesh       bool                  `yaml:"serviceMesh" json:"serviceMesh" default:"true"`
-	Tls               bool                  `yaml:"tls" json:"tls" default:"true"`
-	IgnoreTainted     bool                  `yaml:"ignoreTainted" json:"ignoreTainted" default:"false"`
-	Labels            map[string]string     `yaml:"labels" json:"labels" default:"{}"`
-	Annotations       map[string]string     `yaml:"annotations" json:"annotations" default:"{}"`
-	NodeSelectorTerms []v1.NodeSelectorTerm `yaml:"nodeSelectorTerms" json:"nodeSelectorTerms" default:"[]"`
-	Auth              AuthConfig            `yaml:"auth" json:"auth"`
-	Ingress           IngressConfig         `yaml:"ingress" json:"ingress"`
-	IPv6              bool                  `yaml:"ipv6" json:"ipv6" default:"true"`
-	Debug             bool                  `yaml:"debug" json:"debug" default:"false"`
-	NoKernelModule    bool                  `yaml:"noKernelModule" json:"noKernelModule" default:"false"`
-	Telemetry         TelemetryConfig       `yaml:"telemetry" json:"telemetry"`
+	Docker                  DockerConfig          `yaml:"docker" json:"docker"`
+	Proxy                   ProxyConfig           `yaml:"proxy" json:"proxy"`
+	PodRegexStr             string                `yaml:"regex" json:"regex" default:".*"`
+	Namespaces              []string              `yaml:"namespaces" json:"namespaces" default:"[]"`
+	Release                 ReleaseConfig         `yaml:"release" json:"release"`
+	PersistentStorage       bool                  `yaml:"persistentStorage" json:"persistentStorage" default:"false"`
+	PersistentStorageStatic bool                  `yaml:"persistentStorageStatic" json:"persistentStorageStatic" default:"false"`
+	EfsFileSytemIdAndPath   bool                  `yaml:"efsFileSytemIdAndPath" json:"efsFileSytemIdAndPath" default:""`
+	StorageLimit            string                `yaml:"storageLimit" json:"storageLimit" default:"500Mi"`
+	StorageClass            string                `yaml:"storageClass" json:"storageClass" default:"standard"`
+	DryRun                  bool                  `yaml:"dryRun" json:"dryRun" default:"false"`
+	Resources               ResourcesConfig       `yaml:"resources" json:"resources"`
+	ServiceMesh             bool                  `yaml:"serviceMesh" json:"serviceMesh" default:"true"`
+	Tls                     bool                  `yaml:"tls" json:"tls" default:"true"`
+	IgnoreTainted           bool                  `yaml:"ignoreTainted" json:"ignoreTainted" default:"false"`
+	Labels                  map[string]string     `yaml:"labels" json:"labels" default:"{}"`
+	Annotations             map[string]string     `yaml:"annotations" json:"annotations" default:"{}"`
+	NodeSelectorTerms       []v1.NodeSelectorTerm `yaml:"nodeSelectorTerms" json:"nodeSelectorTerms" default:"[]"`
+	Auth                    AuthConfig            `yaml:"auth" json:"auth"`
+	Ingress                 IngressConfig         `yaml:"ingress" json:"ingress"`
+	IPv6                    bool                  `yaml:"ipv6" json:"ipv6" default:"true"`
+	Debug                   bool                  `yaml:"debug" json:"debug" default:"false"`
+	NoKernelModule          bool                  `yaml:"noKernelModule" json:"noKernelModule" default:"false"`
+	Telemetry               TelemetryConfig       `yaml:"telemetry" json:"telemetry"`
 }
 
 func (config *TapConfig) PodRegex() *regexp.Regexp {
