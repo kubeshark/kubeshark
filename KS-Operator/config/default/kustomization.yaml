@@ -1,3 +1,4 @@
+# Kubeshar Operator for kubeshark.co - API Traffic Analyzer
 # Adds namespace to all resources.
 namespace: ks-operator-system
 
