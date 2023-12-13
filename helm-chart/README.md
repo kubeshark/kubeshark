@@ -41,7 +41,7 @@ Uninstall Kubeshark:
 helm uninstall kubeshark
 ```
 
-## Accesing
+## Accessing
 
 Do the port forwarding:
 
@@ -122,6 +122,8 @@ helm install kubeshark kubeshark/kubeshark \
 | `tap.release.name`                        | Helm release name                          | `kubeshark`                                             |
 | `tap.release.namespace`                   | Helm release namespace                | `default`                                               |
 | `tap.persistentStorage`                   | Use `persistentVolumeClaim` instead of `emptyDir` | `false`                                                |
+| `tap.persistentStorageStatic`             | Use static persistent volume provisioning (explicitly defined `PersistentVolume` ) | `false`                                                      |
+| `tap.efsFileSytemIdAndPath`               | [EFS file system ID and, optionally, subpath and/or access point](https://github.com/kubernetes-sigs/aws-efs-csi-driver/blob/master/examples/kubernetes/access_points/README.md) `<FileSystemId>:<Path>:<AccessPointId>`     | ""                                                           |
 | `tap.storageLimit`                        | Limit of either the `emptyDir` or `persistentVolumeClaim`                  | `500Mi`                                                 |
 | `tap.storageClass`                        | Storage class of the `PersistentVolumeClaim`          | `standard`                                              |
 | `tap.dryRun`                              | Preview of all pods matching the regex, without tapping them                    | `false`                                                 |
