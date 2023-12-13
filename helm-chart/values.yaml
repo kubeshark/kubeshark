@@ -63,7 +63,7 @@ tap:
     annotations: {}
   ipv6: true
   debug: false
-  noKernelModule: false
+  kernelModule: false
   telemetry:
     enabled: true
 logs:

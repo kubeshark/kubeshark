@@ -94,7 +94,7 @@ For example, change from the default 500Mi to 1Gi:
 ```shell
 --set tap.storageLimit=1Gi
 ```
- 
+
 ## Disabling IPV6
 
 Not all have IPV6 enabled, hence this has to be disabled as follows:
@@ -152,7 +152,7 @@ helm install kubeshark kubeshark/kubeshark \
 | `tap.ingress.annotations`                 | `Ingress` annotations                           | `{}`                                                    |
 | `tap.ipv6`                                | Enable IPv6 support for the front-end                        | `true`                                                  |
 | `tap.debug`                               | Enable debug mode                             | `false`                                                 |
-| `tap.noKernelModule`                      | Do not install `PF_RING` kernel module       | `false`                                                 |
+| `tap.kernelModule`                        | Create `PF_RING` kernel module custom resource      | `false`                                                 |
 | `tap.telemetry.enabled`                   | Enable anonymous usage statistics collection           | `true`                                                  |
 | `logs.file`                               | Logs dump path                      | `""`                                                    |
 | `kube.configPath`                         | Path to the `kubeconfig` file (`$HOME/.kube/config`)            | `""`                                                    |

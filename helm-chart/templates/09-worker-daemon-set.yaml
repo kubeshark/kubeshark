@@ -25,6 +25,23 @@ spec:
       name: kubeshark-worker-daemon-set
       namespace: kubeshark
     spec:
+      {{ if .Values.tap.kernelModule}}
+      initContainers:
+      - name: wait-for-pf-ring
+        image: alpine:3.18
+        command: ["/bin/sh", "-c"]
+        args:
+        - >
+          while true; do
+            if lsmod | grep -q "pf_ring"; then
+              echo "pf_ring module is loaded.";
+              break;
+            else
+              echo "Waiting for pf_ring module to be loaded...";
+              sleep 5;
+            fi
+          done
+      {{ end }}
       containers:
         - command:
             - ./worker
@@ -37,11 +54,9 @@ spec:
           {{- end }}
             - -procfs
             - /hostproc
+            - -no-kernel-module
           {{- if .Values.tap.debug }}
             - -debug
-          {{- end }}
-          {{- if .Values.tap.noKernelModule }}
-            - -no-kernel-module
           {{- end }}
           image: '{{ .Values.tap.docker.registry }}/worker:{{ not (eq .Values.tap.docker.tag "") | ternary .Values.tap.docker.tag (printf "v%s" .Chart.Version) }}'
           imagePullPolicy: {{ .Values.tap.docker.imagePullPolicy }}
@@ -69,10 +84,6 @@ spec:
                 - NET_RAW
                 # NET_ADMIN is required to listen the network traffic
                 - NET_ADMIN
-                {{- if not .Values.tap.noKernelModule }}
-                # SYS_MODULE is required to install kernel modules
-                - SYS_MODULE
-                {{- end }}
                 {{- if .Values.tap.serviceMesh }}
                 # SYS_ADMIN is required to read /proc/PID/net/ns + to install eBPF programs (kernel < 5.8)
                 - SYS_ADMIN

@@ -1,0 +1,18 @@
+---
+{{- if .Values.tap.kernelModule }}
+apiVersion: kmm.sigs.x-k8s.io/v1beta1
+kind: Module
+metadata:
+  name: pf-ring
+spec:
+  moduleLoader:
+    container:
+      modprobe:
+        moduleName: pf_ring
+        dirName: /opt
+      kernelMappings:
+        - regexp: '^.+$'
+          containerImage: 'kubehq/pf-ring-module:${KERNEL_FULL_VERSION}'
+  selector:
+    kubernetes.io/hostname:
+{{- end }}
