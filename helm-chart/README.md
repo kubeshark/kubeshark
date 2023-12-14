@@ -152,7 +152,9 @@ helm install kubeshark kubeshark/kubeshark \
 | `tap.ingress.annotations`                 | `Ingress` annotations                           | `{}`                                                    |
 | `tap.ipv6`                                | Enable IPv6 support for the front-end                        | `true`                                                  |
 | `tap.debug`                               | Enable debug mode                             | `false`                                                 |
-| `tap.kernelModule`                        | Create `PF_RING` kernel module custom resource      | `false`                                                 |
+| `tap.kernelModule.mode`                    | PF_RING kernel module loading approach([details](PF_RING.md))      | `auto`                                                 |
+| `tap.kernelModule.imageRepoSecret`                    | ImageRepoSecret is an optional secret that is used to pull both the module loader container([details](PF_RING.md))      | ""                                                 |
+| `tap.kernelModule.kernelMappings`                    |List of mappings between kernel version and container loader([details](PF_RING.md))      | `[{'regexp': '.+$', 'containerImage': 'kubehq/pf-ring-module:${KERNEL_FULL_VERSION}'}]`                                                 |
 | `tap.telemetry.enabled`                   | Enable anonymous usage statistics collection           | `true`                                                  |
 | `logs.file`                               | Logs dump path                      | `""`                                                    |
 | `kube.configPath`                         | Path to the `kubeconfig` file (`$HOME/.kube/config`)            | `""`                                                    |
@@ -163,3 +165,7 @@ helm install kubeshark kubeshark/kubeshark \
 | `scripting.env`                           | Environment variables for the scripting      | `{}`                                                    |
 | `scripting.source`                        | Source directory of the scripts                | `""`                                                    |
 | `scripting.watchScripts`                  | Enable watch mode for the scripts in source directory          | `true`                                                  |
+
+KernelMapping pairs kernel versions with a
+                            DriverContainer image. Kernel versions can be matched
+                            literally or using a regular expression

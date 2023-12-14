@@ -63,7 +63,12 @@ tap:
     annotations: {}
   ipv6: true
   debug: false
-  kernelModule: false
+  kernelModule:
+    mode: auto
+    kernelMappings:
+    - regexp: '^.+$'
+      containerImage: 'kubehq/pf-ring-module:${KERNEL_FULL_VERSION}'
+    imageRepoSecret: ""
   telemetry:
     enabled: true
 logs:
