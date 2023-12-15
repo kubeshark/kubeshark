@@ -1,5 +1,8 @@
 ---
-{{- if .Values.tap.kernelModule }}
+{{- if not (or (eq .Values.tap.kernelModule.mode "auto") (eq .Values.tap.kernelModule.mode "kmm")) }}
+{{- fail "Invalid value for tap.kernelModule.mode; must be 'auto' or 'kmm'" }}
+{{- end }}
+{{- if eq .Values.tap.kernelModule.mode "kmm" }}
 apiVersion: kmm.sigs.x-k8s.io/v1beta1
 kind: Module
 metadata:
@@ -11,8 +14,14 @@ spec:
         moduleName: pf_ring
         dirName: /opt
       kernelMappings:
-        - regexp: '^.+$'
-          containerImage: 'kubehq/pf-ring-module:${KERNEL_FULL_VERSION}'
+      -
+      {{- range .Values.tap.kernelModule.kernelMappings }}
+      {{- toYaml . | nindent 8 }}
+      {{- end }}
   selector:
     kubernetes.io/hostname:
+  {{- if ne .Values.tap.kernelModule.imageRepoSecret "" }}
+  imageRepoSecret:
+    name: {{ .Values.tap.kernelModule.imageRepoSecret }}
+  {{- end }}
 {{- end }}

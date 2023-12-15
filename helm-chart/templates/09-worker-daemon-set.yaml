@@ -54,7 +54,9 @@ spec:
           {{- end }}
             - -procfs
             - /hostproc
+          {{- if eq .Values.tap.kernelModule.mode "kmm" }}
             - -no-kernel-module
+          {{ end }}
           {{- if .Values.tap.debug }}
             - -debug
           {{- end }}
@@ -84,6 +86,10 @@ spec:
                 - NET_RAW
                 # NET_ADMIN is required to listen the network traffic
                 - NET_ADMIN
+                {{- if eq .Values.tap.kernelModule.mode "auto" }}
+                # SYS_MODULE is required to install kernel modules
+                - SYS_MODULE
+                {{- end }}
                 {{- if .Values.tap.serviceMesh }}
                 # SYS_ADMIN is required to read /proc/PID/net/ns + to install eBPF programs (kernel < 5.8)
                 - SYS_ADMIN
