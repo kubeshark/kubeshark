@@ -8,31 +8,29 @@ For comprehensive information on PF_RING™, please visit the [User's Guide]((ht
 
 ## Provisioning mode
 
-There are two ways to approach PF_RING kernel module load on the nodes:
+There are two approaches for loading the PF_RING kernel module on nodes:
 
 1. `auto`
 
-Kubeshark worker takes required PF_RING kernel module version from S3 and loads it on the node.
+In this mode, the Kubeshark worker retrieves the necessary PF_RING kernel module version from an S3 bucket and loads it onto the node.
 
 2. `kmm`
 
-Kernel Module Management controller([KMM](https://kmm.sigs.k8s.io/documentation/deploy_kmod/)) takes required PF_RING kernel module version
-from Docker container and loads it on the node.
+The Kernel Module Management controller ([KMM]((https://kmm.sigs.k8s.io/documentation/deploy_kmod/))) acquires the required PF_RING kernel module version from a Docker container and loads it onto the node
 
-## What mode to use?
+## Selection of Provisioning Mode
 
-Before deciding what methot to use, it is important to find out if there is PF_RING kernel module built already for your kernel version.
-It can be done via runnig:
+Prior to choosing a method, it is essential to verify if a PF_RING kernel module is already built for your kernel version. This can be done by running:
 
 ```
 kubeshark pfring compatibility
 ```
 
-This command verifies if there are kernel modules availabale for the kernel versions running on all nodes in Kubernets cluster.
+This command checks for the availability of kernel modules for the kernel versions running across all nodes in the Kubernetes cluster.
 
 ### Pre-built kernel module exists and external egress allowed
 
-If PF_RING kernel modules exist already for the target nodes, both `auto` and `kmm` provisioning modes can be used.
+If PF_RING kernel modules are already available for the target nodes, both `auto` and `kmm` modes are applicable.
 
 |auto|kmm|
 |----|---|
@@ -45,15 +43,51 @@ If PF_RING kernel modules exist already for the target nodes, both `auto` and `k
 
 ### Pre-built kernel module doesn't exist or external egress isn't allowed
 
-If PF_RING kernel modules don't exist yet for the target nodes, only `kmm` provisioning mode can be used (`auto` mode will still start Kubeshark, but with `libpcap`, not `PF_RING`).
-This mode allows configuration of the custom container images as the source for PF_RING kernel modules.
-That also means private container registries can be used to load PF_RING kernel module.
+In cases where PF_RING kernel modules are not yet available for the target nodes, or if external egress is restricted, the `kmm` mode is the only viable option (`auto` mode would start Kubeshark with libpcap, not PF_RING).
+This approach enables the use of custom container images as the source for PF_RING kernel modules and allows leveraging private container registries.
 
-Follow these steps to use `kmm` with custom containers:
+#### Steps to Use kmm with Custom Containers
 
-1.
+1. Compile the pf_ring.ko kernel module for your target kernel version (see [Appendix B](#appendix-b-pf_ring-kernel-module-compilation) for instructions).
 
-Helm configuration option `tap.kernelModule.mode` controls the wa
+After building the module with kubeshark pfring compile, you will obtain a `pf-ring-<kernel version>.ko` file.
+If manually built, rename the kernel module to this format.
+
+2. Build and push Docker container(-s) with the kernel module file from stage 1.
+
+Create `Dockerfile` in the folder with PF_RING kernel module:
+
+```
+FROM alpine:3.18
+ARG KERNEL_VERSION
+
+COPY pf-ring-${KERNEL_VERSION}.ko /opt/lib/modules/${KERNEL_VERSION}/pf_ring.ko
+RUN apk add kmod
+
+RUN depmod -b /opt ${KERNEL_VERSION}
+```
+
+Run build&command:
+
+```
+docker build --build-arg <kernel version> <your registry>/<image>:<kernel version>
+docker push <your registry>:/<image>:<kernel version>
+```
+
+It is recommended to use kernel version as a container tag for consistency.
+
+
+3. Configure Helm values
+
+```
+tap:
+  kernelModule:
+    mode: kmm
+    kernelMappings:
+    - regexp: '<kernel version>'
+      containerImage: '<your-registry>/<image>:<kernel version>'
+    imageRepoSecret: <optional secret with credentials for private registry>
+```
 
 
 ## Appendix A: pre-build kernel versions
@@ -66,6 +100,67 @@ Helm configuration option `tap.kernelModule.mode` controls the wa
 |5.14.0-362.8.1.el9_3.x86_64|kubehq/pf-ring-module:5.14.0-362.8.1.el9_3.x86_64|
 |5.15.0-1050-aws|kubehq/pf-ring-module:5.15.0-1050-aws|
 
-## Appendix B: PF_RING kernel module custom container build
 
-Build
+## Appendix B: PF_RING kernel module compilation
+
+PF_RING kernel module compilation can be completed automatically or manually.
+
+### Automated complilation
+
+In case your Kubernetes workers run supported Linux distribution, `kubeshark` CLI can be used to build PF_RING module:
+
+```
+kubeshark pfring compile --target <distro>
+```
+
+This command requires:
+- kubectl to be installed and configured with a proper context
+- egress connection to Internet available
+
+This command:
+1. Runs Kubernetes job with build container
+2. Waits for job to be completed
+3. Downloads `pf-ring-<kernel version>.ko` file into the current folder.
+4. Cleans up created job.
+
+Currently supported distros:
+- Ubuntu
+- RHEL 9
+- Amazon Linux 2
+
+### Manual compilation
+
+The process description is based on Ubuntu 22.04 distribution.
+
+1. Get terminal access to the node with target kernel version
+This can be done either via SSH directly to node or with debug container running on the target node:
+
+```
+kubectl debug node/<target node> -it --attach=true --image=ubuntu:22.04
+```
+
+2. Install build tools and kernel headers
+
+```
+apt update
+apt install -y gcc build-essential make git wget tar gzip
+apt install -y linux-headers-$(uname -r)
+```
+
+3. Download PF_RING source code
+
+```
+wget https://github.com/ntop/PF_RING/archive/refs/tags/8.4.0.tar.gz
+tar -xf 8.4.0.tar.gz
+cd PF_RING-8.4.0/kernel
+```
+
+4. Compile the kernel module
+
+```
+make KERNEL_SRC=/usr/src/linux-headers-$(uname -r)
+```
+
+5. Copy `pf_ring.ko` to the local file system.
+
+Use `scp` or `kubectl cp` depending on type of access(SSH or debug pod).
