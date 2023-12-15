@@ -39,7 +39,18 @@ The Kernel Module Management controller ([KMM](https://kmm.sigs.k8s.io/documenta
 Prior to choosing a method, it is essential to verify if a PF_RING kernel module is already built for your kernel version. This can be done by running:
 
 ```
+# TODO: develop this command
+# 1. collect list of nodes and theirs kernel verisons
+# 2. download json with available kernel versions
+# 3. compare and provide report
 kubeshark pfring compatibility
+
+# example output
+| node                                          | kernel version                | exists |
+|-----------------------------------------------|-------------------------------|--------|
+| ip-192-168-34-216.us-west-2.compute.internal  | 5.10.198-187.748.amzn2.x86_64 | true   |
+
+Modules for all kernel versions exist: true
 ```
 
 This command checks for the availability of kernel modules for the kernel versions running across all nodes in the Kubernetes cluster.
@@ -126,6 +137,7 @@ PF_RING kernel module compilation can be completed automatically or manually.
 In case your Kubernetes workers run supported Linux distribution, `kubeshark` CLI can be used to build PF_RING module:
 
 ```
+# currently implemented in pf-ring-compiler
 kubeshark pfring compile --target <distro>
 ```
 
