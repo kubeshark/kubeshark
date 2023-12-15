@@ -16,7 +16,7 @@ In this mode, the Kubeshark worker retrieves the necessary PF_RING kernel module
 
 2. `kmm`
 
-The Kernel Module Management controller ([KMM]((https://kmm.sigs.k8s.io/documentation/deploy_kmod/))) acquires the required PF_RING kernel module version from a Docker container and loads it onto the node
+The Kernel Module Management controller ([KMM](https://kmm.sigs.k8s.io/documentation/deploy_kmod/)) acquires the required PF_RING kernel module version from a Docker container and loads it onto the node
 
 ## Selection of Provisioning Mode
 

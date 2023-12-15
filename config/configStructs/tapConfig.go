@@ -129,8 +129,9 @@ type TapConfig struct {
 	Ingress                 IngressConfig         `yaml:"ingress" json:"ingress"`
 	IPv6                    bool                  `yaml:"ipv6" json:"ipv6" default:"true"`
 	Debug                   bool                  `yaml:"debug" json:"debug" default:"false"`
-	NoKernelModule          bool                  `yaml:"noKernelModule" json:"noKernelModule" default:"false"`
-	Telemetry               TelemetryConfig       `yaml:"telemetry" json:"telemetry"`
+	// TODO: remove completely?
+	NoKernelModule bool            `yaml:"noKernelModule" json:"noKernelModule" default:"false"`
+	Telemetry      TelemetryConfig `yaml:"telemetry" json:"telemetry"`
 }
 
 func (config *TapConfig) PodRegex() *regexp.Regexp {
