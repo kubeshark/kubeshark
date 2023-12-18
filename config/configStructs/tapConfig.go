@@ -131,6 +131,7 @@ type TapConfig struct {
 	Debug                   bool                  `yaml:"debug" json:"debug" default:"false"`
 	NoKernelModule          bool                  `yaml:"noKernelModule" json:"noKernelModule" default:"false"`
 	Telemetry               TelemetryConfig       `yaml:"telemetry" json:"telemetry"`
+	DefaultFilter           string                `yaml:"defaultFilter" json:"defaultFilter"`
 }
 
 func (config *TapConfig) PodRegex() *regexp.Regexp {

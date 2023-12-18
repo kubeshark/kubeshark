@@ -66,6 +66,7 @@ tap:
   noKernelModule: false
   telemetry:
     enabled: true
+  defaultFilter: ""
 logs:
   file: ""
 kube:
