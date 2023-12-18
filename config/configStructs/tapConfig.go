@@ -114,7 +114,7 @@ type TapConfig struct {
 	Release                 ReleaseConfig         `yaml:"release" json:"release"`
 	PersistentStorage       bool                  `yaml:"persistentStorage" json:"persistentStorage" default:"false"`
 	PersistentStorageStatic bool                  `yaml:"persistentStorageStatic" json:"persistentStorageStatic" default:"false"`
-	EfsFileSytemIdAndPath   bool                  `yaml:"efsFileSytemIdAndPath" json:"efsFileSytemIdAndPath" default:""`
+	EfsFileSytemIdAndPath   string                `yaml:"efsFileSytemIdAndPath" json:"efsFileSytemIdAndPath" default:""`
 	StorageLimit            string                `yaml:"storageLimit" json:"storageLimit" default:"500Mi"`
 	StorageClass            string                `yaml:"storageClass" json:"storageClass" default:"standard"`
 	DryRun                  bool                  `yaml:"dryRun" json:"dryRun" default:"false"`
