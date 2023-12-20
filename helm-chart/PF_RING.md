@@ -41,7 +41,7 @@ Kubeshark provides additional CLI tool for this purpose - [pf-ring-compiler](htt
 Compatibility verification can be done by running:
 
 ```
-pf-ring-compiler compatibility
+pfring-compiler compatibility
 ```
 
 This command checks for the availability of kernel modules for the kernel versions running across all nodes in the Kubernetes cluster.
@@ -127,8 +127,7 @@ PF_RING kernel module compilation can be completed automatically or manually.
 In case your Kubernetes workers run supported Linux distribution, `kubeshark` CLI can be used to build PF_RING module:
 
 ```
-# currently implemented in pf-ring-compiler
-kubeshark pfring compile --target <distro>
+pfring-compiler compile --target <distro>
 ```
 
 This command requires:
