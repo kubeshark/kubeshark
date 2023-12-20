@@ -9,8 +9,7 @@
         - [Pre-built kernel module exists and external egress allowed](#pre-built-kernel-module-exists-and-external-egress-allowed)
         - [Pre-built kernel module doesn't exist or external egress isn't allowed](#pre-built-kernel-module-doesnt-exist-or-external-egress-isnt-allowed)
             - [Steps to Use kmm with Custom Containers](#steps-to-use-kmm-with-custom-containers)
-    - [Appendix A: pre-build kernel versions](#appendix-a-pre-build-kernel-versions)
-    - [Appendix B: PF_RING kernel module compilation](#appendix-b-pf_ring-kernel-module-compilation)
+    - [Appendix A: PF_RING kernel module compilation](#appendix-a-pf_ring-kernel-module-compilation)
         - [Automated complilation](#automated-complilation)
         - [Manual compilation](#manual-compilation)
 
@@ -36,35 +35,37 @@ The Kernel Module Management controller ([KMM](https://kmm.sigs.k8s.io/documenta
 
 ## Selection of Provisioning Mode
 
-Prior to choosing a method, it is essential to verify if a PF_RING kernel module is already built for your kernel version. This can be done by running:
+Prior to choosing a method, it is essential to verify if a PF_RING kernel module is already built for your kernel version.
+Kubeshark provides additional CLI tool for this purpose - [pf-ring-compiler](https://github.com/kubeshark/pf-ring-compiler).
+
+Compatibility verification can be done by running:
 
 ```
-# TODO: develop this command
-# 1. collect list of nodes and theirs kernel verisons
-# 2. download json with available kernel versions
-# 3. compare and provide report
-kubeshark pfring compatibility
-
-# example output
-| node                                          | kernel version                | exists |
-|-----------------------------------------------|-------------------------------|--------|
-| ip-192-168-34-216.us-west-2.compute.internal  | 5.10.198-187.748.amzn2.x86_64 | true   |
-
-Modules for all kernel versions exist: true
+pf-ring-compiler compatibility
 ```
 
 This command checks for the availability of kernel modules for the kernel versions running across all nodes in the Kubernetes cluster.
 
+Example output for a compatible cluster:
+```
+Node                                          Kernel Version                 Supported
+ip-192-168-77-230.us-west-2.compute.internal  5.10.199-190.747.amzn2.x86_64  true
+ip-192-168-34-216.us-west-2.compute.internal  5.10.199-190.747.amzn2.x86_64  true
+
+Cluster is compatible
+```
+
+
 ### Pre-built kernel module exists and external egress allowed
 
-If PF_RING kernel modules are already available for the target nodes, both `auto` and `kmm` modes are applicable.
+If PF_RING kernel modules are already available for the target nodes (cluster is compatible), both `auto` and `kmm` modes are applicable.
 
 |auto|kmm|
 |----|---|
-| `SYS_MODULE` capability required for Kubeshark | `SYS_MODULE` capability required for Kubeshark|
-| no additional dependencies | (!)requires `cert-manager` and `KMM` installed (follow [instructions](https://kmm.sigs.k8s.io/#installation-guide)) |
+| `SYS_MODULE` capability required for Kubeshark | `SYS_MODULE` capability is not required for Kubeshark|
+| no additional dependencies | (!)requires `cert-manager` and `KMM` installed (follow [instructions](https://kmm.sigs.k8s.io/documentation/install/)) |
 | Kubeshark falls back to `libpcap` if `PF_RING` kernel module not available | Kubshark waits until PF_RING is loaded with KMM|
-| module is downloaded from S3 bucket in AWS | module is loaded from `ubehq/pf-ring-module:<kernel version>` container|
+| module is downloaded from S3 bucket in AWS | module is loaded from `kubeshark/pf-ring-module:<kernel version>` container|
 | requires egress connectivity to AWS S3 endpoints | requires egress connectivity to Docker Hub container registry|
 
 
@@ -117,18 +118,7 @@ tap:
 ```
 
 
-## Appendix A: pre-build kernel versions
-
-
-| Kernel version | Container |
-|----------------|-----------|
-|5.10.198-187.748.amzn2.x86_64|kubehq/pf-ring-module:5.10.198-187.748.amzn2.x86_64|
-|5.10.199-190.747.amzn2.x86_64|kubehq/pf-ring-module:5.10.199-190.747.amzn2.x86_64|
-|5.14.0-362.8.1.el9_3.x86_64|kubehq/pf-ring-module:5.14.0-362.8.1.el9_3.x86_64|
-|5.15.0-1050-aws|kubehq/pf-ring-module:5.15.0-1050-aws|
-
-
-## Appendix B: PF_RING kernel module compilation
+## Appendix A: PF_RING kernel module compilation
 
 PF_RING kernel module compilation can be completed automatically or manually.
 
