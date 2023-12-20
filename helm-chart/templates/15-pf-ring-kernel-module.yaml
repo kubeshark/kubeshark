@@ -24,4 +24,59 @@ spec:
   imageRepoSecret:
     name: {{ .Values.tap.kernelModule.imageRepoSecret }}
   {{- end }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pfring-kmm-status-check-script
+data:
+  check_status.sh: |
+    #!/bin/bash
+
+    timeout=300
+    interval=10
+    elapsed=0
+
+    while [ $elapsed -lt $timeout ]; do
+        desired=$(kubectl get modules pf-ring -o json | jq -r .status.moduleLoader.desiredNumber)
+        available=$(kubectl get modules pf-ring -o json | jq -r .status.moduleLoader.availableNumber)
+
+        echo "Checking dsired and available module load: $desired vs $available"
+
+        if [ "$desired" = "$available" ]; then
+            echo "PF_RING loaded an all nodes."
+            exit 0
+        else
+            sleep $interval
+            elapsed=$((elapsed + interval))
+        fi
+    done
+
+    echo "Timeout reached. PF_RING module didn't reach desired status."
+    exit 1
+
+---
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: pfring-kmm-status-check
+  annotations:
+    "helm.sh/hook": post-install,post-upgrade
+    "helm.sh/hook-weight": "1"
+    "helm.sh/hook-delete-policy": hook-succeeded
+spec:
+  template:
+    spec:
+      containers:
+      - name: verify-pfring-kmm-status
+        image: alpine/k8s:1.27.8
+        command: ["/bin/bash", "/scripts/check_status.sh"]
+        volumeMounts:
+        - name: script-volume
+          mountPath: /scripts
+      volumes:
+      - name: script-volume
+        configMap:
+          name: pfring-kmm-status-check-script
+      restartPolicy: Never
 {{- end }}

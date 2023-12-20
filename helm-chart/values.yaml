@@ -67,8 +67,7 @@ tap:
     mode: auto
     kernelMappings:
     - regexp: '^.+$'
-      # TODO: replace with kubehq/kubeshark:pf-ring-<kernel-version>?
-      containerImage: 'kubehq/pf-ring-module:${KERNEL_FULL_VERSION}'
+      containerImage: 'kubeshark/pf-ring-module:${KERNEL_FULL_VERSION}'
     imageRepoSecret: ""
   telemetry:
     enabled: true
