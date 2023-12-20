@@ -22,8 +22,12 @@
 
 <p align="center">
   <b>
-  <span>NEW: </span>
-  <a href="https://github.com/kubeshark/kubeshark/releases/latest">v51.0.0</a> is out, with significantly improved performance and optimized resource utilization.
+	  NEW: 
+	  <a href="https://github.com/kubeshark/kubeshark/releases/latest">Version 52.0.0</a> 
+	  now available, featuring a new 
+	  <a href="https://docs.kubeshark.co/en/traffic_recorder">Traffic Recorder</a> 
+	  and  
+	  <a href="https://docs.kubeshark.co/en/half_connections">Half & Erroneous Connection Analysis</a>.
   </b>
 </p>
 
