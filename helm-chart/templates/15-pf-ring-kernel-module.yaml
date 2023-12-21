@@ -1,4 +1,5 @@
 ---
+{{- if .Values.tap.kernelModule.enabled }}
 {{- if not (or (eq .Values.tap.kernelModule.mode "auto") (eq .Values.tap.kernelModule.mode "kmm")) }}
 {{- fail "Invalid value for tap.kernelModule.mode; must be 'auto' or 'kmm'" }}
 {{- end }}
@@ -79,4 +80,5 @@ spec:
         configMap:
           name: pfring-kmm-status-check-script
       restartPolicy: Never
+{{- end }}
 {{- end }}

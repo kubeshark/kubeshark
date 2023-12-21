@@ -64,6 +64,7 @@ tap:
   ipv6: true
   debug: false
   kernelModule:
+    enabled: true
     mode: auto
     kernelMappings:
     - regexp: '^.+$'

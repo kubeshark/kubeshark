@@ -25,7 +25,7 @@ spec:
       name: kubeshark-worker-daemon-set
       namespace: kubeshark
     spec:
-      {{ if .Values.tap.kernelModule}}
+      {{ if and (eq .Values.tap.kernelModule.enabled true) (eq .Values.tap.kernelModule.mode "kmm")}}
       initContainers:
       - name: wait-for-pf-ring
         image: alpine:3.18
@@ -54,7 +54,7 @@ spec:
           {{- end }}
             - -procfs
             - /hostproc
-          {{- if eq .Values.tap.kernelModule.mode "kmm" }}
+          {{- if or (eq .Values.tap.kernelModule.enabled false) (eq .Values.tap.kernelModule.mode "kmm") }}
             - -no-kernel-module
           {{ end }}
           {{- if .Values.tap.debug }}
@@ -86,7 +86,7 @@ spec:
                 - NET_RAW
                 # NET_ADMIN is required to listen the network traffic
                 - NET_ADMIN
-                {{- if eq .Values.tap.kernelModule.mode "auto" }}
+                {{- if and (.Values.tap.kernelModule.enabled) (eq .Values.tap.kernelModule.mode "auto") }}
                 # SYS_MODULE is required to install kernel modules
                 - SYS_MODULE
                 {{- end }}
