@@ -25,7 +25,7 @@ spec:
       containers:
         - env:
             - name: REACT_APP_DEFAULT_FILTER
-              value: ' '
+              value: '{{ not (eq .Values.tap.defaultFilter "") | ternary .Values.tap.defaultFilter " " }}'
             - name: REACT_APP_AUTH_ENABLED
               value: '{{ .Values.tap.auth.enabled }}'
           image: '{{ .Values.tap.docker.registry }}/front:{{ not (eq .Values.tap.docker.tag "") | ternary .Values.tap.docker.tag (printf "v%s" .Chart.Version) }}'
