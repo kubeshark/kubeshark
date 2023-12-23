@@ -42,7 +42,7 @@ data:
         desired=$(kubectl get modules pf-ring -o json | jq -r .status.moduleLoader.desiredNumber)
         available=$(kubectl get modules pf-ring -o json | jq -r .status.moduleLoader.availableNumber)
 
-        echo "Checking dsired and available module load: $desired vs $available"
+        echo "Checking desired and available module load: $desired vs $available"
 
         if [ "$desired" = "$available" ]; then
             echo "PF_RING loaded an all nodes."
