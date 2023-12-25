@@ -67,6 +67,7 @@ tap:
   telemetry:
     enabled: true
   defaultFilter: ""
+  replayDisabled: false
 logs:
   file: ""
 kube:
