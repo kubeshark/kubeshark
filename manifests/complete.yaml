@@ -28,6 +28,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
 stringData:
     LICENSE: ''
+    SCRIPTING_ENV: '{}'
 ---
 # Source: kubeshark/templates/11-nginx-config-map.yaml
 apiVersion: v1
@@ -93,13 +94,13 @@ metadata:
 data:
     POD_REGEX: '.*'
     NAMESPACES: ''
-    SCRIPTING_ENV: '{}'
     SCRIPTING_SCRIPTS: '{}'
     AUTH_ENABLED: ''
     AUTH_APPROVED_EMAILS: ''
     AUTH_APPROVED_DOMAINS: ''
     AUTH_APPROVED_TENANTS: ''
     TELEMETRY_DISABLED: ''
+    REPLAY_DISABLED: ''
 ---
 # Source: kubeshark/templates/02-cluster-role.yaml
 apiVersion: rbac.authorization.k8s.io/v1
