@@ -35,11 +35,11 @@ In this mode, the Kubeshark worker retrieves the necessary PF_RING kernel module
 
 The Kernel Module Management controller ([KMM](https://kmm.sigs.k8s.io/documentation/deploy_kmod/)) acquires the required PF_RING kernel module version from a Docker container and loads it onto the node
 
-> mode=kmm is suitable for air-gapped environments. 
+> mode=kmm is suitable for air-gapped environments.
 
 ## Selection of Provisioning Mode
 
-> This step is optional. In case mode=auto and no PF_RING kernel module is found Kubeshark falls back to `libpcap` if `PF_RING` kernel module not available 
+> This step is optional. In case mode=auto and no PF_RING kernel module is found Kubeshark falls back to `libpcap` if `PF_RING` kernel module not available
 
 Prior to choosing a method, it is essential to verify if a PF_RING kernel module is already built for your kernel version.
 Kubeshark provides additional CLI tool for this purpose - [pf-ring-compiler](https://github.com/kubeshark/pf-ring-compiler).
@@ -69,7 +69,7 @@ If PF_RING kernel modules are already available for the target nodes (cluster is
 |auto|kmm|
 |----|---|
 | `SYS_MODULE` capability required for Kubeshark | `SYS_MODULE` capability is **not** required for Kubeshark|
-| no additional dependencies | (!)requires `cert-manager` and `KMM` installed (follow [instructions](https://kmm.sigs.k8s.io/documentation/install/)) |
+| no additional dependencies | (!)requires `cert-manager` and `KMM` installed (follow [instructions](https://kmm.sigs.k8s.io/documentation/install/) or a specific [cloud platform guide](https://kmm.sigs.k8s.io/lab/)) |
 | Kubeshark falls back to `libpcap` if `PF_RING` kernel module not available | Kubshark waits until PF_RING is loaded with KMM|
 | module is downloaded from S3 bucket in AWS | module is loaded from `kubeshark/pf-ring-module:<kernel version>` container|
 | requires egress connectivity to AWS S3 endpoints | can work in an air-gapped environment when the docker images are stored in a local container registry|
@@ -95,7 +95,7 @@ Create `Dockerfile` in the folder with PF_RING kernel module:
 FROM alpine:3.18
 ARG KERNEL_VERSION
 
-COPY pf-ring-${KERNEL_VERSION}.ko /opt/lib/modules/${KERNEL_VERSION}/pf_ring.ko 
+COPY pf-ring-${KERNEL_VERSION}.ko /opt/lib/modules/${KERNEL_VERSION}/pf_ring.ko
 RUN apk add kmod
 
 RUN depmod -b /opt ${KERNEL_VERSION}
