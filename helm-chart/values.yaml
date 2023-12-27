@@ -68,6 +68,22 @@ tap:
     enabled: true
   defaultFilter: ""
   replayDisabled: false
+  capabilities:
+    networkCapture:
+    - NET_RAW
+    - NET_ADMIN
+    serviceMeshCapture:
+    - SYS_ADMIN
+    - SYS_PTRACE
+    - DAC_OVERRIDE
+    - CHECKPOINT_RESTORE
+    kernelModule:
+    - SYS_MODULE
+    ebpfCapture:
+    - SYS_ADMIN
+    - SYS_PTRACE
+    - SYS_RESOURCE
+    - CHECKPOINT_RESTORE
 logs:
   file: ""
 kube:

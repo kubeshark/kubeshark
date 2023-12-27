@@ -106,6 +106,13 @@ type TelemetryConfig struct {
 	Enabled bool `yaml:"enabled" json:"enabled" default:"true"`
 }
 
+type CapabilitiesConfig struct {
+	NetworkCapture     []string `yaml:"networkCapture" json:"networkCapture"  default:"[]"`
+	ServiceMeshCapture []string `yaml:"serviceMeshCapture" json:"serviceMeshCapture"  default:"[]"`
+	KernelModule       []string `yaml:"kernelModule" json:"kernelModule"  default:"[]"`
+	EBPFCapture        []string `yaml:"ebpfCapture" json:"ebpfCapture"  default:"[]"`
+}
+
 type TapConfig struct {
 	Docker                  DockerConfig          `yaml:"docker" json:"docker"`
 	Proxy                   ProxyConfig           `yaml:"proxy" json:"proxy"`
@@ -133,6 +140,7 @@ type TapConfig struct {
 	Telemetry               TelemetryConfig       `yaml:"telemetry" json:"telemetry"`
 	DefaultFilter           string                `yaml:"defaultFilter" json:"defaultFilter"`
 	ReplayDisabled          bool                  `yaml:"replayDisabled" json:"replayDisabled" default:"false"`
+	Capabilities            CapabilitiesConfig    `yaml:"capabilities" json:"capabilities"`
 }
 
 func (config *TapConfig) PodRegex() *regexp.Regexp {
