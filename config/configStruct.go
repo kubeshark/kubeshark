@@ -27,6 +27,38 @@ func CreateDefaultConfig() ConfigStruct {
 					},
 				},
 			},
+			Capabilities: configStructs.CapabilitiesConfig{
+				NetworkCapture: []string{
+					// NET_RAW is required to listen the network traffic
+					"NET_RAW",
+					// NET_ADMIN is required to listen the network traffic
+					"NET_ADMIN",
+				},
+				ServiceMeshCapture: []string{
+					// SYS_ADMIN is required to read /proc/PID/net/ns + to install eBPF programs (kernel < 5.8)
+					"SYS_ADMIN",
+					// SYS_PTRACE is required to set netns to other process + to open libssl.so of other process
+					"SYS_PTRACE",
+					// DAC_OVERRIDE is required to read /proc/PID/environ
+					"DAC_OVERRIDE",
+					// CHECKPOINT_RESTORE is required to readlink /proc/PID/exe (kernel > 5.9)
+					"CHECKPOINT_RESTORE",
+				},
+				KernelModule: []string{
+					// SYS_MODULE is required to install kernel modules
+					"SYS_MODULE",
+				},
+				EBPFCapture: []string{
+					// SYS_ADMIN is required to read /proc/PID/net/ns + to install eBPF programs (kernel < 5.8)
+					"SYS_ADMIN",
+					// SYS_PTRACE is required to set netns to other process + to open libssl.so of other process
+					"SYS_PTRACE",
+					// SYS_RESOURCE is required to change rlimits for eBPF
+					"SYS_RESOURCE",
+					// CHECKPOINT_RESTORE is required to readlink /proc/PID/exe (kernel > 5.9)
+					"CHECKPOINT_RESTORE",
+				},
+			},
 		},
 	}
 }
