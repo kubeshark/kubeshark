@@ -84,6 +84,7 @@ tap:
     - SYS_PTRACE
     - SYS_RESOURCE
     - CHECKPOINT_RESTORE
+  globalFilter: ""
 logs:
   file: ""
 kube:

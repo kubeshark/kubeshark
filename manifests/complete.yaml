@@ -101,6 +101,7 @@ data:
     AUTH_APPROVED_TENANTS: ''
     TELEMETRY_DISABLED: ''
     REPLAY_DISABLED: ''
+    GLOBAL_FILTER: ''
 ---
 # Source: kubeshark/templates/02-cluster-role.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -522,6 +523,8 @@ spec:
             - name: REACT_APP_DEFAULT_FILTER
               value: ' '
             - name: REACT_APP_AUTH_ENABLED
+              value: 'false'
+            - name: REACT_APP_REPLAY_DISABLED
               value: 'false'
           image: 'docker.io/kubeshark/front:v52.0.0'
           imagePullPolicy: Always
