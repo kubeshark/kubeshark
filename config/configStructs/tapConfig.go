@@ -141,6 +141,7 @@ type TapConfig struct {
 	DefaultFilter           string                `yaml:"defaultFilter" json:"defaultFilter"`
 	ReplayDisabled          bool                  `yaml:"replayDisabled" json:"replayDisabled" default:"false"`
 	Capabilities            CapabilitiesConfig    `yaml:"capabilities" json:"capabilities"`
+	GlobalFilter            string                `yaml:"globalFilter" json:"globalFilter"`
 }
 
 func (config *TapConfig) PodRegex() *regexp.Regexp {
