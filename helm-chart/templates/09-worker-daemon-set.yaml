@@ -82,23 +82,13 @@ spec:
           securityContext:
             capabilities:
               add:
-<<<<<<< HEAD
-                # NET_RAW is required to listen the network traffic
-                - NET_RAW
-                # NET_ADMIN is required to listen the network traffic
-                - NET_ADMIN
-                {{- if and (.Values.tap.kernelModule.enabled) (eq .Values.tap.kernelModule.mode "auto") }}
-                # SYS_MODULE is required to install kernel modules
-                - SYS_MODULE
-=======
                 {{- range .Values.tap.capabilities.networkCapture }}
                 {{ print "- " . }}
                 {{- end }}
-                {{- if not .Values.tap.noKernelModule }}
+                {{- if and (.Values.tap.kernelModule.enabled) (eq .Values.tap.kernelModule.mode "auto") }}
                 {{- range .Values.tap.capabilities.kernelModule }}
                 {{ print "- " . }}
                 {{- end }}
->>>>>>> master
                 {{- end }}
                 {{- if .Values.tap.serviceMesh }}
                 {{- range .Values.tap.capabilities.serviceMeshCapture }}
