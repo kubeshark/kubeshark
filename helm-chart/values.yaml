@@ -67,8 +67,8 @@ tap:
     enabled: true
     mode: auto
     kernelMappings:
-    - regexp: '^.+$'
-      containerImage: 'kubeshark/pf-ring-module:${KERNEL_FULL_VERSION}'
+    - regexp: ^.+$
+      containerImage: kubeshark/pf-ring-module:${KERNEL_FULL_VERSION}
     imageRepoSecret: ""
   telemetry:
     enabled: true

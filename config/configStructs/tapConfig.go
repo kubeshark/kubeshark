@@ -113,6 +113,18 @@ type CapabilitiesConfig struct {
 	EBPFCapture        []string `yaml:"ebpfCapture" json:"ebpfCapture"  default:"[]"`
 }
 
+type KernelMapping struct {
+	Regexp         string `yaml:"regexp" json:"regexp"`
+	ContainerImage string `yaml:"containerImage" json:"containerImage"`
+}
+
+type KernelModuleConfig struct {
+	Enabled         bool            `yaml:"enabled" json:"enabled" default:"true"`
+	Mode            string          `yaml:"mode" json:"mode" default:"auto"`
+	KernelMappings  []KernelMapping `yaml:"kernelMappings" json:"kernelMappings"`
+	ImageRepoSecret string          `yaml:"imageRepoSecret" json:"imageRepoSecret"`
+}
+
 type TapConfig struct {
 	Docker                  DockerConfig          `yaml:"docker" json:"docker"`
 	Proxy                   ProxyConfig           `yaml:"proxy" json:"proxy"`
@@ -136,7 +148,7 @@ type TapConfig struct {
 	Ingress                 IngressConfig         `yaml:"ingress" json:"ingress"`
 	IPv6                    bool                  `yaml:"ipv6" json:"ipv6" default:"true"`
 	Debug                   bool                  `yaml:"debug" json:"debug" default:"false"`
-	NoKernelModule          bool                  `yaml:"noKernelModule" json:"noKernelModule" default:"false"`
+	KernelModule            KernelModuleConfig    `yaml:"kernelModule" json:"kernelModule"`
 	Telemetry               TelemetryConfig       `yaml:"telemetry" json:"telemetry"`
 	DefaultFilter           string                `yaml:"defaultFilter" json:"defaultFilter"`
 	ReplayDisabled          bool                  `yaml:"replayDisabled" json:"replayDisabled" default:"false"`

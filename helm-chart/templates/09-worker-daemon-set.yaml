@@ -25,7 +25,7 @@ spec:
       name: kubeshark-worker-daemon-set
       namespace: kubeshark
     spec:
-      {{ if and (eq .Values.tap.kernelModule.enabled true) (eq .Values.tap.kernelModule.mode "kmm")}}
+    {{- if and (eq .Values.tap.kernelModule.enabled true) (eq .Values.tap.kernelModule.mode "kmm")}}
       initContainers:
       - name: wait-for-pf-ring
         image: alpine:3.18
@@ -41,7 +41,7 @@ spec:
               sleep 5;
             fi
           done
-      {{ end }}
+    {{- end }}
       containers:
         - command:
             - ./worker
