@@ -25,6 +25,23 @@ spec:
       name: kubeshark-worker-daemon-set
       namespace: kubeshark
     spec:
+      {{ if and (eq .Values.tap.kernelModule.enabled true) (eq .Values.tap.kernelModule.mode "kmm")}}
+      initContainers:
+      - name: wait-for-pf-ring
+        image: alpine:3.18
+        command: ["/bin/sh", "-c"]
+        args:
+        - >
+          while true; do
+            if lsmod | grep -q "pf_ring"; then
+              echo "pf_ring module is loaded.";
+              break;
+            else
+              echo "Waiting for pf_ring module to be loaded...";
+              sleep 5;
+            fi
+          done
+      {{ end }}
       containers:
         - command:
             - ./worker
@@ -37,11 +54,11 @@ spec:
           {{- end }}
             - -procfs
             - /hostproc
+          {{- if or (eq .Values.tap.kernelModule.enabled false) (eq .Values.tap.kernelModule.mode "kmm") }}
+            - -no-kernel-module
+          {{ end }}
           {{- if .Values.tap.debug }}
             - -debug
-          {{- end }}
-          {{- if .Values.tap.noKernelModule }}
-            - -no-kernel-module
           {{- end }}
           image: '{{ .Values.tap.docker.registry }}/worker:{{ not (eq .Values.tap.docker.tag "") | ternary .Values.tap.docker.tag (printf "v%s" .Chart.Version) }}'
           imagePullPolicy: {{ .Values.tap.docker.imagePullPolicy }}
@@ -68,7 +85,7 @@ spec:
                 {{- range .Values.tap.capabilities.networkCapture }}
                 {{ print "- " . }}
                 {{- end }}
-                {{- if not .Values.tap.noKernelModule }}
+                {{- if and (.Values.tap.kernelModule.enabled) (eq .Values.tap.kernelModule.mode "auto") }}
                 {{- range .Values.tap.capabilities.kernelModule }}
                 {{ print "- " . }}
                 {{- end }}
