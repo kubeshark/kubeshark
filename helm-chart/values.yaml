@@ -103,3 +103,6 @@ scripting:
   env: {}
   source: ""
   watchScripts: true
+prometheus:
+  service:
+    port: 9100
