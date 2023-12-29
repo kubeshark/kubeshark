@@ -11,7 +11,7 @@ builds:
 brews:
   - name: kubeshark
     homepage: https://github.com/kubeshark/kubeshark
-    tap:
+    repository:
       owner: kubeshark
       name: homebrew-kubeshark
     commit_author:
