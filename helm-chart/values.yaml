@@ -40,7 +40,7 @@ tap:
         cpu: 50m
         memory: 50Mi
   serviceMesh: true
-  tls: true
+  tls: false
   ignoreTainted: false
   labels: {}
   annotations: {}
