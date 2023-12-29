@@ -157,6 +157,8 @@ helm install kubeshark kubeshark/kubeshark \
 | `tap.kernelModule.imageRepoSecret`                    | ImageRepoSecret is an optional secret that is used to pull both the module loader container([details](PF_RING.md))      | ""                                                 |
 | `tap.kernelModule.kernelMappings`                    |List of mappings between kernel version and container loader([details](PF_RING.md))      | `[{'regexp': '.+$', 'containerImage': 'kubehq/pf-ring-module:${KERNEL_FULL_VERSION}'}]`                                                 |
 | `tap.telemetry.enabled`                   | Enable anonymous usage statistics collection           | `true`                                                  |
+| `tap.defaultFilter`                       | Sets the default dashboard KFL filter (e.g. `http`)        | `""`                                                  |
+| `tap.globalFilter`                        | Prepends to any KFL filter and can be used to limit what is visible in the dashboard. For example, `redact("request.headers.Authorization")` will redact the appropriate field.       | `""`                                        |
 | `logs.file`                               | Logs dump path                      | `""`                                                    |
 | `kube.configPath`                         | Path to the `kubeconfig` file (`$HOME/.kube/config`)            | `""`                                                    |
 | `kube.context`                            | Kubernetes context to use for the deployment  | `""`                                                    |
