@@ -1,3 +1,13 @@
+builds:
+  - id: default
+    ldflags: |
+      -extldflags=-static -s -w
+      -X 'github.com/kubeshark/kubeshark/misc.GitCommitHash={{ .Env.COMMIT_HASH }}'
+      -X 'github.com/kubeshark/kubeshark/misc.Branch={{ .Env.GIT_BRANCH }}'
+      -X 'github.com/kubeshark/kubeshark/misc.BuildTimestamp={{ .Env.BUILD_TIMESTAMP }}'
+      -X 'github.com/kubeshark/kubeshark/misc.Platform={{ .Runtime.Goos }}_{{ .Runtime.Goarch }}'
+      -X 'github.com/kubeshark/kubeshark/misc.Ver={{ .Env.VER }}'
+
 brews:
   - name: kubeshark
     homepage: https://github.com/kubeshark/kubeshark
