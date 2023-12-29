@@ -39,7 +39,7 @@ tap:
       requests:
         cpu: 50m
         memory: 50Mi
-  serviceMesh: true
+  serviceMesh: false
   tls: false
   ignoreTainted: false
   labels: {}
