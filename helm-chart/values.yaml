@@ -91,6 +91,8 @@ tap:
     - SYS_RESOURCE
     - CHECKPOINT_RESTORE
   globalFilter: ""
+  metrics:
+    port: 49100
 logs:
   file: ""
 kube:
@@ -103,6 +105,3 @@ scripting:
   env: {}
   source: ""
   watchScripts: true
-prometheus:
-  service:
-    port: 49100
