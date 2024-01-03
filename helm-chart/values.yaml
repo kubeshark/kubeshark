@@ -105,4 +105,4 @@ scripting:
   watchScripts: true
 prometheus:
   service:
-    port: 9100
+    port: 49100

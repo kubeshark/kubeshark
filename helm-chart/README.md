@@ -104,6 +104,10 @@ helm install kubeshark kubeshark/kubeshark \
   --set tap.ipv6=false
 ```
 
+## Metrics
+
+Please refer to [metrics](./metrics.md) documentation for details.
+
 ## Configuration
 
 | Parameter                                 | Description                                   | Default                                                 |
@@ -166,6 +170,7 @@ helm install kubeshark kubeshark/kubeshark \
 | `scripting.env`                           | Environment variables for the scripting      | `{}`                                                    |
 | `scripting.source`                        | Source directory of the scripts                | `""`                                                    |
 | `scripting.watchScripts`                  | Enable watch mode for the scripts in source directory          | `true`                                                  |
+| `prometheus.service.port`                  | Pod port used to expose Prometheus metrics          | `true`                                                  |
 
 KernelMapping pairs kernel versions with a
                             DriverContainer image. Kernel versions can be matched
