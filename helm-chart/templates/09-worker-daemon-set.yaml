@@ -49,6 +49,8 @@ spec:
             - any
             - -port
             - '{{ .Values.tap.proxy.worker.srvPort }}'
+            - -metrics-port
+            - '{{ .Values.tap.metrics.port }}'
           {{- if .Values.tap.serviceMesh }}
             - -servicemesh
           {{- end }}
@@ -63,6 +65,10 @@ spec:
           image: '{{ .Values.tap.docker.registry }}/worker:{{ not (eq .Values.tap.docker.tag "") | ternary .Values.tap.docker.tag (printf "v%s" .Chart.Version) }}'
           imagePullPolicy: {{ .Values.tap.docker.imagePullPolicy }}
           name: sniffer
+          ports:
+            - containerPort: {{ .Values.tap.metrics.port }}
+              protocol: TCP
+              name: metrics
           env:
           - name: POD_NAME
             valueFrom:
