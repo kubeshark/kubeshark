@@ -172,7 +172,7 @@ Please refer to [metrics](./metrics.md) documentation for details.
 | `scripting.env`                           | Environment variables for the scripting      | `{}`                                                    |
 | `scripting.source`                        | Source directory of the scripts                | `""`                                                    |
 | `scripting.watchScripts`                  | Enable watch mode for the scripts in source directory          | `true`                                                  |
-| `prometheus.service.port`                  | Pod port used to expose Prometheus metrics          | `49100`                                                  |
+| `tap.metrics.port`                  | Pod port used to expose Prometheus metrics          | `49100`                                                  |
 
 KernelMapping pairs kernel versions with a
                             DriverContainer image. Kernel versions can be matched
