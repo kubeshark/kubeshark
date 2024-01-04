@@ -33,8 +33,6 @@ const (
 	DebugLabel                   = "debug"
 	ContainerPort                = 80
 	ContainerPortStr             = "80"
-	MetricsPort                  = 49100
-	MetricsPortStr               = "49100"
 )
 
 type ResourceLimits struct {
