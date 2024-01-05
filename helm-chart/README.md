@@ -62,6 +62,7 @@ Set this `value.yaml`:
 tap:
   auth:
     enabled: true
+    type: standard
     approvedEmails:
     - john.doe@example.com
     approvedDomains: []
