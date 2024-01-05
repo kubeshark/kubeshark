@@ -64,3 +64,21 @@ spec:
             requests:
               cpu: {{ .Values.tap.resources.hub.requests.cpu }}
               memory: {{ .Values.tap.resources.hub.requests.memory }}
+          volumeMounts:
+          - name: saml-x509-volume
+            mountPath: "/etc/saml/x509"
+            readOnly: true
+      volumes:
+      - name: saml-x509-volume
+        projected:
+          sources:
+          - secret:
+              name: kubeshark-saml-x509-crt-secret
+              items:
+              - key: AUTH_SAML_X509_CRT
+                path: kubeshark.crt
+          - secret:
+              name: kubeshark-saml-x509-key-secret
+              items:
+              - key: AUTH_SAML_X509_KEY
+                path: kubeshark.key
