@@ -52,6 +52,7 @@ tap:
       - linux
   auth:
     enabled: false
+    type: standard
     approvedEmails: []
     approvedDomains: []
     approvedTenants: []
