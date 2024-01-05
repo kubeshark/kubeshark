@@ -16,6 +16,10 @@ data:
       access_log /dev/stdout;
       error_log /dev/stdout;
 
+      client_body_buffer_size     64k;
+      client_header_buffer_size   32k;
+      large_client_header_buffers 8 64k;
+
       location /api {
         rewrite ^/api(.*)$ $1 break;
         proxy_pass http://kubeshark-hub;
