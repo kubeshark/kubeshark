@@ -12,6 +12,7 @@ data:
     SCRIPTING_SCRIPTS: '{}'
     INGRESS_ENABLED: '{{ .Values.tap.ingress.enabled }}'
     INGRESS_HOST: '{{ .Values.tap.ingress.host }}'
+    PROXY_FRONT_PORT: '{{ .Values.tap.proxy.front.port }}'
     AUTH_ENABLED: '{{ .Values.tap.auth.enabled | ternary "true" "" }}'
     AUTH_TYPE: '{{ .Values.tap.auth.type }}'
     AUTH_APPROVED_EMAILS: '{{ gt (len .Values.tap.auth.approvedEmails) 0 | ternary (join "," .Values.tap.auth.approvedEmails) "" }}'

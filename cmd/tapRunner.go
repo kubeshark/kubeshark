@@ -457,6 +457,8 @@ func updateConfig(kubernetesProvider *kubernetes.Provider) {
 	_, _ = kubernetes.SetConfig(kubernetesProvider, kubernetes.CONFIG_INGRESS_ENABLED, ingressEnabled)
 	_, _ = kubernetes.SetConfig(kubernetesProvider, kubernetes.CONFIG_INGRESS_HOST, config.Config.Tap.Ingress.Host)
 
+	_, _ = kubernetes.SetConfig(kubernetesProvider, kubernetes.CONFIG_PROXY_FRONT_PORT, fmt.Sprint(config.Config.Tap.Proxy.Front.Port))
+
 	_, _ = kubernetes.SetConfig(kubernetesProvider, kubernetes.CONFIG_AUTH_ENABLED, authEnabled)
 	_, _ = kubernetes.SetConfig(kubernetesProvider, kubernetes.CONFIG_AUTH_TYPE, config.Config.Tap.Auth.Type)
 	_, _ = kubernetes.SetConfig(kubernetesProvider, kubernetes.CONFIG_AUTH_APPROVED_EMAILS, strings.Join(config.Config.Tap.Auth.ApprovedEmails, ","))
