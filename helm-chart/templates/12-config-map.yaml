@@ -10,6 +10,8 @@ data:
     POD_REGEX: '{{ .Values.tap.regex }}'
     NAMESPACES: '{{ gt (len .Values.tap.namespaces) 0 | ternary (join "," .Values.tap.namespaces) "" }}'
     SCRIPTING_SCRIPTS: '{}'
+    INGRESS_ENABLED: '{{ .Values.tap.ingress.enabled }}'
+    INGRESS_HOST: '{{ .Values.tap.ingress.host }}'
     AUTH_ENABLED: '{{ .Values.tap.auth.enabled | ternary "true" "" }}'
     AUTH_TYPE: '{{ .Values.tap.auth.type }}'
     AUTH_APPROVED_EMAILS: '{{ gt (len .Values.tap.auth.approvedEmails) 0 | ternary (join "," .Values.tap.auth.approvedEmails) "" }}'
