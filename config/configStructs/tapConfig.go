@@ -113,16 +113,9 @@ type CapabilitiesConfig struct {
 	EBPFCapture        []string `yaml:"ebpfCapture" json:"ebpfCapture"  default:"[]"`
 }
 
-type KernelMapping struct {
-	Regexp         string `yaml:"regexp" json:"regexp"`
-	ContainerImage string `yaml:"containerImage" json:"containerImage"`
-}
-
 type KernelModuleConfig struct {
-	Enabled         bool            `yaml:"enabled" json:"enabled" default:"true"`
-	Mode            string          `yaml:"mode" json:"mode" default:"auto"`
-	KernelMappings  []KernelMapping `yaml:"kernelMappings" json:"kernelMappings"`
-	ImageRepoSecret string          `yaml:"imageRepoSecret" json:"imageRepoSecret"`
+	Enabled bool   `yaml:"enabled" json:"enabled" default:"true"`
+	Image   string `yaml:"image" json:"image" default:"kubeshark/pf-ring-module:all"`
 }
 
 type MetricsConfig struct {
