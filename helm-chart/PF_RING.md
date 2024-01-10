@@ -92,21 +92,24 @@ PF_RING kernel module compilation can be completed automatically or manually.
 
 In case your Kubernetes workers run supported Linux distribution, `kubeshark` CLI can be used to build PF_RING module:
 
-```
+```bash
 pfring-compiler compile --target <distro>
 ```
 
 This command requires:
+
 - kubectl to be installed and configured with a proper context
 - egress connection to Internet available
 
 This command:
+
 1. Runs Kubernetes job with build container
 2. Waits for job to be completed
 3. Downloads `pf-ring-<kernel version>.ko` file into the current folder.
 4. Cleans up created job.
 
 Currently supported distros:
+
 - Ubuntu
 - RHEL 9
 - Amazon Linux 2
@@ -118,13 +121,13 @@ The process description is based on Ubuntu 22.04 distribution.
 1. Get terminal access to the node with target kernel version
 This can be done either via SSH directly to node or with debug container running on the target node:
 
-```
+```bash
 kubectl debug node/<target node> -it --attach=true --image=ubuntu:22.04
 ```
 
 2. Install build tools and kernel headers
 
-```
+```bash
 apt update
 apt install -y gcc build-essential make git wget tar gzip
 apt install -y linux-headers-$(uname -r)
@@ -132,7 +135,7 @@ apt install -y linux-headers-$(uname -r)
 
 3. Download PF_RING source code
 
-```
+```bash
 wget https://github.com/ntop/PF_RING/archive/refs/tags/8.4.0.tar.gz
 tar -xf 8.4.0.tar.gz
 cd PF_RING-8.4.0/kernel
@@ -140,7 +143,7 @@ cd PF_RING-8.4.0/kernel
 
 4. Compile the kernel module
 
-```
+```bash
 make KERNEL_SRC=/usr/src/linux-headers-$(uname -r)
 ```
 
