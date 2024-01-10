@@ -102,6 +102,7 @@ data:
     TELEMETRY_DISABLED: ''
     REPLAY_DISABLED: ''
     GLOBAL_FILTER: ''
+    TRAFFIC_SAMPLE_RATE: '100'
 ---
 # Source: kubeshark/templates/02-cluster-role.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -248,6 +249,29 @@ spec:
     app.kubeshark.co/app: front
   type: ClusterIP
 ---
+# Source: kubeshark/templates/16-worker-service-metrics.yaml
+kind: Service
+apiVersion: v1
+metadata:
+  name: kubeshark-worker-metrics
+  namespace: default
+  annotations:
+    prometheus.io/scrape: 'true'
+    prometheus.io/port: '49100'
+spec:
+  selector:
+    app.kubeshark.co/app: worker
+    helm.sh/chart: kubeshark-52.0.0
+    app.kubernetes.io/name: kubeshark
+    app.kubernetes.io/instance: kubeshark
+    app.kubernetes.io/version: "52.0.0"
+    app.kubernetes.io/managed-by: Helm
+  ports:
+  - name: metrics
+    protocol: TCP
+    port: 49100
+    targetPort: 49100
+---
 # Source: kubeshark/templates/09-worker-daemon-set.yaml
 apiVersion: apps/v1
 kind: DaemonSet
@@ -291,12 +315,18 @@ spec:
             - any
             - -port
             - '30001'
+            - -metrics-port
+            - '49100'
             - -servicemesh
             - -procfs
             - /hostproc
           image: 'docker.io/kubeshark/worker:v52.0.0'
           imagePullPolicy: Always
           name: sniffer
+          ports:
+            - containerPort: 49100
+              protocol: TCP
+              name: metrics
           env:
           - name: POD_NAME
             valueFrom:

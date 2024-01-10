@@ -39,8 +39,8 @@ tap:
       requests:
         cpu: 50m
         memory: 50Mi
-  serviceMesh: false
-  tls: false
+  serviceMesh: true
+  tls: true
   ignoreTainted: false
   labels: {}
   annotations: {}
@@ -93,6 +93,7 @@ tap:
   globalFilter: ""
   metrics:
     port: 49100
+  trafficSampleRate: 100
 logs:
   file: ""
 kube:

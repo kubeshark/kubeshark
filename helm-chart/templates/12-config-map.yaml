@@ -17,3 +17,4 @@ data:
     TELEMETRY_DISABLED: '{{ not .Values.tap.telemetry.enabled | ternary "true" "" }}'
     REPLAY_DISABLED: '{{ .Values.tap.replayDisabled | ternary "true" "" }}'
     GLOBAL_FILTER: '{{ .Values.tap.globalFilter }}'
+    TRAFFIC_SAMPLE_RATE: '{{ .Values.tap.trafficSampleRate }}'

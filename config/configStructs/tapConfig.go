@@ -159,6 +159,7 @@ type TapConfig struct {
 	Capabilities            CapabilitiesConfig    `yaml:"capabilities" json:"capabilities"`
 	GlobalFilter            string                `yaml:"globalFilter" json:"globalFilter"`
 	Metrics                 MetricsConfig         `yaml:"metrics" json:"metrics"`
+	TrafficSampleRate       int                   `yaml:"trafficSampleRate" json:"trafficSampleRate" default:"100"`
 }
 
 func (config *TapConfig) PodRegex() *regexp.Regexp {
