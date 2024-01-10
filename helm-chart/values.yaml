@@ -89,6 +89,7 @@ tap:
   globalFilter: ""
   metrics:
     port: 49100
+  trafficSampleRate: 100
 logs:
   file: ""
 kube:
