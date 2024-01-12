@@ -115,8 +115,9 @@ type CapabilitiesConfig struct {
 }
 
 type KernelModuleConfig struct {
-	Enabled bool   `yaml:"enabled" json:"enabled" default:"true"`
-	Image   string `yaml:"image" json:"image" default:"kubeshark/pf-ring-module:all"`
+	Enabled         bool   `yaml:"enabled" json:"enabled" default:"true"`
+	Image           string `yaml:"image" json:"image" default:"kubeshark/pf-ring-module:all"`
+	UnloadOnDestroy bool   `yaml:"unloadOnDestroy" json:"unloadOnDestroy" default:"false"`
 }
 
 type MetricsConfig struct {

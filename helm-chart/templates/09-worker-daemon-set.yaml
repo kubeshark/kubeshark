@@ -120,7 +120,7 @@ spec:
               readOnly: true
             - mountPath: /app/data
               name: data
-      {{- if .Values.tap.kernelModule.enabled }}
+      {{- if and (eq .Values.tap.kernelModule.enabled true) (eq .Values.tap.kernelModule.unloadOnDestroy true) }}
         - name: unload-pf-ring
           image: {{ .Values.tap.kernelModule.image }}
           command: ["/bin/sh"]

@@ -73,6 +73,7 @@ tap:
   kernelModule:
     enabled: true
     image: kubeshark/pf-ring-module:all
+    unloadOnDestroy: false
   telemetry:
     enabled: true
   defaultFilter: ""
