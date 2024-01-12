@@ -94,7 +94,7 @@ For example, change from the default 500Mi to 1Gi:
 ```shell
 --set tap.storageLimit=1Gi
 ```
- 
+
 ## Disabling IPV6
 
 Not all have IPV6 enabled, hence this has to be disabled as follows:
@@ -103,6 +103,10 @@ Not all have IPV6 enabled, hence this has to be disabled as follows:
 helm install kubeshark kubeshark/kubeshark \
   --set tap.ipv6=false
 ```
+
+## Metrics
+
+Please refer to [metrics](./metrics.md) documentation for details.
 
 ## Configuration
 
@@ -122,6 +126,8 @@ helm install kubeshark kubeshark/kubeshark \
 | `tap.release.name`                        | Helm release name                          | `kubeshark`                                             |
 | `tap.release.namespace`                   | Helm release namespace                | `default`                                               |
 | `tap.persistentStorage`                   | Use `persistentVolumeClaim` instead of `emptyDir` | `false`                                                |
+| `tap.persistentStorageStatic`             | Use static persistent volume provisioning (explicitly defined `PersistentVolume` ) | `false`                                                      |
+| `tap.efsFileSytemIdAndPath`               | [EFS file system ID and, optionally, subpath and/or access point](https://github.com/kubernetes-sigs/aws-efs-csi-driver/blob/master/examples/kubernetes/access_points/README.md) `<FileSystemId>:<Path>:<AccessPointId>`     | ""                                                           |
 | `tap.storageLimit`                        | Limit of either the `emptyDir` or `persistentVolumeClaim`                  | `500Mi`                                                 |
 | `tap.storageClass`                        | Storage class of the `PersistentVolumeClaim`          | `standard`                                              |
 | `tap.dryRun`                              | Preview of all pods matching the regex, without tapping them                    | `false`                                                 |
@@ -134,8 +140,8 @@ helm install kubeshark kubeshark/kubeshark \
 | `tap.resources.hub.limits.memory`         | Memory limit for hub                          | `1Gi`                                                   |
 | `tap.resources.hub.requests.cpu`          | CPU request for hub                           | `50m`                                                   |
 | `tap.resources.hub.requests.memory`       | Memory request for hub                        | `50Mi`                                                  |
-| `tap.serviceMesh`                         | Capture traffic from service meshes like Istio, Linkerd, Consul, etc.          | `true`                                                  |
-| `tap.tls`                                 | Capture the encrypted/TLS traffic from cryptography libraries like OpenSSL                         | `true`                                                  |
+| `tap.serviceMesh`                         | Capture traffic from service meshes like Istio, Linkerd, Consul, etc.          | `false`                                                  |
+| `tap.tls`                                 | Capture the encrypted/TLS traffic from cryptography libraries like OpenSSL                         | `false`                                                  |
 | `tap.ignoreTainted`                       | Whether to ignore tainted nodes               | `false`                                                 |
 | `tap.labels`                              | Kubernetes labels to apply to all Kubeshark resources  | `{}`                                                    |
 | `tap.annotations`                         | Kubernetes annotations to apply to all Kubeshark resources | `{}`                                                |
@@ -150,8 +156,13 @@ helm install kubeshark kubeshark/kubeshark \
 | `tap.ingress.annotations`                 | `Ingress` annotations                           | `{}`                                                    |
 | `tap.ipv6`                                | Enable IPv6 support for the front-end                        | `true`                                                  |
 | `tap.debug`                               | Enable debug mode                             | `false`                                                 |
-| `tap.noKernelModule`                      | Do not install `PF_RING` kernel module       | `false`                                                 |
+| `tap.kernelModule.enabled`                    | Use PF_RING kernel module([details](PF_RING.md))      | `true`                                                 |
+| `tap.kernelModule.mode`                    | PF_RING kernel module loading approach([details](PF_RING.md))      | `auto`                                                 |
+| `tap.kernelModule.imageRepoSecret`                    | ImageRepoSecret is an optional secret that is used to pull both the module loader container([details](PF_RING.md))      | ""                                                 |
+| `tap.kernelModule.kernelMappings`                    |List of mappings between kernel version and container loader([details](PF_RING.md))      | `[{'regexp': '.+$', 'containerImage': 'kubehq/pf-ring-module:${KERNEL_FULL_VERSION}'}]`                                                 |
 | `tap.telemetry.enabled`                   | Enable anonymous usage statistics collection           | `true`                                                  |
+| `tap.defaultFilter`                       | Sets the default dashboard KFL filter (e.g. `http`)        | `""`                                                  |
+| `tap.globalFilter`                        | Prepends to any KFL filter and can be used to limit what is visible in the dashboard. For example, `redact("request.headers.Authorization")` will redact the appropriate field.       | `""`                                        |
 | `logs.file`                               | Logs dump path                      | `""`                                                    |
 | `kube.configPath`                         | Path to the `kubeconfig` file (`$HOME/.kube/config`)            | `""`                                                    |
 | `kube.context`                            | Kubernetes context to use for the deployment  | `""`                                                    |
@@ -161,3 +172,8 @@ helm install kubeshark kubeshark/kubeshark \
 | `scripting.env`                           | Environment variables for the scripting      | `{}`                                                    |
 | `scripting.source`                        | Source directory of the scripts                | `""`                                                    |
 | `scripting.watchScripts`                  | Enable watch mode for the scripts in source directory          | `true`                                                  |
+| `tap.metrics.port`                  | Pod port used to expose Prometheus metrics          | `49100`                                                  |
+
+KernelMapping pairs kernel versions with a
+                            DriverContainer image. Kernel versions can be matched
+                            literally or using a regular expression

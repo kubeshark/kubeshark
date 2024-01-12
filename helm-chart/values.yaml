@@ -8,7 +8,6 @@ tap:
     worker:
       srvPort: 30001
     hub:
-      port: 8898
       srvPort: 8898
     front:
       port: 8899
@@ -20,6 +19,8 @@ tap:
     name: kubeshark
     namespace: default
   persistentStorage: false
+  persistentStorageStatic: false
+  efsFileSytemIdAndPath: ""
   storageLimit: 500Mi
   storageClass: standard
   dryRun: false
@@ -69,9 +70,37 @@ tap:
     annotations: {}
   ipv6: true
   debug: false
-  noKernelModule: false
+  kernelModule:
+    enabled: true
+    mode: auto
+    kernelMappings:
+    - regexp: ^.+$
+      containerImage: kubeshark/pf-ring-module:${KERNEL_FULL_VERSION}
+    imageRepoSecret: ""
   telemetry:
     enabled: true
+  defaultFilter: ""
+  replayDisabled: false
+  capabilities:
+    networkCapture:
+    - NET_RAW
+    - NET_ADMIN
+    serviceMeshCapture:
+    - SYS_ADMIN
+    - SYS_PTRACE
+    - DAC_OVERRIDE
+    - CHECKPOINT_RESTORE
+    kernelModule:
+    - SYS_MODULE
+    ebpfCapture:
+    - SYS_ADMIN
+    - SYS_PTRACE
+    - SYS_RESOURCE
+    - CHECKPOINT_RESTORE
+  globalFilter: ""
+  metrics:
+    port: 49100
+  trafficSampleRate: 100
 logs:
   file: ""
 kube:

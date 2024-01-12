@@ -1,4 +1,25 @@
 ---
+{{- if .Values.tap.persistentStorageStatic }}
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: kubeshark-persistent-volume
+  namespace: {{ .Release.Namespace }}
+spec:
+  capacity:
+    storage: {{ .Values.tap.storageLimit }}
+  volumeMode: Filesystem
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  storageClassName: {{ .Values.tap.storageClass }}
+  {{- if .Values.tap.efsFileSytemIdAndPath }}
+  csi:
+    driver: efs.csi.aws.com
+    volumeHandle: {{ .Values.tap.efsFileSytemIdAndPath }}
+  {{ end }}
+---
+{{ end }}
 {{- if .Values.tap.persistentStorage }}
 apiVersion: v1
 kind: PersistentVolumeClaim
