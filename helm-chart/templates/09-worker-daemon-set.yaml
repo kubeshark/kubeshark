@@ -120,6 +120,10 @@ spec:
               readOnly: true
             - mountPath: /app/data
               name: data
+          lifecycle:
+            preStop:
+              exec:
+                command: ["/bin/sh","-c","rmmod pf_ring"]
       {{- if .Values.tap.tls }}
         - command:
             - ./tracer
