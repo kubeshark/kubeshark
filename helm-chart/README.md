@@ -156,10 +156,9 @@ Please refer to [metrics](./metrics.md) documentation for details.
 | `tap.ingress.annotations`                 | `Ingress` annotations                           | `{}`                                                    |
 | `tap.ipv6`                                | Enable IPv6 support for the front-end                        | `true`                                                  |
 | `tap.debug`                               | Enable debug mode                             | `false`                                                 |
-| `tap.kernelModule.enabled`                    | Use PF_RING kernel module([details](PF_RING.md))      | `true`                                                 |
-| `tap.kernelModule.mode`                    | PF_RING kernel module loading approach([details](PF_RING.md))      | `auto`                                                 |
-| `tap.kernelModule.imageRepoSecret`                    | ImageRepoSecret is an optional secret that is used to pull both the module loader container([details](PF_RING.md))      | ""                                                 |
-| `tap.kernelModule.kernelMappings`                    |List of mappings between kernel version and container loader([details](PF_RING.md))      | `[{'regexp': '.+$', 'containerImage': 'kubehq/pf-ring-module:${KERNEL_FULL_VERSION}'}]`                                                 |
+| `tap.kernelModule.enabled`                | Use PF_RING kernel module([details](PF_RING.md))      | `true`                                                 |
+| `tap.kernelModule.image`                  | Container image containing PF_RING kernel module with supported kernel version([details](PF_RING.md))      | "kubeshark/pf-ring-module:all"                                                 |
+| `tap.kernelModule.unloadOnDestroy`        | Create additional container which watches for pod termination and unloads PF_RING kernel module. | `false`|
 | `tap.telemetry.enabled`                   | Enable anonymous usage statistics collection           | `true`                                                  |
 | `tap.defaultFilter`                       | Sets the default dashboard KFL filter (e.g. `http`)        | `""`                                                  |
 | `tap.globalFilter`                        | Prepends to any KFL filter and can be used to limit what is visible in the dashboard. For example, `redact("request.headers.Authorization")` will redact the appropriate field.       | `""`                                        |

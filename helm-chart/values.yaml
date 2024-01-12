@@ -32,14 +32,14 @@ tap:
       requests:
         cpu: 50m
         memory: 50Mi
-    tracer:
+    hub:
       limits:
         cpu: 750m
         memory: 1Gi
       requests:
         cpu: 50m
-        memory: 150Mi
-    hub:
+        memory: 50Mi
+    tracer:
       limits:
         cpu: 750m
         memory: 1Gi
@@ -72,11 +72,8 @@ tap:
   debug: false
   kernelModule:
     enabled: true
-    mode: auto
-    kernelMappings:
-    - regexp: ^.+$
-      containerImage: kubeshark/pf-ring-module:${KERNEL_FULL_VERSION}
-    imageRepoSecret: ""
+    image: kubeshark/pf-ring-module:all
+    unloadOnDestroy: false
   telemetry:
     enabled: true
   defaultFilter: ""

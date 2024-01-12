@@ -16,14 +16,6 @@ const (
 func CreateDefaultConfig() ConfigStruct {
 	return ConfigStruct{
 		Tap: configStructs.TapConfig{
-			KernelModule: configStructs.KernelModuleConfig{
-				KernelMappings: []configStructs.KernelMapping{
-					{
-						ContainerImage: "kubeshark/pf-ring-module:${KERNEL_FULL_VERSION}",
-						Regexp:         "^.+$",
-					},
-				},
-			},
 			NodeSelectorTerms: []v1.NodeSelectorTerm{
 				{
 					MatchExpressions: []v1.NodeSelectorRequirement{

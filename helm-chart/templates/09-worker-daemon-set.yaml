@@ -25,22 +25,22 @@ spec:
       name: kubeshark-worker-daemon-set
       namespace: kubeshark
     spec:
-    {{- if and (eq .Values.tap.kernelModule.enabled true) (eq .Values.tap.kernelModule.mode "kmm")}}
+    {{- if .Values.tap.kernelModule.enabled }}
       initContainers:
-      - name: wait-for-pf-ring
-        image: alpine:3.18
-        command: ["/bin/sh", "-c"]
-        args:
-        - >
-          while true; do
-            if lsmod | grep -q "pf_ring"; then
-              echo "pf_ring module is loaded.";
-              break;
-            else
-              echo "Waiting for pf_ring module to be loaded...";
-              sleep 5;
-            fi
-          done
+      - name: load-pf-ring
+        image: {{ .Values.tap.kernelModule.image }}
+        imagePullPolicy: {{ .Values.tap.docker.imagePullPolicy }}
+        securityContext:
+          capabilities:
+            add:
+              {{- range .Values.tap.capabilities.kernelModule }}
+              {{ print "- " . }}
+              {{- end }}
+            drop:
+              - ALL
+        volumeMounts:
+        - name: lib-modules
+          mountPath: /lib/modules
     {{- end }}
       containers:
         - command:
@@ -56,9 +56,8 @@ spec:
           {{- end }}
             - -procfs
             - /hostproc
-          {{- if or (eq .Values.tap.kernelModule.enabled false) (eq .Values.tap.kernelModule.mode "kmm") }}
+            # TODO: remove
             - -no-kernel-module
-          {{ end }}
           {{- if .Values.tap.debug }}
             - -debug
           {{- end }}
@@ -91,11 +90,6 @@ spec:
                 {{- range .Values.tap.capabilities.networkCapture }}
                 {{ print "- " . }}
                 {{- end }}
-                {{- if and (.Values.tap.kernelModule.enabled) (eq .Values.tap.kernelModule.mode "auto") }}
-                {{- range .Values.tap.capabilities.kernelModule }}
-                {{ print "- " . }}
-                {{- end }}
-                {{- end }}
                 {{- if .Values.tap.serviceMesh }}
                 {{- range .Values.tap.capabilities.serviceMeshCapture }}
                 {{ print "- " . }}
@@ -126,6 +120,20 @@ spec:
               readOnly: true
             - mountPath: /app/data
               name: data
+      {{- if and (eq .Values.tap.kernelModule.enabled true) (eq .Values.tap.kernelModule.unloadOnDestroy true) }}
+        - name: unload-pf-ring
+          image: {{ .Values.tap.kernelModule.image }}
+          command: ["/bin/sh"]
+          args: ["-c", "trap 'rmmod pf_ring && sleep 3' SIGTERM; while true; do sleep 1; done"] 
+          securityContext:
+            capabilities:
+              add:
+                {{- range .Values.tap.capabilities.kernelModule }}
+                {{ print "- " . }}
+                {{- end }}
+              drop:
+                - ALL
+      {{- end }}
       {{- if .Values.tap.tls }}
         - command:
             - ./tracer
@@ -196,6 +204,9 @@ spec:
         - hostPath:
             path: /sys
           name: sys
+        - name: lib-modules
+          hostPath:
+            path: /lib/modules
         - name: data
 {{- if .Values.tap.persistentStorage }}
           persistentVolumeClaim:
