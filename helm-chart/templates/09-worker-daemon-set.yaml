@@ -146,6 +146,13 @@ spec:
             valueFrom:
               fieldRef:
                 fieldPath: metadata.namespace
+          resources:
+            limits:
+              cpu: {{ .Values.tap.resources.tracer.limits.cpu }}
+              memory: {{ .Values.tap.resources.tracer.limits.memory }}
+            requests:
+              cpu: {{ .Values.tap.resources.tracer.requests.cpu }}
+              memory: {{ .Values.tap.resources.tracer.requests.memory }}
           securityContext:
             capabilities:
               add:
