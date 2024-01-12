@@ -120,10 +120,12 @@ spec:
               readOnly: true
             - mountPath: /app/data
               name: data
+          {{- if .Values.tap.kernelModule.enabled }}
           lifecycle:
             preStop:
               exec:
                 command: ["/bin/sh","-c","rmmod pf_ring"]
+          {{- end }}}
       {{- if .Values.tap.tls }}
         - command:
             - ./tracer
