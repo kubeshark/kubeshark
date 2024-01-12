@@ -125,7 +125,7 @@ spec:
             preStop:
               exec:
                 command: ["/bin/sh","-c","rmmod pf_ring"]
-          {{- end }}}
+          {{- end }}
       {{- if .Values.tap.tls }}
         - command:
             - ./tracer
