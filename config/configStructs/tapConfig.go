@@ -79,6 +79,7 @@ type DockerConfig struct {
 type ResourcesConfig struct {
 	Worker ResourceRequirements `yaml:"worker" json:"worker"`
 	Hub    ResourceRequirements `yaml:"hub" json:"hub"`
+	Tracer ResourceRequirements `yaml:"tracer" json:"tracer"`
 }
 
 type SamlConfig struct {
@@ -121,16 +122,10 @@ type CapabilitiesConfig struct {
 	EBPFCapture        []string `yaml:"ebpfCapture" json:"ebpfCapture"  default:"[]"`
 }
 
-type KernelMapping struct {
-	Regexp         string `yaml:"regexp" json:"regexp"`
-	ContainerImage string `yaml:"containerImage" json:"containerImage"`
-}
-
 type KernelModuleConfig struct {
-	Enabled         bool            `yaml:"enabled" json:"enabled" default:"true"`
-	Mode            string          `yaml:"mode" json:"mode" default:"auto"`
-	KernelMappings  []KernelMapping `yaml:"kernelMappings" json:"kernelMappings"`
-	ImageRepoSecret string          `yaml:"imageRepoSecret" json:"imageRepoSecret"`
+	Enabled         bool   `yaml:"enabled" json:"enabled" default:"true"`
+	Image           string `yaml:"image" json:"image" default:"kubeshark/pf-ring-module:all"`
+	UnloadOnDestroy bool   `yaml:"unloadOnDestroy" json:"unloadOnDestroy" default:"false"`
 }
 
 type MetricsConfig struct {
@@ -167,6 +162,7 @@ type TapConfig struct {
 	Capabilities            CapabilitiesConfig    `yaml:"capabilities" json:"capabilities"`
 	GlobalFilter            string                `yaml:"globalFilter" json:"globalFilter"`
 	Metrics                 MetricsConfig         `yaml:"metrics" json:"metrics"`
+	TrafficSampleRate       int                   `yaml:"trafficSampleRate" json:"trafficSampleRate" default:"100"`
 }
 
 func (config *TapConfig) PodRegex() *regexp.Regexp {

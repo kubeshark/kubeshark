@@ -39,8 +39,15 @@ tap:
       requests:
         cpu: 50m
         memory: 50Mi
-  serviceMesh: false
-  tls: false
+    tracer:
+      limits:
+        cpu: 750m
+        memory: 1Gi
+      requests:
+        cpu: 50m
+        memory: 50Mi
+  serviceMesh: true
+  tls: true
   ignoreTainted: false
   labels: {}
   annotations: {}
@@ -66,11 +73,8 @@ tap:
   debug: false
   kernelModule:
     enabled: true
-    mode: auto
-    kernelMappings:
-    - regexp: ^.+$
-      containerImage: kubeshark/pf-ring-module:${KERNEL_FULL_VERSION}
-    imageRepoSecret: ""
+    image: kubeshark/pf-ring-module:all
+    unloadOnDestroy: false
   telemetry:
     enabled: true
   defaultFilter: ""
@@ -94,6 +98,7 @@ tap:
   globalFilter: ""
   metrics:
     port: 49100
+  trafficSampleRate: 100
 logs:
   file: ""
 kube:
