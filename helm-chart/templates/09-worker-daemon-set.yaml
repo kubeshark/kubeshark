@@ -56,8 +56,9 @@ spec:
           {{- end }}
             - -procfs
             - /hostproc
-            # TODO: remove
-            - -no-kernel-module
+          {{- if .Values.tap.kernelModule.enabled }}
+            - -kernel-module
+          {{- end }}
           {{- if .Values.tap.debug }}
             - -debug
           {{- end }}
