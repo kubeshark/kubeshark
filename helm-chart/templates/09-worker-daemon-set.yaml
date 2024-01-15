@@ -80,11 +80,11 @@ spec:
                 fieldPath: metadata.namespace
           resources:
             limits:
-              cpu: {{ .Values.tap.resources.worker.limits.cpu }}
-              memory: {{ .Values.tap.resources.worker.limits.memory }}
+              cpu: {{ .Values.tap.resources.sniffer.limits.cpu }}
+              memory: {{ .Values.tap.resources.sniffer.limits.memory }}
             requests:
-              cpu: {{ .Values.tap.resources.worker.requests.cpu }}
-              memory: {{ .Values.tap.resources.worker.requests.memory }}
+              cpu: {{ .Values.tap.resources.sniffer.requests.cpu }}
+              memory: {{ .Values.tap.resources.sniffer.requests.memory }}
           securityContext:
             capabilities:
               add:

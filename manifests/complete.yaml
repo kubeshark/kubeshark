@@ -249,7 +249,7 @@ spec:
     app.kubeshark.co/app: front
   type: ClusterIP
 ---
-# Source: kubeshark/templates/16-worker-service-metrics.yaml
+# Source: kubeshark/templates/15-worker-service-metrics.yaml
 kind: Service
 apiVersion: v1
 metadata:
@@ -308,6 +308,19 @@ spec:
       name: kubeshark-worker-daemon-set
       namespace: kubeshark
     spec:
+      initContainers:
+      - name: load-pf-ring
+        image: kubeshark/pf-ring-module:all
+        imagePullPolicy: Always
+        securityContext:
+          capabilities:
+            add:
+              - SYS_MODULE
+            drop:
+              - ALL
+        volumeMounts:
+        - name: lib-modules
+          mountPath: /lib/modules
       containers:
         - command:
             - ./worker
@@ -320,6 +333,7 @@ spec:
             - -servicemesh
             - -procfs
             - /hostproc
+            - -kernel-module
           image: 'docker.io/kubeshark/worker:v52.0.0'
           imagePullPolicy: Always
           name: sniffer
@@ -348,7 +362,6 @@ spec:
               add:
                 - NET_RAW
                 - NET_ADMIN
-                - SYS_MODULE
                 - SYS_ADMIN
                 - SYS_PTRACE
                 - DAC_OVERRIDE
@@ -394,6 +407,13 @@ spec:
             valueFrom:
               fieldRef:
                 fieldPath: metadata.namespace
+          resources:
+            limits:
+              cpu: 750m
+              memory: 1Gi
+            requests:
+              cpu: 50m
+              memory: 50Mi
           securityContext:
             capabilities:
               add:
@@ -437,6 +457,9 @@ spec:
         - hostPath:
             path: /sys
           name: sys
+        - name: lib-modules
+          hostPath:
+            path: /lib/modules
         - name: data
           emptyDir:
             sizeLimit: 500Mi

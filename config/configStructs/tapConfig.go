@@ -77,9 +77,9 @@ type DockerConfig struct {
 }
 
 type ResourcesConfig struct {
-	Worker ResourceRequirements `yaml:"worker" json:"worker"`
-	Hub    ResourceRequirements `yaml:"hub" json:"hub"`
-	Tracer ResourceRequirements `yaml:"tracer" json:"tracer"`
+	Hub     ResourceRequirements `yaml:"hub" json:"hub"`
+	Sniffer ResourceRequirements `yaml:"sniffer" json:"sniffer"`
+	Tracer  ResourceRequirements `yaml:"tracer" json:"tracer"`
 }
 
 type AuthConfig struct {

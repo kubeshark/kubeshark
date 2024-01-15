@@ -25,14 +25,14 @@ tap:
   storageClass: standard
   dryRun: false
   resources:
-    worker:
+    hub:
       limits:
         cpu: 750m
         memory: 1Gi
       requests:
         cpu: 50m
         memory: 50Mi
-    hub:
+    sniffer:
       limits:
         cpu: 750m
         memory: 1Gi
