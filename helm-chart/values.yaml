@@ -98,6 +98,7 @@ tap:
   metrics:
     port: 49100
   trafficSampleRate: 100
+  tcpStreamChannelTimeoutMs: 10000
 logs:
   file: ""
 kube:
