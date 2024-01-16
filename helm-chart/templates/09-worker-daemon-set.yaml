@@ -7,6 +7,9 @@ metadata:
     sidecar.istio.io/inject: "false"
     {{- include "kubeshark.labels" . | nindent 4 }}
   annotations:
+  {{- if .Values.tap.dynatraceExcludeWorker }}
+    oneagent.dynatrace.com/inject: "false"
+  {{- end }}
   {{- if .Values.tap.annotations }}
     {{- toYaml .Values.tap.annotations | nindent 4 }}
   {{- end }}

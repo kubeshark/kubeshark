@@ -31,6 +31,7 @@ const (
 	IngressEnabledLabel          = "ingress-enabled"
 	TelemetryEnabledLabel        = "telemetry-enabled"
 	DebugLabel                   = "debug"
+	DynatraceExcludeWorkerLabel  = "dynatrace-exclude-worker"
 	ContainerPort                = 80
 	ContainerPortStr             = "80"
 )
@@ -156,6 +157,7 @@ type TapConfig struct {
 	Metrics                   MetricsConfig         `yaml:"metrics" json:"metrics"`
 	TrafficSampleRate         int                   `yaml:"trafficSampleRate" json:"trafficSampleRate" default:"100"`
 	TcpStreamChannelTimeoutMs int                   `yaml:"tcpStreamChannelTimeoutMs" json:"tcpStreamChannelTimeoutMs" default:"10000"`
+	DynatraceExcludeWorker    bool                  `yaml:"dynatraceExcludeWorker" json:"dynatraceExcludeWorker" default:"false"`
 }
 
 func (config *TapConfig) PodRegex() *regexp.Regexp {

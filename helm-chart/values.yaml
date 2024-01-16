@@ -50,6 +50,7 @@ tap:
   tls: true
   ignoreTainted: false
   labels: {}
+  dynatraceExcludeWorker: false
   annotations: {}
   nodeSelectorTerms:
   - matchExpressions:
