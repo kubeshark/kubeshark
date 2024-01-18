@@ -78,6 +78,72 @@ tap:
       alb.ingress.kubernetes.io/scheme: internet-facing
 ```
 
+## Installing with SAML enabled
+
+### Prerequisites:
+
+##### 1. Generate X.509 certificate & key (TL;DR: https://ubuntu.com/server/docs/security-certificates)
+
+**How to:**
+```
+openssl genrsa -out mykey.key 2048
+openssl req -new -key mykey.key -out mycsr.csr
+openssl x509 -signkey mykey.key -in mycsr.csr -req -days 365 -out mycert.crt
+```
+
+**What you get:**
+- `mycert.crt` - use it for `tap.auth.saml.x509crt`
+- `mykey.key` - use it for `tap.auth.saml.x509crt`
+
+##### 2. Prepare your SAML IDP
+
+You should set up the required SAML IDP (Google, Auth0, your custom IDP, etc.)
+
+During setup, an IDP provider will typically request to enter:
+- Metadata URL
+- ACS URL (Assertion Consumer Service URL)
+- SLO URL (Single Logout URL)
+
+Correspondingly, you will enter these (if you run the most default Kubeshark setup):
+- [http://localhost:8899/saml/metadata](http://localhost:8899/saml/metadata)
+- [http://localhost:8899/saml/acs](http://localhost:8899/saml/acs)
+- [http://localhost:8899/saml/slo](http://localhost:8899/saml/slo)
+
+Otherwise, if you have `Ingress` enabled, change protocol & domain respectively - showing example domain:
+- [https://kubeshark.example.com/saml/metadata](https://kubeshark.example.com/saml/metadata)
+- [https://kubeshark.example.com/saml/acs](https://kubeshark.example.com/saml/acs)
+- [https://kubeshark.example.com/saml/slo](https://kubeshark.example.com/saml/slo)
+
+```shell
+helm install kubeshark kubeshark/kubeshark -f values.yaml
+```
+
+Set this `value.yaml`:
+```shell
+tap:
+  auth:
+    enabled: true
+    type: saml
+    saml:
+      idpMetadataUrl: "https://tiptophelmet.us.auth0.com/samlp/metadata/MpWiDCMMB5ShU1HRnhdb1sHM6VWqdnDG"
+      x509crt: |
+        -----BEGIN CERTIFICATE-----
+        MIIDlTCCAn0CFFRUzMh+dZvp+FvWd4gRaiBVN8EvMA0GCSqGSIb3DQEBCwUAMIGG
+        MSQwIgYJKoZIhvcNAQkBFhV3ZWJtYXN0ZXJAZXhhbXBsZS5jb20wHhcNMjMxMjI4
+        .................<redacted>.....................................
+        ZMzM7YscqZwoVhTOhrD4/5nIfOD/hTWG/MBe2Um1V1IYF8aVEllotTKTgsF6ZblA
+        miCOgl6lIlZy
+        -----END CERTIFICATE-----
+      x509key: |
+        -----BEGIN PRIVATE KEY-----
+        MIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQDlgDFKsRHj+mok
+        euOF0IpwToOEpQGtafB75ytv3psD/tQAzEIug+rkDriVvsfcvafj0qcaTeYvnCoz
+        .................<redacted>.....................................
+        sUpBCu0E3nRJM/QB2ui5KhNR7uvPSL+kSsaEq19/mXqsL+mRi9aqy2wMEvUSU/kt
+        UaV5sbRtTzYLxpOSQyi8CEFA+A==
+        -----END PRIVATE KEY-----
+```
+
 ## Add a License
 
 When it's necessary, you can use:
