@@ -84,7 +84,7 @@ tap:
 
 ##### 1. Generate X.509 certificate & key (TL;DR: https://ubuntu.com/server/docs/security-certificates)
 
-**How to:**
+**Example:**
 ```
 openssl genrsa -out mykey.key 2048
 openssl req -new -key mykey.key -out mycsr.csr
@@ -109,7 +109,7 @@ Correspondingly, you will enter these (if you run the most default Kubeshark set
 - [http://localhost:8899/saml/acs](http://localhost:8899/saml/acs)
 - [http://localhost:8899/saml/slo](http://localhost:8899/saml/slo)
 
-Otherwise, if you have `Ingress` enabled, change protocol & domain respectively - showing example domain:
+Otherwise, if you have `tap.ingress.enabled == true`, change protocol & domain respectively - showing example domain:
 - [https://kubeshark.example.com/saml/metadata](https://kubeshark.example.com/saml/metadata)
 - [https://kubeshark.example.com/saml/acs](https://kubeshark.example.com/saml/acs)
 - [https://kubeshark.example.com/saml/slo](https://kubeshark.example.com/saml/slo)
@@ -130,7 +130,7 @@ tap:
         -----BEGIN CERTIFICATE-----
         MIIDlTCCAn0CFFRUzMh+dZvp+FvWd4gRaiBVN8EvMA0GCSqGSIb3DQEBCwUAMIGG
         MSQwIgYJKoZIhvcNAQkBFhV3ZWJtYXN0ZXJAZXhhbXBsZS5jb20wHhcNMjMxMjI4
-        .................<redacted>.....................................
+        ........<redacted: please, generate your own X.509 cert>........
         ZMzM7YscqZwoVhTOhrD4/5nIfOD/hTWG/MBe2Um1V1IYF8aVEllotTKTgsF6ZblA
         miCOgl6lIlZy
         -----END CERTIFICATE-----
@@ -138,7 +138,7 @@ tap:
         -----BEGIN PRIVATE KEY-----
         MIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQDlgDFKsRHj+mok
         euOF0IpwToOEpQGtafB75ytv3psD/tQAzEIug+rkDriVvsfcvafj0qcaTeYvnCoz
-        .................<redacted>.....................................
+        ........<redacted: please, generate your own X.509 key>.........
         sUpBCu0E3nRJM/QB2ui5KhNR7uvPSL+kSsaEq19/mXqsL+mRi9aqy2wMEvUSU/kt
         UaV5sbRtTzYLxpOSQyi8CEFA+A==
         -----END PRIVATE KEY-----
