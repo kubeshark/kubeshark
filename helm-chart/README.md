@@ -101,7 +101,7 @@ You should set up the required SAML IDP (Google, Auth0, your custom IDP, etc.)
 
 During setup, an IDP provider will typically request to enter:
 - Metadata URL
-- ACS URL (Assertion Consumer Service URL)
+- ACS URL (Assertion Consumer Service URL, aka Callback URL)
 - SLO URL (Single Logout URL)
 
 Correspondingly, you will enter these (if you run the most default Kubeshark setup):
