@@ -48,3 +48,11 @@ Create the name of the service account to use
 {{- define "kubeshark.serviceAccountName" -}}
 {{- printf "%s-service-account" .Release.Name }}
 {{- end }}
+
+{{/*
+Escape double quotes in a string
+*/}}
+{{- define "kubeshark.escapeDoubleQuotes" -}}
+  {{- regexReplaceAll "\"" . "\"" -}}
+{{- end -}}
+
