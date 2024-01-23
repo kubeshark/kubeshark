@@ -21,5 +21,5 @@ data:
     AUTH_SAML_IDP_METADATA_URL: '{{ .Values.tap.auth.saml.idpMetadataUrl }}'
     TELEMETRY_DISABLED: '{{ not .Values.tap.telemetry.enabled | ternary "true" "" }}'
     REPLAY_DISABLED: '{{ .Values.tap.replayDisabled | ternary "true" "" }}'
-    GLOBAL_FILTER: '{{ .Values.tap.globalFilter }}'
+    GLOBAL_FILTER: {{ include "kubeshark.escapeDoubleQuotes" .Values.tap.globalFilter | quote }}
     TRAFFIC_SAMPLE_RATE: '{{ .Values.tap.trafficSampleRate }}'

@@ -50,3 +50,4 @@ rules:
       - get
       - watch
       - update
+      - patch
