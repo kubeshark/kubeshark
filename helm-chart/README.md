@@ -51,7 +51,7 @@ kubectl port-forward service/kubeshark-front 8899:80
 
 Visit [localhost:8899](http://localhost:8899)
 
-## Installing with Ingress (EKS) and enable Auth
+## Installing with Ingress (EKS) enabled
 
 ```shell
 helm install kubeshark kubeshark/kubeshark -f values.yaml
@@ -60,13 +60,6 @@ helm install kubeshark kubeshark/kubeshark -f values.yaml
 Set this `value.yaml`:
 ```shell
 tap:
-  auth:
-    enabled: true
-    type: standard
-    approvedEmails:
-    - john.doe@example.com
-    approvedDomains: []
-    approvedTenants: []
   ingress:
     enabled: true
     className: "alb"
@@ -217,7 +210,7 @@ Please refer to [metrics](./metrics.md) documentation for details.
 | `tap.annotations`                         | Kubernetes annotations to apply to all Kubeshark resources | `{}`                                                |
 | `tap.nodeSelectorTerms`                   | Node selector terms                           | `[{"matchExpressions":[{"key":"kubernetes.io/os","operator":"In","values":["linux"]}]}]` |
 | `tap.auth.enabled`                        | Enable authentication                         | `false`                                                 |
-| `tap.auth.type`                           | Authentication type (`standard`, `saml`)      | `standard`                                              |
+| `tap.auth.type`                           | Authentication type (1 option available: `saml`)      | `saml`                                              |
 | `tap.auth.approvedEmails`                 | List of approved email addresses for authentication              | `[]`                                                    |
 | `tap.auth.approvedDomains`                | List of approved email domains for authentication                | `[]`                                                    |
 | `tap.auth.saml.idpMetadataUrl`                    | SAML IDP metadata URL <br/>(effective, if `tap.auth.type = saml`)                                  | ``                                                      |

@@ -59,7 +59,7 @@ tap:
       - linux
   auth:
     enabled: false
-    type: standard
+    type: saml
     approvedEmails: []
     approvedDomains: []
     approvedTenants: []
