@@ -59,6 +59,19 @@ func CreateDefaultConfig() ConfigStruct {
 					"CHECKPOINT_RESTORE",
 				},
 			},
+			Auth: configStructs.AuthConfig{
+				Saml: configStructs.SamlConfig{
+					Roles: map[string]configStructs.Role{
+						"admin": {
+							Filter:                "",
+							CanReplayTraffic:      true,
+							CanDownloadPCAP:       true,
+							CanUseScripting:       true,
+							CanUpdateTargetedPods: true,
+						},
+					},
+				},
+			},
 		},
 	}
 }

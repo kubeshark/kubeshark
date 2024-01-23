@@ -82,10 +82,19 @@ type ResourcesConfig struct {
 	Tracer  ResourceRequirements `yaml:"tracer" json:"tracer"`
 }
 
+type Role struct {
+	Filter                string `yaml:"filter" json:"filter" default:""`
+	CanReplayTraffic      bool   `yaml:"canReplayTraffic" json:"canReplayTraffic" default:"false"`
+	CanDownloadPCAP       bool   `yaml:"canDownloadPCAP" json:"canDownloadPCAP" default:"false"`
+	CanUseScripting       bool   `yaml:"canUseScripting" json:"canUseScripting" default:"false"`
+	CanUpdateTargetedPods bool   `yaml:"canUpdateTargetedPods" json:"canUpdateTargetedPods" default:"false"`
+}
+
 type SamlConfig struct {
-	IdpMetadataUrl string `yaml:"idpMetadataUrl" json:"idpMetadataUrl"`
-	X509crt        string `yaml:"x509crt" json:"x509crt"`
-	X509key        string `yaml:"x509key" json:"x509key"`
+	IdpMetadataUrl string          `yaml:"idpMetadataUrl" json:"idpMetadataUrl"`
+	X509crt        string          `yaml:"x509crt" json:"x509crt"`
+	X509key        string          `yaml:"x509key" json:"x509key"`
+	Roles          map[string]Role `yaml:"roles" json:"roles"`
 }
 
 type AuthConfig struct {

@@ -30,6 +30,38 @@ stringData:
     LICENSE: ''
     SCRIPTING_ENV: '{}'
 ---
+# Source: kubeshark/templates/13-secret.yaml
+kind: Secret
+apiVersion: v1
+metadata:
+  name: kubeshark-saml-x509-crt-secret
+  namespace: default
+  labels:
+    app.kubeshark.co/app: hub
+    helm.sh/chart: kubeshark-52.1.0
+    app.kubernetes.io/name: kubeshark
+    app.kubernetes.io/instance: kubeshark
+    app.kubernetes.io/version: "52.1.0"
+    app.kubernetes.io/managed-by: Helm
+stringData:
+  AUTH_SAML_X509_CRT: |
+---
+# Source: kubeshark/templates/13-secret.yaml
+kind: Secret
+apiVersion: v1
+metadata:
+  name: kubeshark-saml-x509-key-secret
+  namespace: default
+  labels:
+    app.kubeshark.co/app: hub
+    helm.sh/chart: kubeshark-52.1.0
+    app.kubernetes.io/name: kubeshark
+    app.kubernetes.io/instance: kubeshark
+    app.kubernetes.io/version: "52.1.0"
+    app.kubernetes.io/managed-by: Helm
+stringData:
+  AUTH_SAML_X509_KEY: |
+---
 # Source: kubeshark/templates/11-nginx-config-map.yaml
 apiVersion: v1
 kind: ConfigMap
@@ -50,6 +82,10 @@ data:
       access_log /dev/stdout;
       error_log /dev/stdout;
 
+      client_body_buffer_size     64k;
+      client_header_buffer_size   32k;
+      large_client_header_buffers 8 64k;
+
       location /api {
         rewrite ^/api(.*)$ $1 break;
         proxy_pass http://kubeshark-hub;
@@ -63,6 +99,17 @@ data:
         proxy_read_timeout 120s;
         proxy_send_timeout 12s;
         proxy_pass_request_headers      on;
+      }
+
+      location /saml {
+        rewrite ^/saml(.*)$ /saml$1 break;
+        proxy_pass http://kubeshark-hub;
+        proxy_set_header   X-Forwarded-For $remote_addr;
+        proxy_set_header   Host $http_host;
+        proxy_connect_timeout 4s;
+        proxy_read_timeout 120s;
+        proxy_send_timeout 12s;
+        proxy_pass_request_headers on;
       }
 
       location / {
@@ -95,10 +142,16 @@ data:
     POD_REGEX: '.*'
     NAMESPACES: ''
     SCRIPTING_SCRIPTS: '{}'
+    INGRESS_ENABLED: 'false'
+    INGRESS_HOST: 'ks.svc.cluster.local'
+    PROXY_FRONT_PORT: '8899'
     AUTH_ENABLED: ''
+    AUTH_TYPE: 'saml'
     AUTH_APPROVED_EMAILS: ''
     AUTH_APPROVED_DOMAINS: ''
     AUTH_APPROVED_TENANTS: ''
+    AUTH_SAML_IDP_METADATA_URL: ''
+    AUTH_SAML_ROLES: '{"admin":{"canDownloadPCAP":true,"canReplayTraffic":true,"canUpdateTargetedPods":true,"canUseScripting":true,"filter":""}}'
     TELEMETRY_DISABLED: ''
     REPLAY_DISABLED: ''
     GLOBAL_FILTER: ""
@@ -539,6 +592,24 @@ spec:
             requests:
               cpu: 50m
               memory: 50Mi
+          volumeMounts:
+          - name: saml-x509-volume
+            mountPath: "/etc/saml/x509"
+            readOnly: true
+      volumes:
+      - name: saml-x509-volume
+        projected:
+          sources:
+          - secret:
+              name: kubeshark-saml-x509-crt-secret
+              items:
+              - key: AUTH_SAML_X509_CRT
+                path: kubeshark.crt
+          - secret:
+              name: kubeshark-saml-x509-key-secret
+              items:
+              - key: AUTH_SAML_X509_KEY
+                path: kubeshark.key
 ---
 # Source: kubeshark/templates/06-front-deployment.yaml
 apiVersion: apps/v1
@@ -580,6 +651,10 @@ spec:
               value: ' '
             - name: REACT_APP_AUTH_ENABLED
               value: 'false'
+            - name: REACT_APP_AUTH_TYPE
+              value: 'saml'
+            - name: REACT_APP_AUTH_SAML_IDP_METADATA_URL
+              value: ''
             - name: REACT_APP_REPLAY_DISABLED
               value: 'false'
           image: 'docker.io/kubeshark/front:v52.1.0'
