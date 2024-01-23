@@ -82,11 +82,19 @@ type ResourcesConfig struct {
 	Tracer  ResourceRequirements `yaml:"tracer" json:"tracer"`
 }
 
+type SamlConfig struct {
+	IdpMetadataUrl string `yaml:"idpMetadataUrl" json:"idpMetadataUrl"`
+	X509crt        string `yaml:"x509crt" json:"x509crt"`
+	X509key        string `yaml:"x509key" json:"x509key"`
+}
+
 type AuthConfig struct {
-	Enabled         bool     `yaml:"enabled" json:"enabled" default:"false"`
-	ApprovedEmails  []string `yaml:"approvedEmails" json:"approvedEmails"  default:"[]"`
-	ApprovedDomains []string `yaml:"approvedDomains" json:"approvedDomains"  default:"[]"`
-	ApprovedTenants []string `yaml:"approvedTenants" json:"approvedTenants"  default:"[]"`
+	Enabled         bool       `yaml:"enabled" json:"enabled" default:"false"`
+	Type            string     `yaml:"type" json:"type" default:"saml"`
+	ApprovedEmails  []string   `yaml:"approvedEmails" json:"approvedEmails"  default:"[]"`
+	ApprovedDomains []string   `yaml:"approvedDomains" json:"approvedDomains"  default:"[]"`
+	ApprovedTenants []string   `yaml:"approvedTenants" json:"approvedTenants"  default:"[]"`
+	Saml            SamlConfig `yaml:"saml" json:"saml"`
 }
 
 type IngressConfig struct {

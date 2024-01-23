@@ -59,9 +59,14 @@ tap:
       - linux
   auth:
     enabled: false
+    type: saml
     approvedEmails: []
     approvedDomains: []
     approvedTenants: []
+    saml:
+      idpMetadataUrl: ""
+      x509crt: ""
+      x509key: ""
   ingress:
     enabled: false
     className: ""

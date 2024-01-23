@@ -16,6 +16,10 @@ data:
       access_log /dev/stdout;
       error_log /dev/stdout;
 
+      client_body_buffer_size     64k;
+      client_header_buffer_size   32k;
+      large_client_header_buffers 8 64k;
+
       location /api {
         rewrite ^/api(.*)$ $1 break;
         proxy_pass http://kubeshark-hub;
@@ -29,6 +33,17 @@ data:
         proxy_read_timeout 120s;
         proxy_send_timeout 12s;
         proxy_pass_request_headers      on;
+      }
+
+      location /saml {
+        rewrite ^/saml(.*)$ /saml$1 break;
+        proxy_pass http://kubeshark-hub;
+        proxy_set_header   X-Forwarded-For $remote_addr;
+        proxy_set_header   Host $http_host;
+        proxy_connect_timeout 4s;
+        proxy_read_timeout 120s;
+        proxy_send_timeout 12s;
+        proxy_pass_request_headers on;
       }
 
       location / {

@@ -28,6 +28,10 @@ spec:
               value: '{{ not (eq .Values.tap.defaultFilter "") | ternary .Values.tap.defaultFilter " " }}'
             - name: REACT_APP_AUTH_ENABLED
               value: '{{ .Values.tap.auth.enabled }}'
+            - name: REACT_APP_AUTH_TYPE
+              value: '{{ .Values.tap.auth.type }}'
+            - name: REACT_APP_AUTH_SAML_IDP_METADATA_URL
+              value: '{{ .Values.tap.auth.saml.idpMetadataUrl }}'
             - name: REACT_APP_REPLAY_DISABLED
               value: '{{ .Values.tap.replayDisabled }}'
           image: '{{ .Values.tap.docker.registry }}/front:{{ not (eq .Values.tap.docker.tag "") | ternary .Values.tap.docker.tag (printf "v%s" .Chart.Version) }}'
