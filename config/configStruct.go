@@ -61,6 +61,7 @@ func CreateDefaultConfig() ConfigStruct {
 			},
 			Auth: configStructs.AuthConfig{
 				Saml: configStructs.SamlConfig{
+					RoleAttribute: "role",
 					Roles: map[string]configStructs.Role{
 						"admin": {
 							Filter:                "",
