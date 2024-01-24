@@ -216,6 +216,8 @@ Please refer to [metrics](./metrics.md) documentation for details.
 | `tap.auth.saml.idpMetadataUrl`                    | SAML IDP metadata URL <br/>(effective, if `tap.auth.type = saml`)                                  | ``                                                      |
 | `tap.auth.saml.x509crt`                   | A self-signed X.509 `.cert` contents <br/>(effective, if `tap.auth.type = saml`)          | ``                                                      |
 | `tap.auth.saml.x509key`                   | A self-signed X.509 `.key` contents <br/>(effective, if `tap.auth.type = saml`)           | ``                                                      |
+| `tap.auth.saml.roleAttribute`             | A SAML attribute name corresponding to user's authorization role <br/>(effective, if `tap.auth.type = saml`)  | `role` |
+| `tap.auth.saml.roles`                     | A list of SAML authorization roles and their permissions <br/>(effective, if `tap.auth.type = saml`)  | `{"admin":{"canDownloadPCAP":true,"canReplayTraffic":true,"canUpdateTargetedPods":true,"canUseScripting":true,"filter":""}}` |
 | `tap.ingress.enabled`                     | Enable `Ingress`                                | `false`                                                 |
 | `tap.ingress.className`                   | Ingress class name                            | `""`                                                    |
 | `tap.ingress.host`                        | Host of the `Ingress`                          | `ks.svc.cluster.local`                                  |
