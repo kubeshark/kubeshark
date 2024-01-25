@@ -94,6 +94,7 @@ type SamlConfig struct {
 	IdpMetadataUrl string          `yaml:"idpMetadataUrl" json:"idpMetadataUrl"`
 	X509crt        string          `yaml:"x509crt" json:"x509crt"`
 	X509key        string          `yaml:"x509key" json:"x509key"`
+	RoleAttribute  string          `yaml:"roleAttribute" json:"roleAttribute"`
 	Roles          map[string]Role `yaml:"roles" json:"roles"`
 }
 

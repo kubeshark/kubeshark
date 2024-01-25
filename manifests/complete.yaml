@@ -151,6 +151,7 @@ data:
     AUTH_APPROVED_DOMAINS: ''
     AUTH_APPROVED_TENANTS: ''
     AUTH_SAML_IDP_METADATA_URL: ''
+    AUTH_SAML_ROLE_ATTRIBUTE: 'role'
     AUTH_SAML_ROLES: '{"admin":{"canDownloadPCAP":true,"canReplayTraffic":true,"canUpdateTargetedPods":true,"canUseScripting":true,"filter":""}}'
     TELEMETRY_DISABLED: ''
     REPLAY_DISABLED: ''
@@ -654,7 +655,7 @@ spec:
             - name: REACT_APP_AUTH_TYPE
               value: 'saml'
             - name: REACT_APP_AUTH_SAML_IDP_METADATA_URL
-              value: ''
+              value: ' '
             - name: REACT_APP_REPLAY_DISABLED
               value: 'false'
           image: 'docker.io/kubeshark/front:v52.1.0'

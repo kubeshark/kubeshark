@@ -67,6 +67,7 @@ tap:
       idpMetadataUrl: ""
       x509crt: ""
       x509key: ""
+      roleAttribute: role
       roles:
         admin:
           filter: ""
