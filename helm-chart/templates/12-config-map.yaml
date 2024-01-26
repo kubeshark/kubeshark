@@ -25,3 +25,5 @@ data:
     REPLAY_DISABLED: '{{ .Values.tap.replayDisabled | ternary "true" "" }}'
     GLOBAL_FILTER: {{ include "kubeshark.escapeDoubleQuotes" .Values.tap.globalFilter | quote }}
     TRAFFIC_SAMPLE_RATE: '{{ .Values.tap.trafficSampleRate }}'
+    KUBESHARK_CLOUD_API_URL: 'https://api.kubeshark.co'
+    

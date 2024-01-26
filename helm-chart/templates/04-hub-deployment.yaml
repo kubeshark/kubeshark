@@ -41,6 +41,11 @@ spec:
             valueFrom:
               fieldRef:
                 fieldPath: metadata.namespace
+          - name: KUBESHARK_CLOUD_API_URL
+            valueFrom:
+              configMapKeyRef:
+                name: kubeshark-config-map
+                key: KUBESHARK_CLOUD_API_URL
           image: '{{ .Values.tap.docker.registry }}/hub:{{ not (eq .Values.tap.docker.tag "") | ternary .Values.tap.docker.tag (printf "v%s" .Chart.Version) }}'
           imagePullPolicy: {{ .Values.tap.docker.imagePullPolicy }}
           readinessProbe:
