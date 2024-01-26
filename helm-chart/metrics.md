@@ -49,3 +49,7 @@ prometheus:
 | kubeshark_matched_pairs_total | Counter | Total number of matched pairs | 
 | kubeshark_dropped_tcp_streams_total | Counter | Total number of dropped TCP streams | 
 | kubeshark_live_tcp_streams | Gauge | Number of live TCP streams |
+
+## Ready-to-use Dashboard
+
+You can import a ready-to-use dashboard from [Grafana's Dashboards Portal](https://grafana.com/grafana/dashboards/20359-kubeshark-dashboard-v1-0-003/).
