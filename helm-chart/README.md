@@ -1,6 +1,6 @@
 # Helm Chart of Kubeshark
 
-## Officially
+## Official
 
 Add the Helm repo for Kubeshark:
 
@@ -14,7 +14,7 @@ then install Kubeshark:
 helm install kubeshark kubeshark/kubeshark
 ```
 
-## Locally
+## Local
 
 Clone the repo:
 
@@ -41,7 +41,7 @@ Uninstall Kubeshark:
 helm uninstall kubeshark
 ```
 
-## Accessing
+## Port-forward
 
 Do the port forwarding:
 
@@ -50,6 +50,25 @@ kubectl port-forward service/kubeshark-front 8899:80
 ```
 
 Visit [localhost:8899](http://localhost:8899)
+
+
+## Increase the Worker's Storage Limit
+
+For example, change from the default 500Mi to 5Gi:
+
+```shell
+--set tap.storageLimit=5Gi
+```
+
+## Add a License
+
+When it's necessary, you can use:
+
+```shell
+--set license=YOUR_LICENSE_GOES_HERE
+```
+
+Get your license from Kubeshark's [Admin Console](https://console.kubeshark.co/).
 
 ## Installing with Ingress (EKS) enabled
 
@@ -69,93 +88,6 @@ tap:
       alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:us-east-1:7..8:certificate/b...65c
       alb.ingress.kubernetes.io/target-type: ip
       alb.ingress.kubernetes.io/scheme: internet-facing
-```
-
-## Installing with SAML enabled
-
-### Prerequisites:
-
-##### 1. Generate X.509 certificate & key (TL;DR: https://ubuntu.com/server/docs/security-certificates)
-
-**Example:**
-```
-openssl genrsa -out mykey.key 2048
-openssl req -new -key mykey.key -out mycsr.csr
-openssl x509 -signkey mykey.key -in mycsr.csr -req -days 365 -out mycert.crt
-```
-
-**What you get:**
-- `mycert.crt` - use it for `tap.auth.saml.x509crt`
-- `mykey.key` - use it for `tap.auth.saml.x509crt`
-
-##### 2. Prepare your SAML IDP
-
-You should set up the required SAML IDP (Google, Auth0, your custom IDP, etc.)
-
-During setup, an IDP provider will typically request to enter:
-- Metadata URL
-- ACS URL (Assertion Consumer Service URL, aka Callback URL)
-- SLO URL (Single Logout URL)
-
-Correspondingly, you will enter these (if you run the most default Kubeshark setup):
-- [http://localhost:8899/saml/metadata](http://localhost:8899/saml/metadata)
-- [http://localhost:8899/saml/acs](http://localhost:8899/saml/acs)
-- [http://localhost:8899/saml/slo](http://localhost:8899/saml/slo)
-
-Otherwise, if you have `tap.ingress.enabled == true`, change protocol & domain respectively - showing example domain:
-- [https://kubeshark.example.com/saml/metadata](https://kubeshark.example.com/saml/metadata)
-- [https://kubeshark.example.com/saml/acs](https://kubeshark.example.com/saml/acs)
-- [https://kubeshark.example.com/saml/slo](https://kubeshark.example.com/saml/slo)
-
-```shell
-helm install kubeshark kubeshark/kubeshark -f values.yaml
-```
-
-Set this `value.yaml`:
-```shell
-tap:
-  auth:
-    enabled: true
-    type: saml
-    approvedEmails: []
-    approvedDomains: []
-    approvedTenants: []
-    saml:
-      idpMetadataUrl: "https://tiptophelmet.us.auth0.com/samlp/metadata/MpWiDCMMB5ShU1HRnhdb1sHM6VWqdnDG"
-      x509crt: |
-        -----BEGIN CERTIFICATE-----
-        MIIDlTCCAn0CFFRUzMh+dZvp+FvWd4gRaiBVN8EvMA0GCSqGSIb3DQEBCwUAMIGG
-        MSQwIgYJKoZIhvcNAQkBFhV3ZWJtYXN0ZXJAZXhhbXBsZS5jb20wHhcNMjMxMjI4
-        ........<redacted: please, generate your own X.509 cert>........
-        ZMzM7YscqZwoVhTOhrD4/5nIfOD/hTWG/MBe2Um1V1IYF8aVEllotTKTgsF6ZblA
-        miCOgl6lIlZy
-        -----END CERTIFICATE-----
-      x509key: |
-        -----BEGIN PRIVATE KEY-----
-        MIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQDlgDFKsRHj+mok
-        euOF0IpwToOEpQGtafB75ytv3psD/tQAzEIug+rkDriVvsfcvafj0qcaTeYvnCoz
-        ........<redacted: please, generate your own X.509 key>.........
-        sUpBCu0E3nRJM/QB2ui5KhNR7uvPSL+kSsaEq19/mXqsL+mRi9aqy2wMEvUSU/kt
-        UaV5sbRtTzYLxpOSQyi8CEFA+A==
-        -----END PRIVATE KEY-----
-```
-
-## Add a License
-
-When it's necessary, you can use:
-
-```shell
---set license=YOUR_LICENSE_GOES_HERE
-```
-
-Get your license from Kubeshark's [Admin Console](https://console.kubeshark.co/).
-
-## Increase the Worker's Storage Limit
-
-For example, change from the default 500Mi to 1Gi:
-
-```shell
---set tap.storageLimit=1Gi
 ```
 
 ## Disabling IPV6
@@ -245,3 +177,72 @@ Please refer to [metrics](./metrics.md) documentation for details.
 KernelMapping pairs kernel versions with a
                             DriverContainer image. Kernel versions can be matched
                             literally or using a regular expression
+
+## Installing with SAML enabled
+
+### Prerequisites:
+
+##### 1. Generate X.509 certificate & key (TL;DR: https://ubuntu.com/server/docs/security-certificates)
+
+**Example:**
+```
+openssl genrsa -out mykey.key 2048
+openssl req -new -key mykey.key -out mycsr.csr
+openssl x509 -signkey mykey.key -in mycsr.csr -req -days 365 -out mycert.crt
+```
+
+**What you get:**
+- `mycert.crt` - use it for `tap.auth.saml.x509crt`
+- `mykey.key` - use it for `tap.auth.saml.x509crt`
+
+##### 2. Prepare your SAML IDP
+
+You should set up the required SAML IDP (Google, Auth0, your custom IDP, etc.)
+
+During setup, an IDP provider will typically request to enter:
+- Metadata URL
+- ACS URL (Assertion Consumer Service URL, aka Callback URL)
+- SLO URL (Single Logout URL)
+
+Correspondingly, you will enter these (if you run the most default Kubeshark setup):
+- [http://localhost:8899/saml/metadata](http://localhost:8899/saml/metadata)
+- [http://localhost:8899/saml/acs](http://localhost:8899/saml/acs)
+- [http://localhost:8899/saml/slo](http://localhost:8899/saml/slo)
+
+Otherwise, if you have `tap.ingress.enabled == true`, change protocol & domain respectively - showing example domain:
+- [https://kubeshark.example.com/saml/metadata](https://kubeshark.example.com/saml/metadata)
+- [https://kubeshark.example.com/saml/acs](https://kubeshark.example.com/saml/acs)
+- [https://kubeshark.example.com/saml/slo](https://kubeshark.example.com/saml/slo)
+
+```shell
+helm install kubeshark kubeshark/kubeshark -f values.yaml
+```
+
+Set this `value.yaml`:
+```shell
+tap:
+  auth:
+    enabled: true
+    type: saml
+    approvedEmails: []
+    approvedDomains: []
+    approvedTenants: []
+    saml:
+      idpMetadataUrl: "https://tiptophelmet.us.auth0.com/samlp/metadata/MpWiDCMMB5ShU1HRnhdb1sHM6VWqdnDG"
+      x509crt: |
+        -----BEGIN CERTIFICATE-----
+        MIIDlTCCAn0CFFRUzMh+dZvp+FvWd4gRaiBVN8EvMA0GCSqGSIb3DQEBCwUAMIGG
+        MSQwIgYJKoZIhvcNAQkBFhV3ZWJtYXN0ZXJAZXhhbXBsZS5jb20wHhcNMjMxMjI4
+        ........<redacted: please, generate your own X.509 cert>........
+        ZMzM7YscqZwoVhTOhrD4/5nIfOD/hTWG/MBe2Um1V1IYF8aVEllotTKTgsF6ZblA
+        miCOgl6lIlZy
+        -----END CERTIFICATE-----
+      x509key: |
+        -----BEGIN PRIVATE KEY-----
+        MIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQDlgDFKsRHj+mok
+        euOF0IpwToOEpQGtafB75ytv3psD/tQAzEIug+rkDriVvsfcvafj0qcaTeYvnCoz
+        ........<redacted: please, generate your own X.509 key>.........
+        sUpBCu0E3nRJM/QB2ui5KhNR7uvPSL+kSsaEq19/mXqsL+mRi9aqy2wMEvUSU/kt
+        UaV5sbRtTzYLxpOSQyi8CEFA+A==
+        -----END PRIVATE KEY-----
+```
