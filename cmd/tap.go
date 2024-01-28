@@ -60,4 +60,5 @@ func init() {
 	tapCmd.Flags().Bool(configStructs.IgnoreTaintedLabel, defaultTapConfig.IgnoreTainted, "Ignore tainted pods while running Worker DaemonSet")
 	tapCmd.Flags().Bool(configStructs.IngressEnabledLabel, defaultTapConfig.Ingress.Enabled, "Enable Ingress")
 	tapCmd.Flags().Bool(configStructs.TelemetryEnabledLabel, defaultTapConfig.Telemetry.Enabled, "Enable/disable Telemetry")
+	tapCmd.Flags().Bool(configStructs.DynatraceExcludeWorkerLabel, defaultTapConfig.DynatraceExcludeWorker, "Exclude worker from Dynatrace monitoring")
 }
