@@ -142,6 +142,11 @@ type MetricsConfig struct {
 	Port uint16 `yaml:"port" json:"port" default:"49100"`
 }
 
+type MiscConfig struct {
+	JsonTTL string `yaml:"jsonTTL" json:"jsonTTL" default:"5m"`
+	PcapTTL string `yaml:"pcapTTL" json:"pcapTTL" default:"10s"`
+}
+
 type TapConfig struct {
 	Docker                    DockerConfig          `yaml:"docker" json:"docker"`
 	Proxy                     ProxyConfig           `yaml:"proxy" json:"proxy"`
@@ -174,6 +179,7 @@ type TapConfig struct {
 	Metrics                   MetricsConfig         `yaml:"metrics" json:"metrics"`
 	TrafficSampleRate         int                   `yaml:"trafficSampleRate" json:"trafficSampleRate" default:"100"`
 	TcpStreamChannelTimeoutMs int                   `yaml:"tcpStreamChannelTimeoutMs" json:"tcpStreamChannelTimeoutMs" default:"10000"`
+	Misc                      MiscConfig            `yaml:"misc" json:"misc"`
 }
 
 func (config *TapConfig) PodRegex() *regexp.Regexp {
