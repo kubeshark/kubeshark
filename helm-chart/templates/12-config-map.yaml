@@ -26,5 +26,5 @@ data:
     GLOBAL_FILTER: {{ include "kubeshark.escapeDoubleQuotes" .Values.tap.globalFilter | quote }}
     TRAFFIC_SAMPLE_RATE: '{{ .Values.tap.trafficSampleRate }}'
     KUBESHARK_CLOUD_API_URL: 'https://api.kubeshark.co'
-    CONFIG_JSON_TTL: '{{ .Values.tap.misc.jsonTTL }}'
-    CONFIG_PCAP_TTL: '{{ .Values.tap.misc.pcapTTL }}'
+    JSON_TTL: '{{ .Values.tap.misc.jsonTTL }}'
+    PCAP_TTL: '{{ .Values.tap.misc.pcapTTL }}'

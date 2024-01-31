@@ -158,8 +158,8 @@ data:
     GLOBAL_FILTER: ""
     TRAFFIC_SAMPLE_RATE: '100'
     KUBESHARK_CLOUD_API_URL: 'https://api.kubeshark.co'
-    CONFIG_JSON_TTL: '5m'
-    CONFIG_PCAP_TTL: '10s'
+    JSON_TTL: '5m'
+    PCAP_TTL: '10s'
 ---
 # Source: kubeshark/templates/02-cluster-role.yaml
 apiVersion: rbac.authorization.k8s.io/v1
