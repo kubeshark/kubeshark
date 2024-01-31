@@ -60,9 +60,6 @@ tap:
   auth:
     enabled: false
     type: saml
-    approvedEmails: []
-    approvedDomains: []
-    approvedTenants: []
     saml:
       idpMetadataUrl: ""
       x509crt: ""

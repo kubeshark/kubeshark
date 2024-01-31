@@ -224,9 +224,6 @@ tap:
   auth:
     enabled: true
     type: saml
-    approvedEmails: []
-    approvedDomains: []
-    approvedTenants: []
     saml:
       idpMetadataUrl: "https://tiptophelmet.us.auth0.com/samlp/metadata/MpWiDCMMB5ShU1HRnhdb1sHM6VWqdnDG"
       x509crt: |

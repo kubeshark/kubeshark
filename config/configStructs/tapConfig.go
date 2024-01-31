@@ -101,9 +101,6 @@ type SamlConfig struct {
 type AuthConfig struct {
 	Enabled         bool       `yaml:"enabled" json:"enabled" default:"false"`
 	Type            string     `yaml:"type" json:"type" default:"saml"`
-	ApprovedEmails  []string   `yaml:"approvedEmails" json:"approvedEmails"  default:"[]"`
-	ApprovedDomains []string   `yaml:"approvedDomains" json:"approvedDomains"  default:"[]"`
-	ApprovedTenants []string   `yaml:"approvedTenants" json:"approvedTenants"  default:"[]"`
 	Saml            SamlConfig `yaml:"saml" json:"saml"`
 }
 
