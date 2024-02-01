@@ -69,6 +69,7 @@ func CreateDefaultConfig() ConfigStruct {
 							CanDownloadPCAP:       true,
 							CanUseScripting:       true,
 							CanUpdateTargetedPods: true,
+							ShowAdminConsoleLink:  true,
 						},
 					},
 				},

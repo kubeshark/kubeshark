@@ -88,6 +88,7 @@ type Role struct {
 	CanDownloadPCAP       bool   `yaml:"canDownloadPCAP" json:"canDownloadPCAP" default:"false"`
 	CanUseScripting       bool   `yaml:"canUseScripting" json:"canUseScripting" default:"false"`
 	CanUpdateTargetedPods bool   `yaml:"canUpdateTargetedPods" json:"canUpdateTargetedPods" default:"false"`
+	ShowAdminConsoleLink  bool   `yaml:"showAdminConsoleLink" json:"showAdminConsoleLink" default:"false"`
 }
 
 type SamlConfig struct {
