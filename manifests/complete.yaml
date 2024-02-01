@@ -149,7 +149,7 @@ data:
     AUTH_TYPE: 'saml'
     AUTH_SAML_IDP_METADATA_URL: ''
     AUTH_SAML_ROLE_ATTRIBUTE: 'role'
-    AUTH_SAML_ROLES: '{"admin":{"canDownloadPCAP":true,"canReplayTraffic":true,"canUpdateTargetedPods":true,"canUseScripting":true,"filter":""}}'
+    AUTH_SAML_ROLES: '{"admin":{"canDownloadPCAP":true,"canReplayTraffic":true,"canUpdateTargetedPods":true,"canUseScripting":true,"filter":"","showAdminConsoleLink":true}}'
     TELEMETRY_DISABLED: ''
     REPLAY_DISABLED: ''
     GLOBAL_FILTER: ""
