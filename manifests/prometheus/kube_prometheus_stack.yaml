@@ -1,0 +1,25 @@
+grafana:
+  additionalDataSources: []
+prometheus:
+  prometheusSpec:
+    scrapeInterval: 10s
+    evaluationInterval: 30s
+    additionalScrapeConfigs: |
+      - job_name: 'kubeshark-worker-metrics'
+        kubernetes_sd_configs:
+          - role: endpoints
+        relabel_configs:
+          - source_labels: [__meta_kubernetes_pod_name]
+            target_label: pod
+          - source_labels: [__meta_kubernetes_pod_node_name]
+            target_label: node
+          - source_labels: [__meta_kubernetes_endpoint_port_name]
+            action: keep
+            regex: ^metrics$
+          - source_labels: [__address__, __meta_kubernetes_endpoint_port_number]
+            action: replace
+            regex: ([^:]+)(?::\d+)?
+            replacement: $1:49100
+            target_label: __address__
+          - action: labelmap
+            regex: __meta_kubernetes_service_label_(.+)

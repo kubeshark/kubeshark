@@ -99,9 +99,9 @@ type SamlConfig struct {
 }
 
 type AuthConfig struct {
-	Enabled         bool       `yaml:"enabled" json:"enabled" default:"false"`
-	Type            string     `yaml:"type" json:"type" default:"saml"`
-	Saml            SamlConfig `yaml:"saml" json:"saml"`
+	Enabled bool       `yaml:"enabled" json:"enabled" default:"false"`
+	Type    string     `yaml:"type" json:"type" default:"saml"`
+	Saml    SamlConfig `yaml:"saml" json:"saml"`
 }
 
 type IngressConfig struct {
@@ -140,8 +140,9 @@ type MetricsConfig struct {
 }
 
 type MiscConfig struct {
-	JsonTTL string `yaml:"jsonTTL" json:"jsonTTL" default:"5m"`
-	PcapTTL string `yaml:"pcapTTL" json:"pcapTTL" default:"10s"`
+	JsonTTL      string `yaml:"jsonTTL" json:"jsonTTL" default:"5m"`
+	PcapTTL      string `yaml:"pcapTTL" json:"pcapTTL" default:"10s"`
+	PcapErrorTTL string `yaml:"pcapErrorTTL" json:"pcapErrorTTL" default:"60s"`
 }
 
 type TapConfig struct {
