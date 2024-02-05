@@ -112,6 +112,7 @@ tap:
   misc:
     jsonTTL: 5m
     pcapTTL: 10s
+    pcapErrorTTL: 60s
 logs:
   file: ""
 kube:
