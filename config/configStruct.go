@@ -57,6 +57,8 @@ func CreateDefaultConfig() ConfigStruct {
 					"SYS_RESOURCE",
 					// CHECKPOINT_RESTORE is required to readlink /proc/PID/exe (kernel > 5.9)
 					"CHECKPOINT_RESTORE",
+					// IPC_LOCK is required for ebpf perf rings (kernel > )
+					"IPC_LOCK",
 				},
 			},
 			Auth: configStructs.AuthConfig{
