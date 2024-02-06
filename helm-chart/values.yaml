@@ -72,6 +72,7 @@ tap:
           canDownloadPCAP: true
           canUseScripting: true
           canUpdateTargetedPods: true
+          showAdminConsoleLink: true
   ingress:
     enabled: false
     className: ""
