@@ -105,6 +105,7 @@ tap:
     - SYS_PTRACE
     - SYS_RESOURCE
     - CHECKPOINT_RESTORE
+    - IPC_LOCK
   globalFilter: ""
   metrics:
     port: 49100
