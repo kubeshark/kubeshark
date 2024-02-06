@@ -157,6 +157,7 @@ data:
     KUBESHARK_CLOUD_API_URL: 'https://api.kubeshark.co'
     JSON_TTL: '5m'
     PCAP_TTL: '10s'
+    PCAP_ERROR_TTL: '60s'
 ---
 # Source: kubeshark/templates/02-cluster-role.yaml
 apiVersion: rbac.authorization.k8s.io/v1
