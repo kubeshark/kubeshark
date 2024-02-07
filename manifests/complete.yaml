@@ -386,6 +386,7 @@ spec:
             - '30001'
             - -metrics-port
             - '49100'
+            - -unixsocket
             - -servicemesh
             - -procfs
             - /hostproc
@@ -484,6 +485,7 @@ spec:
                 - SYS_PTRACE
                 - SYS_RESOURCE
                 - CHECKPOINT_RESTORE
+                - IPC_LOCK
               drop:
                 - ALL
           volumeMounts:
