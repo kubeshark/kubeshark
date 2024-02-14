@@ -84,10 +84,7 @@ spec:
           - name: TCP_STREAM_CHANNEL_TIMEOUT_MS
             value: '{{ .Values.tap.tcpStreamChannelTimeoutMs }}'
           - name: KUBESHARK_CLOUD_API_URL
-            valueFrom:
-              configMapKeyRef:
-                name: kubeshark-config-map
-                key: KUBESHARK_CLOUD_API_URL
+            value: 'https://api.kubeshark.co'
           resources:
             limits:
               cpu: {{ .Values.tap.resources.sniffer.limits.cpu }}
