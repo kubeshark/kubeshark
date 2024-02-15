@@ -154,7 +154,6 @@ data:
     REPLAY_DISABLED: ''
     GLOBAL_FILTER: ""
     TRAFFIC_SAMPLE_RATE: '100'
-    KUBESHARK_CLOUD_API_URL: 'https://api.kubeshark.co'
     JSON_TTL: '5m'
     PCAP_TTL: '10s'
     PCAP_ERROR_TTL: '60s'
@@ -410,10 +409,7 @@ spec:
           - name: TCP_STREAM_CHANNEL_TIMEOUT_MS
             value: '10000'
           - name: KUBESHARK_CLOUD_API_URL
-            valueFrom:
-              configMapKeyRef:
-                name: kubeshark-config-map
-                key: KUBESHARK_CLOUD_API_URL
+            value: 'https://api.kubeshark.co'
           resources:
             limits:
               cpu: 750m
@@ -579,10 +575,7 @@ spec:
               fieldRef:
                 fieldPath: metadata.namespace
           - name: KUBESHARK_CLOUD_API_URL
-            valueFrom:
-              configMapKeyRef:
-                name: kubeshark-config-map
-                key: KUBESHARK_CLOUD_API_URL
+            value: 'https://api.kubeshark.co'
           image: 'docker.io/kubeshark/hub:v52.1.30'
           imagePullPolicy: Always
           readinessProbe:
