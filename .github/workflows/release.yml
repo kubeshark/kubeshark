@@ -88,3 +88,5 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.HOMEBREW_TOKEN }}
           VER: ${{ steps.version.outputs.tag }}
           BUILD_TIMESTAMP: ${{ steps.version.outputs.build_timestamp }}
+          GIT_BRANCH: ${{ steps.version.outputs.branch }}
+          COMMIT_HASH: ${{ env.GITHUB_SHA }}
