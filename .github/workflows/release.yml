@@ -50,41 +50,33 @@ jobs:
           prerelease: true
           bodyFile: 'bin/README.md'
 
-  brew-tap:
-    name: Create Homebrew formulae
-    runs-on: ubuntu-latest
-    needs: [release]
-    steps:
       - name: Checkout
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          repository: kubeshark/homebrew-kubeshark
+          ssh-key: ${{ secrets.HOMEBREW_SSH_KEY }}
+          path: homebrew-kubeshark
 
-      - name: Version
-        id: version
+      - name: Generate Homebrew formulae
         shell: bash
         run: |
-          {
-            echo "tag=${GITHUB_REF#refs/*/}"
-            echo "build_timestamp=$(date +%s)"
-            echo "branch=${GITHUB_REF#refs/heads/}"
-          } >> "$GITHUB_OUTPUT"
+          export FULL_VERSION=${{ steps.version.outputs.tag }}
+          export CLEAN_VERSION=$(echo $FULL_VERSION | sed 's/^v//')
+          export DARWIN_AMD64_SHA256=$(shasum -a 256 bin/kubeshark_darwin_amd64 | awk '{print $1}')
+          export DARWIN_ARM64_SHA256=$(shasum -a 256 bin/kubeshark_darwin_arm64 | awk '{print $1}')
+          export LINUX_AMD64_SHA256=$(shasum -a 256 bin/kubeshark_linux_amd64 | awk '{print $1}')
+          export LINUX_ARM64_SHA256=$(shasum -a 256 bin/kubeshark_linux_arm64 | awk '{print $1}')
+          envsubst < .github/static/kubeshark.rb.tmpl > homebrew-kubeshark/kubeshark.rb
 
-      - name: Fetch all tags
-        run: git fetch --force --tags
+          cat homebrew-kubeshark/kubeshark.rb
 
-      - name: Set up Go
-        uses: actions/setup-go@v4
-        with:
-          go-version-file: 'go.mod'
-
-      - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@v4
-        with:
-          distribution: goreleaser
-          version: ${{ env.GITHUB_REF_NAME }}
-          args: release --clean
-        env:
-          GITHUB_TOKEN: ${{ secrets.HOMEBREW_TOKEN }}
-          VER: ${{ steps.version.outputs.tag }}
-          BUILD_TIMESTAMP: ${{ steps.version.outputs.build_timestamp }}
+      - name: Commit and push Homebrew formulae
+        working-directory: homebrew-kubeshark
+        run: |
+          git config --global user.email "bot@kubeshark.io"
+          git config --global user.name "Kubeshark Bot"
+          git add kubeshark.rb
+          git commit -m "Release ${{ steps.version.outputs.tag }}"
+          git push
+  
