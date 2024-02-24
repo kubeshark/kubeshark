@@ -1,0 +1,46 @@
+# typed: false
+# frozen_string_literal: true
+
+class Kubeshark < Formula
+  desc ""
+  homepage "https://github.com/kubeshark/kubeshark"
+  version "${CLEAN_VERSION}"
+
+  on_macos do
+    if Hardware::CPU.arm?
+      url "https://github.com/kubeshark/kubeshark/releases/download/${FULL_VERSION}/kubeshark_darwin_arm64"
+      sha256 "${DARWIN_ARM64_SHA256}"
+
+      def install
+        bin.install "kubeshark_darwin_arm64" => "kubeshark"
+      end
+    end
+    if Hardware::CPU.intel?
+      url "https://github.com/kubeshark/kubeshark/releases/download/${FULL_VERSION}/kubeshark_darwin_amd64"
+      sha256 "${DARWIN_AMD64_SHA256}"
+
+      def install
+        bin.install "kubeshark_darwin_amd64" => "kubeshark"
+      end
+    end
+  end
+
+  on_linux do
+    if Hardware::CPU.intel?
+      url "https://github.com/kubeshark/kubeshark/releases/download/${FULL_VERSION}/kubeshark_linux_amd64"
+      sha256 "${LINUX_AMD64_SHA256}"
+
+      def install
+        bin.install "kubeshark_linux_amd64" => "kubeshark"
+      end
+    end
+    if Hardware::CPU.arm? && Hardware::CPU.is_64_bit?
+      url "https://github.com/kubeshark/kubeshark/releases/download/${FULL_VERSION}/kubeshark_linux_arm64"
+      sha256 "${LINUX_ARM64_SHA256}"
+
+      def install
+        bin.install "kubeshark_linux_arm64" => "kubeshark"
+      end
+    end
+  end
+end
