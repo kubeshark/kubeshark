@@ -27,7 +27,6 @@ allowedCapabilities:
   - SYS_PTRACE
   - DAC_OVERRIDE
   - SYS_RESOURCE
-  - CHECKPOINT_RESTORE
   - SYS_MODULE
 runAsUser:
   type: RunAsAny

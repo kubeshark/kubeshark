@@ -41,8 +41,6 @@ func CreateDefaultConfig() ConfigStruct {
 					"SYS_PTRACE",
 					// DAC_OVERRIDE is required to read /proc/PID/environ
 					"DAC_OVERRIDE",
-					// CHECKPOINT_RESTORE is required to readlink /proc/PID/exe (kernel > 5.9)
-					"CHECKPOINT_RESTORE",
 				},
 				KernelModule: []string{
 					// SYS_MODULE is required to install kernel modules
@@ -55,8 +53,6 @@ func CreateDefaultConfig() ConfigStruct {
 					"SYS_PTRACE",
 					// SYS_RESOURCE is required to change rlimits for eBPF
 					"SYS_RESOURCE",
-					// CHECKPOINT_RESTORE is required to readlink /proc/PID/exe (kernel > 5.9)
-					"CHECKPOINT_RESTORE",
 					// IPC_LOCK is required for ebpf perf rings (kernel > )
 					"IPC_LOCK",
 				},
