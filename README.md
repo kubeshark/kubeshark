@@ -23,7 +23,7 @@
 <p align="center">
   <b>
 	  NEW: 
-	  <a href="https://github.com/kubeshark/kubeshark/releases/latest">Version 52.1.30</a> 
+	  <a href="https://github.com/kubeshark/kubeshark/releases/latest">Version 52.1.50</a> 
 	  now available, featuring enhanced 
 	  <a href="https://docs.kubeshark.co/en/half_connections">Network Error Detection & Analysis</a>.
   </b>
