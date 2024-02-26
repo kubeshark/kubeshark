@@ -40,6 +40,15 @@ build-base: ## Build binary (select the platform via GOOS / GOARCH env variables
 					-o bin/kubeshark_$(SUFFIX) kubeshark.go && \
 	cd bin && shasum -a 256 kubeshark_${SUFFIX} > kubeshark_${SUFFIX}.sha256
 
+build-brew: ## Build binary for brew/core CI
+	go build ${GCLFAGS} -ldflags="${LDFLAGS_EXT} \
+					-X 'github.com/kubeshark/kubeshark/misc.GitCommitHash=$(COMMIT_HASH)' \
+					-X 'github.com/kubeshark/kubeshark/misc.Branch=$(GIT_BRANCH)' \
+					-X 'github.com/kubeshark/kubeshark/misc.BuildTimestamp=$(BUILD_TIMESTAMP)' \
+					-X 'github.com/kubeshark/kubeshark/misc.Platform=$(SUFFIX)' \
+					-X 'github.com/kubeshark/kubeshark/misc.Ver=$(VER)'" \
+					-o kubeshark kubeshark.go
+
 build-all: ## Build for all supported platforms.
 	export CGO_ENABLED=0
 	echo "Compiling for every OS and Platform" && \
