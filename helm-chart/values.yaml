@@ -97,14 +97,12 @@ tap:
     - SYS_ADMIN
     - SYS_PTRACE
     - DAC_OVERRIDE
-    - CHECKPOINT_RESTORE
     kernelModule:
     - SYS_MODULE
     ebpfCapture:
     - SYS_ADMIN
     - SYS_PTRACE
     - SYS_RESOURCE
-    - CHECKPOINT_RESTORE
     - IPC_LOCK
   globalFilter: ""
   metrics:

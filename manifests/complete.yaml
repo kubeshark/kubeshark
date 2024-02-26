@@ -425,7 +425,6 @@ spec:
                 - SYS_ADMIN
                 - SYS_PTRACE
                 - DAC_OVERRIDE
-                - CHECKPOINT_RESTORE
               drop:
                 - ALL
           readinessProbe:
@@ -480,7 +479,6 @@ spec:
                 - SYS_ADMIN
                 - SYS_PTRACE
                 - SYS_RESOURCE
-                - CHECKPOINT_RESTORE
                 - IPC_LOCK
               drop:
                 - ALL
