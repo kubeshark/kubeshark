@@ -53,7 +53,8 @@ func CreateDefaultConfig() ConfigStruct {
 					"SYS_PTRACE",
 					// SYS_RESOURCE is required to change rlimits for eBPF
 					"SYS_RESOURCE",
-					// IPC_LOCK is required for ebpf perf rings (kernel > )
+					// IPC_LOCK is required for ebpf perf buffers allocations after some amount of size buffer size:
+					// https://github.com/kubeshark/tracer/blob/13e24725ba8b98216dd0e553262e6d9c56dce5fa/main.go#L82)
 					"IPC_LOCK",
 				},
 			},
