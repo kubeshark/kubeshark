@@ -55,7 +55,7 @@ jobs:
         with:
           fetch-depth: 0
           repository: kubeshark/homebrew-kubeshark
-          ssh-key: ${{ secrets.HOMEBREW_TOKEN }}
+          token: ${{ secrets.HOMEBREW_TOKEN }}
           path: homebrew-kubeshark
 
       - name: Generate Homebrew formulae
