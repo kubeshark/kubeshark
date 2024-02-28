@@ -47,7 +47,7 @@ jobs:
           token: ${{ secrets.GITHUB_TOKEN }}
           artifacts: "bin/*"
           tag: ${{ steps.version.outputs.tag }}
-          prerelease: true
+          prerelease: false
           bodyFile: 'bin/README.md'
 
       - name: Checkout
