@@ -36,6 +36,15 @@ if [ $? != 0 ] ; then
 	exit 1
 fi
 
+# Check for Homebrew and kubeshark installation
+if command -v brew >/dev/null; then
+    if brew list kubeshark &>/dev/null; then
+        echo "📦 Found $PROG_NAME instance installed with Homebrew"
+		echo "${ESC}${F_GREEN}m⬇️ Removing before installation with script${ESC}${F_DEFAULT}m"
+        brew uninstall kubeshark
+    fi
+fi
+
 echo "\n🦈 ${ESC}${F_DEFAULT};${B_BLUE}m Started to download $PROG_NAME ${ESC}${B_DEFAULT};${F_DEFAULT}m"
 
 if curl -# --fail -Lo $EXE_NAME ${REPO}/releases/latest/download/${EXE_NAME}_${OS}_${ARCH} ; then
