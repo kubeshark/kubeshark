@@ -55,7 +55,7 @@ jobs:
         with:
           fetch-depth: 0
           repository: kubeshark/homebrew-kubeshark
-          ssh-key: ${{ secrets.HOMEBREW_SSH_KEY }}
+          ssh-key: ${{ secrets.HOMEBREW_TOKEN }}
           path: homebrew-kubeshark
 
       - name: Generate Homebrew formulae
@@ -79,4 +79,3 @@ jobs:
           git add kubeshark.rb
           git commit -m "Release ${{ steps.version.outputs.tag }}"
           git push
-  
