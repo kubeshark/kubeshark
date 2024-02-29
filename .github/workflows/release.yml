@@ -58,6 +58,14 @@ jobs:
           token: ${{ secrets.HOMEBREW_TOKEN }}
           path: homebrew-kubeshark
 
+      - name: Bump core homebrew formula
+        uses: mislav/bump-homebrew-formula-action@v3
+        with:
+          # A PR will be sent to github.com/Homebrew/homebrew-core to update this formula:
+          formula-name: kubeshark
+        env:
+          COMMITTER_TOKEN: ${{ secrets.COMMITTER_TOKEN }}
+
       - name: Generate Homebrew formulae
         shell: bash
         run: |
