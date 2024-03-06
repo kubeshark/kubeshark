@@ -89,6 +89,7 @@ tap:
     enabled: true
   defaultFilter: ""
   replayDisabled: false
+  scriptingDisabled: false
   capabilities:
     networkCapture:
     - NET_RAW
