@@ -90,6 +90,7 @@ tap:
   defaultFilter: ""
   replayDisabled: false
   scriptingDisabled: false
+  targetedPodsUpdateDisabled: false
   capabilities:
     networkCapture:
     - NET_RAW

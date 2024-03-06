@@ -174,6 +174,7 @@ type TapConfig struct {
 	DefaultFilter             string                `yaml:"defaultFilter" json:"defaultFilter"`
 	ReplayDisabled            bool                  `yaml:"replayDisabled" json:"replayDisabled" default:"false"`
 	ScriptingDisabled          bool                  `yaml:"scriptingDisabled" json:"scriptingDisabled" default:"false"`
+	TargetedPodsUpdateDisabled bool                  `yaml:"targetedPodsUpdateDisabled" json:"targetedPodsUpdateDisabled" default:"false"`
 	Capabilities              CapabilitiesConfig    `yaml:"capabilities" json:"capabilities"`
 	GlobalFilter              string                `yaml:"globalFilter" json:"globalFilter"`
 	Metrics                   MetricsConfig         `yaml:"metrics" json:"metrics"`
