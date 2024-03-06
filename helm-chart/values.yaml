@@ -91,6 +91,7 @@ tap:
   replayDisabled: false
   scriptingDisabled: false
   targetedPodsUpdateDisabled: false
+  recordingDisabled: false
   capabilities:
     networkCapture:
     - NET_RAW
