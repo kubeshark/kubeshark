@@ -63,6 +63,7 @@ jobs:
         with:
           # A PR will be sent to github.com/Homebrew/homebrew-core to update this formula:
           formula-name: kubeshark
+          push-to: kubeshark/homebrew-core
         env:
           COMMITTER_TOKEN: ${{ secrets.COMMITTER_TOKEN }}
 
