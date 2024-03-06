@@ -11,7 +11,9 @@ spec:
     - Ingress
     - Egress
   ingress:
-    - {}
+    - ports:
+        - protocol: TCP
+          port: 80
   egress:
     - {}
 ---
@@ -28,7 +30,9 @@ spec:
     - Ingress
     - Egress
   ingress:
-    - {}
+    - ports:
+        - protocol: TCP
+          port: 80
   egress:
     - {}
 ---
@@ -45,6 +49,10 @@ spec:
     - Ingress
     - Egress
   ingress:
-    - {}
+    - ports:
+        - protocol: TCP
+          port: {{ .Values.tap.proxy.worker.srvPort }}
+        - protocol: TCP
+          port: {{ .Values.tap.metrics.port }}
   egress:
     - {}
