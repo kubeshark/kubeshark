@@ -152,6 +152,9 @@ data:
     AUTH_SAML_ROLES: '{"admin":{"canDownloadPCAP":true,"canReplayTraffic":true,"canUpdateTargetedPods":true,"canUseScripting":true,"filter":"","showAdminConsoleLink":true}}'
     TELEMETRY_DISABLED: ''
     REPLAY_DISABLED: ''
+    SCRIPTING_DISABLED: ''
+    TARGETED_PODS_UPDATE_DISABLED: ''
+    RECORDING_DISABLED: ''
     GLOBAL_FILTER: ""
     TRAFFIC_SAMPLE_RATE: '100'
     JSON_TTL: '5m'
@@ -661,6 +664,12 @@ spec:
             - name: REACT_APP_AUTH_SAML_IDP_METADATA_URL
               value: ' '
             - name: REACT_APP_REPLAY_DISABLED
+              value: 'false'
+            - name: REACT_APP_SCRIPTING_DISABLED
+              value: 'false'
+            - name: REACT_APP_TARGETED_PODS_UPDATE_DISABLED
+              value: 'false'
+            - name: REACT_APP_RECORDING_DISABLED
               value: 'false'
           image: 'docker.io/kubeshark/front:v52.1.66'
           imagePullPolicy: Always
