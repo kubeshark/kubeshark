@@ -14,7 +14,7 @@ spec:
   ports:
     - name: kubeshark-front
       port: 80
-      targetPort: 80
+      targetPort: 8080
   selector:
     app.kubeshark.co/app: front
   type: ClusterIP
