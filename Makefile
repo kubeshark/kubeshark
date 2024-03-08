@@ -49,6 +49,12 @@ build-brew: ## Build binary for brew/core CI
 					-X 'github.com/kubeshark/kubeshark/misc.Ver=$(VER)'" \
 					-o kubeshark kubeshark.go
 
+build-windows-amd64:
+	$(MAKE) build GOOS=windows GOARCH=amd64 && \
+	mv ./bin/kubeshark_windows_amd64 ./bin/kubeshark.exe && \
+	rm bin/kubeshark_windows_amd64.sha256 && \
+	cd bin && shasum -a 256 kubeshark.exe > kubeshark.exe.sha256
+
 build-all: ## Build for all supported platforms.
 	export CGO_ENABLED=0
 	echo "Compiling for every OS and Platform" && \
@@ -57,8 +63,7 @@ build-all: ## Build for all supported platforms.
 	$(MAKE) build GOOS=linux GOARCH=arm64 && \
 	$(MAKE) build GOOS=darwin GOARCH=amd64 && \
 	$(MAKE) build GOOS=darwin GOARCH=arm64 && \
-	$(MAKE) build GOOS=windows GOARCH=amd64 && \
-	mv ./bin/kubeshark_windows_amd64 ./bin/kubeshark.exe && \
+	$(MAKE) build-windows-amd64 && \
 	echo "---------" && \
 	find ./bin -ls
 
