@@ -20,6 +20,9 @@ data:
     AUTH_SAML_ROLES: '{{ .Values.tap.auth.saml.roles | toJson }}'
     TELEMETRY_DISABLED: '{{ not .Values.tap.telemetry.enabled | ternary "true" "" }}'
     REPLAY_DISABLED: '{{ .Values.tap.replayDisabled | ternary "true" "" }}'
+    SCRIPTING_DISABLED: '{{ .Values.tap.scriptingDisabled | ternary "true" "" }}'
+    TARGETED_PODS_UPDATE_DISABLED: '{{ .Values.tap.targetedPodsUpdateDisabled | ternary "true" "" }}'
+    RECORDING_DISABLED: '{{ .Values.tap.recordingDisabled | ternary "true" "" }}'
     GLOBAL_FILTER: {{ include "kubeshark.escapeDoubleQuotes" .Values.tap.globalFilter | quote }}
     TRAFFIC_SAMPLE_RATE: '{{ .Values.tap.trafficSampleRate }}'
     JSON_TTL: '{{ .Values.tap.misc.jsonTTL }}'
