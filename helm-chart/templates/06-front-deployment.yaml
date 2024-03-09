@@ -34,6 +34,12 @@ spec:
               value: '{{ not (eq .Values.tap.auth.saml.idpMetadataUrl "") | ternary .Values.tap.auth.saml.idpMetadataUrl " " }}'
             - name: REACT_APP_REPLAY_DISABLED
               value: '{{ .Values.tap.replayDisabled }}'
+            - name: REACT_APP_SCRIPTING_DISABLED
+              value: '{{ .Values.tap.scriptingDisabled }}'
+            - name: REACT_APP_TARGETED_PODS_UPDATE_DISABLED
+              value: '{{ .Values.tap.targetedPodsUpdateDisabled }}'
+            - name: REACT_APP_RECORDING_DISABLED
+              value: '{{ .Values.tap.recordingDisabled }}'
           image: '{{ .Values.tap.docker.registry }}/front:{{ not (eq .Values.tap.docker.tag "") | ternary .Values.tap.docker.tag (printf "v%s" .Chart.Version) }}'
           imagePullPolicy: {{ .Values.tap.docker.imagePullPolicy }}
           name: kubeshark-front
