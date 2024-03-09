@@ -49,14 +49,14 @@ spec:
             successThreshold: 1
             initialDelaySeconds: 3
             tcpSocket:
-              port: 80
+              port: 8080
           readinessProbe:
             periodSeconds: 1
             failureThreshold: 3
             successThreshold: 1
             initialDelaySeconds: 3
             tcpSocket:
-              port: 80
+              port: 8080
             timeoutSeconds: 1
           resources:
             limits:

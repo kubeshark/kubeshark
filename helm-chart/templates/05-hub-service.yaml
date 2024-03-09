@@ -15,7 +15,7 @@ spec:
   ports:
     - name: kubeshark-hub
       port: 80
-      targetPort: 80
+      targetPort: 8080
   selector:
     app.kubeshark.co/app: hub
   type: ClusterIP

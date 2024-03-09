@@ -29,6 +29,8 @@ spec:
         - name: kubeshark-hub
           command:
             - ./hub
+            - -port
+            - "8080"
           {{- if .Values.tap.debug }}
             - -debug
           {{- end }}
@@ -51,14 +53,14 @@ spec:
             successThreshold: 1
             initialDelaySeconds: 3
             tcpSocket:
-              port: 80
+              port: 8080
           livenessProbe:
             periodSeconds: 1
             failureThreshold: 3
             successThreshold: 1
             initialDelaySeconds: 3
             tcpSocket:
-              port: 80
+              port: 8080
           resources:
             limits:
               cpu: {{ .Values.tap.resources.hub.limits.cpu }}
