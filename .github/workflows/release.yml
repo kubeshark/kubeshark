@@ -14,6 +14,8 @@ jobs:
   release:
     name: Build and publish a new release
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.tag }}
     steps:
       - name: Check out the repo
         uses: actions/checkout@v3
@@ -50,6 +52,11 @@ jobs:
           prerelease: false
           bodyFile: 'bin/README.md'
 
+  brew:
+    name: Build and publish a new release
+    needs: [release]
+    runs-on: ubuntu-latest
+    steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
@@ -70,7 +77,7 @@ jobs:
       - name: Generate Homebrew formulae
         shell: bash
         run: |
-          export FULL_VERSION=${{ steps.version.outputs.tag }}
+          export FULL_VERSION=${{ needs.release.outputs.version }}
           export CLEAN_VERSION=$(echo $FULL_VERSION | sed 's/^v//')
           export DARWIN_AMD64_SHA256=$(shasum -a 256 bin/kubeshark_darwin_amd64 | awk '{print $1}')
           export DARWIN_ARM64_SHA256=$(shasum -a 256 bin/kubeshark_darwin_arm64 | awk '{print $1}')
@@ -86,5 +93,5 @@ jobs:
           git config --global user.email "bot@kubeshark.io"
           git config --global user.name "Kubeshark Bot"
           git add kubeshark.rb
-          git commit -m "Release ${{ steps.version.outputs.tag }}"
+          git commit -m "Release ${{ needs.release.outputs.version }}"
           git push
