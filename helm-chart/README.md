@@ -166,6 +166,7 @@ Please refer to [metrics](./metrics.md) documentation for details.
 | `logs.file`                               | Logs dump path                      | `""`                                                    |
 | `kube.configPath`                         | Path to the `kubeconfig` file (`$HOME/.kube/config`)            | `""`                                                    |
 | `kube.context`                            | Kubernetes context to use for the deployment  | `""`                                                    |
+| `timezone`                                | IANA time zone applied to time shown in the front-end | Default: `""` |
 | `dumpLogs`                                | Enable dumping of logs         | `false`                                                 |
 | `headless`                                | Enable running in headless mode               | `false`                                                 |
 | `license`                                 | License key for the Pro/Enterprise edition    | `""`                                                    |
