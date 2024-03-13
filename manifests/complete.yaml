@@ -1,4 +1,66 @@
 ---
+# Source: kubeshark/templates/16-network-policies.yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: kubeshark-hub-network-policy
+  namespace: default
+spec:
+  podSelector:
+    matchLabels:
+      app.kubeshark.co/app: hub
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - ports:
+        - protocol: TCP
+          port: 80
+  egress:
+    - {}
+---
+# Source: kubeshark/templates/16-network-policies.yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: kubeshark-front-network-policy
+  namespace: default
+spec:
+  podSelector:
+    matchLabels:
+      app.kubeshark.co/app: front
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - ports:
+        - protocol: TCP
+          port: 80
+  egress:
+    - {}
+---
+# Source: kubeshark/templates/16-network-policies.yaml
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: kubeshark-worker-network-policy
+  namespace: default
+spec:
+  podSelector:
+    matchLabels:
+      app.kubeshark.co/app: worker
+  policyTypes:
+    - Ingress
+    - Egress
+  ingress:
+    - ports:
+        - protocol: TCP
+          port: 30001
+        - protocol: TCP
+          port: 49100
+  egress:
+    - {}
+---
 # Source: kubeshark/templates/01-service-account.yaml
 apiVersion: v1
 kind: ServiceAccount
@@ -160,6 +222,7 @@ data:
     JSON_TTL: '5m'
     PCAP_TTL: '10s'
     PCAP_ERROR_TTL: '60s'
+    TIMEZONE: ''
 ---
 # Source: kubeshark/templates/02-cluster-role.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -280,7 +343,7 @@ spec:
   ports:
     - name: kubeshark-hub
       port: 80
-      targetPort: 80
+      targetPort: 8080
   selector:
     app.kubeshark.co/app: hub
   type: ClusterIP
@@ -302,7 +365,7 @@ spec:
   ports:
     - name: kubeshark-front
       port: 80
-      targetPort: 80
+      targetPort: 8080
   selector:
     app.kubeshark.co/app: front
   type: ClusterIP
@@ -566,6 +629,8 @@ spec:
         - name: kubeshark-hub
           command:
             - ./hub
+            - -port
+            - "8080"
           env:
           - name: POD_NAME
             valueFrom:
@@ -585,14 +650,14 @@ spec:
             successThreshold: 1
             initialDelaySeconds: 3
             tcpSocket:
-              port: 80
+              port: 8080
           livenessProbe:
             periodSeconds: 1
             failureThreshold: 3
             successThreshold: 1
             initialDelaySeconds: 3
             tcpSocket:
-              port: 80
+              port: 8080
           resources:
             limits:
               cpu: 750m
@@ -663,6 +728,8 @@ spec:
               value: 'saml'
             - name: REACT_APP_AUTH_SAML_IDP_METADATA_URL
               value: ' '
+            - name: REACT_APP_TIMEZONE
+              value: ''
             - name: REACT_APP_REPLAY_DISABLED
               value: 'false'
             - name: REACT_APP_SCRIPTING_DISABLED
@@ -680,14 +747,14 @@ spec:
             successThreshold: 1
             initialDelaySeconds: 3
             tcpSocket:
-              port: 80
+              port: 8080
           readinessProbe:
             periodSeconds: 1
             failureThreshold: 3
             successThreshold: 1
             initialDelaySeconds: 3
             tcpSocket:
-              port: 80
+              port: 8080
             timeoutSeconds: 1
           resources:
             limits:
