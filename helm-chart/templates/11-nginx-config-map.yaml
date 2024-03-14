@@ -9,9 +9,9 @@ metadata:
 data:
   default.conf: |
     server {
-      listen 80;
+      listen 8080;
 {{- if .Values.tap.ipv6 }}
-      listen [::]:80;
+      listen [::]:8080;
 {{- end }}
       access_log /dev/stdout;
       error_log /dev/stdout;
