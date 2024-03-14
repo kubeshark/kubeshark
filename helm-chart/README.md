@@ -166,7 +166,6 @@ Please refer to [metrics](./metrics.md) documentation for details.
 | `logs.file`                               | Logs dump path                      | `""`                                                    |
 | `kube.configPath`                         | Path to the `kubeconfig` file (`$HOME/.kube/config`)            | `""`                                                    |
 | `kube.context`                            | Kubernetes context to use for the deployment  | `""`                                                    |
-| `timezone`                                | IANA time zone applied to time shown in the front-end | `""` (local time zone applies) |
 | `dumpLogs`                                | Enable dumping of logs         | `false`                                                 |
 | `headless`                                | Enable running in headless mode               | `false`                                                 |
 | `license`                                 | License key for the Pro/Enterprise edition    | `""`                                                    |
@@ -174,6 +173,7 @@ Please refer to [metrics](./metrics.md) documentation for details.
 | `scripting.source`                        | Source directory of the scripts                | `""`                                                    |
 | `scripting.watchScripts`                  | Enable watch mode for the scripts in source directory          | `true`                                                  |
 | `tap.metrics.port`                  | Pod port used to expose Prometheus metrics          | `49100`                                                  |
+| `timezone`                                | IANA time zone applied to time shown in the front-end | `""` (local time zone applies) |
 
 KernelMapping pairs kernel versions with a
                             DriverContainer image. Kernel versions can be matched
