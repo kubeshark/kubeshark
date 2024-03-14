@@ -28,4 +28,3 @@ data:
     JSON_TTL: '{{ .Values.tap.misc.jsonTTL }}'
     PCAP_TTL: '{{ .Values.tap.misc.pcapTTL }}'
     PCAP_ERROR_TTL: '{{ .Values.tap.misc.pcapErrorTTL }}'
-    TIMEZONE: '{{ .Values.tap.timezone }}'
