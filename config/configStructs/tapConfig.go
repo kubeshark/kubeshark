@@ -182,7 +182,6 @@ type TapConfig struct {
 	TrafficSampleRate          int                   `yaml:"trafficSampleRate" json:"trafficSampleRate" default:"100"`
 	TcpStreamChannelTimeoutMs  int                   `yaml:"tcpStreamChannelTimeoutMs" json:"tcpStreamChannelTimeoutMs" default:"10000"`
 	Misc                       MiscConfig            `yaml:"misc" json:"misc"`
-	Timezone                   string                `yaml:"timezone" json:"timezone"`
 }
 
 func (config *TapConfig) PodRegex() *regexp.Regexp {
