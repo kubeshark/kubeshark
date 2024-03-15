@@ -53,7 +53,7 @@ jobs:
           bodyFile: 'bin/README.md'
 
   brew:
-    name: Build and publish a new release
+    name: Publish a new Homebrew formulae
     needs: [release]
     runs-on: ubuntu-latest
     steps:
