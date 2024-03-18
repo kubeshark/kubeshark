@@ -57,14 +57,6 @@ jobs:
     needs: [release]
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          repository: kubeshark/homebrew-kubeshark
-          token: ${{ secrets.HOMEBREW_TOKEN }}
-          path: homebrew-kubeshark
-
       - name: Bump core homebrew formula
         uses: mislav/bump-homebrew-formula-action@v3
         with:
@@ -73,25 +65,3 @@ jobs:
           push-to: kubeshark/homebrew-core
         env:
           COMMITTER_TOKEN: ${{ secrets.COMMITTER_TOKEN }}
-
-      - name: Generate Homebrew formulae
-        shell: bash
-        run: |
-          export FULL_VERSION=${{ needs.release.outputs.version }}
-          export CLEAN_VERSION=$(echo $FULL_VERSION | sed 's/^v//')
-          export DARWIN_AMD64_SHA256=$(shasum -a 256 bin/kubeshark_darwin_amd64 | awk '{print $1}')
-          export DARWIN_ARM64_SHA256=$(shasum -a 256 bin/kubeshark_darwin_arm64 | awk '{print $1}')
-          export LINUX_AMD64_SHA256=$(shasum -a 256 bin/kubeshark_linux_amd64 | awk '{print $1}')
-          export LINUX_ARM64_SHA256=$(shasum -a 256 bin/kubeshark_linux_arm64 | awk '{print $1}')
-          envsubst < .github/static/kubeshark.rb.tmpl > homebrew-kubeshark/kubeshark.rb
-
-          cat homebrew-kubeshark/kubeshark.rb
-
-      - name: Commit and push Homebrew formulae
-        working-directory: homebrew-kubeshark
-        run: |
-          git config --global user.email "bot@kubeshark.io"
-          git config --global user.name "Kubeshark Bot"
-          git add kubeshark.rb
-          git commit -m "Release ${{ needs.release.outputs.version }}"
-          git push
