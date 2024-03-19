@@ -32,6 +32,8 @@ spec:
               value: '{{ not (eq .Values.tap.auth.type "") | ternary .Values.tap.auth.type " " }}'
             - name: REACT_APP_AUTH_SAML_IDP_METADATA_URL
               value: '{{ not (eq .Values.tap.auth.saml.idpMetadataUrl "") | ternary .Values.tap.auth.saml.idpMetadataUrl " " }}'
+            - name: REACT_APP_TIMEZONE
+              value: '{{ not (eq .Values.timezone "") | ternary .Values.timezone " " }}'
             - name: REACT_APP_REPLAY_DISABLED
               value: '{{ .Values.tap.replayDisabled }}'
             - name: REACT_APP_SCRIPTING_DISABLED

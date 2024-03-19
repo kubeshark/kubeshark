@@ -96,6 +96,7 @@ type ConfigStruct struct {
 	License      string                        `yaml:"license" json:"license" default:""`
 	Scripting    configStructs.ScriptingConfig `yaml:"scripting" json:"scripting"`
 	Manifests    ManifestsConfig               `yaml:"manifests,omitempty" json:"manifests,omitempty"`
+	Timezone     string                        `yaml:"timezone" json:"timezone"`
 }
 
 func (config *ConfigStruct) ImagePullPolicy() v1.PullPolicy {

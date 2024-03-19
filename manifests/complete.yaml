@@ -727,6 +727,8 @@ spec:
               value: 'saml'
             - name: REACT_APP_AUTH_SAML_IDP_METADATA_URL
               value: ' '
+            - name: REACT_APP_TIMEZONE
+              value: ' '
             - name: REACT_APP_REPLAY_DISABLED
               value: 'false'
             - name: REACT_APP_SCRIPTING_DISABLED
