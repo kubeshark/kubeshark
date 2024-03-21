@@ -42,6 +42,8 @@ spec:
               value: '{{ .Values.tap.targetedPodsUpdateDisabled }}'
             - name: REACT_APP_RECORDING_DISABLED
               value: '{{ .Values.tap.recordingDisabled }}'
+            - name: 'REACT_APP_CLOUD_LICENSE_ENABLED'
+              value: '{{ .Values.cloudLicenseEnabled }}'
           image: '{{ .Values.tap.docker.registry }}/front:{{ not (eq .Values.tap.docker.tag "") | ternary .Values.tap.docker.tag (printf "v%s" .Chart.Version) }}'
           imagePullPolicy: {{ .Values.tap.docker.imagePullPolicy }}
           name: kubeshark-front
