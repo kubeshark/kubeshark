@@ -29,3 +29,4 @@ data:
     PCAP_TTL: '{{ .Values.tap.misc.pcapTTL }}'
     PCAP_ERROR_TTL: '{{ .Values.tap.misc.pcapErrorTTL }}'
     TIMEZONE: '{{ not (eq .Values.timezone "") | ternary .Values.timezone " " }}'
+    CLOUD_LICENSE_ENABLED: '{{ .Values.cloudLicenseEnabled }}'
