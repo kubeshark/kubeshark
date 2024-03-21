@@ -94,6 +94,7 @@ type ConfigStruct struct {
 	DumpLogs     bool                          `yaml:"dumpLogs" json:"dumpLogs" default:"false"`
 	HeadlessMode bool                          `yaml:"headless" json:"headless" default:"false"`
 	License      string                        `yaml:"license" json:"license" default:""`
+	CloudLicenseEnabled bool                          `yaml:"cloudLicenseEnabled" json:"cloudLicenseEnabled" default:"false"`
 	Scripting    configStructs.ScriptingConfig `yaml:"scripting" json:"scripting"`
 	Manifests    ManifestsConfig               `yaml:"manifests,omitempty" json:"manifests,omitempty"`
 	Timezone     string                        `yaml:"timezone" json:"timezone"`
