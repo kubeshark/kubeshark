@@ -48,6 +48,7 @@ tap:
         memory: 50Mi
   serviceMesh: true
   tls: true
+  packetCapture: best
   ignoreTainted: false
   labels: {}
   annotations: {}

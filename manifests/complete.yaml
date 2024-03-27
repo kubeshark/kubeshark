@@ -451,6 +451,8 @@ spec:
             - '31001'
             - -metrics-port
             - '49100'
+            - -packet-capture
+            - 'best'
             - -unixsocket
             - -servicemesh
             - -procfs
