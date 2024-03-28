@@ -55,7 +55,7 @@ spec:
   ingress:
     - ports:
         - protocol: TCP
-          port: 31001
+          port: 30001
         - protocol: TCP
           port: 49100
   egress:
@@ -448,7 +448,7 @@ spec:
             - -i
             - any
             - -port
-            - '31001'
+            - '30001'
             - -metrics-port
             - '49100'
             - -packet-capture
@@ -501,14 +501,14 @@ spec:
             successThreshold: 1
             initialDelaySeconds: 5
             tcpSocket:
-              port: 31001
+              port: 30001
           livenessProbe:
             periodSeconds: 1
             failureThreshold: 3
             successThreshold: 1
             initialDelaySeconds: 5
             tcpSocket:
-              port: 31001
+              port: 30001
           volumeMounts:
             - mountPath: /hostproc
               name: proc

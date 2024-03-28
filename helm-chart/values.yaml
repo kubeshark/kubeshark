@@ -6,7 +6,7 @@ tap:
     imagePullSecrets: []
   proxy:
     worker:
-      srvPort: 31001
+      srvPort: 30001
     hub:
       srvPort: 8898
     front:
