@@ -51,6 +51,8 @@ spec:
             - '{{ .Values.tap.proxy.worker.srvPort }}'
             - -metrics-port
             - '{{ .Values.tap.metrics.port }}'
+            - -packet-capture
+            - '{{ .Values.tap.packetCapture }}'
             - -unixsocket
           {{- if .Values.tap.serviceMesh }}
             - -servicemesh
