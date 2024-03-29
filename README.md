@@ -22,10 +22,8 @@
 
 <p align="center">
   <b>
-	  NEW: 
-	  <a href="https://github.com/kubeshark/kubeshark/releases/latest">Version 52.1.63</a> 
-	  now available, featuring enhanced 
-	  <a href="https://docs.kubeshark.co/en/half_connections">Network Error Detection & Analysis</a>.
+	  Want to see Kubeshark in action,  right now? Visit this
+	  <a href="https://demo.kubeshark.co/">live demo deploymenet</a> of Kubeshark.
   </b>
 </p>
 
@@ -51,16 +49,19 @@ Running any of the :point_up: above commands will open the [Web UI](https://docs
 
 ### Homebrew
 
-[Homebrew](https://brew.sh/) :beer: users can add Kubeshark formulae with:
-
-```shell
-brew tap kubeshark/kubeshark
-```
-
-and install Kubeshark CLI with:
+[Homebrew](https://brew.sh/) :beer: users install Kubeshark CLI with:
 
 ```shell
 brew install kubeshark
+```
+
+### Helm
+
+Add the helm repository and install the chart:
+
+```shell
+helm repo add kubeshark https://helm.kubeshark.co
+‍helm install kubeshark kubeshark/kubeshark
 ```
 
 ## Building From Source
