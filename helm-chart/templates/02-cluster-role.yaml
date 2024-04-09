@@ -27,11 +27,11 @@ rules:
   - apiGroups: 
     - ""
     resources: 
-    - namespaces
+      - namespaces
     verbs: 
-    - get
+      - get
     resourceNames: 
-    - kube-system
+      - kube-system
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
