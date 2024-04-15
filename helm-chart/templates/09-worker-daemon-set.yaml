@@ -179,6 +179,9 @@ spec:
                 {{- range .Values.tap.capabilities.ebpfCapture }}
                 {{ print "- " . }}
                 {{- end }}
+                {{- range .Values.tap.capabilities.networkCapture }}
+                {{ print "- " . }}
+                {{- end }}
               drop:
                 - ALL
           volumeMounts:
