@@ -136,7 +136,7 @@ spec:
         - name: unload-pf-ring
           image: {{ .Values.tap.kernelModule.image }}
           command: ["/bin/sh"]
-          args: ["-c", "trap 'rmmod pf_ring && sleep 3' SIGTERM; while true; do sleep 1; done"] 
+          args: ["-c", "trap 'rmmod pf_ring && sleep 3' SIGTERM; while true; do sleep 1; done"]
           securityContext:
             capabilities:
               add:
