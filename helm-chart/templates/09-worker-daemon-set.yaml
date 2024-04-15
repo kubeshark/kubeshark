@@ -84,7 +84,9 @@ spec:
               fieldRef:
                 fieldPath: metadata.namespace
           - name: TCP_STREAM_CHANNEL_TIMEOUT_MS
-            value: '{{ .Values.tap.tcpStreamChannelTimeoutMs }}'
+            value: '{{ .Values.tap.misc.tcpStreamChannelTimeoutMs }}'
+          - name: TCP_STREAM_CHANNEL_TIMEOUT_SHOW
+            value: '{{ .Values.tap.misc.tcpStreamChannelTimeoutShow }}'
           - name: KUBESHARK_CLOUD_API_URL
             value: 'https://api.kubeshark.co'
           resources:
