@@ -141,9 +141,12 @@ type MetricsConfig struct {
 }
 
 type MiscConfig struct {
-	JsonTTL      string `yaml:"jsonTTL" json:"jsonTTL" default:"5m"`
-	PcapTTL      string `yaml:"pcapTTL" json:"pcapTTL" default:"10s"`
-	PcapErrorTTL string `yaml:"pcapErrorTTL" json:"pcapErrorTTL" default:"60s"`
+	JsonTTL                     string `yaml:"jsonTTL" json:"jsonTTL" default:"5m"`
+	PcapTTL                     string `yaml:"pcapTTL" json:"pcapTTL" default:"10s"`
+	PcapErrorTTL                string `yaml:"pcapErrorTTL" json:"pcapErrorTTL" default:"60s"`
+	TrafficSampleRate           int    `yaml:"trafficSampleRate" json:"trafficSampleRate" default:"100"`
+	TcpStreamChannelTimeoutMs   int    `yaml:"tcpStreamChannelTimeoutMs" json:"tcpStreamChannelTimeoutMs" default:"10000"`
+	TcpStreamChannelTimeoutShow bool   `yaml:"tcpStreamChannelTimeoutShow" json:"tcpStreamChannelTimeoutShow" default:"false"`
 }
 
 type TapConfig struct {
@@ -180,8 +183,6 @@ type TapConfig struct {
 	Capabilities               CapabilitiesConfig    `yaml:"capabilities" json:"capabilities"`
 	GlobalFilter               string                `yaml:"globalFilter" json:"globalFilter"`
 	Metrics                    MetricsConfig         `yaml:"metrics" json:"metrics"`
-	TrafficSampleRate          int                   `yaml:"trafficSampleRate" json:"trafficSampleRate" default:"100"`
-	TcpStreamChannelTimeoutMs  int                   `yaml:"tcpStreamChannelTimeoutMs" json:"tcpStreamChannelTimeoutMs" default:"10000"`
 	Misc                       MiscConfig            `yaml:"misc" json:"misc"`
 }
 

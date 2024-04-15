@@ -251,6 +251,14 @@ rules:
       - list
       - get
       - watch
+  - apiGroups:
+      - ""
+    resources:
+      - namespaces
+    verbs:
+      - get
+    resourceNames:
+      - kube-system
 ---
 # Source: kubeshark/templates/03-cluster-role-binding.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -476,6 +484,8 @@ spec:
                 fieldPath: metadata.namespace
           - name: TCP_STREAM_CHANNEL_TIMEOUT_MS
             value: '10000'
+          - name: TCP_STREAM_CHANNEL_TIMEOUT_SHOW
+            value: 'false'
           - name: KUBESHARK_CLOUD_API_URL
             value: 'https://api.kubeshark.co'
           resources:
