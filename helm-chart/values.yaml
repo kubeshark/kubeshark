@@ -111,12 +111,13 @@ tap:
   globalFilter: ""
   metrics:
     port: 49100
-  trafficSampleRate: 100
-  tcpStreamChannelTimeoutMs: 10000
   misc:
     jsonTTL: 5m
     pcapTTL: 10s
     pcapErrorTTL: 60s
+    trafficSampleRate: 100
+    tcpStreamChannelTimeoutMs: 10000
+    tcpStreamChannelTimeoutShow: false
 logs:
   file: ""
 kube:

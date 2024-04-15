@@ -84,7 +84,9 @@ spec:
               fieldRef:
                 fieldPath: metadata.namespace
           - name: TCP_STREAM_CHANNEL_TIMEOUT_MS
-            value: '{{ .Values.tap.tcpStreamChannelTimeoutMs }}'
+            value: '{{ .Values.tap.misc.tcpStreamChannelTimeoutMs }}'
+          - name: TCP_STREAM_CHANNEL_TIMEOUT_SHOW
+            value: '{{ .Values.tap.misc.tcpStreamChannelTimeoutShow }}'
           - name: KUBESHARK_CLOUD_API_URL
             value: 'https://api.kubeshark.co'
           resources:
@@ -134,7 +136,7 @@ spec:
         - name: unload-pf-ring
           image: {{ .Values.tap.kernelModule.image }}
           command: ["/bin/sh"]
-          args: ["-c", "trap 'rmmod pf_ring && sleep 3' SIGTERM; while true; do sleep 1; done"] 
+          args: ["-c", "trap 'rmmod pf_ring && sleep 3' SIGTERM; while true; do sleep 1; done"]
           securityContext:
             capabilities:
               add:
@@ -175,6 +177,9 @@ spec:
             capabilities:
               add:
                 {{- range .Values.tap.capabilities.ebpfCapture }}
+                {{ print "- " . }}
+                {{- end }}
+                {{- range .Values.tap.capabilities.networkCapture }}
                 {{ print "- " . }}
                 {{- end }}
               drop:

@@ -24,6 +24,14 @@ rules:
       - list
       - get
       - watch
+  - apiGroups:
+      - ""
+    resources:
+      - namespaces
+    verbs:
+      - get
+    resourceNames:
+      - kube-system
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
