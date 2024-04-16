@@ -15,7 +15,7 @@ spec:
   selector:
     matchLabels:
       app.kubeshark.co/app: front
-      {{- include "kubeshark.labels" . | nindent 6 }}
+      {{- include "kubeshark.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       labels:
