@@ -24,13 +24,13 @@ rules:
       - list
       - get
       - watch
-  - apiGroups: 
+  - apiGroups:
       - ""
-    resources: 
+    resources:
       - namespaces
-    verbs: 
+    verbs:
       - get
-    resourceNames: 
+    resourceNames:
       - kube-system
 ---
 apiVersion: rbac.authorization.k8s.io/v1
