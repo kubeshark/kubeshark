@@ -24,7 +24,7 @@ data:
     TARGETED_PODS_UPDATE_DISABLED: '{{ .Values.tap.targetedPodsUpdateDisabled | ternary "true" "" }}'
     RECORDING_DISABLED: '{{ .Values.tap.recordingDisabled | ternary "true" "" }}'
     GLOBAL_FILTER: {{ include "kubeshark.escapeDoubleQuotes" .Values.tap.globalFilter | quote }}
-    TRAFFIC_SAMPLE_RATE: '{{ .Values.tap.trafficSampleRate }}'
+    TRAFFIC_SAMPLE_RATE: '{{ .Values.tap.misc.trafficSampleRate }}'
     JSON_TTL: '{{ .Values.tap.misc.jsonTTL }}'
     PCAP_TTL: '{{ .Values.tap.misc.pcapTTL }}'
     PCAP_ERROR_TTL: '{{ .Values.tap.misc.pcapErrorTTL }}'
