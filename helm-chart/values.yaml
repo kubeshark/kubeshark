@@ -126,6 +126,7 @@ kube:
 dumpLogs: false
 headless: false
 license: ""
+cloudLicenseEnabled: true
 scripting:
   env: {}
   source: ""
