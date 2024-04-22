@@ -23,7 +23,7 @@
 <p align="center">
   <b>
 	  Want to see Kubeshark in action,  right now? Visit this
-	  <a href="https://demo.kubeshark.co/">live demo deploymenet</a> of Kubeshark.
+	  <a href="https://demo.kubeshark.co/">live demo deployment</a> of Kubeshark.
   </b>
 </p>
 
