@@ -13,8 +13,12 @@ data:
     INGRESS_ENABLED: '{{ .Values.tap.ingress.enabled }}'
     INGRESS_HOST: '{{ .Values.tap.ingress.host }}'
     PROXY_FRONT_PORT: '{{ .Values.tap.proxy.front.port }}'
-    AUTH_ENABLED: '{{ .Values.tap.auth.enabled | ternary "true" "" }}'
-    AUTH_TYPE: '{{ .Values.tap.auth.type }}'
+    AUTH_ENABLED: '{{- if and .Values.cloudLicenseEnabled (not (empty .Values.license)) -}}
+                      "false"
+                  {{- else -}}
+                      {{ .Values.cloudLicenseEnabled | ternary "true" (.Values.tap.auth.enabled | ternary "true" "") }}
+                  {{- end }}'
+    AUTH_TYPE: '{{ .Values.cloudLicenseEnabled | ternary "oidc" (.Values.tap.auth.type) }}'
     AUTH_SAML_IDP_METADATA_URL: '{{ .Values.tap.auth.saml.idpMetadataUrl }}'
     AUTH_SAML_ROLE_ATTRIBUTE: '{{ .Values.tap.auth.saml.roleAttribute }}'
     AUTH_SAML_ROLES: '{{ .Values.tap.auth.saml.roles | toJson }}'
@@ -29,3 +33,9 @@ data:
     PCAP_TTL: '{{ .Values.tap.misc.pcapTTL }}'
     PCAP_ERROR_TTL: '{{ .Values.tap.misc.pcapErrorTTL }}'
     TIMEZONE: '{{ not (eq .Values.timezone "") | ternary .Values.timezone " " }}'
+    CLOUD_LICENSE_ENABLED: '{{- if and .Values.cloudLicenseEnabled (not (empty .Values.license)) -}}
+                              false
+                            {{- else -}}
+                              {{ .Values.cloudLicenseEnabled }}
+                            {{- end }}'
+
