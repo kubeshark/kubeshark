@@ -154,6 +154,9 @@ spec:
             - ./tracer
             - -procfs
             - /hostproc
+          {{- if ne .Values.tap.packetCapture "ebpf" }}
+            - -disable-ebpf
+          {{- end }}
           {{- if .Values.tap.debug }}
             - -debug
           {{- end }}
