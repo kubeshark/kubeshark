@@ -27,7 +27,11 @@ spec:
             - name: REACT_APP_DEFAULT_FILTER
               value: '{{ not (eq .Values.tap.defaultFilter "") | ternary .Values.tap.defaultFilter " " }}'
             - name: REACT_APP_AUTH_ENABLED
-              value: '{{ .Values.cloudLicenseEnabled | ternary true .Values.tap.auth.enabled }}'
+              value: '{{- if and .Values.cloudLicenseEnabled (not (empty .Values.license)) -}}
+                      "false"
+                    {{- else -}}
+                      {{ .Values.cloudLicenseEnabled | ternary "true" .Values.tap.auth.enabled }}
+                    {{- end }}'
             - name: REACT_APP_AUTH_TYPE
               value: '{{ not (eq .Values.tap.auth.type "") | ternary (.Values.cloudLicenseEnabled | ternary "oidc" .Values.tap.auth.type) " " }}'
             - name: REACT_APP_AUTH_SAML_IDP_METADATA_URL
@@ -43,7 +47,11 @@ spec:
             - name: REACT_APP_RECORDING_DISABLED
               value: '{{ .Values.tap.recordingDisabled }}'
             - name: 'REACT_APP_CLOUD_LICENSE_ENABLED'
-              value: '{{ .Values.cloudLicenseEnabled }}'
+              value: '{{- if and .Values.cloudLicenseEnabled (not (empty .Values.license)) -}}
+                        "false"
+                      {{- else -}}
+                        {{ .Values.cloudLicenseEnabled }}
+                      {{- end }}'
           image: '{{ .Values.tap.docker.registry }}/front:{{ not (eq .Values.tap.docker.tag "") | ternary .Values.tap.docker.tag (printf "v%s" .Chart.Version) }}'
           imagePullPolicy: {{ .Values.tap.docker.imagePullPolicy }}
           name: kubeshark-front
