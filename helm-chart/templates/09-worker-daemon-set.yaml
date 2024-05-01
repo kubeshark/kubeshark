@@ -62,9 +62,6 @@ spec:
           {{- if .Values.tap.kernelModule.enabled }}
             - -kernel-module
           {{- end }}
-          {{- if ne .Values.tap.packetCapture "ebpf" }}
-            - -disable-ebpf
-          {{- end }}
           {{- if .Values.tap.debug }}
             - -debug
             - -dumptracer
@@ -154,9 +151,6 @@ spec:
             - ./tracer
             - -procfs
             - /hostproc
-          {{- if ne .Values.tap.packetCapture "ebpf" }}
-            - -disable-ebpf
-          {{- end }}
           {{- if .Values.tap.debug }}
             - -debug
           {{- end }}
