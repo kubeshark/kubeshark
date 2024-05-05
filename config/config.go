@@ -146,7 +146,8 @@ func loadConfigFile(config *ConfigStruct, silent bool) error {
 	} else {
 		ConfigFilePath = cwdConfig
 	}
-
+	defer reader.Close()
+	
 	buf, err := io.ReadAll(reader)
 	if err != nil {
 		return err
