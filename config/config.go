@@ -41,7 +41,7 @@ func InitConfig(cmd *cobra.Command) error {
 	var err error
 	DebugMode, err = cmd.Flags().GetBool(DebugFlag)
 	if err != nil {
-		log.Error().Err(err).Msg(fmt.Sprintf("Can't recieve '%s' flag", DebugFlag))
+		log.Error().Err(err).Msg(fmt.Sprintf("Can't receive '%s' flag", DebugFlag))
 	}
 
 	if DebugMode {
