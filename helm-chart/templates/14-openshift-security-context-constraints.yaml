@@ -28,6 +28,7 @@ allowedCapabilities:
   - DAC_OVERRIDE
   - SYS_RESOURCE
   - SYS_MODULE
+  - IPC_LOCK
 runAsUser:
   type: RunAsAny
 fsGroup:
