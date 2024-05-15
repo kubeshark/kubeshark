@@ -569,6 +569,9 @@ spec:
               readOnly: true
             - mountPath: /app/data
               name: data
+            - mountPath: /etc/os-release
+              name: os-release
+              readOnly: true
       dnsPolicy: ClusterFirstWithHostNet
       hostNetwork: true
       serviceAccountName: kubeshark-service-account
@@ -600,6 +603,9 @@ spec:
         - name: data
           emptyDir:
             sizeLimit: 500Mi
+        - hostPath:
+            path: /etc/os-release
+          name: os-release
 ---
 # Source: kubeshark/templates/04-hub-deployment.yaml
 apiVersion: apps/v1

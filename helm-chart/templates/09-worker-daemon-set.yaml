@@ -197,6 +197,9 @@ spec:
               readOnly: true
             - mountPath: /app/data
               name: data
+            - mountPath: /etc/os-release
+              name: os-release
+              readOnly: true
       {{- end }}
       dnsPolicy: ClusterFirstWithHostNet
       hostNetwork: true
@@ -226,6 +229,9 @@ spec:
         - name: lib-modules
           hostPath:
             path: /lib/modules
+        - hostPath:
+            path: /etc/os-release
+          name: os-release
         - name: data
 {{- if .Values.tap.persistentStorage }}
           persistentVolumeClaim:
