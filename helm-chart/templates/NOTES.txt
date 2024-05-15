@@ -3,6 +3,18 @@ Thank you for installing {{ title .Chart.Name }}.
 Registry: {{ .Values.tap.docker.registry }}
 Tag: {{ not (eq .Values.tap.docker.tag "") | ternary .Values.tap.docker.tag (printf "v%s" .Chart.Version) }}
 
+{{- if .Values.tap.docker.overrideTag.worker }}
+Overridden worker tag: {{ .Values.tap.docker.overrideTag.worker }}
+{{ end }}
+
+{{- if .Values.tap.docker.overrideTag.hub }}
+Overridden hub tag: {{ .Values.tap.docker.overrideTag.hub }}
+{{ end }}
+
+{{- if .Values.tap.docker.overrideTag.front }}
+Overridden front tag: {{ .Values.tap.docker.overrideTag.front }}
+{{ end }}
+
 Your deployment has been successful. The release is named `{{ .Release.Name }}` and it has been deployed in the `{{ .Release.Namespace }}` namespace.
 
 {{- if .Values.tap.telemetry.enabled }}

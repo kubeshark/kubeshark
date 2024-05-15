@@ -4,6 +4,10 @@ tap:
     tag: ""
     imagePullPolicy: Always
     imagePullSecrets: []
+    overrideTag:
+      worker: ""
+      hub: ""
+      front: ""
   proxy:
     worker:
       srvPort: 30001

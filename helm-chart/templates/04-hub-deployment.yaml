@@ -45,7 +45,11 @@ spec:
                 fieldPath: metadata.namespace
           - name: KUBESHARK_CLOUD_API_URL
             value: 'https://api.kubeshark.co'
+        {{- if .Values.tap.docker.overrideTag.hub }}
+          image: '{{ .Values.tap.docker.registry }}/hub:{{ .Values.tap.docker.overrideTag.hub }}'
+        {{ else }}
           image: '{{ .Values.tap.docker.registry }}/hub:{{ not (eq .Values.tap.docker.tag "") | ternary .Values.tap.docker.tag (printf "v%s" .Chart.Version) }}'
+        {{- end }}
           imagePullPolicy: {{ .Values.tap.docker.imagePullPolicy }}
           readinessProbe:
             periodSeconds: 1

@@ -52,7 +52,11 @@ spec:
                       {{- else -}}
                         {{ .Values.cloudLicenseEnabled }}
                       {{- end }}'
+        {{- if .Values.tap.docker.overrideTag.front }}
+          image: '{{ .Values.tap.docker.registry }}/front:{{ .Values.tap.docker.overrideTag.front }}'
+        {{ else }}
           image: '{{ .Values.tap.docker.registry }}/front:{{ not (eq .Values.tap.docker.tag "") | ternary .Values.tap.docker.tag (printf "v%s" .Chart.Version) }}'
+        {{- end }}
           imagePullPolicy: {{ .Values.tap.docker.imagePullPolicy }}
           name: kubeshark-front
           livenessProbe:
