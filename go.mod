@@ -14,6 +14,7 @@ require (
 	github.com/rs/zerolog v1.28.0
 	github.com/spf13/cobra v1.7.0
 	github.com/spf13/pflag v1.0.5
+	github.com/tanqiangyes/grep-go v0.0.0-20220515134556-b36bff9c3d8e
 	helm.sh/helm/v3 v3.12.0
 	k8s.io/api v0.28.3
 	k8s.io/apimachinery v0.28.3

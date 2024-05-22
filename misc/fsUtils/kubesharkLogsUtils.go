@@ -13,7 +13,7 @@ import (
 	"github.com/rs/zerolog/log"
 )
 
-func DumpLogs(ctx context.Context, provider *kubernetes.Provider, filePath string) error {
+func DumpLogs(ctx context.Context, provider *kubernetes.Provider, filePath string, grep string) error {
 	podExactRegex := regexp.MustCompile("^" + kubernetes.SELF_RESOURCES_PREFIX)
 	pods, err := provider.ListAllPodsMatchingRegex(ctx, podExactRegex, []string{config.Config.Tap.Release.Namespace})
 	if err != nil {
@@ -34,7 +34,7 @@ func DumpLogs(ctx context.Context, provider *kubernetes.Provider, filePath strin
 
 	for _, pod := range pods {
 		for _, container := range pod.Spec.Containers {
-			logs, err := provider.GetPodLogs(ctx, pod.Namespace, pod.Name, container.Name)
+			logs, err := provider.GetPodLogs(ctx, pod.Namespace, pod.Name, container.Name, grep)
 			if err != nil {
 				log.Error().Err(err).Msg("Failed to get logs!")
 				continue

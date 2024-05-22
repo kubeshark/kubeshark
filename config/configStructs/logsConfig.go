@@ -10,10 +10,12 @@ import (
 
 const (
 	FileLogsName = "file"
+	GrepLogsName = "grep"
 )
 
 type LogsConfig struct {
 	FileStr string `yaml:"file" json:"file"`
+	Grep    string `yaml:"grep" json:"grep"`
 }
 
 func (config *LogsConfig) Validate() error {

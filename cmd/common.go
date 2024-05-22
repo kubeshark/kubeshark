@@ -111,7 +111,7 @@ func dumpLogsIfNeeded(ctx context.Context, kubernetesProvider *kubernetes.Provid
 	}
 	dotDir := misc.GetDotFolderPath()
 	filePath := path.Join(dotDir, fmt.Sprintf("%s_logs_%s.zip", misc.Program, time.Now().Format("2006_01_02__15_04_05")))
-	if err := fsUtils.DumpLogs(ctx, kubernetesProvider, filePath); err != nil {
+	if err := fsUtils.DumpLogs(ctx, kubernetesProvider, filePath, config.Config.Logs.Grep); err != nil {
 		log.Error().Err(err).Msg("Failed to dump logs.")
 	}
 }

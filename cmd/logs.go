@@ -30,7 +30,7 @@ var logsCmd = &cobra.Command{
 
 		log.Debug().Str("logs-path", config.Config.Logs.FilePath()).Msg("Using this logs path...")
 
-		if dumpLogsErr := fsUtils.DumpLogs(ctx, kubernetesProvider, config.Config.Logs.FilePath()); dumpLogsErr != nil {
+		if dumpLogsErr := fsUtils.DumpLogs(ctx, kubernetesProvider, config.Config.Logs.FilePath(), config.Config.Logs.Grep); dumpLogsErr != nil {
 			log.Error().Err(dumpLogsErr).Msg("Failed to dump logs.")
 		}
 
@@ -47,4 +47,5 @@ func init() {
 	}
 
 	logsCmd.Flags().StringP(configStructs.FileLogsName, "f", defaultLogsConfig.FileStr, fmt.Sprintf("Path for zip file (default current <pwd>\\%s_logs.zip)", misc.Program))
+	logsCmd.Flags().StringP(configStructs.GrepLogsName, "g", defaultLogsConfig.Grep, "Regexp to do grepping on the logs")
 }

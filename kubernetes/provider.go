@@ -1,6 +1,7 @@
 package kubernetes
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"fmt"
@@ -8,12 +9,14 @@ import (
 	"net/url"
 	"path/filepath"
 	"regexp"
+	"strings"
 
 	"github.com/kubeshark/kubeshark/config"
 	"github.com/kubeshark/kubeshark/misc"
 	"github.com/kubeshark/kubeshark/semver"
 	"github.com/kubeshark/kubeshark/utils"
 	"github.com/rs/zerolog/log"
+	"github.com/tanqiangyes/grep-go/reader"
 	core "k8s.io/api/core/v1"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -142,7 +145,7 @@ func (provider *Provider) ListPodsByAppLabel(ctx context.Context, namespaces str
 	return pods.Items, err
 }
 
-func (provider *Provider) GetPodLogs(ctx context.Context, namespace string, podName string, containerName string) (string, error) {
+func (provider *Provider) GetPodLogs(ctx context.Context, namespace string, podName string, containerName string, grep string) (string, error) {
 	podLogOpts := core.PodLogOptions{Container: containerName}
 	req := provider.clientSet.CoreV1().Pods(namespace).GetLogs(podName, &podLogOpts)
 	podLogs, err := req.Stream(ctx)
@@ -154,8 +157,26 @@ func (provider *Provider) GetPodLogs(ctx context.Context, namespace string, podN
 	if _, err = io.Copy(buf, podLogs); err != nil {
 		return "", fmt.Errorf("error copy information from podLogs to buf, ns: %s, pod: %s, %w", namespace, podName, err)
 	}
-	str := buf.String()
-	return str, nil
+
+	if grep != "" {
+		finder, err := reader.NewFinder(grep, true, true)
+		if err != nil {
+			panic(err)
+		}
+
+		read, err := reader.NewStdReader(bufio.NewReader(buf), []reader.Finder{finder})
+		if err != nil {
+			panic(err)
+		}
+		read.Run()
+		result := read.Result()[0]
+
+		log.Info().Str("namespace", namespace).Str("pod", podName).Str("container", containerName).Int("lines", len(result.Lines)).Str("grep", grep).Send()
+		return strings.Join(result.MatchString, "\n"), nil
+	} else {
+		log.Info().Str("namespace", namespace).Str("pod", podName).Str("container", containerName).Send()
+		return buf.String(), nil
+	}
 }
 
 func (provider *Provider) GetNamespaceEvents(ctx context.Context, namespace string) (string, error) {
