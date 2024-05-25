@@ -122,8 +122,10 @@ tap:
     trafficSampleRate: 100
     tcpStreamChannelTimeoutMs: 10000
     tcpStreamChannelTimeoutShow: false
+    disableCgroupIdResolution: false
 logs:
   file: ""
+  grep: ""
 kube:
   configPath: ""
   context: ""

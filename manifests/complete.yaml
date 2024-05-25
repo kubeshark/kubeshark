@@ -244,6 +244,7 @@ rules:
       - extensions
       - apps
     resources:
+      - nodes
       - pods
       - services
       - endpoints
@@ -600,12 +601,12 @@ spec:
         - name: lib-modules
           hostPath:
             path: /lib/modules
-        - name: data
-          emptyDir:
-            sizeLimit: 500Mi
         - hostPath:
             path: /etc/os-release
           name: os-release
+        - name: data
+          emptyDir:
+            sizeLimit: 500Mi
 ---
 # Source: kubeshark/templates/04-hub-deployment.yaml
 apiVersion: apps/v1
