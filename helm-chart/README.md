@@ -23,6 +23,14 @@ git clone git@github.com:kubeshark/kubeshark.git --depth 1
 cd kubeshark/helm-chart
 ```
 
+In case you want to clone a specific tag of the repo (e.g. `v52.3.59`):
+
+```shell
+git clone git@github.com:kubeshark/kubeshark.git --depth 1 --branch <tag>
+cd kubeshark/helm-chart
+```
+> See the list of available tags here: https://github.com/kubeshark/kubeshark/tags
+
 Render the templates
 
 ```shell
