@@ -87,7 +87,7 @@ tap:
   ipv6: true
   debug: false
   kernelModule:
-    enabled: true
+    enabled: false
     image: kubeshark/pf-ring-module:all
     unloadOnDestroy: false
   telemetry:
