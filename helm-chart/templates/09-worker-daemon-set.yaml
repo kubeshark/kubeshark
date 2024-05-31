@@ -62,6 +62,9 @@ spec:
           {{- if .Values.tap.kernelModule.enabled }}
             - -kernel-module
           {{- end }}
+          {{- if ne .Values.tap.packetCapture "ebpf" }}
+            - -disable-ebpf
+          {{- end }}
           {{- if .Values.tap.misc.disableCgroupIdResolution }}
             - -disable-cgroup-id-resolution
           {{- end }}
@@ -154,6 +157,9 @@ spec:
             - ./tracer
             - -procfs
             - /hostproc
+          {{- if ne .Values.tap.packetCapture "ebpf" }}
+            - -disable-ebpf
+          {{- end }}          
           {{- if .Values.tap.debug }}
             - -debug
           {{- end }}
