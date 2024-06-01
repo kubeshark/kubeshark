@@ -436,19 +436,6 @@ spec:
       name: kubeshark-worker-daemon-set
       namespace: kubeshark
     spec:
-      initContainers:
-      - name: load-pf-ring
-        image: kubeshark/pf-ring-module:all
-        imagePullPolicy: Always
-        securityContext:
-          capabilities:
-            add:
-              - SYS_MODULE
-            drop:
-              - ALL
-        volumeMounts:
-        - name: lib-modules
-          mountPath: /lib/modules
       containers:
         - command:
             - ./worker
@@ -464,7 +451,7 @@ spec:
             - -servicemesh
             - -procfs
             - /hostproc
-            - -kernel-module
+            - -disable-ebpf
           image: 'docker.io/kubeshark/worker:v52.3.59'
           imagePullPolicy: Always
           name: sniffer
@@ -531,6 +518,7 @@ spec:
             - ./tracer
             - -procfs
             - /hostproc
+            - -disable-ebpf
           image: 'docker.io/kubeshark/worker:v52.3.59'
           imagePullPolicy: Always
           name: tracer
