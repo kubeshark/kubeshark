@@ -19,19 +19,21 @@ import (
 	v1 "k8s.io/api/core/v1"
 )
 
+const (
+	DefaultRetries = 3
+	DefaultTimeout = 2 * time.Second
+	DefaultSleep   = 1 * time.Second
+)
+
 type Connector struct {
-	url     string
+	baseURL string
 	retries int
 	client  *http.Client
 }
 
-const DefaultRetries = 3
-const DefaultTimeout = 2 * time.Second
-const DefaultSleep = 1 * time.Second
-
-func NewConnector(url string, retries int, timeout time.Duration) *Connector {
+func NewConnector(baseURL string, retries int, timeout time.Duration) *Connector {
 	return &Connector{
-		url:     url,
+		baseURL: baseURL,
 		retries: retries,
 		client: &http.Client{
 			Timeout: timeout,
@@ -39,86 +41,71 @@ func NewConnector(url string, retries int, timeout time.Duration) *Connector {
 	}
 }
 
-func (connector *Connector) TestConnection(path string) error {
-	retriesLeft := connector.retries
-	for retriesLeft > 0 {
-		if isReachable, err := connector.isReachable(path); err != nil || !isReachable {
-			log.Debug().Str("url", connector.url).Err(err).Msg("Not ready yet!")
+func (c *Connector) TestConnection(path string) error {
+	for i := 0; i < c.retries; i++ {
+		if reachable, err := c.isReachable(path); err != nil || !reachable {
+			log.Debug().Str("url", c.baseURL).Err(err).Msg("Not ready yet!")
 		} else {
-			log.Debug().Str("url", connector.url).Msg("Connection test passed successfully.")
-			break
+			log.Debug().Str("url", c.baseURL).Msg("Connection test passed successfully.")
+			return nil
 		}
-		retriesLeft -= 1
-		time.Sleep(5 * DefaultSleep)
+		time.Sleep(DefaultSleep * 5)
 	}
-
-	if retriesLeft == 0 {
-		return fmt.Errorf("Couldn't reach the URL: %s after %d retries!", connector.url, connector.retries)
-	}
-	return nil
+	return fmt.Errorf("Couldn't reach the URL: %s after %d retries!", c.baseURL, c.retries)
 }
 
-func (connector *Connector) isReachable(path string) (bool, error) {
-	targetUrl := fmt.Sprintf("%s%s", connector.url, path)
-	if _, err := utils.Get(targetUrl, connector.client); err != nil {
-		return false, err
-	} else {
-		return true, nil
-	}
+func (c *Connector) isReachable(path string) (bool, error) {
+	targetURL := fmt.Sprintf("%s%s", c.baseURL, path)
+	_, err := utils.Get(targetURL, c.client)
+	return err == nil, err
 }
 
-func (connector *Connector) PostWorkerPodToHub(pod *v1.Pod) {
-	postWorkerUrl := fmt.Sprintf("%s/pods/worker", connector.url)
-
-	if podMarshalled, err := json.Marshal(pod); err != nil {
-		log.Error().Err(err).Msg("Failed to marshal the Worker pod:")
-	} else {
-		ok := false
-		for !ok {
-			var resp *http.Response
-			if resp, err = utils.Post(postWorkerUrl, "application/json", bytes.NewBuffer(podMarshalled), connector.client, config.Config.License); err != nil || resp.StatusCode != http.StatusOK {
-				if _, ok := err.(*url.Error); ok {
-					break
-				}
-				log.Warn().Err(err).Msg("Failed sending the Worker pod to Hub. Retrying...")
-			} else {
-				log.Debug().Interface("worker-pod", pod).Msg("Reported worker pod to Hub:")
-				return
-			}
-			time.Sleep(DefaultSleep)
-		}
+func (c *Connector) postJSON(url string, payload interface{}) (*http.Response, error) {
+	data, err := json.Marshal(payload)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to marshal payload")
+		return nil, err
 	}
+	return utils.Post(url, "application/json", bytes.NewBuffer(data), c.client, config.Config.License)
+}
+
+func (c *Connector) retryPostJSON(url string, payload interface{}) (*http.Response, error) {
+	for i := 0; i < c.retries; i++ {
+		resp, err := c.postJSON(url, payload)
+		if err == nil && resp.StatusCode == http.StatusOK {
+			return resp, nil
+		}
+		log.Warn().Err(err).Msg("Retrying...")
+		time.Sleep(DefaultSleep)
+	}
+	return nil, fmt.Errorf("failed to POST to %s after %d retries", url, c.retries)
+}
+
+func (c *Connector) PostWorkerPodToHub(pod *v1.Pod) {
+	url := fmt.Sprintf("%s/pods/worker", c.baseURL)
+	resp, err := c.retryPostJSON(url, pod)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to send Worker pod to Hub")
+		return
+	}
+	log.Debug().Interface("worker-pod", pod).Msg("Reported worker pod to Hub")
+	defer resp.Body.Close()
 }
 
 type postLicenseRequest struct {
 	License string `json:"license"`
 }
 
-func (connector *Connector) PostLicense(license string) {
-	postLicenseUrl := fmt.Sprintf("%s/license", connector.url)
-
-	payload := postLicenseRequest{
-		License: license,
+func (c *Connector) PostLicense(license string) {
+	url := fmt.Sprintf("%s/license", c.baseURL)
+	payload := postLicenseRequest{License: license}
+	resp, err := c.retryPostJSON(url, payload)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to send license to Hub")
+		return
 	}
-
-	if payloadMarshalled, err := json.Marshal(payload); err != nil {
-		log.Error().Err(err).Msg("Failed to marshal the payload:")
-	} else {
-		ok := false
-		for !ok {
-			var resp *http.Response
-			if resp, err = utils.Post(postLicenseUrl, "application/json", bytes.NewBuffer(payloadMarshalled), connector.client, config.Config.License); err != nil || resp.StatusCode != http.StatusOK {
-				if _, ok := err.(*url.Error); ok {
-					break
-				}
-				log.Warn().Err(err).Msg("Failed sending the license to Hub. Retrying...")
-			} else {
-				log.Debug().Str("license", license).Msg("Reported license to Hub:")
-				return
-			}
-			time.Sleep(DefaultSleep)
-		}
-	}
+	log.Debug().Str("license", license).Msg("Reported license to Hub")
+	defer resp.Body.Close()
 }
 
 type postScriptRequest struct {
@@ -126,166 +113,48 @@ type postScriptRequest struct {
 	Code  string `json:"code"`
 }
 
-func (connector *Connector) PostScript(script *misc.Script) (index int64, err error) {
-	postScriptUrl := fmt.Sprintf("%s/scripts", connector.url)
-
+func (c *Connector) PostScript(script *misc.Script) (int64, error) {
+	url := fmt.Sprintf("%s/scripts", c.baseURL)
 	payload := postScriptRequest{
 		Title: script.Title,
 		Code:  script.Code,
 	}
+	resp, err := c.retryPostJSON(url, payload)
+	if err != nil {
+		return 0, err
+	}
+	defer resp.Body.Close()
 
-	var scriptMarshalled []byte
-	if scriptMarshalled, err = json.Marshal(payload); err != nil {
-		log.Error().Err(err).Msg("Failed to marshal the script:")
-	} else {
-		ok := false
-		for !ok {
-			var resp *http.Response
-			if resp, err = utils.Post(postScriptUrl, "application/json", bytes.NewBuffer(scriptMarshalled), connector.client, config.Config.License); err != nil || resp.StatusCode != http.StatusOK {
-				if _, ok := err.(*url.Error); ok {
-					break
-				}
-				log.Warn().Err(err).Msg("Failed creating script Hub:")
-			} else {
-
-				var j map[string]interface{}
-				err = json.NewDecoder(resp.Body).Decode(&j)
-				if err != nil {
-					return
-				}
-
-				val, ok := j["index"]
-				if !ok {
-					err = errors.New("Response does not contain `key` field!")
-					return
-				}
-
-				index = int64(val.(float64))
-
-				log.Debug().Int("index", int(index)).Interface("script", script).Msg("Created script on Hub:")
-				return
-			}
-			time.Sleep(DefaultSleep)
-		}
+	var result map[string]interface{}
+	if err := json.NewDecoder(resp.Body).Decode(&result); err != nil {
+		return 0, err
 	}
 
-	return
+	index, ok := result["index"].(float64)
+	if !ok {
+		return 0, errors.New("response does not contain 'index' field")
+	}
+	log.Debug().Int("index", int(index)).Interface("script", script).Msg("Created script on Hub")
+	return int64(index), nil
 }
 
-func (connector *Connector) PutScript(script *misc.Script, index int64) (err error) {
-	putScriptUrl := fmt.Sprintf("%s/scripts/%d", connector.url, index)
-
-	var scriptMarshalled []byte
-	if scriptMarshalled, err = json.Marshal(script); err != nil {
-		log.Error().Err(err).Msg("Failed to marshal the script:")
-	} else {
-		ok := false
-		for !ok {
-			client := &http.Client{}
-
-			var req *http.Request
-			req, err = http.NewRequest(http.MethodPut, putScriptUrl, bytes.NewBuffer(scriptMarshalled))
-			if err != nil {
-				log.Error().Err(err).Send()
-				return
-			}
-			req.Header.Set("Content-Type", "application/json")
-			req.Header.Set("License-Key", config.Config.License)
-
-			var resp *http.Response
-			resp, err = client.Do(req)
-			if err != nil {
-				log.Error().Err(err).Send()
-				return
-			}
-
-			if resp.StatusCode != http.StatusOK {
-				if _, ok := err.(*url.Error); ok {
-					break
-				}
-				log.Warn().Err(err).Msg("Failed updating script on Hub:")
-			} else {
-				log.Debug().Int("index", int(index)).Interface("script", script).Msg("Updated script on Hub:")
-				return
-			}
-			time.Sleep(DefaultSleep)
-		}
+func (c *Connector) PutScript(script *misc.Script, index int64) error {
+	url := fmt.Sprintf("%s/scripts/%d", c.baseURL, index)
+	client := &http.Client{}
+	data, err := json.Marshal(script)
+	if err != nil {
+		log.Error().Err(err).Msg("Failed to marshal script")
+		return err
 	}
 
-	return
-}
-
-func (connector *Connector) DeleteScript(index int64) (err error) {
-	deleteScriptUrl := fmt.Sprintf("%s/scripts/%d", connector.url, index)
-
-	ok := false
-	for !ok {
-		client := &http.Client{}
-
-		var req *http.Request
-		req, err = http.NewRequest(http.MethodDelete, deleteScriptUrl, nil)
+	for i := 0; i < c.retries; i++ {
+		req, err := http.NewRequest(http.MethodPut, url, bytes.NewBuffer(data))
 		if err != nil {
-			log.Error().Err(err).Send()
-			return
+			log.Error().Err(err).Msg("Failed to create PUT request")
+			return err
 		}
 		req.Header.Set("Content-Type", "application/json")
 		req.Header.Set("License-Key", config.Config.License)
 
-		var resp *http.Response
-		resp, err = client.Do(req)
-		if err != nil {
-			log.Error().Err(err).Send()
-			return
-		}
-
-		if resp.StatusCode != http.StatusOK {
-			if _, ok := err.(*url.Error); ok {
-				break
-			}
-			log.Warn().Err(err).Msg("Failed deleting script on Hub:")
-		} else {
-			log.Debug().Int("index", int(index)).Msg("Deleted script on Hub:")
-			return
-		}
-		time.Sleep(DefaultSleep)
-	}
-
-	return
-}
-
-func (connector *Connector) PostPcapsMerge(out *os.File) {
-	postEnvUrl := fmt.Sprintf("%s/pcaps/merge", connector.url)
-
-	if envMarshalled, err := json.Marshal(map[string]string{"query": ""}); err != nil {
-		log.Error().Err(err).Msg("Failed to marshal the env:")
-	} else {
-		ok := false
-		for !ok {
-			var resp *http.Response
-			if resp, err = utils.Post(postEnvUrl, "application/json", bytes.NewBuffer(envMarshalled), connector.client, config.Config.License); err != nil || resp.StatusCode != http.StatusOK {
-				if _, ok := err.(*url.Error); ok {
-					break
-				}
-				log.Warn().Err(err).Msg("Failed exported PCAP download. Retrying...")
-			} else {
-				defer resp.Body.Close()
-
-				// Check server response
-				if resp.StatusCode != http.StatusOK {
-					log.Error().Str("status", resp.Status).Err(err).Msg("Failed exported PCAP download.")
-					return
-				}
-
-				// Writer the body to file
-				_, err = io.Copy(out, resp.Body)
-				if err != nil {
-					log.Error().Err(err).Msg("Failed writing PCAP export:")
-					return
-				}
-				log.Info().Str("path", out.Name()).Msg("Downloaded exported PCAP:")
-				return
-			}
-			time.Sleep(DefaultSleep)
-		}
-	}
-}
+		resp, err := client.Do(req)
+		if err == nil && resp.StatusCod
