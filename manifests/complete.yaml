@@ -452,6 +452,8 @@ spec:
             - -procfs
             - /hostproc
             - -disable-ebpf
+            - -resolution-strategy
+            - 'auto'
           image: 'docker.io/kubeshark/worker:v52.3.62'
           imagePullPolicy: Always
           name: sniffer

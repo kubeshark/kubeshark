@@ -65,9 +65,8 @@ spec:
           {{- if ne .Values.tap.packetCapture "ebpf" }}
             - -disable-ebpf
           {{- end }}
-          {{- if .Values.tap.misc.disableCgroupIdResolution }}
-            - -disable-cgroup-id-resolution
-          {{- end }}
+            - -resolution-strategy
+            - '{{ .Values.tap.misc.resolutionStrategy }}'
           {{- if .Values.tap.debug }}
             - -debug
             - -dumptracer
