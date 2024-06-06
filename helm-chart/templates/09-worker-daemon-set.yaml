@@ -94,6 +94,8 @@ spec:
             value: '{{ .Values.tap.misc.tcpStreamChannelTimeoutShow }}'
           - name: KUBESHARK_CLOUD_API_URL
             value: 'https://api.kubeshark.co'
+          - name: PROFILING_ENABLED
+            value: '{{ .Values.tap.misc.profile }}'
           resources:
             limits:
               cpu: {{ .Values.tap.resources.sniffer.limits.cpu }}

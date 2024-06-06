@@ -123,6 +123,7 @@ tap:
     tcpStreamChannelTimeoutMs: 10000
     tcpStreamChannelTimeoutShow: false
     resolutionStrategy: auto
+    profile: false
 logs:
   file: ""
   grep: ""

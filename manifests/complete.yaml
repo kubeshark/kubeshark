@@ -476,6 +476,8 @@ spec:
             value: 'false'
           - name: KUBESHARK_CLOUD_API_URL
             value: 'https://api.kubeshark.co'
+          - name: PROFILING_ENABLED
+            value: 'false'
           resources:
             limits:
               cpu: 750m
