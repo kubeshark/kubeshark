@@ -132,7 +132,11 @@ func runLicenseRecieverServer() {
 	log.Info().Msg("Alternatively enter your license key:")
 
 	var licenseKey string
-	fmt.Scanf("%s", &licenseKey)
+	_, err := fmt.Scanf("%s", &licenseKey)
+	if err != nil {
+		log.Error().Err(err).Send()
+		return
+	}
 
 	updateLicense(licenseKey)
 }
