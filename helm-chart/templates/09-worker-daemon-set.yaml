@@ -73,7 +73,11 @@ spec:
             - -dumptracer
             - "100000000"
           {{- end }}
+        {{- if .Values.tap.docker.overrideTag.worker }}
+          image: '{{ .Values.tap.docker.registry }}/worker:{{ .Values.tap.docker.overrideTag.worker }}'
+        {{ else }}
           image: '{{ .Values.tap.docker.registry }}/worker:{{ not (eq .Values.tap.docker.tag "") | ternary .Values.tap.docker.tag (printf "v%s" .Chart.Version) }}'
+        {{- end }}
           imagePullPolicy: {{ .Values.tap.docker.imagePullPolicy }}
           name: sniffer
           ports:
