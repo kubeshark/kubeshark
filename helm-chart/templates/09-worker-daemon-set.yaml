@@ -65,9 +65,8 @@ spec:
           {{- if ne .Values.tap.packetCapture "ebpf" }}
             - -disable-ebpf
           {{- end }}
-          {{- if .Values.tap.misc.disableCgroupIdResolution }}
-            - -disable-cgroup-id-resolution
-          {{- end }}
+            - -resolution-strategy
+            - '{{ .Values.tap.misc.resolutionStrategy }}'
           {{- if .Values.tap.debug }}
             - -debug
             - -dumptracer
@@ -99,6 +98,8 @@ spec:
             value: '{{ .Values.tap.misc.tcpStreamChannelTimeoutShow }}'
           - name: KUBESHARK_CLOUD_API_URL
             value: 'https://api.kubeshark.co'
+          - name: PROFILING_ENABLED
+            value: '{{ .Values.tap.misc.profile }}'
           resources:
             limits:
               cpu: {{ .Values.tap.resources.sniffer.limits.cpu }}

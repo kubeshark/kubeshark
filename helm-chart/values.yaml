@@ -122,7 +122,8 @@ tap:
     trafficSampleRate: 100
     tcpStreamChannelTimeoutMs: 10000
     tcpStreamChannelTimeoutShow: false
-    disableCgroupIdResolution: false
+    resolutionStrategy: auto
+    profile: false
 logs:
   file: ""
   grep: ""
