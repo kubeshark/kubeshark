@@ -52,6 +52,8 @@ spec:
                       {{- else -}}
                         {{ .Values.cloudLicenseEnabled }}
                       {{- end }}'
+            - name: 'REACT_APP_TIMELINE_TAB_ENABLED'
+              value: '{{ .Values.timelineTabEnabled }}'
         {{- if .Values.tap.docker.overrideTag.front }}
           image: '{{ .Values.tap.docker.registry }}/front:{{ .Values.tap.docker.overrideTag.front }}'
         {{ else }}
