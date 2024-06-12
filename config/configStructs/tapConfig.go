@@ -163,7 +163,7 @@ type TapConfig struct {
 	Proxy                      ProxyConfig           `yaml:"proxy" json:"proxy"`
 	PodRegexStr                string                `yaml:"regex" json:"regex" default:".*"`
 	Namespaces                 []string              `yaml:"namespaces" json:"namespaces" default:"[]"`
-	Bpf                        string                `yaml:"bpf" json:"bpf" default:""`
+	BpfOverride                string                `yaml:"bpfOverride" json:"bpfOverride" default:""`
 	Release                    ReleaseConfig         `yaml:"release" json:"release"`
 	PersistentStorage          bool                  `yaml:"persistentStorage" json:"persistentStorage" default:"false"`
 	PersistentStorageStatic    bool                  `yaml:"persistentStorageStatic" json:"persistentStorageStatic" default:"false"`

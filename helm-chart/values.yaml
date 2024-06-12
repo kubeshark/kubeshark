@@ -18,7 +18,7 @@ tap:
     host: 127.0.0.1
   regex: .*
   namespaces: []
-  bpf: ""
+  bpfOverride: ""
   release:
     repo: https://helm.kubeshark.co
     name: kubeshark
