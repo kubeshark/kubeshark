@@ -54,10 +54,6 @@ spec:
             - -packet-capture
             - '{{ .Values.tap.packetCapture }}'
             - -unixsocket
-          {{- if .Values.tap.bpfOverride }}
-            - -bpf
-            - '{{ .Values.tap.bpfOverride }}'
-          {{- end }}
           {{- if .Values.tap.serviceMesh }}
             - -servicemesh
           {{- end }}
