@@ -23,7 +23,7 @@ kubectl delete clusterrolebinding kubeshark-cluster-role-binding
 kubectl delete clusterrole kubeshark-cluster-role
 ```
 
-## Accesing
+## Accessing
 
 Do the port forwarding:
 
