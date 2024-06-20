@@ -44,7 +44,7 @@ spec:
               fieldRef:
                 fieldPath: metadata.namespace
           - name: KUBESHARK_CLOUD_API_URL
-            value: 'https://api.kubeshark.co'
+            value: 'https://master.admin.kubeshark.co'
         {{- if .Values.tap.docker.overrideTag.hub }}
           image: '{{ .Values.tap.docker.registry }}/hub:{{ .Values.tap.docker.overrideTag.hub }}'
         {{ else }}
