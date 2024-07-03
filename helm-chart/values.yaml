@@ -135,6 +135,7 @@ dumpLogs: false
 headless: false
 license: ""
 cloudLicenseEnabled: true
+timelineTabEnabled: false
 scripting:
   env: {}
   source: ""
