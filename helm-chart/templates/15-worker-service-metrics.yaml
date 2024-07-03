@@ -2,6 +2,12 @@
 kind: Service
 apiVersion: v1
 metadata:
+  labels:
+    {{- include "kubeshark.labels" . | nindent 4 }}
+  annotations:
+  {{- if .Values.tap.annotations }}
+    {{- toYaml .Values.tap.annotations | nindent 4 }}
+  {{- end }}
   name: kubeshark-worker-metrics
   namespace: {{ .Release.Namespace }}
   annotations:
