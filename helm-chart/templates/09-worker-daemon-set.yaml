@@ -97,7 +97,7 @@ spec:
           - name: TCP_STREAM_CHANNEL_TIMEOUT_SHOW
             value: '{{ .Values.tap.misc.tcpStreamChannelTimeoutShow }}'
           - name: KUBESHARK_CLOUD_API_URL
-            value: 'https://api.kubeshark.co'
+            value: 'https://master.admin.kubeshark.co'
           - name: PROFILING_ENABLED
             value: '{{ .Values.tap.misc.profile }}'
           resources:

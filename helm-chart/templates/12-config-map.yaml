@@ -9,6 +9,7 @@ metadata:
 data:
     POD_REGEX: '{{ .Values.tap.regex }}'
     NAMESPACES: '{{ gt (len .Values.tap.namespaces) 0 | ternary (join "," .Values.tap.namespaces) "" }}'
+    BPF_OVERRIDE: '{{ .Values.tap.bpfOverride }}'
     SCRIPTING_SCRIPTS: '{}'
     INGRESS_ENABLED: '{{ .Values.tap.ingress.enabled }}'
     INGRESS_HOST: '{{ .Values.tap.ingress.host }}'
