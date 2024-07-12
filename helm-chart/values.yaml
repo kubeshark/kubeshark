@@ -19,6 +19,7 @@ tap:
   regex: .*
   namespaces: []
   bpfOverride: ""
+  stopped: false
   release:
     repo: https://helm.kubeshark.co
     name: kubeshark

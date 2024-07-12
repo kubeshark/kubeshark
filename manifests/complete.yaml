@@ -225,6 +225,7 @@ data:
     POD_REGEX: '.*'
     NAMESPACES: ''
     BPF_OVERRIDE: ''
+    STOPPED: 'false'
     SCRIPTING_SCRIPTS: '{}'
     INGRESS_ENABLED: 'false'
     INGRESS_HOST: 'ks.svc.cluster.local'
