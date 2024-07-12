@@ -215,6 +215,28 @@ spec:
               name: os-release
               readOnly: true
       {{- end }}
+      {{- if .Values.tap.debug }}
+        - command:
+            - /bin/sh
+            - -c
+            - "sleep infinity"
+          image: '{{ .Values.tap.docker.registry }}/debug-tools:latest'
+          imagePullPolicy: {{ .Values.tap.docker.imagePullPolicy }}
+          name: debugger
+          securityContext:
+            capabilities:
+              add:
+                {{- range .Values.tap.capabilities.networkCapture }}
+                {{ print "- " . }}
+                {{- end }}
+                {{- if .Values.tap.serviceMesh }}
+                {{- range .Values.tap.capabilities.serviceMeshCapture }}
+                {{ print "- " . }}
+                {{- end }}
+                {{- end }}
+              drop:
+                - ALL
+      {{- end }}
       dnsPolicy: ClusterFirstWithHostNet
       hostNetwork: true
       serviceAccountName: {{ include "kubeshark.serviceAccountName" . }}
