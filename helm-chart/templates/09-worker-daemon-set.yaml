@@ -229,10 +229,11 @@ spec:
                 {{- range .Values.tap.capabilities.networkCapture }}
                 {{ print "- " . }}
                 {{- end }}
-                {{- if .Values.tap.serviceMesh }}
                 {{- range .Values.tap.capabilities.serviceMeshCapture }}
                 {{ print "- " . }}
                 {{- end }}
+                {{- range .Values.tap.capabilities.ebpfCapture }}
+                {{ print "- " . }}
                 {{- end }}
               drop:
                 - ALL
