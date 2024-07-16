@@ -64,7 +64,6 @@ func CreateDefaultConfig() ConfigStruct {
 					Roles: map[string]configStructs.Role{
 						"admin": {
 							Filter:                "",
-							CanReplayTraffic:      true,
 							CanDownloadPCAP:       true,
 							CanUseScripting:       true,
 							CanUpdateTargetedPods: true,

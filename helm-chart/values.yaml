@@ -75,7 +75,6 @@ tap:
       roles:
         admin:
           filter: ""
-          canReplayTraffic: true
           canDownloadPCAP: true
           canUseScripting: true
           canUpdateTargetedPods: true
@@ -95,7 +94,6 @@ tap:
   telemetry:
     enabled: true
   defaultFilter: ""
-  replayDisabled: false
   scriptingDisabled: false
   targetedPodsUpdateDisabled: false
   recordingDisabled: false
