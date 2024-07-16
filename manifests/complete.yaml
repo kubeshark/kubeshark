@@ -247,6 +247,7 @@ data:
     PCAP_ERROR_TTL: '60s'
     TIMEZONE: ' '
     CLOUD_LICENSE_ENABLED: 'true'
+    DUPLICATE_TIMEFRAME: '200ms'
 ---
 # Source: kubeshark/templates/02-cluster-role.yaml
 apiVersion: rbac.authorization.k8s.io/v1
