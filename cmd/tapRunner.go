@@ -193,6 +193,7 @@ func watchHubPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, c
 					ready.Lock()
 					ready.Hub = true
 					ready.Unlock()
+					log.Info().Str("pod", kubernetes.HubPodName).Msg("Ready.")
 				}
 
 				ready.Lock()
@@ -282,6 +283,7 @@ func watchFrontPod(ctx context.Context, kubernetesProvider *kubernetes.Provider,
 					ready.Lock()
 					ready.Front = true
 					ready.Unlock()
+					log.Info().Str("pod", kubernetes.FrontPodName).Msg("Ready.")
 				}
 
 				ready.Lock()

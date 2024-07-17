@@ -1,6 +1,12 @@
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
+  labels:
+    {{- include "kubeshark.labels" . | nindent 4 }}
+  annotations:
+  {{- if .Values.tap.annotations }}
+    {{- toYaml .Values.tap.annotations | nindent 4 }}
+  {{- end }}
   name: kubeshark-hub-network-policy
   namespace: {{ .Release.Namespace }}
 spec:
@@ -20,6 +26,12 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
+  labels:
+    {{- include "kubeshark.labels" . | nindent 4 }}
+  annotations:
+  {{- if .Values.tap.annotations }}
+    {{- toYaml .Values.tap.annotations | nindent 4 }}
+  {{- end }}
   name: kubeshark-front-network-policy
   namespace: {{ .Release.Namespace }}
 spec:
@@ -39,6 +51,12 @@ spec:
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
+  labels:
+    {{- include "kubeshark.labels" . | nindent 4 }}
+  annotations:
+  {{- if .Values.tap.annotations }}
+    {{- toYaml .Values.tap.annotations | nindent 4 }}
+  {{- end }}
   name: kubeshark-worker-network-policy
   namespace: {{ .Release.Namespace }}
 spec:

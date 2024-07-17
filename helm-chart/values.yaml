@@ -18,6 +18,8 @@ tap:
     host: 127.0.0.1
   regex: .*
   namespaces: []
+  bpfOverride: ""
+  stopped: false
   release:
     repo: https://helm.kubeshark.co
     name: kubeshark
@@ -73,7 +75,6 @@ tap:
       roles:
         admin:
           filter: ""
-          canReplayTraffic: true
           canDownloadPCAP: true
           canUseScripting: true
           canUpdateTargetedPods: true
@@ -93,7 +94,6 @@ tap:
   telemetry:
     enabled: true
   defaultFilter: ""
-  replayDisabled: false
   scriptingDisabled: false
   targetedPodsUpdateDisabled: false
   recordingDisabled: false
@@ -124,6 +124,7 @@ tap:
     tcpStreamChannelTimeoutShow: false
     resolutionStrategy: auto
     profile: false
+    duplicateTimeframe: 200ms
 logs:
   file: ""
   grep: ""
