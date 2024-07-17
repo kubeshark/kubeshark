@@ -90,11 +90,12 @@ type ResourcesConfig struct {
 }
 
 type Role struct {
-	Filter                string `yaml:"filter" json:"filter" default:""`
-	CanDownloadPCAP       bool   `yaml:"canDownloadPCAP" json:"canDownloadPCAP" default:"false"`
-	CanUseScripting       bool   `yaml:"canUseScripting" json:"canUseScripting" default:"false"`
-	CanUpdateTargetedPods bool   `yaml:"canUpdateTargetedPods" json:"canUpdateTargetedPods" default:"false"`
-	ShowAdminConsoleLink  bool   `yaml:"showAdminConsoleLink" json:"showAdminConsoleLink" default:"false"`
+	Filter                  string `yaml:"filter" json:"filter" default:""`
+	CanDownloadPCAP         bool   `yaml:"canDownloadPCAP" json:"canDownloadPCAP" default:"false"`
+	CanUseScripting         bool   `yaml:"canUseScripting" json:"canUseScripting" default:"false"`
+	CanUpdateTargetedPods   bool   `yaml:"canUpdateTargetedPods" json:"canUpdateTargetedPods" default:"false"`
+	CanStopTrafficCapturing bool   `yaml:"canStopTrafficCapturing" json:"canStopTrafficCapturing" default:"false"`
+	ShowAdminConsoleLink    bool   `yaml:"showAdminConsoleLink" json:"showAdminConsoleLink" default:"false"`
 }
 
 type SamlConfig struct {
