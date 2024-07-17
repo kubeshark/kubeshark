@@ -39,4 +39,5 @@ data:
                             {{- else -}}
                               {{ .Values.cloudLicenseEnabled }}
                             {{- end }}'
+    DUPLICATE_TIMEFRAME: '{{ .Values.tap.misc.duplicateTimeframe }}'
 

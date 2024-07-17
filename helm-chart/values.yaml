@@ -124,6 +124,7 @@ tap:
     tcpStreamChannelTimeoutShow: false
     resolutionStrategy: auto
     profile: false
+    duplicateTimeframe: 200ms
 logs:
   file: ""
   grep: ""
