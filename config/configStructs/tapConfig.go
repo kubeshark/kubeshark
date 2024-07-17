@@ -91,7 +91,6 @@ type ResourcesConfig struct {
 
 type Role struct {
 	Filter                string `yaml:"filter" json:"filter" default:""`
-	CanReplayTraffic      bool   `yaml:"canReplayTraffic" json:"canReplayTraffic" default:"false"`
 	CanDownloadPCAP       bool   `yaml:"canDownloadPCAP" json:"canDownloadPCAP" default:"false"`
 	CanUseScripting       bool   `yaml:"canUseScripting" json:"canUseScripting" default:"false"`
 	CanUpdateTargetedPods bool   `yaml:"canUpdateTargetedPods" json:"canUpdateTargetedPods" default:"false"`
@@ -188,7 +187,6 @@ type TapConfig struct {
 	KernelModule               KernelModuleConfig    `yaml:"kernelModule" json:"kernelModule"`
 	Telemetry                  TelemetryConfig       `yaml:"telemetry" json:"telemetry"`
 	DefaultFilter              string                `yaml:"defaultFilter" json:"defaultFilter"`
-	ReplayDisabled             bool                  `yaml:"replayDisabled" json:"replayDisabled" default:"false"`
 	ScriptingDisabled          bool                  `yaml:"scriptingDisabled" json:"scriptingDisabled" default:"false"`
 	TargetedPodsUpdateDisabled bool                  `yaml:"targetedPodsUpdateDisabled" json:"targetedPodsUpdateDisabled" default:"false"`
 	RecordingDisabled          bool                  `yaml:"recordingDisabled" json:"recordingDisabled" default:"false"`
