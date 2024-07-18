@@ -28,7 +28,11 @@ data:
     SCRIPTING_DISABLED: '{{ .Values.tap.scriptingDisabled | ternary "true" "" }}'
     TARGETED_PODS_UPDATE_DISABLED: '{{ .Values.tap.targetedPodsUpdateDisabled | ternary "true" "" }}'
     RECORDING_DISABLED: '{{ .Values.tap.recordingDisabled | ternary "true" "" }}'
-    STOP_TRAFFIC_CAPTURING_DISABLED: '{{ .Values.tap.stopTrafficCapturingDisabled | ternary "true" "" }}'
+    STOP_TRAFFIC_CAPTURING_DISABLED: '{{- if and .Values.tap.stopTrafficCapturingDisabled .Values.tap.stopped -}}
+                                        false
+                                      {{- else -}}
+                                        {{ .Values.tap.stopTrafficCapturingDisabled | ternary "true" "false" }}
+                                      {{- end }}'
     GLOBAL_FILTER: {{ include "kubeshark.escapeDoubleQuotes" .Values.tap.globalFilter | quote }}
     TRAFFIC_SAMPLE_RATE: '{{ .Values.tap.misc.trafficSampleRate }}'
     JSON_TTL: '{{ .Values.tap.misc.jsonTTL }}'

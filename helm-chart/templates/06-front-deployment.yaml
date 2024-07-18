@@ -47,7 +47,11 @@ spec:
             - name: REACT_APP_RECORDING_DISABLED
               value: '{{ .Values.tap.recordingDisabled }}'
             - name: REACT_APP_STOP_TRAFFIC_CAPTURING_DISABLED
-              value: '{{ .Values.tap.stopTrafficCapturingDisabled }}'
+              value: '{{- if and .Values.tap.stopTrafficCapturingDisabled .Values.tap.stopped -}}
+                        false
+                      {{- else -}}
+                        {{ .Values.tap.stopTrafficCapturingDisabled | ternary "true" "false" }}
+                      {{- end -}}'
             - name: REACT_APP_STOPPED
               value: '{{ .Values.tap.stopped }}'
             - name: 'REACT_APP_CLOUD_LICENSE_ENABLED'
