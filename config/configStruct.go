@@ -63,11 +63,12 @@ func CreateDefaultConfig() ConfigStruct {
 					RoleAttribute: "role",
 					Roles: map[string]configStructs.Role{
 						"admin": {
-							Filter:                "",
-							CanDownloadPCAP:       true,
-							CanUseScripting:       true,
-							CanUpdateTargetedPods: true,
-							ShowAdminConsoleLink:  true,
+							Filter:                  "",
+							CanDownloadPCAP:         true,
+							CanUseScripting:         true,
+							CanUpdateTargetedPods:   true,
+							CanStopTrafficCapturing: true,
+							ShowAdminConsoleLink:    true,
 						},
 					},
 				},
