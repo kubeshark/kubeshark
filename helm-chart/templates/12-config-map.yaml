@@ -10,7 +10,7 @@ data:
     POD_REGEX: '{{ .Values.tap.regex }}'
     NAMESPACES: '{{ gt (len .Values.tap.namespaces) 0 | ternary (join "," .Values.tap.namespaces) "" }}'
     BPF_OVERRIDE: '{{ .Values.tap.bpfOverride }}'
-    STOPPED: '{{ .Values.tap.stopped }}'
+    STOPPED: '{{ .Values.tap.stopped | ternary "true" "false" }}'
     SCRIPTING_SCRIPTS: '{}'
     INGRESS_ENABLED: '{{ .Values.tap.ingress.enabled }}'
     INGRESS_HOST: '{{ .Values.tap.ingress.host }}'
