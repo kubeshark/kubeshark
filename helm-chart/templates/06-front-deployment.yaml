@@ -46,6 +46,12 @@ spec:
               value: '{{ eq .Values.tap.packetCapture "ebpf" | ternary "true" "false" }}'
             - name: REACT_APP_RECORDING_DISABLED
               value: '{{ .Values.tap.recordingDisabled }}'
+            - name: REACT_APP_STOP_TRAFFIC_CAPTURING_DISABLED
+              value: '{{- if and .Values.tap.stopTrafficCapturingDisabled .Values.tap.stopped -}}
+                        false
+                      {{- else -}}
+                        {{ .Values.tap.stopTrafficCapturingDisabled | ternary "true" "false" }}
+                      {{- end -}}'
             - name: 'REACT_APP_CLOUD_LICENSE_ENABLED'
               value: '{{- if and .Values.cloudLicenseEnabled (not (empty .Values.license)) -}}
                         "false"
