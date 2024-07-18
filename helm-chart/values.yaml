@@ -78,6 +78,7 @@ tap:
           canDownloadPCAP: true
           canUseScripting: true
           canUpdateTargetedPods: true
+          canStopTrafficCapturing: true
           showAdminConsoleLink: true
   ingress:
     enabled: false
