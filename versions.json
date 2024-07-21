@@ -16,5 +16,14 @@
             "hub": "v52.3.68",
             "worker": "v52.3.68"
         }
+    },
+    {
+        "version": "v52.3.62",
+        "timestamp": "1719926259",
+        "components": {
+            "front": "v52.3.62",
+            "hub": "v52.3.62",
+            "worker": "v52.3.62"
+        }
     }
 ]
