@@ -1,0 +1,20 @@
+[
+    {
+        "version": "v52.3.69",
+        "timestamp": "1720531059",
+        "components": {
+            "front": "v52.3.69",
+            "hub": "v52.3.69",
+            "worker": "v52.3.69"
+        }
+    },
+    {
+        "version": "v52.3.68",
+        "timestamp": "1720444659",
+        "components": {
+            "front": "v52.3.68",
+            "hub": "v52.3.68",
+            "worker": "v52.3.68"
+        }
+    }
+]
