@@ -69,8 +69,6 @@ spec:
             - '{{ .Values.tap.misc.resolutionStrategy }}'
           {{- if .Values.tap.debug }}
             - -debug
-            - -dumptracer
-            - "100000000"
           {{- end }}
         {{- if .Values.tap.docker.overrideTag.worker }}
           image: '{{ .Values.tap.docker.registry }}/worker:{{ .Values.tap.docker.overrideTag.worker }}'
