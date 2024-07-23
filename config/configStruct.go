@@ -73,6 +73,18 @@ func CreateDefaultConfig() ConfigStruct {
 					},
 				},
 			},
+			EnabledDissectors: []string{
+				"amqp",
+				"dns",
+				"http",
+				"icmp",
+				"kafka",
+				"redis",
+				"sctp",
+				"syscall",
+				"tcp",
+				"ws",
+			},
 		},
 	}
 }

@@ -194,6 +194,7 @@ type TapConfig struct {
 	StopTrafficCapturingDisabled bool                  `yaml:"stopTrafficCapturingDisabled" json:"stopTrafficCapturingDisabled" default:"false"`
 	Capabilities                 CapabilitiesConfig    `yaml:"capabilities" json:"capabilities"`
 	GlobalFilter                 string                `yaml:"globalFilter" json:"globalFilter"`
+	EnabledDissectors            []string              `yaml:"enabledDissectors" json:"enabledDissectors"`
 	Metrics                      MetricsConfig         `yaml:"metrics" json:"metrics"`
 	Misc                         MiscConfig            `yaml:"misc" json:"misc"`
 }
