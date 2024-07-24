@@ -234,11 +234,12 @@ data:
     AUTH_TYPE: 'oidc'
     AUTH_SAML_IDP_METADATA_URL: ''
     AUTH_SAML_ROLE_ATTRIBUTE: 'role'
-    AUTH_SAML_ROLES: '{"admin":{"canDownloadPCAP":true,"canUpdateTargetedPods":true,"canUseScripting":true,"filter":"","showAdminConsoleLink":true}}'
+    AUTH_SAML_ROLES: '{"admin":{"canDownloadPCAP":true,"canStopTrafficCapturing":true,"canUpdateTargetedPods":true,"canUseScripting":true,"filter":"","showAdminConsoleLink":true}}'
     TELEMETRY_DISABLED: ''
     SCRIPTING_DISABLED: ''
     TARGETED_PODS_UPDATE_DISABLED: ''
     RECORDING_DISABLED: ''
+    STOP_TRAFFIC_CAPTURING_DISABLED: 'false'
     GLOBAL_FILTER: ""
     TRAFFIC_SAMPLE_RATE: '100'
     JSON_TTL: '5m'
@@ -772,6 +773,8 @@ spec:
             - name: REACT_APP_BPF_OVERRIDE_DISABLED
               value: 'false'
             - name: REACT_APP_RECORDING_DISABLED
+              value: 'false'
+            - name: REACT_APP_STOP_TRAFFIC_CAPTURING_DISABLED
               value: 'false'
             - name: 'REACT_APP_CLOUD_LICENSE_ENABLED'
               value: 'true'
