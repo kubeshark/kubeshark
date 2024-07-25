@@ -137,6 +137,7 @@ dumpLogs: false
 headless: false
 license: ""
 cloudLicenseEnabled: true
+supportChatEnabled: false
 scripting:
   env: {}
   source: ""
