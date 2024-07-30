@@ -59,7 +59,7 @@ spec:
                         {{ .Values.cloudLicenseEnabled }}
                       {{- end }}'
             - name: REACT_APP_SUPPORT_CHAT_ENABLED
-              value: '{{ not .Values.supportChatEnabled | ternary "false" .Values.supportChatEnabled }}'
+              value: '{{ not .Values.supportChatEnabled | ternary "true" .Values.supportChatEnabled }}'
         {{- if .Values.tap.docker.overrideTag.front }}
           image: '{{ .Values.tap.docker.registry }}/front:{{ .Values.tap.docker.overrideTag.front }}'
         {{ else }}
