@@ -138,6 +138,7 @@ headless: false
 license: ""
 cloudLicenseEnabled: true
 supportChatEnabled: true
+internetConnectivity: true
 scripting:
   env: {}
   source: ""
