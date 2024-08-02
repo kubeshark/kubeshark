@@ -14,7 +14,7 @@ export VER?=0.0.0
 help: ## Print this help message.
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
-build-debug:  ## Build for debuging.
+build-debug:  ## Build for debugging.
 	export CGO_ENABLED=1
 	export GCLFAGS='-gcflags="all=-N -l"'
 	${MAKE} build-base
