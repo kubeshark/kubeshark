@@ -27,7 +27,7 @@ spec:
             - name: REACT_APP_DEFAULT_FILTER
               value: '{{ not (eq .Values.tap.defaultFilter "") | ternary .Values.tap.defaultFilter " " }}'
             - name: REACT_APP_AUTH_ENABLED
-              value: '{{- if and .Values.cloudLicenseEnabled (not (empty .Values.license)) -}}
+              value: '{{- if or (and .Values.cloudLicenseEnabled (not (empty .Values.license))) (not .Values.internetConnectivity) -}}
                       "false"
                     {{- else -}}
                       {{ .Values.cloudLicenseEnabled | ternary "true" .Values.tap.auth.enabled }}
@@ -53,13 +53,13 @@ spec:
                         {{ .Values.tap.stopTrafficCapturingDisabled | ternary "true" "false" }}
                       {{- end -}}'
             - name: 'REACT_APP_CLOUD_LICENSE_ENABLED'
-              value: '{{- if and .Values.cloudLicenseEnabled (not (empty .Values.license)) -}}
+              value: '{{- if or (and .Values.cloudLicenseEnabled (not (empty .Values.license))) (not .Values.internetConnectivity) -}}
                         "false"
                       {{- else -}}
                         {{ .Values.cloudLicenseEnabled }}
                       {{- end }}'
             - name: REACT_APP_SUPPORT_CHAT_ENABLED
-              value: '{{ not .Values.supportChatEnabled | ternary "true" .Values.supportChatEnabled }}'
+              value: '{{ and .Values.supportChatEnabled .Values.internetConnectivity | ternary "true" "false" }}'
         {{- if .Values.tap.docker.overrideTag.front }}
           image: '{{ .Values.tap.docker.registry }}/front:{{ .Values.tap.docker.overrideTag.front }}'
         {{ else }}

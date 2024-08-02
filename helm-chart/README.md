@@ -171,6 +171,7 @@ Please refer to [metrics](./metrics.md) documentation for details.
 | `tap.telemetry.enabled`                   | Enable anonymous usage statistics collection           | `true`                                                  |
 | `tap.defaultFilter`                       | Sets the default dashboard KFL filter (e.g. `http`)        | `""`                                                  |
 | `tap.globalFilter`                        | Prepends to any KFL filter and can be used to limit what is visible in the dashboard. For example, `redact("request.headers.Authorization")` will redact the appropriate field. Another example `!dns` will not show any DNS traffic.      | `""`                                        |
+| `tap.metrics.port`                  | Pod port used to expose Prometheus metrics          | `49100`                                                  |
 | `logs.file`                               | Logs dump path                      | `""`                                                    |
 | `kube.configPath`                         | Path to the `kubeconfig` file (`$HOME/.kube/config`)            | `""`                                                    |
 | `kube.context`                            | Kubernetes context to use for the deployment  | `""`                                                    |
@@ -180,8 +181,9 @@ Please refer to [metrics](./metrics.md) documentation for details.
 | `scripting.env`                           | Environment variables for the scripting      | `{}`                                                    |
 | `scripting.source`                        | Source directory of the scripts                | `""`                                                    |
 | `scripting.watchScripts`                  | Enable watch mode for the scripts in source directory          | `true`                                                  |
-| `tap.metrics.port`                  | Pod port used to expose Prometheus metrics          | `49100`                                                  |
 | `timezone`                                | IANA time zone applied to time shown in the front-end | `""` (local time zone applies) |
+| `supportChatEnabled`                      | Enable real-time support chat channel based on Intercom | `true` |
+| `internetConnectivity`                    | Turns off API requests that are dependant on Internet connectivity such as `telemetry` and `online-support`. | `true` |
 
 KernelMapping pairs kernel versions with a
                             DriverContainer image. Kernel versions can be matched
