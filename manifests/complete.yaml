@@ -234,11 +234,12 @@ data:
     AUTH_TYPE: 'oidc'
     AUTH_SAML_IDP_METADATA_URL: ''
     AUTH_SAML_ROLE_ATTRIBUTE: 'role'
-    AUTH_SAML_ROLES: '{"admin":{"canDownloadPCAP":true,"canUpdateTargetedPods":true,"canUseScripting":true,"filter":"","showAdminConsoleLink":true}}'
+    AUTH_SAML_ROLES: '{"admin":{"canDownloadPCAP":true,"canStopTrafficCapturing":true,"canUpdateTargetedPods":true,"canUseScripting":true,"filter":"","showAdminConsoleLink":true}}'
     TELEMETRY_DISABLED: ''
     SCRIPTING_DISABLED: ''
     TARGETED_PODS_UPDATE_DISABLED: ''
     RECORDING_DISABLED: ''
+    STOP_TRAFFIC_CAPTURING_DISABLED: 'false'
     GLOBAL_FILTER: ""
     TRAFFIC_SAMPLE_RATE: '100'
     JSON_TTL: '5m'
@@ -247,6 +248,7 @@ data:
     TIMEZONE: ' '
     CLOUD_LICENSE_ENABLED: 'true'
     DUPLICATE_TIMEFRAME: '200ms'
+    ENABLED_DISSECTORS: 'amqp,dns,http,icmp,kafka,redis,sctp,syscall,tcp,ws'
 ---
 # Source: kubeshark/templates/02-cluster-role.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -772,6 +774,8 @@ spec:
             - name: REACT_APP_BPF_OVERRIDE_DISABLED
               value: 'false'
             - name: REACT_APP_RECORDING_DISABLED
+              value: 'false'
+            - name: REACT_APP_STOP_TRAFFIC_CAPTURING_DISABLED
               value: 'false'
             - name: 'REACT_APP_CLOUD_LICENSE_ENABLED'
               value: 'true'
