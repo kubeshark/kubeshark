@@ -19,7 +19,7 @@ func FormatError(err error) error {
 	if k8serrors.IsForbidden(err) {
 		errorNew = fmt.Errorf("insufficient permissions: %w. "+
 			"supply the required permission or control %s's access to namespaces by setting %s "+
-			"in the config file or setting the targeted namespace with --%s %s=<NAMEPSACE>",
+			"in the config file or setting the targeted namespace with --%s %s=<NAMESPACE>",
 			err,
 			misc.Software,
 			configStructs.ReleaseNamespaceLabel,
