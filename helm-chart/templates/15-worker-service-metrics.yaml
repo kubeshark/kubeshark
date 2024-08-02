@@ -5,14 +5,13 @@ metadata:
   labels:
     {{- include "kubeshark.labels" . | nindent 4 }}
   annotations:
+    prometheus.io/scrape: 'true'
+    prometheus.io/port: '{{ .Values.tap.metrics.port }}'
   {{- if .Values.tap.annotations }}
     {{- toYaml .Values.tap.annotations | nindent 4 }}
   {{- end }}
   name: kubeshark-worker-metrics
   namespace: {{ .Release.Namespace }}
-  annotations:
-    prometheus.io/scrape: 'true'
-    prometheus.io/port: '{{ .Values.tap.metrics.port }}'
 spec:
   selector:
     app.kubeshark.co/app: worker

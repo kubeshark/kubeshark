@@ -78,6 +78,7 @@ tap:
           canDownloadPCAP: true
           canUseScripting: true
           canUpdateTargetedPods: true
+          canStopTrafficCapturing: true
           showAdminConsoleLink: true
   ingress:
     enabled: false
@@ -97,6 +98,7 @@ tap:
   scriptingDisabled: false
   targetedPodsUpdateDisabled: false
   recordingDisabled: false
+  stopTrafficCapturingDisabled: false
   capabilities:
     networkCapture:
     - NET_RAW
@@ -135,6 +137,8 @@ dumpLogs: false
 headless: false
 license: ""
 cloudLicenseEnabled: true
+supportChatEnabled: true
+internetConnectivity: true
 scripting:
   env: {}
   source: ""

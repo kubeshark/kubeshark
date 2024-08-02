@@ -191,10 +191,8 @@ branch:
 	@cd ../worker && git checkout master && git pull && git checkout -b $(name); git push --set-upstream origin $(name)
 	@cd ../hub && git checkout master && git pull && git checkout -b $(name); git push --set-upstream origin $(name)
 	@cd ../front && git checkout master && git pull && git checkout -b $(name); git push --set-upstream origin $(name)
-	@cd ../kubeshark && git checkout master && git pull && git checkout -b $(name); git push --set-upstream origin $(name)
 
 switch-to-branch:
 	@cd ../worker && git checkout $(name)
 	@cd ../hub && git checkout $(name)
 	@cd ../front && git checkout $(name)
-	@cd ../kubeshark && git checkout $(name)
