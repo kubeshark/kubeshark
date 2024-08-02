@@ -117,6 +117,17 @@ tap:
     - SYS_RESOURCE
     - IPC_LOCK
   globalFilter: ""
+  enabledDissectors:
+  - amqp
+  - dns
+  - http
+  - icmp
+  - kafka
+  - redis
+  - sctp
+  - syscall
+  - tcp
+  - ws
   metrics:
     port: 49100
   misc:
@@ -139,7 +150,8 @@ dumpLogs: false
 headless: false
 license: ""
 cloudLicenseEnabled: true
-supportChatEnabled: false
+supportChatEnabled: true
+internetConnectivity: true
 scripting:
   env: {}
   source: ""

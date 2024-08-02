@@ -14,7 +14,7 @@ export VER?=0.0.0
 help: ## Print this help message.
 	@awk 'BEGIN {FS = ":.*?## "} /^[a-zA-Z_-]+:.*?## / {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
-build-debug:  ## Build for debuging.
+build-debug:  ## Build for debugging.
 	export CGO_ENABLED=1
 	export GCLFAGS='-gcflags="all=-N -l"'
 	${MAKE} build-base
@@ -191,10 +191,8 @@ branch:
 	@cd ../worker && git checkout master && git pull && git checkout -b $(name); git push --set-upstream origin $(name)
 	@cd ../hub && git checkout master && git pull && git checkout -b $(name); git push --set-upstream origin $(name)
 	@cd ../front && git checkout master && git pull && git checkout -b $(name); git push --set-upstream origin $(name)
-	@cd ../kubeshark && git checkout master && git pull && git checkout -b $(name); git push --set-upstream origin $(name)
 
 switch-to-branch:
 	@cd ../worker && git checkout $(name)
 	@cd ../hub && git checkout $(name)
 	@cd ../front && git checkout $(name)
-	@cd ../kubeshark && git checkout $(name)
