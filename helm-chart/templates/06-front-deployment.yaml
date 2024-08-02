@@ -27,7 +27,7 @@ spec:
             - name: REACT_APP_DEFAULT_FILTER
               value: '{{ not (eq .Values.tap.defaultFilter "") | ternary .Values.tap.defaultFilter " " }}'
             - name: REACT_APP_AUTH_ENABLED
-              value: '{{- if and .Values.cloudLicenseEnabled (not (empty .Values.license)) -}}
+              value: '{{- if or (and .Values.cloudLicenseEnabled (not (empty .Values.license))) (not .Values.internetConnectivity) -}}
                       "false"
                     {{- else -}}
                       {{ .Values.cloudLicenseEnabled | ternary "true" .Values.tap.auth.enabled }}
@@ -53,7 +53,7 @@ spec:
                         {{ .Values.tap.stopTrafficCapturingDisabled | ternary "true" "false" }}
                       {{- end -}}'
             - name: 'REACT_APP_CLOUD_LICENSE_ENABLED'
-              value: '{{- if and .Values.cloudLicenseEnabled (not (empty .Values.license)) -}}
+              value: '{{- if or (and .Values.cloudLicenseEnabled (not (empty .Values.license))) (not .Values.internetConnectivity) -}}
                         "false"
                       {{- else -}}
                         {{ .Values.cloudLicenseEnabled }}
