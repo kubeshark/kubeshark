@@ -18,6 +18,8 @@ tap:
     host: 127.0.0.1
   regex: .*
   namespaces: []
+  excludedNamespaces:
+  - kube-system
   bpfOverride: ""
   stopped: false
   release:

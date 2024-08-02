@@ -17,6 +17,7 @@ const (
 	ProxyHubPortLabel            = "proxy-hub-port"
 	ProxyHostLabel               = "proxy-host"
 	NamespacesLabel              = "namespaces"
+	ExcludedNamespacesLabel      = "excludedNamespaces"
 	ReleaseNamespaceLabel        = "release-namespace"
 	PersistentStorageLabel       = "persistentStorage"
 	PersistentStorageStaticLabel = "persistentStorageStatic"
@@ -164,6 +165,7 @@ type TapConfig struct {
 	Proxy                        ProxyConfig           `yaml:"proxy" json:"proxy"`
 	PodRegexStr                  string                `yaml:"regex" json:"regex" default:".*"`
 	Namespaces                   []string              `yaml:"namespaces" json:"namespaces" default:"[]"`
+	ExcludedNamespaces           []string              `yaml:"excludedNamespaces" json:"excludedNamespaces" default:"[]"`
 	BpfOverride                  string                `yaml:"bpfOverride" json:"bpfOverride" default:""`
 	Stopped                      bool                  `yaml:"stopped" json:"stopped" default:"false"`
 	Release                      ReleaseConfig         `yaml:"release" json:"release"`

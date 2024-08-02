@@ -227,12 +227,24 @@ func (provider *Provider) GetKubernetesVersion() (*semver.SemVersion, error) {
 	return &serverVersionSemVer, nil
 }
 
-func (provider *Provider) GetNamespaces() []string {
+func (provider *Provider) GetNamespaces() (namespaces []string) {
 	if len(config.Config.Tap.Namespaces) > 0 {
-		return utils.Unique(config.Config.Tap.Namespaces)
+		namespaces = utils.Unique(config.Config.Tap.Namespaces)
 	} else {
-		return []string{K8sAllNamespaces}
+		namespaceList, err := provider.clientSet.CoreV1().Namespaces().List(context.TODO(), metav1.ListOptions{})
+		if err != nil {
+			log.Error().Err(err).Send()
+			return
+		}
+
+		for _, ns := range namespaceList.Items {
+			namespaces = append(namespaces, ns.Name)
+		}
 	}
+
+	namespaces = utils.Diff(namespaces, config.Config.Tap.ExcludedNamespaces)
+
+	return
 }
 
 func getClientSet(config *rest.Config) (*kubernetes.Clientset, error) {

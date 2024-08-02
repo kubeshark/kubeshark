@@ -9,6 +9,7 @@ metadata:
 data:
     POD_REGEX: '{{ .Values.tap.regex }}'
     NAMESPACES: '{{ gt (len .Values.tap.namespaces) 0 | ternary (join "," .Values.tap.namespaces) "" }}'
+    EXCLUDED_NAMESPACES: '{{ gt (len .Values.tap.excludedNamespaces) 0 | ternary (join "," .Values.tap.excludedNamespaces) "" }}'
     BPF_OVERRIDE: '{{ .Values.tap.bpfOverride }}'
     STOPPED: '{{ .Values.tap.stopped | ternary "true" "false" }}'
     SCRIPTING_SCRIPTS: '{}'
