@@ -16,9 +16,9 @@ const (
 func CreateDefaultConfig() ConfigStruct {
 	return ConfigStruct{
 		Tap: configStructs.TapConfig{
-			// ExcludedNamespaces: []string{
-			// 	"kube-system",
-			// },
+			ExcludedNamespaces: []string{
+				"kube-system",
+			},
 			NodeSelectorTerms: []v1.NodeSelectorTerm{
 				{
 					MatchExpressions: []v1.NodeSelectorRequirement{
