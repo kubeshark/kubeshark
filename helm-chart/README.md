@@ -125,6 +125,7 @@ Please refer to [metrics](./metrics.md) documentation for details.
 | `tap.proxy.front.port`                    | Front-facing service port                     | `8899`                                                  |
 | `tap.proxy.host`                          | Proxy server's IP                                   | `127.0.0.1`                                             |
 | `tap.namespaces`                          | List of namespaces for the traffic capture                 | `[]`                                                    |
+| `tap.excludedNamespaces`                  | List of namespaces to explicitly exclude                 | `[]`                                                    |
 | `tap.release.repo`                        | URL of the Helm chart repository             | `https://helm.kubeshark.co`                             |
 | `tap.release.name`                        | Helm release name                          | `kubeshark`                                             |
 | `tap.release.namespace`                   | Helm release namespace                | `default`                                               |
@@ -172,6 +173,7 @@ Please refer to [metrics](./metrics.md) documentation for details.
 | `tap.defaultFilter`                       | Sets the default dashboard KFL filter (e.g. `http`)        | `""`                                                  |
 | `tap.globalFilter`                        | Prepends to any KFL filter and can be used to limit what is visible in the dashboard. For example, `redact("request.headers.Authorization")` will redact the appropriate field. Another example `!dns` will not show any DNS traffic.      | `""`                                        |
 | `tap.metrics.port`                  | Pod port used to expose Prometheus metrics          | `49100`                                                  |
+| `tap.stopped`                             | A flag indicating whether to start Kubeshark with traffic processing stopped resulting in almost no resource consumption (e.g. Kubeshark is dormant). This property can be dynamically control via the dashboard.         | `true`                                                  |
 | `logs.file`                               | Logs dump path                      | `""`                                                    |
 | `kube.configPath`                         | Path to the `kubeconfig` file (`$HOME/.kube/config`)            | `""`                                                    |
 | `kube.context`                            | Kubernetes context to use for the deployment  | `""`                                                    |
