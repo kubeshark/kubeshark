@@ -125,6 +125,7 @@ Please refer to [metrics](./metrics.md) documentation for details.
 | `tap.proxy.front.port`                    | Front-facing service port                     | `8899`                                                  |
 | `tap.proxy.host`                          | Proxy server's IP                                   | `127.0.0.1`                                             |
 | `tap.namespaces`                          | List of namespaces for the traffic capture                 | `[]`                                                    |
+| `tap.excludedNamespaces`                  | List of namespaces to explicitly exclude                 | `[]`                                                    |
 | `tap.release.repo`                        | URL of the Helm chart repository             | `https://helm.kubeshark.co`                             |
 | `tap.release.name`                        | Helm release name                          | `kubeshark`                                             |
 | `tap.release.namespace`                   | Helm release namespace                | `default`                                               |
