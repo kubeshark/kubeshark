@@ -42,14 +42,14 @@ tap:
     sniffer:
       limits:
         cpu: 1200m
-        memory: 1400Mi
+        memory: 1300Mi
       requests:
         cpu: 300m
         memory: 500Mi
     tracer:
       limits:
-        cpu: 1200m
-        memory: 1400Mi
+        cpu: 800m
+        memory: 1200Mi
       requests:
         cpu: 300m
         memory: 500Mi
