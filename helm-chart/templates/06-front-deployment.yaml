@@ -30,7 +30,7 @@ spec:
               value: '{{- if or (and .Values.cloudLicenseEnabled (not (empty .Values.license))) (not .Values.internetConnectivity) -}}
                       "false"
                     {{- else -}}
-                      {{ .Values.cloudLicenseEnabled | ternary "true" .Values.tap.auth.enabled }}
+                      {{ .Values.cloudLicenseEnabled | ternary "true" (.Values.tap.auth.enabled | ternary "true" "false") }}
                     {{- end }}'
             - name: REACT_APP_AUTH_TYPE
               value: '{{ not (eq .Values.tap.auth.type "") | ternary (.Values.cloudLicenseEnabled | ternary "oidc" .Values.tap.auth.type) " " }}'
@@ -39,13 +39,13 @@ spec:
             - name: REACT_APP_TIMEZONE
               value: '{{ not (eq .Values.timezone "") | ternary .Values.timezone " " }}'
             - name: REACT_APP_SCRIPTING_DISABLED
-              value: '{{ .Values.tap.scriptingDisabled }}'
+              value: '{{ .Values.tap.scriptingDisabled | ternary "true" "false" }}'
             - name: REACT_APP_TARGETED_PODS_UPDATE_DISABLED
-              value: '{{ .Values.tap.targetedPodsUpdateDisabled }}'
+              value: '{{ .Values.tap.targetedPodsUpdateDisabled | ternary "true" "false" }}'
             - name: REACT_APP_BPF_OVERRIDE_DISABLED
               value: '{{ eq .Values.tap.packetCapture "ebpf" | ternary "true" "false" }}'
             - name: REACT_APP_RECORDING_DISABLED
-              value: '{{ .Values.tap.recordingDisabled }}'
+              value: '{{ .Values.tap.recordingDisabled | ternary "true" "false" }}'
             - name: REACT_APP_STOP_TRAFFIC_CAPTURING_DISABLED
               value: '{{- if and .Values.tap.stopTrafficCapturingDisabled .Values.tap.stopped -}}
                         false
@@ -56,7 +56,7 @@ spec:
               value: '{{- if or (and .Values.cloudLicenseEnabled (not (empty .Values.license))) (not .Values.internetConnectivity) -}}
                         "false"
                       {{- else -}}
-                        {{ .Values.cloudLicenseEnabled }}
+                        {{ .Values.cloudLicenseEnabled | ternary "true" "false" }}
                       {{- end }}'
             - name: REACT_APP_SUPPORT_CHAT_ENABLED
               value: '{{ and .Values.supportChatEnabled .Values.internetConnectivity | ternary "true" "false" }}'
