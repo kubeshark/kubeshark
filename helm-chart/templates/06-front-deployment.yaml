@@ -30,7 +30,7 @@ spec:
               value: '{{- if or (and .Values.cloudLicenseEnabled (not (empty .Values.license))) (not .Values.internetConnectivity) -}}
                       "false"
                     {{- else -}}
-                      {{ .Values.cloudLicenseEnabled | ternary "true" .Values.tap.auth.enabled }}
+                      {{ .Values.cloudLicenseEnabled | ternary "true" (.Values.tap.auth.enabled | ternary "true" "false") }}
                     {{- end }}'
             - name: REACT_APP_AUTH_TYPE
               value: '{{ not (eq .Values.tap.auth.type "") | ternary (.Values.cloudLicenseEnabled | ternary "oidc" .Values.tap.auth.type) " " }}'
