@@ -56,7 +56,7 @@ spec:
               value: '{{- if or (and .Values.cloudLicenseEnabled (not (empty .Values.license))) (not .Values.internetConnectivity) -}}
                         "false"
                       {{- else -}}
-                        {{ .Values.cloudLicenseEnabled }}
+                        {{ .Values.cloudLicenseEnabled | ternary "true" "false" }}
                       {{- end }}'
             - name: REACT_APP_SUPPORT_CHAT_ENABLED
               value: '{{ and .Values.supportChatEnabled .Values.internetConnectivity | ternary "true" "false" }}'
