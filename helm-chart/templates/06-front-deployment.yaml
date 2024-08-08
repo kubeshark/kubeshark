@@ -45,7 +45,7 @@ spec:
             - name: REACT_APP_BPF_OVERRIDE_DISABLED
               value: '{{ eq .Values.tap.packetCapture "ebpf" | ternary "true" "false" }}'
             - name: REACT_APP_RECORDING_DISABLED
-              value: '{{ .Values.tap.recordingDisabled }}'
+              value: '{{ .Values.tap.recordingDisabled | ternary "true" "false" }}'
             - name: REACT_APP_STOP_TRAFFIC_CAPTURING_DISABLED
               value: '{{- if and .Values.tap.stopTrafficCapturingDisabled .Values.tap.stopped -}}
                         false
