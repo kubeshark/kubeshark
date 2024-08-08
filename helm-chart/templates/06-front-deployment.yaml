@@ -41,7 +41,7 @@ spec:
             - name: REACT_APP_SCRIPTING_DISABLED
               value: '{{ .Values.tap.scriptingDisabled }}'
             - name: REACT_APP_TARGETED_PODS_UPDATE_DISABLED
-              value: '{{ .Values.tap.targetedPodsUpdateDisabled }}'
+              value: '{{ .Values.tap.targetedPodsUpdateDisabled | ternary "true" "false" }}'
             - name: REACT_APP_BPF_OVERRIDE_DISABLED
               value: '{{ eq .Values.tap.packetCapture "ebpf" | ternary "true" "false" }}'
             - name: REACT_APP_RECORDING_DISABLED
