@@ -8,6 +8,11 @@ import (
 	"strings"
 )
 
+const (
+	X_KUBESHARK_CAPTURE_HEADER_KEY          = "X-Kubeshark-Capture"
+	X_KUBESHARK_CAPTURE_HEADER_IGNORE_VALUE = "ignore"
+)
+
 // Get - When err is nil, resp always contains a non-nil resp.Body.
 // Caller should close resp.Body when done reading from it.
 func Get(url string, client *http.Client) (*http.Response, error) {
@@ -60,5 +65,5 @@ func checkError(response *http.Response, errInOperation error) (*http.Response, 
 }
 
 func AddIgnoreCaptureHeader(req *http.Request) {
-	req.Header.Set("X-Kubeshark-Capture", "ignore")
+	req.Header.Set(X_KUBESHARK_CAPTURE_HEADER_KEY, X_KUBESHARK_CAPTURE_HEADER_IGNORE_VALUE)
 }
