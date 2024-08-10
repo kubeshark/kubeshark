@@ -59,6 +59,7 @@ func runConsole() {
 		Path:   "/scripts/logs",
 	}
 	headers := http.Header{}
+	headers.Set(utils.X_KUBESHARK_CAPTURE_HEADER_KEY, utils.X_KUBESHARK_CAPTURE_HEADER_IGNORE_VALUE)
 	headers.Set("License-Key", config.Config.License)
 
 	c, _, err := websocket.DefaultDialer.Dial(u.String(), headers)

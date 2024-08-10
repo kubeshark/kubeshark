@@ -189,6 +189,7 @@ func (connector *Connector) PutScript(script *misc.Script, index int64) (err err
 				log.Error().Err(err).Send()
 				return
 			}
+			utils.AddIgnoreCaptureHeader(req)
 			req.Header.Set("Content-Type", "application/json")
 			req.Header.Set("License-Key", config.Config.License)
 
@@ -228,6 +229,7 @@ func (connector *Connector) DeleteScript(index int64) (err error) {
 			log.Error().Err(err).Send()
 			return
 		}
+		utils.AddIgnoreCaptureHeader(req)
 		req.Header.Set("Content-Type", "application/json")
 		req.Header.Set("License-Key", config.Config.License)
 

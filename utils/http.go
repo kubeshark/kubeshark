@@ -8,10 +8,21 @@ import (
 	"strings"
 )
 
+const (
+	X_KUBESHARK_CAPTURE_HEADER_KEY          = "X-Kubeshark-Capture"
+	X_KUBESHARK_CAPTURE_HEADER_IGNORE_VALUE = "ignore"
+)
+
 // Get - When err is nil, resp always contains a non-nil resp.Body.
 // Caller should close resp.Body when done reading from it.
 func Get(url string, client *http.Client) (*http.Response, error) {
-	return checkError(client.Get(url))
+	req, err := http.NewRequest(http.MethodPost, url, nil)
+	if err != nil {
+		return nil, err
+	}
+	AddIgnoreCaptureHeader(req)
+
+	return checkError(client.Do(req))
 }
 
 // Post - When err is nil, resp always contains a non-nil resp.Body.
@@ -21,6 +32,7 @@ func Post(url, contentType string, body io.Reader, client *http.Client, licenseK
 	if err != nil {
 		return nil, err
 	}
+	AddIgnoreCaptureHeader(req)
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("License-Key", licenseKey)
 
@@ -50,4 +62,8 @@ func checkError(response *http.Response, errInOperation error) (*http.Response, 
 	}
 
 	return response, nil
+}
+
+func AddIgnoreCaptureHeader(req *http.Request) {
+	req.Header.Set(X_KUBESHARK_CAPTURE_HEADER_KEY, X_KUBESHARK_CAPTURE_HEADER_IGNORE_VALUE)
 }
