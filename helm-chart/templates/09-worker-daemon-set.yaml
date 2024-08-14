@@ -162,9 +162,13 @@ spec:
             - /hostproc
           {{- if ne .Values.tap.packetCapture "ebpf" }}
             - -disable-ebpf
-          {{- end }}          
+          {{- end }}
           {{- if .Values.tap.debug }}
             - -debug
+          {{- end }}
+          {{- if .Values.tap.misc.profile }}
+            - -port
+            - '{{ add .Values.tap.proxy.worker.srvPort 1 }}'
           {{- end }}
         {{- if .Values.tap.docker.overrideTag.worker }}
           image: '{{ .Values.tap.docker.registry }}/worker:{{ .Values.tap.docker.overrideTag.worker }}'
@@ -182,6 +186,8 @@ spec:
             valueFrom:
               fieldRef:
                 fieldPath: metadata.namespace
+          - name: PROFILING_ENABLED
+            value: '{{ .Values.tap.misc.profile }}'
           resources:
             limits:
               cpu: {{ .Values.tap.resources.tracer.limits.cpu }}
