@@ -57,7 +57,7 @@ Escape double quotes in a string
 {{- end -}}
 
 {{/*
-Define debug docker tag prefix
+Define debug docker tag suffix
 */}}
 {{- define "kubeshark.dockerTagDebugVersion" -}}
 {{- .Values.tap.misc.profile | ternary "-debug" "" }}
