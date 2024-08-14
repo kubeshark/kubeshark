@@ -56,3 +56,9 @@ Escape double quotes in a string
   {{- regexReplaceAll "\"" . "\"" -}}
 {{- end -}}
 
+{{/*
+Define debug docker tag suffix
+*/}}
+{{- define "kubeshark.dockerTagDebugVersion" -}}
+{{- .Values.tap.misc.profile | ternary "-debug" "" }}
+{{- end -}}
