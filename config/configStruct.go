@@ -82,7 +82,7 @@ func CreateDefaultConfig() ConfigStruct {
 				"redis",
 				"sctp",
 				"syscall",
-				"tcp",
+				// "tcp",
 				"ws",
 			},
 		},
