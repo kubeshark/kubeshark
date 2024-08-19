@@ -37,7 +37,7 @@ const (
 )
 
 type ResourceLimits struct {
-	CPU    string `yaml:"cpu" json:"cpu" default:"750m"`
+	CPU    string `yaml:"cpu" json:"cpu" default:"1"`
 	Memory string `yaml:"memory" json:"memory" default:"1Gi"`
 }
 
@@ -172,7 +172,7 @@ type TapConfig struct {
 	PersistentStorage            bool                  `yaml:"persistentStorage" json:"persistentStorage" default:"false"`
 	PersistentStorageStatic      bool                  `yaml:"persistentStorageStatic" json:"persistentStorageStatic" default:"false"`
 	EfsFileSytemIdAndPath        string                `yaml:"efsFileSytemIdAndPath" json:"efsFileSytemIdAndPath" default:""`
-	StorageLimit                 string                `yaml:"storageLimit" json:"storageLimit" default:"500Mi"`
+	StorageLimit                 string                `yaml:"storageLimit" json:"storageLimit" default:"15Gi"`
 	StorageClass                 string                `yaml:"storageClass" json:"storageClass" default:"standard"`
 	DryRun                       bool                  `yaml:"dryRun" json:"dryRun" default:"false"`
 	Resources                    ResourcesConfig       `yaml:"resources" json:"resources"`
