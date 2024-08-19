@@ -36,19 +36,29 @@ const (
 	ContainerPortStr             = "80"
 )
 
-type ResourceLimits struct {
-	CPU    string `yaml:"cpu" json:"cpu" default:"750m"`
-	Memory string `yaml:"memory" json:"memory" default:"1Gi"`
+type ResourceLimitsHub struct {
+	CPU    string `yaml:"cpu" json:"cpu" default:"1000m"`
+	Memory string `yaml:"memory" json:"memory" default:"1500Mi"`
+}
+
+type ResourceLimitsWorker struct {
+	CPU    string `yaml:"cpu" json:"cpu" default:"1200m"`
+	Memory string `yaml:"memory" json:"memory" default:"2000Mi"`
 }
 
 type ResourceRequests struct {
-	CPU    string `yaml:"cpu" json:"cpu" default:"50m"`
-	Memory string `yaml:"memory" json:"memory" default:"50Mi"`
+	CPU    string `yaml:"cpu" json:"cpu" default:"300m"`
+	Memory string `yaml:"memory" json:"memory" default:"500Mi"`
 }
 
-type ResourceRequirements struct {
-	Limits   ResourceLimits   `yaml:"limits" json:"limits"`
-	Requests ResourceRequests `yaml:"requests" json:"requests"`
+type ResourceRequirementsHub struct {
+	Limits   ResourceLimitsHub `yaml:"limits" json:"limits"`
+	Requests ResourceRequests  `yaml:"requests" json:"requests"`
+}
+
+type ResourceRequirementsWorker struct {
+	Limits   ResourceLimitsHub `yaml:"limits" json:"limits"`
+	Requests ResourceRequests  `yaml:"requests" json:"requests"`
 }
 
 type WorkerConfig struct {
@@ -85,9 +95,9 @@ type DockerConfig struct {
 }
 
 type ResourcesConfig struct {
-	Hub     ResourceRequirements `yaml:"hub" json:"hub"`
-	Sniffer ResourceRequirements `yaml:"sniffer" json:"sniffer"`
-	Tracer  ResourceRequirements `yaml:"tracer" json:"tracer"`
+	Hub     ResourceRequirementsHub    `yaml:"hub" json:"hub"`
+	Sniffer ResourceRequirementsWorker `yaml:"sniffer" json:"sniffer"`
+	Tracer  ResourceRequirementsWorker `yaml:"tracer" json:"tracer"`
 }
 
 type Role struct {
@@ -172,7 +182,7 @@ type TapConfig struct {
 	PersistentStorage            bool                  `yaml:"persistentStorage" json:"persistentStorage" default:"false"`
 	PersistentStorageStatic      bool                  `yaml:"persistentStorageStatic" json:"persistentStorageStatic" default:"false"`
 	EfsFileSytemIdAndPath        string                `yaml:"efsFileSytemIdAndPath" json:"efsFileSytemIdAndPath" default:""`
-	StorageLimit                 string                `yaml:"storageLimit" json:"storageLimit" default:"500Mi"`
+	StorageLimit                 string                `yaml:"storageLimit" json:"storageLimit" default:"3000Mi"`
 	StorageClass                 string                `yaml:"storageClass" json:"storageClass" default:"standard"`
 	DryRun                       bool                  `yaml:"dryRun" json:"dryRun" default:"false"`
 	Resources                    ResourcesConfig       `yaml:"resources" json:"resources"`
