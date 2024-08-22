@@ -760,7 +760,7 @@ spec:
       containers:
         - env:
             - name: REACT_APP_DEFAULT_FILTER
-              value: ' '
+              value: '!dns and !tcp'
             - name: REACT_APP_AUTH_ENABLED
               value: 'true'
             - name: REACT_APP_AUTH_TYPE
