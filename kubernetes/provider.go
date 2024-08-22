@@ -247,6 +247,19 @@ func (provider *Provider) GetNamespaces() (namespaces []string) {
 	return
 }
 
+func (provider *Provider) GetWorkerPods() (pods []*core.Pod, err error) {
+	var podList *core.PodList
+	podList, err = provider.clientSet.CoreV1().Pods(config.Config.Tap.Release.Namespace).List(context.TODO(), metav1.ListOptions{})
+	if err != nil {
+		return
+	}
+
+	for _, v := range podList.Items {
+		pods = append(pods, &v)
+	}
+	return
+}
+
 func getClientSet(config *rest.Config) (*kubernetes.Clientset, error) {
 	clientSet, err := kubernetes.NewForConfig(config)
 	if err != nil {
