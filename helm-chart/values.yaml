@@ -95,7 +95,7 @@ tap:
     unloadOnDestroy: false
   telemetry:
     enabled: true
-  defaultFilter: ""
+  defaultFilter: "!dns and !tcp"
   scriptingDisabled: false
   targetedPodsUpdateDisabled: false
   recordingDisabled: false
