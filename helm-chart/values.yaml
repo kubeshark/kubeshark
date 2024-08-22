@@ -34,15 +34,15 @@ tap:
   resources:
     hub:
       limits:
-        cpu: 1000m
-        memory: 1500Mi
+        cpu: 2000m
+        memory: 2000Mi
       requests:
         cpu: 300m
         memory: 500Mi
     sniffer:
       limits:
-        cpu: 1000m
-        memory: 1500Mi
+        cpu: 2000m
+        memory: 2000Mi
       requests:
         cpu: 300m
         memory: 500Mi
