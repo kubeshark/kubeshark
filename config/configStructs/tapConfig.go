@@ -199,7 +199,7 @@ type TapConfig struct {
 	Debug                        bool                  `yaml:"debug" json:"debug" default:"false"`
 	KernelModule                 KernelModuleConfig    `yaml:"kernelModule" json:"kernelModule"`
 	Telemetry                    TelemetryConfig       `yaml:"telemetry" json:"telemetry"`
-	DefaultFilter                string                `yaml:"defaultFilter" json:"defaultFilter"`
+	DefaultFilter                string                `yaml:"defaultFilter" json:"defaultFilter" default:"!dns and !tcp"`
 	ScriptingDisabled            bool                  `yaml:"scriptingDisabled" json:"scriptingDisabled" default:"false"`
 	TargetedPodsUpdateDisabled   bool                  `yaml:"targetedPodsUpdateDisabled" json:"targetedPodsUpdateDisabled" default:"false"`
 	RecordingDisabled            bool                  `yaml:"recordingDisabled" json:"recordingDisabled" default:"false"`
