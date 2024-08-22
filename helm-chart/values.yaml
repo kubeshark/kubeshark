@@ -125,6 +125,7 @@ tap:
   - redis
   - sctp
   - syscall
+  - tcp
   - ws
   metrics:
     port: 49100
