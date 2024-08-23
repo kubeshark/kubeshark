@@ -90,6 +90,9 @@ spec:
             valueFrom:
               fieldRef:
                 fieldPath: metadata.namespace
+            envFrom:
+            - configMapRef:
+                name: kubeshark-config-map
           - name: TCP_STREAM_CHANNEL_TIMEOUT_MS
             value: '{{ .Values.tap.misc.tcpStreamChannelTimeoutMs }}'
           - name: TCP_STREAM_CHANNEL_TIMEOUT_SHOW
