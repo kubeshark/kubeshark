@@ -168,6 +168,7 @@ type MiscConfig struct {
 	ResolutionStrategy          string `yaml:"resolutionStrategy" json:"resolutionStrategy" default:"auto"`
 	Profile                     bool   `yaml:"profile" json:"profile" default:"false"`
 	DuplicateTimeframe          string `yaml:"duplicateTimeframe" json:"duplicateTimeframe" default:"200ms"`
+	DetectDuplicates            bool   `yaml:"detectDuplicates" json:"detectDuplicates" default:"false"`
 }
 
 type TapConfig struct {

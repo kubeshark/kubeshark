@@ -139,6 +139,7 @@ tap:
     resolutionStrategy: auto
     profile: false
     duplicateTimeframe: 200ms
+    detectDuplicates: false
 logs:
   file: ""
   grep: ""
