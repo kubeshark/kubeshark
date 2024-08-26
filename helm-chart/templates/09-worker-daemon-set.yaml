@@ -81,6 +81,9 @@ spec:
             - containerPort: {{ .Values.tap.metrics.port }}
               protocol: TCP
               name: metrics
+          envFrom:
+          - configMapRef:
+              name: kubeshark-config-map
           env:
           - name: POD_NAME
             valueFrom:
@@ -90,9 +93,6 @@ spec:
             valueFrom:
               fieldRef:
                 fieldPath: metadata.namespace
-          envFrom:
-          - configMapRef:
-              name: kubeshark-config-map
           - name: TCP_STREAM_CHANNEL_TIMEOUT_MS
             value: '{{ .Values.tap.misc.tcpStreamChannelTimeoutMs }}'
           - name: TCP_STREAM_CHANNEL_TIMEOUT_SHOW
