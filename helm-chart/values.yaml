@@ -28,31 +28,31 @@ tap:
   persistentStorage: false
   persistentStorageStatic: false
   efsFileSytemIdAndPath: ""
-  storageLimit: 3000Mi
+  storageLimit: 5000Mi
   storageClass: standard
   dryRun: false
   resources:
     hub:
       limits:
-        cpu: 2000m
-        memory: 2000Mi
+        cpu: 1000m
+        memory: 1500Mi
       requests:
-        cpu: 300m
-        memory: 500Mi
+        cpu: 50m
+        memory: 50Mi
     sniffer:
       limits:
-        cpu: 2000m
-        memory: 2000Mi
+        cpu: 1000m
+        memory: 1500Mi
       requests:
-        cpu: 300m
-        memory: 500Mi
+        cpu: 50m
+        memory: 50Mi
     tracer:
       limits:
         cpu: 1000m
         memory: 1500Mi
       requests:
-        cpu: 300m
-        memory: 500Mi
+        cpu: 50m
+        memory: 50Mi
   serviceMesh: true
   tls: true
   packetCapture: best
