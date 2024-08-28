@@ -166,6 +166,9 @@ spec:
           {{- if .Values.tap.debug }}
             - -debug
           {{- end }}
+          {{- if .Values.tap.disableTlsLog }}
+            - -disable-tls-log
+          {{- end }}
           {{- if .Values.tap.misc.profile }}
             - -port
             - '{{ add .Values.tap.proxy.worker.srvPort 1 }}'

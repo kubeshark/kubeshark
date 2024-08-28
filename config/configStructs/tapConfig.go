@@ -189,6 +189,7 @@ type TapConfig struct {
 	Resources                    ResourcesConfig       `yaml:"resources" json:"resources"`
 	ServiceMesh                  bool                  `yaml:"serviceMesh" json:"serviceMesh" default:"true"`
 	Tls                          bool                  `yaml:"tls" json:"tls" default:"true"`
+	DisableTlsLog                bool                  `yaml:"disableTlsLog" json:"disableTlsLog" default:"false"`
 	PacketCapture                string                `yaml:"packetCapture" json:"packetCapture" default:"best"`
 	IgnoreTainted                bool                  `yaml:"ignoreTainted" json:"ignoreTainted" default:"false"`
 	Labels                       map[string]string     `yaml:"labels" json:"labels" default:"{}"`
