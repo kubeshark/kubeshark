@@ -109,6 +109,7 @@ type ConfigStruct struct {
 	CloudLicenseEnabled  bool                          `yaml:"cloudLicenseEnabled" json:"cloudLicenseEnabled" default:"true"`
 	SupportChatEnabled   bool                          `yaml:"supportChatEnabled" json:"supportChatEnabled" default:"true"`
 	InternetConnectivity bool                          `yaml:"internetConnectivity" json:"internetConnectivity" default:"true"`
+	DissectorsUiEnabled  bool                          `yaml:"dissectorsUiEnabled" json:"dissectorsUiEnabled" default:"true"`
 	Scripting            configStructs.ScriptingConfig `yaml:"scripting" json:"scripting"`
 	Manifests            ManifestsConfig               `yaml:"manifests,omitempty" json:"manifests,omitempty"`
 	Timezone             string                        `yaml:"timezone" json:"timezone"`

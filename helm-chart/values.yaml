@@ -152,6 +152,7 @@ license: ""
 cloudLicenseEnabled: true
 supportChatEnabled: true
 internetConnectivity: true
+dissectorsUiEnabled: true
 scripting:
   env: {}
   source: ""
