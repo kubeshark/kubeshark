@@ -60,6 +60,8 @@ spec:
                       {{- end }}'
             - name: REACT_APP_SUPPORT_CHAT_ENABLED
               value: '{{ and .Values.supportChatEnabled .Values.internetConnectivity | ternary "true" "false" }}'
+            - name: REACT_APP_DISSECTORS_UPDATING_ENABLED
+              value: '{{ .Values.dissectorsUpdatingEnabled | ternary "true" "false" }}'
         {{- if .Values.tap.docker.overrideTag.front }}
           image: '{{ .Values.tap.docker.registry }}/front:{{ .Values.tap.docker.overrideTag.front }}'
         {{ else }}
