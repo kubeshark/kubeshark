@@ -188,7 +188,7 @@ Please refer to [metrics](./metrics.md) documentation for details.
 | `timezone`                                | IANA time zone applied to time shown in the front-end | `""` (local time zone applies) |
 | `supportChatEnabled`                      | Enable real-time support chat channel based on Intercom | `true` |
 | `internetConnectivity`                    | Turns off API requests that are dependant on Internet connectivity such as `telemetry` and `online-support`. | `true` |
-| `dissectorsUiEnabled`                     | Turns off UI for enabling/disabling dissectors | `true` |
+| `dissectorsUpdatingEnabled`                     | Turns off UI for enabling/disabling dissectors | `true` |
 
 KernelMapping pairs kernel versions with a
                             DriverContainer image. Kernel versions can be matched
