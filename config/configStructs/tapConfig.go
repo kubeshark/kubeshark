@@ -89,6 +89,7 @@ type OverrideTagConfig struct {
 type DockerConfig struct {
 	Registry         string            `yaml:"registry" json:"registry" default:"docker.io/kubeshark"`
 	Tag              string            `yaml:"tag" json:"tag" default:""`
+	TagLocked        bool              `yaml:"tagLocked" json:"tagLocked" default:"true"`
 	ImagePullPolicy  string            `yaml:"imagePullPolicy" json:"imagePullPolicy" default:"Always"`
 	ImagePullSecrets []string          `yaml:"imagePullSecrets" json:"imagePullSecrets"`
 	OverrideTag      OverrideTagConfig `yaml:"overrideTag" json:"overrideTag"`

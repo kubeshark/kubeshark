@@ -117,6 +117,7 @@ Please refer to [metrics](./metrics.md) documentation for details.
 |-------------------------------------------|-----------------------------------------------|---------------------------------------------------------|
 | `tap.docker.registry`                     | Docker registry to pull from                           | `docker.io/kubeshark`                                   |
 | `tap.docker.tag`                          | Tag of the Docker images                              | `latest`                                                |
+| `tap.docker.tagLocked`                    | If `false` - use latest minor tag             | `true`                                                  |
 | `tap.docker.imagePullPolicy`              | Kubernetes image pull policy                  | `Always`                                                |
 | `tap.docker.imagePullSecrets`             | Kubernetes secrets to pull the images      | `[]`                                                    |
 | `tap.proxy.worker.srvPort`                | Worker server port                           | `30001`                                                  |
