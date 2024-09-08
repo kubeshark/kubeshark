@@ -30,6 +30,12 @@ spec:
       - name: load-pf-ring
         image: {{ .Values.tap.kernelModule.image }}
         imagePullPolicy: {{ .Values.tap.docker.imagePullPolicy }}
+      {{- if .Values.tap.docker.imagePullSecrets }}
+        imagePullSecrets:
+          {{- range .Values.tap.docker.imagePullSecrets }}
+          - name: {{ . }}
+          {{- end }}
+      {{- end }}
         securityContext:
           capabilities:
             add:
@@ -76,6 +82,12 @@ spec:
           image: '{{ .Values.tap.docker.registry }}/worker:{{ not (eq .Values.tap.docker.tag "") | ternary .Values.tap.docker.tag (printf "v%s" .Chart.Version) }}{{ include "kubeshark.dockerTagDebugVersion" . }}'
         {{- end }}
           imagePullPolicy: {{ .Values.tap.docker.imagePullPolicy }}
+        {{- if .Values.tap.docker.imagePullSecrets }}
+          imagePullSecrets:
+            {{- range .Values.tap.docker.imagePullSecrets }}
+            - name: {{ . }}
+            {{- end }}
+        {{- end }}
           name: sniffer
           ports:
             - containerPort: {{ .Values.tap.metrics.port }}
@@ -179,6 +191,12 @@ spec:
           image: '{{ .Values.tap.docker.registry }}/worker:{{ not (eq .Values.tap.docker.tag "") | ternary .Values.tap.docker.tag (printf "v%s" .Chart.Version) }}{{ include "kubeshark.dockerTagDebugVersion" . }}'
         {{- end }}
           imagePullPolicy: {{ .Values.tap.docker.imagePullPolicy }}
+        {{- if .Values.tap.docker.imagePullSecrets }}
+          imagePullSecrets:
+            {{- range .Values.tap.docker.imagePullSecrets }}
+            - name: {{ . }}
+            {{- end }}
+        {{- end }}
           name: tracer
           env:
           - name: POD_NAME
