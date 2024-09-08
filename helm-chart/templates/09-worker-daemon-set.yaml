@@ -97,7 +97,7 @@ spec:
           - name: KUBESHARK_CLOUD_API_URL
             value: 'https://api.kubeshark.co'
           - name: PROFILING_ENABLED
-            value: '{{ .Values.tap.misc.profile }}'
+            value: '{{ .Values.tap.pprof.enabled }}'
           resources:
             limits:
               cpu: {{ .Values.tap.resources.sniffer.limits.cpu }}
@@ -169,7 +169,7 @@ spec:
           {{- if .Values.tap.disableTlsLog }}
             - -disable-tls-log
           {{- end }}
-          {{- if .Values.tap.misc.profile }}
+          {{- if .Values.tap.pprof.enabled }}
             - -port
             - '{{ add .Values.tap.proxy.worker.srvPort 1 }}'
           {{- end }}
@@ -190,7 +190,7 @@ spec:
               fieldRef:
                 fieldPath: metadata.namespace
           - name: PROFILING_ENABLED
-            value: '{{ .Values.tap.misc.profile }}'
+            value: '{{ .Values.tap.pprof.enabled }}'
           resources:
             limits:
               cpu: {{ .Values.tap.resources.tracer.limits.cpu }}
