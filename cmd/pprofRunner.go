@@ -24,7 +24,7 @@ func runPprof() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	hubPods, err := provider.ListPodsByAppLabel(ctx, config.Config.Tap.Release.Namespace, map[string]string{"app.kubeshark.co/app": "hub"})
+	hubPods, err := provider.ListPodsByAppLabel(ctx, config.Config.Tap.Release.Namespace, map[string]string{kubernetes.AppLabelKey: "hub"})
 	if err != nil {
 		log.Error().
 			Err(err).
@@ -33,7 +33,7 @@ func runPprof() {
 		return
 	}
 
-	workerPods, err := provider.ListPodsByAppLabel(ctx, config.Config.Tap.Release.Namespace, map[string]string{"app.kubeshark.co/app": "worker"})
+	workerPods, err := provider.ListPodsByAppLabel(ctx, config.Config.Tap.Release.Namespace, map[string]string{kubernetes.AppLabelKey: "worker"})
 	if err != nil {
 		log.Error().
 			Err(err).
