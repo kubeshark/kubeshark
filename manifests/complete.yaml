@@ -250,6 +250,7 @@ data:
     CLOUD_LICENSE_ENABLED: 'true'
     DUPLICATE_TIMEFRAME: '200ms'
     ENABLED_DISSECTORS: 'amqp,dns,http,icmp,kafka,redis,sctp,syscall,tcp,ws'
+    DISSECTORS_UPDATING_ENABLED: 'true'
     DETECT_DUPLICATES: 'false'
 ---
 # Source: kubeshark/templates/02-cluster-role.yaml
@@ -669,7 +670,7 @@ spec:
       dnsPolicy: ClusterFirstWithHostNet
       serviceAccountName: kubeshark-service-account
       containers:
-        - name: kubeshark-hub
+        - name: hub
           command:
             - ./hub
             - -port
@@ -685,6 +686,8 @@ spec:
                 fieldPath: metadata.namespace
           - name: KUBESHARK_CLOUD_API_URL
             value: 'https://api.kubeshark.co'
+          - name: PROFILING_ENABLED
+            value: 'false'
           image: 'docker.io/kubeshark/hub:v52.3.79'
           imagePullPolicy: Always
           readinessProbe:
@@ -783,6 +786,8 @@ spec:
             - name: 'REACT_APP_CLOUD_LICENSE_ENABLED'
               value: 'true'
             - name: REACT_APP_SUPPORT_CHAT_ENABLED
+              value: 'true'
+            - name: REACT_APP_DISSECTORS_UPDATING_ENABLED
               value: 'true'
           image: 'docker.io/kubeshark/front:v52.3.79'
           imagePullPolicy: Always
