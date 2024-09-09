@@ -70,6 +70,7 @@ func InitConfig(cmd *cobra.Command) error {
 		"pro",
 		"proxy",
 		"scripts",
+		"pprof",
 	}, cmdName) {
 		cmdName = "tap"
 	}

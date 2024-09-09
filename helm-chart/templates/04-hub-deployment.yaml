@@ -26,7 +26,7 @@ spec:
       dnsPolicy: ClusterFirstWithHostNet
       serviceAccountName: {{ include "kubeshark.serviceAccountName" . }}
       containers:
-        - name: kubeshark-hub
+        - name: hub
           command:
             - ./hub
             - -port
@@ -50,11 +50,11 @@ spec:
           - name: KUBESHARK_CLOUD_API_URL
             value: 'https://api.kubeshark.co'
           - name: PROFILING_ENABLED
-            value: '{{ .Values.tap.misc.profile }}'
+            value: '{{ .Values.tap.pprof.enabled }}'
         {{- if .Values.tap.docker.overrideTag.hub }}
           image: '{{ .Values.tap.docker.registry }}/hub:{{ .Values.tap.docker.overrideTag.hub }}'
         {{ else }}
-          image: '{{ .Values.tap.docker.registry }}/hub:{{ not (eq .Values.tap.docker.tag "") | ternary .Values.tap.docker.tag (printf "v%s" .Chart.Version) }}'
+          image: '{{ .Values.tap.docker.registry }}/hub:{{ not (eq .Values.tap.docker.tag "") | ternary .Values.tap.docker.tag (include "kubeshark.defaultVersion" .) }}'
         {{- end }}
           imagePullPolicy: {{ .Values.tap.docker.imagePullPolicy }}
           readinessProbe:

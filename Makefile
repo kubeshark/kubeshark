@@ -165,7 +165,7 @@ helm-install-debug:
 	cd helm-chart && helm install kubeshark . --set tap.docker.tag=$(TAG) --set tap.debug=true && cd ..
 
 helm-install-profile:
-	cd helm-chart && helm install kubeshark . --set tap.docker.tag=$(TAG) --set tap.misc.profile=true && cd ..
+	cd helm-chart && helm install kubeshark . --set tap.docker.tag=$(TAG) --set tap.pprof.enabled=true && cd ..
 
 helm-uninstall:
 	helm uninstall kubeshark

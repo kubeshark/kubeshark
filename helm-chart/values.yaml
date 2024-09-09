@@ -2,6 +2,7 @@ tap:
   docker:
     registry: docker.io/kubeshark
     tag: ""
+    tagLocked: true
     imagePullPolicy: Always
     imagePullSecrets: []
     overrideTag:
@@ -133,6 +134,10 @@ tap:
   - ws
   metrics:
     port: 49100
+  pprof:
+    enabled: false
+    port: 8000
+    view: flamegraph
   misc:
     jsonTTL: 5m
     pcapTTL: 10s
@@ -141,7 +146,6 @@ tap:
     tcpStreamChannelTimeoutMs: 10000
     tcpStreamChannelTimeoutShow: false
     resolutionStrategy: auto
-    profile: false
     duplicateTimeframe: 200ms
     detectDuplicates: false
 logs:

@@ -31,6 +31,8 @@ const (
 	IgnoreTaintedLabel           = "ignoreTainted"
 	IngressEnabledLabel          = "ingress-enabled"
 	TelemetryEnabledLabel        = "telemetry-enabled"
+	PprofPortLabel               = "pprof-port"
+	PprofViewLabel               = "pprof-view"
 	DebugLabel                   = "debug"
 	ContainerPort                = 80
 	ContainerPortStr             = "80"
@@ -89,6 +91,7 @@ type OverrideTagConfig struct {
 type DockerConfig struct {
 	Registry         string            `yaml:"registry" json:"registry" default:"docker.io/kubeshark"`
 	Tag              string            `yaml:"tag" json:"tag" default:""`
+	TagLocked        bool              `yaml:"tagLocked" json:"tagLocked" default:"true"`
 	ImagePullPolicy  string            `yaml:"imagePullPolicy" json:"imagePullPolicy" default:"Always"`
 	ImagePullSecrets []string          `yaml:"imagePullSecrets" json:"imagePullSecrets"`
 	OverrideTag      OverrideTagConfig `yaml:"overrideTag" json:"overrideTag"`
@@ -163,6 +166,12 @@ type MetricsConfig struct {
 	Port uint16 `yaml:"port" json:"port" default:"49100"`
 }
 
+type PprofConfig struct {
+	Enabled bool   `yaml:"enabled" json:"enabled" default:"false"`
+	Port    uint16 `yaml:"port" json:"port" default:"8000"`
+	View    string `yaml:"view" json:"view" default:"flamegraph"`
+}
+
 type MiscConfig struct {
 	JsonTTL                     string `yaml:"jsonTTL" json:"jsonTTL" default:"5m"`
 	PcapTTL                     string `yaml:"pcapTTL" json:"pcapTTL" default:"10s"`
@@ -171,7 +180,6 @@ type MiscConfig struct {
 	TcpStreamChannelTimeoutMs   int    `yaml:"tcpStreamChannelTimeoutMs" json:"tcpStreamChannelTimeoutMs" default:"10000"`
 	TcpStreamChannelTimeoutShow bool   `yaml:"tcpStreamChannelTimeoutShow" json:"tcpStreamChannelTimeoutShow" default:"false"`
 	ResolutionStrategy          string `yaml:"resolutionStrategy" json:"resolutionStrategy" default:"auto"`
-	Profile                     bool   `yaml:"profile" json:"profile" default:"false"`
 	DuplicateTimeframe          string `yaml:"duplicateTimeframe" json:"duplicateTimeframe" default:"200ms"`
 	DetectDuplicates            bool   `yaml:"detectDuplicates" json:"detectDuplicates" default:"false"`
 }
@@ -216,6 +224,7 @@ type TapConfig struct {
 	GlobalFilter                 string                `yaml:"globalFilter" json:"globalFilter"`
 	EnabledDissectors            []string              `yaml:"enabledDissectors" json:"enabledDissectors"`
 	Metrics                      MetricsConfig         `yaml:"metrics" json:"metrics"`
+	Pprof                        PprofConfig           `yaml:"pprof" json:"pprof"`
 	Misc                         MiscConfig            `yaml:"misc" json:"misc"`
 }
 
