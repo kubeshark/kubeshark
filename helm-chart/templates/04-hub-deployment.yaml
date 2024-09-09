@@ -50,7 +50,7 @@ spec:
         {{- if .Values.tap.docker.overrideTag.hub }}
           image: '{{ .Values.tap.docker.registry }}/hub:{{ .Values.tap.docker.overrideTag.hub }}'
         {{ else }}
-          image: '{{ .Values.tap.docker.registry }}/hub:{{ not (eq .Values.tap.docker.tag "") | ternary .Values.tap.docker.tag (printf "v%s" .Chart.Version) }}'
+          image: '{{ .Values.tap.docker.registry }}/hub:{{ not (eq .Values.tap.docker.tag "") | ternary .Values.tap.docker.tag (include "kubeshark.defaultVersion" .) }}'
         {{- end }}
           imagePullPolicy: {{ .Values.tap.docker.imagePullPolicy }}
           readinessProbe:

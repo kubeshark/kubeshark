@@ -2,6 +2,7 @@ tap:
   docker:
     registry: docker.io/kubeshark
     tag: ""
+    tagLocked: true
     imagePullPolicy: Always
     imagePullSecrets: []
     overrideTag:

@@ -62,3 +62,14 @@ Define debug docker tag suffix
 {{- define "kubeshark.dockerTagDebugVersion" -}}
 {{- .Values.tap.pprof.enabled | ternary "-debug" "" }}
 {{- end -}}
+
+{{/*
+Create docker tag default version
+*/}}
+{{- define "kubeshark.defaultVersion" -}}
+{{- $defaultVersion := (printf "v%s" .Chart.Version) -}}
+{{- if not .Values.tap.docker.tagLocked }}
+  {{- $defaultVersion = regexReplaceAll "^([^.]+\\.[^.]+).*" $defaultVersion "$1" -}}
+{{- end }}
+{{- $defaultVersion }}
+{{- end -}}
