@@ -141,6 +141,11 @@ type TelemetryConfig struct {
 	Enabled bool `yaml:"enabled" json:"enabled" default:"true"`
 }
 
+type SentryConfig struct {
+	Enabled     bool   `yaml:"enabled" json:"enabled" default:"false"`
+	Environment string `yaml:"environment" json:"environment" default:"production"`
+}
+
 type CapabilitiesConfig struct {
 	NetworkCapture     []string `yaml:"networkCapture" json:"networkCapture"  default:"[]"`
 	ServiceMeshCapture []string `yaml:"serviceMeshCapture" json:"serviceMeshCapture"  default:"[]"`
@@ -201,6 +206,7 @@ type TapConfig struct {
 	Debug                        bool                  `yaml:"debug" json:"debug" default:"false"`
 	KernelModule                 KernelModuleConfig    `yaml:"kernelModule" json:"kernelModule"`
 	Telemetry                    TelemetryConfig       `yaml:"telemetry" json:"telemetry"`
+	Sentry                       SentryConfig          `yaml:"sentry" json:"sentry"`
 	DefaultFilter                string                `yaml:"defaultFilter" json:"defaultFilter" default:"!dns and !tcp"`
 	ScriptingDisabled            bool                  `yaml:"scriptingDisabled" json:"scriptingDisabled" default:"false"`
 	TargetedPodsUpdateDisabled   bool                  `yaml:"targetedPodsUpdateDisabled" json:"targetedPodsUpdateDisabled" default:"false"`
