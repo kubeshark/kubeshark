@@ -45,6 +45,8 @@ spec:
                 fieldPath: metadata.namespace
           - name: KUBESHARK_CLOUD_API_URL
             value: 'https://api.kubeshark.co'
+          - name: PROFILING_ENABLED
+            value: '{{ .Values.tap.misc.profile }}'
         {{- if .Values.tap.docker.overrideTag.hub }}
           image: '{{ .Values.tap.docker.registry }}/hub:{{ .Values.tap.docker.overrideTag.hub }}'
         {{ else }}
