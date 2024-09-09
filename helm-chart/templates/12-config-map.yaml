@@ -49,4 +49,5 @@ data:
     ENABLED_DISSECTORS: '{{ gt (len .Values.tap.enabledDissectors) 0 | ternary (join "," .Values.tap.enabledDissectors) "" }}'
     DISSECTORS_UPDATING_ENABLED: '{{ .Values.dissectorsUpdatingEnabled | ternary "true" "false" }}'
     DETECT_DUPLICATES: '{{ .Values.tap.misc.detectDuplicates | ternary "true" "false" }}'
+    SENTRY_ENABLED: '{{ .Values.sentryEnabled | ternary "true" "false" }}'
 
