@@ -191,6 +191,10 @@ spec:
                 fieldPath: metadata.namespace
           - name: PROFILING_ENABLED
             value: '{{ .Values.tap.pprof.enabled }}'
+          - name: SENTRY_ENABLED
+            value: '{{ .Values.tap.sentry.enabled }}'
+          - name: SENTRY_ENVIRONMENT
+            value: '{{ .Values.tap.sentry.environment }}'
           resources:
             limits:
               cpu: {{ .Values.tap.resources.tracer.limits.cpu }}

@@ -97,6 +97,9 @@ tap:
     unloadOnDestroy: false
   telemetry:
     enabled: true
+  sentry:
+    enabled: false
+    environment: production
   defaultFilter: "!dns and !tcp"
   scriptingDisabled: false
   targetedPodsUpdateDisabled: false
