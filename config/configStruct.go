@@ -108,6 +108,7 @@ type ConfigStruct struct {
 	License                   string                        `yaml:"license" json:"license" default:""`
 	CloudLicenseEnabled       bool                          `yaml:"cloudLicenseEnabled" json:"cloudLicenseEnabled" default:"true"`
 	SupportChatEnabled        bool                          `yaml:"supportChatEnabled" json:"supportChatEnabled" default:"true"`
+	SentryEnabled             bool                          `yaml:"sentryEnabled" json:"sentryEnabled" default:"true"`
 	InternetConnectivity      bool                          `yaml:"internetConnectivity" json:"internetConnectivity" default:"true"`
 	DissectorsUpdatingEnabled bool                          `yaml:"dissectorsUpdatingEnabled" json:"dissectorsUpdatingEnabled" default:"true"`
 	Scripting                 configStructs.ScriptingConfig `yaml:"scripting" json:"scripting"`

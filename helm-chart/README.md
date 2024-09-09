@@ -187,6 +187,7 @@ Please refer to [metrics](./metrics.md) documentation for details.
 | `scripting.watchScripts`                  | Enable watch mode for the scripts in source directory          | `true`                                                  |
 | `timezone`                                | IANA time zone applied to time shown in the front-end | `""` (local time zone applies) |
 | `supportChatEnabled`                      | Enable real-time support chat channel based on Intercom | `true` |
+| `sentryEnabled`                           | Enable real-time error tracking - helps our team analyze Kubeshark errors | `true` |
 | `internetConnectivity`                    | Turns off API requests that are dependant on Internet connectivity such as `telemetry` and `online-support`. | `true` |
 | `dissectorsUpdatingEnabled`                     | Turns off UI for enabling/disabling dissectors | `true` |
 
