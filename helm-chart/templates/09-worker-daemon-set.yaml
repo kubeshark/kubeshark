@@ -98,6 +98,10 @@ spec:
             value: 'https://api.kubeshark.co'
           - name: PROFILING_ENABLED
             value: '{{ .Values.tap.misc.profile }}'
+          - name: SENTRY_ENABLED
+            value: '{{ .Values.tap.sentry.enabled }}'
+          - name: SENTRY_ENVIRONMENT
+            value: '{{ .Values.tap.sentry.environment }}'
           resources:
             limits:
               cpu: {{ .Values.tap.resources.sniffer.limits.cpu }}
@@ -191,6 +195,10 @@ spec:
                 fieldPath: metadata.namespace
           - name: PROFILING_ENABLED
             value: '{{ .Values.tap.misc.profile }}'
+          - name: SENTRY_ENABLED
+            value: '{{ .Values.tap.sentry.enabled }}'
+          - name: SENTRY_ENVIRONMENT
+            value: '{{ .Values.tap.sentry.environment }}'
           resources:
             limits:
               cpu: {{ .Values.tap.resources.tracer.limits.cpu }}
