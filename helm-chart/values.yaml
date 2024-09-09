@@ -2,6 +2,7 @@ tap:
   docker:
     registry: docker.io/kubeshark
     tag: ""
+    tagLocked: true
     imagePullPolicy: Always
     imagePullSecrets: []
     overrideTag:
@@ -55,6 +56,7 @@ tap:
         memory: 50Mi
   serviceMesh: true
   tls: true
+  disableTlsLog: false
   packetCapture: best
   ignoreTainted: false
   labels: {}
