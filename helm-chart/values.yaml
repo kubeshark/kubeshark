@@ -55,6 +55,7 @@ tap:
         memory: 50Mi
   serviceMesh: true
   tls: true
+  disableTlsLog: false
   packetCapture: best
   ignoreTainted: false
   labels: {}
@@ -95,6 +96,9 @@ tap:
     unloadOnDestroy: false
   telemetry:
     enabled: true
+  sentry:
+    enabled: false
+    environment: production
   defaultFilter: "!dns and !tcp"
   scriptingDisabled: false
   targetedPodsUpdateDisabled: false
