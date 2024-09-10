@@ -72,6 +72,12 @@ spec:
           image: '{{ .Values.tap.docker.registry }}/front:{{ not (eq .Values.tap.docker.tag "") | ternary .Values.tap.docker.tag (include "kubeshark.defaultVersion" .) }}'
         {{- end }}
           imagePullPolicy: {{ .Values.tap.docker.imagePullPolicy }}
+        {{- if .Values.tap.docker.imagePullSecrets }}
+          imagePullSecrets:
+            {{- range .Values.tap.docker.imagePullSecrets }}
+            - name: {{ . }}
+            {{- end }}
+        {{- end }}
           name: kubeshark-front
           livenessProbe:
             periodSeconds: 1
