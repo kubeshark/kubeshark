@@ -62,10 +62,14 @@ spec:
               value: '{{ and .Values.supportChatEnabled .Values.internetConnectivity | ternary "true" "false" }}'
             - name: REACT_APP_DISSECTORS_UPDATING_ENABLED
               value: '{{ .Values.dissectorsUpdatingEnabled | ternary "true" "false" }}'
+            - name: REACT_APP_SENTRY_ENABLED
+              value: '{{ .Values.tap.sentry.enabled }}'
+            - name: REACT_APP_SENTRY_ENVIRONMENT
+              value: '{{ .Values.tap.sentry.environment }}'
         {{- if .Values.tap.docker.overrideTag.front }}
           image: '{{ .Values.tap.docker.registry }}/front:{{ .Values.tap.docker.overrideTag.front }}'
         {{ else }}
-          image: '{{ .Values.tap.docker.registry }}/front:{{ not (eq .Values.tap.docker.tag "") | ternary .Values.tap.docker.tag (printf "v%s" .Chart.Version) }}'
+          image: '{{ .Values.tap.docker.registry }}/front:{{ not (eq .Values.tap.docker.tag "") | ternary .Values.tap.docker.tag (include "kubeshark.defaultVersion" .) }}'
         {{- end }}
           imagePullPolicy: {{ .Values.tap.docker.imagePullPolicy }}
         {{- if .Values.tap.docker.imagePullSecrets }}

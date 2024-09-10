@@ -2,6 +2,7 @@ tap:
   docker:
     registry: docker.io/kubeshark
     tag: ""
+    tagLocked: true
     imagePullPolicy: Always
     imagePullSecrets: []
     overrideTag:
@@ -55,6 +56,7 @@ tap:
         memory: 50Mi
   serviceMesh: true
   tls: true
+  disableTlsLog: false
   packetCapture: best
   ignoreTainted: false
   labels: {}
@@ -95,6 +97,9 @@ tap:
     unloadOnDestroy: false
   telemetry:
     enabled: true
+  sentry:
+    enabled: false
+    environment: production
   defaultFilter: "!dns and !tcp"
   scriptingDisabled: false
   targetedPodsUpdateDisabled: false
@@ -129,6 +134,10 @@ tap:
   - ws
   metrics:
     port: 49100
+  pprof:
+    enabled: false
+    port: 8000
+    view: flamegraph
   misc:
     jsonTTL: 5m
     pcapTTL: 10s
@@ -137,7 +146,6 @@ tap:
     tcpStreamChannelTimeoutMs: 10000
     tcpStreamChannelTimeoutShow: false
     resolutionStrategy: auto
-    profile: false
     duplicateTimeframe: 200ms
     detectDuplicates: false
 logs:

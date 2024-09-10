@@ -8,4 +8,5 @@ const (
 	HubServiceName             = HubPodName
 	K8sAllNamespaces           = ""
 	MinKubernetesServerVersion = "1.16.0"
+	AppLabelKey                = "app.kubeshark.co/app"
 )

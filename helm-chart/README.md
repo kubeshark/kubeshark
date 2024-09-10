@@ -117,6 +117,7 @@ Please refer to [metrics](./metrics.md) documentation for details.
 |-------------------------------------------|-----------------------------------------------|---------------------------------------------------------|
 | `tap.docker.registry`                     | Docker registry to pull from                           | `docker.io/kubeshark`                                   |
 | `tap.docker.tag`                          | Tag of the Docker images                              | `latest`                                                |
+| `tap.docker.tagLocked`                    | If `false` - use latest minor tag             | `true`                                                  |
 | `tap.docker.imagePullPolicy`              | Kubernetes image pull policy                  | `Always`                                                |
 | `tap.docker.imagePullSecrets`             | Kubernetes secrets to pull the images      | `[]`                                                    |
 | `tap.proxy.worker.srvPort`                | Worker server port                           | `30001`                                                  |
@@ -171,6 +172,8 @@ Please refer to [metrics](./metrics.md) documentation for details.
 | `tap.kernelModule.image`                  | Container image containing PF_RING kernel module with supported kernel version([details](PF_RING.md))      | "kubeshark/pf-ring-module:all"                                                 |
 | `tap.kernelModule.unloadOnDestroy`        | Create additional container which watches for pod termination and unloads PF_RING kernel module. | `false`|
 | `tap.telemetry.enabled`                   | Enable anonymous usage statistics collection           | `true`                                                  |
+| `tap.sentry.enabled`                      | Enable sending of error logs to Sentry          | `false`                                                  |
+| `tap.sentry.environment`                      | Sentry environment to label error logs with      | `production`                                                  |
 | `tap.defaultFilter`                       | Sets the default dashboard KFL filter (e.g. `http`). By default, this value is set to filter out DNS  and TCP entries. The user can easily change this in the Dashboard.         | `"!dns and !tcp"`                                                  |
 | `tap.globalFilter`                        | Prepends to any KFL filter and can be used to limit what is visible in the dashboard. For example, `redact("request.headers.Authorization")` will redact the appropriate field. Another example `!dns` will not show any DNS traffic.      | `""`                                        |
 | `tap.metrics.port`                  | Pod port used to expose Prometheus metrics          | `49100`                                                  |
