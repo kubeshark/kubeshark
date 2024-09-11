@@ -73,3 +73,16 @@ Create docker tag default version
 {{- end }}
 {{- $defaultVersion }}
 {{- end -}}
+
+{{/*
+Set sentry based on internet connectivity and telemetry
+*/}}
+{{- define "sentry.enabled" -}}
+  {{- $sentryEnabledVal := .Values.tap.sentry.enabled -}}
+  {{- if not .Values.internetConnectivity -}}
+    {{- $sentryEnabledVal = false -}}
+  {{- else if not .Values.tap.telemetry.enabled -}}
+    {{- $sentryEnabledVal = false -}}
+  {{- end -}}
+  {{- $sentryEnabledVal -}}
+{{- end -}}

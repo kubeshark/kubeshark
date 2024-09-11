@@ -63,7 +63,7 @@ spec:
             - name: REACT_APP_DISSECTORS_UPDATING_ENABLED
               value: '{{ .Values.dissectorsUpdatingEnabled | ternary "true" "false" }}'
             - name: REACT_APP_SENTRY_ENABLED
-              value: '{{ .Values.tap.sentry.enabled }}'
+              value: '{{ (include "sentry.enabled" .) }}'
             - name: REACT_APP_SENTRY_ENVIRONMENT
               value: '{{ .Values.tap.sentry.environment }}'
         {{- if .Values.tap.docker.overrideTag.front }}
