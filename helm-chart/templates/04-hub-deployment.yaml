@@ -44,7 +44,7 @@ spec:
               fieldRef:
                 fieldPath: metadata.namespace
           - name: SENTRY_ENABLED
-            value: '{{ .Values.tap.sentry.enabled }}'
+            value: '{{ (include "sentry.enabled" .) }}'
           - name: SENTRY_ENVIRONMENT
             value: '{{ .Values.tap.sentry.environment }}'
           - name: KUBESHARK_CLOUD_API_URL
