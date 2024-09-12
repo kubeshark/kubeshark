@@ -11,12 +11,42 @@ tap:
       front: ""
   proxy:
     worker:
-      srvPort: 30001
+      daemonset:
+        annotations: {}
+        labels: {}
+      pod:
+        annotations: {}
+        labels: {}
+      service:
+        annotations: {}
+        labels: {}
+        port: 30001
     hub:
-      srvPort: 8898
+      deployment:
+        annotations: {}
+        labels: {}
+      pod:
+        annotations: {}
+        labels: {}
+      service:
+        annotations: {}
+        labels: {}
+        port: 8898
     front:
-      port: 8899
+      deployment:
+        annotations: {}
+        labels: {}
+      pod:
+        annotations: {}
+        labels: {}
+      service:
+        annotations: {}
+        labels: {}
+        port: 8899
     host: 127.0.0.1
+  serviceaccount:
+    annotations: {}
+    labels: {}
   regex: .*
   namespaces: []
   excludedNamespaces: []

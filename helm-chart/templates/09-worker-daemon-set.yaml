@@ -5,10 +5,16 @@ metadata:
   labels:
     app.kubeshark.co/app: worker
     sidecar.istio.io/inject: "false"
-    {{- include "kubeshark.labels" . | nindent 4 }}
+  {{- include "kubeshark.labels" . | nindent 4 }}
+  {{- if .Values.tap.proxy.worker.daemonset.labels }}
+    {{- toYaml .Values.tap.proxy.worker.daemonset.labels | nindent 4 }}
+  {{- end }}
   annotations:
   {{- if .Values.tap.annotations }}
     {{- toYaml .Values.tap.annotations | nindent 4 }}
+  {{- end }}
+  {{- if .Values.tap.proxy.worker.daemonset.annotations }}
+    {{- toYaml .Values.tap.proxy.worker.daemonset.annotations | nindent 4 }}
   {{- end }}
   name: kubeshark-worker-daemon-set
   namespace: {{ .Release.Namespace }}
@@ -21,7 +27,14 @@ spec:
     metadata:
       labels:
         app.kubeshark.co/app: worker
-        {{- include "kubeshark.labels" . | nindent 8 }}
+      {{- include "kubeshark.labels" . | nindent 8 }}
+      {{- if .Values.tap.proxy.worker.pod.labels }}
+        {{- toYaml .Values.tap.proxy.worker.pod.labels | nindent 4 }}
+      {{- end }}
+      annotations:
+      {{- if .Values.tap.proxy.worker.pod.annotations }}
+        {{- toYaml .Values.tap.proxy.worker.pod.annotations | nindent 4 }}
+      {{- end }}
       name: kubeshark-worker-daemon-set
       namespace: kubeshark
     spec:
@@ -54,7 +67,7 @@ spec:
             - -i
             - any
             - -port
-            - '{{ .Values.tap.proxy.worker.srvPort }}'
+            - '{{ .Values.tap.proxy.worker.service.port }}'
             - -metrics-port
             - '{{ .Values.tap.metrics.port }}'
             - -packet-capture
@@ -140,14 +153,14 @@ spec:
             successThreshold: 1
             initialDelaySeconds: 5
             tcpSocket:
-              port: {{ .Values.tap.proxy.worker.srvPort }}
+              port: {{ .Values.tap.proxy.worker.service.port }}
           livenessProbe:
             periodSeconds: 1
             failureThreshold: 3
             successThreshold: 1
             initialDelaySeconds: 5
             tcpSocket:
-              port: {{ .Values.tap.proxy.worker.srvPort }}
+              port: {{ .Values.tap.proxy.worker.service.port }}
           volumeMounts:
             - mountPath: /hostproc
               name: proc
@@ -187,7 +200,7 @@ spec:
           {{- end }}
           {{- if .Values.tap.pprof.enabled }}
             - -port
-            - '{{ add .Values.tap.proxy.worker.srvPort 1 }}'
+            - '{{ add .Values.tap.proxy.worker.service.port 1 }}'
           {{- end }}
         {{- if .Values.tap.docker.overrideTag.worker }}
           image: '{{ .Values.tap.docker.registry }}/worker:{{ .Values.tap.docker.overrideTag.worker }}{{ include "kubeshark.dockerTagDebugVersion" . }}'

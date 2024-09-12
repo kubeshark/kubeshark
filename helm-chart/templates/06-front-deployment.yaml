@@ -3,10 +3,16 @@ kind: Deployment
 metadata:
   labels:
     app.kubeshark.co/app: front
-    {{- include "kubeshark.labels" . | nindent 4 }}
+  {{- include "kubeshark.labels" . | nindent 4 }}
+  {{- if .Values.tap.proxy.front.deployment.labels }}
+    {{- toYaml .Values.tap.proxy.front.deployment.labels | nindent 4 }}
+  {{- end }}
   annotations:
   {{- if .Values.tap.annotations }}
     {{- toYaml .Values.tap.annotations | nindent 4 }}
+  {{- end }}
+  {{- if .Values.tap.proxy.front.deployment.annotations }}
+    {{- toYaml .Values.tap.proxy.front.deployment.annotations | nindent 4 }}
   {{- end }}
   name: {{ include "kubeshark.name" . }}-front
   namespace: {{ .Release.Namespace }}
@@ -20,7 +26,14 @@ spec:
     metadata:
       labels:
         app.kubeshark.co/app: front
-        {{- include "kubeshark.labels" . | nindent 8 }}
+      {{- include "kubeshark.labels" . | nindent 8 }}
+      {{- if .Values.tap.proxy.front.pod.labels }}
+        {{- toYaml .Values.tap.proxy.front.pod.labels | nindent 4 }}
+      {{- end }}
+      annotations:
+      {{- if .Values.tap.proxy.front.pod.annotations }}
+        {{- toYaml .Values.tap.proxy.front.pod.annotations | nindent 4 }}
+      {{- end }}
     spec:
       containers:
         - env:
