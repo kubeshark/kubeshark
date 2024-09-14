@@ -115,36 +115,43 @@ Please refer to [metrics](./metrics.md) documentation for details.
 
 | Parameter                                 | Description                                   | Default                                                 |
 |-------------------------------------------|-----------------------------------------------|---------------------------------------------------------|
-| `tap.docker.registry`                     | Docker registry to pull from                           | `docker.io/kubeshark`                                   |
-| `tap.docker.tag`                          | Tag of the Docker images                              | `latest`                                                |
+| `tap.docker.registry`                     | Docker registry to pull from                  | `docker.io/kubeshark`                                   |
+| `tap.docker.tag`                          | Tag of the Docker images                      | `latest`                                                |
+| `tap.docker.tagLocked`                    | Lock the Docker image tags to prevent automatic upgrades to the latest branch image version. | `true`   |
 | `tap.docker.tagLocked`                    | If `false` - use latest minor tag             | `true`                                                  |
 | `tap.docker.imagePullPolicy`              | Kubernetes image pull policy                  | `Always`                                                |
-| `tap.docker.imagePullSecrets`             | Kubernetes secrets to pull the images      | `[]`                                                    |
-| `tap.proxy.worker.srvPort`                | Worker server port                           | `30001`                                                  |
-| `tap.proxy.hub.port`                      | Hub service port                              | `8898`                                                  |
-| `tap.proxy.hub.srvPort`                   | Hub server port                   | `8898`                                                  |
-| `tap.proxy.front.port`                    | Front-facing service port                     | `8899`                                                  |
-| `tap.proxy.host`                          | Proxy server's IP                                   | `127.0.0.1`                                             |
-| `tap.namespaces`                          | List of namespaces for the traffic capture                 | `[]`                                                    |
-| `tap.excludedNamespaces`                  | List of namespaces to explicitly exclude                 | `[]`                                                    |
-| `tap.release.repo`                        | URL of the Helm chart repository             | `https://helm.kubeshark.co`                             |
-| `tap.release.name`                        | Helm release name                          | `kubeshark`                                             |
-| `tap.release.namespace`                   | Helm release namespace                | `default`                                               |
-| `tap.persistentStorage`                   | Use `persistentVolumeClaim` instead of `emptyDir` | `false`                                                |
-| `tap.persistentStorageStatic`             | Use static persistent volume provisioning (explicitly defined `PersistentVolume` ) | `false`                                                      |
-| `tap.efsFileSytemIdAndPath`               | [EFS file system ID and, optionally, subpath and/or access point](https://github.com/kubernetes-sigs/aws-efs-csi-driver/blob/master/examples/kubernetes/access_points/README.md) `<FileSystemId>:<Path>:<AccessPointId>`     | ""                                                           |
-| `tap.storageLimit`                        | Limit of either the `emptyDir` or `persistentVolumeClaim`                  | `500Mi`                                                 |
-| `tap.storageClass`                        | Storage class of the `PersistentVolumeClaim`          | `standard`                                              |
-| `tap.dryRun`                              | Preview of all pods matching the regex, without tapping them                    | `false`                                                 |
-| `tap.pcap`                                |                                               | `""`                                                    |
-| `tap.resources.worker.limits.cpu`         | CPU limit for worker                          | `750m`                                                  |
-| `tap.resources.worker.limits.memory`      | Memory limit for worker                       | `1Gi`                                                   |
-| `tap.resources.worker.requests.cpu`       | CPU request for worker                        | `50m`                                                   |
-| `tap.resources.worker.requests.memory`    | Memory request for worker                     | `50Mi`                                                  |
-| `tap.resources.hub.limits.cpu`            | CPU limit for hub                             | `750m`                                                  |
-| `tap.resources.hub.limits.memory`         | Memory limit for hub                          | `1Gi`                                                   |
+| `tap.docker.imagePullSecrets`             | Kubernetes secrets to pull the images         | `[]`                                                    |
+| `tap.docker.overrideTag`                  | DANGER: Used to override specific images, when testing custom features from the Kubeshark team | `""`   |
+| `tap.proxy.hub.srvPort`                   | Hub server port. Change if already occupied.  | `8898`                                                  |
+| `tap.proxy.worker.srvPort`                | Worker server port. Change if already occupied.| `30001`                                                |
+| `tap.proxy.front.port`                    | Front service port. Change if already occupied.| `8899`                                                 |
+| `tap.proxy.host`                          | Change to 0.0.0.0 top open up to the world.   | `127.0.0.1`                                             |
+| `tap.regex`                               | Target (process traffic from) pods that match regex | `.*`                                              |
+| `tap.namespaces`                          | Target pods in namespaces                     | `[]`                                                    |
+| `tap.excludedNamespaces`                  | Exclude pods in namespaces                    | `[]`                                                    |
+| `tap.bpfOverride`                         | When using AF_PACKET as a traffic capture backend, override any existing pod targeting rules and set explicit BPF expression (e.g. `net 0.0.0.0/0`).                                                          | `[]`                                                    |
+| `tap.stopped`                             | Set to `false` to have traffic processing start automatically. When set to `true`, traffic processing is stopped by default, resulting in almost no resource consumption (e.g. Kubeshark is dormant). This property can be dynamically control via the dashboard.      | `true`                                                                                                                                                |
+| `tap.release.repo`                        | URL of the Helm chart repository              | `https://helm.kubeshark.co`                             |
+| `tap.release.name`                        | Helm release name                             | `kubeshark`                                             |
+| `tap.release.namespace`                   | Helm release namespace                        | `default`                                               |
+| `tap.persistentStorage`                   | Use `persistentVolumeClaim` instead of `emptyDir` | `false`                                             |
+| `tap.persistentStorageStatic`             | Use static persistent volume provisioning (explicitly defined `PersistentVolume` ) | `false`            |
+| `tap.efsFileSytemIdAndPath`               | [EFS file system ID and, optionally, subpath and/or access point](https://github.com/kubernetes-sigs/aws-efs-csi-driver/blob/master/examples/kubernetes/access_points/README.md) `<FileSystemId>:<Path>:<AccessPointId>`  | ""                             |
+| `tap.storageLimit`                        | Limit of either the `emptyDir` or `persistentVolumeClaim` | `500Mi`                                     |
+| `tap.storageClass`                        | Storage class of the `PersistentVolumeClaim`          | `standard`                                      |
+| `tap.dryRun`                              | Preview of all pods matching the regex, without tapping them    | `false`                               |
+| `tap.resources.hub.limits.cpu`            | CPU limit for hub                             | `1000m`                                                 |
+| `tap.resources.hub.limits.memory`         | Memory limit for hub                          | `1500Mi`                                                |
 | `tap.resources.hub.requests.cpu`          | CPU request for hub                           | `50m`                                                   |
 | `tap.resources.hub.requests.memory`       | Memory request for hub                        | `50Mi`                                                  |
+| `tap.resources.sniffer.limits.cpu`        | CPU limit for sniffer                         | `1000m`                                                 |
+| `tap.resources.sniffer.limits.memory`     | Memory limit for sniffer                      | `1500Mi`                                                |
+| `tap.resources.sniffer.requests.cpu`      | CPU request for sniffer                       | `50m`                                                   |
+| `tap.resources.sniffer.requests.memory`   | Memory request for sniffer                    | `50Mi`                                                  |
+| `tap.resources.tracer.limits.cpu`         | CPU limit for tracer                          | `1000m`                                                 |
+| `tap.resources.tracer.limits.memory`      | Memory limit for tracer                       | `1500Mi`                                                |
+| `tap.resources.tracer.requests.cpu`       | CPU request for tracer                        | `50m`                                                   |
+| `tap.resources.tracer.requests.memory`    | Memory request for tracer                     | `50Mi`                                                  |
 | `tap.serviceMesh`                         | Capture traffic from service meshes like Istio, Linkerd, Consul, etc.          | `true`                                                  |
 | `tap.tls`                                 | Capture the encrypted/TLS traffic from cryptography libraries like OpenSSL                         | `true`                                                  |
 | `tap.disableTlsLog`                       | Suppress logging for TLS/eBPF                 | `false`                                                 |
@@ -177,7 +184,6 @@ Please refer to [metrics](./metrics.md) documentation for details.
 | `tap.defaultFilter`                       | Sets the default dashboard KFL filter (e.g. `http`). By default, this value is set to filter out DNS  and TCP entries. The user can easily change this in the Dashboard.         | `"!dns and !tcp"`                                                  |
 | `tap.globalFilter`                        | Prepends to any KFL filter and can be used to limit what is visible in the dashboard. For example, `redact("request.headers.Authorization")` will redact the appropriate field. Another example `!dns` will not show any DNS traffic.      | `""`                                        |
 | `tap.metrics.port`                  | Pod port used to expose Prometheus metrics          | `49100`                                                  |
-| `tap.stopped`                             | A flag indicating whether to start Kubeshark with traffic processing stopped resulting in almost no resource consumption (e.g. Kubeshark is dormant). This property can be dynamically control via the dashboard.         | `true`                                                  |
 | `tap.enabledDissectors`                   | This is an array of strings representing the list of supported protocols. Remove or comment out redundant protocols (e.g., dns).| The default list includes: amqp, dns , http, icmp, kafka, redis,sctp, syscall, tcp, ws.  |
 | `logs.file`                               | Logs dump path                      | `""`                                                    |
 | `kube.configPath`                         | Path to the `kubeconfig` file (`$HOME/.kube/config`)            | `""`                                                    |
