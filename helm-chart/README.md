@@ -243,7 +243,7 @@ tap:
     enabled: true
     type: saml
     saml:
-      idpMetadataUrl: "https://tiptophelmet.us.auth0.com/samlp/metadata/MpWiDCMMB5ShU1HRnhdb1sHM6VWqdnDG"
+      idpMetadataUrl: "https://ti..th0.com/samlp/metadata/MpWiDCM..qdnDG"
       x509crt: |
         -----BEGIN CERTIFICATE-----
         MIIDlTCCAn0CFFRUzMh+dZvp+FvWd4gRaiBVN8EvMA0GCSqGSIb3DQEBCwUAMIGG
