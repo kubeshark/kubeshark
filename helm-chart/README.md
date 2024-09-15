@@ -59,16 +59,9 @@ kubectl port-forward service/kubeshark-front 8899:80
 
 Visit [localhost:8899](http://localhost:8899)
 
+You can also use `kubeshark proxy` for a more stable port-forward connection.
 
-## Increase the Worker's Storage Limit
-
-For example, change from the default 500Mi to 5Gi:
-
-```shell
---set tap.storageLimit=5Gi
-```
-
-## Add a License
+## Add a License Key
 
 When it's necessary, you can use:
 
@@ -107,7 +100,7 @@ helm install kubeshark kubeshark/kubeshark \
   --set tap.ipv6=false
 ```
 
-## Metrics
+## Prometheus Metrics
 
 Please refer to [metrics](./metrics.md) documentation for details.
 
