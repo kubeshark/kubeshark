@@ -52,4 +52,4 @@ prometheus:
 
 ## Ready-to-use Dashboard
 
-You can import a ready-to-use dashboard from [Grafana's Dashboards Portal](https://grafana.com/grafana/dashboards/20359-kubeshark-dashboard-v1-0-003/).
+You can import a ready-to-use dashboard from [Grafana's Dashboards Portal](https://grafana.com/grafana/dashboards/21332-kubeshark-dashboard-v3-4/).
