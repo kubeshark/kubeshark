@@ -74,7 +74,7 @@ spec:
             - -resolution-strategy
             - '{{ .Values.tap.misc.resolutionStrategy }}'
             - -staletimeout
-            - {{ .Values.tap.misc.staleTimeoutSeconds }}
+            - '{{ .Values.tap.misc.staleTimeoutSeconds }}'
           {{- if .Values.tap.debug }}
             - -debug
           {{- end }}
