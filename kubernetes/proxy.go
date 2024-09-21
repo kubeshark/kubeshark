@@ -138,6 +138,7 @@ func NewPortForward(kubernetesProvider *Provider, namespace string, podRegex *re
 	go func() {
 		if err = forwarder.ForwardPorts(); err != nil {
 			log.Error().Err(err).Msg("While Kubernetes port-forwarding!")
+			log.Info().Str("command", fmt.Sprintf("kubectl port-forward -n %s service/kubeshark-front 8899:80", config.Config.Tap.Release.Namespace)).Msg("Please try running:")
 			return
 		}
 	}()
