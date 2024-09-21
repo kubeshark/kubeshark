@@ -15,6 +15,18 @@ type Script struct {
 	Code  string `json:"code"`
 }
 
+type ConfigMapScript struct {
+	Title string `json:"title"`
+	Code  string `json:"code"`
+}
+
+func (s *Script) ConfigMap() ConfigMapScript {
+	return ConfigMapScript{
+		Title: s.Title,
+		Code:  s.Code,
+	}
+}
+
 func ReadScriptFile(path string) (script *Script, err error) {
 	filename := filepath.Base(path)
 	var body []byte
