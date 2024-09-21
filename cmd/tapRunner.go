@@ -32,7 +32,6 @@ type tapState struct {
 }
 
 var state tapState
-var connector *connect.Connector
 
 type Readiness struct {
 	Hub   bool
