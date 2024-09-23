@@ -2,8 +2,10 @@ package kubernetes
 
 import (
 	"context"
+	"encoding/json"
 
 	"github.com/kubeshark/kubeshark/config"
+	"github.com/kubeshark/kubeshark/misc"
 	"github.com/rs/zerolog/log"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -23,6 +25,7 @@ const (
 	CONFIG_AUTH_ENABLED               = "AUTH_ENABLED"
 	CONFIG_AUTH_TYPE                  = "AUTH_TYPE"
 	CONFIG_AUTH_SAML_IDP_METADATA_URL = "AUTH_SAML_IDP_METADATA_URL"
+	CONFIG_SCRIPTING_SCRIPTS          = "SCRIPTING_SCRIPTS"
 )
 
 func SetSecret(provider *Provider, key string, value string) (updated bool, err error) {
@@ -48,6 +51,17 @@ func SetSecret(provider *Provider, key string, value string) (updated bool, err 
 	return
 }
 
+func GetConfig(provider *Provider, key string) (value string, err error) {
+	var configMap *v1.ConfigMap
+	configMap, err = provider.clientSet.CoreV1().ConfigMaps(config.Config.Tap.Release.Namespace).Get(context.TODO(), SELF_RESOURCES_PREFIX+SUFFIX_CONFIG_MAP, metav1.GetOptions{})
+	if err != nil {
+		return
+	}
+
+	value = configMap.Data[key]
+	return
+}
+
 func SetConfig(provider *Provider, key string, value string) (updated bool, err error) {
 	var configMap *v1.ConfigMap
 	configMap, err = provider.clientSet.CoreV1().ConfigMaps(config.Config.Tap.Release.Namespace).Get(context.TODO(), SELF_RESOURCES_PREFIX+SUFFIX_CONFIG_MAP, metav1.GetOptions{})
@@ -68,5 +82,16 @@ func SetConfig(provider *Provider, key string, value string) (updated bool, err 
 	} else {
 		log.Error().Str("config", key).Err(err).Send()
 	}
+	return
+}
+
+func ConfigGetScripts(provider *Provider) (scripts map[int64]misc.ConfigMapScript, err error) {
+	var data string
+	data, err = GetConfig(provider, CONFIG_SCRIPTING_SCRIPTS)
+	if err != nil {
+		return
+	}
+
+	err = json.Unmarshal([]byte(data), &scripts)
 	return
 }

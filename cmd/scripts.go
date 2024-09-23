@@ -2,14 +2,12 @@ package cmd
 
 import (
 	"context"
-	"fmt"
-	"net/http"
+	"encoding/json"
 
 	"github.com/creasty/defaults"
 	"github.com/fsnotify/fsnotify"
 	"github.com/kubeshark/kubeshark/config"
 	"github.com/kubeshark/kubeshark/config/configStructs"
-	"github.com/kubeshark/kubeshark/internal/connect"
 	"github.com/kubeshark/kubeshark/kubernetes"
 	"github.com/kubeshark/kubeshark/misc"
 	"github.com/kubeshark/kubeshark/utils"
@@ -45,19 +43,99 @@ func runScripts() {
 		return
 	}
 
-	hubUrl := kubernetes.GetHubUrl()
-	response, err := http.Get(fmt.Sprintf("%s/echo", hubUrl))
-	if err != nil || response.StatusCode != 200 {
-		log.Info().Msg(fmt.Sprintf(utils.Yellow, "Couldn't connect to Hub. Establishing proxy..."))
-		runProxy(false, true)
+	kubernetesProvider, err := getKubernetesProviderForCli(false, false)
+	if err != nil {
+		log.Error().Err(err).Send()
+		return
 	}
 
-	connector = connect.NewConnector(kubernetes.GetHubUrl(), connect.DefaultRetries, connect.DefaultTimeout)
-
-	watchScripts(true)
+	watchScripts(kubernetesProvider, true)
 }
 
-func watchScripts(block bool) {
+func createScript(provider *kubernetes.Provider, script misc.ConfigMapScript) (index int64, err error) {
+	var scripts map[int64]misc.ConfigMapScript
+	scripts, err = kubernetes.ConfigGetScripts(provider)
+	if err != nil {
+		return
+	}
+
+	// Turn it into updateScript if there is a script with the same title
+	var setScript bool
+	if script.Title != "New Script" {
+		for i, v := range scripts {
+			if v.Title == script.Title {
+				scripts[i] = script
+				setScript = true
+			}
+		}
+	}
+
+	if !setScript {
+		index = int64(len(scripts))
+		scripts[index] = script
+	}
+
+	var data []byte
+	data, err = json.Marshal(scripts)
+	if err != nil {
+		return
+	}
+
+	_, err = kubernetes.SetConfig(provider, kubernetes.CONFIG_SCRIPTING_SCRIPTS, string(data))
+	if err != nil {
+		return
+	}
+
+	return
+}
+
+func updateScript(provider *kubernetes.Provider, index int64, script misc.ConfigMapScript) (err error) {
+	var scripts map[int64]misc.ConfigMapScript
+	scripts, err = kubernetes.ConfigGetScripts(provider)
+	if err != nil {
+		return
+	}
+
+	scripts[index] = script
+
+	var data []byte
+	data, err = json.Marshal(scripts)
+	if err != nil {
+		return
+	}
+
+	_, err = kubernetes.SetConfig(provider, kubernetes.CONFIG_SCRIPTING_SCRIPTS, string(data))
+	if err != nil {
+		return
+	}
+
+	return
+}
+
+func deleteScript(provider *kubernetes.Provider, index int64) (err error) {
+	var scripts map[int64]misc.ConfigMapScript
+	scripts, err = kubernetes.ConfigGetScripts(provider)
+	if err != nil {
+		return
+	}
+
+	delete(scripts, index)
+
+	var data []byte
+	data, err = json.Marshal(scripts)
+	if err != nil {
+		return
+	}
+
+	_, err = kubernetes.SetConfig(provider, kubernetes.CONFIG_SCRIPTING_SCRIPTS, string(data))
+	if err != nil {
+		return
+	}
+
+	return
+}
+
+func watchScripts(provider *kubernetes.Provider, block bool) {
 	files := make(map[string]int64)
 
 	scripts, err := config.Config.Scripting.GetScripts()
@@ -67,7 +145,7 @@ func watchScripts(block bool) {
 	}
 
 	for _, script := range scripts {
-		index, err := connector.PostScript(script)
+		index, err := createScript(provider, script.ConfigMap())
 		if err != nil {
 			log.Error().Err(err).Send()
 			return
@@ -98,7 +176,7 @@ func watchScripts(block bool) {
 						continue
 					}
 
-					index, err := connector.PostScript(script)
+					index, err := createScript(provider, script.ConfigMap())
 					if err != nil {
 						log.Error().Err(err).Send()
 						continue
@@ -114,7 +192,7 @@ func watchScripts(block bool) {
 						continue
 					}
 
-					err = connector.PutScript(script, index)
+					err = updateScript(provider, index, script.ConfigMap())
 					if err != nil {
 						log.Error().Err(err).Send()
 						continue
@@ -122,7 +200,7 @@ func watchScripts(block bool) {
 
 				case fsnotify.Rename:
 					index := files[event.Name]
-					err := connector.DeleteScript(index)
+					err := deleteScript(provider, index)
 					if err != nil {
 						log.Error().Err(err).Send()
 						continue

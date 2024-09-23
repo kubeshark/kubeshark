@@ -10,7 +10,6 @@ import (
 	"sync"
 	"time"
 
-	"github.com/kubeshark/kubeshark/internal/connect"
 	"github.com/kubeshark/kubeshark/kubernetes/helm"
 	"github.com/kubeshark/kubeshark/misc"
 	"github.com/kubeshark/kubeshark/utils"
@@ -32,7 +31,6 @@ type tapState struct {
 }
 
 var state tapState
-var connector *connect.Connector
 
 type Readiness struct {
 	Hub   bool
@@ -51,8 +49,6 @@ func tap() {
 	log.Info().
 		Str("limit", config.Config.Tap.StorageLimit).
 		Msg(fmt.Sprintf("%s will store the traffic up to a limit (per node). Oldest TCP/UDP streams will be removed once the limit is reached.", misc.Software))
-
-	connector = connect.NewConnector(kubernetes.GetHubUrl(), connect.DefaultRetries, connect.DefaultTimeout)
 
 	kubernetesProvider, err := getKubernetesProviderForCli(false, false)
 	if err != nil {
@@ -429,7 +425,7 @@ func postFrontStarted(ctx context.Context, kubernetesProvider *kubernetes.Provid
 	}
 
 	if config.Config.Scripting.Source != "" && config.Config.Scripting.WatchScripts {
-		watchScripts(false)
+		watchScripts(kubernetesProvider, false)
 	}
 }
 
