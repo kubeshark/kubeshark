@@ -249,7 +249,7 @@ data:
     TIMEZONE: ' '
     CLOUD_LICENSE_ENABLED: 'true'
     DUPLICATE_TIMEFRAME: '200ms'
-    ENABLED_DISSECTORS: 'amqp,dns,http,icmp,kafka,redis,sctp,syscall,tcp,ws'
+    ENABLED_DISSECTORS: 'amqp,dns,http,icmp,kafka,redis,sctp,syscall,tcp,udp,ws'
     DISSECTORS_UPDATING_ENABLED: 'true'
     DETECT_DUPLICATES: 'false'
 ---
@@ -785,7 +785,7 @@ spec:
       containers:
         - env:
             - name: REACT_APP_DEFAULT_FILTER
-              value: '!dns and !tcp'
+              value: '!dns and !tcp and !udp and !icmp'
             - name: REACT_APP_AUTH_ENABLED
               value: 'true'
             - name: REACT_APP_AUTH_TYPE

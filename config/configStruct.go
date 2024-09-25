@@ -83,6 +83,7 @@ func CreateDefaultConfig() ConfigStruct {
 				"sctp",
 				"syscall",
 				"tcp",
+				"udp",
 				"ws",
 			},
 		},
