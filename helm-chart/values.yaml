@@ -132,6 +132,7 @@ tap:
   - sctp
   - syscall
   - tcp
+  - udp
   - ws
   metrics:
     port: 49100
