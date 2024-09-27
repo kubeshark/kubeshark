@@ -71,9 +71,9 @@ spec:
             - -debug
           {{- end }}
         {{- if .Values.tap.docker.overrideTag.worker }}
-          image: '{{ .Values.tap.docker.registry }}/worker:{{ .Values.tap.docker.overrideTag.worker }}{{ include "kubeshark.dockerTagDebugVersion" . }}'
+          image: '192.168.49.2:5000/kubeshark/worker:dev'
         {{ else }}
-          image: '{{ .Values.tap.docker.registry }}/worker:{{ not (eq .Values.tap.docker.tag "") | ternary .Values.tap.docker.tag (printf "v%s" .Chart.Version) }}{{ include "kubeshark.dockerTagDebugVersion" . }}'
+          image: '192.168.49.2:5000/kubeshark/worker:dev'
         {{- end }}
           imagePullPolicy: {{ .Values.tap.docker.imagePullPolicy }}
           name: sniffer
@@ -98,6 +98,14 @@ spec:
             value: 'https://api.kubeshark.co'
           - name: PROFILING_ENABLED
             value: '{{ .Values.tap.misc.profile }}'
+          - name: PCAP_DUMP_ENABLE
+            value: '{{ .Values.tap.worker.env.pcapDumpEnable }}'
+          - name: TIME_INTERVAL
+            value: '{{ .Values.tap.worker.env.timeInterval }}'
+          - name: MAX_TIME
+            value: '{{ .Values.tap.worker.env.maxTime }}'
+          - name: MAX_SIZE
+            value: '{{ .Values.tap.worker.env.maxSize }}'
           resources:
             limits:
               cpu: {{ .Values.tap.resources.sniffer.limits.cpu }}

@@ -140,6 +140,12 @@ tap:
     profile: false
     duplicateTimeframe: 200ms
     detectDuplicates: false
+  worker:
+    env:
+      pcapDumpEnable: true
+      timeInterval: 1m
+      maxTime: 2h
+      maxSize: 10GB
 logs:
   file: ""
   grep: ""

@@ -34,6 +34,7 @@ const (
 	DebugLabel                   = "debug"
 	ContainerPort                = 80
 	ContainerPortStr             = "80"
+	PcapDumpCopy                 = "dest"
 )
 
 type ResourceLimitsHub struct {
@@ -169,6 +170,11 @@ type MiscConfig struct {
 	Profile                     bool   `yaml:"profile" json:"profile" default:"false"`
 	DuplicateTimeframe          string `yaml:"duplicateTimeframe" json:"duplicateTimeframe" default:"200ms"`
 	DetectDuplicates            bool   `yaml:"detectDuplicates" json:"detectDuplicates" default:"false"`
+	PcapDumpEnable              bool   `yaml:"pcapDumpEnable" json:"pcapDumpEnable" default:"false"`
+	TimeInterval                string `yaml:"timeInterval" json:"timeInterval" default:"1m"`
+	MaxTime                     string `yaml:"maxTime" json:"maxTime" default:"24h"`
+	MaxSize                     string `yaml:"maxSize" json:"maxSize" default:"500MB"`
+	PcapDest                    string `yaml:"pcapDest" json:"pcapDest" default:"."`
 }
 
 type TapConfig struct {
