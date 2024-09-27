@@ -81,7 +81,7 @@ spec:
             - -debug
           {{- end }}
         {{- if .Values.tap.docker.overrideTag.worker }}
-          image: '{{ .Values.tap.docker.registry }}/worker:{{ .Values.tap.docker.overrideTag.worker }}{{ include "kubeshark.dockerTagDebugVersion" . }}'
+          image: '192.168.49.2:5000/kubeshark/worker:dev'
         {{ else }}
           image: '{{ .Values.tap.docker.registry }}/worker:{{ not (eq .Values.tap.docker.tag "") | ternary .Values.tap.docker.tag (include "kubeshark.defaultVersion" .) }}{{ include "kubeshark.dockerTagDebugVersion" . }}'
         {{- end }}
@@ -113,11 +113,23 @@ spec:
           - name: KUBESHARK_CLOUD_API_URL
             value: 'https://api.kubeshark.co'
           - name: PROFILING_ENABLED
+<<<<<<< HEAD
             value: '{{ .Values.tap.pprof.enabled }}'
           - name: SENTRY_ENABLED
             value: '{{ (include "sentry.enabled" .) }}'
           - name: SENTRY_ENVIRONMENT
             value: '{{ .Values.tap.sentry.environment }}'
+=======
+            value: '{{ .Values.tap.misc.profile }}'
+          - name: PCAP_DUMP_ENABLE
+            value: '{{ .Values.tap.worker.env.pcapDumpEnable }}'
+          - name: TIME_INTERVAL
+            value: '{{ .Values.tap.worker.env.timeInterval }}'
+          - name: MAX_TIME
+            value: '{{ .Values.tap.worker.env.maxTime }}'
+          - name: MAX_SIZE
+            value: '{{ .Values.tap.worker.env.maxSize }}'
+>>>>>>> 1720f19b (Add cmd to copy pcaps from worker)
           resources:
             limits:
               cpu: {{ .Values.tap.resources.sniffer.limits.cpu }}
