@@ -101,7 +101,7 @@ tap:
   sentry:
     enabled: false
     environment: production
-  defaultFilter: "!dns and !tcp"
+  defaultFilter: "!dns and !tcp and !udp and !icmp"
   scriptingDisabled: false
   targetedPodsUpdateDisabled: false
   recordingDisabled: false
