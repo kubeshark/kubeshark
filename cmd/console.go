@@ -55,8 +55,8 @@ func runConsole() {
 	log.Info().Str("host", config.Config.Tap.Proxy.Host).Str("url", hubUrl).Msg("Connecting to:")
 	u := url.URL{
 		Scheme: "ws",
-		Host:   fmt.Sprintf("%s:%d/api", config.Config.Tap.Proxy.Host, config.Config.Tap.Proxy.Front.Port),
-		Path:   "/scripts/logs",
+		Host:   fmt.Sprintf("%s:%d", config.Config.Tap.Proxy.Host, config.Config.Tap.Proxy.Front.Port),
+		Path:   "/api/scripts/logs",
 	}
 	headers := http.Header{}
 	headers.Set(utils.X_KUBESHARK_CAPTURE_HEADER_KEY, utils.X_KUBESHARK_CAPTURE_HEADER_IGNORE_VALUE)
