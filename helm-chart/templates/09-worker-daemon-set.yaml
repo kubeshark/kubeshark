@@ -59,7 +59,9 @@ spec:
             - '{{ .Values.tap.metrics.port }}'
             - -packet-capture
             - '{{ .Values.tap.packetCapture }}'
+          {{- if .Values.tap.tls }}
             - -unixsocket
+          {{- end }}
           {{- if .Values.tap.serviceMesh }}
             - -servicemesh
           {{- end }}
