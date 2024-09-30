@@ -489,13 +489,9 @@ spec:
             - -disable-ebpf
             - -resolution-strategy
             - 'auto'
-<<<<<<< HEAD
             - -staletimeout
             - '30'
           image: 'docker.io/kubeshark/worker:v52.3.82'
-=======
-          image: '192.168.49.2:5000/kubeshark/worker:dev'
->>>>>>> 4a6076c8 (Update commands to merge pcaps)
           imagePullPolicy: Always
           name: sniffer
           ports:
