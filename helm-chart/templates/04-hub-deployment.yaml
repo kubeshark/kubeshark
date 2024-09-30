@@ -4,10 +4,16 @@ kind: Deployment
 metadata:
   labels:
     app.kubeshark.co/app: hub
-    {{- include "kubeshark.labels" . | nindent 4 }}
+  {{- include "kubeshark.labels" . | nindent 4 }}
+  {{- if .Values.tap.proxy.hub.deployment.labels }}
+    {{- toYaml .Values.tap.proxy.hub.deployment.labels | nindent 4 }}
+  {{- end }}
   annotations:
   {{- if .Values.tap.annotations }}
     {{- toYaml .Values.tap.annotations | nindent 4 }}
+  {{- end }}
+  {{- if .Values.tap.proxy.hub.deployment.annotations }}
+    {{- toYaml .Values.tap.proxy.hub.deployment.annotations | nindent 4 }}
   {{- end }}
   name: {{ include "kubeshark.name" . }}-hub
   namespace: {{ .Release.Namespace }}
@@ -22,6 +28,13 @@ spec:
       labels:
         app.kubeshark.co/app: hub
         {{- include "kubeshark.labels" . | nindent 8 }}
+        {{- if .Values.tap.proxy.hub.pod.labels }}
+          {{- toYaml .Values.tap.proxy.hub.pod.labels | nindent 4 }}
+        {{- end }}
+      annotations:
+        {{- if .Values.tap.proxy.hub.pod.annotations }}
+          {{- toYaml .Values.tap.proxy.hub.pod.annotations | nindent 4 }}
+        {{- end }}
     spec:
       dnsPolicy: ClusterFirstWithHostNet
       serviceAccountName: {{ include "kubeshark.serviceAccountName" . }}

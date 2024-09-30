@@ -69,7 +69,7 @@ spec:
   ingress:
     - ports:
         - protocol: TCP
-          port: {{ .Values.tap.proxy.worker.srvPort }}
+          port: {{ .Values.tap.proxy.worker.service.port }}
         - protocol: TCP
           port: {{ .Values.tap.metrics.port }}
   egress:
