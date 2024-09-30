@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"context"
-	"fmt"
 	"path/filepath"
 
 	"github.com/creasty/defaults"
@@ -10,7 +9,6 @@ import (
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/homedir"
 )
@@ -46,14 +44,13 @@ var pcapStartCmd = &cobra.Command{
 		maxTime, _ := cmd.Flags().GetString("max-time")
 		maxSize, _ := cmd.Flags().GetString("max-size")
 
-		// Iterate over each pod to start the PCAP capture by updating the config file
+		// Iterate over each pod to start the PCAP capture by updating the configuration in Kubernetes
 		for _, pod := range workerPods.Items {
-			err := writeStartConfigToFileInPod(context.Background(), clientset, config, pod.Name, namespace, timeInterval, maxTime, maxSize)
+			err := setPcapConfigInKubernetes(clientset, pod.Name, namespace, "true", timeInterval, maxTime, maxSize)
 			if err != nil {
-				log.Error().Err(err).Msgf("Error updating config file for pod %s", pod.Name)
+				log.Error().Err(err).Msgf("Error setting PCAP config for pod %s", pod.Name)
 				continue
 			}
-			fmt.Printf("PCAP capture started for pod %s\n", pod.Name)
 		}
 
 		return nil
@@ -69,33 +66,7 @@ func init() {
 	}
 
 	// Use full flag name without shorthand
-	pcapStartCmd.Flags().String("time-interval", defaultTapConfig.Misc.TimeInterval, "Time interval for PCAP file rotation (e.g., 1m, 2h)")
-	pcapStartCmd.Flags().String("max-time", defaultTapConfig.Misc.MaxTime, "Maximum time for retaining old PCAP files (e.g., 24h)")
-	pcapStartCmd.Flags().String("max-size", defaultTapConfig.Misc.MaxSize, "Maximum size of PCAP files before deletion (e.g., 500MB, 10GB)")
-}
-
-// writeStartConfigToFileInPod writes config to start pcap in the worker pods
-func writeStartConfigToFileInPod(ctx context.Context, clientset *kubernetes.Clientset, config *rest.Config, podName, namespace, timeInterval, maxTime, maxSize string) error {
-	existingConfig, err := readConfigFileFromPod(ctx, clientset, config, podName, namespace, configPath)
-	if err != nil {
-		return fmt.Errorf("failed to read config file from pod %s: %w", podName, err)
-	}
-
-	existingConfig["PCAP_DUMP_ENABLE"] = "true"
-	if timeInterval != "" {
-		existingConfig["TIME_INTERVAL"] = timeInterval
-	}
-	if maxTime != "" {
-		existingConfig["MAX_TIME"] = maxTime
-	}
-	if maxSize != "" {
-		existingConfig["MAX_SIZE"] = maxSize
-	}
-
-	err = writeConfigFileToPod(ctx, clientset, config, podName, namespace, configPath, existingConfig)
-	if err != nil {
-		return fmt.Errorf("failed to write config file to pod %s: %w", podName, err)
-	}
-
-	return nil
+	pcapStartCmd.Flags().String("time-interval", defaultTapConfig.Misc.PcapTimeInterval, "Time interval for PCAP file rotation (e.g., 1m, 2h)")
+	pcapStartCmd.Flags().String("max-time", defaultTapConfig.Misc.PcapMaxTime, "Maximum time for retaining old PCAP files (e.g., 24h)")
+	pcapStartCmd.Flags().String("max-size", defaultTapConfig.Misc.PcapMaxSize, "Maximum size of PCAP files before deletion (e.g., 500MB, 10GB)")
 }

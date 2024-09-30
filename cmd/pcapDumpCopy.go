@@ -2,7 +2,9 @@ package cmd
 
 import (
 	"context"
+	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/creasty/defaults"
 	"github.com/kubeshark/kubeshark/config/configStructs"
@@ -14,8 +16,7 @@ import (
 )
 
 const (
-	configPath = "/app/config/pcap_config.txt"
-	namespace  = "default"
+	namespace = "default"
 )
 
 // pcapCopyCmd represents the pcapcopy command
@@ -49,18 +50,9 @@ var pcapCopyCmd = &cobra.Command{
 
 		// Iterate over each pod to get the PCAP directory from config and copy files
 		for _, pod := range workerPods.Items {
-			// Read the config file from the pod to get the PCAP_DIR value
-			configMap, err := readConfigFileFromPod(context.Background(), clientset, config, pod.Name, namespace, configPath)
+			srcDir, err := getWorkerSource(clientset, pod.Name, pod.Namespace)
 			if err != nil {
-				log.Error().Err(err).Msgf("Error reading config file from pod %s", pod.Name)
-				continue
-			}
-
-			// Use the PCAP_DIR value from the config file
-			srcDir := configMap["PCAP_DIR"]
-			if srcDir == "" {
-				log.Error().Msgf("PCAP_DIR not found in config for pod %s", pod.Name)
-				continue
+				log.Error().Err(err).Msgf("Failed to read the worker source dir for %s", pod.Name)
 			}
 
 			// List files in the PCAP directory on the pod
@@ -69,6 +61,8 @@ var pcapCopyCmd = &cobra.Command{
 				log.Error().Err(err).Msgf("Error listing files in pod %s", pod.Name)
 				continue
 			}
+
+			var currentFiles []string
 
 			// Copy each file from the pod to the local destination
 			for _, file := range files {
@@ -79,7 +73,41 @@ var pcapCopyCmd = &cobra.Command{
 				if err != nil {
 					log.Error().Err(err).Msgf("Error copying file from pod %s", pod.Name)
 				}
+
+				currentFiles = append(currentFiles, destFile)
 			}
+			if len(currentFiles) == 0 {
+				log.Error().Msgf("No files to merge for pod %s", pod.Name)
+				continue
+			}
+
+			// Generate a temporary filename based on the first file
+			tempMergedFile := currentFiles[0] + "_temp"
+
+			// Merge the PCAPs into the temporary file
+			err = mergePCAPs(tempMergedFile, currentFiles)
+			if err != nil {
+				log.Error().Err(err).Msgf("Error merging file from pod %s", pod.Name)
+				continue
+			}
+
+			// Remove the original files after merging
+			for _, file := range currentFiles {
+				err := os.Remove(file)
+				if err != nil {
+					log.Error().Err(err).Msgf("Error removing file %s", file)
+				}
+			}
+
+			// Rename the temp file to the final name (removing "_temp")
+			finalMergedFile := strings.TrimSuffix(tempMergedFile, "_temp")
+			err = os.Rename(tempMergedFile, finalMergedFile)
+			if err != nil {
+				log.Error().Err(err).Msgf("Error renaming merged file %s", tempMergedFile)
+				continue
+			}
+
+			log.Info().Msgf("Merged file created: %s", finalMergedFile)
 		}
 
 		return nil

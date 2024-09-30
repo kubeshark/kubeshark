@@ -3,13 +3,21 @@ package cmd
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"fmt"
+	"io"
+	"net/http"
 	"os"
 	"strings"
 
+	"github.com/kubeshark/gopacket"
+	"github.com/kubeshark/gopacket/layers"
+	"github.com/kubeshark/gopacket/pcapgo"
+	"github.com/rs/zerolog/log"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
+	clientk8s "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/remotecommand"
 )
@@ -17,7 +25,7 @@ import (
 const label = "app.kubeshark.co/app=worker"
 
 // listWorkerPods fetches all the worker pods using the Kubernetes client
-func listWorkerPods(ctx context.Context, clientset *kubernetes.Clientset, namespace string) (*corev1.PodList, error) {
+func listWorkerPods(ctx context.Context, clientset *clientk8s.Clientset, namespace string) (*corev1.PodList, error) {
 	labelSelector := label
 
 	// List all pods matching the label
@@ -32,7 +40,7 @@ func listWorkerPods(ctx context.Context, clientset *kubernetes.Clientset, namesp
 }
 
 // listFilesInPodDir lists all files in the specified directory inside the pod
-func listFilesInPodDir(ctx context.Context, clientset *kubernetes.Clientset, config *rest.Config, podName, namespace, srcDir string) ([]string, error) {
+func listFilesInPodDir(ctx context.Context, clientset *clientk8s.Clientset, config *rest.Config, podName, namespace, srcDir string) ([]string, error) {
 	cmd := []string{"ls", srcDir}
 	req := clientset.CoreV1().RESTClient().Post().
 		Resource("pods").
@@ -69,7 +77,7 @@ func listFilesInPodDir(ctx context.Context, clientset *kubernetes.Clientset, con
 }
 
 // copyFileFromPod copies a single file from a pod to a local destination
-func copyFileFromPod(ctx context.Context, clientset *kubernetes.Clientset, config *rest.Config, podName, namespace, srcFile, destFile string) error {
+func copyFileFromPod(ctx context.Context, clientset *clientk8s.Clientset, config *rest.Config, podName, namespace, srcFile, destFile string) error {
 	cmd := []string{"cat", srcFile}
 	req := clientset.CoreV1().RESTClient().Post().
 		Resource("pods").
@@ -106,154 +114,126 @@ func copyFileFromPod(ctx context.Context, clientset *kubernetes.Clientset, confi
 		return fmt.Errorf("error copying file from pod: %w. Stderr: %s", err, stderrBuf.String())
 	}
 
-	fmt.Printf("File from pod %s copied to local destination: %s\n", podName, destFile)
 	return nil
 }
 
-// updatePodEnvVars updates the configuration file inside the worker pod
-func updatePodEnvVars(ctx context.Context, clientset *kubernetes.Clientset, config *rest.Config, podName, namespace string, stop bool, timeInterval, maxTime, maxSize string) error {
-	var envVars []string
-	if stop {
-		envVars = append(envVars, "PCAP_DUMP_ENABLE=false")
-	} else {
-		envVars = append(envVars, "PCAP_DUMP_ENABLE=true")
+func mergePCAPs(outputFile string, inputFiles []string) error {
+	// Create the output file
+	f, err := os.Create(outputFile)
+	if err != nil {
+		return err
+	}
+	defer f.Close()
 
-		if timeInterval != "" {
-			envVars = append(envVars, fmt.Sprintf("TIME_INTERVAL=%s", timeInterval))
-		}
-		if maxTime != "" {
-			envVars = append(envVars, fmt.Sprintf("MAX_TIME=%s", maxTime))
-		}
-		if maxSize != "" {
-			envVars = append(envVars, fmt.Sprintf("MAX_SIZE=%s", maxSize))
-		}
+	// Create a pcap writer for the output file
+	writer := pcapgo.NewWriter(f)
+	err = writer.WriteFileHeader(65536, layers.LinkTypeEthernet) // Snapshot length and LinkType
+	if err != nil {
+		return err
 	}
 
-	// Create a command that sets the environment variables directly in the pod
-	for _, envVar := range envVars {
-		cmd := []string{"sh", "-c", fmt.Sprintf("export %s", envVar)}
-		req := clientset.CoreV1().RESTClient().Post().
-			Resource("pods").
-			Name(podName).
-			Namespace(namespace).
-			SubResource("exec").
-			Param("container", "sniffer"). // Assuming container is called 'sniffer'
-			Param("stdout", "true").
-			Param("stderr", "true").
-			Param("command", cmd[0]).
-			Param("command", cmd[1]).
-			Param("command", cmd[2])
-
-		exec, err := remotecommand.NewSPDYExecutor(config, "POST", req.URL())
+	for _, inputFile := range inputFiles {
+		// Open each input file
+		file, err := os.Open(inputFile)
 		if err != nil {
-			return fmt.Errorf("failed to initialize executor for pod %s: %w", podName, err)
+			return err
 		}
+		defer file.Close()
 
-		var stdoutBuf, stderrBuf bytes.Buffer
-		err = exec.StreamWithContext(ctx, remotecommand.StreamOptions{
-			Stdout: &stdoutBuf,
-			Stderr: &stderrBuf,
-		})
+		reader, err := pcapgo.NewReader(file)
 		if err != nil {
-			return fmt.Errorf("failed to update env vars in pod %s: %w. Stderr: %s", podName, err, stderrBuf.String())
+			log.Error().Err(err).Msgf("Failed to create pcapng reader for %v", file.Name())
+			return err
 		}
-	}
 
-	fmt.Printf("Updated env vars for pod %s\n", podName)
-	return nil
-}
+		// Create the packet source
+		packetSource := gopacket.NewPacketSource(reader, layers.LinkTypeEthernet)
 
-// readConfigFileFromPod reads the configuration file from the pod
-func readConfigFileFromPod(ctx context.Context, clientset *kubernetes.Clientset, config *rest.Config, podName, namespace, configFilePath string) (map[string]string, error) {
-	cmd := []string{"cat", configFilePath}
-	req := clientset.CoreV1().RESTClient().Post().
-		Resource("pods").
-		Name(podName).
-		Namespace(namespace).
-		SubResource("exec").
-		Param("container", "sniffer").
-		Param("stdout", "true").
-		Param("stderr", "true").
-		Param("command", cmd[0]).
-		Param("command", cmd[1])
-
-	exec, err := remotecommand.NewSPDYExecutor(config, "POST", req.URL())
-	if err != nil {
-		return nil, fmt.Errorf("failed to initialize executor for pod %s: %w", podName, err)
-	}
-
-	var stdoutBuf, stderrBuf bytes.Buffer
-	err = exec.StreamWithContext(ctx, remotecommand.StreamOptions{
-		Stdout: &stdoutBuf,
-		Stderr: &stderrBuf,
-	})
-	if err != nil {
-		return nil, fmt.Errorf("failed to read config file from pod %s: %w. Stderr: %s", podName, err, stderrBuf.String())
-	}
-
-	// Parse the config content into a map of key-value pairs
-	configMap := parseConfigContent(stdoutBuf.String())
-	return configMap, nil
-}
-
-// writeConfigFileToPod writes the updated configuration map to the file in the pod
-func writeConfigFileToPod(ctx context.Context, clientset *kubernetes.Clientset, config *rest.Config, podName, namespace, configFilePath string, configMap map[string]string) error {
-	// Convert the config map back to a string format for writing
-	configContent := formatConfigMapToString(configMap)
-
-	// Escape any single quotes in the config content to avoid issues in the shell command
-	escapedConfigContent := strings.ReplaceAll(configContent, "'", "'\\''")
-
-	// Prepare the command to write the configuration to the file
-	cmd := []string{"sh", "-c", fmt.Sprintf("echo '%s' > %s", escapedConfigContent, configFilePath)}
-	req := clientset.CoreV1().RESTClient().Post().
-		Resource("pods").
-		Name(podName).
-		Namespace(namespace).
-		SubResource("exec").
-		Param("container", "sniffer").
-		Param("stdout", "true").
-		Param("stderr", "true").
-		Param("command", cmd[0]).
-		Param("command", cmd[1]).
-		Param("command", cmd[2])
-
-	exec, err := remotecommand.NewSPDYExecutor(config, "POST", req.URL())
-	if err != nil {
-		return fmt.Errorf("failed to initialize executor for pod %s: %w", podName, err)
-	}
-
-	var stdoutBuf, stderrBuf bytes.Buffer
-	err = exec.StreamWithContext(ctx, remotecommand.StreamOptions{
-		Stdout: &stdoutBuf,
-		Stderr: &stderrBuf,
-	})
-	if err != nil {
-		return fmt.Errorf("failed to write config file to pod %s: %w. Stderr: %s", podName, err, stderrBuf.String())
+		for packet := range packetSource.Packets() {
+			err := writer.WritePacket(packet.Metadata().CaptureInfo, packet.Data())
+			if err != nil {
+				return err
+			}
+		}
 	}
 
 	return nil
 }
 
-// parseConfigContent parses the content of the config file into a map of key-value pairs
-func parseConfigContent(content string) map[string]string {
-	configMap := make(map[string]string)
-	lines := strings.Split(content, "\n")
-	for _, line := range lines {
-		if strings.TrimSpace(line) == "" || !strings.Contains(line, "=") {
-			continue
-		}
-		parts := strings.SplitN(line, "=", 2)
-		configMap[strings.TrimSpace(parts[0])] = strings.TrimSpace(parts[1])
+func setPcapConfigInKubernetes(clientset *clientk8s.Clientset, podName, namespace, enabledPcap, timeInterval, maxTime, maxSize string) error {
+	// Load the existing ConfigMap
+	configMap, err := clientset.CoreV1().ConfigMaps(namespace).Get(context.TODO(), "kubeshark-config-map", metav1.GetOptions{})
+	if err != nil {
+		return fmt.Errorf("failed to load ConfigMap: %w", err)
 	}
-	return configMap
+
+	// Update the values with user-provided input
+	if len(configMap.Data["PCAP_TIME_INTERVAL"]) > 0 {
+		configMap.Data["PCAP_TIME_INTERVAL"] = timeInterval
+
+	}
+	if len(configMap.Data["PCAP_MAX_SIZE"]) > 0 {
+		configMap.Data["PCAP_MAX_SIZE"] = maxSize
+
+	}
+	if len(configMap.Data["PCAP_MAX_TIME"]) > 0 {
+		configMap.Data["PCAP_MAX_TIME"] = maxTime
+
+	}
+	if len(configMap.Data["PCAP_DUMP_ENABLE"]) > 0 {
+		configMap.Data["PCAP_DUMP_ENABLE"] = enabledPcap
+	}
+
+	// Apply the updated ConfigMap back to the cluster
+	_, err = clientset.CoreV1().ConfigMaps(namespace).Update(context.TODO(), configMap, metav1.UpdateOptions{})
+	if err != nil {
+		return fmt.Errorf("failed to update ConfigMap: %w", err)
+	}
+
+	return nil
 }
 
-// formatConfigMapToString converts the config map back to string format
-func formatConfigMapToString(configMap map[string]string) string {
-	var sb strings.Builder
-	for key, value := range configMap {
-		sb.WriteString(fmt.Sprintf("%s=%s\n", key, value))
+// WorkerSrcResponse represents the response structure from the worker's /pcaps/worker-src endpoint.
+type WorkerSrcResponse struct {
+	WorkerSrcDir string `json:"workerSrcDir"`
+}
+
+// getWorkerSource fetches the worker source directory from the worker pod via the /pcaps/worker-src endpoint.
+func getWorkerSource(clientset *kubernetes.Clientset, podName, namespace string) (string, error) {
+	// Get the worker pod IP or service address (you can also use the cluster DNS name)
+	pod, err := clientset.CoreV1().Pods(namespace).Get(context.TODO(), podName, metav1.GetOptions{})
+	if err != nil {
+		log.Error().Err(err).Msgf("Failed to get pod %s", podName)
+		return "", err
 	}
-	return sb.String()
+
+	// Construct the URL to access the worker's /pcaps/worker-src endpoint
+	workerURL := fmt.Sprintf("http://%s:30001/pcaps/worker-src", pod.Status.PodIP)
+
+	// Make an HTTP request to the worker pod's endpoint
+	resp, err := http.Get(workerURL)
+	if err != nil {
+		log.Error().Err(err).Msgf("Failed to request worker src dir from %s", workerURL)
+		return "", err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return "", fmt.Errorf("failed to get worker src dir, status code: %d", resp.StatusCode)
+	}
+
+	// Read the response body
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return "", err
+	}
+
+	// Parse the JSON response
+	var workerSrcResp WorkerSrcResponse
+	err = json.Unmarshal(body, &workerSrcResp)
+	if err != nil {
+		return "", fmt.Errorf("failed to parse worker src dir response: %v", err)
+	}
+
+	return workerSrcResp.WorkerSrcDir, nil
 }

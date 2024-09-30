@@ -185,9 +185,9 @@ type MiscConfig struct {
 	DetectDuplicates            bool   `yaml:"detectDuplicates" json:"detectDuplicates" default:"false"`
 	StaleTimeoutSeconds         int    `yaml:"staleTimeoutSeconds" json:"staleTimeoutSeconds" default:"30"`
 	PcapDumpEnable              bool   `yaml:"pcapDumpEnable" json:"pcapDumpEnable" default:"false"`
-	TimeInterval                string `yaml:"timeInterval" json:"timeInterval" default:"1m"`
-	MaxTime                     string `yaml:"maxTime" json:"maxTime" default:"24h"`
-	MaxSize                     string `yaml:"maxSize" json:"maxSize" default:"500MB"`
+	PcapTimeInterval            string `yaml:"timeInterval" json:"timeInterval" default:"1m"`
+	PcapMaxTime                 string `yaml:"maxTime" json:"maxTime" default:"24h"`
+	PcapMaxSize                 string `yaml:"maxSize" json:"maxSize" default:"500MB"`
 	PcapDest                    string `yaml:"pcapDest" json:"pcapDest" default:"."`
 }
 

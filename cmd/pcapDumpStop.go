@@ -2,13 +2,11 @@ package cmd
 
 import (
 	"context"
-	"fmt"
 	"path/filepath"
 
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/homedir"
 )
@@ -28,8 +26,6 @@ func init() {
 }
 
 func stopPcap(cmd *cobra.Command) error {
-	fmt.Println("Stopping PCAP capture.")
-
 	// Load Kubernetes configuration
 	kubeconfig := filepath.Join(homedir.HomeDir(), ".kube", "config")
 	config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
@@ -53,30 +49,11 @@ func stopPcap(cmd *cobra.Command) error {
 
 	// Iterate over the worker pods and set config to stop pcap
 	for _, pod := range workerPods.Items {
-		err := writeStopConfigToFileInPod(context.Background(), clientset, config, pod.Name, namespace)
+		err := setPcapConfigInKubernetes(clientset, pod.Name, namespace, "false", "", "", "")
 		if err != nil {
-			log.Error().Err(err).Msgf("Error updating config file for pod %s", pod.Name)
+			log.Error().Err(err).Msgf("Error setting PCAP config for pod %s", pod.Name)
 			continue
 		}
-		fmt.Printf("PCAP capture stopped for pod %s\n", pod.Name)
-	}
-
-	fmt.Println("PCAP capture stopped successfully.")
-	return nil
-}
-
-// writeStopConfigToFileInPod reads the existing config, updates the PCAP_DUMP_ENABLE value, and writes it back to the file
-func writeStopConfigToFileInPod(ctx context.Context, clientset *kubernetes.Clientset, config *rest.Config, podName, namespace string) error {
-	existingConfig, err := readConfigFileFromPod(ctx, clientset, config, podName, namespace, configPath)
-	if err != nil {
-		return fmt.Errorf("failed to read config file from pod %s: %w", podName, err)
-	}
-
-	existingConfig["PCAP_DUMP_ENABLE"] = "false"
-
-	err = writeConfigFileToPod(ctx, clientset, config, podName, namespace, configPath, existingConfig)
-	if err != nil {
-		return fmt.Errorf("failed to write config file to pod %s: %w", podName, err)
 	}
 
 	return nil
