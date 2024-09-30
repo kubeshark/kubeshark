@@ -99,13 +99,13 @@ spec:
           - name: PROFILING_ENABLED
             value: '{{ .Values.tap.misc.profile }}'
           - name: PCAP_DUMP_ENABLE
-            value: '{{ .Values.tap.worker.env.pcapDumpEnable }}'
-          - name: TIME_INTERVAL
-            value: '{{ .Values.tap.worker.env.timeInterval }}'
-          - name: MAX_TIME
-            value: '{{ .Values.tap.worker.env.maxTime }}'
-          - name: MAX_SIZE
-            value: '{{ .Values.tap.worker.env.maxSize }}'
+            value: '{{ .Values.tap.misc.pcapDumpEnable }}'
+          - name: PCAP_TIME_INTERVAL
+            value: '{{ .Values.tap.misc.pcapTimeInterval }}'
+          - name: PCAP_MAX_TIME
+            value: '{{ .Values.tap.misc.pcapMaxTime }}'
+          - name: PCAP_MAX_SIZE
+            value: '{{ .Values.tap.misc.pcapMaxSize }}'
           resources:
             limits:
               cpu: {{ .Values.tap.resources.sniffer.limits.cpu }}

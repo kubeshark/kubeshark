@@ -23,6 +23,10 @@ const (
 	CONFIG_AUTH_ENABLED               = "AUTH_ENABLED"
 	CONFIG_AUTH_TYPE                  = "AUTH_TYPE"
 	CONFIG_AUTH_SAML_IDP_METADATA_URL = "AUTH_SAML_IDP_METADATA_URL"
+	CONFIG_PCAP_DUMP_ENABLE           = "PCAP_DUMP_ENABLE"
+	CONFIG_TIME_INTERVAL              = "TIME_INTERVAL"
+	CONFIG_MAX_TIME                   = "MAX_TIME"
+	CONFIG_MAX_SIZE                   = "MAX_SIZE"
 )
 
 func SetSecret(provider *Provider, key string, value string) (updated bool, err error) {

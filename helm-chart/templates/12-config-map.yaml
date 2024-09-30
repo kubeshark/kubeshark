@@ -49,4 +49,7 @@ data:
     ENABLED_DISSECTORS: '{{ gt (len .Values.tap.enabledDissectors) 0 | ternary (join "," .Values.tap.enabledDissectors) "" }}'
     DISSECTORS_UPDATING_ENABLED: '{{ .Values.dissectorsUpdatingEnabled | ternary "true" "false" }}'
     DETECT_DUPLICATES: '{{ .Values.tap.misc.detectDuplicates | ternary "true" "false" }}'
-
+    PCAP_DUMP_ENABLE: '{{ .Values.tap.misc.pcapDumpEnable }}'
+    PCAP_TIME_INTERVAL: '{{ .Values.tap.misc.pcapTimeInterval }}'
+    PCAP_MAX_TIME: '{{ .Values.tap.misc.pcapMaxTime }}'
+    PCAP_MAX_SIZE: '{{ .Values.tap.misc.pcapMaxSize }}'
