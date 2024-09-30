@@ -487,7 +487,7 @@ spec:
             - -disable-ebpf
             - -resolution-strategy
             - 'auto'
-          image: '192.168.49.2:5000/kubeshark/worker:dev'
+          image: 'docker.io/kubeshark/worker:v52.3.79'
           imagePullPolicy: Always
           name: sniffer
           ports:
@@ -556,7 +556,7 @@ spec:
             - -procfs
             - /hostproc
             - -disable-ebpf
-          image: '192.168.49.2:5000/kubeshark/worker:dev'
+          image: 'docker.io/kubeshark/worker:v52.3.79'
           imagePullPolicy: Always
           name: tracer
           env:
