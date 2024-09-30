@@ -73,6 +73,9 @@ spec:
           {{- if ne .Values.tap.packetCapture "ebpf" }}
             - -disable-ebpf
           {{- end }}
+          {{- if .Values.tap.resourceGuard.enabled }}
+            - -enable-resource-guard
+          {{- end }}
             - -resolution-strategy
             - '{{ .Values.tap.misc.resolutionStrategy }}'
             - -staletimeout

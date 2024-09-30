@@ -98,6 +98,8 @@ tap:
     unloadOnDestroy: false
   telemetry:
     enabled: true
+  resourceGuard:
+    enabled: false
   sentry:
     enabled: false
     environment: production
