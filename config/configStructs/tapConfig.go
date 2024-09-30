@@ -31,6 +31,7 @@ const (
 	IgnoreTaintedLabel           = "ignoreTainted"
 	IngressEnabledLabel          = "ingress-enabled"
 	TelemetryEnabledLabel        = "telemetry-enabled"
+	ResourceGuardEnabledLabel    = "resource-guard-enabled"
 	PprofPortLabel               = "pprof-port"
 	PprofViewLabel               = "pprof-view"
 	DebugLabel                   = "debug"
@@ -144,6 +145,10 @@ type TelemetryConfig struct {
 	Enabled bool `yaml:"enabled" json:"enabled" default:"true"`
 }
 
+type ResourceGuardConfig struct {
+	Enabled bool `yaml:"enabled" json:"enabled" default:"false"`
+}
+
 type SentryConfig struct {
 	Enabled     bool   `yaml:"enabled" json:"enabled" default:"false"`
 	Environment string `yaml:"environment" json:"environment" default:"production"`
@@ -215,6 +220,7 @@ type TapConfig struct {
 	Debug                        bool                  `yaml:"debug" json:"debug" default:"false"`
 	KernelModule                 KernelModuleConfig    `yaml:"kernelModule" json:"kernelModule"`
 	Telemetry                    TelemetryConfig       `yaml:"telemetry" json:"telemetry"`
+	ResourceGuard                ResourceGuardConfig   `yaml:"resourceGuard" json:"resourceGuard"`
 	Sentry                       SentryConfig          `yaml:"sentry" json:"sentry"`
 	DefaultFilter                string                `yaml:"defaultFilter" json:"defaultFilter" default:"!dns and !tcp and !udp and !icmp"`
 	ScriptingDisabled            bool                  `yaml:"scriptingDisabled" json:"scriptingDisabled" default:"false"`
