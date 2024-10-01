@@ -237,3 +237,51 @@ func getWorkerSource(clientset *kubernetes.Clientset, podName, namespace string)
 
 	return workerSrcResp.WorkerSrcDir, nil
 }
+
+// searchForDirectoryInPod searches for a directory (e.g., "userPcaps") in the worker pod and returns its full path.
+func searchForDirectoryInPod(ctx context.Context, clientset *kubernetes.Clientset, config *rest.Config, podName, namespace, dirName string) (string, error) {
+	// Command to find the directory inside the pod
+	log.Warn().Msgf("pased %v", dirName)
+	cmd := []string{"find", "/", "-type", "d", "-name", dirName, "-print", "-o", "-path", "/hostproc", "-prune"}
+
+	req := clientset.CoreV1().RESTClient().Post().
+		Resource("pods").
+		Name(podName).
+		Namespace(namespace).
+		SubResource("exec").
+		Param("container", "sniffer").
+		Param("stdout", "true").
+		Param("stderr", "true").
+		Param("command", cmd[0]).
+		Param("command", cmd[1]).
+		Param("command", cmd[2]).
+		Param("command", cmd[3]).
+		Param("command", cmd[4]).
+		Param("command", cmd[5]).
+		Param("command", cmd[6]).
+		Param("command", cmd[7]).
+		Param("command", cmd[8]).
+		Param("command", cmd[9]).
+		Param("command", cmd[10])
+
+	exec, err := remotecommand.NewSPDYExecutor(config, "POST", req.URL())
+	if err != nil {
+		return "", fmt.Errorf("failed to initialize executor: %w", err)
+	}
+
+	var stdoutBuf, stderrBuf bytes.Buffer
+	err = exec.StreamWithContext(ctx, remotecommand.StreamOptions{
+		Stdout: &stdoutBuf,
+		Stderr: &stderrBuf,
+	})
+	if err != nil {
+		return "", fmt.Errorf("error searching directory in pod: %w. Stderr: %s", err, stderrBuf.String())
+	}
+
+	output := strings.TrimSpace(stdoutBuf.String())
+	if output == "" {
+		return "", fmt.Errorf("directory '%s' not found in pod %s", dirName, podName)
+	}
+
+	return output, nil
+}

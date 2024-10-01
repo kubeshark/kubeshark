@@ -50,13 +50,19 @@ var pcapCopyCmd = &cobra.Command{
 
 		// Iterate over each pod to get the PCAP directory from config and copy files
 		for _, pod := range workerPods.Items {
-			srcDir, err := getWorkerSource(clientset, pod.Name, pod.Namespace)
+			// Search for the 'userPcaps' directory in the pod
+			userPcapsDir, err := searchForDirectoryInPod(context.Background(), clientset, config, pod.Name, namespace, "userPcaps")
 			if err != nil {
-				log.Error().Err(err).Msgf("Failed to read the worker source dir for %s", pod.Name)
+				log.Error().Err(err).Msgf("Error searching for 'userPcaps' directory in pod %s", pod.Name)
+				continue
 			}
 
+			if userPcapsDir == "" {
+				log.Error().Msgf("'userPcaps' directory not found in pod %s", pod.Name)
+				continue
+			}
 			// List files in the PCAP directory on the pod
-			files, err := listFilesInPodDir(context.Background(), clientset, config, pod.Name, namespace, srcDir)
+			files, err := listFilesInPodDir(context.Background(), clientset, config, pod.Name, namespace, userPcapsDir)
 			if err != nil {
 				log.Error().Err(err).Msgf("Error listing files in pod %s", pod.Name)
 				continue
@@ -66,7 +72,7 @@ var pcapCopyCmd = &cobra.Command{
 
 			// Copy each file from the pod to the local destination
 			for _, file := range files {
-				srcFile := filepath.Join(srcDir, file)
+				srcFile := filepath.Join(userPcapsDir, file)
 				destFile := filepath.Join(destDir, pod.Name+"_"+file)
 
 				err = copyFileFromPod(context.Background(), clientset, config, pod.Name, namespace, srcFile, destFile)
