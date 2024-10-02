@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"errors"
-	"fmt"
 	"path/filepath"
 
 	"github.com/creasty/defaults"
@@ -63,7 +62,6 @@ var pcapDumpCmd = &cobra.Command{
 			if err != nil {
 				return err
 			}
-			fmt.Printf("Started PCAP capture with parameters: %v, %v, %v\n", timeInterval, maxTime, maxSize)
 		}
 
 		// Handle stop operation if the stop string is provided
@@ -80,7 +78,6 @@ var pcapDumpCmd = &cobra.Command{
 			if destDir == "" {
 				return errors.New("the --dest flag must be specified with --copy")
 			}
-			fmt.Printf("Copying PCAP files to destination: %v\n", destDir)
 			err = copyPcapFiles(clientset, config, destDir)
 			if err != nil {
 				return err
