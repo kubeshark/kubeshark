@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"errors"
-	"flag"
 	"fmt"
 	"path/filepath"
 
@@ -20,16 +19,20 @@ var pcapDumpCmd = &cobra.Command{
 	Use:   "pcapdump",
 	Short: "Manage PCAP operations: start, stop, or copy PCAP files",
 	RunE: func(cmd *cobra.Command, args []string) error {
-		var kubeconfig *string
-		if home := homedir.HomeDir(); home != "" {
-			kubeconfig = flag.String("kubeconfig", filepath.Join(home, ".kube", "config"), "(optional) absolute path to the kubeconfig file")
-		} else {
-			kubeconfig = flag.String("kubeconfig", "", "absolute path to the kubeconfig file")
+		// Retrieve the kubeconfig path from the flag
+		kubeconfig, _ := cmd.Flags().GetString(configStructs.PcapKubeconfig)
+
+		// If kubeconfig is not provided, use the default location
+		if kubeconfig == "" {
+			if home := homedir.HomeDir(); home != "" {
+				kubeconfig = filepath.Join(home, ".kube", "config")
+			} else {
+				return errors.New("kubeconfig flag not provided and no home directory available for default config location")
+			}
 		}
-		flag.Parse()
 
 		// Use the current context in kubeconfig
-		config, err := clientcmd.BuildConfigFromFlags("", *kubeconfig)
+		config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
 		if err != nil {
 			log.Error().Err(err).Msg("Error building kubeconfig")
 			return err
@@ -103,5 +106,5 @@ func init() {
 	pcapDumpCmd.Flags().String(configStructs.PcapMaxTime, defaultPcapDumpConfig.PcapMaxTime, "Maximum time for retaining old PCAP files (used with --start)")
 	pcapDumpCmd.Flags().String(configStructs.PcapMaxSize, defaultPcapDumpConfig.PcapMaxSize, "Maximum size of PCAP files before deletion (used with --start)")
 	pcapDumpCmd.Flags().String(configStructs.PcapDest, defaultPcapDumpConfig.PcapDest, "Local destination path for copied PCAP files (used with --copy)")
-	pcapDumpCmd.Flags().String("kubeconfig", "", "Absolute path to the kubeconfig file (optional)")
+	pcapDumpCmd.Flags().String(configStructs.PcapKubeconfig, defaultPcapDumpConfig.PcapKubeconfig, "Absolute path to the kubeconfig file (optional)")
 }
