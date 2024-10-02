@@ -157,6 +157,7 @@ tap:
     pcapTimeInterval: 1m
     pcapMaxTime: 2h
     pcapMaxSize: 1MB
+    pcapSrcDir: "userPcaps"
 logs:
   file: ""
   grep: ""

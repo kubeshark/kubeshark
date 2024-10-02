@@ -37,7 +37,7 @@ const (
 	DebugLabel                   = "debug"
 	ContainerPort                = 80
 	ContainerPortStr             = "80"
-	PcapDumpCopy                 = "dest"
+	PcapCopy                     = "copy"
 )
 
 type ResourceLimitsHub struct {
@@ -193,7 +193,9 @@ type MiscConfig struct {
 	PcapTimeInterval            string `yaml:"timeInterval" json:"timeInterval" default:"1m"`
 	PcapMaxTime                 string `yaml:"maxTime" json:"maxTime" default:"24h"`
 	PcapMaxSize                 string `yaml:"maxSize" json:"maxSize" default:"500MB"`
-	PcapDest                    string `yaml:"pcapDest" json:"pcapDest" default:"."`
+	PcapDest                    string `yaml:"pcapDest" json:"pcapDest" default:""`
+	PcapSrcDir                  string `yaml:"pcapSrcDir" json:"pcapSrcDir" default:""`
+	PcapCopy                    string `yaml:"pcapCopy" json:"pcapCopy" default:""`
 }
 
 type TapConfig struct {
