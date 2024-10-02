@@ -38,6 +38,7 @@ const (
 	ContainerPort                = 80
 	ContainerPortStr             = "80"
 	PcapCopy                     = "copy"
+	PcapDest                     = "dest"
 )
 
 type ResourceLimitsHub struct {
@@ -189,13 +190,16 @@ type MiscConfig struct {
 	DuplicateTimeframe          string `yaml:"duplicateTimeframe" json:"duplicateTimeframe" default:"200ms"`
 	DetectDuplicates            bool   `yaml:"detectDuplicates" json:"detectDuplicates" default:"false"`
 	StaleTimeoutSeconds         int    `yaml:"staleTimeoutSeconds" json:"staleTimeoutSeconds" default:"30"`
-	PcapDumpEnable              bool   `yaml:"pcapDumpEnable" json:"pcapDumpEnable" default:"false"`
-	PcapTimeInterval            string `yaml:"timeInterval" json:"timeInterval" default:"1m"`
-	PcapMaxTime                 string `yaml:"maxTime" json:"maxTime" default:"24h"`
-	PcapMaxSize                 string `yaml:"maxSize" json:"maxSize" default:"500MB"`
-	PcapDest                    string `yaml:"pcapDest" json:"pcapDest" default:""`
-	PcapSrcDir                  string `yaml:"pcapSrcDir" json:"pcapSrcDir" default:""`
-	PcapCopy                    string `yaml:"pcapCopy" json:"pcapCopy" default:""`
+}
+
+type PcapDumpConfig struct {
+	PcapDumpEnable   bool   `yaml:"pcapDumpEnable" json:"pcapDumpEnable" default:"false"`
+	PcapTimeInterval string `yaml:"timeInterval" json:"timeInterval" default:"1m"`
+	PcapMaxTime      string `yaml:"maxTime" json:"maxTime" default:"24h"`
+	PcapMaxSize      string `yaml:"maxSize" json:"maxSize" default:"500MB"`
+	PcapDest         string `yaml:"dest" json:"dest" default:""`
+	PcapSrcDir       string `yaml:"pcapSrcDir" json:"pcapSrcDir" default:""`
+	PcapCopy         string `yaml:"copy" json:"copy" default:""`
 }
 
 type TapConfig struct {
