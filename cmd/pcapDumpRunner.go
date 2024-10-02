@@ -24,6 +24,13 @@ const label = "app.kubeshark.co/app=worker"
 const SELF_RESOURCES_PREFIX = "kubeshark-"
 const SUFFIX_CONFIG_MAP = "config-map"
 
+// NamespaceFiles represents the namespace and the files found in that namespace.
+type NamespaceFiles struct {
+	Namespace string   // The namespace in which the files were found
+	SrcDir    string   // The source directory from which the files were listed
+	Files     []string // List of files found in the namespace
+}
+
 // listWorkerPods fetches all worker pods from multiple namespaces
 func listWorkerPods(ctx context.Context, clientset *clientk8s.Clientset, namespaces []string) ([]corev1.Pod, error) {
 	var allPods []corev1.Pod
@@ -46,26 +53,32 @@ func listWorkerPods(ctx context.Context, clientset *clientk8s.Clientset, namespa
 }
 
 // listFilesInPodDir lists all files in the specified directory inside the pod across multiple namespaces
-func listFilesInPodDir(ctx context.Context, clientset *clientk8s.Clientset, config *rest.Config, podName string, namespaces []string, configMapName, configMapKey string) (string, []string, error) {
-	var allFiles []string
-	var srcDir string
-	var ok bool
+func listFilesInPodDir(ctx context.Context, clientset *clientk8s.Clientset, config *rest.Config, podName string, namespaces []string, configMapName, configMapKey string) ([]NamespaceFiles, error) {
+	var namespaceFilesList []NamespaceFiles
 
 	for _, namespace := range namespaces {
-		// Step 1: Retrieve the ConfigMap for the current namespace
+		// Attempt to get the ConfigMap in the current namespace
 		configMap, err := clientset.CoreV1().ConfigMaps(namespace).Get(ctx, configMapName, metav1.GetOptions{})
 		if err != nil {
-			return "", nil, fmt.Errorf("failed to retrieve ConfigMap %s in namespace %s: %w", configMapName, namespace, err)
+			continue
 		}
 
-		// Step 2: Get the srcDir from the ConfigMap data
-		srcDir, ok = configMap.Data[configMapKey]
+		// Check if the source directory exists in the ConfigMap
+		srcDir, ok := configMap.Data[configMapKey]
 		if !ok || srcDir == "" {
-			return "", nil, fmt.Errorf("directory path not found in ConfigMap %s under key %s", configMapName, configMapKey)
+			continue
 		}
 
-		// Step 3: List files in the retrieved srcDir
-		cmd := []string{"ls", srcDir}
+		// Attempt to get the pod in the current namespace
+		pod, err := clientset.CoreV1().Pods(namespace).Get(ctx, podName, metav1.GetOptions{})
+		if err != nil {
+			continue
+		}
+
+		nodeName := pod.Spec.NodeName
+		srcFilePath := filepath.Join("data", nodeName, srcDir)
+
+		cmd := []string{"ls", srcFilePath}
 		req := clientset.CoreV1().RESTClient().Post().
 			Resource("pods").
 			Name(podName).
@@ -79,95 +92,90 @@ func listFilesInPodDir(ctx context.Context, clientset *clientk8s.Clientset, conf
 
 		exec, err := remotecommand.NewSPDYExecutor(config, "POST", req.URL())
 		if err != nil {
-			return "", nil, fmt.Errorf("failed to initialize executor for pod %s in namespace %s: %w", podName, namespace, err)
+			continue
 		}
 
 		var stdoutBuf bytes.Buffer
 		var stderrBuf bytes.Buffer
 
-		// Stream the result of the ls command
+		// Execute the command to list files
 		err = exec.StreamWithContext(ctx, remotecommand.StreamOptions{
 			Stdout: &stdoutBuf,
 			Stderr: &stderrBuf,
 		})
 		if err != nil {
-			return "", nil, fmt.Errorf("error listing files in pod %s in namespace %s: %w. Stderr: %s", podName, namespace, err, stderrBuf.String())
+			continue
 		}
 
-		// Split the output (file names) into a list and accumulate them
+		// Split the output (file names) into a list
 		files := strings.Split(strings.TrimSpace(stdoutBuf.String()), "\n")
-		allFiles = append(allFiles, files...)
+		if len(files) > 0 {
+			// Append the NamespaceFiles struct to the list
+			namespaceFilesList = append(namespaceFilesList, NamespaceFiles{
+				Namespace: namespace,
+				SrcDir:    srcDir,
+				Files:     files,
+			})
+		}
 	}
 
-	if len(allFiles) == 0 {
-		return "", nil, fmt.Errorf("no files found in pod %s across the provided namespaces", podName)
+	if len(namespaceFilesList) == 0 {
+		return nil, fmt.Errorf("no files found in pod %s across the provided namespaces", podName)
 	}
 
-	return srcDir, allFiles, nil
+	return namespaceFilesList, nil
 }
 
-// copyFileFromPod copies a single file from a pod to a local destination across multiple namespaces
-func copyFileFromPod(ctx context.Context, clientset *clientk8s.Clientset, config *rest.Config, podName, srcDir, srcFile, destFile string, namespaces []string) error {
-	for _, namespace := range namespaces {
-		// Get the pod to retrieve its node name
-		pod, err := clientset.CoreV1().Pods(namespace).Get(ctx, podName, metav1.GetOptions{})
-		if err != nil {
-			log.Error().Err(err).Msgf("Failed to get pod %s in namespace %s", podName, namespace)
-			continue // Move to the next namespace
-		}
-
-		// Construct the complete path using /data, the node name, srcDir, and srcFile
-		nodeName := pod.Spec.NodeName
-		srcFilePath := filepath.Join("/data", nodeName, srcDir, srcFile)
-
-		log.Warn().Msgf("Copying file %v", srcFilePath)
-
-		// Execute the `cat` command to read the file at the srcFilePath
-		cmd := []string{"cat", srcFilePath}
-		req := clientset.CoreV1().RESTClient().Post().
-			Resource("pods").
-			Name(podName).
-			Namespace(namespace).
-			SubResource("exec").
-			Param("container", "sniffer").
-			Param("stdout", "true").
-			Param("stderr", "true").
-			Param("command", cmd[0]).
-			Param("command", cmd[1])
-
-		exec, err := remotecommand.NewSPDYExecutor(config, "POST", req.URL())
-		if err != nil {
-			log.Error().Err(err).Msgf("Failed to initialize executor for pod %s in namespace %s", podName, namespace)
-			continue // Move to the next namespace
-		}
-
-		// Create the local file to write the content to
-		outFile, err := os.Create(destFile)
-		if err != nil {
-			return fmt.Errorf("failed to create destination file: %w", err)
-		}
-		defer outFile.Close()
-
-		// Capture stderr for error logging
-		var stderrBuf bytes.Buffer
-
-		// Stream the file content from the pod to the local file
-		err = exec.StreamWithContext(ctx, remotecommand.StreamOptions{
-			Stdout: outFile,
-			Stderr: &stderrBuf,
-		})
-		if err != nil {
-			log.Error().Err(err).Msgf("Error copying file from pod %s in namespace %s: %s", podName, namespace, stderrBuf.String())
-			continue // Move to the next namespace
-		}
-
-		// If the copy is successful, break out of the loop as there's no need to continue
-		log.Info().Msgf("Successfully copied file from pod %s in namespace %s to %s", podName, namespace, destFile)
-		return nil
+// copyFileFromPod copies a single file from a pod to a local destination
+func copyFileFromPod(ctx context.Context, clientset *kubernetes.Clientset, config *rest.Config, podName, namespace, srcDir, srcFile, destFile string) error {
+	// Get the pod to retrieve its node name
+	pod, err := clientset.CoreV1().Pods(namespace).Get(ctx, podName, metav1.GetOptions{})
+	if err != nil {
+		return fmt.Errorf("failed to get pod %s in namespace %s: %w", podName, namespace, err)
 	}
 
-	// If the file couldn't be copied from any namespace, return an error
-	return fmt.Errorf("failed to copy file from pod %s across all provided namespaces", podName)
+	// Construct the complete path using /data, the node name, srcDir, and srcFile
+	nodeName := pod.Spec.NodeName
+	srcFilePath := filepath.Join("data", nodeName, srcDir, srcFile)
+
+	// Execute the `cat` command to read the file at the srcFilePath
+	cmd := []string{"cat", srcFilePath}
+	req := clientset.CoreV1().RESTClient().Post().
+		Resource("pods").
+		Name(podName).
+		Namespace(namespace).
+		SubResource("exec").
+		Param("container", "sniffer").
+		Param("stdout", "true").
+		Param("stderr", "true").
+		Param("command", cmd[0]).
+		Param("command", cmd[1])
+
+	exec, err := remotecommand.NewSPDYExecutor(config, "POST", req.URL())
+	if err != nil {
+		return fmt.Errorf("failed to initialize executor for pod %s in namespace %s: %w", podName, namespace, err)
+	}
+
+	// Create the local file to write the content to
+	outFile, err := os.Create(destFile)
+	if err != nil {
+		return fmt.Errorf("failed to create destination file: %w", err)
+	}
+	defer outFile.Close()
+
+	// Capture stderr for error logging
+	var stderrBuf bytes.Buffer
+
+	// Stream the file content from the pod to the local file
+	err = exec.StreamWithContext(ctx, remotecommand.StreamOptions{
+		Stdout: outFile,
+		Stderr: &stderrBuf,
+	})
+	if err != nil {
+		return fmt.Errorf("error copying file from pod %s in namespace %s: %s", podName, namespace, stderrBuf.String())
+	}
+
+	return nil
 }
 
 func mergePCAPs(outputFile string, inputFiles []string) error {
@@ -219,7 +227,7 @@ func setPcapConfigInKubernetes(ctx context.Context, clientset *clientk8s.Clients
 		// Load the existing ConfigMap in the current namespace
 		configMap, err := clientset.CoreV1().ConfigMaps(namespace).Get(ctx, "kubeshark-config-map", metav1.GetOptions{})
 		if err != nil {
-			return fmt.Errorf("failed to load ConfigMap in namespace %s: %w", namespace, err)
+			continue
 		}
 
 		// Update the values with user-provided input
@@ -231,7 +239,7 @@ func setPcapConfigInKubernetes(ctx context.Context, clientset *clientk8s.Clients
 		// Apply the updated ConfigMap back to the cluster in the current namespace
 		_, err = clientset.CoreV1().ConfigMaps(namespace).Update(ctx, configMap, metav1.UpdateOptions{})
 		if err != nil {
-			return fmt.Errorf("failed to update ConfigMap in namespace %s: %w", namespace, err)
+			continue
 		}
 	}
 
@@ -313,8 +321,8 @@ func copyPcapFiles(clientset *kubernetes.Clientset, config *rest.Config, destDir
 
 	// Iterate over each pod to get the PCAP directory from config and copy files
 	for _, pod := range workerPods {
-		// List files in the PCAP directory on the pod
-		srcDir, files, err := listFilesInPodDir(context.Background(), clientset, config, pod.Name, targetNamespaces, SELF_RESOURCES_PREFIX+SUFFIX_CONFIG_MAP, "PCAP_SRC_DIR")
+		// Get the list of NamespaceFiles (files per namespace) and their source directories
+		namespaceFiles, err := listFilesInPodDir(context.Background(), clientset, config, pod.Name, targetNamespaces, SELF_RESOURCES_PREFIX+SUFFIX_CONFIG_MAP, "PCAP_SRC_DIR")
 		if err != nil {
 			log.Error().Err(err).Msgf("Error listing files in pod %s", pod.Name)
 			continue
@@ -322,19 +330,21 @@ func copyPcapFiles(clientset *kubernetes.Clientset, config *rest.Config, destDir
 
 		var currentFiles []string
 
-		// Copy each file from the pod to the local destination
-		for _, file := range files {
-			destFile := filepath.Join(destDir, pod.Name+"_"+file)
+		// Copy each file from the pod to the local destination for each namespace
+		for _, nsFiles := range namespaceFiles {
+			for _, file := range nsFiles.Files {
+				destFile := filepath.Join(destDir, file)
 
-			log.Warn().Msgf("Got srcDir %v", srcDir)
+				// Pass the correct namespace and related details to the function
+				err = copyFileFromPod(context.Background(), clientset, config, pod.Name, nsFiles.Namespace, nsFiles.SrcDir, file, destFile)
+				if err != nil {
+					log.Error().Err(err).Msgf("Error copying file from pod %s in namespace %s", pod.Name, nsFiles.Namespace)
+				}
 
-			err = copyFileFromPod(context.Background(), clientset, config, pod.Name, srcDir, file, destFile, targetNamespaces)
-			if err != nil {
-				log.Error().Err(err).Msgf("Error copying file from pod %s", pod.Name)
+				currentFiles = append(currentFiles, destFile)
 			}
-
-			currentFiles = append(currentFiles, destFile)
 		}
+
 		if len(currentFiles) == 0 {
 			log.Error().Msgf("No files to merge for pod %s", pod.Name)
 			continue
@@ -346,7 +356,7 @@ func copyPcapFiles(clientset *kubernetes.Clientset, config *rest.Config, destDir
 		// Merge the PCAPs into the temporary file
 		err = mergePCAPs(tempMergedFile, currentFiles)
 		if err != nil {
-			log.Error().Err(err).Msgf("Error merging file from pod %s", pod.Name)
+			log.Error().Err(err).Msgf("Error merging files from pod %s", pod.Name)
 			continue
 		}
 
@@ -368,5 +378,6 @@ func copyPcapFiles(clientset *kubernetes.Clientset, config *rest.Config, destDir
 
 		log.Info().Msgf("Merged file created: %s", finalMergedFile)
 	}
+
 	return nil
 }

@@ -7,7 +7,6 @@ import (
 	"path/filepath"
 
 	"github.com/creasty/defaults"
-	"github.com/kubeshark/kubeshark/config"
 	"github.com/kubeshark/kubeshark/config/configStructs"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
@@ -30,33 +29,33 @@ var pcapDumpCmd = &cobra.Command{
 		flag.Parse()
 
 		// Use the current context in kubeconfig
-		k8sconfig, err := clientcmd.BuildConfigFromFlags("", *kubeconfig)
+		config, err := clientcmd.BuildConfigFromFlags("", *kubeconfig)
 		if err != nil {
 			log.Error().Err(err).Msg("Error building kubeconfig")
 			return err
 		}
 
-		clientset, err := kubernetes.NewForConfig(k8sconfig)
+		clientset, err := kubernetes.NewForConfig(config)
 		if err != nil {
 			log.Error().Err(err).Msg("Error creating Kubernetes client")
 			return err
 		}
 
 		// Check flags for start, stop, copy
-		start, _ := cmd.Flags().GetString("start")
-		stop, _ := cmd.Flags().GetString("stop")
-		copy, _ := cmd.Flags().GetString("copy")
+		start, _ := cmd.Flags().GetBool(configStructs.PcapStart)
+		stop, _ := cmd.Flags().GetBool(configStructs.PcapStop)
+		copy, _ := cmd.Flags().GetBool(configStructs.PcapCopy)
 
 		// At least one of --start, --stop, or --copy must be provided
-		if start == "" && stop == "" && copy == "" {
+		if !start && !stop && !copy {
 			return errors.New("at least one of --start, --stop, or --copy must be specified")
 		}
 
 		// Handle start operation if the start string is provided
-		if start != "" {
-			timeInterval, _ := cmd.Flags().GetString("time-interval")
-			maxTime, _ := cmd.Flags().GetString("max-time")
-			maxSize, _ := cmd.Flags().GetString("max-size")
+		if start {
+			timeInterval, _ := cmd.Flags().GetString(configStructs.PcapTimeInterval)
+			maxTime, _ := cmd.Flags().GetString(configStructs.PcapMaxTime)
+			maxSize, _ := cmd.Flags().GetString(configStructs.PcapMaxSize)
 			err = startPcap(clientset, timeInterval, maxTime, maxSize)
 			if err != nil {
 				return err
@@ -65,21 +64,21 @@ var pcapDumpCmd = &cobra.Command{
 		}
 
 		// Handle stop operation if the stop string is provided
-		if stop != "" {
+		if stop {
 			err = stopPcap(clientset)
 			if err != nil {
 				return err
 			}
-			fmt.Println("Stopped PCAP capture")
 		}
 
 		// Handle copy operation if the copy string is provided
-		if copy != "" {
-			if config.Config.PcapDump.PcapDest == "" {
+		if copy {
+			destDir, _ := cmd.Flags().GetString(configStructs.PcapDest)
+			if destDir == "" {
 				return errors.New("the --dest flag must be specified with --copy")
 			}
-			fmt.Printf("Copying PCAP files to destination: %v\n", config.Config.PcapDump.PcapDest)
-			err = copyPcapFiles(clientset, k8sconfig, config.Config.PcapDump.PcapDest)
+			fmt.Printf("Copying PCAP files to destination: %v\n", destDir)
+			err = copyPcapFiles(clientset, config, destDir)
 			if err != nil {
 				return err
 			}
@@ -97,12 +96,12 @@ func init() {
 		log.Debug().Err(err).Send()
 	}
 
-	pcapDumpCmd.Flags().String("start", "", "Start PCAP capture with the given name or parameters")
-	pcapDumpCmd.Flags().String("stop", "", "Stop PCAP capture with the given name or parameters")
-	pcapDumpCmd.Flags().String(configStructs.PcapCopy, defaultPcapDumpConfig.PcapCopy, "Copy PCAP files with the given name or parameters")
-	pcapDumpCmd.Flags().String("time-interval", defaultPcapDumpConfig.PcapTimeInterval, "Time interval for PCAP file rotation (used with --start)")
-	pcapDumpCmd.Flags().String("max-time", defaultPcapDumpConfig.PcapMaxTime, "Maximum time for retaining old PCAP files (used with --start)")
-	pcapDumpCmd.Flags().String("max-size", defaultPcapDumpConfig.PcapMaxSize, "Maximum size of PCAP files before deletion (used with --start)")
+	pcapDumpCmd.Flags().Bool(configStructs.PcapStart, defaultPcapDumpConfig.PcapStart, "Start PCAP capture with the given name or parameters")
+	pcapDumpCmd.Flags().Bool(configStructs.PcapStop, defaultPcapDumpConfig.PcapStop, "Stop PCAP capture with the given name or parameters")
+	pcapDumpCmd.Flags().Bool(configStructs.PcapCopy, defaultPcapDumpConfig.PcapCopy, "Copy PCAP files with the given name or parameters")
+	pcapDumpCmd.Flags().String(configStructs.PcapTimeInterval, defaultPcapDumpConfig.PcapTimeInterval, "Time interval for PCAP file rotation (used with --start)")
+	pcapDumpCmd.Flags().String(configStructs.PcapMaxTime, defaultPcapDumpConfig.PcapMaxTime, "Maximum time for retaining old PCAP files (used with --start)")
+	pcapDumpCmd.Flags().String(configStructs.PcapMaxSize, defaultPcapDumpConfig.PcapMaxSize, "Maximum size of PCAP files before deletion (used with --start)")
 	pcapDumpCmd.Flags().String(configStructs.PcapDest, defaultPcapDumpConfig.PcapDest, "Local destination path for copied PCAP files (used with --copy)")
 	pcapDumpCmd.Flags().String("kubeconfig", "", "Absolute path to the kubeconfig file (optional)")
 }

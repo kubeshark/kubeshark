@@ -53,4 +53,4 @@ data:
     PCAP_TIME_INTERVAL: '{{ .Values.tap.misc.pcapTimeInterval }}'
     PCAP_MAX_TIME: '{{ .Values.tap.misc.pcapMaxTime }}'
     PCAP_MAX_SIZE: '{{ .Values.tap.misc.pcapMaxSize }}'
-    PCAP_SRC_DIR: '{{ .Values.tap.misc.pcapMaxSize }}'
+    PCAP_SRC_DIR: '{{ .Values.tap.misc.pcapSrcDir }}'
