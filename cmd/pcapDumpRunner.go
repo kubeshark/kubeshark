@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 
 	"github.com/kubeshark/gopacket"
@@ -222,7 +223,7 @@ func mergePCAPs(outputFile string, inputFiles []string) error {
 }
 
 // setPcapConfigInKubernetes sets the PCAP config for all pods across multiple namespaces
-func setPcapConfigInKubernetes(ctx context.Context, clientset *clientk8s.Clientset, podName string, namespaces []string, enabledPcap, timeInterval, maxTime, maxSize string) error {
+func setPcapConfigInKubernetes(ctx context.Context, clientset *clientk8s.Clientset, podName string, namespaces []string, enabledPcap bool, timeInterval, maxTime, maxSize string) error {
 	for _, namespace := range namespaces {
 		// Load the existing ConfigMap in the current namespace
 		configMap, err := clientset.CoreV1().ConfigMaps(namespace).Get(ctx, "kubeshark-config-map", metav1.GetOptions{})
@@ -234,7 +235,7 @@ func setPcapConfigInKubernetes(ctx context.Context, clientset *clientk8s.Clients
 		configMap.Data["PCAP_TIME_INTERVAL"] = timeInterval
 		configMap.Data["PCAP_MAX_SIZE"] = maxSize
 		configMap.Data["PCAP_MAX_TIME"] = maxTime
-		configMap.Data["PCAP_DUMP_ENABLE"] = enabledPcap
+		configMap.Data["PCAP_DUMP_ENABLE"] = strconv.FormatBool(enabledPcap)
 
 		// Apply the updated ConfigMap back to the cluster in the current namespace
 		_, err = clientset.CoreV1().ConfigMaps(namespace).Update(ctx, configMap, metav1.UpdateOptions{})
@@ -247,7 +248,7 @@ func setPcapConfigInKubernetes(ctx context.Context, clientset *clientk8s.Clients
 }
 
 // startPcap function for starting the PCAP capture
-func startStopPcap(clientset *kubernetes.Clientset, pcapEnable, timeInterval, maxTime, maxSize string) error {
+func startStopPcap(clientset *kubernetes.Clientset, pcapEnable bool, timeInterval, maxTime, maxSize string) error {
 	kubernetesProvider, err := getKubernetesProviderForCli(false, false)
 	if err != nil {
 		log.Error().Err(err).Send()
