@@ -179,6 +179,9 @@ Please refer to [metrics](./metrics.md) documentation for details.
 | `tap.metrics.port`                  | Pod port used to expose Prometheus metrics          | `49100`                                                  |
 | `tap.enabledDissectors`                   | This is an array of strings representing the list of supported protocols. Remove or comment out redundant protocols (e.g., dns).| The default list includes: amqp, dns , http, icmp, kafka, redis,sctp, syscall, tcp, ws.  |
 | `logs.file`                               | Logs dump path                      | `""`                                                    |
+| `pcapdump.enabled`                        | Enable recording of all traffic captured according to other parameters. Whatever Kubeshark captures, considering pod targeting rules, will be stored in pcap files ready to be viewed by tools                 | `true`                                                                                                  |
+| `pcapdump.maxTime`                        | The time window into the past that will be stored. Older traffic will be discarded.  | `2h`  |
+| `pcapdump.maxSize`                        | The maximum storage size the PCAP files will consume. Old files that cause to surpass storage consumption will get discarded.   | `500MB`  |
 | `kube.configPath`                         | Path to the `kubeconfig` file (`$HOME/.kube/config`)            | `""`                                                    |
 | `kube.context`                            | Kubernetes context to use for the deployment  | `""`                                                    |
 | `dumpLogs`                                | Enable dumping of logs         | `false`                                                 |
