@@ -50,7 +50,7 @@ var pcapDumpCmd = &cobra.Command{
 			log.Error().Err(err).Msg("Error getting pcapdump enable flag")
 			return err
 		}
-		if enabled == "unknown" {
+		if !cmd.Flags().Changed(configStructs.PcapDumpEnable) {
 			destDir, _ := cmd.Flags().GetString(configStructs.PcapDest)
 			log.Info().Msg("Copying PCAP files")
 			err = copyPcapFiles(clientset, config, destDir)
