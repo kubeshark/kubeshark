@@ -247,7 +247,7 @@ func setPcapConfigInKubernetes(ctx context.Context, clientset *clientk8s.Clients
 }
 
 // startPcap function for starting the PCAP capture
-func startPcap(clientset *kubernetes.Clientset, timeInterval, maxTime, maxSize string) error {
+func startStopPcap(clientset *kubernetes.Clientset, pcapEnable, timeInterval, maxTime, maxSize string) error {
 	kubernetesProvider, err := getKubernetesProviderForCli(false, false)
 	if err != nil {
 		log.Error().Err(err).Send()
@@ -265,35 +265,7 @@ func startPcap(clientset *kubernetes.Clientset, timeInterval, maxTime, maxSize s
 
 	// Iterate over each pod to start the PCAP capture by updating the configuration in Kubernetes
 	for _, pod := range workerPods {
-		err := setPcapConfigInKubernetes(context.Background(), clientset, pod.Name, targetNamespaces, "true", timeInterval, maxTime, maxSize)
-		if err != nil {
-			log.Error().Err(err).Msgf("Error setting PCAP config for pod %s", pod.Name)
-			continue
-		}
-	}
-	return nil
-}
-
-// stopPcap function for stopping the PCAP capture
-func stopPcap(clientset *kubernetes.Clientset) error {
-	kubernetesProvider, err := getKubernetesProviderForCli(false, false)
-	if err != nil {
-		log.Error().Err(err).Send()
-		return err
-	}
-
-	targetNamespaces := kubernetesProvider.GetNamespaces()
-
-	// Get the list of worker pods
-	workerPods, err := listWorkerPods(context.Background(), clientset, targetNamespaces)
-	if err != nil {
-		log.Error().Err(err).Msg("Error listing worker pods")
-		return err
-	}
-
-	// Iterate over the worker pods and set config to stop pcap
-	for _, pod := range workerPods {
-		err := setPcapConfigInKubernetes(context.Background(), clientset, pod.Name, targetNamespaces, "false", "", "", "")
+		err := setPcapConfigInKubernetes(context.Background(), clientset, pod.Name, targetNamespaces, pcapEnable, timeInterval, maxTime, maxSize)
 		if err != nil {
 			log.Error().Err(err).Msgf("Error setting PCAP config for pod %s", pod.Name)
 			continue

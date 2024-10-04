@@ -43,45 +43,31 @@ var pcapDumpCmd = &cobra.Command{
 			return err
 		}
 
-		// Check flags for start, stop, copy
-		start, _ := cmd.Flags().GetBool(configStructs.PcapStart)
-		stop, _ := cmd.Flags().GetBool(configStructs.PcapStop)
-		copy, _ := cmd.Flags().GetBool(configStructs.PcapCopy)
-
-		// At least one of --start, --stop, or --copy must be provided
-		if !start && !stop && !copy {
-			return errors.New("at least one of --start, --stop, or --copy must be specified")
-		}
+		enabled, _ := cmd.Flags().GetString(configStructs.PcapDumpEnable)
 
 		// Handle start operation if the start string is provided
-		if start {
+		if enabled != "" {
 			timeInterval, _ := cmd.Flags().GetString(configStructs.PcapTimeInterval)
 			maxTime, _ := cmd.Flags().GetString(configStructs.PcapMaxTime)
 			maxSize, _ := cmd.Flags().GetString(configStructs.PcapMaxSize)
-			err = startPcap(clientset, timeInterval, maxTime, maxSize)
+			err = startStopPcap(clientset, enabled, timeInterval, maxTime, maxSize)
 			if err != nil {
 				return err
 			}
-		}
 
-		// Handle stop operation if the stop string is provided
-		if stop {
-			err = stopPcap(clientset)
-			if err != nil {
-				return err
+			if enabled == "true" {
+				return nil
 			}
 		}
 
 		// Handle copy operation if the copy string is provided
-		if copy {
-			destDir, _ := cmd.Flags().GetString(configStructs.PcapDest)
-			if destDir == "" {
-				return errors.New("the --dest flag must be specified with --copy")
-			}
-			err = copyPcapFiles(clientset, config, destDir)
-			if err != nil {
-				return err
-			}
+		destDir, _ := cmd.Flags().GetString(configStructs.PcapDest)
+		if destDir == "" {
+			return errors.New("the --dest flag must be specified")
+		}
+		err = copyPcapFiles(clientset, config, destDir)
+		if err != nil {
+			return err
 		}
 
 		return nil
@@ -96,12 +82,11 @@ func init() {
 		log.Debug().Err(err).Send()
 	}
 
-	pcapDumpCmd.Flags().Bool(configStructs.PcapStart, defaultPcapDumpConfig.PcapStart, "Start PCAP capture with the given name or parameters")
-	pcapDumpCmd.Flags().Bool(configStructs.PcapStop, defaultPcapDumpConfig.PcapStop, "Stop PCAP capture with the given name or parameters")
-	pcapDumpCmd.Flags().Bool(configStructs.PcapCopy, defaultPcapDumpConfig.PcapCopy, "Copy PCAP files with the given name or parameters")
 	pcapDumpCmd.Flags().String(configStructs.PcapTimeInterval, defaultPcapDumpConfig.PcapTimeInterval, "Time interval for PCAP file rotation (used with --start)")
 	pcapDumpCmd.Flags().String(configStructs.PcapMaxTime, defaultPcapDumpConfig.PcapMaxTime, "Maximum time for retaining old PCAP files (used with --start)")
 	pcapDumpCmd.Flags().String(configStructs.PcapMaxSize, defaultPcapDumpConfig.PcapMaxSize, "Maximum size of PCAP files before deletion (used with --start)")
 	pcapDumpCmd.Flags().String(configStructs.PcapDest, defaultPcapDumpConfig.PcapDest, "Local destination path for copied PCAP files (used with --copy)")
 	pcapDumpCmd.Flags().String(configStructs.PcapKubeconfig, defaultPcapDumpConfig.PcapKubeconfig, "Absolute path to the kubeconfig file (optional)")
+	pcapDumpCmd.Flags().String(configStructs.PcapDumpEnable, defaultPcapDumpConfig.PcapDumpEnable, "Enabled/Disable to pcap dumps")
+
 }

@@ -37,14 +37,12 @@ const (
 	DebugLabel                   = "debug"
 	ContainerPort                = 80
 	ContainerPortStr             = "80"
-	PcapCopy                     = "copy"
 	PcapDest                     = "dest"
-	PcapStart                    = "start"
-	PcapStop                     = "stop"
 	PcapMaxSize                  = "maxSize"
 	PcapMaxTime                  = "maxTime"
 	PcapTimeInterval             = "timeInterval"
 	PcapKubeconfig               = "kubeconfig"
+	PcapDumpEnable               = "enabled"
 )
 
 type ResourceLimitsHub struct {
@@ -199,15 +197,12 @@ type MiscConfig struct {
 }
 
 type PcapDumpConfig struct {
-	PcapDumpEnable   bool   `yaml:"pcapDumpEnable" json:"pcapDumpEnable" default:"false"`
+	PcapDumpEnable   string `yaml:"enabled" json:"enabled" default:"true"`
 	PcapTimeInterval string `yaml:"timeInterval" json:"timeInterval" default:"1m"`
 	PcapMaxTime      string `yaml:"maxTime" json:"maxTime" default:"24h"`
 	PcapMaxSize      string `yaml:"maxSize" json:"maxSize" default:"500MB"`
 	PcapDest         string `yaml:"dest" json:"dest" default:""`
-	PcapSrcDir       string `yaml:"pcapSrcDir" json:"pcapSrcDir" default:"pcapdump"`
-	PcapCopy         bool   `yaml:"copy" json:"copy" default:"false"`
-	PcapStart        bool   `yaml:"start" json:"start" default:"false"`
-	PcapStop         bool   `yaml:"stop" json:"stop" default:"false"`
+	PcapSrcDir       string `yaml:"pcapSrcDir" json:"pcapSrcDir" default:"pcapdumps"`
 	PcapKubeconfig   string `yaml:"kubeconfig" json:"kubeconfig" default:""`
 }
 

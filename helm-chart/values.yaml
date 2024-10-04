@@ -153,14 +153,20 @@ tap:
     duplicateTimeframe: 200ms
     detectDuplicates: false
     staleTimeoutSeconds: 30
-    pcapDumpEnable: true
-    pcapTimeInterval: 1m
-    pcapMaxTime: 2h
-    pcapMaxSize: 1MB
-    pcapSrcDir: "pcapdump"
 logs:
   file: ""
   grep: ""
+pcapdump:
+  pcapDumpEnable: true
+  timeInterval: 1m
+  maxTime: 24h
+  maxSize: 500MB
+  dest: ""
+  pcapSrcDir: pcapdumps
+  copy: false
+  start: false
+  stop: false
+  kubeconfig: ""
 kube:
   configPath: ""
   context: ""
