@@ -45,11 +45,6 @@ var pcapDumpCmd = &cobra.Command{
 
 		// Handle copy operation if the copy string is provided
 
-		enabled, err := cmd.Flags().GetBool(configStructs.PcapDumpEnable)
-		if err != nil {
-			log.Error().Err(err).Msg("Error getting pcapdump enable flag")
-			return err
-		}
 		if !cmd.Flags().Changed(configStructs.PcapDumpEnable) {
 			destDir, _ := cmd.Flags().GetString(configStructs.PcapDest)
 			log.Info().Msg("Copying PCAP files")
@@ -62,6 +57,11 @@ var pcapDumpCmd = &cobra.Command{
 			// Handle start operation if the start string is provided
 
 			log.Info().Msg("Starting/stopping PCAP dump")
+			enabled, err := cmd.Flags().GetBool(configStructs.PcapDumpEnable)
+			if err != nil {
+				log.Error().Err(err).Msg("Error getting pcapdump enable flag")
+				return err
+			}
 			timeInterval, _ := cmd.Flags().GetString(configStructs.PcapTimeInterval)
 			maxTime, _ := cmd.Flags().GetString(configStructs.PcapMaxTime)
 			maxSize, _ := cmd.Flags().GetString(configStructs.PcapMaxSize)

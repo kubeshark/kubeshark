@@ -121,14 +121,6 @@ spec:
             value: '{{ (include "sentry.enabled" .) }}'
           - name: SENTRY_ENVIRONMENT
             value: '{{ .Values.tap.sentry.environment }}'
-          - name: PCAP_DUMP_ENABLE
-            value: '{{ .Values.pcapdump.pcapDumpEnable }}'
-          - name: PCAP_TIME_INTERVAL
-            value: '{{ .Values.pcapdump.pcapTimeInterval }}'
-          - name: PCAP_MAX_TIME
-            value: '{{ .Values.pcapdump.pcapMaxTime }}'
-          - name: PCAP_MAX_SIZE
-            value: '{{ .Values.pcapdump.pcapMaxSize }}'
           resources:
             limits:
               cpu: {{ .Values.tap.resources.sniffer.limits.cpu }}
