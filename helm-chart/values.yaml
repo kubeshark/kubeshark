@@ -158,12 +158,10 @@ logs:
   grep: ""
 pcapdump:
   enabled: true
-  timeInterval: 1m
+  timeInterval: 10m
   maxTime: 1h
   maxSize: 50MB
-  dest: ""
   pcapSrcDir: pcapdump
-  kubeconfig: ""
 kube:
   configPath: ""
   context: ""
