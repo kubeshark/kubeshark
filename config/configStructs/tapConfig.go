@@ -200,7 +200,7 @@ type PcapDumpConfig struct {
 	PcapDumpEnabled  bool   `yaml:"enabled" json:"enabled" default:"true"`
 	PcapTimeInterval string `yaml:"timeInterval" json:"timeInterval" default:"10m"`
 	PcapMaxTime      string `yaml:"maxTime" json:"maxTime" default:"1h"`
-	PcapMaxSize      string `yaml:"maxSize" json:"maxSize" default:"50MB"`
+	PcapMaxSize      string `yaml:"maxSize" json:"maxSize" default:"10MB"`
 	PcapSrcDir       string `yaml:"pcapSrcDir" json:"pcapSrcDir" default:"pcapdump"`
 }
 
