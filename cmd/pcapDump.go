@@ -45,7 +45,7 @@ var pcapDumpCmd = &cobra.Command{
 
 		// Handle copy operation if the copy string is provided
 
-		if !cmd.Flags().Changed(configStructs.PcapDumpEnable) {
+		if !cmd.Flags().Changed(configStructs.PcapDumpEnabled) {
 			destDir, _ := cmd.Flags().GetString(configStructs.PcapDest)
 			log.Info().Msg("Copying PCAP files")
 			err = copyPcapFiles(clientset, config, destDir)
@@ -56,8 +56,7 @@ var pcapDumpCmd = &cobra.Command{
 		} else {
 			// Handle start operation if the start string is provided
 
-			log.Info().Msg("Starting/stopping PCAP dump")
-			enabled, err := cmd.Flags().GetBool(configStructs.PcapDumpEnable)
+			enabled, err := cmd.Flags().GetBool(configStructs.PcapDumpEnabled)
 			if err != nil {
 				log.Error().Err(err).Msg("Error getting pcapdump enable flag")
 				return err
@@ -96,8 +95,7 @@ func init() {
 	pcapDumpCmd.Flags().String(configStructs.PcapTimeInterval, defaultPcapDumpConfig.PcapTimeInterval, "Time interval for PCAP file rotation (used with --start)")
 	pcapDumpCmd.Flags().String(configStructs.PcapMaxTime, defaultPcapDumpConfig.PcapMaxTime, "Maximum time for retaining old PCAP files (used with --start)")
 	pcapDumpCmd.Flags().String(configStructs.PcapMaxSize, defaultPcapDumpConfig.PcapMaxSize, "Maximum size of PCAP files before deletion (used with --start)")
-	pcapDumpCmd.Flags().String(configStructs.PcapDest, defaultPcapDumpConfig.PcapDest, "Local destination path for copied PCAP files (can not be used together with --enabled)")
-	pcapDumpCmd.Flags().String(configStructs.PcapKubeconfig, defaultPcapDumpConfig.PcapKubeconfig, "Absolute path to the kubeconfig file (optional)")
-	pcapDumpCmd.Flags().Bool(configStructs.PcapDumpEnable, defaultPcapDumpConfig.PcapDumpEnable, "Enabled/Disable to pcap dumps (can not be used together with --dest)")
+	pcapDumpCmd.Flags().String(configStructs.PcapDest, "", "Local destination path for copied PCAP files (can not be used together with --enabled)")
+	pcapDumpCmd.Flags().String(configStructs.PcapKubeconfig, "", "Enabled/Disable to pcap dumps (can not be used together with --dest)")
 
 }
