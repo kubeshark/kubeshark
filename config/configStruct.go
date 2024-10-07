@@ -104,6 +104,7 @@ type ConfigStruct struct {
 	Tap                       configStructs.TapConfig       `yaml:"tap" json:"tap"`
 	Logs                      configStructs.LogsConfig      `yaml:"logs" json:"logs"`
 	Config                    configStructs.ConfigConfig    `yaml:"config,omitempty" json:"config,omitempty"`
+	PcapDump                  configStructs.PcapDumpConfig  `yaml:"pcapdump" json:"pcapdump"`
 	Kube                      KubeConfig                    `yaml:"kube" json:"kube"`
 	DumpLogs                  bool                          `yaml:"dumpLogs" json:"dumpLogs" default:"false"`
 	HeadlessMode              bool                          `yaml:"headless" json:"headless" default:"false"`

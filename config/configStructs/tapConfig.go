@@ -37,6 +37,12 @@ const (
 	DebugLabel                   = "debug"
 	ContainerPort                = 80
 	ContainerPortStr             = "80"
+	PcapDest                     = "dest"
+	PcapMaxSize                  = "maxSize"
+	PcapMaxTime                  = "maxTime"
+	PcapTimeInterval             = "timeInterval"
+	PcapKubeconfig               = "kubeconfig"
+	PcapDumpEnabled              = "enabled"
 )
 
 type ResourceLimitsHub struct {
@@ -188,6 +194,14 @@ type MiscConfig struct {
 	DuplicateTimeframe          string `yaml:"duplicateTimeframe" json:"duplicateTimeframe" default:"200ms"`
 	DetectDuplicates            bool   `yaml:"detectDuplicates" json:"detectDuplicates" default:"false"`
 	StaleTimeoutSeconds         int    `yaml:"staleTimeoutSeconds" json:"staleTimeoutSeconds" default:"30"`
+}
+
+type PcapDumpConfig struct {
+	PcapDumpEnabled  bool   `yaml:"enabled" json:"enabled" default:"true"`
+	PcapTimeInterval string `yaml:"timeInterval" json:"timeInterval" default:"10m"`
+	PcapMaxTime      string `yaml:"maxTime" json:"maxTime" default:"1h"`
+	PcapMaxSize      string `yaml:"maxSize" json:"maxSize" default:"10MB"`
+	PcapSrcDir       string `yaml:"pcapSrcDir" json:"pcapSrcDir" default:"pcapdump"`
 }
 
 type TapConfig struct {
