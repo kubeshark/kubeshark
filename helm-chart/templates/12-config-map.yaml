@@ -28,6 +28,7 @@ data:
     TELEMETRY_DISABLED: '{{ not .Values.internetConnectivity | ternary "true" (not .Values.tap.telemetry.enabled | ternary "true" "false") }}'
     SCRIPTING_DISABLED: '{{ .Values.tap.scriptingDisabled | ternary "true" "" }}'
     TARGETED_PODS_UPDATE_DISABLED: '{{ .Values.tap.targetedPodsUpdateDisabled | ternary "true" "" }}'
+    PRESET_FILTERS_CHANGING_ENABLED: '{{ .Values.tap.presetFiltersChangingEnabled | ternary "true" "" }}'
     RECORDING_DISABLED: '{{ .Values.tap.recordingDisabled | ternary "true" "" }}'
     STOP_TRAFFIC_CAPTURING_DISABLED: '{{- if and .Values.tap.stopTrafficCapturingDisabled .Values.tap.stopped -}}
                                         false
