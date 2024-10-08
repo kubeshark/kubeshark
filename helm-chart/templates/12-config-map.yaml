@@ -35,6 +35,7 @@ data:
                                         {{ .Values.tap.stopTrafficCapturingDisabled | ternary "true" "false" }}
                                       {{- end }}'
     GLOBAL_FILTER: {{ include "kubeshark.escapeDoubleQuotes" .Values.tap.globalFilter | quote }}
+    DEFAULT_FILTER: {{ include "kubeshark.escapeDoubleQuotes" .Values.tap.defaultFilter | quote }}
     TRAFFIC_SAMPLE_RATE: '{{ .Values.tap.misc.trafficSampleRate }}'
     JSON_TTL: '{{ .Values.tap.misc.jsonTTL }}'
     PCAP_TTL: '{{ .Values.tap.misc.pcapTTL }}'
