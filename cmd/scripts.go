@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"encoding/json"
+	"strings"
 
 	"github.com/creasty/defaults"
 	"github.com/fsnotify/fsnotify"
@@ -168,6 +169,10 @@ func watchScripts(provider *kubernetes.Provider, block bool) {
 			select {
 			// watch for events
 			case event := <-watcher.Events:
+				if !strings.HasSuffix(event.Name, "js") {
+					log.Info().Str("file", event.Name).Msg("Ignoring file")
+					continue
+				}
 				switch event.Op {
 				case fsnotify.Create:
 					script, err := misc.ReadScriptFile(event.Name)
