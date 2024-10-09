@@ -67,12 +67,14 @@ func listFilesInPodDir(ctx context.Context, clientset *clientk8s.Clientset, conf
 		// Check if the source directory exists in the ConfigMap
 		srcDir, ok := configMap.Data[configMapKey]
 		if !ok || srcDir == "" {
+			log.Error().Msgf("source directory not found in ConfigMap %s in namespace %s", configMapName, namespace)
 			continue
 		}
 
 		// Attempt to get the pod in the current namespace
 		pod, err := clientset.CoreV1().Pods(namespace).Get(ctx, podName, metav1.GetOptions{})
 		if err != nil {
+			log.Error().Err(err).Msgf("failed to get pod %s in namespace %s", podName, namespace)
 			continue
 		}
 
@@ -93,6 +95,7 @@ func listFilesInPodDir(ctx context.Context, clientset *clientk8s.Clientset, conf
 
 		exec, err := remotecommand.NewSPDYExecutor(config, "POST", req.URL())
 		if err != nil {
+			log.Error().Err(err).Msgf("failed to initialize executor for pod %s in namespace %s", podName, namespace)
 			continue
 		}
 
@@ -105,6 +108,7 @@ func listFilesInPodDir(ctx context.Context, clientset *clientk8s.Clientset, conf
 			Stderr: &stderrBuf,
 		})
 		if err != nil {
+			log.Error().Err(err).Msgf("error listing files in pod %s in namespace %s: %s", podName, namespace, stderrBuf.String())
 			continue
 		}
 
@@ -195,17 +199,19 @@ func mergePCAPs(outputFile string, inputFiles []string) error {
 	}
 
 	for _, inputFile := range inputFiles {
+		log.Info().Msgf("Merging %s int %s", inputFile, outputFile)
 		// Open each input file
 		file, err := os.Open(inputFile)
 		if err != nil {
-			return err
+			log.Error().Err(err).Msgf("Failed to open %v", inputFile)
+			continue
 		}
 		defer file.Close()
 
 		reader, err := pcapgo.NewReader(file)
 		if err != nil {
 			log.Error().Err(err).Msgf("Failed to create pcapng reader for %v", file.Name())
-			return err
+			continue
 		}
 
 		// Create the packet source
@@ -214,7 +220,8 @@ func mergePCAPs(outputFile string, inputFiles []string) error {
 		for packet := range packetSource.Packets() {
 			err := writer.WritePacket(packet.Metadata().CaptureInfo, packet.Data())
 			if err != nil {
-				return err
+				log.Error().Err(err).Msgf("Failed to write packet to %v", outputFile)
+				continue
 			}
 		}
 	}
@@ -228,6 +235,7 @@ func setPcapConfigInKubernetes(ctx context.Context, clientset *clientk8s.Clients
 		// Load the existing ConfigMap in the current namespace
 		configMap, err := clientset.CoreV1().ConfigMaps(namespace).Get(ctx, "kubeshark-config-map", metav1.GetOptions{})
 		if err != nil {
+			log.Error().Err(err).Msgf("failed to get ConfigMap in namespace %s", namespace)
 			continue
 		}
 
@@ -240,6 +248,7 @@ func setPcapConfigInKubernetes(ctx context.Context, clientset *clientk8s.Clients
 		// Apply the updated ConfigMap back to the cluster in the current namespace
 		_, err = clientset.CoreV1().ConfigMaps(namespace).Update(ctx, configMap, metav1.UpdateOptions{})
 		if err != nil {
+			log.Error().Err(err).Msgf("failed to update ConfigMap in namespace %s", namespace)
 			continue
 		}
 	}
@@ -311,6 +320,8 @@ func copyPcapFiles(clientset *kubernetes.Clientset, config *rest.Config, destDir
 				err = copyFileFromPod(context.Background(), clientset, config, pod.Name, nsFiles.Namespace, nsFiles.SrcDir, file, destFile)
 				if err != nil {
 					log.Error().Err(err).Msgf("Error copying file from pod %s in namespace %s", pod.Name, nsFiles.Namespace)
+				} else {
+					log.Info().Msgf("Copied %s from %s to %s", file, pod.Name, destFile)
 				}
 
 				currentFiles = append(currentFiles, destFile)
