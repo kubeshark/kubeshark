@@ -24,8 +24,6 @@ spec:
     spec:
       containers:
         - env:
-            - name: REACT_APP_DEFAULT_FILTER
-              value: '{{ not (eq .Values.tap.defaultFilter "") | ternary .Values.tap.defaultFilter " " }}'
             - name: REACT_APP_AUTH_ENABLED
               value: '{{- if or (and .Values.cloudLicenseEnabled (not (empty .Values.license))) (not .Values.internetConnectivity) -}}
                       "false"
@@ -42,6 +40,8 @@ spec:
               value: '{{ .Values.tap.scriptingDisabled }}'
             - name: REACT_APP_TARGETED_PODS_UPDATE_DISABLED
               value: '{{ .Values.tap.targetedPodsUpdateDisabled }}'
+            - name: REACT_APP_PRESET_FILTERS_CHANGING_ENABLED
+              value: '{{ .Values.tap.presetFiltersChangingEnabled }}'
             - name: REACT_APP_BPF_OVERRIDE_DISABLED
               value: '{{ eq .Values.tap.packetCapture "ebpf" | ternary "true" "false" }}'
             - name: REACT_APP_RECORDING_DISABLED
