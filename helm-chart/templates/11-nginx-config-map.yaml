@@ -33,10 +33,6 @@ data:
         proxy_read_timeout 120s;
         proxy_send_timeout 12s;
         proxy_pass_request_headers      on;
-
-        proxy_next_upstream error timeout invalid_header http_502 http_503 http_504;
-        proxy_next_upstream_tries 10;
-        proxy_next_upstream_timeout 5s;
       }
 
       location /saml {
@@ -48,10 +44,6 @@ data:
         proxy_read_timeout 120s;
         proxy_send_timeout 12s;
         proxy_pass_request_headers on;
-
-        proxy_next_upstream error timeout invalid_header http_502 http_503 http_504;
-        proxy_next_upstream_tries 10;
-        proxy_next_upstream_timeout 5s;
       }
 
       location / {
@@ -60,18 +52,10 @@ data:
         try_files $uri $uri/ /index.html;
         expires -1;
         add_header Cache-Control no-cache;
-
-        proxy_next_upstream error timeout invalid_header http_502 http_503 http_504;
-        proxy_next_upstream_tries 10;
-        proxy_next_upstream_timeout 5s;
       }
       error_page   500 502 503 504  /50x.html;
       location = /50x.html {
         root   /usr/share/nginx/html;
-
-        proxy_next_upstream error timeout invalid_header http_502 http_503 http_504;
-        proxy_next_upstream_tries 10;
-        proxy_next_upstream_timeout 5s;
       }
     }
 
