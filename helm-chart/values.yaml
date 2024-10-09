@@ -105,6 +105,7 @@ tap:
   defaultFilter: "!dns and !tcp and !udp and !icmp"
   scriptingDisabled: false
   targetedPodsUpdateDisabled: false
+  presetFiltersChangingEnabled: false
   recordingDisabled: false
   stopTrafficCapturingDisabled: false
   capabilities:

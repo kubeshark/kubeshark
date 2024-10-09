@@ -239,6 +239,7 @@ type TapConfig struct {
 	DefaultFilter                string                `yaml:"defaultFilter" json:"defaultFilter" default:"!dns and !tcp and !udp and !icmp"`
 	ScriptingDisabled            bool                  `yaml:"scriptingDisabled" json:"scriptingDisabled" default:"false"`
 	TargetedPodsUpdateDisabled   bool                  `yaml:"targetedPodsUpdateDisabled" json:"targetedPodsUpdateDisabled" default:"false"`
+	PresetFiltersChangingEnabled bool                  `yaml:"presetFiltersChangingEnabled" json:"presetFiltersChangingEnabled" default:"false"`
 	RecordingDisabled            bool                  `yaml:"recordingDisabled" json:"recordingDisabled" default:"false"`
 	StopTrafficCapturingDisabled bool                  `yaml:"stopTrafficCapturingDisabled" json:"stopTrafficCapturingDisabled" default:"false"`
 	Capabilities                 CapabilitiesConfig    `yaml:"capabilities" json:"capabilities"`
