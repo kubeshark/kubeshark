@@ -41,13 +41,15 @@ func init() {
 	consoleCmd.Flags().StringP(configStructs.ReleaseNamespaceLabel, "s", defaultTapConfig.Release.Namespace, "Release namespace of Kubeshark")
 }
 
-func runConsole() {
+func runConsoleWithoutProxy() {
+	time.Sleep(5 * time.Second)
 	for {
 		hubUrl := kubernetes.GetHubUrl()
 		response, err := http.Get(fmt.Sprintf("%s/echo", hubUrl))
 		if err != nil || response.StatusCode != 200 {
-			log.Info().Msg(fmt.Sprintf(utils.Yellow, "Couldn't connect to Hub. Establishing proxy..."))
-			runProxy(false, true)
+			log.Info().Msg(fmt.Sprintf(utils.Yellow, "Couldn't connect to Hub."))
+			time.Sleep(5 * time.Second)
+			continue
 		}
 
 		interrupt := make(chan os.Signal, 1)
@@ -101,14 +103,41 @@ func runConsole() {
 			time.Sleep(5 * time.Second) // Delay before reconnecting
 			continue                    // Reconnect after error
 		case <-interrupt:
-			log.Warn().Msg(fmt.Sprintf(utils.Yellow, "Received interrupt, exiting..."))
-
 			err := c.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
 			if err != nil {
 				log.Error().Err(err).Send()
 				continue
 			}
 
+			select {
+			case <-done:
+			case <-time.After(time.Second):
+			}
+			return
+		}
+	}
+}
+
+func runConsole() {
+	go runConsoleWithoutProxy()
+	for {
+		hubUrl := kubernetes.GetHubUrl()
+		response, err := http.Get(fmt.Sprintf("%s/echo", hubUrl))
+		if err != nil || response.StatusCode != 200 {
+			log.Info().Msg(fmt.Sprintf(utils.Yellow, "Couldn't connect to Hub. Establishing proxy..."))
+			runProxy(false, true)
+		}
+
+		interrupt := make(chan os.Signal, 1)
+		signal.Notify(interrupt, os.Interrupt)
+		done := make(chan struct{})
+
+		ticker := time.NewTicker(time.Second)
+		defer ticker.Stop()
+
+		select { // Reconnect after error
+		case <-interrupt:
+			log.Warn().Msg(fmt.Sprintf(utils.Yellow, "Received interrupt, exiting..."))
 			select {
 			case <-done:
 			case <-time.After(time.Second):
