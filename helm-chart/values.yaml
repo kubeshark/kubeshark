@@ -178,4 +178,5 @@ scripting:
   env: {}
   source: ""
   watchScripts: true
+  activeScripts: []
 timezone: ""

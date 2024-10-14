@@ -13,6 +13,7 @@ data:
     BPF_OVERRIDE: '{{ .Values.tap.bpfOverride }}'
     STOPPED: '{{ .Values.tap.stopped | ternary "true" "false" }}'
     SCRIPTING_SCRIPTS: '{}'
+    SCRIPTING_ACTIVE_SCRIPTS: '{{ gt (len .Values.scripting.active) 0 | ternary (join "," .Values.scripting.active) "" }}'
     INGRESS_ENABLED: '{{ .Values.tap.ingress.enabled }}'
     INGRESS_HOST: '{{ .Values.tap.ingress.host }}'
     PROXY_FRONT_PORT: '{{ .Values.tap.proxy.front.port }}'
