@@ -42,6 +42,7 @@ func init() {
 }
 
 func runConsoleWithoutProxy() {
+	log.Info().Msg("Starting scripting console ...")
 	time.Sleep(5 * time.Second)
 	for {
 		hubUrl := kubernetes.GetHubUrl()
