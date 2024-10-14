@@ -1,4 +1,3 @@
-# find a detailed description here: https://github.com/kubeshark/kubeshark/blob/master/helm-chart/README.md
 tap:
   docker:
     registry: docker.io/kubeshark
@@ -178,5 +177,6 @@ scripting:
   env: {}
   source: ""
   watchScripts: true
-  activeScripts: []
+  active: []
+  console: true
 timezone: ""

@@ -14,6 +14,7 @@ type ScriptingConfig struct {
 	Env          map[string]interface{} `yaml:"env" json:"env" default:"{}"`
 	Source       string                 `yaml:"source" json:"source" default:""`
 	WatchScripts bool                   `yaml:"watchScripts" json:"watchScripts" default:"true"`
+	Active       []string               `yaml:"active" json:"active" default:"[]"`
 	Console      bool                   `yaml:"console" json:"console" default:"true"`
 }
 
