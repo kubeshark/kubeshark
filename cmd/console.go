@@ -44,8 +44,10 @@ func init() {
 func runConsoleWithoutProxy() {
 	log.Info().Msg("Starting scripting console ...")
 	time.Sleep(5 * time.Second)
+	hubUrl := kubernetes.GetHubUrl()
 	for {
-		hubUrl := kubernetes.GetHubUrl()
+
+		// Attempt to connect to the Hub every second
 		response, err := http.Get(fmt.Sprintf("%s/echo", hubUrl))
 		if err != nil || response.StatusCode != 200 {
 			log.Info().Msg(fmt.Sprintf(utils.Yellow, "Couldn't connect to Hub."))
@@ -121,29 +123,34 @@ func runConsoleWithoutProxy() {
 
 func runConsole() {
 	go runConsoleWithoutProxy()
+
+	// Create interrupt channel and setup signal handling once
+	interrupt := make(chan os.Signal, 1)
+	signal.Notify(interrupt, os.Interrupt)
+	done := make(chan struct{})
+
+	ticker := time.NewTicker(5 * time.Second)
+	defer ticker.Stop()
+
 	for {
-		hubUrl := kubernetes.GetHubUrl()
-		response, err := http.Get(fmt.Sprintf("%s/echo", hubUrl))
-		if err != nil || response.StatusCode != 200 {
-			log.Info().Msg(fmt.Sprintf(utils.Yellow, "Couldn't connect to Hub. Establishing proxy..."))
-			runProxy(false, true)
-		}
-
-		interrupt := make(chan os.Signal, 1)
-		signal.Notify(interrupt, os.Interrupt)
-		done := make(chan struct{})
-
-		ticker := time.NewTicker(time.Second)
-		defer ticker.Stop()
-
-		select { // Reconnect after error
+		select {
 		case <-interrupt:
+			// Handle interrupt and exit gracefully
 			log.Warn().Msg(fmt.Sprintf(utils.Yellow, "Received interrupt, exiting..."))
 			select {
 			case <-done:
 			case <-time.After(time.Second):
 			}
 			return
+
+		case <-ticker.C:
+			// Attempt to connect to the Hub every second
+			hubUrl := kubernetes.GetHubUrl()
+			response, err := http.Get(fmt.Sprintf("%s/echo", hubUrl))
+			if err != nil || response.StatusCode != 200 {
+				log.Info().Msg(fmt.Sprintf(utils.Yellow, "Couldn't connect to Hub. Establishing proxy..."))
+				runProxy(false, true)
+			}
 		}
 	}
 }
