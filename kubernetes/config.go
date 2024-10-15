@@ -3,6 +3,8 @@ package kubernetes
 import (
 	"context"
 	"encoding/json"
+	"slices"
+	"strings"
 
 	"github.com/kubeshark/kubeshark/config"
 	"github.com/kubeshark/kubeshark/misc"
@@ -26,6 +28,7 @@ const (
 	CONFIG_AUTH_TYPE                  = "AUTH_TYPE"
 	CONFIG_AUTH_SAML_IDP_METADATA_URL = "AUTH_SAML_IDP_METADATA_URL"
 	CONFIG_SCRIPTING_SCRIPTS          = "SCRIPTING_SCRIPTS"
+	CONFIG_SCRIPTING_ACTIVE_SCRIPTS   = "SCRIPTING_ACTIVE_SCRIPTS"
 	CONFIG_PCAP_DUMP_ENABLE           = "PCAP_DUMP_ENABLE"
 	CONFIG_TIME_INTERVAL              = "TIME_INTERVAL"
 	CONFIG_MAX_TIME                   = "MAX_TIME"
@@ -98,4 +101,30 @@ func ConfigGetScripts(provider *Provider) (scripts map[int64]misc.ConfigMapScrip
 
 	err = json.Unmarshal([]byte(data), &scripts)
 	return
+}
+
+func IsActiveScript(provider *Provider, title string) bool {
+	configActiveScripts, err := GetConfig(provider, CONFIG_SCRIPTING_ACTIVE_SCRIPTS)
+	if err != nil {
+		return false
+	}
+	return strings.Contains(configActiveScripts, title)
+}
+
+func DeleteActiveScriptByTitle(provider *Provider, title string) (err error) {
+	configActiveScripts, err := GetConfig(provider, CONFIG_SCRIPTING_ACTIVE_SCRIPTS)
+	if err != nil {
+		return err
+	}
+	activeScripts := strings.Split(configActiveScripts, ",")
+
+	idx := slices.Index(activeScripts, title)
+	if idx != -1 {
+		activeScripts = slices.Delete(activeScripts, idx, idx+1)
+		_, err = SetConfig(provider, CONFIG_SCRIPTING_ACTIVE_SCRIPTS, strings.Join(activeScripts, ","))
+		if err != nil {
+			return err
+		}
+	}
+	return nil
 }

@@ -59,22 +59,16 @@ func createScript(provider *kubernetes.Provider, script misc.ConfigMapScript) (i
 	if err != nil {
 		return
 	}
-
-	// Turn it into updateScript if there is a script with the same title
-	var setScript bool
+	script.Active = kubernetes.IsActiveScript(provider, script.Title)
+	index = int64(len(scripts))
 	if script.Title != "New Script" {
 		for i, v := range scripts {
 			if v.Title == script.Title {
-				scripts[i] = script
-				setScript = true
+				index = int64(i)
 			}
 		}
 	}
-
-	if !setScript {
-		index = int64(len(scripts))
-		scripts[index] = script
-	}
+	scripts[index] = script
 
 	var data []byte
 	data, err = json.Marshal(scripts)
@@ -96,7 +90,7 @@ func updateScript(provider *kubernetes.Provider, index int64, script misc.Config
 	if err != nil {
 		return
 	}
-
+	script.Active = kubernetes.IsActiveScript(provider, script.Title)
 	scripts[index] = script
 
 	var data []byte
@@ -119,7 +113,10 @@ func deleteScript(provider *kubernetes.Provider, index int64) (err error) {
 	if err != nil {
 		return
 	}
-
+	err = kubernetes.DeleteActiveScriptByTitle(provider, scripts[index].Title)
+	if err != nil {
+		return
+	}
 	delete(scripts, index)
 
 	var data []byte
