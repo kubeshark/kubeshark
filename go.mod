@@ -1,6 +1,6 @@
 module github.com/kubeshark/kubeshark
 
-go 1.20
+go 1.21.1
 
 require (
 	github.com/creasty/defaults v1.5.2
