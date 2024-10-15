@@ -427,6 +427,10 @@ func postFrontStarted(ctx context.Context, kubernetesProvider *kubernetes.Provid
 	if config.Config.Scripting.Source != "" && config.Config.Scripting.WatchScripts {
 		watchScripts(kubernetesProvider, false)
 	}
+
+	if config.Config.Scripting.Console {
+		go runConsoleWithoutProxy()
+	}
 }
 
 func updateConfig(kubernetesProvider *kubernetes.Provider) {
