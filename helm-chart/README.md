@@ -133,16 +133,16 @@ Please refer to [metrics](./metrics.md) documentation for details.
 | `tap.storageLimit`                        | Limit of either the `emptyDir` or `persistentVolumeClaim` | `500Mi`                                     |
 | `tap.storageClass`                        | Storage class of the `PersistentVolumeClaim`          | `standard`                                      |
 | `tap.dryRun`                              | Preview of all pods matching the regex, without tapping them    | `false`                               |
-| `tap.resources.hub.limits.cpu`            | CPU limit for hub                             | `1000m`                                                 |
-| `tap.resources.hub.limits.memory`         | Memory limit for hub                          | `1500Mi`                                                |
+| `tap.resources.hub.limits.cpu`            | CPU limit for hub                             | `""`  (no limit)                                                 |
+| `tap.resources.hub.limits.memory`         | Memory limit for hub                          | `3Gi`                                                |
 | `tap.resources.hub.requests.cpu`          | CPU request for hub                           | `50m`                                                   |
 | `tap.resources.hub.requests.memory`       | Memory request for hub                        | `50Mi`                                                  |
-| `tap.resources.sniffer.limits.cpu`        | CPU limit for sniffer                         | `1000m`                                                 |
-| `tap.resources.sniffer.limits.memory`     | Memory limit for sniffer                      | `1500Mi`                                                |
+| `tap.resources.sniffer.limits.cpu`        | CPU limit for sniffer                         | `""`  (no limit)                                                    |
+| `tap.resources.sniffer.limits.memory`     | Memory limit for sniffer                      | `3Gi`                                                |
 | `tap.resources.sniffer.requests.cpu`      | CPU request for sniffer                       | `50m`                                                   |
 | `tap.resources.sniffer.requests.memory`   | Memory request for sniffer                    | `50Mi`                                                  |
-| `tap.resources.tracer.limits.cpu`         | CPU limit for tracer                          | `1000m`                                                 |
-| `tap.resources.tracer.limits.memory`      | Memory limit for tracer                       | `1500Mi`                                                |
+| `tap.resources.tracer.limits.cpu`         | CPU limit for tracer                          | `""`  (no limit)                                                     |
+| `tap.resources.tracer.limits.memory`      | Memory limit for tracer                       | `3Gi`                                                |
 | `tap.resources.tracer.requests.cpu`       | CPU request for tracer                        | `50m`                                                   |
 | `tap.resources.tracer.requests.memory`    | Memory request for tracer                     | `50Mi`                                                  |
 | `tap.serviceMesh`                         | Capture traffic from service meshes like Istio, Linkerd, Consul, etc.          | `true`                                                  |
