@@ -134,7 +134,7 @@ Please refer to [metrics](./metrics.md) documentation for details.
 | `tap.storageClass`                        | Storage class of the `PersistentVolumeClaim`          | `standard`                                      |
 | `tap.dryRun`                              | Preview of all pods matching the regex, without tapping them    | `false`                               |
 | `tap.resources.hub.limits.cpu`            | CPU limit for hub                             | `""`  (no limit)                                                 |
-| `tap.resources.hub.limits.memory`         | Memory limit for hub                          | `3Gi`                                                |
+| `tap.resources.hub.limits.memory`         | Memory limit for hub                          | `5Gi`                                                |
 | `tap.resources.hub.requests.cpu`          | CPU request for hub                           | `50m`                                                   |
 | `tap.resources.hub.requests.memory`       | Memory request for hub                        | `50Mi`                                                  |
 | `tap.resources.sniffer.limits.cpu`        | CPU limit for sniffer                         | `""`  (no limit)                                                    |
@@ -147,7 +147,7 @@ Please refer to [metrics](./metrics.md) documentation for details.
 | `tap.resources.tracer.requests.memory`    | Memory request for tracer                     | `50Mi`                                                  |
 | `tap.serviceMesh`                         | Capture traffic from service meshes like Istio, Linkerd, Consul, etc.          | `true`                                                  |
 | `tap.tls`                                 | Capture the encrypted/TLS traffic from cryptography libraries like OpenSSL                         | `true`                                                  |
-| `tap.disableTlsLog`                       | Suppress logging for TLS/eBPF                 | `false`                                                 |
+| `tap.disableTlsLog`                       | Suppress logging for TLS/eBPF                 | `true`                                                 |
 | `tap.ignoreTainted`                       | Whether to ignore tainted nodes               | `false`                                                 |
 | `tap.labels`                              | Kubernetes labels to apply to all Kubeshark resources  | `{}`                                                    |
 | `tap.annotations`                         | Kubernetes annotations to apply to all Kubeshark resources | `{}`                                                |
