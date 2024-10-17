@@ -222,7 +222,7 @@ type TapConfig struct {
 	Resources                    ResourcesConfig       `yaml:"resources" json:"resources"`
 	ServiceMesh                  bool                  `yaml:"serviceMesh" json:"serviceMesh" default:"true"`
 	Tls                          bool                  `yaml:"tls" json:"tls" default:"true"`
-	DisableTlsLog                bool                  `yaml:"disableTlsLog" json:"disableTlsLog" default:"false"`
+	DisableTlsLog                bool                  `yaml:"disableTlsLog" json:"disableTlsLog" default:"true"`
 	PacketCapture                string                `yaml:"packetCapture" json:"packetCapture" default:"best"`
 	IgnoreTainted                bool                  `yaml:"ignoreTainted" json:"ignoreTainted" default:"false"`
 	Labels                       map[string]string     `yaml:"labels" json:"labels" default:"{}"`
@@ -243,7 +243,7 @@ type TapConfig struct {
 	RecordingDisabled            bool                  `yaml:"recordingDisabled" json:"recordingDisabled" default:"false"`
 	StopTrafficCapturingDisabled bool                  `yaml:"stopTrafficCapturingDisabled" json:"stopTrafficCapturingDisabled" default:"false"`
 	Capabilities                 CapabilitiesConfig    `yaml:"capabilities" json:"capabilities"`
-	GlobalFilter                 string                `yaml:"globalFilter" json:"globalFilter"`
+	GlobalFilter                 string                `yaml:"globalFilter" json:"globalFilter" default:"timestamp>now()"`
 	EnabledDissectors            []string              `yaml:"enabledDissectors" json:"enabledDissectors"`
 	Metrics                      MetricsConfig         `yaml:"metrics" json:"metrics"`
 	Pprof                        PprofConfig           `yaml:"pprof" json:"pprof"`
