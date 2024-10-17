@@ -47,7 +47,7 @@ const (
 
 type ResourceLimitsHub struct {
 	CPU    string `yaml:"cpu" json:"cpu" default:""`
-	Memory string `yaml:"memory" json:"memory" default:"3Gi"`
+	Memory string `yaml:"memory" json:"memory" default:"5Gi"`
 }
 
 type ResourceLimitsWorker struct {
@@ -56,7 +56,7 @@ type ResourceLimitsWorker struct {
 }
 
 type ResourceRequests struct {
-	CPU    string `yaml:"cpu" json:"cpu" default:"50m"`
+	CPU    string `yaml:"cpu" json:"cpu" default:""`
 	Memory string `yaml:"memory" json:"memory" default:"50Mi"`
 }
 
