@@ -1,3 +1,4 @@
+# find a detailed description here: https://github.com/kubeshark/kubeshark/blob/master/helm-chart/README.md
 tap:
   docker:
     registry: docker.io/kubeshark
@@ -35,28 +36,28 @@ tap:
   resources:
     hub:
       limits:
-        cpu: 1000m
-        memory: 1500Mi
+        cpu: ""
+        memory: 5Gi
       requests:
-        cpu: 50m
+        cpu: ""
         memory: 50Mi
     sniffer:
       limits:
-        cpu: 1000m
-        memory: 1500Mi
+        cpu: ""
+        memory: 5Gi
       requests:
-        cpu: 50m
+        cpu: ""
         memory: 50Mi
     tracer:
       limits:
-        cpu: 1000m
-        memory: 1500Mi
+        cpu: ""
+        memory: 5Gi
       requests:
-        cpu: 50m
+        cpu: ""
         memory: 50Mi
   serviceMesh: true
   tls: true
-  disableTlsLog: false
+  disableTlsLog: true
   packetCapture: best
   ignoreTainted: false
   labels: {}
@@ -105,7 +106,7 @@ tap:
   defaultFilter: "!dns and !tcp and !udp and !icmp"
   scriptingDisabled: false
   targetedPodsUpdateDisabled: false
-  presetFiltersChangingEnabled: false
+  presetFiltersChangingEnabled: true
   recordingDisabled: false
   stopTrafficCapturingDisabled: false
   capabilities:
@@ -123,7 +124,7 @@ tap:
     - SYS_PTRACE
     - SYS_RESOURCE
     - IPC_LOCK
-  globalFilter: ""
+  globalFilter: timestamp>now()
   enabledDissectors:
   - amqp
   - dns
