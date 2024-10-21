@@ -211,7 +211,7 @@ type TapConfig struct {
 	Namespaces                   []string              `yaml:"namespaces" json:"namespaces" default:"[]"`
 	ExcludedNamespaces           []string              `yaml:"excludedNamespaces" json:"excludedNamespaces" default:"[]"`
 	BpfOverride                  string                `yaml:"bpfOverride" json:"bpfOverride" default:""`
-	Stopped                      bool                  `yaml:"stopped" json:"stopped" default:"true"`
+	Stopped                      bool                  `yaml:"stopped" json:"stopped" default:"false"`
 	Release                      ReleaseConfig         `yaml:"release" json:"release"`
 	PersistentStorage            bool                  `yaml:"persistentStorage" json:"persistentStorage" default:"false"`
 	PersistentStorageStatic      bool                  `yaml:"persistentStorageStatic" json:"persistentStorageStatic" default:"false"`
