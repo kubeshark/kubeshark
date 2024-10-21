@@ -70,6 +70,7 @@ func createScript(provider *kubernetes.Provider, script misc.ConfigMapScript) (i
 	}
 	scripts[index] = script
 
+	log.Info().Str("title", script.Title).Bool("Active", script.Active).Int64("Index", index).Msg("Creating script")
 	var data []byte
 	data, err = json.Marshal(scripts)
 	if err != nil {
@@ -146,7 +147,7 @@ func watchScripts(provider *kubernetes.Provider, block bool) {
 		index, err := createScript(provider, script.ConfigMap())
 		if err != nil {
 			log.Error().Err(err).Send()
-			return
+			continue
 		}
 
 		files[script.Path] = index

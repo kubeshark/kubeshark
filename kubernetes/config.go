@@ -84,7 +84,16 @@ func SetConfig(provider *Provider, key string, value string) (updated bool, err 
 	_, err = provider.clientSet.CoreV1().ConfigMaps(config.Config.Tap.Release.Namespace).Update(context.TODO(), configMap, metav1.UpdateOptions{})
 	if err == nil {
 		if updated {
-			log.Info().Str("config", key).Str("value", value).Msg("Updated:")
+			log.Info().
+				Str("config", key).
+				Str("value", func() string {
+					if len(value) > 10 {
+						return value[:10]
+					}
+					return value
+				}()).
+				Int("length", len(value)).
+				Msg("Updated. Printing only 10 first characters of value:")
 		}
 	} else {
 		log.Error().Str("config", key).Err(err).Send()
