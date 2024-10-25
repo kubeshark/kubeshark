@@ -92,13 +92,6 @@ func runProxy(block bool, noBrowser bool) {
 		establishedProxy = true
 		okToOpen("Kubeshark", frontUrl, noBrowser)
 	}
-	if config.Config.Scripting.Source != "" && config.Config.Scripting.WatchScripts {
-		watchScripts(kubernetesProvider, false)
-	}
-
-	if config.Config.Scripting.Console {
-		go runConsoleWithoutProxy()
-	}
 	if establishedProxy && block {
 		utils.WaitForTermination(ctx, cancel)
 	}
