@@ -106,17 +106,6 @@ spec:
               mountPath: /etc/nginx/conf.d/default.conf
               subPath: default.conf
               readOnly: true
-      initContainers:
-      - name: wait-for-kubeshark-hub
-        image: busybox
-        command:
-        - sh
-        - -c
-        - |
-          until nc -z kubeshark-hub 80; do
-            echo "Waiting for kubeshark-hub to be ready..."
-            sleep 5
-          done
       volumes:
         - name: nginx-config
           configMap:
