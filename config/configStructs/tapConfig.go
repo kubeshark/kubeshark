@@ -243,7 +243,7 @@ type TapConfig struct {
 	RecordingDisabled            bool                  `yaml:"recordingDisabled" json:"recordingDisabled" default:"false"`
 	StopTrafficCapturingDisabled bool                  `yaml:"stopTrafficCapturingDisabled" json:"stopTrafficCapturingDisabled" default:"false"`
 	Capabilities                 CapabilitiesConfig    `yaml:"capabilities" json:"capabilities"`
-	GlobalFilter                 string                `yaml:"globalFilter" json:"globalFilter" default:"timestamp>now()"`
+	GlobalFilter                 string                `yaml:"globalFilter" json:"globalFilter" default:""`
 	EnabledDissectors            []string              `yaml:"enabledDissectors" json:"enabledDissectors"`
 	Metrics                      MetricsConfig         `yaml:"metrics" json:"metrics"`
 	Pprof                        PprofConfig           `yaml:"pprof" json:"pprof"`
