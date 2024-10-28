@@ -3,8 +3,8 @@ kind: NetworkPolicy
 metadata:
   labels:
     {{- include "kubeshark.labels" . | nindent 4 }}
-  annotations:
   {{- if .Values.tap.annotations }}
+  annotations:
     {{- toYaml .Values.tap.annotations | nindent 4 }}
   {{- end }}
   name: kubeshark-hub-network-policy
@@ -28,8 +28,8 @@ kind: NetworkPolicy
 metadata:
   labels:
     {{- include "kubeshark.labels" . | nindent 4 }}
-  annotations:
   {{- if .Values.tap.annotations }}
+  annotations:
     {{- toYaml .Values.tap.annotations | nindent 4 }}
   {{- end }}
   name: kubeshark-front-network-policy
@@ -53,8 +53,8 @@ kind: NetworkPolicy
 metadata:
   labels:
     {{- include "kubeshark.labels" . | nindent 4 }}
-  annotations:
   {{- if .Values.tap.annotations }}
+  annotations:
     {{- toYaml .Values.tap.annotations | nindent 4 }}
   {{- end }}
   name: kubeshark-worker-network-policy

@@ -6,8 +6,8 @@ metadata:
     app.kubeshark.co/app: worker
     sidecar.istio.io/inject: "false"
     {{- include "kubeshark.labels" . | nindent 4 }}
-  annotations:
   {{- if .Values.tap.annotations }}
+  annotations:
     {{- toYaml .Values.tap.annotations | nindent 4 }}
   {{- end }}
   name: kubeshark-worker-daemon-set

@@ -9,7 +9,6 @@ metadata:
     app.kubernetes.io/instance: kubeshark
     app.kubernetes.io/version: "52.3.88"
     app.kubernetes.io/managed-by: Helm
-  annotations:
   name: kubeshark-hub-network-policy
   namespace: default
 spec:
@@ -36,7 +35,6 @@ metadata:
     app.kubernetes.io/instance: kubeshark
     app.kubernetes.io/version: "52.3.88"
     app.kubernetes.io/managed-by: Helm
-  annotations:
   name: kubeshark-front-network-policy
   namespace: default
 spec:
@@ -63,7 +61,6 @@ metadata:
     app.kubernetes.io/instance: kubeshark
     app.kubernetes.io/version: "52.3.88"
     app.kubernetes.io/managed-by: Helm
-  annotations:
   name: kubeshark-worker-network-policy
   namespace: default
 spec:
@@ -92,7 +89,6 @@ metadata:
     app.kubernetes.io/instance: kubeshark
     app.kubernetes.io/version: "52.3.88"
     app.kubernetes.io/managed-by: Helm
-  annotations:
   name: kubeshark-service-account
   namespace: default
 ---
@@ -110,8 +106,8 @@ metadata:
     app.kubernetes.io/version: "52.3.88"
     app.kubernetes.io/managed-by: Helm
 stringData:
-    LICENSE: ''
-    SCRIPTING_ENV: '{}'
+  LICENSE: ""
+  SCRIPTING_ENV: "{}"
 ---
 # Source: kubeshark/templates/13-secret.yaml
 kind: Secret
@@ -222,44 +218,44 @@ metadata:
     app.kubernetes.io/version: "52.3.88"
     app.kubernetes.io/managed-by: Helm
 data:
-    POD_REGEX: '.*'
-    NAMESPACES: ''
-    EXCLUDED_NAMESPACES: ''
-    BPF_OVERRIDE: ''
-    STOPPED: 'false'
-    SCRIPTING_SCRIPTS: '{}'
-    SCRIPTING_ACTIVE_SCRIPTS: ''
-    INGRESS_ENABLED: 'false'
-    INGRESS_HOST: 'ks.svc.cluster.local'
-    PROXY_FRONT_PORT: '8899'
-    AUTH_ENABLED: 'true'
-    AUTH_TYPE: 'oidc'
-    AUTH_SAML_IDP_METADATA_URL: ''
-    AUTH_SAML_ROLE_ATTRIBUTE: 'role'
-    AUTH_SAML_ROLES: '{"admin":{"canDownloadPCAP":true,"canStopTrafficCapturing":true,"canUpdateTargetedPods":true,"canUseScripting":true,"filter":"","showAdminConsoleLink":true}}'
-    TELEMETRY_DISABLED: 'false'
-    SCRIPTING_DISABLED: ''
-    TARGETED_PODS_UPDATE_DISABLED: ''
-    PRESET_FILTERS_CHANGING_ENABLED: 'true'
-    RECORDING_DISABLED: ''
-    STOP_TRAFFIC_CAPTURING_DISABLED: 'false'
-    GLOBAL_FILTER: ""
-    DEFAULT_FILTER: "!dns and !tcp and !udp and !icmp"
-    TRAFFIC_SAMPLE_RATE: '100'
-    JSON_TTL: '5m'
-    PCAP_TTL: '10s'
-    PCAP_ERROR_TTL: '60s'
-    TIMEZONE: ' '
-    CLOUD_LICENSE_ENABLED: 'true'
-    DUPLICATE_TIMEFRAME: '200ms'
-    ENABLED_DISSECTORS: 'amqp,dns,http,icmp,kafka,redis,sctp,syscall,ws,tls'
-    DISSECTORS_UPDATING_ENABLED: 'true'
-    DETECT_DUPLICATES: 'false'
-    PCAP_DUMP_ENABLE: 'true'
-    PCAP_TIME_INTERVAL: '1m'
-    PCAP_MAX_TIME: '1h'
-    PCAP_MAX_SIZE: '500MB'
-    PCAP_SRC_DIR: 'pcapdump'
+  POD_REGEX: ".*"
+  NAMESPACES: ""
+  EXCLUDED_NAMESPACES: ""
+  BPF_OVERRIDE: ""
+  STOPPED: "false"
+  SCRIPTING_SCRIPTS: "{}"
+  SCRIPTING_ACTIVE_SCRIPTS: ""
+  INGRESS_ENABLED: "false"
+  INGRESS_HOST: "ks.svc.cluster.local"
+  PROXY_FRONT_PORT: "8899"
+  AUTH_ENABLED: "true"
+  AUTH_TYPE: "oidc"
+  AUTH_SAML_IDP_METADATA_URL: ""
+  AUTH_SAML_ROLE_ATTRIBUTE: "role"
+  AUTH_SAML_ROLES: '{"admin":{"canDownloadPCAP":true,"canStopTrafficCapturing":true,"canUpdateTargetedPods":true,"canUseScripting":true,"filter":"","showAdminConsoleLink":true}}'
+  TELEMETRY_DISABLED: "false"
+  SCRIPTING_DISABLED: ""
+  TARGETED_PODS_UPDATE_DISABLED: ""
+  PRESET_FILTERS_CHANGING_ENABLED: "true"
+  RECORDING_DISABLED: ""
+  STOP_TRAFFIC_CAPTURING_DISABLED: "false"
+  GLOBAL_FILTER: ""
+  DEFAULT_FILTER: "!dns and !tcp and !udp and !icmp"
+  TRAFFIC_SAMPLE_RATE: "100"
+  JSON_TTL: "5m"
+  PCAP_TTL: "10s"
+  PCAP_ERROR_TTL: "60s"
+  TIMEZONE: " "
+  CLOUD_LICENSE_ENABLED: "true"
+  DUPLICATE_TIMEFRAME: "200ms"
+  ENABLED_DISSECTORS: "amqp,dns,http,icmp,kafka,redis,sctp,syscall,ws,tls"
+  DISSECTORS_UPDATING_ENABLED: "true"
+  DETECT_DUPLICATES: "false"
+  PCAP_DUMP_ENABLE: "true"
+  PCAP_TIME_INTERVAL: "1m"
+  PCAP_MAX_TIME: "1h"
+  PCAP_MAX_SIZE: "500MB"
+  PCAP_SRC_DIR: "pcapdump"
 ---
 # Source: kubeshark/templates/02-cluster-role.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -271,7 +267,6 @@ metadata:
     app.kubernetes.io/instance: kubeshark
     app.kubernetes.io/version: "52.3.88"
     app.kubernetes.io/managed-by: Helm
-  annotations:
   name: kubeshark-cluster-role-default
   namespace: default
 rules:
@@ -298,16 +293,16 @@ rules:
     resourceNames:
       - kube-system
   - apiGroups:
-    - networking.k8s.io
+      - networking.k8s.io
     resources:
-    - networkpolicies
+      - networkpolicies
     verbs:
-    - get
-    - list
-    - watch
-    - create
-    - update
-    - delete
+      - get
+      - list
+      - watch
+      - create
+      - update
+      - delete
 ---
 # Source: kubeshark/templates/03-cluster-role-binding.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -319,7 +314,6 @@ metadata:
     app.kubernetes.io/instance: kubeshark
     app.kubernetes.io/version: "52.3.88"
     app.kubernetes.io/managed-by: Helm
-  annotations:
   name: kubeshark-cluster-role-binding-default
   namespace: default
 roleRef:
@@ -341,7 +335,6 @@ metadata:
     app.kubernetes.io/instance: kubeshark
     app.kubernetes.io/version: "52.3.88"
     app.kubernetes.io/managed-by: Helm
-  annotations:
   name: kubeshark-self-config-role
   namespace: default
 rules:
@@ -371,7 +364,6 @@ metadata:
     app.kubernetes.io/instance: kubeshark
     app.kubernetes.io/version: "52.3.88"
     app.kubernetes.io/managed-by: Helm
-  annotations:
   name: kubeshark-self-config-role-binding
   namespace: default
 roleRef:
@@ -394,7 +386,6 @@ metadata:
     app.kubernetes.io/instance: kubeshark
     app.kubernetes.io/version: "52.3.88"
     app.kubernetes.io/managed-by: Helm
-  annotations:
   name: kubeshark-hub
   namespace: default
 spec:
@@ -416,7 +407,6 @@ metadata:
     app.kubernetes.io/instance: kubeshark
     app.kubernetes.io/version: "52.3.88"
     app.kubernetes.io/managed-by: Helm
-  annotations:
   name: kubeshark-front
   namespace: default
 spec:
@@ -439,8 +429,8 @@ metadata:
     app.kubernetes.io/version: "52.3.88"
     app.kubernetes.io/managed-by: Helm
   annotations:
-    prometheus.io/scrape: 'true'
-    prometheus.io/port: '49100'
+    prometheus.io/scrape: "true"
+    prometheus.io/port: "49100"
   name: kubeshark-worker-metrics
   namespace: default
 spec:
@@ -452,10 +442,10 @@ spec:
     app.kubernetes.io/version: "52.3.88"
     app.kubernetes.io/managed-by: Helm
   ports:
-  - name: metrics
-    protocol: TCP
-    port: 49100
-    targetPort: 49100
+    - name: metrics
+      protocol: TCP
+      port: 49100
+      targetPort: 49100
 ---
 # Source: kubeshark/templates/09-worker-daemon-set.yaml
 apiVersion: apps/v1
@@ -469,7 +459,6 @@ metadata:
     app.kubernetes.io/instance: kubeshark
     app.kubernetes.io/version: "52.3.88"
     app.kubernetes.io/managed-by: Helm
-  annotations:
   name: kubeshark-worker-daemon-set
   namespace: default
 spec:
@@ -496,21 +485,21 @@ spec:
             - -i
             - any
             - -port
-            - '30001'
+            - "30001"
             - -metrics-port
-            - '49100'
+            - "49100"
             - -packet-capture
-            - 'best'
+            - "best"
             - -unixsocket
             - -servicemesh
             - -procfs
             - /hostproc
             - -disable-ebpf
             - -resolution-strategy
-            - 'auto'
+            - "auto"
             - -staletimeout
-            - '30'
-          image: 'docker.io/kubeshark/worker:v52.3.88'
+            - "30"
+          image: "docker.io/kubeshark/worker:v52.3.88"
           imagePullPolicy: Always
           name: sniffer
           ports:
@@ -518,39 +507,35 @@ spec:
               protocol: TCP
               name: metrics
           env:
-          - name: POD_NAME
-            valueFrom:
-              fieldRef:
-                fieldPath: metadata.name
-          - name: POD_NAMESPACE
-            valueFrom:
-              fieldRef:
-                fieldPath: metadata.namespace
-          - name: TCP_STREAM_CHANNEL_TIMEOUT_MS
-            value: '10000'
-          - name: TCP_STREAM_CHANNEL_TIMEOUT_SHOW
-            value: 'false'
-          - name: KUBESHARK_CLOUD_API_URL
-            value: 'https://api.kubeshark.co'
-          - name: PROFILING_ENABLED
-            value: 'false'
-          - name: SENTRY_ENABLED
-            value: 'false'
-          - name: SENTRY_ENVIRONMENT
-            value: 'production'
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: TCP_STREAM_CHANNEL_TIMEOUT_MS
+              value: "10000"
+            - name: TCP_STREAM_CHANNEL_TIMEOUT_SHOW
+              value: "false"
+            - name: KUBESHARK_CLOUD_API_URL
+              value: "https://api.kubeshark.co"
+            - name: PROFILING_ENABLED
+              value: "false"
+            - name: SENTRY_ENABLED
+              value: "false"
+            - name: SENTRY_ENVIRONMENT
+              value: "production"
           resources:
             limits:
-              
-              
               memory: 5Gi
-              
+
             requests:
-              
               cpu: 50m
-              
-              
+
               memory: 50Mi
-              
+
           securityContext:
             capabilities:
               add:
@@ -590,37 +575,33 @@ spec:
             - /hostproc
             - -disable-ebpf
             - -disable-tls-log
-          image: 'docker.io/kubeshark/worker:v52.3.88'
+          image: "docker.io/kubeshark/worker:v52.3.88"
           imagePullPolicy: Always
           name: tracer
           env:
-          - name: POD_NAME
-            valueFrom:
-              fieldRef:
-                fieldPath: metadata.name
-          - name: POD_NAMESPACE
-            valueFrom:
-              fieldRef:
-                fieldPath: metadata.namespace
-          - name: PROFILING_ENABLED
-            value: 'false'
-          - name: SENTRY_ENABLED
-            value: 'false'
-          - name: SENTRY_ENVIRONMENT
-            value: 'production'
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: PROFILING_ENABLED
+              value: "false"
+            - name: SENTRY_ENABLED
+              value: "false"
+            - name: SENTRY_ENVIRONMENT
+              value: "production"
           resources:
             limits:
-              
-              
               memory: 5Gi
-              
+
             requests:
-              
               cpu: 50m
-              
-              
+
               memory: 50Mi
-              
+
           securityContext:
             capabilities:
               add:
@@ -661,11 +642,11 @@ spec:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
             nodeSelectorTerms:
-            - matchExpressions:
-              - key: kubernetes.io/os
-                operator: In
-                values:
-                - linux
+              - matchExpressions:
+                  - key: kubernetes.io/os
+                    operator: In
+                    values:
+                      - linux
       volumes:
         - hostPath:
             path: /proc
@@ -697,11 +678,10 @@ metadata:
     app.kubernetes.io/instance: kubeshark
     app.kubernetes.io/version: "52.3.88"
     app.kubernetes.io/managed-by: Helm
-  annotations:
   name: kubeshark-hub
   namespace: default
 spec:
-  replicas: 1  # Set the desired number of replicas
+  replicas: 1 # Set the desired number of replicas
   selector:
     matchLabels:
       app.kubeshark.co/app: hub
@@ -726,23 +706,23 @@ spec:
             - -port
             - "8080"
           env:
-          - name: POD_NAME
-            valueFrom:
-              fieldRef:
-                fieldPath: metadata.name
-          - name: POD_NAMESPACE
-            valueFrom:
-              fieldRef:
-                fieldPath: metadata.namespace
-          - name: SENTRY_ENABLED
-            value: 'false'
-          - name: SENTRY_ENVIRONMENT
-            value: 'production'
-          - name: KUBESHARK_CLOUD_API_URL
-            value: 'https://api.kubeshark.co'
-          - name: PROFILING_ENABLED
-            value: 'false'
-          image: 'docker.io/kubeshark/hub:v52.3.88'
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: SENTRY_ENABLED
+              value: "false"
+            - name: SENTRY_ENVIRONMENT
+              value: "production"
+            - name: KUBESHARK_CLOUD_API_URL
+              value: "https://api.kubeshark.co"
+            - name: PROFILING_ENABLED
+              value: "false"
+          image: "docker.io/kubeshark/hub:v52.3.88"
           imagePullPolicy: Always
           readinessProbe:
             periodSeconds: 1
@@ -760,35 +740,31 @@ spec:
               port: 8080
           resources:
             limits:
-              
-              
               memory: 5Gi
-              
+
             requests:
-              
               cpu: 50m
-              
-              
+
               memory: 50Mi
-              
+
           volumeMounts:
-          - name: saml-x509-volume
-            mountPath: "/etc/saml/x509"
-            readOnly: true
+            - name: saml-x509-volume
+              mountPath: "/etc/saml/x509"
+              readOnly: true
       volumes:
-      - name: saml-x509-volume
-        projected:
-          sources:
-          - secret:
-              name: kubeshark-saml-x509-crt-secret
-              items:
-              - key: AUTH_SAML_X509_CRT
-                path: kubeshark.crt
-          - secret:
-              name: kubeshark-saml-x509-key-secret
-              items:
-              - key: AUTH_SAML_X509_KEY
-                path: kubeshark.key
+        - name: saml-x509-volume
+          projected:
+            sources:
+              - secret:
+                  name: kubeshark-saml-x509-crt-secret
+                  items:
+                    - key: AUTH_SAML_X509_CRT
+                      path: kubeshark.crt
+              - secret:
+                  name: kubeshark-saml-x509-key-secret
+                  items:
+                    - key: AUTH_SAML_X509_KEY
+                      path: kubeshark.key
 ---
 # Source: kubeshark/templates/06-front-deployment.yaml
 apiVersion: apps/v1
@@ -801,11 +777,10 @@ metadata:
     app.kubernetes.io/instance: kubeshark
     app.kubernetes.io/version: "52.3.88"
     app.kubernetes.io/managed-by: Helm
-  annotations:
   name: kubeshark-front
   namespace: default
 spec:
-  replicas: 1  # Set the desired number of replicas
+  replicas: 1 # Set the desired number of replicas
   selector:
     matchLabels:
       app.kubeshark.co/app: front
@@ -824,36 +799,36 @@ spec:
       containers:
         - env:
             - name: REACT_APP_AUTH_ENABLED
-              value: 'true'
+              value: "true"
             - name: REACT_APP_AUTH_TYPE
-              value: 'oidc'
+              value: "oidc"
             - name: REACT_APP_AUTH_SAML_IDP_METADATA_URL
-              value: ' '
+              value: " "
             - name: REACT_APP_TIMEZONE
-              value: ' '
+              value: " "
             - name: REACT_APP_SCRIPTING_DISABLED
-              value: 'false'
+              value: "false"
             - name: REACT_APP_TARGETED_PODS_UPDATE_DISABLED
-              value: 'false'
+              value: "false"
             - name: REACT_APP_PRESET_FILTERS_CHANGING_ENABLED
-              value: 'true'
+              value: "true"
             - name: REACT_APP_BPF_OVERRIDE_DISABLED
-              value: 'false'
+              value: "false"
             - name: REACT_APP_RECORDING_DISABLED
-              value: 'false'
+              value: "false"
             - name: REACT_APP_STOP_TRAFFIC_CAPTURING_DISABLED
-              value: 'false'
-            - name: 'REACT_APP_CLOUD_LICENSE_ENABLED'
-              value: 'true'
+              value: "false"
+            - name: "REACT_APP_CLOUD_LICENSE_ENABLED"
+              value: "true"
             - name: REACT_APP_SUPPORT_CHAT_ENABLED
-              value: 'true'
+              value: "true"
             - name: REACT_APP_DISSECTORS_UPDATING_ENABLED
-              value: 'true'
+              value: "true"
             - name: REACT_APP_SENTRY_ENABLED
-              value: 'false'
+              value: "false"
             - name: REACT_APP_SENTRY_ENVIRONMENT
-              value: 'production'
-          image: 'docker.io/kubeshark/front:v52.3.88'
+              value: "production"
+          image: "docker.io/kubeshark/front:v52.3.88"
           imagePullPolicy: Always
           name: kubeshark-front
           livenessProbe:

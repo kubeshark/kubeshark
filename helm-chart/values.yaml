@@ -67,11 +67,11 @@ tap:
   labels: {}
   annotations: {}
   nodeSelectorTerms:
-  - matchExpressions:
-    - key: kubernetes.io/os
-      operator: In
-      values:
-      - linux
+    - matchExpressions:
+        - key: kubernetes.io/os
+          operator: In
+          values:
+            - linux
   auth:
     enabled: false
     type: saml
@@ -115,31 +115,31 @@ tap:
   stopTrafficCapturingDisabled: false
   capabilities:
     networkCapture:
-    - NET_RAW
-    - NET_ADMIN
+      - NET_RAW
+      - NET_ADMIN
     serviceMeshCapture:
-    - SYS_ADMIN
-    - SYS_PTRACE
-    - DAC_OVERRIDE
+      - SYS_ADMIN
+      - SYS_PTRACE
+      - DAC_OVERRIDE
     kernelModule:
-    - SYS_MODULE
+      - SYS_MODULE
     ebpfCapture:
-    - SYS_ADMIN
-    - SYS_PTRACE
-    - SYS_RESOURCE
-    - IPC_LOCK
+      - SYS_ADMIN
+      - SYS_PTRACE
+      - SYS_RESOURCE
+      - IPC_LOCK
   globalFilter: ""
   enabledDissectors:
-  - amqp
-  - dns
-  - http
-  - icmp
-  - kafka
-  - redis
-  - sctp
-  - syscall
-  - ws
-  - tls
+    - amqp
+    - dns
+    - http
+    - icmp
+    - kafka
+    - redis
+    - sctp
+    - syscall
+    - ws
+    - tls
   metrics:
     port: 49100
   pprof:
