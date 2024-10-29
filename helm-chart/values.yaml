@@ -22,7 +22,7 @@ tap:
   namespaces: []
   excludedNamespaces: []
   bpfOverride: ""
-  stopped: true
+  stopped: false
   release:
     repo: https://helm.kubeshark.co
     name: kubeshark
@@ -99,7 +99,7 @@ tap:
   telemetry:
     enabled: true
   resourceGuard:
-    enabled: false
+    enabled: true
   sentry:
     enabled: false
     environment: production
@@ -124,7 +124,7 @@ tap:
     - SYS_PTRACE
     - SYS_RESOURCE
     - IPC_LOCK
-  globalFilter: timestamp>now()
+  globalFilter: ""
   enabledDissectors:
   - amqp
   - dns
@@ -134,8 +134,6 @@ tap:
   - redis
   - sctp
   - syscall
-  - tcp
-  - udp
   - ws
   - tls
   metrics:
