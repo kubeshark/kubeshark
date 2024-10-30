@@ -184,10 +184,10 @@ release:
 	@cd ../front && git checkout master && git pull && git tag -d v$(VERSION); git tag v$(VERSION) && git push origin --tags
 	@cd ../kubeshark && git checkout master && git pull && sed -i 's/^version:.*/version: "$(VERSION)"/' helm-chart/Chart.yaml && make && make generate-helm-values && make generate-manifests
 	@git add -A . && git commit -m ":bookmark: Bump the Helm chart version to $(VERSION)" && git push
-	# @git tag -d v$(VERSION); git tag v$(VERSION) && git push origin --tags
-	# @cd helm-chart && cp -r . ../../kubeshark.github.io/charts/chart
-	# @cd ../../kubeshark.github.io/ && git add -A . && git commit -m ":sparkles: Update the Helm chart" && git push
-	# @cd ../kubeshark
+	@git tag -d v$(VERSION); git tag v$(VERSION) && git push origin --tags
+	@cd helm-chart && cp -r . ../../kubeshark.github.io/charts/chart
+	@cd ../../kubeshark.github.io/ && git add -A . && git commit -m ":sparkles: Update the Helm chart" && git push
+	@cd ../kubeshark
 
 branch:
 	@cd ../worker && git checkout master && git pull && git checkout -b $(name); git push --set-upstream origin $(name)
