@@ -99,7 +99,7 @@ tap:
   telemetry:
     enabled: true
   resourceGuard:
-    enabled: true
+    enabled: false
   sentry:
     enabled: false
     environment: production
