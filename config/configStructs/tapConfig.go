@@ -152,7 +152,7 @@ type TelemetryConfig struct {
 }
 
 type ResourceGuardConfig struct {
-	Enabled bool `yaml:"enabled" json:"enabled" default:"true"`
+	Enabled bool `yaml:"enabled" json:"enabled" default:"false"`
 }
 
 type SentryConfig struct {
