@@ -14,7 +14,7 @@ keywords:
   - microservice
   - forensics
   - api
-kubeVersion: '>= 1.16.0-0'
+kubeVersion: ">= 1.16.0-0"
 maintainers:
   - email: info@kubeshark.co
     name: Kubeshark
