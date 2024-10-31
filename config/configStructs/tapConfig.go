@@ -89,6 +89,11 @@ type ProxyConfig struct {
 	Host   string       `yaml:"host" json:"host" default:"127.0.0.1"`
 }
 
+type OverrideImageConfig struct {
+	Worker string `yaml:"worker" json:"worker"`
+	Hub    string `yaml:"hub" json:"hub"`
+	Front  string `yaml:"front" json:"front"`
+}
 type OverrideTagConfig struct {
 	Worker string `yaml:"worker" json:"worker"`
 	Hub    string `yaml:"hub" json:"hub"`
@@ -96,12 +101,13 @@ type OverrideTagConfig struct {
 }
 
 type DockerConfig struct {
-	Registry         string            `yaml:"registry" json:"registry" default:"docker.io/kubeshark"`
-	Tag              string            `yaml:"tag" json:"tag" default:""`
-	TagLocked        bool              `yaml:"tagLocked" json:"tagLocked" default:"true"`
-	ImagePullPolicy  string            `yaml:"imagePullPolicy" json:"imagePullPolicy" default:"Always"`
-	ImagePullSecrets []string          `yaml:"imagePullSecrets" json:"imagePullSecrets"`
-	OverrideTag      OverrideTagConfig `yaml:"overrideTag" json:"overrideTag"`
+	Registry         string              `yaml:"registry" json:"registry" default:"docker.io/kubeshark"`
+	Tag              string              `yaml:"tag" json:"tag" default:""`
+	TagLocked        bool                `yaml:"tagLocked" json:"tagLocked" default:"true"`
+	ImagePullPolicy  string              `yaml:"imagePullPolicy" json:"imagePullPolicy" default:"Always"`
+	ImagePullSecrets []string            `yaml:"imagePullSecrets" json:"imagePullSecrets"`
+	OverrideImage    OverrideImageConfig `yaml:"overrideImage" json:"overrideImage"`
+	OverrideTag      OverrideTagConfig   `yaml:"overrideTag" json:"overrideTag"`
 }
 
 type ResourcesConfig struct {
