@@ -104,6 +104,20 @@ helm install kubeshark kubeshark/kubeshark \
 
 Please refer to [metrics](./metrics.md) documentation for details.
 
+## Override Tag, Tags, Images
+
+In addition to using a private registry, you can further override the images' tag, specific image tags and specific image names.
+
+Example for overriding image names:
+
+```yaml
+  docker:
+    overrideImage: 
+      worker: docker.io/kubeshark/worker:v52.3.87
+      front:  docker.io/kubeshark/front:v52.3.87
+      hub:    docker.io/kubeshark/hub:v52.3.87
+```
+
 ## Configuration
 
 | Parameter                                 | Description                                   | Default                                                 |
@@ -114,7 +128,8 @@ Please refer to [metrics](./metrics.md) documentation for details.
 | `tap.docker.tagLocked`                    | If `false` - use latest minor tag             | `true`                                                  |
 | `tap.docker.imagePullPolicy`              | Kubernetes image pull policy                  | `Always`                                                |
 | `tap.docker.imagePullSecrets`             | Kubernetes secrets to pull the images         | `[]`                                                    |
-| `tap.docker.overrideTag`                  | DANGER: Used to override specific images, when testing custom features from the Kubeshark team | `""`   |
+| `tap.docker.overrideImage`                | Can be used to directly override image names  | `""`                                                    |
+| `tap.docker.overrideTag`                  | Can be used to override image tags            | `""`                                                    |
 | `tap.proxy.hub.srvPort`                   | Hub server port. Change if already occupied.  | `8898`                                                  |
 | `tap.proxy.worker.srvPort`                | Worker server port. Change if already occupied.| `30001`                                                |
 | `tap.proxy.front.port`                    | Front service port. Change if already occupied.| `8899`                                                 |
