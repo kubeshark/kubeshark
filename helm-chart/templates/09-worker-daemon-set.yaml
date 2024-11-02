@@ -125,11 +125,19 @@ spec:
             value: '{{ .Values.tap.sentry.environment }}'
           resources:
             limits:
+              {{ if ne .Values.tap.resources.sniffer.limits.cpu "0" }}
               cpu: {{ .Values.tap.resources.sniffer.limits.cpu }}
+              {{ end }}
+              {{ if ne .Values.tap.resources.sniffer.limits.memory "0" }}
               memory: {{ .Values.tap.resources.sniffer.limits.memory }}
+              {{ end }}
             requests:
+              {{ if ne .Values.tap.resources.sniffer.requests.cpu "0" }}
               cpu: {{ .Values.tap.resources.sniffer.requests.cpu }}
+              {{ end }}
+              {{ if ne .Values.tap.resources.sniffer.requests.memory "0" }}
               memory: {{ .Values.tap.resources.sniffer.requests.memory }}
+              {{ end }}
           securityContext:
             capabilities:
               add:
@@ -228,11 +236,19 @@ spec:
             value: '{{ .Values.tap.sentry.environment }}'
           resources:
             limits:
+              {{ if ne .Values.tap.resources.tracer.limits.cpu "0" }}
               cpu: {{ .Values.tap.resources.tracer.limits.cpu }}
+              {{ end }}
+              {{ if ne .Values.tap.resources.tracer.limits.memory "0" }}
               memory: {{ .Values.tap.resources.tracer.limits.memory }}
+              {{ end }}
             requests:
+              {{ if ne .Values.tap.resources.tracer.requests.cpu "0" }}
               cpu: {{ .Values.tap.resources.tracer.requests.cpu }}
+              {{ end }}
+              {{ if ne .Values.tap.resources.tracer.requests.memory "0" }}
               memory: {{ .Values.tap.resources.tracer.requests.memory }}
+              {{ end }}
           securityContext:
             capabilities:
               add:
