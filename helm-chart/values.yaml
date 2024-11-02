@@ -40,24 +40,24 @@ tap:
   resources:
     hub:
       limits:
-        cpu: ""
+        cpu: "0"
         memory: 5Gi
       requests:
-        cpu: ""
+        cpu: 50m
         memory: 50Mi
     sniffer:
       limits:
-        cpu: ""
+        cpu: "0"
         memory: 5Gi
       requests:
-        cpu: ""
+        cpu: 50m
         memory: 50Mi
     tracer:
       limits:
-        cpu: ""
+        cpu: "0"
         memory: 5Gi
       requests:
-        cpu: ""
+        cpu: 50m
         memory: 50Mi
   serviceMesh: true
   tls: true
