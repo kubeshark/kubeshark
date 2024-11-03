@@ -3,6 +3,7 @@ package cmd
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"os"
 	"os/signal"
 	"strings"
@@ -16,6 +17,8 @@ import (
 	"github.com/kubeshark/kubeshark/misc"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/watch"
 )
 
 var scriptsCmd = &cobra.Command{
@@ -53,6 +56,7 @@ func runScripts() {
 	}
 
 	watchScripts(kubernetesProvider, true)
+	watchConfigMap(kubernetesProvider)
 }
 
 func createScript(provider *kubernetes.Provider, script misc.ConfigMapScript) (index int64, err error) {
@@ -253,4 +257,46 @@ func watchScripts(provider *kubernetes.Provider, block bool) {
 	if block {
 		<-ctx.Done()
 	}
+}
+
+// New function to watch for ConfigMap events
+func watchConfigMap(provider *kubernetes.Provider) {
+	clientset := provider.GetClientSet()
+	configMapName := kubernetes.SELF_RESOURCES_PREFIX + kubernetes.SUFFIX_CONFIG_MAP
+	watcher, err := clientset.CoreV1().ConfigMaps(config.Config.Tap.Release.Namespace).Watch(context.TODO(), metav1.ListOptions{
+		FieldSelector: "metadata.name=" + configMapName,
+	})
+	if err != nil {
+
+		log.Error().Err(err).Msg("Failed to set up ConfigMap watcher")
+		return
+	}
+	defer watcher.Stop()
+	fmt.Println("Watching ConfigMap for changes")
+	for event := range watcher.ResultChan() {
+		if event.Type == watch.Added {
+			log.Info().Msg("ConfigMap created or modified, performing sync")
+			runScriptsSync(provider)
+		}
+	}
+}
+
+func runScriptsSync(provider *kubernetes.Provider) {
+	files := make(map[string]int64)
+
+	scripts, err := config.Config.Scripting.GetScripts()
+	if err != nil {
+		log.Error().Err(err).Send()
+		return
+	}
+
+	for _, script := range scripts {
+		index, err := createScript(provider, script.ConfigMap())
+		if err != nil {
+			log.Error().Err(err).Send()
+			continue
+		}
+		files[script.Path] = index
+	}
+	log.Info().Msg("Synchronized scripts with ConfigMap.")
 }
