@@ -93,7 +93,7 @@ func runProxy(block bool, noBrowser bool) {
 		okToOpen("Kubeshark", frontUrl, noBrowser)
 	}
 	if config.Config.Scripting.Source != "" && config.Config.Scripting.WatchScripts {
-		watchScripts(kubernetesProvider, false)
+		watchScripts(ctx, kubernetesProvider, false)
 	}
 
 	if config.Config.Scripting.Console {
