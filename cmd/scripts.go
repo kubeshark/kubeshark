@@ -3,7 +3,10 @@ package cmd
 import (
 	"context"
 	"encoding/json"
+	"os"
+	"os/signal"
 	"strings"
+	"time"
 
 	"github.com/creasty/defaults"
 	"github.com/fsnotify/fsnotify"
@@ -11,7 +14,6 @@ import (
 	"github.com/kubeshark/kubeshark/config/configStructs"
 	"github.com/kubeshark/kubeshark/kubernetes"
 	"github.com/kubeshark/kubeshark/misc"
-	"github.com/kubeshark/kubeshark/utils"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 )
@@ -162,6 +164,27 @@ func watchScripts(provider *kubernetes.Provider, block bool) {
 		defer watcher.Close()
 	}
 
+	// Set up a context for graceful shutdown on Ctrl+C
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	// Handle Ctrl+C (SIGINT) to stop watching
+	signalChan := make(chan os.Signal, 1)
+	signal.Notify(signalChan, os.Interrupt)
+
+	go func() {
+		<-signalChan
+		log.Info().Msg("Received interrupt, stopping script watch.")
+		cancel()        // Cancel the context to stop the watcher loop
+		watcher.Close() // Close watcher explicitly to break out of for-select loop
+	}()
+
+	// Attempt to add the directory to the watcher
+	if err := watcher.Add(config.Config.Scripting.Source); err != nil {
+		log.Error().Err(err).Msg("Failed to add scripting source to watcher")
+		return
+	}
+
 	go func() {
 		for {
 			select {
@@ -216,6 +239,7 @@ func watchScripts(provider *kubernetes.Provider, block bool) {
 			// watch for errors
 			case err := <-watcher.Errors:
 				log.Error().Err(err).Send()
+				time.Sleep(5 * time.Second) // Retry after a delay
 			}
 		}
 	}()
@@ -227,8 +251,6 @@ func watchScripts(provider *kubernetes.Provider, block bool) {
 	log.Info().Str("directory", config.Config.Scripting.Source).Msg("Watching scripts against changes:")
 
 	if block {
-		ctx, cancel := context.WithCancel(context.Background())
-		defer cancel()
-		utils.WaitForTermination(ctx, cancel)
+		<-ctx.Done()
 	}
 }
