@@ -84,7 +84,8 @@ kubectl-view-kubeshark-resources: ## This command outputs all Kubernetes resourc
 	./kubectl.sh view-kubeshark-resources
 
 generate-helm-values: ## Generate the Helm values from config.yaml
-	./bin/kubeshark__ config > ./helm-chart/values.yaml && sed -i 's/^license:.*/license: ""/' helm-chart/values.yaml && sed -i '1i # find a detailed description here: https://github.com/kubeshark/kubeshark/blob/master/helm-chart/README.md' helm-chart/values.yaml 
+	mv ~/.kubeshark/config.yaml ~/.kubeshark/config.yaml.old; bin/kubeshark__ config>helm-chart/values.yaml;mv ~/.kubeshark/config.yaml.old ~/.kubeshark/config.yaml
+	sed -i 's/^license:.*/license: ""/' helm-chart/values.yaml && sed -i '1i # find a detailed description here: https://github.com/kubeshark/kubeshark/blob/master/helm-chart/README.md' helm-chart/values.yaml 
 
 generate-manifests: ## Generate the manifests from the Helm chart using default configuration
 	helm template kubeshark -n default ./helm-chart > ./manifests/complete.yaml
@@ -177,7 +178,7 @@ port-forward:
 	kubectl port-forward $$(kubectl get pods | awk '$$1 ~ /^$(POD_PREFIX)/' | awk 'END {print $$1}') $(SRC_PORT):$(DST_PORT)
 
 release:
-	@cd ../worker && git checkout master && git pull && git tag -d v$(VERSION); git tag v$(VERSION) ## && git push origin --tags
+	@cd ../worker && git checkout master && git pull && git tag -d v$(VERSION); git tag v$(VERSION) && git push origin --tags
 	@cd ../tracer && git checkout master && git pull && git tag -d v$(VERSION); git tag v$(VERSION) && git push origin --tags
 	@cd ../hub && git checkout master && git pull && git tag -d v$(VERSION); git tag v$(VERSION) && git push origin --tags
 	@cd ../front && git checkout master && git pull && git tag -d v$(VERSION); git tag v$(VERSION) && git push origin --tags

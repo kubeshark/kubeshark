@@ -83,7 +83,9 @@ spec:
           {{- if .Values.tap.debug }}
             - -debug
           {{- end }}
-        {{- if .Values.tap.docker.overrideTag.worker }}
+        {{- if .Values.tap.docker.overrideImage.worker }}
+          image: '{{ .Values.tap.docker.overrideImage.worker }}'
+        {{- else if .Values.tap.docker.overrideTag.worker }}
           image: '{{ .Values.tap.docker.registry }}/worker:{{ .Values.tap.docker.overrideTag.worker }}{{ include "kubeshark.dockerTagDebugVersion" . }}'
         {{ else }}
           image: '{{ .Values.tap.docker.registry }}/worker:{{ not (eq .Values.tap.docker.tag "") | ternary .Values.tap.docker.tag (include "kubeshark.defaultVersion" .) }}{{ include "kubeshark.dockerTagDebugVersion" . }}'
@@ -123,11 +125,19 @@ spec:
             value: '{{ .Values.tap.sentry.environment }}'
           resources:
             limits:
+              {{ if ne .Values.tap.resources.sniffer.limits.cpu "0" }}
               cpu: {{ .Values.tap.resources.sniffer.limits.cpu }}
+              {{ end }}
+              {{ if ne .Values.tap.resources.sniffer.limits.memory "0" }}
               memory: {{ .Values.tap.resources.sniffer.limits.memory }}
+              {{ end }}
             requests:
+              {{ if ne .Values.tap.resources.sniffer.requests.cpu "0" }}
               cpu: {{ .Values.tap.resources.sniffer.requests.cpu }}
+              {{ end }}
+              {{ if ne .Values.tap.resources.sniffer.requests.memory "0" }}
               memory: {{ .Values.tap.resources.sniffer.requests.memory }}
+              {{ end }}
           securityContext:
             capabilities:
               add:
@@ -226,11 +236,19 @@ spec:
             value: '{{ .Values.tap.sentry.environment }}'
           resources:
             limits:
+              {{ if ne .Values.tap.resources.tracer.limits.cpu "0" }}
               cpu: {{ .Values.tap.resources.tracer.limits.cpu }}
+              {{ end }}
+              {{ if ne .Values.tap.resources.tracer.limits.memory "0" }}
               memory: {{ .Values.tap.resources.tracer.limits.memory }}
+              {{ end }}
             requests:
+              {{ if ne .Values.tap.resources.tracer.requests.cpu "0" }}
               cpu: {{ .Values.tap.resources.tracer.requests.cpu }}
+              {{ end }}
+              {{ if ne .Values.tap.resources.tracer.requests.memory "0" }}
               memory: {{ .Values.tap.resources.tracer.requests.memory }}
+              {{ end }}
           securityContext:
             capabilities:
               add:

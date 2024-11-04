@@ -46,17 +46,17 @@ const (
 )
 
 type ResourceLimitsHub struct {
-	CPU    string `yaml:"cpu" json:"cpu" default:""`
+	CPU    string `yaml:"cpu" json:"cpu" default:"0"`
 	Memory string `yaml:"memory" json:"memory" default:"5Gi"`
 }
 
 type ResourceLimitsWorker struct {
-	CPU    string `yaml:"cpu" json:"cpu" default:""`
+	CPU    string `yaml:"cpu" json:"cpu" default:"0"`
 	Memory string `yaml:"memory" json:"memory" default:"3Gi"`
 }
 
 type ResourceRequests struct {
-	CPU    string `yaml:"cpu" json:"cpu" default:""`
+	CPU    string `yaml:"cpu" json:"cpu" default:"50m"`
 	Memory string `yaml:"memory" json:"memory" default:"50Mi"`
 }
 
@@ -89,6 +89,11 @@ type ProxyConfig struct {
 	Host   string       `yaml:"host" json:"host" default:"127.0.0.1"`
 }
 
+type OverrideImageConfig struct {
+	Worker string `yaml:"worker" json:"worker"`
+	Hub    string `yaml:"hub" json:"hub"`
+	Front  string `yaml:"front" json:"front"`
+}
 type OverrideTagConfig struct {
 	Worker string `yaml:"worker" json:"worker"`
 	Hub    string `yaml:"hub" json:"hub"`
@@ -96,12 +101,13 @@ type OverrideTagConfig struct {
 }
 
 type DockerConfig struct {
-	Registry         string            `yaml:"registry" json:"registry" default:"docker.io/kubeshark"`
-	Tag              string            `yaml:"tag" json:"tag" default:""`
-	TagLocked        bool              `yaml:"tagLocked" json:"tagLocked" default:"true"`
-	ImagePullPolicy  string            `yaml:"imagePullPolicy" json:"imagePullPolicy" default:"Always"`
-	ImagePullSecrets []string          `yaml:"imagePullSecrets" json:"imagePullSecrets"`
-	OverrideTag      OverrideTagConfig `yaml:"overrideTag" json:"overrideTag"`
+	Registry         string              `yaml:"registry" json:"registry" default:"docker.io/kubeshark"`
+	Tag              string              `yaml:"tag" json:"tag" default:""`
+	TagLocked        bool                `yaml:"tagLocked" json:"tagLocked" default:"true"`
+	ImagePullPolicy  string              `yaml:"imagePullPolicy" json:"imagePullPolicy" default:"Always"`
+	ImagePullSecrets []string            `yaml:"imagePullSecrets" json:"imagePullSecrets"`
+	OverrideImage    OverrideImageConfig `yaml:"overrideImage" json:"overrideImage"`
+	OverrideTag      OverrideTagConfig   `yaml:"overrideTag" json:"overrideTag"`
 }
 
 type ResourcesConfig struct {
@@ -243,7 +249,7 @@ type TapConfig struct {
 	RecordingDisabled            bool                  `yaml:"recordingDisabled" json:"recordingDisabled" default:"false"`
 	StopTrafficCapturingDisabled bool                  `yaml:"stopTrafficCapturingDisabled" json:"stopTrafficCapturingDisabled" default:"false"`
 	Capabilities                 CapabilitiesConfig    `yaml:"capabilities" json:"capabilities"`
-	GlobalFilter                 string                `yaml:"globalFilter" json:"globalFilter" default:"timestamp>now()"`
+	GlobalFilter                 string                `yaml:"globalFilter" json:"globalFilter" default:""`
 	EnabledDissectors            []string              `yaml:"enabledDissectors" json:"enabledDissectors"`
 	Metrics                      MetricsConfig         `yaml:"metrics" json:"metrics"`
 	Pprof                        PprofConfig           `yaml:"pprof" json:"pprof"`

@@ -104,6 +104,20 @@ helm install kubeshark kubeshark/kubeshark \
 
 Please refer to [metrics](./metrics.md) documentation for details.
 
+## Override Tag, Tags, Images
+
+In addition to using a private registry, you can further override the images' tag, specific image tags and specific image names.
+
+Example for overriding image names:
+
+```yaml
+  docker:
+    overrideImage: 
+      worker: docker.io/kubeshark/worker:v52.3.87
+      front:  docker.io/kubeshark/front:v52.3.87
+      hub:    docker.io/kubeshark/hub:v52.3.87
+```
+
 ## Configuration
 
 | Parameter                                 | Description                                   | Default                                                 |
@@ -114,7 +128,8 @@ Please refer to [metrics](./metrics.md) documentation for details.
 | `tap.docker.tagLocked`                    | If `false` - use latest minor tag             | `true`                                                  |
 | `tap.docker.imagePullPolicy`              | Kubernetes image pull policy                  | `Always`                                                |
 | `tap.docker.imagePullSecrets`             | Kubernetes secrets to pull the images         | `[]`                                                    |
-| `tap.docker.overrideTag`                  | DANGER: Used to override specific images, when testing custom features from the Kubeshark team | `""`   |
+| `tap.docker.overrideImage`                | Can be used to directly override image names  | `""`                                                    |
+| `tap.docker.overrideTag`                  | Can be used to override image tags            | `""`                                                    |
 | `tap.proxy.hub.srvPort`                   | Hub server port. Change if already occupied.  | `8898`                                                  |
 | `tap.proxy.worker.srvPort`                | Worker server port. Change if already occupied.| `30001`                                                |
 | `tap.proxy.front.port`                    | Front service port. Change if already occupied.| `8899`                                                 |
@@ -176,7 +191,7 @@ Please refer to [metrics](./metrics.md) documentation for details.
 | `tap.sentry.enabled`                      | Enable sending of error logs to Sentry          | `false`                                                  |
 | `tap.sentry.environment`                      | Sentry environment to label error logs with      | `production`                                                  |
 | `tap.defaultFilter`                       | Sets the default dashboard KFL filter (e.g. `http`). By default, this value is set to filter out noisy protocols such as DNS, UDP, ICMP and TCP. The user can easily change this in the Dashboard. You can also change this value to change this behavior.        | `"!dns and !tcp and !udp and !icmp"`                                                  |
-| `tap.globalFilter`                        | Prepends to any KFL filter and can be used to limit what is visible in the dashboard. For example, `redact("request.headers.Authorization")` will redact the appropriate field. Another example `!dns` will not show any DNS traffic.      | `"timestamp>now()"`                                        |
+| `tap.globalFilter`                        | Prepends to any KFL filter and can be used to limit what is visible in the dashboard. For example, `redact("request.headers.Authorization")` will redact the appropriate field. Another example `!dns` will not show any DNS traffic.      | `""`                                        |
 | `tap.metrics.port`                  | Pod port used to expose Prometheus metrics          | `49100`                                                  |
 | `tap.enabledDissectors`                   | This is an array of strings representing the list of supported protocols. Remove or comment out redundant protocols (e.g., dns).| The default list excludes: `dns` and `tcp` |
 | `logs.file`                               | Logs dump path                      | `""`                                                    |

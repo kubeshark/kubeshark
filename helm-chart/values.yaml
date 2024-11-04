@@ -6,6 +6,10 @@ tap:
     tagLocked: true
     imagePullPolicy: Always
     imagePullSecrets: []
+    overrideImage:
+      worker: ""
+      hub: ""
+      front: ""
     overrideTag:
       worker: ""
       hub: ""
@@ -22,7 +26,7 @@ tap:
   namespaces: []
   excludedNamespaces: []
   bpfOverride: ""
-  stopped: true
+  stopped: false
   release:
     repo: https://helm.kubeshark.co
     name: kubeshark
@@ -36,24 +40,24 @@ tap:
   resources:
     hub:
       limits:
-        cpu: ""
+        cpu: "0"
         memory: 5Gi
       requests:
-        cpu: ""
+        cpu: 50m
         memory: 50Mi
     sniffer:
       limits:
-        cpu: ""
+        cpu: "0"
         memory: 5Gi
       requests:
-        cpu: ""
+        cpu: 50m
         memory: 50Mi
     tracer:
       limits:
-        cpu: ""
+        cpu: "0"
         memory: 5Gi
       requests:
-        cpu: ""
+        cpu: 50m
         memory: 50Mi
   serviceMesh: true
   tls: true
@@ -124,7 +128,7 @@ tap:
     - SYS_PTRACE
     - SYS_RESOURCE
     - IPC_LOCK
-  globalFilter: timestamp>now()
+  globalFilter: ""
   enabledDissectors:
   - amqp
   - dns
@@ -134,8 +138,6 @@ tap:
   - redis
   - sctp
   - syscall
-  - tcp
-  - udp
   - ws
   - tls
   metrics:
