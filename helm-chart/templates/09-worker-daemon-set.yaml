@@ -236,19 +236,19 @@ spec:
             value: '{{ .Values.tap.sentry.environment }}'
           resources:
             limits:
-              {{ if ne .Values.tap.resources.tracer.limits.cpu "0" }}
+              {{- if ne .Values.tap.resources.tracer.limits.cpu "0" }}
               cpu: {{ .Values.tap.resources.tracer.limits.cpu }}
-              {{ end }}
-              {{ if ne .Values.tap.resources.tracer.limits.memory "0" }}
+              {{- end }}
+              {{- if ne .Values.tap.resources.tracer.limits.memory "0" }}
               memory: {{ .Values.tap.resources.tracer.limits.memory }}
-              {{ end }}
+              {{- end }}
             requests:
-              {{ if ne .Values.tap.resources.tracer.requests.cpu "0" }}
+              {{- if ne .Values.tap.resources.tracer.requests.cpu "0" }}
               cpu: {{ .Values.tap.resources.tracer.requests.cpu }}
-              {{ end }}
-              {{ if ne .Values.tap.resources.tracer.requests.memory "0" }}
+              {{- end }}
+              {{- if ne .Values.tap.resources.tracer.requests.memory "0" }}
               memory: {{ .Values.tap.resources.tracer.requests.memory }}
-              {{ end }}
+              {{- end }}
           securityContext:
             capabilities:
               add:

@@ -85,7 +85,7 @@ kubectl-view-kubeshark-resources: ## This command outputs all Kubernetes resourc
 
 generate-helm-values: ## Generate the Helm values from config.yaml
 	mv ~/.kubeshark/config.yaml ~/.kubeshark/config.yaml.old; bin/kubeshark__ config>helm-chart/values.yaml;mv ~/.kubeshark/config.yaml.old ~/.kubeshark/config.yaml
-	sed -i 's/^license:.*/license: ""/' helm-chart/values.yaml && sed -i '1i # find a detailed description here: https://github.com/kubeshark/kubeshark/blob/master/helm-chart/README.md' helm-chart/values.yaml 
+	sed -i 's/^license:.*/license: ""/' helm-chart/values.yaml && sed -i '1i # find a detailed description here: https://github.com/kubeshark/kubeshark/blob/master/helm-chart/README.md' helm-chart/values.yaml
 
 generate-manifests: ## Generate the manifests from the Helm chart using default configuration
 	helm template kubeshark -n default ./helm-chart > ./manifests/complete.yaml
