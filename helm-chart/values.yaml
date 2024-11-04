@@ -96,10 +96,6 @@ tap:
     annotations: {}
   ipv6: true
   debug: false
-  kernelModule:
-    enabled: false
-    image: kubeshark/pf-ring-module:all
-    unloadOnDestroy: false
   telemetry:
     enabled: true
   resourceGuard:
@@ -121,8 +117,6 @@ tap:
     - SYS_ADMIN
     - SYS_PTRACE
     - DAC_OVERRIDE
-    kernelModule:
-    - SYS_MODULE
     ebpfCapture:
     - SYS_ADMIN
     - SYS_PTRACE
