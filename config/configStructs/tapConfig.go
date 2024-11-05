@@ -35,8 +35,8 @@ const (
 	PprofPortLabel               = "pprof-port"
 	PprofViewLabel               = "pprof-view"
 	DebugLabel                   = "debug"
-	ContainerPort                = 80
-	ContainerPortStr             = "80"
+	ContainerPort                = 8080
+	ContainerPortStr             = "8080"
 	PcapDest                     = "dest"
 	PcapMaxSize                  = "maxSize"
 	PcapMaxTime                  = "maxTime"
