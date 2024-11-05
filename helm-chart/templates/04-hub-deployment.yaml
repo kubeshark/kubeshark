@@ -25,6 +25,12 @@ spec:
     spec:
       dnsPolicy: ClusterFirstWithHostNet
       serviceAccountName: {{ include "kubeshark.serviceAccountName" . }}
+    {{- if .Values.tap.docker.imagePullSecrets }}
+      imagePullSecrets:
+      {{- range .Values.tap.docker.imagePullSecrets }}
+      - name: {{ . }}
+      {{- end }}
+    {{- end }}
       containers:
         - name: hub
           command:
@@ -59,12 +65,6 @@ spec:
           image: '{{ .Values.tap.docker.registry }}/hub:{{ not (eq .Values.tap.docker.tag "") | ternary .Values.tap.docker.tag (include "kubeshark.defaultVersion" .) }}'
         {{- end }}
           imagePullPolicy: {{ .Values.tap.docker.imagePullPolicy }}
-        {{- if .Values.tap.docker.imagePullSecrets }}
-          imagePullSecrets:
-            {{- range .Values.tap.docker.imagePullSecrets }}
-            - name: {{ . }}
-            {{- end }}
-        {{- end }}
           readinessProbe:
             periodSeconds: 1
             failureThreshold: 3

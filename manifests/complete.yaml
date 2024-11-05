@@ -314,7 +314,6 @@ metadata:
     app.kubernetes.io/version: "52.3.88"
     app.kubernetes.io/managed-by: Helm
   name: kubeshark-cluster-role-binding-default
-  namespace: default
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -528,17 +527,10 @@ spec:
             value: 'production'
           resources:
             limits:
-              
-              
               memory: 5Gi
-              
             requests:
-              
               cpu: 50m
-              
-              
               memory: 50Mi
-              
           securityContext:
             capabilities:
               add:
