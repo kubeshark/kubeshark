@@ -425,7 +425,7 @@ func postFrontStarted(ctx context.Context, kubernetesProvider *kubernetes.Provid
 	}
 
 	if config.Config.Scripting.Source != "" && config.Config.Scripting.WatchScripts {
-		watchScripts(kubernetesProvider, false)
+		watchScripts(ctx, kubernetesProvider, false)
 	}
 
 	if config.Config.Scripting.Console {
