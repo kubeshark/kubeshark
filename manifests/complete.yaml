@@ -628,8 +628,6 @@ spec:
       tolerations:
         - effect: NoExecute
           operator: Exists
-        - effect: NoSchedule
-          operator: Exists
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
