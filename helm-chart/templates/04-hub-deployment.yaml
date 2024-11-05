@@ -81,17 +81,17 @@ spec:
               port: 8080
           resources:
             limits:
-              {{ if ne .Values.tap.resources.hub.limits.cpu "0" }}
+              {{ if ne (toString .Values.tap.resources.hub.limits.cpu) "0" }}
               cpu: {{ .Values.tap.resources.hub.limits.cpu }}
               {{ end }}
-              {{ if ne .Values.tap.resources.hub.limits.memory "0" }}
+              {{ if ne (toString .Values.tap.resources.hub.limits.memory) "0" }}
               memory: {{ .Values.tap.resources.hub.limits.memory }}
               {{ end }}
             requests:
-              {{ if ne .Values.tap.resources.hub.requests.cpu "0" }}
+              {{ if ne (toString .Values.tap.resources.hub.requests.cpu) "0" }}
               cpu: {{ .Values.tap.resources.hub.requests.cpu }}
               {{ end }}
-              {{ if ne .Values.tap.resources.hub.requests.memory "0" }}
+              {{ if ne (toString .Values.tap.resources.hub.requests.memor) "0" }}
               memory: {{ .Values.tap.resources.hub.requests.memory }}
               {{ end }}
           volumeMounts:
