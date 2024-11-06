@@ -25,29 +25,6 @@ spec:
       name: kubeshark-worker-daemon-set
       namespace: kubeshark
     spec:
-    {{- if .Values.tap.kernelModule.enabled }}
-      initContainers:
-      - name: load-pf-ring
-        image: {{ .Values.tap.kernelModule.image }}
-        imagePullPolicy: {{ .Values.tap.docker.imagePullPolicy }}
-      {{- if .Values.tap.docker.imagePullSecrets }}
-        imagePullSecrets:
-          {{- range .Values.tap.docker.imagePullSecrets }}
-          - name: {{ . }}
-          {{- end }}
-      {{- end }}
-        securityContext:
-          capabilities:
-            add:
-              {{- range .Values.tap.capabilities.kernelModule }}
-              {{ print "- " . }}
-              {{- end }}
-            drop:
-              - ALL
-        volumeMounts:
-        - name: lib-modules
-          mountPath: /lib/modules
-    {{- end }}
       containers:
         - command:
             - ./worker
@@ -67,9 +44,6 @@ spec:
           {{- end }}
             - -procfs
             - /hostproc
-          {{- if .Values.tap.kernelModule.enabled }}
-            - -kernel-module
-          {{- end }}
           {{- if ne .Values.tap.packetCapture "ebpf" }}
             - -disable-ebpf
           {{- end }}
@@ -174,20 +148,6 @@ spec:
               readOnly: true
             - mountPath: /app/data
               name: data
-      {{- if and (eq .Values.tap.kernelModule.enabled true) (eq .Values.tap.kernelModule.unloadOnDestroy true) }}
-        - name: unload-pf-ring
-          image: {{ .Values.tap.kernelModule.image }}
-          command: ["/bin/sh"]
-          args: ["-c", "trap 'rmmod pf_ring && sleep 3' SIGTERM; while true; do sleep 1; done"]
-          securityContext:
-            capabilities:
-              add:
-                {{- range .Values.tap.capabilities.kernelModule }}
-                {{ print "- " . }}
-                {{- end }}
-              drop:
-                - ALL
-      {{- end }}
       {{- if .Values.tap.tls }}
         - command:
             - ./tracer
