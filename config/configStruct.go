@@ -42,10 +42,6 @@ func CreateDefaultConfig() ConfigStruct {
 					// DAC_OVERRIDE is required to read /proc/PID/environ
 					"DAC_OVERRIDE",
 				},
-				KernelModule: []string{
-					// SYS_MODULE is required to install kernel modules
-					"SYS_MODULE",
-				},
 				EBPFCapture: []string{
 					// SYS_ADMIN is required to read /proc/PID/net/ns + to install eBPF programs (kernel < 5.8)
 					"SYS_ADMIN",

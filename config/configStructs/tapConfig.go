@@ -35,8 +35,8 @@ const (
 	PprofPortLabel               = "pprof-port"
 	PprofViewLabel               = "pprof-view"
 	DebugLabel                   = "debug"
-	ContainerPort                = 80
-	ContainerPortStr             = "80"
+	ContainerPort                = 8080
+	ContainerPortStr             = "8080"
 	PcapDest                     = "dest"
 	PcapMaxSize                  = "maxSize"
 	PcapMaxTime                  = "maxTime"
@@ -169,14 +169,7 @@ type SentryConfig struct {
 type CapabilitiesConfig struct {
 	NetworkCapture     []string `yaml:"networkCapture" json:"networkCapture"  default:"[]"`
 	ServiceMeshCapture []string `yaml:"serviceMeshCapture" json:"serviceMeshCapture"  default:"[]"`
-	KernelModule       []string `yaml:"kernelModule" json:"kernelModule"  default:"[]"`
 	EBPFCapture        []string `yaml:"ebpfCapture" json:"ebpfCapture"  default:"[]"`
-}
-
-type KernelModuleConfig struct {
-	Enabled         bool   `yaml:"enabled" json:"enabled" default:"false"`
-	Image           string `yaml:"image" json:"image" default:"kubeshark/pf-ring-module:all"`
-	UnloadOnDestroy bool   `yaml:"unloadOnDestroy" json:"unloadOnDestroy" default:"false"`
 }
 
 type MetricsConfig struct {
@@ -238,7 +231,6 @@ type TapConfig struct {
 	Ingress                      IngressConfig         `yaml:"ingress" json:"ingress"`
 	IPv6                         bool                  `yaml:"ipv6" json:"ipv6" default:"true"`
 	Debug                        bool                  `yaml:"debug" json:"debug" default:"false"`
-	KernelModule                 KernelModuleConfig    `yaml:"kernelModule" json:"kernelModule"`
 	Telemetry                    TelemetryConfig       `yaml:"telemetry" json:"telemetry"`
 	ResourceGuard                ResourceGuardConfig   `yaml:"resourceGuard" json:"resourceGuard"`
 	Sentry                       SentryConfig          `yaml:"sentry" json:"sentry"`

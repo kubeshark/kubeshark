@@ -183,9 +183,6 @@ Example for overriding image names:
 | `tap.ingress.annotations`                 | `Ingress` annotations                           | `{}`                                                    |
 | `tap.ipv6`                                | Enable IPv6 support for the front-end                        | `true`                                                  |
 | `tap.debug`                               | Enable debug mode                             | `false`                                                 |
-| `tap.kernelModule.enabled`                | Use PF_RING kernel module([details](PF_RING.md))      | `false`                                                 |
-| `tap.kernelModule.image`                  | Container image containing PF_RING kernel module with supported kernel version([details](PF_RING.md))      | "kubeshark/pf-ring-module:all"                                                 |
-| `tap.kernelModule.unloadOnDestroy`        | Create additional container which watches for pod termination and unloads PF_RING kernel module. | `false`|
 | `tap.telemetry.enabled`                   | Enable anonymous usage statistics collection           | `true`                                                  |
 | `tap.resourceGuard.enabled`               | Enable resource guard worker process, which watches RAM/disk usage and enables/disables traffic capture based on available resources | `false` |
 | `tap.sentry.enabled`                      | Enable sending of error logs to Sentry          | `false`                                                  |

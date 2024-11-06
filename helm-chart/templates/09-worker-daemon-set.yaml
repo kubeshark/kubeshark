@@ -25,29 +25,6 @@ spec:
       name: kubeshark-worker-daemon-set
       namespace: kubeshark
     spec:
-    {{- if .Values.tap.kernelModule.enabled }}
-      initContainers:
-      - name: load-pf-ring
-        image: {{ .Values.tap.kernelModule.image }}
-        imagePullPolicy: {{ .Values.tap.docker.imagePullPolicy }}
-        securityContext:
-          capabilities:
-            add:
-              {{- range .Values.tap.capabilities.kernelModule }}
-              {{ print "- " . }}
-              {{- end }}
-            drop:
-              - ALL
-        volumeMounts:
-        - name: lib-modules
-          mountPath: /lib/modules
-    {{- end }}
-    {{- if .Values.tap.docker.imagePullSecrets }}
-      imagePullSecrets:
-      {{- range .Values.tap.docker.imagePullSecrets }}
-      - name: {{ . }}
-      {{- end }}
-    {{- end }}
       containers:
         - command:
             - ./worker
@@ -67,9 +44,6 @@ spec:
           {{- end }}
             - -procfs
             - /hostproc
-          {{- if .Values.tap.kernelModule.enabled }}
-            - -kernel-module
-          {{- end }}
           {{- if ne .Values.tap.packetCapture "ebpf" }}
             - -disable-ebpf
           {{- end }}
@@ -119,17 +93,17 @@ spec:
             value: '{{ .Values.tap.sentry.environment }}'
           resources:
             limits:
-              {{- if ne .Values.tap.resources.sniffer.limits.cpu "0" }}
+              {{- if ne (toString .Values.tap.resources.sniffer.limits.cpu) "0" }}
               cpu: {{ .Values.tap.resources.sniffer.limits.cpu }}
               {{- end }}
-              {{- if ne .Values.tap.resources.sniffer.limits.memory "0" }}
+              {{- if ne (toString .Values.tap.resources.sniffer.limits.memory) "0" }}
               memory: {{ .Values.tap.resources.sniffer.limits.memory }}
               {{- end }}
             requests:
-              {{- if ne .Values.tap.resources.sniffer.requests.cpu "0" }}
+              {{- if ne (toString .Values.tap.resources.sniffer.requests.cpu) "0" }}
               cpu: {{ .Values.tap.resources.sniffer.requests.cpu }}
               {{- end }}
-              {{- if ne .Values.tap.resources.sniffer.requests.memory "0" }}
+              {{- if ne (toString .Values.tap.resources.sniffer.requests.memory) "0" }}
               memory: {{ .Values.tap.resources.sniffer.requests.memory }}
               {{- end }}
           securityContext:
@@ -168,20 +142,6 @@ spec:
               readOnly: true
             - mountPath: /app/data
               name: data
-      {{- if and (eq .Values.tap.kernelModule.enabled true) (eq .Values.tap.kernelModule.unloadOnDestroy true) }}
-        - name: unload-pf-ring
-          image: {{ .Values.tap.kernelModule.image }}
-          command: ["/bin/sh"]
-          args: ["-c", "trap 'rmmod pf_ring && sleep 3' SIGTERM; while true; do sleep 1; done"]
-          securityContext:
-            capabilities:
-              add:
-                {{- range .Values.tap.capabilities.kernelModule }}
-                {{ print "- " . }}
-                {{- end }}
-              drop:
-                - ALL
-      {{- end }}
       {{- if .Values.tap.tls }}
         - command:
             - ./tracer
@@ -230,17 +190,17 @@ spec:
             value: '{{ .Values.tap.sentry.environment }}'
           resources:
             limits:
-              {{- if ne .Values.tap.resources.tracer.limits.cpu "0" }}
+              {{- if ne (toString .Values.tap.resources.tracer.limits.cpu) "0" }}
               cpu: {{ .Values.tap.resources.tracer.limits.cpu }}
               {{- end }}
-              {{- if ne .Values.tap.resources.tracer.limits.memory "0" }}
+              {{- if ne (toString .Values.tap.resources.tracer.limits.memory) "0" }}
               memory: {{ .Values.tap.resources.tracer.limits.memory }}
               {{- end }}
             requests:
-              {{- if ne .Values.tap.resources.tracer.requests.cpu "0" }}
+              {{- if ne (toString .Values.tap.resources.tracer.requests.cpu) "0" }}
               cpu: {{ .Values.tap.resources.tracer.requests.cpu }}
               {{- end }}
-              {{- if ne .Values.tap.resources.tracer.requests.memory "0" }}
+              {{- if ne (toString .Values.tap.resources.tracer.requests.memory) "0" }}
               memory: {{ .Values.tap.resources.tracer.requests.memory }}
               {{- end }}
           securityContext:
