@@ -424,7 +424,8 @@ func postFrontStarted(ctx context.Context, kubernetesProvider *kubernetes.Provid
 		time.Sleep(100 * time.Millisecond)
 	}
 
-	if config.Config.Scripting.Source != "" && config.Config.Scripting.WatchScripts {
+
+	if (config.Config.Scripting.Source != "" || len(config.Config.Scripting.Sources) > 0) && config.Config.Scripting.WatchScripts {
 		watchScripts(ctx, kubernetesProvider, false)
 	}
 

@@ -25,7 +25,7 @@ import (
 
 var scriptsCmd = &cobra.Command{
 	Use:   "scripts",
-	Short: "Watch the `scripting.source` directory for changes and update the scripts",
+	Short: "Watch the `scripting.source` and/or `scripting.sources` folders for changes and update the scripts",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		runScripts()
 		return nil
@@ -46,8 +46,8 @@ func init() {
 }
 
 func runScripts() {
-	if config.Config.Scripting.Source == "" {
-		log.Error().Msg("`scripting.source` field is empty.")
+	if config.Config.Scripting.Source == "" && len(config.Config.Scripting.Sources) == 0 {
+		log.Error().Msg("Both `scripting.source` and `scripting.sources` fields are empty.")
 		return
 	}
 
@@ -296,7 +296,13 @@ func watchScripts(ctx context.Context, provider *kubernetes.Provider, block bool
 		log.Error().Err(err).Send()
 	}
 
-	log.Info().Str("directory", config.Config.Scripting.Source).Msg("Watching scripts against changes:")
+	for _, source := range config.Config.Scripting.Sources {
+		if err := watcher.Add(source); err != nil {
+			log.Error().Err(err).Send()
+		}
+	}
+
+	log.Info().Str("folder", config.Config.Scripting.Source).Interface("folders", config.Config.Scripting.Sources).Msg("Watching scripts against changes:")
 
 	if block {
 		<-ctx.Done()
