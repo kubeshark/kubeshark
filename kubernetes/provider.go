@@ -247,6 +247,10 @@ func (provider *Provider) GetNamespaces() (namespaces []string) {
 	return
 }
 
+func (provider *Provider) GetClientSet() *kubernetes.Clientset {
+	return provider.clientSet
+}
+
 func getClientSet(config *rest.Config) (*kubernetes.Clientset, error) {
 	clientSet, err := kubernetes.NewForConfig(config)
 	if err != nil {
