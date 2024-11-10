@@ -173,6 +173,7 @@ dissectorsUpdatingEnabled: true
 scripting:
   env: {}
   source: ""
+  sources: []
   watchScripts: true
   active: []
   console: true
