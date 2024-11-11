@@ -23,7 +23,7 @@ type ScriptingConfig struct {
 func (config *ScriptingConfig) GetScripts() (scripts []*misc.Script, err error) {
 	// Check if both Source and Sources are empty
 	if config.Source == "" && len(config.Sources) == 0 {
-		return nil, fmt.Errorf("no script sources provided")
+		return nil, nil
 	}
 
 	var allFiles []struct {

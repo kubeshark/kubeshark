@@ -1,0 +1,66 @@
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool, specifically when used with LiteIDE
+*.out
+
+# Dependency directories (remove the comment below to include it)
+# vendor/
+.idea/
+build
+
+# Mac OS
+.DS_Store
+.vscode/
+
+# Ignore the scripts that are created for development
+*dev.*
+
+# Environment variables
+.env
+
+# pprof
+pprof/*
+
+# Database Files
+*.db
+*.gob
+
+# Nohup Files - https://man7.org/linux/man-pages/man1/nohup.1p.html
+nohup.*
+
+# Cypress tests
+cypress.env.json
+*/cypress/downloads
+*/cypress/fixtures
+*/cypress/plugins
+*/cypress/screenshots
+*/cypress/videos
+*/cypress/support
+
+# UI folders to ignore
+**/node_modules/**
+**/dist/**
+*.editorconfig
+
+# Ignore *.log files
+*.log
+
+# Object files
+*.o
+
+# Binaries
+bin
+
+# Scripts
+scripts/
+
+# CWD config YAML
+kubeshark.yaml
