@@ -4,10 +4,16 @@ kind: Service
 metadata:
   labels:
     app.kubeshark.co/app: hub
-    {{- include "kubeshark.labels" . | nindent 4 }}
+  {{- include "kubeshark.labels" . | nindent 4 }}
+  {{- if .Values.tap.proxy.hub.service.labels }}
+    {{- toYaml .Values.tap.proxy.hub.service.labels | nindent 4 }}
+  {{- end }}
   annotations:
   {{- if .Values.tap.annotations }}
     {{- toYaml .Values.tap.annotations | nindent 4 }}
+  {{- end }}
+  {{- if .Values.tap.proxy.hub.service.annotations }}
+    {{- toYaml .Values.tap.proxy.hub.service.annotations | nindent 4 }}
   {{- end }}
   name: kubeshark-hub
   namespace: {{ .Release.Namespace }}

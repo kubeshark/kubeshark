@@ -16,7 +16,7 @@ data:
     SCRIPTING_ACTIVE_SCRIPTS: '{{ gt (len .Values.scripting.active) 0 | ternary (join "," .Values.scripting.active) "" }}'
     INGRESS_ENABLED: '{{ .Values.tap.ingress.enabled }}'
     INGRESS_HOST: '{{ .Values.tap.ingress.host }}'
-    PROXY_FRONT_PORT: '{{ .Values.tap.proxy.front.port }}'
+    PROXY_FRONT_PORT: '{{ .Values.tap.proxy.front.service.port }}'
     AUTH_ENABLED: '{{- if and .Values.cloudLicenseEnabled (not (empty .Values.license)) -}}
                       "false"
                   {{- else -}}
