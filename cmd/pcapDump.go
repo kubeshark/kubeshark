@@ -16,7 +16,7 @@ import (
 // pcapDumpCmd represents the consolidated pcapdump command
 var pcapDumpCmd = &cobra.Command{
 	Use:   "pcapdump",
-	Short: "Manage PCAP dump operations: start, stop, or copy PCAP files",
+	Short: "Store all captured traffic (including decrypted TLS) in a PCAP file.",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		// Retrieve the kubeconfig path from the flag
 		kubeconfig, _ := cmd.Flags().GetString(configStructs.PcapKubeconfig)
