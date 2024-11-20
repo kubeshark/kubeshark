@@ -186,7 +186,7 @@ release:
 	@git add -A . && git commit -m ":bookmark: Bump the Helm chart version to $(VERSION)" && git push
 	@git tag -d v$(VERSION); git tag v$(VERSION) && git push origin --tags
 	@cd helm-chart && cp -r . ../../kubeshark.github.io/charts/chart
-	@cd ../kubeshark.github.io/ && git add -A . && git commit -m ":sparkles: Update the Helm chart" && git push
+	@cd ../../kubeshark.github.io/ && git add -A . && git commit -m ":sparkles: Update the Helm chart" && git push
 	@cd ../kubeshark
 
 soft-release:
@@ -198,7 +198,7 @@ soft-release:
 	@git add -A . && git commit -m ":bookmark: Bump the Helm chart version to $(VERSION)" && git push
 	# @git tag -d v$(VERSION); git tag v$(VERSION) && git push origin --tags
 	# @cd helm-chart && cp -r . ../../kubeshark.github.io/charts/chart
-	# @cd ../kubeshark.github.io/ && git add -A . && git commit -m ":sparkles: Update the Helm chart" && git push
+	# @cd ../../kubeshark.github.io/ && git add -A . && git commit -m ":sparkles: Update the Helm chart" && git push
 	# @cd ../kubeshark
 
 branch:
