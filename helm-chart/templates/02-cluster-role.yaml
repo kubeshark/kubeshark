@@ -33,8 +33,6 @@ rules:
       - get
       - list
       - watch
-    resourceNames:
-      - kube-system
   - apiGroups:
     - networking.k8s.io
     resources:
