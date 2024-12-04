@@ -31,8 +31,8 @@ rules:
       - namespaces
     verbs:
       - get
-    resourceNames:
-      - kube-system
+      - list
+      - watch
   - apiGroups:
     - networking.k8s.io
     resources:
