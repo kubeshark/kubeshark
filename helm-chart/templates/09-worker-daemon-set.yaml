@@ -6,8 +6,8 @@ metadata:
     app.kubeshark.co/app: worker
     sidecar.istio.io/inject: "false"
     {{- include "kubeshark.labels" . | nindent 4 }}
-  annotations:
   {{- if .Values.tap.annotations }}
+  annotations:
     {{- toYaml .Values.tap.annotations | nindent 4 }}
   {{- end }}
   name: kubeshark-worker-daemon-set
@@ -61,16 +61,10 @@ spec:
           image: '{{ .Values.tap.docker.overrideImage.worker }}'
         {{- else if .Values.tap.docker.overrideTag.worker }}
           image: '{{ .Values.tap.docker.registry }}/worker:{{ .Values.tap.docker.overrideTag.worker }}{{ include "kubeshark.dockerTagDebugVersion" . }}'
-        {{ else }}
+        {{- else }}
           image: '{{ .Values.tap.docker.registry }}/worker:{{ not (eq .Values.tap.docker.tag "") | ternary .Values.tap.docker.tag (include "kubeshark.defaultVersion" .) }}{{ include "kubeshark.dockerTagDebugVersion" . }}'
         {{- end }}
           imagePullPolicy: {{ .Values.tap.docker.imagePullPolicy }}
-        {{- if .Values.tap.docker.imagePullSecrets }}
-          imagePullSecrets:
-            {{- range .Values.tap.docker.imagePullSecrets }}
-            - name: {{ . }}
-            {{- end }}
-        {{- end }}
           name: sniffer
           ports:
             - containerPort: {{ .Values.tap.metrics.port }}
@@ -99,19 +93,19 @@ spec:
             value: '{{ .Values.tap.sentry.environment }}'
           resources:
             limits:
-              {{ if ne (toString .Values.tap.resources.sniffer.limits.cpu) "0" }}
+              {{- if ne (toString .Values.tap.resources.sniffer.limits.cpu) "0" }}
               cpu: {{ .Values.tap.resources.sniffer.limits.cpu }}
-              {{ end }}
-              {{ if ne (toString .Values.tap.resources.sniffer.limits.memory) "0" }}
+              {{- end }}
+              {{- if ne (toString .Values.tap.resources.sniffer.limits.memory) "0" }}
               memory: {{ .Values.tap.resources.sniffer.limits.memory }}
-              {{ end }}
+              {{- end }}
             requests:
-              {{ if ne (toString .Values.tap.resources.sniffer.requests.cpu) "0" }}
+              {{- if ne (toString .Values.tap.resources.sniffer.requests.cpu) "0" }}
               cpu: {{ .Values.tap.resources.sniffer.requests.cpu }}
-              {{ end }}
-              {{ if ne (toString .Values.tap.resources.sniffer.requests.memory) "0" }}
+              {{- end }}
+              {{- if ne (toString .Values.tap.resources.sniffer.requests.memory) "0" }}
               memory: {{ .Values.tap.resources.sniffer.requests.memory }}
-              {{ end }}
+              {{- end }}
           securityContext:
             capabilities:
               add:
@@ -196,19 +190,19 @@ spec:
             value: '{{ .Values.tap.sentry.environment }}'
           resources:
             limits:
-              {{ if ne (toString .Values.tap.resources.tracer.limits.cpu) "0" }}
+              {{- if ne (toString .Values.tap.resources.tracer.limits.cpu) "0" }}
               cpu: {{ .Values.tap.resources.tracer.limits.cpu }}
-              {{ end }}
-              {{ if ne (toString .Values.tap.resources.tracer.limits.memory) "0" }}
+              {{- end }}
+              {{- if ne (toString .Values.tap.resources.tracer.limits.memory) "0" }}
               memory: {{ .Values.tap.resources.tracer.limits.memory }}
-              {{ end }}
+              {{- end }}
             requests:
-              {{ if ne (toString .Values.tap.resources.tracer.requests.cpu) "0" }}
+              {{- if ne (toString .Values.tap.resources.tracer.requests.cpu) "0" }}
               cpu: {{ .Values.tap.resources.tracer.requests.cpu }}
-              {{ end }}
-              {{ if ne (toString .Values.tap.resources.tracer.requests.memory) "0" }}
+              {{- end }}
+              {{- if ne (toString .Values.tap.resources.tracer.requests.memory) "0" }}
               memory: {{ .Values.tap.resources.tracer.requests.memory }}
-              {{ end }}
+              {{- end }}
           securityContext:
             capabilities:
               add:
@@ -244,7 +238,7 @@ spec:
       tolerations:
         - effect: NoExecute
           operator: Exists
-{{- if not .Values.tap.ignoreTainted }}
+{{- if eq .Values.tap.ignoreTainted true }}
         - effect: NoSchedule
           operator: Exists
 {{- end }}

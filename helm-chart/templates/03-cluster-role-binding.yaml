@@ -4,12 +4,11 @@ kind: ClusterRoleBinding
 metadata:
   labels:
     {{- include "kubeshark.labels" . | nindent 4 }}
-  annotations:
   {{- if .Values.tap.annotations }}
+  annotations:
     {{- toYaml .Values.tap.annotations | nindent 4 }}
   {{- end }}
   name: kubeshark-cluster-role-binding-{{ .Release.Namespace }}
-  namespace: {{ .Release.Namespace }}
 roleRef:
   apiGroup: rbac.authorization.k8s.io
   kind: ClusterRole
@@ -24,8 +23,8 @@ kind: RoleBinding
 metadata:
   labels:
     {{- include "kubeshark.labels" . | nindent 4 }}
-  annotations:
   {{- if .Values.tap.annotations }}
+  annotations:
     {{- toYaml .Values.tap.annotations | nindent 4 }}
   {{- end }}
   name: kubeshark-self-config-role-binding

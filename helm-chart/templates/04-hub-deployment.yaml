@@ -5,8 +5,8 @@ metadata:
   labels:
     app.kubeshark.co/app: hub
     {{- include "kubeshark.labels" . | nindent 4 }}
-  annotations:
   {{- if .Values.tap.annotations }}
+  annotations:
     {{- toYaml .Values.tap.annotations | nindent 4 }}
   {{- end }}
   name: {{ include "kubeshark.name" . }}-hub
@@ -25,6 +25,12 @@ spec:
     spec:
       dnsPolicy: ClusterFirstWithHostNet
       serviceAccountName: {{ include "kubeshark.serviceAccountName" . }}
+    {{- if .Values.tap.docker.imagePullSecrets }}
+      imagePullSecrets:
+      {{- range .Values.tap.docker.imagePullSecrets }}
+      - name: {{ . }}
+      {{- end }}
+    {{- end }}
       containers:
         - name: hub
           command:
@@ -59,12 +65,6 @@ spec:
           image: '{{ .Values.tap.docker.registry }}/hub:{{ not (eq .Values.tap.docker.tag "") | ternary .Values.tap.docker.tag (include "kubeshark.defaultVersion" .) }}'
         {{- end }}
           imagePullPolicy: {{ .Values.tap.docker.imagePullPolicy }}
-        {{- if .Values.tap.docker.imagePullSecrets }}
-          imagePullSecrets:
-            {{- range .Values.tap.docker.imagePullSecrets }}
-            - name: {{ . }}
-            {{- end }}
-        {{- end }}
           readinessProbe:
             periodSeconds: 1
             failureThreshold: 3
@@ -81,19 +81,19 @@ spec:
               port: 8080
           resources:
             limits:
-              {{ if ne (toString .Values.tap.resources.hub.limits.cpu) "0" }}
+              {{- if ne (toString .Values.tap.resources.hub.limits.cpu) "0" }}
               cpu: {{ .Values.tap.resources.hub.limits.cpu }}
-              {{ end }}
-              {{ if ne (toString .Values.tap.resources.hub.limits.memory) "0" }}
+              {{- end }}
+              {{- if ne (toString .Values.tap.resources.hub.limits.memory) "0" }}
               memory: {{ .Values.tap.resources.hub.limits.memory }}
-              {{ end }}
+              {{- end }}
             requests:
-              {{ if ne (toString .Values.tap.resources.hub.requests.cpu) "0" }}
+              {{- if ne (toString .Values.tap.resources.hub.requests.cpu) "0" }}
               cpu: {{ .Values.tap.resources.hub.requests.cpu }}
               {{ end }}
-              {{ if ne (toString .Values.tap.resources.hub.requests.memor) "0" }}
+              {{- if ne (toString .Values.tap.resources.hub.requests.memor) "0" }}
               memory: {{ .Values.tap.resources.hub.requests.memory }}
-              {{ end }}
+              {{- end }}
           volumeMounts:
           - name: saml-x509-volume
             mountPath: "/etc/saml/x509"
