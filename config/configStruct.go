@@ -81,7 +81,7 @@ func CreateDefaultConfig() ConfigStruct {
 				// "tcp",
 				// "udp",
 				"ws",
-				"tls",
+				// "tls",
 			},
 		},
 	}
