@@ -97,9 +97,12 @@ func createScript(provider *kubernetes.Provider, script misc.ConfigMapScript) (i
 			return
 		}
 		script.Active = kubernetes.IsActiveScript(provider, script.Title)
-		index = int64(len(scripts))
+		index = 0
 		if script.Title != "New Script" {
 			for i, v := range scripts {
+				if index <= i {
+					index = i + 1
+				}
 				if v.Title == script.Title {
 					index = int64(i)
 				}
