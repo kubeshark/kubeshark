@@ -82,6 +82,7 @@ func CreateDefaultConfig() ConfigStruct {
 				// "udp",
 				"ws",
 				// "tls",
+				"ldap",
 			},
 		},
 	}
