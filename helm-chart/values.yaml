@@ -103,7 +103,7 @@ tap:
   sentry:
     enabled: false
     environment: production
-  defaultFilter: "!dns and !tcp and !udp and !icmp"
+  defaultFilter: "!dns and !error"
   scriptingDisabled: false
   targetedPodsUpdateDisabled: false
   presetFiltersChangingEnabled: true
@@ -133,7 +133,6 @@ tap:
   - sctp
   - syscall
   - ws
-  - tls
   metrics:
     port: 49100
   pprof:
