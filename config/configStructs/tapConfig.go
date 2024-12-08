@@ -234,7 +234,7 @@ type TapConfig struct {
 	Telemetry                    TelemetryConfig       `yaml:"telemetry" json:"telemetry"`
 	ResourceGuard                ResourceGuardConfig   `yaml:"resourceGuard" json:"resourceGuard"`
 	Sentry                       SentryConfig          `yaml:"sentry" json:"sentry"`
-	DefaultFilter                string                `yaml:"defaultFilter" json:"defaultFilter" default:"!dns and !tcp and !udp and !icmp"`
+	DefaultFilter                string                `yaml:"defaultFilter" json:"defaultFilter" default:"!dns and !error"`
 	ScriptingDisabled            bool                  `yaml:"scriptingDisabled" json:"scriptingDisabled" default:"false"`
 	TargetedPodsUpdateDisabled   bool                  `yaml:"targetedPodsUpdateDisabled" json:"targetedPodsUpdateDisabled" default:"false"`
 	PresetFiltersChangingEnabled bool                  `yaml:"presetFiltersChangingEnabled" json:"presetFiltersChangingEnabled" default:"true"`
