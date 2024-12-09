@@ -133,6 +133,7 @@ tap:
   - sctp
   - syscall
   - ws
+  - ldap
   metrics:
     port: 49100
   pprof:
