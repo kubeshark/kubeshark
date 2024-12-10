@@ -6,7 +6,6 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"time"
 
@@ -257,61 +256,6 @@ func mergePCAPs(outputFile string, inputFiles []string) error {
 		}
 	}
 
-	return nil
-}
-
-// setPcapConfigInKubernetes sets the PCAP config for all pods across multiple namespaces
-func setPcapConfigInKubernetes(ctx context.Context, clientset *clientk8s.Clientset, podName string, namespaces []string, enabledPcap bool, timeInterval, maxTime, maxSize string) error {
-	for _, namespace := range namespaces {
-		// Load the existing ConfigMap in the current namespace
-		configMap, err := clientset.CoreV1().ConfigMaps(namespace).Get(ctx, "kubeshark-config-map", metav1.GetOptions{})
-		if err != nil {
-			log.Error().Err(err).Msgf("failed to get ConfigMap in namespace %s", namespace)
-			continue
-		}
-
-		// Update the values with user-provided input
-		configMap.Data["PCAP_TIME_INTERVAL"] = timeInterval
-		configMap.Data["PCAP_MAX_SIZE"] = maxSize
-		configMap.Data["PCAP_MAX_TIME"] = maxTime
-		configMap.Data["PCAP_DUMP_ENABLE"] = strconv.FormatBool(enabledPcap)
-
-		// Apply the updated ConfigMap back to the cluster in the current namespace
-		_, err = clientset.CoreV1().ConfigMaps(namespace).Update(ctx, configMap, metav1.UpdateOptions{})
-		if err != nil {
-			log.Error().Err(err).Msgf("failed to update ConfigMap in namespace %s", namespace)
-			continue
-		}
-	}
-
-	return nil
-}
-
-// startPcap function for starting the PCAP capture
-func startStopPcap(clientset *kubernetes.Clientset, pcapEnable bool, timeInterval, maxTime, maxSize string) error {
-	kubernetesProvider, err := getKubernetesProviderForCli(false, false)
-	if err != nil {
-		log.Error().Err(err).Send()
-		return err
-	}
-
-	targetNamespaces := kubernetesProvider.GetNamespaces()
-
-	// List worker pods
-	workerPods, err := listWorkerPods(context.Background(), clientset, targetNamespaces)
-	if err != nil {
-		log.Error().Err(err).Msg("Error listing worker pods")
-		return err
-	}
-
-	// Iterate over each pod to start the PCAP capture by updating the configuration in Kubernetes
-	for _, pod := range workerPods {
-		err := setPcapConfigInKubernetes(context.Background(), clientset, pod.Name, targetNamespaces, pcapEnable, timeInterval, maxTime, maxSize)
-		if err != nil {
-			log.Error().Err(err).Msgf("Error setting PCAP config for pod %s", pod.Name)
-			continue
-		}
-	}
 	return nil
 }
 
