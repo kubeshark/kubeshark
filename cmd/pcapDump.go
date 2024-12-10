@@ -3,6 +3,7 @@ package cmd
 import (
 	"errors"
 	"path/filepath"
+	"time"
 
 	"github.com/creasty/defaults"
 	"github.com/kubeshark/kubeshark/config/configStructs"
@@ -43,41 +44,26 @@ var pcapDumpCmd = &cobra.Command{
 			return err
 		}
 
+		// Parse the `--time` flag
+		timeIntervalStr, _ := cmd.Flags().GetString("time")
+		var cutoffTime *time.Time // Use a pointer to distinguish between provided and not provided
+		if timeIntervalStr != "" {
+			duration, err := time.ParseDuration(timeIntervalStr)
+			if err != nil {
+				log.Error().Err(err).Msg("Invalid time interval")
+				return err
+			}
+			tempCutoffTime := time.Now().Add(-duration)
+			cutoffTime = &tempCutoffTime
+		}
+
 		// Handle copy operation if the copy string is provided
-
-		if !cmd.Flags().Changed(configStructs.PcapDumpEnabled) {
-			destDir, _ := cmd.Flags().GetString(configStructs.PcapDest)
-			log.Info().Msg("Copying PCAP files")
-			err = copyPcapFiles(clientset, config, destDir)
-			if err != nil {
-				log.Error().Err(err).Msg("Error copying PCAP files")
-				return err
-			}
-		} else {
-			// Handle start operation if the start string is provided
-
-			enabled, err := cmd.Flags().GetBool(configStructs.PcapDumpEnabled)
-			if err != nil {
-				log.Error().Err(err).Msg("Error getting pcapdump enable flag")
-				return err
-			}
-			timeInterval, _ := cmd.Flags().GetString(configStructs.PcapTimeInterval)
-			maxTime, _ := cmd.Flags().GetString(configStructs.PcapMaxTime)
-			maxSize, _ := cmd.Flags().GetString(configStructs.PcapMaxSize)
-			err = startStopPcap(clientset, enabled, timeInterval, maxTime, maxSize)
-			if err != nil {
-				log.Error().Err(err).Msg("Error starting/stopping PCAP dump")
-				return err
-			}
-
-			if enabled {
-				log.Info().Msg("Pcapdump started successfully")
-				return nil
-			} else {
-				log.Info().Msg("Pcapdump stopped successfully")
-				return nil
-			}
-
+		destDir, _ := cmd.Flags().GetString(configStructs.PcapDest)
+		log.Info().Msg("Copying PCAP files")
+		err = copyPcapFiles(clientset, config, destDir, cutoffTime)
+		if err != nil {
+			log.Error().Err(err).Msg("Error copying PCAP files")
+			return err
 		}
 
 		return nil
@@ -92,10 +78,7 @@ func init() {
 		log.Debug().Err(err).Send()
 	}
 
-	pcapDumpCmd.Flags().String(configStructs.PcapTimeInterval, defaultPcapDumpConfig.PcapTimeInterval, "Time interval for PCAP file rotation (used with --start)")
-	pcapDumpCmd.Flags().String(configStructs.PcapMaxTime, defaultPcapDumpConfig.PcapMaxTime, "Maximum time for retaining old PCAP files (used with --start)")
-	pcapDumpCmd.Flags().String(configStructs.PcapMaxSize, defaultPcapDumpConfig.PcapMaxSize, "Maximum size of PCAP files before deletion (used with --start)")
+	pcapDumpCmd.Flags().String(configStructs.PcapTime, "", "Time interval (e.g., 10m, 1h) to filter PCAP files by timestamp")
 	pcapDumpCmd.Flags().String(configStructs.PcapDest, "", "Local destination path for copied PCAP files (can not be used together with --enabled)")
-	pcapDumpCmd.Flags().String(configStructs.PcapKubeconfig, "", "Enabled/Disable to pcap dumps (can not be used together with --dest)")
-
+	pcapDumpCmd.Flags().String(configStructs.PcapKubeconfig, "", "Path for kubeconfig (if not provided the default location will be checked)")
 }
