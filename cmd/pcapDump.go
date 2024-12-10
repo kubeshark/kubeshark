@@ -78,7 +78,7 @@ func init() {
 		log.Debug().Err(err).Send()
 	}
 
-	pcapDumpCmd.Flags().String(configStructs.PcapTime, "", "Time interval (e.g., 10m, 1h) to filter PCAP files by timestamp")
+	pcapDumpCmd.Flags().String(configStructs.PcapTime, "", "Time interval (e.g., 10m, 1h) in the past for which the pcaps are copied")
 	pcapDumpCmd.Flags().String(configStructs.PcapDest, "", "Local destination path for copied PCAP files (can not be used together with --enabled)")
 	pcapDumpCmd.Flags().String(configStructs.PcapKubeconfig, "", "Path for kubeconfig (if not provided the default location will be checked)")
 }
