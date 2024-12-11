@@ -173,7 +173,8 @@ type CapabilitiesConfig struct {
 }
 
 type MetricsConfig struct {
-	Port uint16 `yaml:"port" json:"port" default:"49100"`
+	WorkerPort uint16 `yaml:"workerPort" json:"workerPort" default:"49100"`
+	HubPort    uint16 `yaml:"hubPort" json:"hubPort" default:"49101"`
 }
 
 type PprofConfig struct {
