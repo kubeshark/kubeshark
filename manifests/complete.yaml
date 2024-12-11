@@ -490,6 +490,20 @@ spec:
       name: kubeshark-worker-daemon-set
       namespace: kubeshark
     spec:
+      initContainers:
+        - command:
+          - sh
+          - -c
+          - |
+            rm -f /sys/fs/bpf/kubeshark/*
+          image: 'docker.io/kubeshark/worker:v52.3.92'
+          imagePullPolicy: IfNotPresent
+          name: init-bpf-dir
+          securityContext:
+            privileged: true
+          volumeMounts:
+          - mountPath: /sys
+            name: sys
       containers:
         - command:
             - ./worker

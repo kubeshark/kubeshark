@@ -25,6 +25,20 @@ spec:
       name: kubeshark-worker-daemon-set
       namespace: kubeshark
     spec:
+      initContainers:
+        - command:
+          - sh
+          - -c
+          - |
+            rm -f /sys/fs/bpf/kubeshark/*
+          image: '{{ .Values.tap.docker.overrideImage.worker }}'
+          imagePullPolicy: IfNotPresent
+          name: init-bpf-dir
+          securityContext:
+            privileged: true
+          volumeMounts:
+          - mountPath: /sys
+            name: sys
       containers:
         - command:
             - ./worker
