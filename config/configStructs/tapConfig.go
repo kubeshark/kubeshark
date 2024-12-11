@@ -37,9 +37,12 @@ const (
 	DebugLabel                   = "debug"
 	ContainerPort                = 8080
 	ContainerPortStr             = "8080"
-	PcapTime                     = "time"
 	PcapDest                     = "dest"
+	PcapMaxSize                  = "maxSize"
+	PcapMaxTime                  = "maxTime"
+	PcapTimeInterval             = "timeInterval"
 	PcapKubeconfig               = "kubeconfig"
+	PcapDumpEnabled              = "enabled"
 )
 
 type ResourceLimitsHub struct {
@@ -193,8 +196,11 @@ type MiscConfig struct {
 }
 
 type PcapDumpConfig struct {
-	PcapTime   string `yaml:"time" json:"time" default:"time"`
-	PcapSrcDir string `yaml:"pcapSrcDir" json:"pcapSrcDir" default:"pcapdump"`
+	PcapDumpEnabled  bool   `yaml:"enabled" json:"enabled" default:"true"`
+	PcapTimeInterval string `yaml:"timeInterval" json:"timeInterval" default:"1m"`
+	PcapMaxTime      string `yaml:"maxTime" json:"maxTime" default:"1h"`
+	PcapMaxSize      string `yaml:"maxSize" json:"maxSize" default:"500MB"`
+	PcapSrcDir       string `yaml:"pcapSrcDir" json:"pcapSrcDir" default:"pcapdump"`
 }
 
 type TapConfig struct {
