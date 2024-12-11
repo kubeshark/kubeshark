@@ -135,8 +135,7 @@ tap:
   - ws
   - ldap
   metrics:
-    workerPort: 49100
-    hubPort: 49101
+    port: 49100
   pprof:
     enabled: false
     port: 8000

@@ -33,7 +33,7 @@ spec:
             - -port
             - '{{ .Values.tap.proxy.worker.srvPort }}'
             - -metrics-port
-            - '{{ .Values.tap.metrics.workerPort }}'
+            - '{{ .Values.tap.metrics.port }}'
             - -packet-capture
             - '{{ .Values.tap.packetCapture }}'
           {{- if .Values.tap.tls }}

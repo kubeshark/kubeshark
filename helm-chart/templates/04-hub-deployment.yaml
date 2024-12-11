@@ -31,8 +31,6 @@ spec:
             - ./hub
             - -port
             - "8080"
-            - -metrics-port
-            - '{{ .Values.tap.metrics.workerPort }}'
           {{- if .Values.tap.debug }}
             - -debug
           {{- end }}

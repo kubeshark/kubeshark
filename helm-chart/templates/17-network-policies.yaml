@@ -22,7 +22,7 @@ spec:
           port: 8080
     - ports:
         - protocol: TCP
-          port: {{ .Values.tap.metrics.hubPort }}
+          port: 9100
   egress:
     - {}
 ---
@@ -74,6 +74,6 @@ spec:
         - protocol: TCP
           port: {{ .Values.tap.proxy.worker.srvPort }}
         - protocol: TCP
-          port: {{ .Values.tap.metrics.workerPort }}
+          port: {{ .Values.tap.metrics.port }}
   egress:
     - {}
