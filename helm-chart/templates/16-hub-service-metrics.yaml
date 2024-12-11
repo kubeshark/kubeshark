@@ -6,18 +6,18 @@ metadata:
     {{- include "kubeshark.labels" . | nindent 4 }}
   annotations:
     prometheus.io/scrape: 'true'
-    prometheus.io/port: '{{ .Values.tap.metrics.workerPort }}'
+    prometheus.io/port: '{{ .Values.tap.metrics.hubPort }}'
   {{- if .Values.tap.annotations }}
     {{- toYaml .Values.tap.annotations | nindent 4 }}
   {{- end }}
-  name: kubeshark-worker-metrics
+  name: kubeshark-hub-metrics
   namespace: {{ .Release.Namespace }}
 spec:
   selector:
-    app.kubeshark.co/app: worker
+    app.kubeshark.co/app: hub
     {{- include "kubeshark.labels" . | nindent 4 }}
   ports:
   - name: metrics
     protocol: TCP
-    port: {{ .Values.tap.metrics.workerPort }}
-    targetPort: {{ .Values.tap.metrics.workerPort }}
+    port: {{ .Values.tap.metrics.hubPort }}
+    targetPort: {{ .Values.tap.metrics.hubPort }}
