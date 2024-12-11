@@ -6,7 +6,7 @@ metadata:
     {{- include "kubeshark.labels" . | nindent 4 }}
   annotations:
     prometheus.io/scrape: 'true'
-    prometheus.io/port: '{{ .Values.tap.metrics.hubPort }}'
+    prometheus.io/port: '9100'
   {{- if .Values.tap.annotations }}
     {{- toYaml .Values.tap.annotations | nindent 4 }}
   {{- end }}
@@ -19,5 +19,5 @@ spec:
   ports:
   - name: metrics
     protocol: TCP
-    port: {{ .Values.tap.metrics.hubPort }}
-    targetPort: {{ .Values.tap.metrics.hubPort }}
+    port: 9100
+    targetPort: 9100
