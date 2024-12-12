@@ -27,13 +27,11 @@ spec:
     spec:
       initContainers:
         - command:
-          - sh
-          - -c
-          - |
-            rm -f /sys/fs/bpf/kubeshark/*
+          - ./tracer
+          - -init-bpf
           image: '{{ .Values.tap.docker.overrideImage.worker }}'
-          imagePullPolicy: IfNotPresent
-          name: init-bpf-dir
+          imagePullPolicy: Always
+          name: init-bpf
           securityContext:
             privileged: true
           volumeMounts:

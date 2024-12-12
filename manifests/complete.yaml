@@ -492,13 +492,11 @@ spec:
     spec:
       initContainers:
         - command:
-          - sh
-          - -c
-          - |
-            rm -f /sys/fs/bpf/kubeshark/*
+          - ./tracer
+          - -init-bpf
           image: 'docker.io/kubeshark/worker:v52.3.92'
-          imagePullPolicy: IfNotPresent
-          name: init-bpf-dir
+          imagePullPolicy: Always
+          name: init-bpf
           securityContext:
             privileged: true
           volumeMounts:
