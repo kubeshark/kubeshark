@@ -571,6 +571,7 @@ spec:
                 - SYS_ADMIN
                 - SYS_PTRACE
                 - DAC_OVERRIDE
+                - IPC_LOCK
               drop:
                 - ALL
           readinessProbe:

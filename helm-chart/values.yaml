@@ -117,6 +117,7 @@ tap:
     - SYS_ADMIN
     - SYS_PTRACE
     - DAC_OVERRIDE
+    - IPC_LOCK
     ebpfCapture:
     - SYS_ADMIN
     - SYS_PTRACE
