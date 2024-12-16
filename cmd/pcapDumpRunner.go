@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
-	"strconv"
 	"strings"
+	"time"
 
 	"github.com/kubeshark/gopacket"
 	"github.com/kubeshark/gopacket/layers"
@@ -54,7 +54,7 @@ func listWorkerPods(ctx context.Context, clientset *clientk8s.Clientset, namespa
 }
 
 // listFilesInPodDir lists all files in the specified directory inside the pod across multiple namespaces
-func listFilesInPodDir(ctx context.Context, clientset *clientk8s.Clientset, config *rest.Config, podName string, namespaces []string, configMapName, configMapKey string) ([]NamespaceFiles, error) {
+func listFilesInPodDir(ctx context.Context, clientset *clientk8s.Clientset, config *rest.Config, podName string, namespaces []string, configMapName, configMapKey string, cutoffTime *time.Time) ([]NamespaceFiles, error) {
 	var namespaceFilesList []NamespaceFiles
 
 	for _, namespace := range namespaces {
@@ -114,12 +114,42 @@ func listFilesInPodDir(ctx context.Context, clientset *clientk8s.Clientset, conf
 
 		// Split the output (file names) into a list
 		files := strings.Split(strings.TrimSpace(stdoutBuf.String()), "\n")
-		if len(files) > 0 {
-			// Append the NamespaceFiles struct to the list
+		if len(files) == 0 {
+			log.Info().Msgf("No files found in directory %s in pod %s", srcFilePath, podName)
+			continue
+		}
+
+		var filteredFiles []string
+
+		// Filter files based on cutoff time if provided
+		for _, file := range files {
+			if cutoffTime != nil {
+				parts := strings.Split(file, "-")
+				if len(parts) < 2 {
+					log.Warn().Msgf("Skipping file with invalid format: %s", file)
+					continue
+				}
+
+				timestampStr := parts[len(parts)-2] + parts[len(parts)-1][:6] // Extract YYYYMMDDHHMMSS
+				fileTime, err := time.Parse("20060102150405", timestampStr)
+				if err != nil {
+					log.Warn().Err(err).Msgf("Skipping file with unparsable timestamp: %s", file)
+					continue
+				}
+
+				if fileTime.Before(*cutoffTime) {
+					continue
+				}
+			}
+			// Add file to filtered list
+			filteredFiles = append(filteredFiles, file)
+		}
+
+		if len(filteredFiles) > 0 {
 			namespaceFilesList = append(namespaceFilesList, NamespaceFiles{
 				Namespace: namespace,
 				SrcDir:    srcDir,
-				Files:     files,
+				Files:     filteredFiles,
 			})
 		}
 	}
@@ -229,63 +259,8 @@ func mergePCAPs(outputFile string, inputFiles []string) error {
 	return nil
 }
 
-// setPcapConfigInKubernetes sets the PCAP config for all pods across multiple namespaces
-func setPcapConfigInKubernetes(ctx context.Context, clientset *clientk8s.Clientset, podName string, namespaces []string, enabledPcap bool, timeInterval, maxTime, maxSize string) error {
-	for _, namespace := range namespaces {
-		// Load the existing ConfigMap in the current namespace
-		configMap, err := clientset.CoreV1().ConfigMaps(namespace).Get(ctx, "kubeshark-config-map", metav1.GetOptions{})
-		if err != nil {
-			log.Error().Err(err).Msgf("failed to get ConfigMap in namespace %s", namespace)
-			continue
-		}
-
-		// Update the values with user-provided input
-		configMap.Data["PCAP_TIME_INTERVAL"] = timeInterval
-		configMap.Data["PCAP_MAX_SIZE"] = maxSize
-		configMap.Data["PCAP_MAX_TIME"] = maxTime
-		configMap.Data["PCAP_DUMP_ENABLE"] = strconv.FormatBool(enabledPcap)
-
-		// Apply the updated ConfigMap back to the cluster in the current namespace
-		_, err = clientset.CoreV1().ConfigMaps(namespace).Update(ctx, configMap, metav1.UpdateOptions{})
-		if err != nil {
-			log.Error().Err(err).Msgf("failed to update ConfigMap in namespace %s", namespace)
-			continue
-		}
-	}
-
-	return nil
-}
-
-// startPcap function for starting the PCAP capture
-func startStopPcap(clientset *kubernetes.Clientset, pcapEnable bool, timeInterval, maxTime, maxSize string) error {
-	kubernetesProvider, err := getKubernetesProviderForCli(false, false)
-	if err != nil {
-		log.Error().Err(err).Send()
-		return err
-	}
-
-	targetNamespaces := kubernetesProvider.GetNamespaces()
-
-	// List worker pods
-	workerPods, err := listWorkerPods(context.Background(), clientset, targetNamespaces)
-	if err != nil {
-		log.Error().Err(err).Msg("Error listing worker pods")
-		return err
-	}
-
-	// Iterate over each pod to start the PCAP capture by updating the configuration in Kubernetes
-	for _, pod := range workerPods {
-		err := setPcapConfigInKubernetes(context.Background(), clientset, pod.Name, targetNamespaces, pcapEnable, timeInterval, maxTime, maxSize)
-		if err != nil {
-			log.Error().Err(err).Msgf("Error setting PCAP config for pod %s", pod.Name)
-			continue
-		}
-	}
-	return nil
-}
-
 // copyPcapFiles function for copying the PCAP files from the worker pods
-func copyPcapFiles(clientset *kubernetes.Clientset, config *rest.Config, destDir string) error {
+func copyPcapFiles(clientset *kubernetes.Clientset, config *rest.Config, destDir string, cutoffTime *time.Time) error {
 	kubernetesProvider, err := getKubernetesProviderForCli(false, false)
 	if err != nil {
 		log.Error().Err(err).Send()
@@ -305,7 +280,7 @@ func copyPcapFiles(clientset *kubernetes.Clientset, config *rest.Config, destDir
 	// Iterate over each pod to get the PCAP directory from config and copy files
 	for _, pod := range workerPods {
 		// Get the list of NamespaceFiles (files per namespace) and their source directories
-		namespaceFiles, err := listFilesInPodDir(context.Background(), clientset, config, pod.Name, targetNamespaces, SELF_RESOURCES_PREFIX+SUFFIX_CONFIG_MAP, "PCAP_SRC_DIR")
+		namespaceFiles, err := listFilesInPodDir(context.Background(), clientset, config, pod.Name, targetNamespaces, SELF_RESOURCES_PREFIX+SUFFIX_CONFIG_MAP, "PCAP_SRC_DIR", cutoffTime)
 		if err != nil {
 			log.Error().Err(err).Msgf("Error listing files in pod %s", pod.Name)
 			continue

@@ -31,9 +31,8 @@ spec:
             - ./hub
             - -port
             - "8080"
-          {{- if .Values.tap.debug }}
-            - -debug
-          {{- end }}
+            - -loglevel
+            - '{{ .Values.logLevel | default "warning" }}'
           env:
           - name: POD_NAME
             valueFrom:

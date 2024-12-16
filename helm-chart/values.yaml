@@ -182,3 +182,4 @@ scripting:
   active: []
   console: true
 timezone: ""
+logLevel: warning
