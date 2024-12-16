@@ -1,0 +1,23 @@
+---
+kind: Service
+apiVersion: v1
+metadata:
+  labels:
+    {{- include "kubeshark.labels" . | nindent 4 }}
+  annotations:
+    prometheus.io/scrape: 'true'
+    prometheus.io/port: '9100'
+  {{- if .Values.tap.annotations }}
+    {{- toYaml .Values.tap.annotations | nindent 4 }}
+  {{- end }}
+  name: kubeshark-hub-metrics
+  namespace: {{ .Release.Namespace }}
+spec:
+  selector:
+    app.kubeshark.co/app: hub
+    {{- include "kubeshark.labels" . | nindent 4 }}
+  ports:
+  - name: metrics
+    protocol: TCP
+    port: 9100
+    targetPort: 9100
