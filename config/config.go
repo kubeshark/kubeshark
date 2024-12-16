@@ -63,6 +63,9 @@ func InitConfig(cmd *cobra.Command) error {
 
 	Config = CreateDefaultConfig()
 	Config.Tap.Debug = DebugMode
+	if DebugMode {
+		Config.LogLevel = "debug"
+	}
 	cmdName = cmd.Name()
 	if utils.Contains([]string{
 		"clean",

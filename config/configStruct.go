@@ -113,6 +113,7 @@ type ConfigStruct struct {
 	Scripting                 configStructs.ScriptingConfig `yaml:"scripting" json:"scripting"`
 	Manifests                 ManifestsConfig               `yaml:"manifests,omitempty" json:"manifests,omitempty"`
 	Timezone                  string                        `yaml:"timezone" json:"timezone"`
+	LogLevel                  string                        `yaml:"logLevel" json:"logLevel" default:"warning"`
 }
 
 func (config *ConfigStruct) ImagePullPolicy() v1.PullPolicy {
