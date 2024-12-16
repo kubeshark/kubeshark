@@ -36,6 +36,8 @@ spec:
             - '{{ .Values.tap.metrics.port }}'
             - -packet-capture
             - '{{ .Values.tap.packetCapture }}'
+            - -loglevel
+            - '{{ .Values.logLevel | default "warning" }}'
           {{- if .Values.tap.tls }}
             - -unixsocket
           {{- end }}
@@ -54,9 +56,6 @@ spec:
             - '{{ .Values.tap.misc.resolutionStrategy }}'
             - -staletimeout
             - '{{ .Values.tap.misc.staleTimeoutSeconds }}'
-          {{- if .Values.tap.debug }}
-            - -debug
-          {{- end }}
         {{- if .Values.tap.docker.overrideImage.worker }}
           image: '{{ .Values.tap.docker.overrideImage.worker }}'
         {{- else if .Values.tap.docker.overrideTag.worker }}
@@ -156,9 +155,6 @@ spec:
           {{- if ne .Values.tap.packetCapture "ebpf" }}
             - -disable-ebpf
           {{- end }}
-          {{- if .Values.tap.debug }}
-            - -debug
-          {{- end }}
           {{- if .Values.tap.disableTlsLog }}
             - -disable-tls-log
           {{- end }}
@@ -166,6 +162,8 @@ spec:
             - -port
             - '{{ add .Values.tap.proxy.worker.srvPort 1 }}'
           {{- end }}
+            # - -loglevel
+            # - '{{ .Values.logLevel | default "warning" }}'
         {{- if .Values.tap.docker.overrideTag.worker }}
           image: '{{ .Values.tap.docker.registry }}/worker:{{ .Values.tap.docker.overrideTag.worker }}{{ include "kubeshark.dockerTagDebugVersion" . }}'
         {{ else }}
