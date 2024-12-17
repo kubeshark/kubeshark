@@ -36,7 +36,7 @@ spec:
           image: '{{ .Values.tap.docker.registry }}/worker:{{ not (eq .Values.tap.docker.tag "") | ternary .Values.tap.docker.tag (include "kubeshark.defaultVersion" .) }}{{ include "kubeshark.dockerTagDebugVersion" . }}'
         {{- end }}
           imagePullPolicy: {{ .Values.tap.docker.imagePullPolicy }}
-          name: init-bpf
+          name: check-bpf
           securityContext:
             privileged: true
           volumeMounts:
