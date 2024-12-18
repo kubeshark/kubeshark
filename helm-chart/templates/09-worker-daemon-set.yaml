@@ -195,8 +195,8 @@ spec:
             - -port
             - '{{ add .Values.tap.proxy.worker.srvPort 1 }}'
           {{- end }}
-            - -loglevel
-            - '{{ .Values.logLevel | default "warning" }}'
+            # - -loglevel
+            # - '{{ .Values.logLevel | default "warning" }}'
         {{- if .Values.tap.docker.overrideTag.worker }}
           image: '{{ .Values.tap.docker.registry }}/worker:{{ .Values.tap.docker.overrideTag.worker }}{{ include "kubeshark.dockerTagDebugVersion" . }}'
         {{ else }}
