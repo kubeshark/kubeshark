@@ -72,7 +72,7 @@ type ResourceRequirementsWorker struct {
 }
 
 type WorkerConfig struct {
-	SrvPort uint16 `yaml:"srvPort" json:"srvPort" default:"30001"`
+	SrvPort uint16 `yaml:"srvPort" json:"srvPort" default:"48999"`
 }
 
 type HubConfig struct {

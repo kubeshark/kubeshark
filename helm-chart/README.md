@@ -131,7 +131,7 @@ Example for overriding image names:
 | `tap.docker.overrideImage`                | Can be used to directly override image names  | `""`                                                    |
 | `tap.docker.overrideTag`                  | Can be used to override image tags            | `""`                                                    |
 | `tap.proxy.hub.srvPort`                   | Hub server port. Change if already occupied.  | `8898`                                                  |
-| `tap.proxy.worker.srvPort`                | Worker server port. Change if already occupied.| `30001`                                                |
+| `tap.proxy.worker.srvPort`                | Worker server port. Change if already occupied.| `48999`                                                |
 | `tap.proxy.front.port`                    | Front service port. Change if already occupied.| `8899`                                                 |
 | `tap.proxy.host`                          | Change to 0.0.0.0 top open up to the world.   | `127.0.0.1`                                             |
 | `tap.regex`                               | Target (process traffic from) pods that match regex | `.*`                                              |
