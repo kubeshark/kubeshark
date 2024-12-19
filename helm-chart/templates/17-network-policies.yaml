@@ -20,6 +20,9 @@ spec:
     - ports:
         - protocol: TCP
           port: 8080
+    - ports:
+        - protocol: TCP
+          port: 9100
   egress:
     - {}
 ---
