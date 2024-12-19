@@ -16,7 +16,7 @@ tap:
       front: ""
   proxy:
     worker:
-      srvPort: 30001
+      srvPort: 48999
     hub:
       srvPort: 8898
     front:
