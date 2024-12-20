@@ -155,6 +155,11 @@ spec:
                 {{ print "- " . }}
                 {{- end }}
                 {{- end }}
+                {{- if .Values.tap.capabilities.ebpfCapture }}
+                {{- range .Values.tap.capabilities.ebpfCapture }}
+                {{ print "- " . }}
+                {{- end }}
+                {{- end }}
               drop:
                 - ALL
           readinessProbe:
