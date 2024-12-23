@@ -1,5 +1,5 @@
 ---
-# Source: kubeshark/templates/17-network-policies.yaml
+# Source: kubeshark/templates/16-network-policies.yaml
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -23,13 +23,10 @@ spec:
     - ports:
         - protocol: TCP
           port: 8080
-    - ports:
-        - protocol: TCP
-          port: 9100
   egress:
     - {}
 ---
-# Source: kubeshark/templates/17-network-policies.yaml
+# Source: kubeshark/templates/16-network-policies.yaml
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -56,7 +53,7 @@ spec:
   egress:
     - {}
 ---
-# Source: kubeshark/templates/17-network-policies.yaml
+# Source: kubeshark/templates/16-network-policies.yaml
 apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
@@ -256,7 +253,6 @@ data:
     CLOUD_LICENSE_ENABLED: 'true'
     DUPLICATE_TIMEFRAME: '200ms'
     ENABLED_DISSECTORS: 'amqp,dns,http,icmp,kafka,redis,sctp,syscall,ws,ldap'
-    CUSTOM_MACROS: '{}'
     DISSECTORS_UPDATING_ENABLED: 'true'
     DETECT_DUPLICATES: 'false'
     PCAP_DUMP_ENABLE: 'true'
@@ -461,35 +457,6 @@ spec:
     port: 49100
     targetPort: 49100
 ---
-# Source: kubeshark/templates/16-hub-service-metrics.yaml
-kind: Service
-apiVersion: v1
-metadata:
-  labels:
-    helm.sh/chart: kubeshark-52.3.92
-    app.kubernetes.io/name: kubeshark
-    app.kubernetes.io/instance: kubeshark
-    app.kubernetes.io/version: "52.3.92"
-    app.kubernetes.io/managed-by: Helm
-  annotations:
-    prometheus.io/scrape: 'true'
-    prometheus.io/port: '9100'
-  name: kubeshark-hub-metrics
-  namespace: default
-spec:
-  selector:
-    app.kubeshark.co/app: hub
-    helm.sh/chart: kubeshark-52.3.92
-    app.kubernetes.io/name: kubeshark
-    app.kubernetes.io/instance: kubeshark
-    app.kubernetes.io/version: "52.3.92"
-    app.kubernetes.io/managed-by: Helm
-  ports:
-  - name: metrics
-    protocol: TCP
-    port: 9100
-    targetPort: 9100
----
 # Source: kubeshark/templates/09-worker-daemon-set.yaml
 apiVersion: apps/v1
 kind: DaemonSet
@@ -559,8 +526,6 @@ spec:
             - '49100'
             - -packet-capture
             - 'best'
-            - -loglevel
-            - 'warning'
             - -unixsocket
             - -servicemesh
             - -procfs
@@ -619,6 +584,7 @@ spec:
                 - SYS_ADMIN
                 - SYS_PTRACE
                 - DAC_OVERRIDE
+                - IPC_LOCK
               drop:
                 - ALL
           readinessProbe:
@@ -650,8 +616,6 @@ spec:
             - /hostproc
             - -disable-ebpf
             - -disable-tls-log
-            # - -loglevel
-            # - 'warning'
           image: 'docker.io/kubeshark/worker:v52.3.92'
           imagePullPolicy: Always
           name: tracer
@@ -787,8 +751,6 @@ spec:
             - ./hub
             - -port
             - "8080"
-            - -loglevel
-            - 'warning'
           env:
           - name: POD_NAME
             valueFrom:

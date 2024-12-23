@@ -85,6 +85,10 @@ tap:
           filter: ""
           canDownloadPCAP: true
           canUseScripting: true
+          scriptingPermissions:
+            canSave: true
+            canActivate: true
+            canDelete: true
           canUpdateTargetedPods: true
           canStopTrafficCapturing: true
           showAdminConsoleLink: true
@@ -117,6 +121,7 @@ tap:
     - SYS_ADMIN
     - SYS_PTRACE
     - DAC_OVERRIDE
+    - IPC_LOCK
     ebpfCapture:
     - SYS_ADMIN
     - SYS_PTRACE
@@ -134,7 +139,6 @@ tap:
   - syscall
   - ws
   - ldap
-  customMacros: {}
   metrics:
     port: 49100
   pprof:
@@ -161,7 +165,6 @@ pcapdump:
   maxTime: 1h
   maxSize: 500MB
   pcapSrcDir: pcapdump
-  time: time
 kube:
   configPath: ""
   context: ""
