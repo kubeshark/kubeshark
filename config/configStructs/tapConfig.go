@@ -117,13 +117,20 @@ type ResourcesConfig struct {
 	Tracer  ResourceRequirementsWorker `yaml:"tracer" json:"tracer"`
 }
 
+type ScriptingPermissions struct {
+	CanSave     bool `yaml:"canSave" json:"canSave" default:"false"`
+	CanActivate bool `yaml:"canActivate" json:"canActivate" default:"false"`
+	CanDelete   bool `yaml:"canDelete" json:"canDelete" default:"false"`
+}
+
 type Role struct {
-	Filter                  string `yaml:"filter" json:"filter" default:""`
-	CanDownloadPCAP         bool   `yaml:"canDownloadPCAP" json:"canDownloadPCAP" default:"false"`
-	CanUseScripting         bool   `yaml:"canUseScripting" json:"canUseScripting" default:"false"`
-	CanUpdateTargetedPods   bool   `yaml:"canUpdateTargetedPods" json:"canUpdateTargetedPods" default:"false"`
-	CanStopTrafficCapturing bool   `yaml:"canStopTrafficCapturing" json:"canStopTrafficCapturing" default:"false"`
-	ShowAdminConsoleLink    bool   `yaml:"showAdminConsoleLink" json:"showAdminConsoleLink" default:"false"`
+	Filter                  string               `yaml:"filter" json:"filter" default:""`
+	CanDownloadPCAP         bool                 `yaml:"canDownloadPCAP" json:"canDownloadPCAP" default:"false"`
+	CanUseScripting         bool                 `yaml:"canUseScripting" json:"canUseScripting" default:"false"`
+	ScriptingPermissions    ScriptingPermissions `yaml:"scriptingPermissions" json:"scriptingPermissions"`
+	CanUpdateTargetedPods   bool                 `yaml:"canUpdateTargetedPods" json:"canUpdateTargetedPods" default:"false"`
+	CanStopTrafficCapturing bool                 `yaml:"canStopTrafficCapturing" json:"canStopTrafficCapturing" default:"false"`
+	ShowAdminConsoleLink    bool                 `yaml:"showAdminConsoleLink" json:"showAdminConsoleLink" default:"false"`
 }
 
 type SamlConfig struct {

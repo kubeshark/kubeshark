@@ -62,6 +62,11 @@ func CreateDefaultConfig() ConfigStruct {
 							Filter:                  "",
 							CanDownloadPCAP:         true,
 							CanUseScripting:         true,
+							ScriptingPermissions: configStructs.ScriptingPermissions{
+								CanSave: false,
+								CanActivate: false,
+								CanDelete: false,
+							},
 							CanUpdateTargetedPods:   true,
 							CanStopTrafficCapturing: true,
 							ShowAdminConsoleLink:    true,
