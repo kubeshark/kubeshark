@@ -118,9 +118,9 @@ type ResourcesConfig struct {
 }
 
 type ScriptingPermissions struct {
-	CanSave     bool `yaml:"canSave" json:"canSave" default:"false"`
-	CanActivate bool `yaml:"canActivate" json:"canActivate" default:"false"`
-	CanDelete   bool `yaml:"canDelete" json:"canDelete" default:"false"`
+	CanSave     bool `yaml:"canSave" json:"canSave" default:"true"`
+	CanActivate bool `yaml:"canActivate" json:"canActivate" default:"true"`
+	CanDelete   bool `yaml:"canDelete" json:"canDelete" default:"true"`
 }
 
 type Role struct {

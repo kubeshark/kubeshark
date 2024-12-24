@@ -86,9 +86,9 @@ tap:
           canDownloadPCAP: true
           canUseScripting: true
           scriptingPermissions:
-            canSave: false
-            canActivate: false
-            canDelete: false
+            canSave: true
+            canActivate: true
+            canDelete: true
           canUpdateTargetedPods: true
           canStopTrafficCapturing: true
           showAdminConsoleLink: true
