@@ -85,6 +85,10 @@ tap:
           filter: ""
           canDownloadPCAP: true
           canUseScripting: true
+          scriptingPermissions:
+            canSave: true
+            canActivate: true
+            canDelete: true
           canUpdateTargetedPods: true
           canStopTrafficCapturing: true
           showAdminConsoleLink: true
