@@ -43,7 +43,7 @@ spec:
             - name: REACT_APP_PRESET_FILTERS_CHANGING_ENABLED
               value: '{{ .Values.tap.presetFiltersChangingEnabled }}'
             - name: REACT_APP_BPF_OVERRIDE_DISABLED
-              value: '{{ eq .Values.tap.packetCapture "ebpf" | ternary "true" "false" }}'
+              value: '{{ if and (ne .Values.tap.packetCapture "af_packet") (ne .Values.tap.packetCapture "libpcap") }}true{{ else }}false{{ end }}'
             - name: REACT_APP_RECORDING_DISABLED
               value: '{{ .Values.tap.recordingDisabled }}'
             - name: REACT_APP_STOP_TRAFFIC_CAPTURING_DISABLED

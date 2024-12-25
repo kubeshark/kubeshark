@@ -35,7 +35,11 @@ spec:
             - -metrics-port
             - '{{ .Values.tap.metrics.port }}'
             - -packet-capture
-            - '{{ .Values.tap.packetCapture }}'
+          {{- if or (eq .Values.tap.packetCapture "ebpf") (eq .Values.tap.packetCapture "ebpf-v1") }}
+            - ebpf
+          {{- else }}
+            - {{ .Values.tap.packetCapture }}
+          {{- end }}
             - -loglevel
             - '{{ .Values.logLevel | default "warning" }}'
           {{- if .Values.tap.tls }}
@@ -46,7 +50,7 @@ spec:
           {{- end }}
             - -procfs
             - /hostproc
-          {{- if ne .Values.tap.packetCapture "ebpf" }}
+          {{- if or (eq .Values.tap.packetCapture "af_packet") (eq .Values.tap.packetCapture "libpcap") }}
             - -disable-ebpf
           {{- end }}
           {{- if .Values.tap.resourceGuard.enabled }}
@@ -157,8 +161,11 @@ spec:
             - ./tracer
             - -procfs
             - /hostproc
-          {{- if ne .Values.tap.packetCapture "ebpf" }}
+          {{- if or (eq .Values.tap.packetCapture "af_packet") (eq .Values.tap.packetCapture "libpcap") }}
             - -disable-ebpf
+          {{- end }}
+          {{- if eq .Values.tap.packetCapture "ebpf-v1" }}
+            - -ebpf1
           {{- end }}
           {{- if .Values.tap.disableTlsLog }}
             - -disable-tls-log
