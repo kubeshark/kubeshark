@@ -239,7 +239,7 @@ data:
     AUTH_TYPE: 'oidc'
     AUTH_SAML_IDP_METADATA_URL: ''
     AUTH_SAML_ROLE_ATTRIBUTE: 'role'
-    AUTH_SAML_ROLES: '{"admin":{"canDownloadPCAP":true,"canStopTrafficCapturing":true,"canUpdateTargetedPods":true,"canUseScripting":true,"filter":"","showAdminConsoleLink":true}}'
+    AUTH_SAML_ROLES: '{"admin":{"canDownloadPCAP":true,"canStopTrafficCapturing":true,"canUpdateTargetedPods":true,"canUseScripting":true,"filter":"","scriptingPermissions":{"canActivate":true,"canDelete":true,"canSave":true},"showAdminConsoleLink":true}}'
     TELEMETRY_DISABLED: 'false'
     SCRIPTING_DISABLED: ''
     TARGETED_PODS_UPDATE_DISABLED: ''
@@ -523,31 +523,6 @@ spec:
       name: kubeshark-worker-daemon-set
       namespace: kubeshark
     spec:
-      initContainers:
-        - command:
-          - /bin/sh
-          - -c
-          - mkdir -p /sys/fs/bpf && mount | grep -q '/sys/fs/bpf' || mount -t bpf bpf /sys/fs/bpf
-          image: 'docker.io/kubeshark/worker:v52.3.92'
-          imagePullPolicy: Always
-          name: check-bpf
-          securityContext:
-            privileged: true
-          volumeMounts:
-          - mountPath: /sys
-            name: sys
-            mountPropagation: Bidirectional
-        - command:
-          - ./tracer
-          - -init-bpf
-          image: 'docker.io/kubeshark/worker:v52.3.92'
-          imagePullPolicy: Always
-          name: init-bpf
-          securityContext:
-            privileged: true
-          volumeMounts:
-          - mountPath: /sys
-            name: sys
       containers:
         - command:
             - ./worker
@@ -619,6 +594,10 @@ spec:
                 - SYS_ADMIN
                 - SYS_PTRACE
                 - DAC_OVERRIDE
+                - SYS_ADMIN
+                - SYS_PTRACE
+                - SYS_RESOURCE
+                - IPC_LOCK
               drop:
                 - ALL
           readinessProbe:
