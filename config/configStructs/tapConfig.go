@@ -252,6 +252,7 @@ type TapConfig struct {
 	Capabilities                 CapabilitiesConfig    `yaml:"capabilities" json:"capabilities"`
 	GlobalFilter                 string                `yaml:"globalFilter" json:"globalFilter" default:""`
 	EnabledDissectors            []string              `yaml:"enabledDissectors" json:"enabledDissectors"`
+	CustomMacros                 map[string]string     `yaml:"customMacros" json:"customMacros"`
 	Metrics                      MetricsConfig         `yaml:"metrics" json:"metrics"`
 	Pprof                        PprofConfig           `yaml:"pprof" json:"pprof"`
 	Misc                         MiscConfig            `yaml:"misc" json:"misc"`
