@@ -523,6 +523,31 @@ spec:
       name: kubeshark-worker-daemon-set
       namespace: kubeshark
     spec:
+      initContainers:
+        - command:
+          - /bin/sh
+          - -c
+          - mkdir -p /sys/fs/bpf && mount | grep -q '/sys/fs/bpf' || mount -t bpf bpf /sys/fs/bpf
+          image: 'docker.io/kubeshark/worker:v52.3.92'
+          imagePullPolicy: Always
+          name: check-bpf
+          securityContext:
+            privileged: true
+          volumeMounts:
+          - mountPath: /sys
+            name: sys
+            mountPropagation: Bidirectional
+        - command:
+          - ./tracer
+          - -init-bpf
+          image: 'docker.io/kubeshark/worker:v52.3.92'
+          imagePullPolicy: Always
+          name: init-bpf
+          securityContext:
+            privileged: true
+          volumeMounts:
+          - mountPath: /sys
+            name: sys
       containers:
         - command:
             - ./worker
