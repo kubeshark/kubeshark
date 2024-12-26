@@ -38,7 +38,9 @@ spec:
           imagePullPolicy: {{ .Values.tap.docker.imagePullPolicy }}
           name: check-bpf
           securityContext:
-            privileged: true
+            capabilities:
+              add:
+                - CAP_SYS_ADMIN 
           volumeMounts:
           - mountPath: /sys
             name: sys
@@ -54,7 +56,9 @@ spec:
           imagePullPolicy: {{ .Values.tap.docker.imagePullPolicy }}
           name: init-bpf
           securityContext:
-            privileged: true
+            capabilities:
+              add:
+                - CAP_SYS_ADMIN 
           volumeMounts:
           - mountPath: /sys
             name: sys
