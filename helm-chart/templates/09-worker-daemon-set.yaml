@@ -37,8 +37,10 @@ spec:
         {{- end }}
           imagePullPolicy: {{ .Values.tap.docker.imagePullPolicy }}
           name: check-bpf
+        {{- if .Values.tap.capabilities.bpfPrivileged }}
           securityContext:
             privileged: true
+        {{- end }}
           volumeMounts:
           - mountPath: /sys
             name: sys
@@ -53,8 +55,10 @@ spec:
         {{- end }}
           imagePullPolicy: {{ .Values.tap.docker.imagePullPolicy }}
           name: init-bpf
+        {{- if .Values.tap.capabilities.bpfPrivileged }}
           securityContext:
             privileged: true
+        {{- end }}
           volumeMounts:
           - mountPath: /sys
             name: sys

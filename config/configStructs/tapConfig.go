@@ -178,6 +178,7 @@ type CapabilitiesConfig struct {
 	NetworkCapture     []string `yaml:"networkCapture" json:"networkCapture"  default:"[]"`
 	ServiceMeshCapture []string `yaml:"serviceMeshCapture" json:"serviceMeshCapture"  default:"[]"`
 	EBPFCapture        []string `yaml:"ebpfCapture" json:"ebpfCapture"  default:"[]"`
+	BpfPrivileged      bool     `yaml:"bpfPrivileged" json:"bpfPrivileged" default:"false"`
 }
 
 type MetricsConfig struct {
