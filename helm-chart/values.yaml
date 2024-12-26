@@ -126,6 +126,7 @@ tap:
     - SYS_PTRACE
     - SYS_RESOURCE
     - IPC_LOCK
+    bpfPrivileged: false
   globalFilter: ""
   enabledDissectors:
   - amqp
