@@ -85,6 +85,10 @@ tap:
           filter: ""
           canDownloadPCAP: true
           canUseScripting: true
+          scriptingPermissions:
+            canSave: true
+            canActivate: true
+            canDelete: true
           canUpdateTargetedPods: true
           canStopTrafficCapturing: true
           showAdminConsoleLink: true
@@ -134,7 +138,8 @@ tap:
   - syscall
   - ws
   - ldap
-  customMacros: {}
+  customMacros:
+    https: tls and (http or http2)
   metrics:
     port: 49100
   pprof:
