@@ -59,13 +59,13 @@ func CreateDefaultConfig() ConfigStruct {
 					RoleAttribute: "role",
 					Roles: map[string]configStructs.Role{
 						"admin": {
-							Filter:                  "",
-							CanDownloadPCAP:         true,
-							CanUseScripting:         true,
+							Filter:          "",
+							CanDownloadPCAP: true,
+							CanUseScripting: true,
 							ScriptingPermissions: configStructs.ScriptingPermissions{
-								CanSave: true,
+								CanSave:     true,
 								CanActivate: true,
-								CanDelete: true,
+								CanDelete:   true,
 							},
 							CanUpdateTargetedPods:   true,
 							CanStopTrafficCapturing: true,
@@ -88,6 +88,7 @@ func CreateDefaultConfig() ConfigStruct {
 				"ws",
 				// "tlsx",
 				"ldap",
+				"radius",
 			},
 		},
 	}
