@@ -59,6 +59,17 @@ tap:
       requests:
         cpu: 50m
         memory: 50Mi
+  probes:
+    hub:
+      initialDelaySeconds: 15
+      periodSeconds: 10
+      successThreshold: 1
+      failureThreshold: 3
+    sniffer:
+      initialDelaySeconds: 15
+      periodSeconds: 10
+      successThreshold: 1
+      failureThreshold: 3
   serviceMesh: true
   tls: true
   disableTlsLog: true

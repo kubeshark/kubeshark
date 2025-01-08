@@ -163,17 +163,17 @@ spec:
               drop:
                 - ALL
           readinessProbe:
-            periodSeconds: 1
-            failureThreshold: 3
-            successThreshold: 1
-            initialDelaySeconds: 5
+            periodSeconds: {{ .Values.tap.probes.sniffer.periodSeconds }}
+            failureThreshold: {{ .Values.tap.probes.sniffer.failureThreshold }}
+            successThreshold: {{ .Values.tap.probes.sniffer.successThreshold }}
+            initialDelaySeconds: {{ .Values.tap.probes.sniffer.initialDelaySeconds }}
             tcpSocket:
               port: {{ .Values.tap.proxy.worker.srvPort }}
           livenessProbe:
-            periodSeconds: 1
-            failureThreshold: 3
-            successThreshold: 1
-            initialDelaySeconds: 5
+            periodSeconds: {{ .Values.tap.probes.sniffer.periodSeconds }}
+            failureThreshold: {{ .Values.tap.probes.sniffer.failureThreshold }}
+            successThreshold: {{ .Values.tap.probes.sniffer.successThreshold }}
+            initialDelaySeconds: {{ .Values.tap.probes.sniffer.initialDelaySeconds }}
             tcpSocket:
               port: {{ .Values.tap.proxy.worker.srvPort }}
           volumeMounts:
