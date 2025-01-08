@@ -163,14 +163,14 @@ spec:
               drop:
                 - ALL
           readinessProbe:
-            periodSeconds: 5
+            periodSeconds: 10
             failureThreshold: 3
             successThreshold: 1
             initialDelaySeconds: 15
             tcpSocket:
               port: {{ .Values.tap.proxy.worker.srvPort }}
           livenessProbe:
-            periodSeconds: 5
+            periodSeconds: 10
             failureThreshold: 3
             successThreshold: 1
             initialDelaySeconds: 15
