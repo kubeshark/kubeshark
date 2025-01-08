@@ -65,17 +65,17 @@ spec:
             {{- end }}
         {{- end }}
           readinessProbe:
-            periodSeconds: 1
-            failureThreshold: 3
-            successThreshold: 1
-            initialDelaySeconds: 3
+            periodSeconds: {{ .Values.tap.probes.hub.periodSeconds }}
+            failureThreshold: {{ .Values.tap.probes.hub.failureThreshold }}
+            successThreshold: {{ .Values.tap.probes.hub.successThreshold }}
+            initialDelaySeconds: {{ .Values.tap.probes.hub.initialDelaySeconds }}
             tcpSocket:
               port: 8080
           livenessProbe:
-            periodSeconds: 1
-            failureThreshold: 3
-            successThreshold: 1
-            initialDelaySeconds: 3
+            periodSeconds: {{ .Values.tap.probes.hub.periodSeconds }}
+            failureThreshold: {{ .Values.tap.probes.hub.failureThreshold }}
+            successThreshold: {{ .Values.tap.probes.hub.successThreshold }}
+            initialDelaySeconds: {{ .Values.tap.probes.hub.initialDelaySeconds }}
             tcpSocket:
               port: 8080
           resources:

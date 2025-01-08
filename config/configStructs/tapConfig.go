@@ -117,6 +117,18 @@ type ResourcesConfig struct {
 	Tracer  ResourceRequirementsWorker `yaml:"tracer" json:"tracer"`
 }
 
+type ProbesConfig struct {
+	Hub     ProbeConfig `yaml:"hub" json:"hub"`
+	Sniffer ProbeConfig `yaml:"sniffer" json:"sniffer"`
+}
+
+type ProbeConfig struct {
+	InitialDelaySeconds int `yaml:"initialDelaySeconds" json:"initialDelaySeconds" default:"15"`
+	PeriodSeconds       int `yaml:"periodSeconds" json:"periodSeconds" default:"10"`
+	SuccessThreshold    int `yaml:"successThreshold" json:"successThreshold" default:"1"`
+	FailureThreshold    int `yaml:"failureThreshold" json:"failureThreshold" default:"3"`
+}
+
 type ScriptingPermissions struct {
 	CanSave     bool `yaml:"canSave" json:"canSave" default:"true"`
 	CanActivate bool `yaml:"canActivate" json:"canActivate" default:"true"`
@@ -228,6 +240,7 @@ type TapConfig struct {
 	StorageClass                 string                `yaml:"storageClass" json:"storageClass" default:"standard"`
 	DryRun                       bool                  `yaml:"dryRun" json:"dryRun" default:"false"`
 	Resources                    ResourcesConfig       `yaml:"resources" json:"resources"`
+	Probes                       ProbesConfig          `yaml:"probes" json:"probes"`
 	ServiceMesh                  bool                  `yaml:"serviceMesh" json:"serviceMesh" default:"true"`
 	Tls                          bool                  `yaml:"tls" json:"tls" default:"true"`
 	DisableTlsLog                bool                  `yaml:"disableTlsLog" json:"disableTlsLog" default:"true"`
