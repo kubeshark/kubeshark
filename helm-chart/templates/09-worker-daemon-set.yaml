@@ -166,14 +166,14 @@ spec:
             periodSeconds: 1
             failureThreshold: 3
             successThreshold: 1
-            initialDelaySeconds: 5
+            initialDelaySeconds: 30
             tcpSocket:
               port: {{ .Values.tap.proxy.worker.srvPort }}
           livenessProbe:
             periodSeconds: 1
             failureThreshold: 3
             successThreshold: 1
-            initialDelaySeconds: 5
+            initialDelaySeconds: 30
             tcpSocket:
               port: {{ .Values.tap.proxy.worker.srvPort }}
           volumeMounts:
