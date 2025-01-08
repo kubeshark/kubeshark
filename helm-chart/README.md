@@ -160,6 +160,14 @@ Example for overriding image names:
 | `tap.resources.tracer.limits.memory`      | Memory limit for tracer                       | `3Gi`                                                |
 | `tap.resources.tracer.requests.cpu`       | CPU request for tracer                        | `50m`                                                   |
 | `tap.resources.tracer.requests.memory`    | Memory request for tracer                     | `50Mi`                                                  |
+| `tap.probes.hub.initialDelaySeconds`      | Initial delay before probing the hub         | `15`                                                    |
+| `tap.probes.hub.periodSeconds`            | Period between probes for the hub             | `10`                                                    |
+| `tap.probes.hub.successThreshold`         | Number of successful probes before considering the hub healthy | `1`                                        |
+| `tap.probes.hub.failureThreshold`         | Number of failed probes before considering the hub unhealthy | `3`                                           |
+| `tap.probes.sniffer.initialDelaySeconds`  | Initial delay before probing the sniffer     | `15`                                                    |
+| `tap.probes.sniffer.periodSeconds`        | Period between probes for the sniffer         | `10`                                                    |
+| `tap.probes.sniffer.successThreshold`     | Number of successful probes before considering the sniffer healthy | `1`                                    |
+| `tap.probes.sniffer.failureThreshold`     | Number of failed probes before considering the sniffer unhealthy | `3`                                       |
 | `tap.serviceMesh`                         | Capture traffic from service meshes like Istio, Linkerd, Consul, etc.          | `true`                                                  |
 | `tap.tls`                                 | Capture the encrypted/TLS traffic from cryptography libraries like OpenSSL                         | `true`                                                  |
 | `tap.disableTlsLog`                       | Suppress logging for TLS/eBPF                 | `true`                                                 |
