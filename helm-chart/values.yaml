@@ -149,6 +149,7 @@ tap:
   - syscall
   - ws
   - ldap
+  - radius
   customMacros:
     https: tls and (http or http2)
   metrics:
