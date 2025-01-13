@@ -187,6 +187,7 @@ headless: false
 license: ""
 cloudLicenseEnabled: true
 supportChatEnabled: true
+serviceMapNewUiEnabled: false
 internetConnectivity: true
 dissectorsUpdatingEnabled: true
 scripting:
