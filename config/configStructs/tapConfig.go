@@ -222,6 +222,7 @@ type PcapDumpConfig struct {
 	PcapMaxSize      string `yaml:"maxSize" json:"maxSize" default:"500MB"`
 	PcapSrcDir       string `yaml:"pcapSrcDir" json:"pcapSrcDir" default:"pcapdump"`
 	PcapTime         string `yaml:"time" json:"time" default:"time"`
+	PcapDest         string `yaml:"dest" json:"dest" default:""`
 }
 
 type TapConfig struct {
