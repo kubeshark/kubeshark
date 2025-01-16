@@ -104,22 +104,21 @@ type ManifestsConfig struct {
 }
 
 type ConfigStruct struct {
-	Tap                       configStructs.TapConfig       `yaml:"tap" json:"tap"`
-	Logs                      configStructs.LogsConfig      `yaml:"logs" json:"logs"`
-	Config                    configStructs.ConfigConfig    `yaml:"config,omitempty" json:"config,omitempty"`
-	PcapDump                  configStructs.PcapDumpConfig  `yaml:"pcapdump" json:"pcapdump"`
-	Kube                      KubeConfig                    `yaml:"kube" json:"kube"`
-	DumpLogs                  bool                          `yaml:"dumpLogs" json:"dumpLogs" default:"false"`
-	HeadlessMode              bool                          `yaml:"headless" json:"headless" default:"false"`
-	License                   string                        `yaml:"license" json:"license" default:""`
-	CloudLicenseEnabled       bool                          `yaml:"cloudLicenseEnabled" json:"cloudLicenseEnabled" default:"true"`
-	SupportChatEnabled        bool                          `yaml:"supportChatEnabled" json:"supportChatEnabled" default:"true"`
-	InternetConnectivity      bool                          `yaml:"internetConnectivity" json:"internetConnectivity" default:"true"`
-	DissectorsUpdatingEnabled bool                          `yaml:"dissectorsUpdatingEnabled" json:"dissectorsUpdatingEnabled" default:"true"`
-	Scripting                 configStructs.ScriptingConfig `yaml:"scripting" json:"scripting"`
-	Manifests                 ManifestsConfig               `yaml:"manifests,omitempty" json:"manifests,omitempty"`
-	Timezone                  string                        `yaml:"timezone" json:"timezone"`
-	LogLevel                  string                        `yaml:"logLevel" json:"logLevel" default:"warning"`
+	Tap                  configStructs.TapConfig       `yaml:"tap" json:"tap"`
+	Logs                 configStructs.LogsConfig      `yaml:"logs" json:"logs"`
+	Config               configStructs.ConfigConfig    `yaml:"config,omitempty" json:"config,omitempty"`
+	PcapDump             configStructs.PcapDumpConfig  `yaml:"pcapdump" json:"pcapdump"`
+	Kube                 KubeConfig                    `yaml:"kube" json:"kube"`
+	DumpLogs             bool                          `yaml:"dumpLogs" json:"dumpLogs" default:"false"`
+	HeadlessMode         bool                          `yaml:"headless" json:"headless" default:"false"`
+	License              string                        `yaml:"license" json:"license" default:""`
+	CloudLicenseEnabled  bool                          `yaml:"cloudLicenseEnabled" json:"cloudLicenseEnabled" default:"true"`
+	SupportChatEnabled   bool                          `yaml:"supportChatEnabled" json:"supportChatEnabled" default:"true"`
+	InternetConnectivity bool                          `yaml:"internetConnectivity" json:"internetConnectivity" default:"true"`
+	Scripting            configStructs.ScriptingConfig `yaml:"scripting" json:"scripting"`
+	Manifests            ManifestsConfig               `yaml:"manifests,omitempty" json:"manifests,omitempty"`
+	Timezone             string                        `yaml:"timezone" json:"timezone"`
+	LogLevel             string                        `yaml:"logLevel" json:"logLevel" default:"warning"`
 }
 
 func (config *ConfigStruct) ImagePullPolicy() v1.PullPolicy {

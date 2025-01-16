@@ -119,11 +119,7 @@ tap:
     enabled: false
     environment: production
   defaultFilter: "!dns and !error"
-  scriptingDisabled: false
-  targetedPodsUpdateDisabled: false
-  presetFiltersChangingEnabled: true
-  recordingDisabled: false
-  stopTrafficCapturingDisabled: false
+  liveConfigMapChangesDisabled: false
   capabilities:
     networkCapture:
     - NET_RAW
@@ -188,7 +184,6 @@ license: ""
 cloudLicenseEnabled: true
 supportChatEnabled: true
 internetConnectivity: true
-dissectorsUpdatingEnabled: true
 scripting:
   env: {}
   source: ""
