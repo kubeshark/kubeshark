@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"bufio"
 	"bytes"
 	"context"
 	"fmt"
@@ -9,8 +10,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/kubeshark/gopacket"
-	"github.com/kubeshark/gopacket/layers"
 	"github.com/kubeshark/gopacket/pcapgo"
 	"github.com/rs/zerolog/log"
 	corev1 "k8s.io/api/core/v1"
@@ -214,44 +213,64 @@ func copyFileFromPod(ctx context.Context, clientset *kubernetes.Clientset, confi
 }
 
 func mergePCAPs(outputFile string, inputFiles []string) error {
-	// Create the output file
+	// Open the output file
 	f, err := os.Create(outputFile)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to create output file: %w", err)
 	}
 	defer f.Close()
 
-	// Create a pcap writer for the output file
-	writer := pcapgo.NewWriter(f)
-	err = writer.WriteFileHeader(65536, layers.LinkTypeEthernet) // Snapshot length and LinkType
+	// Create a buffered writer for better I/O performance
+	bufWriter := bufio.NewWriter(f)
+	defer bufWriter.Flush()
+
+	// Create the PCAP writer
+	writer := pcapgo.NewWriter(bufWriter)
+	err = writer.WriteFileHeader(65536, 1) // Snapshot length and LinkType (1 = Ethernet)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to write PCAP file header: %w", err)
 	}
 
 	for _, inputFile := range inputFiles {
-		log.Info().Msgf("Merging %s int %s", inputFile, outputFile)
-		// Open each input file
+		fmt.Printf("Processing file: %s\n", inputFile)
+
+		// Open the input file
 		file, err := os.Open(inputFile)
 		if err != nil {
-			log.Error().Err(err).Msgf("Failed to open %v", inputFile)
+			fmt.Printf("Failed to open input file %s: %v\n", inputFile, err)
 			continue
 		}
 		defer file.Close()
 
+		// Create the PCAP reader for the input file
 		reader, err := pcapgo.NewReader(file)
 		if err != nil {
-			log.Error().Err(err).Msgf("Failed to create pcapng reader for %v", file.Name())
+			fmt.Printf("Failed to create PCAP reader for file %s: %v\n", inputFile, err)
 			continue
 		}
 
-		// Create the packet source
-		packetSource := gopacket.NewPacketSource(reader, layers.LinkTypeEthernet)
-
-		for packet := range packetSource.Packets() {
-			err := writer.WritePacket(packet.Metadata().CaptureInfo, packet.Data())
+		for {
+			// Read raw packet data
+			data, ci, err := reader.ReadPacketData()
 			if err != nil {
-				log.Error().Err(err).Msgf("Failed to write packet to %v", outputFile)
+				if err.Error() == "EOF" {
+					break
+				}
+				fmt.Printf("Error reading packet from file %s: %v\n", inputFile, err)
+				break
+			}
+
+			// Filter out malformed packets
+			if ci.CaptureLength == 0 || ci.Length == 0 || len(data) == 0 {
+				fmt.Printf("Skipping malformed or truncated packet in file %s\n", inputFile)
 				continue
+			}
+
+			// Write the packet to the output file
+			err = writer.WritePacket(ci, data)
+			if err != nil {
+				fmt.Printf("Error writing packet to output file: %v\n", err)
+				break
 			}
 		}
 	}
