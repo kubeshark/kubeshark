@@ -269,6 +269,8 @@ func copyPcapFiles(clientset *kubernetes.Clientset, config *rest.Config, destDir
 
 	targetNamespaces := kubernetesProvider.GetNamespaces()
 
+	log.Warn().Msgf("targetNamespaces %v", targetNamespaces)
+
 	// List worker pods
 	workerPods, err := listWorkerPods(context.Background(), clientset, targetNamespaces)
 	if err != nil {
@@ -279,12 +281,15 @@ func copyPcapFiles(clientset *kubernetes.Clientset, config *rest.Config, destDir
 
 	// Iterate over each pod to get the PCAP directory from config and copy files
 	for _, pod := range workerPods {
+		log.Warn().Msgf("getting files from pod %v", pod.Name)
 		// Get the list of NamespaceFiles (files per namespace) and their source directories
 		namespaceFiles, err := listFilesInPodDir(context.Background(), clientset, config, pod.Name, targetNamespaces, SELF_RESOURCES_PREFIX+SUFFIX_CONFIG_MAP, "PCAP_SRC_DIR", cutoffTime)
 		if err != nil {
 			log.Error().Err(err).Msgf("Error listing files in pod %s", pod.Name)
 			continue
 		}
+
+		log.Warn().Msgf("got files from pod %v files %v", pod.Name, namespaceFiles)
 
 		// Copy each file from the pod to the local destination for each namespace
 		for _, nsFiles := range namespaceFiles {
