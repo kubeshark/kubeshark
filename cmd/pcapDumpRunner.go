@@ -280,13 +280,16 @@ func mergePCAPs(outputFile string, inputFiles []string) error {
 
 // copyPcapFiles function for copying the PCAP files from the worker pods
 func copyPcapFiles(clientset *kubernetes.Clientset, config *rest.Config, destDir string, cutoffTime *time.Time) error {
-	kubernetesProvider, err := getKubernetesProviderForCli(false, false)
+	namespaceList, err := clientset.CoreV1().Namespaces().List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
-		log.Error().Err(err).Send()
+		log.Error().Err(err).Msg("Error listing namespaces")
 		return err
 	}
 
-	targetNamespaces := kubernetesProvider.GetNamespaces()
+	var targetNamespaces []string
+	for _, ns := range namespaceList.Items {
+		targetNamespaces = append(targetNamespaces, ns.Name)
+	}
 
 	log.Warn().Msgf("targetNamespaces %v", targetNamespaces)
 
