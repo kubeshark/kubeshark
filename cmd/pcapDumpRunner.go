@@ -4,7 +4,9 @@ import (
 	"bufio"
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
@@ -232,8 +234,6 @@ func mergePCAPs(outputFile string, inputFiles []string) error {
 	}
 
 	for _, inputFile := range inputFiles {
-		fmt.Printf("Processing file: %s\n", inputFile)
-
 		// Open the input file
 		file, err := os.Open(inputFile)
 		if err != nil {
@@ -250,20 +250,14 @@ func mergePCAPs(outputFile string, inputFiles []string) error {
 		}
 
 		for {
-			// Read raw packet data
+			// Read packet data
 			data, ci, err := reader.ReadPacketData()
 			if err != nil {
-				if err.Error() == "EOF" {
+				if errors.Is(err, io.EOF) {
 					break
 				}
 				fmt.Printf("Error reading packet from file %s: %v\n", inputFile, err)
 				break
-			}
-
-			// Filter out malformed packets
-			if ci.CaptureLength == 0 || ci.Length == 0 || len(data) == 0 {
-				fmt.Printf("Skipping malformed or truncated packet in file %s\n", inputFile)
-				continue
 			}
 
 			// Write the packet to the output file
@@ -291,8 +285,6 @@ func copyPcapFiles(clientset *kubernetes.Clientset, config *rest.Config, destDir
 		targetNamespaces = append(targetNamespaces, ns.Name)
 	}
 
-	log.Warn().Msgf("targetNamespaces %v", targetNamespaces)
-
 	// List worker pods
 	workerPods, err := listWorkerPods(context.Background(), clientset, targetNamespaces)
 	if err != nil {
@@ -303,15 +295,12 @@ func copyPcapFiles(clientset *kubernetes.Clientset, config *rest.Config, destDir
 
 	// Iterate over each pod to get the PCAP directory from config and copy files
 	for _, pod := range workerPods {
-		log.Warn().Msgf("getting files from pod %v", pod.Name)
 		// Get the list of NamespaceFiles (files per namespace) and their source directories
 		namespaceFiles, err := listFilesInPodDir(context.Background(), clientset, config, pod.Name, targetNamespaces, SELF_RESOURCES_PREFIX+SUFFIX_CONFIG_MAP, "PCAP_SRC_DIR", cutoffTime)
 		if err != nil {
 			log.Error().Err(err).Msgf("Error listing files in pod %s", pod.Name)
 			continue
 		}
-
-		log.Warn().Msgf("got files from pod %v files %v", pod.Name, namespaceFiles)
 
 		// Copy each file from the pod to the local destination for each namespace
 		for _, nsFiles := range namespaceFiles {
@@ -322,20 +311,16 @@ func copyPcapFiles(clientset *kubernetes.Clientset, config *rest.Config, destDir
 				err = copyFileFromPod(context.Background(), clientset, config, pod.Name, nsFiles.Namespace, nsFiles.SrcDir, file, destFile)
 				if err != nil {
 					log.Error().Err(err).Msgf("Error copying file from pod %s in namespace %s", pod.Name, nsFiles.Namespace)
-				} else {
-					log.Info().Msgf("Copied %s from %s to %s", file, pod.Name, destFile)
 				}
 
 				currentFiles = append(currentFiles, destFile)
 			}
 		}
-
 	}
 
 	if len(currentFiles) == 0 {
 		log.Error().Msgf("No files to merge")
 		return nil
-		// continue
 	}
 
 	// Generate a temporary filename based on the first file
@@ -346,7 +331,6 @@ func copyPcapFiles(clientset *kubernetes.Clientset, config *rest.Config, destDir
 	if err != nil {
 		log.Error().Err(err).Msgf("Error merging files")
 		return err
-		// continue
 	}
 
 	// Remove the original files after merging
@@ -362,7 +346,6 @@ func copyPcapFiles(clientset *kubernetes.Clientset, config *rest.Config, destDir
 	err = os.Rename(tempMergedFile, finalMergedFile)
 	if err != nil {
 		log.Error().Err(err).Msgf("Error renaming merged file %s", tempMergedFile)
-		// continue
 		return err
 	}
 
