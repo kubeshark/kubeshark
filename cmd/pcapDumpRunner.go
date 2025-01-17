@@ -215,20 +215,19 @@ func copyFileFromPod(ctx context.Context, clientset *kubernetes.Clientset, confi
 }
 
 func mergePCAPs(outputFile string, inputFiles []string) error {
-	// Open the output file
+	// Create the output file
 	f, err := os.Create(outputFile)
 	if err != nil {
 		return fmt.Errorf("failed to create output file: %w", err)
 	}
 	defer f.Close()
 
-	// Create a buffered writer for better I/O performance
 	bufWriter := bufio.NewWriter(f)
 	defer bufWriter.Flush()
 
 	// Create the PCAP writer
 	writer := pcapgo.NewWriter(bufWriter)
-	err = writer.WriteFileHeader(65536, 1) // Snapshot length and LinkType (1 = Ethernet)
+	err = writer.WriteFileHeader(65536, 1)
 	if err != nil {
 		return fmt.Errorf("failed to write PCAP file header: %w", err)
 	}
@@ -237,7 +236,7 @@ func mergePCAPs(outputFile string, inputFiles []string) error {
 		// Open the input file
 		file, err := os.Open(inputFile)
 		if err != nil {
-			fmt.Printf("Failed to open input file %s: %v\n", inputFile, err)
+			log.Error().Err(err).Msgf("Failed to open %v", inputFile)
 			continue
 		}
 		defer file.Close()
@@ -245,7 +244,7 @@ func mergePCAPs(outputFile string, inputFiles []string) error {
 		// Create the PCAP reader for the input file
 		reader, err := pcapgo.NewReader(file)
 		if err != nil {
-			fmt.Printf("Failed to create PCAP reader for file %s: %v\n", inputFile, err)
+			log.Error().Err(err).Msgf("Failed to create pcapng reader for %v", file.Name())
 			continue
 		}
 
@@ -256,14 +255,14 @@ func mergePCAPs(outputFile string, inputFiles []string) error {
 				if errors.Is(err, io.EOF) {
 					break
 				}
-				fmt.Printf("Error reading packet from file %s: %v\n", inputFile, err)
+				log.Error().Err(err).Msgf("Error reading packet from file %s", inputFile)
 				break
 			}
 
 			// Write the packet to the output file
 			err = writer.WritePacket(ci, data)
 			if err != nil {
-				fmt.Printf("Error writing packet to output file: %v\n", err)
+				log.Error().Err(err).Msgf("Error writing packet to output file")
 				break
 			}
 		}
@@ -311,6 +310,8 @@ func copyPcapFiles(clientset *kubernetes.Clientset, config *rest.Config, destDir
 				err = copyFileFromPod(context.Background(), clientset, config, pod.Name, nsFiles.Namespace, nsFiles.SrcDir, file, destFile)
 				if err != nil {
 					log.Error().Err(err).Msgf("Error copying file from pod %s in namespace %s", pod.Name, nsFiles.Namespace)
+				} else {
+					log.Info().Msgf("Copied %s from %s to %s", file, pod.Name, destFile)
 				}
 
 				currentFiles = append(currentFiles, destFile)
@@ -321,6 +322,7 @@ func copyPcapFiles(clientset *kubernetes.Clientset, config *rest.Config, destDir
 	if len(currentFiles) == 0 {
 		log.Error().Msgf("No files to merge")
 		return nil
+		// continue
 	}
 
 	// Generate a temporary filename based on the first file
@@ -331,6 +333,7 @@ func copyPcapFiles(clientset *kubernetes.Clientset, config *rest.Config, destDir
 	if err != nil {
 		log.Error().Err(err).Msgf("Error merging files")
 		return err
+		// continue
 	}
 
 	// Remove the original files after merging
@@ -346,6 +349,7 @@ func copyPcapFiles(clientset *kubernetes.Clientset, config *rest.Config, destDir
 	err = os.Rename(tempMergedFile, finalMergedFile)
 	if err != nil {
 		log.Error().Err(err).Msgf("Error renaming merged file %s", tempMergedFile)
+		// continue
 		return err
 	}
 
