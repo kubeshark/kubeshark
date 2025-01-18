@@ -1,16 +1,17 @@
 package cmd
 
 import (
+	"bufio"
 	"bytes"
 	"context"
+	"errors"
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"strings"
 	"time"
 
-	"github.com/kubeshark/gopacket"
-	"github.com/kubeshark/gopacket/layers"
 	"github.com/kubeshark/gopacket/pcapgo"
 	"github.com/rs/zerolog/log"
 	corev1 "k8s.io/api/core/v1"
@@ -217,20 +218,22 @@ func mergePCAPs(outputFile string, inputFiles []string) error {
 	// Create the output file
 	f, err := os.Create(outputFile)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to create output file: %w", err)
 	}
 	defer f.Close()
 
-	// Create a pcap writer for the output file
-	writer := pcapgo.NewWriter(f)
-	err = writer.WriteFileHeader(65536, layers.LinkTypeEthernet) // Snapshot length and LinkType
+	bufWriter := bufio.NewWriter(f)
+	defer bufWriter.Flush()
+
+	// Create the PCAP writer
+	writer := pcapgo.NewWriter(bufWriter)
+	err = writer.WriteFileHeader(65536, 1)
 	if err != nil {
-		return err
+		return fmt.Errorf("failed to write PCAP file header: %w", err)
 	}
 
 	for _, inputFile := range inputFiles {
-		log.Info().Msgf("Merging %s int %s", inputFile, outputFile)
-		// Open each input file
+		// Open the input file
 		file, err := os.Open(inputFile)
 		if err != nil {
 			log.Error().Err(err).Msgf("Failed to open %v", inputFile)
@@ -238,20 +241,29 @@ func mergePCAPs(outputFile string, inputFiles []string) error {
 		}
 		defer file.Close()
 
+		// Create the PCAP reader for the input file
 		reader, err := pcapgo.NewReader(file)
 		if err != nil {
 			log.Error().Err(err).Msgf("Failed to create pcapng reader for %v", file.Name())
 			continue
 		}
 
-		// Create the packet source
-		packetSource := gopacket.NewPacketSource(reader, layers.LinkTypeEthernet)
-
-		for packet := range packetSource.Packets() {
-			err := writer.WritePacket(packet.Metadata().CaptureInfo, packet.Data())
+		for {
+			// Read packet data
+			data, ci, err := reader.ReadPacketData()
 			if err != nil {
-				log.Error().Err(err).Msgf("Failed to write packet to %v", outputFile)
-				continue
+				if errors.Is(err, io.EOF) {
+					break
+				}
+				log.Error().Err(err).Msgf("Error reading packet from file %s", inputFile)
+				break
+			}
+
+			// Write the packet to the output file
+			err = writer.WritePacket(ci, data)
+			if err != nil {
+				log.Error().Err(err).Msgf("Error writing packet to output file")
+				break
 			}
 		}
 	}
@@ -261,13 +273,16 @@ func mergePCAPs(outputFile string, inputFiles []string) error {
 
 // copyPcapFiles function for copying the PCAP files from the worker pods
 func copyPcapFiles(clientset *kubernetes.Clientset, config *rest.Config, destDir string, cutoffTime *time.Time) error {
-	kubernetesProvider, err := getKubernetesProviderForCli(false, false)
+	namespaceList, err := clientset.CoreV1().Namespaces().List(context.TODO(), metav1.ListOptions{})
 	if err != nil {
-		log.Error().Err(err).Send()
+		log.Error().Err(err).Msg("Error listing namespaces")
 		return err
 	}
 
-	targetNamespaces := kubernetesProvider.GetNamespaces()
+	var targetNamespaces []string
+	for _, ns := range namespaceList.Items {
+		targetNamespaces = append(targetNamespaces, ns.Name)
+	}
 
 	// List worker pods
 	workerPods, err := listWorkerPods(context.Background(), clientset, targetNamespaces)
@@ -302,7 +317,6 @@ func copyPcapFiles(clientset *kubernetes.Clientset, config *rest.Config, destDir
 				currentFiles = append(currentFiles, destFile)
 			}
 		}
-
 	}
 
 	if len(currentFiles) == 0 {
