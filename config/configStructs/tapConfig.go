@@ -222,7 +222,6 @@ type PcapDumpConfig struct {
 	PcapMaxSize      string `yaml:"maxSize" json:"maxSize" default:"500MB"`
 	PcapSrcDir       string `yaml:"pcapSrcDir" json:"pcapSrcDir" default:"pcapdump"`
 	PcapTime         string `yaml:"time" json:"time" default:"time"`
-	PcapDest         string `yaml:"dest" json:"dest" default:""`
 }
 
 type TapConfig struct {
@@ -258,11 +257,7 @@ type TapConfig struct {
 	ResourceGuard                ResourceGuardConfig   `yaml:"resourceGuard" json:"resourceGuard"`
 	Sentry                       SentryConfig          `yaml:"sentry" json:"sentry"`
 	DefaultFilter                string                `yaml:"defaultFilter" json:"defaultFilter" default:"!dns and !error"`
-	ScriptingDisabled            bool                  `yaml:"scriptingDisabled" json:"scriptingDisabled" default:"false"`
-	TargetedPodsUpdateDisabled   bool                  `yaml:"targetedPodsUpdateDisabled" json:"targetedPodsUpdateDisabled" default:"false"`
-	PresetFiltersChangingEnabled bool                  `yaml:"presetFiltersChangingEnabled" json:"presetFiltersChangingEnabled" default:"true"`
-	RecordingDisabled            bool                  `yaml:"recordingDisabled" json:"recordingDisabled" default:"false"`
-	StopTrafficCapturingDisabled bool                  `yaml:"stopTrafficCapturingDisabled" json:"stopTrafficCapturingDisabled" default:"false"`
+	LiveConfigMapChangesDisabled bool                  `yaml:"liveConfigMapChangesDisabled" json:"liveConfigMapChangesDisabled" default:"false"`
 	Capabilities                 CapabilitiesConfig    `yaml:"capabilities" json:"capabilities"`
 	GlobalFilter                 string                `yaml:"globalFilter" json:"globalFilter" default:""`
 	EnabledDissectors            []string              `yaml:"enabledDissectors" json:"enabledDissectors"`

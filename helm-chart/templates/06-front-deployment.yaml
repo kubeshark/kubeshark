@@ -37,20 +37,20 @@ spec:
             - name: REACT_APP_TIMEZONE
               value: '{{ not (eq .Values.timezone "") | ternary .Values.timezone " " }}'
             - name: REACT_APP_SCRIPTING_DISABLED
-              value: '{{ .Values.tap.scriptingDisabled }}'
+              value: '{{ .Values.tap.liveConfigMapChangesDisabled }}'
             - name: REACT_APP_TARGETED_PODS_UPDATE_DISABLED
-              value: '{{ .Values.tap.targetedPodsUpdateDisabled }}'
+              value: '{{ .Values.tap.liveConfigMapChangesDisabled }}'
             - name: REACT_APP_PRESET_FILTERS_CHANGING_ENABLED
-              value: '{{ .Values.tap.presetFiltersChangingEnabled }}'
+              value: '{{ .Values.tap.liveConfigMapChangesDisabled | ternary "false" "true" }}'
             - name: REACT_APP_BPF_OVERRIDE_DISABLED
               value: '{{ eq .Values.tap.packetCapture "ebpf" | ternary "true" "false" }}'
             - name: REACT_APP_RECORDING_DISABLED
-              value: '{{ .Values.tap.recordingDisabled }}'
+              value: '{{ .Values.tap.liveConfigMapChangesDisabled }}'
             - name: REACT_APP_STOP_TRAFFIC_CAPTURING_DISABLED
-              value: '{{- if and .Values.tap.stopTrafficCapturingDisabled .Values.tap.stopped -}}
+              value: '{{- if and .Values.tap.liveConfigMapChangesDisabled .Values.tap.stopped -}}
                         false
                       {{- else -}}
-                        {{ .Values.tap.stopTrafficCapturingDisabled | ternary "true" "false" }}
+                        {{ .Values.tap.liveConfigMapChangesDisabled | ternary "true" "false" }}
                       {{- end -}}'
             - name: 'REACT_APP_CLOUD_LICENSE_ENABLED'
               value: '{{- if or (and .Values.cloudLicenseEnabled (not (empty .Values.license))) (not .Values.internetConnectivity) -}}
@@ -61,7 +61,7 @@ spec:
             - name: REACT_APP_SUPPORT_CHAT_ENABLED
               value: '{{ and .Values.supportChatEnabled .Values.internetConnectivity | ternary "true" "false" }}'
             - name: REACT_APP_DISSECTORS_UPDATING_ENABLED
-              value: '{{ .Values.dissectorsUpdatingEnabled | ternary "true" "false" }}'
+              value: '{{ .Values.tap.liveConfigMapChangesDisabled | ternary "false" "true" }}'
             - name: REACT_APP_SENTRY_ENABLED
               value: '{{ (include "sentry.enabled" .) }}'
             - name: REACT_APP_SENTRY_ENVIRONMENT
