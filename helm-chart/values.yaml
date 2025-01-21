@@ -173,7 +173,6 @@ pcapdump:
   timeInterval: 1m
   maxTime: 1h
   maxSize: 500MB
-  pcapSrcDir: pcapdump
   time: time
 kube:
   configPath: ""
