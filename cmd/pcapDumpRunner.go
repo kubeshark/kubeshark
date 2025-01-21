@@ -24,7 +24,7 @@ import (
 
 const (
 	label  = "app.kubeshark.co/app=worker"
-	srcDir = "pcapDumps"
+	srcDir = "pcapdump"
 )
 
 // NamespaceFiles represents the namespace and the files found in that namespace.
