@@ -78,11 +78,24 @@ tap:
   labels: {}
   annotations: {}
   nodeSelectorTerms:
-  - matchExpressions:
-    - key: kubernetes.io/os
-      operator: In
-      values:
-      - linux
+    hub:
+    - matchExpressions:
+      - key: kubernetes.io/os
+        operator: In
+        values:
+        - linux
+    workers:
+    - matchExpressions:
+      - key: kubernetes.io/os
+        operator: In
+        values:
+        - linux
+    front:
+    - matchExpressions:
+      - key: kubernetes.io/os
+        operator: In
+        values:
+        - linux
   auth:
     enabled: false
     type: saml
