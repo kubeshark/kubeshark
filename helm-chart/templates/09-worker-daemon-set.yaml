@@ -73,6 +73,8 @@ spec:
             - '{{ .Values.logLevel | default "warning" }}'
           {{- if .Values.tap.tls }}
             - -unixsocket
+          {{- else }}
+            - -disable-tracer
           {{- end }}
           {{- if .Values.tap.serviceMesh }}
             - -servicemesh
