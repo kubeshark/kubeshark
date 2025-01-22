@@ -97,6 +97,13 @@ spec:
           - name: saml-x509-volume
             mountPath: "/etc/saml/x509"
             readOnly: true
+{{- if gt (len .Values.tap.nodeSelectorTerms.hub) 0}}
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              {{- toYaml .Values.tap.nodeSelectorTerms.hub | nindent 12 }}
+{{- end }}
       volumes:
       - name: saml-x509-volume
         projected:

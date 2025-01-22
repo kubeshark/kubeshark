@@ -284,12 +284,12 @@ spec:
         - effect: NoSchedule
           operator: Exists
 {{- end }}
-{{- if gt (len .Values.tap.nodeSelectorTerms) 0}}
+{{- if gt (len .Values.tap.nodeSelectorTerms.workers) 0}}
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
             nodeSelectorTerms:
-              {{- toYaml .Values.tap.nodeSelectorTerms | nindent 12 }}
+              {{- toYaml .Values.tap.nodeSelectorTerms.workers | nindent 12 }}
 {{- end }}
       volumes:
         - hostPath:
