@@ -113,6 +113,7 @@ func CreateDefaultConfig() ConfigStruct {
 				// "tlsx",
 				"ldap",
 				"radius",
+				"diameter",
 			},
 		},
 	}
