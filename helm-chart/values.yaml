@@ -40,7 +40,7 @@ tap:
   dns:
     nameservers: []
     searches: []
-    options: {}
+    options: []
   resources:
     hub:
       limits:

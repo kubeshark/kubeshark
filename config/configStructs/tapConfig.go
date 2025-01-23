@@ -114,7 +114,12 @@ type DockerConfig struct {
 type DnsConfig struct {
 	Nameservers []string          `yaml:"nameservers" json:"nameservers" default:"[]"`
 	Searches    []string          `yaml:"searches" json:"searches" default:"[]"`
-	Options     map[string]string `yaml:"options" json:"options" default:"{}"`
+	Options     []DnsConfigOption `yaml:"options" json:"options" default:"[]"`
+}
+
+type DnsConfigOption struct {
+	Name  string `yaml:"name" json:"name"`
+	Value string `yaml:"value" json:"value"`
 }
 
 type ResourcesConfig struct {
