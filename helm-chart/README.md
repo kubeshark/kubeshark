@@ -148,6 +148,9 @@ Example for overriding image names:
 | `tap.storageLimit`                        | Limit of either the `emptyDir` or `persistentVolumeClaim` | `500Mi`                                     |
 | `tap.storageClass`                        | Storage class of the `PersistentVolumeClaim`          | `standard`                                      |
 | `tap.dryRun`                              | Preview of all pods matching the regex, without tapping them    | `false`                               |
+| `tap.dnsConfig.nameservers`               | Nameservers to use for DNS resolution          | `[]`                                                    |
+| `tap.dnsConfig.searches`                  | Search domains to use for DNS resolution       | `[]`                                                    |
+| `tap.dnsConfig.options`                   | DNS options to use for DNS resolution          | `[]`                                                    |
 | `tap.resources.hub.limits.cpu`            | CPU limit for hub                             | `""`  (no limit)                                                 |
 | `tap.resources.hub.limits.memory`         | Memory limit for hub                          | `5Gi`                                                |
 | `tap.resources.hub.requests.cpu`          | CPU request for hub                           | `50m`                                                   |
