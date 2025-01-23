@@ -40,7 +40,9 @@ tap:
   dns:
     nameservers: []
     searches: []
-    options: []
+    options:
+      - name: ndots
+        value: "2"
   resources:
     hub:
       limits:
