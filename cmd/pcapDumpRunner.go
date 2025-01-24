@@ -274,7 +274,7 @@ func copyPcapFiles(clientset *kubernetes.Clientset, config *rest.Config, destDir
 	// List worker pods
 	workerPods, err := listWorkerPods(context.Background(), clientset, targetNamespaces)
 	if err != nil {
-		log.Error().Err(err).Msg("Error listing worker pods")
+		log.Warn().Err(err).Msg("Error listing worker pods")
 		return err
 	}
 	var currentFiles []string
@@ -284,7 +284,7 @@ func copyPcapFiles(clientset *kubernetes.Clientset, config *rest.Config, destDir
 		// Get the list of NamespaceFiles (files per namespace) and their source directories
 		namespaceFiles, err := listFilesInPodDir(context.Background(), clientset, config, pod.Name, targetNamespaces, cutoffTime)
 		if err != nil {
-			log.Error().Err(err).Msgf("Error listing files in pod %s", pod.Name)
+			log.Warn().Err(err).Send()
 			continue
 		}
 
