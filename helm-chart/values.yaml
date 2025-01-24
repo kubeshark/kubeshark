@@ -37,6 +37,12 @@ tap:
   storageLimit: 5000Mi
   storageClass: standard
   dryRun: false
+  dns:
+    nameservers: []
+    searches: []
+    options:
+      - name: ndots
+        value: "2"
   resources:
     hub:
       limits:
@@ -159,6 +165,7 @@ tap:
   - ws
   - ldap
   - radius
+  - diameter
   customMacros:
     https: tls and (http or http2)
   metrics:

@@ -111,6 +111,17 @@ type DockerConfig struct {
 	OverrideTag      OverrideTagConfig   `yaml:"overrideTag" json:"overrideTag"`
 }
 
+type DnsConfig struct {
+	Nameservers []string          `yaml:"nameservers" json:"nameservers" default:"[]"`
+	Searches    []string          `yaml:"searches" json:"searches" default:"[]"`
+	Options     []DnsConfigOption `yaml:"options" json:"options" default:"[]"`
+}
+
+type DnsConfigOption struct {
+	Name  string `yaml:"name" json:"name"`
+	Value string `yaml:"value" json:"value"`
+}
+
 type ResourcesConfig struct {
 	Hub     ResourceRequirementsHub    `yaml:"hub" json:"hub"`
 	Sniffer ResourceRequirementsWorker `yaml:"sniffer" json:"sniffer"`
@@ -244,6 +255,7 @@ type TapConfig struct {
 	StorageLimit                 string                  `yaml:"storageLimit" json:"storageLimit" default:"5000Mi"`
 	StorageClass                 string                  `yaml:"storageClass" json:"storageClass" default:"standard"`
 	DryRun                       bool                    `yaml:"dryRun" json:"dryRun" default:"false"`
+	DnsConfig                    DnsConfig               `yaml:"dns" json:"dns"`
 	Resources                    ResourcesConfig         `yaml:"resources" json:"resources"`
 	Probes                       ProbesConfig            `yaml:"probes" json:"probes"`
 	ServiceMesh                  bool                    `yaml:"serviceMesh" json:"serviceMesh" default:"true"`

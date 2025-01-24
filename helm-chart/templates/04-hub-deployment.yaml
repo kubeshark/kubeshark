@@ -104,6 +104,30 @@ spec:
             nodeSelectorTerms:
               {{- toYaml .Values.tap.nodeSelectorTerms.hub | nindent 12 }}
 {{- end }}
+      {{- if or .Values.tap.dns.nameservers .Values.tap.dns.searches .Values.tap.dns.options }}
+      dnsConfig:
+        {{- if .Values.tap.dns.nameservers }}
+        nameservers:
+        {{- range .Values.tap.dns.nameservers }}
+          - {{ . | quote }}
+        {{- end }}
+        {{- end }}
+        {{- if .Values.tap.dns.searches }}
+        searches:
+        {{- range .Values.tap.dns.searches }}
+          - {{ . | quote }}
+        {{- end }}
+        {{- end }}
+        {{- if .Values.tap.dns.options }}
+        options:
+        {{- range .Values.tap.dns.options }}
+          - name: {{ .name | quote }}
+            {{- if .value }}
+            value: {{ .value | quote }}
+            {{- end }}
+        {{- end }}
+        {{- end }}
+      {{- end }}
       volumes:
       - name: saml-x509-volume
         projected:
