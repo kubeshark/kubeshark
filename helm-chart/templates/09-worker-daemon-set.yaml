@@ -81,7 +81,7 @@ spec:
           {{- end }}
             - -procfs
             - /hostproc
-          {{- if ne .Values.tap.packetCapture "ebpf" }}
+          {{- if eq .Values.tap.packetCapture "af_packet" }}
             - -disable-ebpf
           {{- end }}
           {{- if .Values.tap.resourceGuard.enabled }}
@@ -192,7 +192,7 @@ spec:
             - ./tracer
             - -procfs
             - /hostproc
-          {{- if ne .Values.tap.packetCapture "ebpf" }}
+          {{- if eq .Values.tap.packetCapture "af_packet" }}
             - -disable-ebpf
           {{- end }}
           {{- if .Values.tap.disableTlsLog }}
