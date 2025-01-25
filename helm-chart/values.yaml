@@ -146,6 +146,23 @@ tap:
   - ws
   - ldap
   - radius
+  - diameter
+  portMapping:
+    http:
+    - 80
+    - 443
+    - 8080
+    amqp:
+    - 5671
+    - 5672
+    kafka:
+    - 9092
+    redis:
+    - 6379
+    ldap:
+    - 389
+    diameter:
+    - 3868
   customMacros:
     https: tls and (http or http2)
   metrics:

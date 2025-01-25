@@ -224,6 +224,15 @@ type PcapDumpConfig struct {
 	PcapTime         string `yaml:"time" json:"time" default:"time"`
 }
 
+type PortMapping struct {
+	HTTP     []uint16 `yaml:"http" json:"http"`
+	AMQP     []uint16 `yaml:"amqp" json:"amqp"`
+	KAFKA    []uint16 `yaml:"kafka" json:"kafka"`
+	REDIS    []uint16 `yaml:"redis" json:"redis"`
+	LDAP     []uint16 `yaml:"ldap" json:"ldap"`
+	DIAMETER []uint16 `yaml:"diameter" json:"diameter"`
+}
+
 type TapConfig struct {
 	Docker                       DockerConfig          `yaml:"docker" json:"docker"`
 	Proxy                        ProxyConfig           `yaml:"proxy" json:"proxy"`
@@ -261,6 +270,7 @@ type TapConfig struct {
 	Capabilities                 CapabilitiesConfig    `yaml:"capabilities" json:"capabilities"`
 	GlobalFilter                 string                `yaml:"globalFilter" json:"globalFilter" default:""`
 	EnabledDissectors            []string              `yaml:"enabledDissectors" json:"enabledDissectors"`
+	PortMapping                  PortMapping           `yaml:"portMapping" json:"portMapping"`
 	CustomMacros                 map[string]string     `yaml:"customMacros" json:"customMacros" default:"{\"https\":\"tls and (http or http2)\"}"`
 	Metrics                      MetricsConfig         `yaml:"metrics" json:"metrics"`
 	Pprof                        PprofConfig           `yaml:"pprof" json:"pprof"`

@@ -255,7 +255,7 @@ data:
     TIMEZONE: ' '
     CLOUD_LICENSE_ENABLED: 'true'
     DUPLICATE_TIMEFRAME: '200ms'
-    ENABLED_DISSECTORS: 'amqp,dns,http,icmp,kafka,redis,sctp,syscall,ws,ldap,radius'
+    ENABLED_DISSECTORS: 'amqp,dns,http,icmp,kafka,redis,sctp,syscall,ws,ldap,radius,diameter'
     CUSTOM_MACROS: '{"https":"tls and (http or http2)"}'
     DISSECTORS_UPDATING_ENABLED: 'true'
     DETECT_DUPLICATES: 'false'
@@ -264,6 +264,7 @@ data:
     PCAP_MAX_TIME: '1h'
     PCAP_MAX_SIZE: '500MB'
     PCAP_SRC_DIR: 'pcapdump'
+    PORT_MAPPING: '{"amqp":[5671,5672],"diameter":[3868],"http":[80,443,8080],"kafka":[9092],"ldap":[389],"redis":[6379]}'
 ---
 # Source: kubeshark/templates/02-cluster-role.yaml
 apiVersion: rbac.authorization.k8s.io/v1
