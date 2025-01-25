@@ -263,6 +263,7 @@ data:
     PCAP_TIME_INTERVAL: '1m'
     PCAP_MAX_TIME: '1h'
     PCAP_MAX_SIZE: '500MB'
+    PORT_MAPPING: '{"amqp":[5671,5672],"diameter":[3868],"http":[80,443,8080],"kafka":[9092],"ldap":[389],"redis":[6379]}'
 ---
 # Source: kubeshark/templates/02-cluster-role.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -564,7 +565,6 @@ spec:
             - -servicemesh
             - -procfs
             - /hostproc
-            - -disable-ebpf
             - -resolution-strategy
             - 'auto'
             - -staletimeout
@@ -651,7 +651,6 @@ spec:
             - ./tracer
             - -procfs
             - /hostproc
-            - -disable-ebpf
             - -disable-tls-log
             # - -loglevel
             # - 'warning'

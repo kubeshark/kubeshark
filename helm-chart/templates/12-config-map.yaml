@@ -57,3 +57,4 @@ data:
     PCAP_TIME_INTERVAL: '{{ .Values.pcapdump.timeInterval }}'
     PCAP_MAX_TIME: '{{ .Values.pcapdump.maxTime }}'
     PCAP_MAX_SIZE: '{{ .Values.pcapdump.maxSize }}'
+    PORT_MAPPING: '{{ toJson .Values.tap.portMapping }}'

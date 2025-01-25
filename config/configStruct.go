@@ -115,6 +115,14 @@ func CreateDefaultConfig() ConfigStruct {
 				"radius",
 				"diameter",
 			},
+			PortMapping: configStructs.PortMapping{
+				HTTP:     []uint16{80, 443, 8080},
+				AMQP:     []uint16{5671, 5672},
+				KAFKA:    []uint16{9092},
+				REDIS:    []uint16{6379},
+				LDAP:     []uint16{389},
+				DIAMETER: []uint16{3868},
+			},
 		},
 	}
 }
