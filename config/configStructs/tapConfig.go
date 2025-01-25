@@ -111,6 +111,17 @@ type DockerConfig struct {
 	OverrideTag      OverrideTagConfig   `yaml:"overrideTag" json:"overrideTag"`
 }
 
+type DnsConfig struct {
+	Nameservers []string          `yaml:"nameservers" json:"nameservers" default:"[]"`
+	Searches    []string          `yaml:"searches" json:"searches" default:"[]"`
+	Options     []DnsConfigOption `yaml:"options" json:"options" default:"[]"`
+}
+
+type DnsConfigOption struct {
+	Name  string `yaml:"name" json:"name"`
+	Value string `yaml:"value" json:"value"`
+}
+
 type ResourcesConfig struct {
 	Hub     ResourceRequirementsHub    `yaml:"hub" json:"hub"`
 	Sniffer ResourceRequirementsWorker `yaml:"sniffer" json:"sniffer"`
@@ -120,6 +131,12 @@ type ResourcesConfig struct {
 type ProbesConfig struct {
 	Hub     ProbeConfig `yaml:"hub" json:"hub"`
 	Sniffer ProbeConfig `yaml:"sniffer" json:"sniffer"`
+}
+
+type NodeSelectorTermsConfig struct {
+	Hub     []v1.NodeSelectorTerm `yaml:"hub" json:"hub" default:"[]"`
+	Workers []v1.NodeSelectorTerm `yaml:"workers" json:"workers" default:"[]"`
+	Front   []v1.NodeSelectorTerm `yaml:"front" json:"front" default:"[]"`
 }
 
 type ProbeConfig struct {
@@ -220,7 +237,6 @@ type PcapDumpConfig struct {
 	PcapTimeInterval string `yaml:"timeInterval" json:"timeInterval" default:"1m"`
 	PcapMaxTime      string `yaml:"maxTime" json:"maxTime" default:"1h"`
 	PcapMaxSize      string `yaml:"maxSize" json:"maxSize" default:"500MB"`
-	PcapSrcDir       string `yaml:"pcapSrcDir" json:"pcapSrcDir" default:"pcapdump"`
 	PcapTime         string `yaml:"time" json:"time" default:"time"`
 }
 
@@ -234,47 +250,48 @@ type PortMapping struct {
 }
 
 type TapConfig struct {
-	Docker                       DockerConfig          `yaml:"docker" json:"docker"`
-	Proxy                        ProxyConfig           `yaml:"proxy" json:"proxy"`
-	PodRegexStr                  string                `yaml:"regex" json:"regex" default:".*"`
-	Namespaces                   []string              `yaml:"namespaces" json:"namespaces" default:"[]"`
-	ExcludedNamespaces           []string              `yaml:"excludedNamespaces" json:"excludedNamespaces" default:"[]"`
-	BpfOverride                  string                `yaml:"bpfOverride" json:"bpfOverride" default:""`
-	Stopped                      bool                  `yaml:"stopped" json:"stopped" default:"false"`
-	Release                      ReleaseConfig         `yaml:"release" json:"release"`
-	PersistentStorage            bool                  `yaml:"persistentStorage" json:"persistentStorage" default:"false"`
-	PersistentStorageStatic      bool                  `yaml:"persistentStorageStatic" json:"persistentStorageStatic" default:"false"`
-	EfsFileSytemIdAndPath        string                `yaml:"efsFileSytemIdAndPath" json:"efsFileSytemIdAndPath" default:""`
-	StorageLimit                 string                `yaml:"storageLimit" json:"storageLimit" default:"5000Mi"`
-	StorageClass                 string                `yaml:"storageClass" json:"storageClass" default:"standard"`
-	DryRun                       bool                  `yaml:"dryRun" json:"dryRun" default:"false"`
-	Resources                    ResourcesConfig       `yaml:"resources" json:"resources"`
-	Probes                       ProbesConfig          `yaml:"probes" json:"probes"`
-	ServiceMesh                  bool                  `yaml:"serviceMesh" json:"serviceMesh" default:"true"`
-	Tls                          bool                  `yaml:"tls" json:"tls" default:"true"`
-	DisableTlsLog                bool                  `yaml:"disableTlsLog" json:"disableTlsLog" default:"true"`
-	PacketCapture                string                `yaml:"packetCapture" json:"packetCapture" default:"best"`
-	IgnoreTainted                bool                  `yaml:"ignoreTainted" json:"ignoreTainted" default:"false"`
-	Labels                       map[string]string     `yaml:"labels" json:"labels" default:"{}"`
-	Annotations                  map[string]string     `yaml:"annotations" json:"annotations" default:"{}"`
-	NodeSelectorTerms            []v1.NodeSelectorTerm `yaml:"nodeSelectorTerms" json:"nodeSelectorTerms" default:"[]"`
-	Auth                         AuthConfig            `yaml:"auth" json:"auth"`
-	Ingress                      IngressConfig         `yaml:"ingress" json:"ingress"`
-	IPv6                         bool                  `yaml:"ipv6" json:"ipv6" default:"true"`
-	Debug                        bool                  `yaml:"debug" json:"debug" default:"false"`
-	Telemetry                    TelemetryConfig       `yaml:"telemetry" json:"telemetry"`
-	ResourceGuard                ResourceGuardConfig   `yaml:"resourceGuard" json:"resourceGuard"`
-	Sentry                       SentryConfig          `yaml:"sentry" json:"sentry"`
-	DefaultFilter                string                `yaml:"defaultFilter" json:"defaultFilter" default:"!dns and !error"`
-	LiveConfigMapChangesDisabled bool                  `yaml:"liveConfigMapChangesDisabled" json:"liveConfigMapChangesDisabled" default:"false"`
-	Capabilities                 CapabilitiesConfig    `yaml:"capabilities" json:"capabilities"`
-	GlobalFilter                 string                `yaml:"globalFilter" json:"globalFilter" default:""`
-	EnabledDissectors            []string              `yaml:"enabledDissectors" json:"enabledDissectors"`
-	PortMapping                  PortMapping           `yaml:"portMapping" json:"portMapping"`
-	CustomMacros                 map[string]string     `yaml:"customMacros" json:"customMacros" default:"{\"https\":\"tls and (http or http2)\"}"`
-	Metrics                      MetricsConfig         `yaml:"metrics" json:"metrics"`
-	Pprof                        PprofConfig           `yaml:"pprof" json:"pprof"`
-	Misc                         MiscConfig            `yaml:"misc" json:"misc"`
+	Docker                       DockerConfig            `yaml:"docker" json:"docker"`
+	Proxy                        ProxyConfig             `yaml:"proxy" json:"proxy"`
+	PodRegexStr                  string                  `yaml:"regex" json:"regex" default:".*"`
+	Namespaces                   []string                `yaml:"namespaces" json:"namespaces" default:"[]"`
+	ExcludedNamespaces           []string                `yaml:"excludedNamespaces" json:"excludedNamespaces" default:"[]"`
+	BpfOverride                  string                  `yaml:"bpfOverride" json:"bpfOverride" default:""`
+	Stopped                      bool                    `yaml:"stopped" json:"stopped" default:"false"`
+	Release                      ReleaseConfig           `yaml:"release" json:"release"`
+	PersistentStorage            bool                    `yaml:"persistentStorage" json:"persistentStorage" default:"false"`
+	PersistentStorageStatic      bool                    `yaml:"persistentStorageStatic" json:"persistentStorageStatic" default:"false"`
+	EfsFileSytemIdAndPath        string                  `yaml:"efsFileSytemIdAndPath" json:"efsFileSytemIdAndPath" default:""`
+	StorageLimit                 string                  `yaml:"storageLimit" json:"storageLimit" default:"5000Mi"`
+	StorageClass                 string                  `yaml:"storageClass" json:"storageClass" default:"standard"`
+	DryRun                       bool                    `yaml:"dryRun" json:"dryRun" default:"false"`
+	DnsConfig                    DnsConfig               `yaml:"dns" json:"dns"`
+	Resources                    ResourcesConfig         `yaml:"resources" json:"resources"`
+	Probes                       ProbesConfig            `yaml:"probes" json:"probes"`
+	ServiceMesh                  bool                    `yaml:"serviceMesh" json:"serviceMesh" default:"true"`
+	Tls                          bool                    `yaml:"tls" json:"tls" default:"true"`
+	DisableTlsLog                bool                    `yaml:"disableTlsLog" json:"disableTlsLog" default:"true"`
+	PacketCapture                string                  `yaml:"packetCapture" json:"packetCapture" default:"best"`
+	IgnoreTainted                bool                    `yaml:"ignoreTainted" json:"ignoreTainted" default:"false"`
+	Labels                       map[string]string       `yaml:"labels" json:"labels" default:"{}"`
+	Annotations                  map[string]string       `yaml:"annotations" json:"annotations" default:"{}"`
+	NodeSelectorTerms            NodeSelectorTermsConfig `yaml:"nodeSelectorTerms" json:"nodeSelectorTerms" default:"{}"`
+	Auth                         AuthConfig              `yaml:"auth" json:"auth"`
+	Ingress                      IngressConfig           `yaml:"ingress" json:"ingress"`
+	IPv6                         bool                    `yaml:"ipv6" json:"ipv6" default:"true"`
+	Debug                        bool                    `yaml:"debug" json:"debug" default:"false"`
+	Telemetry                    TelemetryConfig         `yaml:"telemetry" json:"telemetry"`
+	ResourceGuard                ResourceGuardConfig     `yaml:"resourceGuard" json:"resourceGuard"`
+	Sentry                       SentryConfig            `yaml:"sentry" json:"sentry"`
+	DefaultFilter                string                  `yaml:"defaultFilter" json:"defaultFilter" default:"!dns and !error"`
+	LiveConfigMapChangesDisabled bool                    `yaml:"liveConfigMapChangesDisabled" json:"liveConfigMapChangesDisabled" default:"false"`
+	Capabilities                 CapabilitiesConfig      `yaml:"capabilities" json:"capabilities"`
+	GlobalFilter                 string                  `yaml:"globalFilter" json:"globalFilter" default:""`
+	EnabledDissectors            []string                `yaml:"enabledDissectors" json:"enabledDissectors"`
+	PortMapping                  PortMapping             `yaml:"portMapping" json:"portMapping"`
+	CustomMacros                 map[string]string       `yaml:"customMacros" json:"customMacros" default:"{\"https\":\"tls and (http or http2)\"}"`
+	Metrics                      MetricsConfig           `yaml:"metrics" json:"metrics"`
+	Pprof                        PprofConfig             `yaml:"pprof" json:"pprof"`
+	Misc                         MiscConfig              `yaml:"misc" json:"misc"`
 }
 
 func (config *TapConfig) PodRegex() *regexp.Regexp {

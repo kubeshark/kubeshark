@@ -22,9 +22,10 @@ import (
 	"k8s.io/client-go/tools/remotecommand"
 )
 
-const label = "app.kubeshark.co/app=worker"
-const SELF_RESOURCES_PREFIX = "kubeshark-"
-const SUFFIX_CONFIG_MAP = "config-map"
+const (
+	label  = "app.kubeshark.co/app=worker"
+	srcDir = "pcapdump"
+)
 
 // NamespaceFiles represents the namespace and the files found in that namespace.
 type NamespaceFiles struct {
@@ -55,27 +56,13 @@ func listWorkerPods(ctx context.Context, clientset *clientk8s.Clientset, namespa
 }
 
 // listFilesInPodDir lists all files in the specified directory inside the pod across multiple namespaces
-func listFilesInPodDir(ctx context.Context, clientset *clientk8s.Clientset, config *rest.Config, podName string, namespaces []string, configMapName, configMapKey string, cutoffTime *time.Time) ([]NamespaceFiles, error) {
+func listFilesInPodDir(ctx context.Context, clientset *clientk8s.Clientset, config *rest.Config, podName string, namespaces []string, cutoffTime *time.Time) ([]NamespaceFiles, error) {
 	var namespaceFilesList []NamespaceFiles
 
 	for _, namespace := range namespaces {
-		// Attempt to get the ConfigMap in the current namespace
-		configMap, err := clientset.CoreV1().ConfigMaps(namespace).Get(ctx, configMapName, metav1.GetOptions{})
-		if err != nil {
-			continue
-		}
-
-		// Check if the source directory exists in the ConfigMap
-		srcDir, ok := configMap.Data[configMapKey]
-		if !ok || srcDir == "" {
-			log.Error().Msgf("source directory not found in ConfigMap %s in namespace %s", configMapName, namespace)
-			continue
-		}
-
 		// Attempt to get the pod in the current namespace
 		pod, err := clientset.CoreV1().Pods(namespace).Get(ctx, podName, metav1.GetOptions{})
 		if err != nil {
-			log.Error().Err(err).Msgf("failed to get pod %s in namespace %s", podName, namespace)
 			continue
 		}
 
@@ -252,7 +239,7 @@ func mergePCAPs(outputFile string, inputFiles []string) error {
 			// Read packet data
 			data, ci, err := reader.ReadPacketData()
 			if err != nil {
-				if errors.Is(err, io.EOF) {
+				if errors.Is(err, io.EOF) || errors.Is(err, io.ErrUnexpectedEOF) {
 					break
 				}
 				log.Error().Err(err).Msgf("Error reading packet from file %s", inputFile)
@@ -287,7 +274,7 @@ func copyPcapFiles(clientset *kubernetes.Clientset, config *rest.Config, destDir
 	// List worker pods
 	workerPods, err := listWorkerPods(context.Background(), clientset, targetNamespaces)
 	if err != nil {
-		log.Error().Err(err).Msg("Error listing worker pods")
+		log.Warn().Err(err).Msg("Error listing worker pods")
 		return err
 	}
 	var currentFiles []string
@@ -295,9 +282,9 @@ func copyPcapFiles(clientset *kubernetes.Clientset, config *rest.Config, destDir
 	// Iterate over each pod to get the PCAP directory from config and copy files
 	for _, pod := range workerPods {
 		// Get the list of NamespaceFiles (files per namespace) and their source directories
-		namespaceFiles, err := listFilesInPodDir(context.Background(), clientset, config, pod.Name, targetNamespaces, SELF_RESOURCES_PREFIX+SUFFIX_CONFIG_MAP, "PCAP_SRC_DIR", cutoffTime)
+		namespaceFiles, err := listFilesInPodDir(context.Background(), clientset, config, pod.Name, targetNamespaces, cutoffTime)
 		if err != nil {
-			log.Error().Err(err).Msgf("Error listing files in pod %s", pod.Name)
+			log.Warn().Err(err).Send()
 			continue
 		}
 

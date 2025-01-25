@@ -37,6 +37,10 @@ tap:
   storageLimit: 5000Mi
   storageClass: standard
   dryRun: false
+  dns:
+    nameservers: []
+    searches: []
+    options: []
   resources:
     hub:
       limits:
@@ -78,11 +82,24 @@ tap:
   labels: {}
   annotations: {}
   nodeSelectorTerms:
-  - matchExpressions:
-    - key: kubernetes.io/os
-      operator: In
-      values:
-      - linux
+    hub:
+    - matchExpressions:
+      - key: kubernetes.io/os
+        operator: In
+        values:
+        - linux
+    workers:
+    - matchExpressions:
+      - key: kubernetes.io/os
+        operator: In
+        values:
+        - linux
+    front:
+    - matchExpressions:
+      - key: kubernetes.io/os
+        operator: In
+        values:
+        - linux
   auth:
     enabled: false
     type: saml
@@ -190,7 +207,6 @@ pcapdump:
   timeInterval: 1m
   maxTime: 1h
   maxSize: 500MB
-  pcapSrcDir: pcapdump
   time: time
 kube:
   configPath: ""

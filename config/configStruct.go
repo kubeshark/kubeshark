@@ -16,13 +16,37 @@ const (
 func CreateDefaultConfig() ConfigStruct {
 	return ConfigStruct{
 		Tap: configStructs.TapConfig{
-			NodeSelectorTerms: []v1.NodeSelectorTerm{
-				{
-					MatchExpressions: []v1.NodeSelectorRequirement{
-						{
-							Key:      "kubernetes.io/os",
-							Operator: v1.NodeSelectorOpIn,
-							Values:   []string{"linux"},
+			NodeSelectorTerms: configStructs.NodeSelectorTermsConfig{
+				Workers: []v1.NodeSelectorTerm{
+					{
+						MatchExpressions: []v1.NodeSelectorRequirement{
+							{
+								Key:      "kubernetes.io/os",
+								Operator: v1.NodeSelectorOpIn,
+								Values:   []string{"linux"},
+							},
+						},
+					},
+				},
+				Hub: []v1.NodeSelectorTerm{
+					{
+						MatchExpressions: []v1.NodeSelectorRequirement{
+							{
+								Key:      "kubernetes.io/os",
+								Operator: v1.NodeSelectorOpIn,
+								Values:   []string{"linux"},
+							},
+						},
+					},
+				},
+				Front: []v1.NodeSelectorTerm{
+					{
+						MatchExpressions: []v1.NodeSelectorRequirement{
+							{
+								Key:      "kubernetes.io/os",
+								Operator: v1.NodeSelectorOpIn,
+								Values:   []string{"linux"},
+							},
 						},
 					},
 				},

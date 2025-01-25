@@ -148,6 +148,9 @@ Example for overriding image names:
 | `tap.storageLimit`                        | Limit of either the `emptyDir` or `persistentVolumeClaim` | `500Mi`                                     |
 | `tap.storageClass`                        | Storage class of the `PersistentVolumeClaim`          | `standard`                                      |
 | `tap.dryRun`                              | Preview of all pods matching the regex, without tapping them    | `false`                               |
+| `tap.dnsConfig.nameservers`               | Nameservers to use for DNS resolution          | `[]`                                                    |
+| `tap.dnsConfig.searches`                  | Search domains to use for DNS resolution       | `[]`                                                    |
+| `tap.dnsConfig.options`                   | DNS options to use for DNS resolution          | `[]`                                                    |
 | `tap.resources.hub.limits.cpu`            | CPU limit for hub                             | `""`  (no limit)                                                 |
 | `tap.resources.hub.limits.memory`         | Memory limit for hub                          | `5Gi`                                                |
 | `tap.resources.hub.requests.cpu`          | CPU request for hub                           | `50m`                                                   |
@@ -174,7 +177,9 @@ Example for overriding image names:
 | `tap.ignoreTainted`                       | Whether to ignore tainted nodes               | `false`                                                 |
 | `tap.labels`                              | Kubernetes labels to apply to all Kubeshark resources  | `{}`                                                    |
 | `tap.annotations`                         | Kubernetes annotations to apply to all Kubeshark resources | `{}`                                                |
-| `tap.nodeSelectorTerms`                   | Node selector terms                           | `[{"matchExpressions":[{"key":"kubernetes.io/os","operator":"In","values":["linux"]}]}]` |
+| `tap.nodeSelectorTerms.Workers`                   | Node selector terms for workers components                       | `[{"matchExpressions":[{"key":"kubernetes.io/os","operator":"In","values":["linux"]}]}]` |
+| `tap.nodeSelectorTerms.Hub`                   | Node selector terms for hub component                 | `[{"matchExpressions":[{"key":"kubernetes.io/os","operator":"In","values":["linux"]}]}]` |
+| `tap.nodeSelectorTerms.Front`                   | Node selector terms for front-end component                         | `[{"matchExpressions":[{"key":"kubernetes.io/os","operator":"In","values":["linux"]}]}]` |
 | `tap.auth.enabled`                        | Enable authentication                         | `false`                                                 |
 | `tap.auth.type`                           | Authentication type (1 option available: `saml`)      | `saml`                                              |
 | `tap.auth.approvedEmails`                 | List of approved email addresses for authentication              | `[]`                                                    |
