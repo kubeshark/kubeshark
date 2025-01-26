@@ -7,6 +7,7 @@ import (
 
 	"github.com/creasty/defaults"
 	"github.com/kubeshark/kubeshark/config/configStructs"
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"k8s.io/client-go/kubernetes"
@@ -29,6 +30,14 @@ var pcapDumpCmd = &cobra.Command{
 			} else {
 				return errors.New("kubeconfig flag not provided and no home directory available for default config location")
 			}
+		}
+
+		debugEnabled, _ := cmd.Flags().GetBool("debug")
+		if debugEnabled {
+			zerolog.SetGlobalLevel(zerolog.DebugLevel)
+			log.Debug().Msg("Debug logging enabled")
+		} else {
+			zerolog.SetGlobalLevel(zerolog.InfoLevel)
 		}
 
 		// Use the current context in kubeconfig
@@ -81,4 +90,5 @@ func init() {
 	pcapDumpCmd.Flags().String(configStructs.PcapTime, "", "Time interval (e.g., 10m, 1h) in the past for which the pcaps are copied")
 	pcapDumpCmd.Flags().String(configStructs.PcapDest, "", "Local destination path for copied PCAP files (can not be used together with --enabled)")
 	pcapDumpCmd.Flags().String(configStructs.PcapKubeconfig, "", "Path for kubeconfig (if not provided the default location will be checked)")
+	pcapDumpCmd.Flags().Bool("debug", false, "Enable debug logging")
 }
