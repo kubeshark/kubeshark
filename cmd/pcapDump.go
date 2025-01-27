@@ -68,23 +68,25 @@ var pcapDumpCmd = &cobra.Command{
 			cutoffTime = &tempCutoffTime
 		}
 
-		// Handle copy operation if the copy string is provided
+		// Test the dest dir if provided
 		destDir, _ := cmd.Flags().GetString(configStructs.PcapDest)
-		info, err := os.Stat(destDir)
-		if os.IsNotExist(err) {
-			return fmt.Errorf("Directory does not exist: %s", destDir)
+		if destDir != "" {
+			info, err := os.Stat(destDir)
+			if os.IsNotExist(err) {
+				return fmt.Errorf("Directory does not exist: %s", destDir)
+			}
+			if err != nil {
+				return fmt.Errorf("Error checking dest directory: %w", err)
+			}
+			if !info.IsDir() {
+				return fmt.Errorf("Dest path is not a directory: %s", destDir)
+			}
+			tempFile, err := os.CreateTemp(destDir, "write-test-*")
+			if err != nil {
+				return fmt.Errorf("Directory %s is not writable", destDir)
+			}
+			_ = os.Remove(tempFile.Name())
 		}
-		if err != nil {
-			return fmt.Errorf("Error checking dest directory: %w", err)
-		}
-		if !info.IsDir() {
-			return fmt.Errorf("Dest path is not a directory: %s", destDir)
-		}
-		tempFile, err := os.CreateTemp(destDir, "write-test-*")
-		if err != nil {
-			return fmt.Errorf("Directory %s is not writable", destDir)
-		}
-		_ = os.Remove(tempFile.Name())
 
 		log.Info().Msg("Copying PCAP files")
 		err = copyPcapFiles(clientset, config, destDir, cutoffTime)
