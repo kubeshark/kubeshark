@@ -2,11 +2,14 @@ package cmd
 
 import (
 	"errors"
+	"fmt"
+	"os"
 	"path/filepath"
 	"time"
 
 	"github.com/creasty/defaults"
 	"github.com/kubeshark/kubeshark/config/configStructs"
+	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"k8s.io/client-go/kubernetes"
@@ -31,17 +34,23 @@ var pcapDumpCmd = &cobra.Command{
 			}
 		}
 
+		debugEnabled, _ := cmd.Flags().GetBool("debug")
+		if debugEnabled {
+			zerolog.SetGlobalLevel(zerolog.DebugLevel)
+			log.Debug().Msg("Debug logging enabled")
+		} else {
+			zerolog.SetGlobalLevel(zerolog.InfoLevel)
+		}
+
 		// Use the current context in kubeconfig
 		config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
 		if err != nil {
-			log.Error().Err(err).Msg("Error building kubeconfig")
-			return err
+			return fmt.Errorf("Error building kubeconfig: %w", err)
 		}
 
 		clientset, err := kubernetes.NewForConfig(config)
 		if err != nil {
-			log.Error().Err(err).Msg("Error creating Kubernetes client")
-			return err
+			return fmt.Errorf("Error creating Kubernetes client: %w", err)
 		}
 
 		// Parse the `--time` flag
@@ -50,19 +59,35 @@ var pcapDumpCmd = &cobra.Command{
 		if timeIntervalStr != "" {
 			duration, err := time.ParseDuration(timeIntervalStr)
 			if err != nil {
-				log.Error().Err(err).Msg("Invalid time interval")
-				return err
+				return fmt.Errorf("Invalid format %w", err)
 			}
 			tempCutoffTime := time.Now().Add(-duration)
 			cutoffTime = &tempCutoffTime
 		}
 
-		// Handle copy operation if the copy string is provided
+		// Test the dest dir if provided
 		destDir, _ := cmd.Flags().GetString(configStructs.PcapDest)
+		if destDir != "" {
+			info, err := os.Stat(destDir)
+			if os.IsNotExist(err) {
+				return fmt.Errorf("Directory does not exist: %s", destDir)
+			}
+			if err != nil {
+				return fmt.Errorf("Error checking dest directory: %w", err)
+			}
+			if !info.IsDir() {
+				return fmt.Errorf("Dest path is not a directory: %s", destDir)
+			}
+			tempFile, err := os.CreateTemp(destDir, "write-test-*")
+			if err != nil {
+				return fmt.Errorf("Directory %s is not writable", destDir)
+			}
+			_ = os.Remove(tempFile.Name())
+		}
+
 		log.Info().Msg("Copying PCAP files")
 		err = copyPcapFiles(clientset, config, destDir, cutoffTime)
 		if err != nil {
-			log.Error().Err(err).Msg("Error copying PCAP files")
 			return err
 		}
 
@@ -81,4 +106,5 @@ func init() {
 	pcapDumpCmd.Flags().String(configStructs.PcapTime, "", "Time interval (e.g., 10m, 1h) in the past for which the pcaps are copied")
 	pcapDumpCmd.Flags().String(configStructs.PcapDest, "", "Local destination path for copied PCAP files (can not be used together with --enabled)")
 	pcapDumpCmd.Flags().String(configStructs.PcapKubeconfig, "", "Path for kubeconfig (if not provided the default location will be checked)")
+	pcapDumpCmd.Flags().Bool("debug", false, "Enable debug logging")
 }
