@@ -239,6 +239,7 @@ type PcapDumpConfig struct {
 	PcapMaxSize      string `yaml:"maxSize" json:"maxSize" default:"500MB"`
 	PcapTime         string `yaml:"time" json:"time" default:"time"`
 	PcapDebug        bool   `yaml:"debug" json:"debug" default:"false"`
+	PcapDest         string `yaml:"dest" json:"dest" default:""`
 }
 
 type PortMapping struct {
