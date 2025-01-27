@@ -281,19 +281,14 @@ func copyPcapFiles(clientset *kubernetes.Clientset, config *rest.Config, destDir
 		log.Debug().Err(err).Msg("error while listing worker pods")
 	}
 
-	numWorkerPods := len(workerPods)
-
-	sem := make(chan struct{}, numWorkerPods)
 	var wg sync.WaitGroup
 
 	// Launch a goroutine for each pod
 	for _, pod := range workerPods {
-		sem <- struct{}{}
 		wg.Add(1)
 
 		go func(pod *PodFileInfo) {
 			defer wg.Done()
-			defer func() { <-sem }()
 
 			// List files for the current pod
 			err := listFilesInPodDir(context.Background(), clientset, config, pod, cutoffTime)
