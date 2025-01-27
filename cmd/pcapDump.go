@@ -45,14 +45,12 @@ var pcapDumpCmd = &cobra.Command{
 		// Use the current context in kubeconfig
 		config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
 		if err != nil {
-			log.Error().Err(err).Msg("Error building kubeconfig")
-			return err
+			return fmt.Errorf("Error building kubeconfig: %w", err)
 		}
 
 		clientset, err := kubernetes.NewForConfig(config)
 		if err != nil {
-			log.Error().Err(err).Msg("Error creating Kubernetes client")
-			return err
+			return fmt.Errorf("Error creating Kubernetes client: %w", err)
 		}
 
 		// Parse the `--time` flag
@@ -61,8 +59,7 @@ var pcapDumpCmd = &cobra.Command{
 		if timeIntervalStr != "" {
 			duration, err := time.ParseDuration(timeIntervalStr)
 			if err != nil {
-				log.Error().Err(err).Msg("Invalid time interval")
-				return err
+				return fmt.Errorf("Invalid format %w", err)
 			}
 			tempCutoffTime := time.Now().Add(-duration)
 			cutoffTime = &tempCutoffTime
@@ -91,7 +88,6 @@ var pcapDumpCmd = &cobra.Command{
 		log.Info().Msg("Copying PCAP files")
 		err = copyPcapFiles(clientset, config, destDir, cutoffTime)
 		if err != nil {
-			log.Error().Err(err).Msg("Error copying PCAP files")
 			return err
 		}
 
