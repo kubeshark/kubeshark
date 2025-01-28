@@ -280,12 +280,12 @@ spec:
         - effect: NoSchedule
           operator: Exists
 {{- end }}
-      {{- if .Values.tap.docker.imagePullSecrets }}
-        imagePullSecrets:
-          {{- range .Values.tap.docker.imagePullSecrets }}
-          - name: {{ . }}
-          {{- end }}
-      {{- end }}
+    {{- if .Values.tap.docker.imagePullSecrets }}
+      imagePullSecrets:
+        {{- range .Values.tap.docker.imagePullSecrets }}
+        - name: {{ . }}
+        {{- end }}
+    {{- end }}
 {{- if gt (len .Values.tap.nodeSelectorTerms.workers) 0}}
       affinity:
         nodeAffinity:

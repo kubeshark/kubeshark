@@ -91,12 +91,12 @@ spec:
           - name: saml-x509-volume
             mountPath: "/etc/saml/x509"
             readOnly: true
-      {{- if .Values.tap.docker.imagePullSecrets }}
-        imagePullSecrets:
-          {{- range .Values.tap.docker.imagePullSecrets }}
-          - name: {{ . }}
-          {{- end }}
-      {{- end }}
+    {{- if .Values.tap.docker.imagePullSecrets }}
+      imagePullSecrets:
+        {{- range .Values.tap.docker.imagePullSecrets }}
+        - name: {{ . }}
+        {{- end }}
+    {{- end }}
 {{- if gt (len .Values.tap.nodeSelectorTerms.hub) 0}}
       affinity:
         nodeAffinity:
