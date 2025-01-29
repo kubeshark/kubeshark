@@ -27,7 +27,8 @@
   </b>
 </p>
 
-**Kubeshark** is an API Traffic Analyzer for [**Kubernetes**](https://kubernetes.io/) providing real-time, protocol-level visibility into Kubernetes’ internal network, capturing and monitoring all traffic and payloads going in, out and across containers, pods, nodes and clusters.
+**Kubeshark** is a network observability platform for [**Kubernetes**](https://kubernetes.io/), providing real-time, protocol-level visibility into Kubernetes’ network, enabling users to inspect all internal and external cluster connections, API calls, and data in transit. In addition, Kubeshark enables users to detect suspicious network behaviors, trigger automated actions, and gain unlimited insights into the network, also by using the latest GenAI technology.
+
 
 ![Simple UI](https://github.com/kubeshark/assets/raw/master/png/kubeshark-ui.png)
 
@@ -35,17 +36,10 @@ Think [TCPDump](https://en.wikipedia.org/wiki/Tcpdump) and [Wireshark](https://w
 
 ## Getting Started
 
-Download **Kubeshark**'s binary distribution [latest release](https://github.com/kubeshark/kubeshark/releases/latest) and run following one of these examples:
+Run `brew install kubeshark` or download **Kubeshark**'s binary distribution [latest release](https://github.com/kubeshark/kubeshark/releases/latest) and run `kubeshark tap`.
+``
 
-```shell
-kubeshark tap
-```
-
-```shell
-kubeshark tap -n sock-shop "(catalo*|front-end*)"
-```
-
-Running any of the :point_up: above commands will open the [Web UI](https://docs.kubeshark.co/en/ui) in your browser which streams the traffic in your Kubernetes cluster in real-time.
+The [Web UI](https://docs.kubeshark.co/en/ui) should open in your browser and present a real-time view of all of your cluster's traffic.
 
 ### Homebrew
 
@@ -53,6 +47,11 @@ Running any of the :point_up: above commands will open the [Web UI](https://docs
 
 ```shell
 brew install kubeshark
+```
+
+Clean up:
+```shell
+kubeshark clean
 ```
 
 ### Helm
@@ -64,6 +63,11 @@ helm repo add kubeshark https://helm.kubeshark.co
 ‍helm install kubeshark kubeshark/kubeshark
 ```
 
+Clean up:
+```shell
+helm uninstall kubeshark
+```
+
 ## Building From Source
 
 Clone this repository and run `make` command to build it. After the build is complete, the executable can be found at `./bin/kubeshark__`.
@@ -71,6 +75,24 @@ Clone this repository and run `make` command to build it. After the build is com
 ## Documentation
 
 To learn more, read the [documentation](https://docs.kubeshark.co).
+
+## Additional Use-cases
+
+### Dump All Cluster-wide Traffic into a single PCAP File
+
+Record **all** cluster traffc an incorporate into a single PCAP file (tcpdump-style)
+
+Run Kubeshark to start capturing traffc:
+```
+kubeshark tap --set headless=true
+```
+> You can `^C` the command. Kubeshark will continue to run.
+
+Take a snapshot of traffic (e.g. past 5 minutes):
+```
+kubeshark pcapdump --time 5m
+```
+> Read more [here](https://docs.kubeshark.co/en/pcapdump)
 
 ## Contributing
 
