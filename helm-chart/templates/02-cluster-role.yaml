@@ -74,3 +74,4 @@ rules:
       - list
       - update
       - patch
+      - delete
