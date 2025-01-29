@@ -74,12 +74,6 @@ spec:
           image: '{{ .Values.tap.docker.registry }}/front:{{ not (eq .Values.tap.docker.tag "") | ternary .Values.tap.docker.tag (include "kubeshark.defaultVersion" .) }}'
         {{- end }}
           imagePullPolicy: {{ .Values.tap.docker.imagePullPolicy }}
-        {{- if .Values.tap.docker.imagePullSecrets }}
-          imagePullSecrets:
-            {{- range .Values.tap.docker.imagePullSecrets }}
-            - name: {{ . }}
-            {{- end }}
-        {{- end }}
           name: kubeshark-front
           livenessProbe:
             periodSeconds: 1
@@ -108,6 +102,12 @@ spec:
               mountPath: /etc/nginx/conf.d/default.conf
               subPath: default.conf
               readOnly: true
+    {{- if .Values.tap.docker.imagePullSecrets }}
+      imagePullSecrets:
+        {{- range .Values.tap.docker.imagePullSecrets }}
+        - name: {{ . }}
+        {{- end }}
+    {{- end }}
 {{- if gt (len .Values.tap.nodeSelectorTerms.front) 0}}
       affinity:
         nodeAffinity:

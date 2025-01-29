@@ -58,12 +58,6 @@ spec:
           image: '{{ .Values.tap.docker.registry }}/hub:{{ not (eq .Values.tap.docker.tag "") | ternary .Values.tap.docker.tag (include "kubeshark.defaultVersion" .) }}'
         {{- end }}
           imagePullPolicy: {{ .Values.tap.docker.imagePullPolicy }}
-        {{- if .Values.tap.docker.imagePullSecrets }}
-          imagePullSecrets:
-            {{- range .Values.tap.docker.imagePullSecrets }}
-            - name: {{ . }}
-            {{- end }}
-        {{- end }}
           readinessProbe:
             periodSeconds: {{ .Values.tap.probes.hub.periodSeconds }}
             failureThreshold: {{ .Values.tap.probes.hub.failureThreshold }}
@@ -97,6 +91,12 @@ spec:
           - name: saml-x509-volume
             mountPath: "/etc/saml/x509"
             readOnly: true
+    {{- if .Values.tap.docker.imagePullSecrets }}
+      imagePullSecrets:
+        {{- range .Values.tap.docker.imagePullSecrets }}
+        - name: {{ . }}
+        {{- end }}
+    {{- end }}
 {{- if gt (len .Values.tap.nodeSelectorTerms.hub) 0}}
       affinity:
         nodeAffinity:

@@ -210,12 +210,6 @@ spec:
           image: '{{ .Values.tap.docker.registry }}/worker:{{ not (eq .Values.tap.docker.tag "") | ternary .Values.tap.docker.tag (include "kubeshark.defaultVersion" .) }}{{ include "kubeshark.dockerTagDebugVersion" . }}'
         {{- end }}
           imagePullPolicy: {{ .Values.tap.docker.imagePullPolicy }}
-        {{- if .Values.tap.docker.imagePullSecrets }}
-          imagePullSecrets:
-            {{- range .Values.tap.docker.imagePullSecrets }}
-            - name: {{ . }}
-            {{- end }}
-        {{- end }}
           name: tracer
           env:
           - name: POD_NAME
@@ -286,6 +280,12 @@ spec:
         - effect: NoSchedule
           operator: Exists
 {{- end }}
+    {{- if .Values.tap.docker.imagePullSecrets }}
+      imagePullSecrets:
+        {{- range .Values.tap.docker.imagePullSecrets }}
+        - name: {{ . }}
+        {{- end }}
+    {{- end }}
 {{- if gt (len .Values.tap.nodeSelectorTerms.workers) 0}}
       affinity:
         nodeAffinity:
