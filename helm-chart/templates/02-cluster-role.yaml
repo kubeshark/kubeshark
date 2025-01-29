@@ -63,6 +63,8 @@ rules:
     resourceNames:
       - kubeshark-secret
       - kubeshark-config-map
+      - kubeshark-secret-default
+      - kubeshark-config-map-default
     resources:
       - secrets
       - configmaps
