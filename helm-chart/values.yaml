@@ -76,6 +76,7 @@ tap:
       failureThreshold: 3
   serviceMesh: true
   tls: true
+  mountBpf: true
   disableTlsLog: true
   packetCapture: best
   ignoreTainted: false
