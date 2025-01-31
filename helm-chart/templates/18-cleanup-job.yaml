@@ -1,0 +1,24 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: kubeshark-cleanup-job
+  annotations:
+    "helm.sh/hook": pre-delete
+    "helm.sh/hook-delete-policy": hook-succeeded
+spec:
+  template:
+    spec:
+      serviceAccountName: {{ include "kubeshark.serviceAccountName" . }}
+      restartPolicy: Never
+      containers:
+        - name: cleanup
+        {{- if .Values.tap.docker.overrideImage.hub }}
+          image: '{{ .Values.tap.docker.overrideImage.hub }}'
+        {{- else if .Values.tap.docker.overrideTag.hub }}
+          image: '{{ .Values.tap.docker.registry }}/hub:{{ .Values.tap.docker.overrideTag.hub }}'
+        {{ else }}
+          image: '{{ .Values.tap.docker.registry }}/hub:{{ not (eq .Values.tap.docker.tag "") | ternary .Values.tap.docker.tag (include "kubeshark.defaultVersion" .) }}'
+        {{- end }}
+          command: ["/bin/sh", "-c"]
+          args:
+            - "kubectl delete cm kubeshark-config-map && kubectl delete secret kubeshark-secret"
