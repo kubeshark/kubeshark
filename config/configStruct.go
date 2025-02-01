@@ -51,31 +51,35 @@ func CreateDefaultConfig() ConfigStruct {
 					},
 				},
 			},
-			Capabilities: configStructs.CapabilitiesConfig{
-				NetworkCapture: []string{
-					// NET_RAW is required to listen the network traffic
-					"NET_RAW",
-					// NET_ADMIN is required to listen the network traffic
-					"NET_ADMIN",
-				},
-				ServiceMeshCapture: []string{
-					// SYS_ADMIN is required to read /proc/PID/net/ns + to install eBPF programs (kernel < 5.8)
-					"SYS_ADMIN",
-					// SYS_PTRACE is required to set netns to other process + to open libssl.so of other process
-					"SYS_PTRACE",
-					// DAC_OVERRIDE is required to read /proc/PID/environ
-					"DAC_OVERRIDE",
-				},
-				EBPFCapture: []string{
-					// SYS_ADMIN is required to read /proc/PID/net/ns + to install eBPF programs (kernel < 5.8)
-					"SYS_ADMIN",
-					// SYS_PTRACE is required to set netns to other process + to open libssl.so of other process
-					"SYS_PTRACE",
-					// SYS_RESOURCE is required to change rlimits for eBPF
-					"SYS_RESOURCE",
-					// IPC_LOCK is required for ebpf perf buffers allocations after some amount of size buffer size:
-					// https://github.com/kubeshark/tracer/blob/13e24725ba8b98216dd0e553262e6d9c56dce5fa/main.go#L82)
-					"IPC_LOCK",
+			SecurityContext: configStructs.SecurityContextConfig{
+				Privileged: true,
+				// Capabilities used only when running in unprivileged mode
+				Capabilities: configStructs.CapabilitiesConfig{
+					NetworkCapture: []string{
+						// NET_RAW is required to listen the network traffic
+						"NET_RAW",
+						// NET_ADMIN is required to listen the network traffic
+						"NET_ADMIN",
+					},
+					ServiceMeshCapture: []string{
+						// SYS_ADMIN is required to read /proc/PID/net/ns + to install eBPF programs (kernel < 5.8)
+						"SYS_ADMIN",
+						// SYS_PTRACE is required to set netns to other process + to open libssl.so of other process
+						"SYS_PTRACE",
+						// DAC_OVERRIDE is required to read /proc/PID/environ
+						"DAC_OVERRIDE",
+					},
+					EBPFCapture: []string{
+						// SYS_ADMIN is required to read /proc/PID/net/ns + to install eBPF programs (kernel < 5.8)
+						"SYS_ADMIN",
+						// SYS_PTRACE is required to set netns to other process + to open libssl.so of other process
+						"SYS_PTRACE",
+						// SYS_RESOURCE is required to change rlimits for eBPF
+						"SYS_RESOURCE",
+						// IPC_LOCK is required for ebpf perf buffers allocations after some amount of size buffer size:
+						// https://github.com/kubeshark/tracer/blob/13e24725ba8b98216dd0e553262e6d9c56dce5fa/main.go#L82)
+						"IPC_LOCK",
+					},
 				},
 			},
 			Auth: configStructs.AuthConfig{
