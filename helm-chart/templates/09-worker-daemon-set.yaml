@@ -129,23 +129,52 @@ spec:
               memory: {{ .Values.tap.resources.sniffer.requests.memory }}
               {{ end }}
           securityContext:
+            privileged: {{ .Values.tap.securityContext.privileged }}
+            {{- if not .Values.tap.securityContext.privileged }}
+            {{- $aaProfile := .Values.tap.securityContext.appArmorProfile }}
+            {{- $selinuxOpts := .Values.tap.securityContext.seLinuxOptions }}
+            {{- if or (ne $aaProfile.type "") (ne $aaProfile.localhostProfile "") }}
+            appArmorProfile:
+              {{- if ne $aaProfile.type "" }}
+              type: {{ $aaProfile.type }}
+              {{- end }}
+              {{- if ne $aaProfile.localhostProfile "" }}
+              localhostProfile: {{ $aaProfile.localhostProfile }}
+              {{- end }}
+            {{- end }}
+            {{- if or (ne $selinuxOpts.level "") (ne $selinuxOpts.role "") (ne $selinuxOpts.type "") (ne $selinuxOpts.user "") }}
+            seLinuxOptions:
+              {{- if ne $selinuxOpts.level "" }}
+              level: {{ $selinuxOpts.level }}
+              {{- end }}
+              {{- if ne $selinuxOpts.role "" }}
+              role: {{ $selinuxOpts.role }}
+              {{- end }}
+              {{- if ne $selinuxOpts.type "" }}
+              type: {{ $selinuxOpts.type }}
+              {{- end }}
+              {{- if ne $selinuxOpts.user "" }}
+              user: {{ $selinuxOpts.user }}
+              {{- end }}
+            {{- end }}
             capabilities:
               add:
-                {{- range .Values.tap.capabilities.networkCapture }}
+                {{- range .Values.tap.securityContext.capabilities.networkCapture }}
                 {{ print "- " . }}
                 {{- end }}
                 {{- if .Values.tap.serviceMesh }}
-                {{- range .Values.tap.capabilities.serviceMeshCapture }}
+                {{- range .Values.tap.securityContext.capabilities.serviceMeshCapture }}
                 {{ print "- " . }}
                 {{- end }}
                 {{- end }}
-                {{- if .Values.tap.capabilities.ebpfCapture }}
-                {{- range .Values.tap.capabilities.ebpfCapture }}
+                {{- if .Values.tap.securityContext.capabilities.ebpfCapture }}
+                {{- range .Values.tap.securityContext.capabilities.ebpfCapture }}
                 {{ print "- " . }}
                 {{- end }}
                 {{- end }}
               drop:
                 - ALL
+            {{- end }}
           readinessProbe:
             periodSeconds: {{ .Values.tap.probes.sniffer.periodSeconds }}
             failureThreshold: {{ .Values.tap.probes.sniffer.failureThreshold }}
@@ -222,16 +251,45 @@ spec:
               memory: {{ .Values.tap.resources.tracer.requests.memory }}
               {{ end }}
           securityContext:
+            privileged: {{ .Values.tap.securityContext.privileged }}
+            {{- if not .Values.tap.securityContext.privileged }}
+            {{- $aaProfile := .Values.tap.securityContext.appArmorProfile }}
+            {{- $selinuxOpts := .Values.tap.securityContext.seLinuxOptions }}
+            {{- if or (ne $aaProfile.type "") (ne $aaProfile.localhostProfile "") }}
+            appArmorProfile:
+              {{- if ne $aaProfile.type "" }}
+              type: {{ $aaProfile.type }}
+              {{- end }}
+              {{- if ne $aaProfile.localhostProfile "" }}
+              localhostProfile: {{ $aaProfile.localhostProfile }}
+              {{- end }}
+            {{- end }}
+            {{- if or (ne $selinuxOpts.level "") (ne $selinuxOpts.role "") (ne $selinuxOpts.type "") (ne $selinuxOpts.user "") }}
+            seLinuxOptions:
+              {{- if ne $selinuxOpts.level "" }}
+              level: {{ $selinuxOpts.level }}
+              {{- end }}
+              {{- if ne $selinuxOpts.role "" }}
+              role: {{ $selinuxOpts.role }}
+              {{- end }}
+              {{- if ne $selinuxOpts.type "" }}
+              type: {{ $selinuxOpts.type }}
+              {{- end }}
+              {{- if ne $selinuxOpts.user "" }}
+              user: {{ $selinuxOpts.user }}
+              {{- end }}
+            {{- end }}
             capabilities:
               add:
-                {{- range .Values.tap.capabilities.ebpfCapture }}
+                {{- range .Values.tap.securityContext.capabilities.ebpfCapture }}
                 {{ print "- " . }}
                 {{- end }}
-                {{- range .Values.tap.capabilities.networkCapture }}
+                {{- range .Values.tap.securityContext.capabilities.networkCapture }}
                 {{ print "- " . }}
                 {{- end }}
               drop:
                 - ALL
+            {{- end }}
           volumeMounts:
             - mountPath: /hostproc
               name: proc

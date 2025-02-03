@@ -251,6 +251,25 @@ type PortMapping struct {
 	DIAMETER []uint16 `yaml:"diameter" json:"diameter"`
 }
 
+type SecurityContextConfig struct {
+	Privileged      bool                  `yaml:"privileged" json:"privileged" default:"true"`
+	AppArmorProfile AppArmorProfileConfig `yaml:"appArmorProfile" json:"appArmorProfile"`
+	SeLinuxOptions  SeLinuxOptionsConfig  `yaml:"seLinuxOptions" json:"seLinuxOptions"`
+	Capabilities    CapabilitiesConfig    `yaml:"capabilities" json:"capabilities"`
+}
+
+type AppArmorProfileConfig struct {
+	Type             string `yaml:"type" json:"type"`
+	LocalhostProfile string `yaml:"localhostProfile" json:"localhostProfile"`
+}
+
+type SeLinuxOptionsConfig struct {
+	Level string `yaml:"level" json:"level"`
+	Role  string `yaml:"role" json:"role"`
+	Type  string `yaml:"type" json:"type"`
+	User  string `yaml:"user" json:"user"`
+}
+
 type TapConfig struct {
 	Docker                       DockerConfig            `yaml:"docker" json:"docker"`
 	Proxy                        ProxyConfig             `yaml:"proxy" json:"proxy"`
@@ -286,7 +305,6 @@ type TapConfig struct {
 	Sentry                       SentryConfig            `yaml:"sentry" json:"sentry"`
 	DefaultFilter                string                  `yaml:"defaultFilter" json:"defaultFilter" default:"!dns and !error"`
 	LiveConfigMapChangesDisabled bool                    `yaml:"liveConfigMapChangesDisabled" json:"liveConfigMapChangesDisabled" default:"false"`
-	Capabilities                 CapabilitiesConfig      `yaml:"capabilities" json:"capabilities"`
 	GlobalFilter                 string                  `yaml:"globalFilter" json:"globalFilter" default:""`
 	EnabledDissectors            []string                `yaml:"enabledDissectors" json:"enabledDissectors"`
 	PortMapping                  PortMapping             `yaml:"portMapping" json:"portMapping"`
@@ -294,6 +312,7 @@ type TapConfig struct {
 	Metrics                      MetricsConfig           `yaml:"metrics" json:"metrics"`
 	Pprof                        PprofConfig             `yaml:"pprof" json:"pprof"`
 	Misc                         MiscConfig              `yaml:"misc" json:"misc"`
+	SecurityContext              SecurityContextConfig   `yaml:"securityContext" json:"securityContext"`
 }
 
 func (config *TapConfig) PodRegex() *regexp.Regexp {
