@@ -25,39 +25,26 @@ spec:
       name: kubeshark-worker-daemon-set
       namespace: kubeshark
     spec:
+      {{- if .Values.tap.mountBpf }}
       initContainers:
         - command:
           - /bin/sh
           - -c
           - mkdir -p /sys/fs/bpf && mount | grep -q '/sys/fs/bpf' || mount -t bpf bpf /sys/fs/bpf
-        {{- if .Values.tap.docker.overrideTag.worker }}
+          {{- if .Values.tap.docker.overrideTag.worker }}
           image: '{{ .Values.tap.docker.registry }}/worker:{{ .Values.tap.docker.overrideTag.worker }}{{ include "kubeshark.dockerTagDebugVersion" . }}'
         {{ else }}
           image: '{{ .Values.tap.docker.registry }}/worker:{{ not (eq .Values.tap.docker.tag "") | ternary .Values.tap.docker.tag (include "kubeshark.defaultVersion" .) }}{{ include "kubeshark.dockerTagDebugVersion" . }}'
         {{- end }}
           imagePullPolicy: {{ .Values.tap.docker.imagePullPolicy }}
-          name: check-bpf
+          name: mount-bpf
           securityContext:
             privileged: true
           volumeMounts:
           - mountPath: /sys
             name: sys
             mountPropagation: Bidirectional
-        - command:
-          - ./tracer
-          - -init-bpf
-        {{- if .Values.tap.docker.overrideTag.worker }}
-          image: '{{ .Values.tap.docker.registry }}/worker:{{ .Values.tap.docker.overrideTag.worker }}{{ include "kubeshark.dockerTagDebugVersion" . }}'
-        {{ else }}
-          image: '{{ .Values.tap.docker.registry }}/worker:{{ not (eq .Values.tap.docker.tag "") | ternary .Values.tap.docker.tag (include "kubeshark.defaultVersion" .) }}{{ include "kubeshark.dockerTagDebugVersion" . }}'
-        {{- end }}
-          imagePullPolicy: {{ .Values.tap.docker.imagePullPolicy }}
-          name: init-bpf
-          securityContext:
-            privileged: true
-          volumeMounts:
-          - mountPath: /sys
-            name: sys
+      {{- end }}
       containers:
         - command:
             - ./worker
@@ -71,9 +58,7 @@ spec:
             - '{{ .Values.tap.packetCapture }}'
             - -loglevel
             - '{{ .Values.logLevel | default "warning" }}'
-          {{- if .Values.tap.tls }}
-            - -unixsocket
-          {{- else }}
+          {{- if not .Values.tap.tls }}
             - -disable-tracer
           {{- end }}
           {{- if .Values.tap.serviceMesh }}
@@ -81,9 +66,6 @@ spec:
           {{- end }}
             - -procfs
             - /hostproc
-          {{- if eq .Values.tap.packetCapture "af_packet" }}
-            - -disable-ebpf
-          {{- end }}
           {{- if .Values.tap.resourceGuard.enabled }}
             - -enable-resource-guard
           {{- end }}
@@ -185,6 +167,7 @@ spec:
             - mountPath: /sys
               name: sys
               readOnly: true
+              mountPropagation: HostToContainer
             - mountPath: /app/data
               name: data
       {{- if .Values.tap.tls }}
@@ -192,9 +175,6 @@ spec:
             - ./tracer
             - -procfs
             - /hostproc
-          {{- if eq .Values.tap.packetCapture "af_packet" }}
-            - -disable-ebpf
-          {{- end }}
           {{- if .Values.tap.disableTlsLog }}
             - -disable-tls-log
           {{- end }}
@@ -202,8 +182,8 @@ spec:
             - -port
             - '{{ add .Values.tap.proxy.worker.srvPort 1 }}'
           {{- end }}
-            # - -loglevel
-            # - '{{ .Values.logLevel | default "warning" }}'
+            - -loglevel
+            - '{{ .Values.logLevel | default "warning" }}'
         {{- if .Values.tap.docker.overrideTag.worker }}
           image: '{{ .Values.tap.docker.registry }}/worker:{{ .Values.tap.docker.overrideTag.worker }}{{ include "kubeshark.dockerTagDebugVersion" . }}'
         {{ else }}
@@ -259,6 +239,7 @@ spec:
             - mountPath: /sys
               name: sys
               readOnly: true
+              mountPropagation: HostToContainer
             - mountPath: /app/data
               name: data
             - mountPath: /etc/os-release
