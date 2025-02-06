@@ -663,10 +663,6 @@ spec:
             - mountPath: /etc/os-release
               name: os-release
               readOnly: true
-            - mountPath: /hostroot
-              mountPropagation: HostToContainer
-              name: root
-              readOnly: true
       dnsPolicy: ClusterFirstWithHostNet
       hostNetwork: true
       serviceAccountName: kubeshark-service-account
@@ -698,9 +694,6 @@ spec:
         - hostPath:
             path: /etc/os-release
           name: os-release
-        - hostPath:
-            path: /
-          name: root
         - name: data
           emptyDir:
             sizeLimit: 5000Mi
