@@ -182,7 +182,11 @@ release:
 	@cd ../tracer && git checkout master && git pull && git tag -d v$(VERSION); git tag v$(VERSION) && git push origin --tags
 	@cd ../hub && git checkout master && git pull && git tag -d v$(VERSION); git tag v$(VERSION) && git push origin --tags
 	@cd ../front && git checkout master && git pull && git tag -d v$(VERSION); git tag v$(VERSION) && git push origin --tags
-	@cd ../kubeshark && git checkout master && git pull && sed -i "s/^version:.*/version: \"$(shell echo $(VERSION) | sed -E 's/^([0-9]+\.[0-9]+)\..*/\1/')\"/" helm-chart/Chart.yaml && make && make generate-helm-values && make generate-manifests
+	@cd ../kubeshark && git checkout master && git pull && sed -i "s/^version:.*/version: \"$(shell echo $(VERSION) | sed -E 's/^([0-9]+\.[0-9]+)\..*/\1/')\"/" helm-chart/Chart.yaml && make
+	@if [ "$(shell uname)" = "Darwin" ]; then \
+		codesign --sign - --force --preserve-metadata=entitlements,requirements,flags,runtime ./bin/kubeshark__; \
+	fi
+	@make generate-helm-values && make generate-manifests
 	@git add -A . && git commit -m ":bookmark: Bump the Helm chart version to $(VERSION)" && git push
 	@git tag -d v$(VERSION); git tag v$(VERSION) && git push origin --tags
 	@cd helm-chart && rm -r ../../kubeshark.github.io/charts/chart/* && cp -r . ../../kubeshark.github.io/charts/chart
