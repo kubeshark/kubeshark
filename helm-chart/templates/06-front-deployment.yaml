@@ -37,7 +37,11 @@ spec:
             - name: REACT_APP_TIMEZONE
               value: '{{ not (eq .Values.timezone "") | ternary .Values.timezone " " }}'
             - name: REACT_APP_SCRIPTING_DISABLED
-              value: '{{ .Values.tap.liveConfigMapChangesDisabled }}'
+              value: '{{- if and .Values.tap.liveConfigMapChangesDisabled -}}
+                        {{ .Values.demoModeEnabled | ternary "false" | "true" }}
+                      {{- else -}}
+                        "false"
+                      {{- end }}'
             - name: REACT_APP_TARGETED_PODS_UPDATE_DISABLED
               value: '{{ .Values.tap.liveConfigMapChangesDisabled }}'
             - name: REACT_APP_PRESET_FILTERS_CHANGING_ENABLED
