@@ -28,7 +28,7 @@ data:
     AUTH_SAML_ROLES: '{{ .Values.tap.auth.saml.roles | toJson }}'
     TELEMETRY_DISABLED: '{{ not .Values.internetConnectivity | ternary "true" (not .Values.tap.telemetry.enabled | ternary "true" "false") }}'
     SCRIPTING_DISABLED: '{{- if and .Values.tap.liveConfigMapChangesDisabled -}}
-                            {{ .Values.demoModeEnabled | ternary "false" | "true" }}
+                            {{ .Values.demoModeEnabled | ternary "false" "true" }}
                          {{- else -}}
                             "false"
                          {{- end }}'

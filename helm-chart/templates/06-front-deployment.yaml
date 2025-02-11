@@ -38,7 +38,7 @@ spec:
               value: '{{ not (eq .Values.timezone "") | ternary .Values.timezone " " }}'
             - name: REACT_APP_SCRIPTING_DISABLED
               value: '{{- if and .Values.tap.liveConfigMapChangesDisabled -}}
-                        {{ .Values.demoModeEnabled | ternary "false" | "true" }}
+                        {{ .Values.demoModeEnabled | ternary "false" "true" }}
                       {{- else -}}
                         "false"
                       {{- end }}'
