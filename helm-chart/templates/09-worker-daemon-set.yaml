@@ -311,14 +311,22 @@ spec:
       dnsPolicy: ClusterFirstWithHostNet
       hostNetwork: true
       serviceAccountName: {{ include "kubeshark.serviceAccountName" . }}
-      terminationGracePeriodSeconds: 0
+      {{- if .Values.tap.tolerations.workers }}
       tolerations:
-        - effect: NoExecute
-          operator: Exists
-{{- if not .Values.tap.ignoreTainted }}
-        - effect: NoSchedule
-          operator: Exists
-{{- end }}
+      {{- range .Values.tap.tolerations.workers }}
+        - key: {{ .key | quote }}
+          operator: {{ .operator | quote }}
+          {{- if .value }}
+          value: {{ .value | quote }}
+          {{- end }}
+          {{- if .effect }}
+          effect: {{ .effect | quote }}
+          {{- end }}
+          {{- if .tolerationSeconds }}
+          tolerationSeconds: {{ .tolerationSeconds }}
+          {{- end }}
+      {{- end }}
+      {{- end }}
     {{- if .Values.tap.docker.imagePullSecrets }}
       imagePullSecrets:
         {{- range .Values.tap.docker.imagePullSecrets }}

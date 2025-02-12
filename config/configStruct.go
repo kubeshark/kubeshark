@@ -51,6 +51,14 @@ func CreateDefaultConfig() ConfigStruct {
 					},
 				},
 			},
+			Tolerations: configStructs.TolerationsConfig{
+				Workers: []v1.Toleration{
+					{
+						Effect:   v1.TaintEffect("NoExecute"),
+						Operator: v1.TolerationOpExists,
+					},
+				},
+			},
 			SecurityContext: configStructs.SecurityContextConfig{
 				Privileged: true,
 				// Capabilities used only when running in unprivileged mode

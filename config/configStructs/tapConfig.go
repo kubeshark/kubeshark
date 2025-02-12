@@ -139,6 +139,12 @@ type NodeSelectorTermsConfig struct {
 	Front   []v1.NodeSelectorTerm `yaml:"front" json:"front" default:"[]"`
 }
 
+type TolerationsConfig struct {
+	Hub     []v1.Toleration `yaml:"hub" json:"hub" default:"[]"`
+	Workers []v1.Toleration `yaml:"workers" json:"workers" default:"[]"`
+	Front   []v1.Toleration `yaml:"front" json:"front" default:"[]"`
+}
+
 type ProbeConfig struct {
 	InitialDelaySeconds int `yaml:"initialDelaySeconds" json:"initialDelaySeconds" default:"15"`
 	PeriodSeconds       int `yaml:"periodSeconds" json:"periodSeconds" default:"10"`
@@ -292,10 +298,10 @@ type TapConfig struct {
 	Tls                          bool                    `yaml:"tls" json:"tls" default:"true"`
 	DisableTlsLog                bool                    `yaml:"disableTlsLog" json:"disableTlsLog" default:"true"`
 	PacketCapture                string                  `yaml:"packetCapture" json:"packetCapture" default:"best"`
-	IgnoreTainted                bool                    `yaml:"ignoreTainted" json:"ignoreTainted" default:"false"`
 	Labels                       map[string]string       `yaml:"labels" json:"labels" default:"{}"`
 	Annotations                  map[string]string       `yaml:"annotations" json:"annotations" default:"{}"`
 	NodeSelectorTerms            NodeSelectorTermsConfig `yaml:"nodeSelectorTerms" json:"nodeSelectorTerms" default:"{}"`
+	Tolerations                  TolerationsConfig       `yaml:"tolerations" json:"tolerations" default:"{}"`
 	Auth                         AuthConfig              `yaml:"auth" json:"auth"`
 	Ingress                      IngressConfig           `yaml:"ingress" json:"ingress"`
 	IPv6                         bool                    `yaml:"ipv6" json:"ipv6" default:"true"`
