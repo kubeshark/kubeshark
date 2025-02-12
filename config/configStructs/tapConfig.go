@@ -313,6 +313,7 @@ type TapConfig struct {
 	Pprof                        PprofConfig             `yaml:"pprof" json:"pprof"`
 	Misc                         MiscConfig              `yaml:"misc" json:"misc"`
 	SecurityContext              SecurityContextConfig   `yaml:"securityContext" json:"securityContext"`
+	ShortTermProcs               bool                    `yaml:"shortTermProcs" json:"shortTermProcs" default:"false"`
 	MountBpf                     bool                    `yaml:"mountBpf" json:"mountBpf" default:"true"`
 }
 
