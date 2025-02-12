@@ -209,6 +209,7 @@ tap:
       - SYS_PTRACE
       - SYS_RESOURCE
       - IPC_LOCK
+  shortTermProcs: false
 logs:
   file: ""
   grep: ""

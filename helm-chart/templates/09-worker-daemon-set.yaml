@@ -303,6 +303,12 @@ spec:
             - mountPath: /etc/os-release
               name: os-release
               readOnly: true
+            {{- if .Values.tap.shortTermProcs }}
+            - mountPath: /hostroot
+              mountPropagation: HostToContainer
+              name: root
+              readOnly: true
+            {{- end }}
       {{- end }}
       dnsPolicy: ClusterFirstWithHostNet
       hostNetwork: true
@@ -365,6 +371,11 @@ spec:
         - hostPath:
             path: /etc/os-release
           name: os-release
+        {{- if .Values.tap.shortTermProcs }}
+        - hostPath:
+            path: /
+          name: root
+        {{- end }}
         - name: data
 {{- if .Values.tap.persistentStorage }}
           persistentVolumeClaim:
