@@ -214,6 +214,7 @@ tap:
       - SYS_PTRACE
       - SYS_RESOURCE
       - IPC_LOCK
+  mountBpf: true
 logs:
   file: ""
   grep: ""
