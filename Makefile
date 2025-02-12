@@ -189,9 +189,16 @@ release:
 	@make generate-helm-values && make generate-manifests
 	@git add -A . && git commit -m ":bookmark: Bump the Helm chart version to $(VERSION)" && git push
 	@git tag -d v$(VERSION); git tag v$(VERSION) && git push origin --tags
-	@cd helm-chart && rm -r ../../kubeshark.github.io/charts/chart/* && cp -r . ../../kubeshark.github.io/charts/chart
+	@cd helm-chart && rm -rf ../../kubeshark.github.io/charts/chart/* && cp -r . ../../kubeshark.github.io/charts/chart
 	@cd ../../kubeshark.github.io/ && git add -A . && git commit -m ":sparkles: Update the Helm chart" && git push
 	@cd ../kubeshark
+
+release-patch:
+	@cd ../worker && git checkout master && git pull && git tag -d v$(VERSION); git tag v$(VERSION) && git push origin --tags
+	@cd ../tracer && git checkout master && git pull && git tag -d v$(VERSION); git tag v$(VERSION) && git push origin --tags
+	@cd ../hub && git checkout master && git pull && git tag -d v$(VERSION); git tag v$(VERSION) && git push origin --tags
+	@cd ../front && git checkout master && git pull && git tag -d v$(VERSION); git tag v$(VERSION) && git push origin --tags
+	# @cd ../kubeshark && git tag -d v$(VERSION); git tag v$(VERSION) && git push origin --tags
 
 release-dry-run:
 	@cd ../kubeshark && git checkout master && git pull && sed -i "s/^version:.*/version: \"$(shell echo $(VERSION) | sed -E 's/^([0-9]+\.[0-9]+)\..*/\1/')\"/" helm-chart/Chart.yaml && make && make generate-helm-values && make generate-manifests
