@@ -151,6 +151,7 @@ type ConfigStruct struct {
 	License              string                        `yaml:"license" json:"license" default:""`
 	CloudLicenseEnabled  bool                          `yaml:"cloudLicenseEnabled" json:"cloudLicenseEnabled" default:"true"`
 	AiAssistantEnabled   bool                          `yaml:"aiAssistantEnabled" json:"aiAssistantEnabled" default:"false"`
+	DemoModeEnabled      bool                          `yaml:"demoModeEnabled" json:"demoModeEnabled" default:"false"`
 	SupportChatEnabled   bool                          `yaml:"supportChatEnabled" json:"supportChatEnabled" default:"true"`
 	InternetConnectivity bool                          `yaml:"internetConnectivity" json:"internetConnectivity" default:"true"`
 	Scripting            configStructs.ScriptingConfig `yaml:"scripting" json:"scripting"`
