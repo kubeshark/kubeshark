@@ -51,7 +51,7 @@ spec:
             - name: REACT_APP_PRESET_FILTERS_CHANGING_ENABLED
               value: '{{ .Values.tap.liveConfigMapChangesDisabled | ternary "false" "true" }}'
             - name: REACT_APP_BPF_OVERRIDE_DISABLED
-              value: '{{ eq .Values.tap.packetCapture "ebpf" | ternary "true" "false" }}'
+              value: '{{ eq .Values.tap.packetCapture "af_packet" | ternary "false" "true" }}'
             - name: REACT_APP_RECORDING_DISABLED
               value: '{{ .Values.tap.liveConfigMapChangesDisabled }}'
             - name: REACT_APP_STOP_TRAFFIC_CAPTURING_DISABLED
