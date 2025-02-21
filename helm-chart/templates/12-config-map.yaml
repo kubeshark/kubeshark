@@ -56,6 +56,7 @@ data:
                             {{- else -}}
                               {{ .Values.cloudLicenseEnabled }}
                             {{- end }}'
+    AI_ASSISTANT_ENABLED: '{{ .Values.aiAssistantEnabled | ternary "true" "false" }}'
     DUPLICATE_TIMEFRAME: '{{ .Values.tap.misc.duplicateTimeframe }}'
     ENABLED_DISSECTORS: '{{ gt (len .Values.tap.enabledDissectors) 0 | ternary (join "," .Values.tap.enabledDissectors) "" }}'
     CUSTOM_MACROS: '{{ toJson .Values.tap.customMacros }}'

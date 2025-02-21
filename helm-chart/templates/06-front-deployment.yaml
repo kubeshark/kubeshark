@@ -66,6 +66,8 @@ spec:
                       {{- else -}}
                         {{ .Values.cloudLicenseEnabled }}
                       {{- end }}'
+            - name: 'REACT_APP_AI_ASSISTANT_ENABLED'
+              value: '{{ .Values.aiAssistantEnabled | ternary "true" "false" }}'
             - name: REACT_APP_SUPPORT_CHAT_ENABLED
               value: '{{ and .Values.supportChatEnabled .Values.internetConnectivity | ternary "true" "false" }}'
             - name: REACT_APP_DISSECTORS_UPDATING_ENABLED
