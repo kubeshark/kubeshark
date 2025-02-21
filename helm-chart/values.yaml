@@ -228,6 +228,7 @@ dumpLogs: false
 headless: false
 license: ""
 cloudLicenseEnabled: true
+aiAssistantEnabled: false
 supportChatEnabled: true
 internetConnectivity: true
 scripting:
