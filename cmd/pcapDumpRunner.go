@@ -341,13 +341,18 @@ func copyPcapFiles(clientset *kubernetes.Clientset, config *rest.Config, destDir
 
 	// Remove the original files after merging
 	for _, file := range copiedFiles {
-		if err := os.Remove(file); err != nil {
+		if err = os.Remove(file); err != nil {
 			log.Debug().Err(err).Msgf("error removing file %s", file)
 		}
 	}
 
+	clusterID, err := getClusterID(clientset)
+	if err != nil {
+		return fmt.Errorf("failed to get cluster ID: %w", err)
+	}
+	timestamp := time.Now().Format("2006-01-02_15-04")
 	// Rename the temp file to the final name
-	finalMergedFile := strings.TrimSuffix(tempMergedFile, "_temp")
+	finalMergedFile := filepath.Join(destDir, fmt.Sprintf("%s-%s.pcap", clusterID, timestamp))
 	err = os.Rename(tempMergedFile, finalMergedFile)
 	if err != nil {
 		return err
@@ -355,4 +360,12 @@ func copyPcapFiles(clientset *kubernetes.Clientset, config *rest.Config, destDir
 
 	log.Info().Msgf("Merged file created: %s", finalMergedFile)
 	return nil
+}
+
+func getClusterID(clientset *kubernetes.Clientset) (string, error) {
+	namespace, err := clientset.CoreV1().Namespaces().Get(context.TODO(), "kube-system", metav1.GetOptions{})
+	if err != nil {
+		return "", fmt.Errorf("failed to get kube-system namespace UID: %w", err)
+	}
+	return string(namespace.UID), nil
 }
