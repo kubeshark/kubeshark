@@ -127,12 +127,16 @@ data:
     # Static clients registered in Dex by default.
     #
     # Alternatively, clients may be added through the gRPC API.
-    # staticClients:
-    #   - id: example-app
-    #     redirectURIs:
-    #       - 'http://127.0.0.1:5555/callback'
-    #     name: 'Example App'
-    #     secret: ZXhhbXBsZS1hcHAtc2VjcmV0
+    staticClients:
+     - id: kubeshark-hub
+       secret: enter a secret for Kubeshark Hub
+       name: 'Kubeshark Hub'
+       redirectURIs:
+{{- if .Values.tap.ingress.enabled }}
+         - https://{{ .Values.tap.ingress.host }}/dex/callback
+{{- else }}
+         - http://0.0.0.0:{{ .Values.tap.proxy.front.port }}/dex/callback
+{{- end }}
 
     # Connectors are used to authenticate users against upstream identity providers.
     #
