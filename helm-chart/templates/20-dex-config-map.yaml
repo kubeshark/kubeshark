@@ -133,9 +133,9 @@ data:
        name: 'Kubeshark Hub'
        redirectURIs:
 {{- if .Values.tap.ingress.enabled }}
-         - https://{{ .Values.tap.ingress.host }}/dex/callback
+         - https://{{ .Values.tap.ingress.host }}/api/oauth2/callback
 {{- else }}
-         - http://0.0.0.0:{{ .Values.tap.proxy.front.port }}/dex/callback
+         - http://0.0.0.0:{{ .Values.tap.proxy.front.port }}/api/oauth2/callback
 {{- end }}
 
     # Connectors are used to authenticate users against upstream identity providers.
