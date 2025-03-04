@@ -37,13 +37,21 @@ spec:
             - name: REACT_APP_TIMEZONE
               value: '{{ not (eq .Values.timezone "") | ternary .Values.timezone " " }}'
             - name: REACT_APP_SCRIPTING_DISABLED
-              value: '{{ .Values.tap.liveConfigMapChangesDisabled }}'
+              value: '{{- if .Values.tap.liveConfigMapChangesDisabled -}}
+                        {{- if .Values.demoModeEnabled -}}
+                          {{ .Values.demoModeEnabled | ternary false true }}
+                        {{- else -}}
+                          true
+                        {{- end }}
+                      {{- else -}}
+                        false
+                      {{- end }}'
             - name: REACT_APP_TARGETED_PODS_UPDATE_DISABLED
               value: '{{ .Values.tap.liveConfigMapChangesDisabled }}'
             - name: REACT_APP_PRESET_FILTERS_CHANGING_ENABLED
               value: '{{ .Values.tap.liveConfigMapChangesDisabled | ternary "false" "true" }}'
             - name: REACT_APP_BPF_OVERRIDE_DISABLED
-              value: '{{ eq .Values.tap.packetCapture "ebpf" | ternary "true" "false" }}'
+              value: '{{ eq .Values.tap.packetCapture "af_packet" | ternary "false" "true" }}'
             - name: REACT_APP_RECORDING_DISABLED
               value: '{{ .Values.tap.liveConfigMapChangesDisabled }}'
             - name: REACT_APP_STOP_TRAFFIC_CAPTURING_DISABLED
@@ -58,6 +66,8 @@ spec:
                       {{- else -}}
                         {{ .Values.cloudLicenseEnabled }}
                       {{- end }}'
+            - name: 'REACT_APP_AI_ASSISTANT_ENABLED'
+              value: '{{ .Values.aiAssistantEnabled | ternary "true" "false" }}'
             - name: REACT_APP_SUPPORT_CHAT_ENABLED
               value: '{{ and .Values.supportChatEnabled .Values.internetConnectivity | ternary "true" "false" }}'
             - name: REACT_APP_DISSECTORS_UPDATING_ENABLED
@@ -138,6 +148,22 @@ spec:
             {{- end }}
         {{- end }}
         {{- end }}
+      {{- end }}
+      {{- if .Values.tap.tolerations.front }}
+      tolerations:
+      {{- range .Values.tap.tolerations.front }}
+        - key: {{ .key | quote }}
+          operator: {{ .operator | quote }}
+          {{- if .value }}
+          value: {{ .value | quote }}
+          {{- end }}
+          {{- if .effect }}
+          effect: {{ .effect | quote }}
+          {{- end }}
+          {{- if .tolerationSeconds }}
+          tolerationSeconds: {{ .tolerationSeconds }}
+          {{- end }}
+      {{- end }}
       {{- end }}
       volumes:
         - name: nginx-config

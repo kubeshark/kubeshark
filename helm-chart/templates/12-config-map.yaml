@@ -27,7 +27,15 @@ data:
     AUTH_SAML_ROLE_ATTRIBUTE: '{{ .Values.tap.auth.saml.roleAttribute }}'
     AUTH_SAML_ROLES: '{{ .Values.tap.auth.saml.roles | toJson }}'
     TELEMETRY_DISABLED: '{{ not .Values.internetConnectivity | ternary "true" (not .Values.tap.telemetry.enabled | ternary "true" "false") }}'
-    SCRIPTING_DISABLED: '{{ .Values.tap.liveConfigMapChangesDisabled | ternary "true" "" }}'
+    SCRIPTING_DISABLED: '{{- if .Values.tap.liveConfigMapChangesDisabled -}}
+                           {{- if .Values.demoModeEnabled -}}
+                             {{ .Values.demoModeEnabled | ternary false true }}
+                           {{- else -}}
+                             true
+                           {{- end }}
+                         {{- else -}}
+                           false
+                         {{- end }}'
     TARGETED_PODS_UPDATE_DISABLED: '{{ .Values.tap.liveConfigMapChangesDisabled | ternary "true" "" }}'
     PRESET_FILTERS_CHANGING_ENABLED: '{{ .Values.tap.liveConfigMapChangesDisabled | ternary "false" "true" }}'
     RECORDING_DISABLED: '{{ .Values.tap.liveConfigMapChangesDisabled | ternary "true" "" }}'
@@ -48,6 +56,7 @@ data:
                             {{- else -}}
                               {{ .Values.cloudLicenseEnabled }}
                             {{- end }}'
+    AI_ASSISTANT_ENABLED: '{{ .Values.aiAssistantEnabled | ternary "true" "false" }}'
     DUPLICATE_TIMEFRAME: '{{ .Values.tap.misc.duplicateTimeframe }}'
     ENABLED_DISSECTORS: '{{ gt (len .Values.tap.enabledDissectors) 0 | ternary (join "," .Values.tap.enabledDissectors) "" }}'
     CUSTOM_MACROS: '{{ toJson .Values.tap.customMacros }}'

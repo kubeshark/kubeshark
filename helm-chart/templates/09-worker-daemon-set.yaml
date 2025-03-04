@@ -25,39 +25,26 @@ spec:
       name: kubeshark-worker-daemon-set
       namespace: kubeshark
     spec:
+      {{- if .Values.tap.mountBpf }}
       initContainers:
         - command:
           - /bin/sh
           - -c
           - mkdir -p /sys/fs/bpf && mount | grep -q '/sys/fs/bpf' || mount -t bpf bpf /sys/fs/bpf
-        {{- if .Values.tap.docker.overrideTag.worker }}
+          {{- if .Values.tap.docker.overrideTag.worker }}
           image: '{{ .Values.tap.docker.registry }}/worker:{{ .Values.tap.docker.overrideTag.worker }}{{ include "kubeshark.dockerTagDebugVersion" . }}'
         {{ else }}
           image: '{{ .Values.tap.docker.registry }}/worker:{{ not (eq .Values.tap.docker.tag "") | ternary .Values.tap.docker.tag (include "kubeshark.defaultVersion" .) }}{{ include "kubeshark.dockerTagDebugVersion" . }}'
         {{- end }}
           imagePullPolicy: {{ .Values.tap.docker.imagePullPolicy }}
-          name: check-bpf
+          name: mount-bpf
           securityContext:
             privileged: true
           volumeMounts:
           - mountPath: /sys
             name: sys
             mountPropagation: Bidirectional
-        - command:
-          - ./tracer
-          - -init-bpf
-        {{- if .Values.tap.docker.overrideTag.worker }}
-          image: '{{ .Values.tap.docker.registry }}/worker:{{ .Values.tap.docker.overrideTag.worker }}{{ include "kubeshark.dockerTagDebugVersion" . }}'
-        {{ else }}
-          image: '{{ .Values.tap.docker.registry }}/worker:{{ not (eq .Values.tap.docker.tag "") | ternary .Values.tap.docker.tag (include "kubeshark.defaultVersion" .) }}{{ include "kubeshark.dockerTagDebugVersion" . }}'
-        {{- end }}
-          imagePullPolicy: {{ .Values.tap.docker.imagePullPolicy }}
-          name: init-bpf
-          securityContext:
-            privileged: true
-          volumeMounts:
-          - mountPath: /sys
-            name: sys
+      {{- end }}
       containers:
         - command:
             - ./worker
@@ -71,9 +58,7 @@ spec:
             - '{{ .Values.tap.packetCapture }}'
             - -loglevel
             - '{{ .Values.logLevel | default "warning" }}'
-          {{- if .Values.tap.tls }}
-            - -unixsocket
-          {{- else }}
+          {{- if not .Values.tap.tls }}
             - -disable-tracer
           {{- end }}
           {{- if .Values.tap.serviceMesh }}
@@ -81,9 +66,6 @@ spec:
           {{- end }}
             - -procfs
             - /hostproc
-          {{- if eq .Values.tap.packetCapture "af_packet" }}
-            - -disable-ebpf
-          {{- end }}
           {{- if .Values.tap.resourceGuard.enabled }}
             - -enable-resource-guard
           {{- end }}
@@ -147,23 +129,52 @@ spec:
               memory: {{ .Values.tap.resources.sniffer.requests.memory }}
               {{ end }}
           securityContext:
+            privileged: {{ .Values.tap.securityContext.privileged }}
+            {{- if not .Values.tap.securityContext.privileged }}
+            {{- $aaProfile := .Values.tap.securityContext.appArmorProfile }}
+            {{- $selinuxOpts := .Values.tap.securityContext.seLinuxOptions }}
+            {{- if or (ne $aaProfile.type "") (ne $aaProfile.localhostProfile "") }}
+            appArmorProfile:
+              {{- if ne $aaProfile.type "" }}
+              type: {{ $aaProfile.type }}
+              {{- end }}
+              {{- if ne $aaProfile.localhostProfile "" }}
+              localhostProfile: {{ $aaProfile.localhostProfile }}
+              {{- end }}
+            {{- end }}
+            {{- if or (ne $selinuxOpts.level "") (ne $selinuxOpts.role "") (ne $selinuxOpts.type "") (ne $selinuxOpts.user "") }}
+            seLinuxOptions:
+              {{- if ne $selinuxOpts.level "" }}
+              level: {{ $selinuxOpts.level }}
+              {{- end }}
+              {{- if ne $selinuxOpts.role "" }}
+              role: {{ $selinuxOpts.role }}
+              {{- end }}
+              {{- if ne $selinuxOpts.type "" }}
+              type: {{ $selinuxOpts.type }}
+              {{- end }}
+              {{- if ne $selinuxOpts.user "" }}
+              user: {{ $selinuxOpts.user }}
+              {{- end }}
+            {{- end }}
             capabilities:
               add:
-                {{- range .Values.tap.capabilities.networkCapture }}
+                {{- range .Values.tap.securityContext.capabilities.networkCapture }}
                 {{ print "- " . }}
                 {{- end }}
                 {{- if .Values.tap.serviceMesh }}
-                {{- range .Values.tap.capabilities.serviceMeshCapture }}
+                {{- range .Values.tap.securityContext.capabilities.serviceMeshCapture }}
                 {{ print "- " . }}
                 {{- end }}
                 {{- end }}
-                {{- if .Values.tap.capabilities.ebpfCapture }}
-                {{- range .Values.tap.capabilities.ebpfCapture }}
+                {{- if .Values.tap.securityContext.capabilities.ebpfCapture }}
+                {{- range .Values.tap.securityContext.capabilities.ebpfCapture }}
                 {{ print "- " . }}
                 {{- end }}
                 {{- end }}
               drop:
                 - ALL
+            {{- end }}
           readinessProbe:
             periodSeconds: {{ .Values.tap.probes.sniffer.periodSeconds }}
             failureThreshold: {{ .Values.tap.probes.sniffer.failureThreshold }}
@@ -185,6 +196,7 @@ spec:
             - mountPath: /sys
               name: sys
               readOnly: true
+              mountPropagation: HostToContainer
             - mountPath: /app/data
               name: data
       {{- if .Values.tap.tls }}
@@ -192,9 +204,6 @@ spec:
             - ./tracer
             - -procfs
             - /hostproc
-          {{- if eq .Values.tap.packetCapture "af_packet" }}
-            - -disable-ebpf
-          {{- end }}
           {{- if .Values.tap.disableTlsLog }}
             - -disable-tls-log
           {{- end }}
@@ -202,8 +211,8 @@ spec:
             - -port
             - '{{ add .Values.tap.proxy.worker.srvPort 1 }}'
           {{- end }}
-            # - -loglevel
-            # - '{{ .Values.logLevel | default "warning" }}'
+            - -loglevel
+            - '{{ .Values.logLevel | default "warning" }}'
         {{- if .Values.tap.docker.overrideTag.worker }}
           image: '{{ .Values.tap.docker.registry }}/worker:{{ .Values.tap.docker.overrideTag.worker }}{{ include "kubeshark.dockerTagDebugVersion" . }}'
         {{ else }}
@@ -242,16 +251,45 @@ spec:
               memory: {{ .Values.tap.resources.tracer.requests.memory }}
               {{ end }}
           securityContext:
+            privileged: {{ .Values.tap.securityContext.privileged }}
+            {{- if not .Values.tap.securityContext.privileged }}
+            {{- $aaProfile := .Values.tap.securityContext.appArmorProfile }}
+            {{- $selinuxOpts := .Values.tap.securityContext.seLinuxOptions }}
+            {{- if or (ne $aaProfile.type "") (ne $aaProfile.localhostProfile "") }}
+            appArmorProfile:
+              {{- if ne $aaProfile.type "" }}
+              type: {{ $aaProfile.type }}
+              {{- end }}
+              {{- if ne $aaProfile.localhostProfile "" }}
+              localhostProfile: {{ $aaProfile.localhostProfile }}
+              {{- end }}
+            {{- end }}
+            {{- if or (ne $selinuxOpts.level "") (ne $selinuxOpts.role "") (ne $selinuxOpts.type "") (ne $selinuxOpts.user "") }}
+            seLinuxOptions:
+              {{- if ne $selinuxOpts.level "" }}
+              level: {{ $selinuxOpts.level }}
+              {{- end }}
+              {{- if ne $selinuxOpts.role "" }}
+              role: {{ $selinuxOpts.role }}
+              {{- end }}
+              {{- if ne $selinuxOpts.type "" }}
+              type: {{ $selinuxOpts.type }}
+              {{- end }}
+              {{- if ne $selinuxOpts.user "" }}
+              user: {{ $selinuxOpts.user }}
+              {{- end }}
+            {{- end }}
             capabilities:
               add:
-                {{- range .Values.tap.capabilities.ebpfCapture }}
+                {{- range .Values.tap.securityContext.capabilities.ebpfCapture }}
                 {{ print "- " . }}
                 {{- end }}
-                {{- range .Values.tap.capabilities.networkCapture }}
+                {{- range .Values.tap.securityContext.capabilities.networkCapture }}
                 {{ print "- " . }}
                 {{- end }}
               drop:
                 - ALL
+            {{- end }}
           volumeMounts:
             - mountPath: /hostproc
               name: proc
@@ -259,6 +297,7 @@ spec:
             - mountPath: /sys
               name: sys
               readOnly: true
+              mountPropagation: HostToContainer
             - mountPath: /app/data
               name: data
             - mountPath: /etc/os-release
@@ -272,14 +311,22 @@ spec:
       dnsPolicy: ClusterFirstWithHostNet
       hostNetwork: true
       serviceAccountName: {{ include "kubeshark.serviceAccountName" . }}
-      terminationGracePeriodSeconds: 0
+      {{- if .Values.tap.tolerations.workers }}
       tolerations:
-        - effect: NoExecute
-          operator: Exists
-{{- if not .Values.tap.ignoreTainted }}
-        - effect: NoSchedule
-          operator: Exists
-{{- end }}
+      {{- range .Values.tap.tolerations.workers }}
+        - key: {{ .key | quote }}
+          operator: {{ .operator | quote }}
+          {{- if .value }}
+          value: {{ .value | quote }}
+          {{- end }}
+          {{- if .effect }}
+          effect: {{ .effect | quote }}
+          {{- end }}
+          {{- if .tolerationSeconds }}
+          tolerationSeconds: {{ .tolerationSeconds }}
+          {{- end }}
+      {{- end }}
+      {{- end }}
     {{- if .Values.tap.docker.imagePullSecrets }}
       imagePullSecrets:
         {{- range .Values.tap.docker.imagePullSecrets }}

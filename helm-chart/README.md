@@ -174,12 +174,14 @@ Example for overriding image names:
 | `tap.serviceMesh`                         | Capture traffic from service meshes like Istio, Linkerd, Consul, etc.          | `true`                                                  |
 | `tap.tls`                                 | Capture the encrypted/TLS traffic from cryptography libraries like OpenSSL                         | `true`                                                  |
 | `tap.disableTlsLog`                       | Suppress logging for TLS/eBPF                 | `true`                                                 |
-| `tap.ignoreTainted`                       | Whether to ignore tainted nodes               | `false`                                                 |
 | `tap.labels`                              | Kubernetes labels to apply to all Kubeshark resources  | `{}`                                                    |
 | `tap.annotations`                         | Kubernetes annotations to apply to all Kubeshark resources | `{}`                                                |
-| `tap.nodeSelectorTerms.Workers`                   | Node selector terms for workers components                       | `[{"matchExpressions":[{"key":"kubernetes.io/os","operator":"In","values":["linux"]}]}]` |
-| `tap.nodeSelectorTerms.Hub`                   | Node selector terms for hub component                 | `[{"matchExpressions":[{"key":"kubernetes.io/os","operator":"In","values":["linux"]}]}]` |
-| `tap.nodeSelectorTerms.Front`                   | Node selector terms for front-end component                         | `[{"matchExpressions":[{"key":"kubernetes.io/os","operator":"In","values":["linux"]}]}]` |
+| `tap.nodeSelectorTerms.workers`                   | Node selector terms for workers components                       | `[{"matchExpressions":[{"key":"kubernetes.io/os","operator":"In","values":["linux"]}]}]` |
+| `tap.nodeSelectorTerms.hub`                   | Node selector terms for hub component                 | `[{"matchExpressions":[{"key":"kubernetes.io/os","operator":"In","values":["linux"]}]}]` |
+| `tap.nodeSelectorTerms.front`                   | Node selector terms for front-end component                         | `[{"matchExpressions":[{"key":"kubernetes.io/os","operator":"In","values":["linux"]}]}]` |
+| `tap.tolerations.workers`                  | Tolerations for workers components                         | `[ {"operator": "Exists", "effect": "NoExecute"}` |
+| `tap.tolerations.hub`                  | Tolerations for hub component                         | `[]` |
+| `tap.tolerations.front`                  | Tolerations for front-end component                         | `[]` |
 | `tap.auth.enabled`                        | Enable authentication                         | `false`                                                 |
 | `tap.auth.type`                           | Authentication type (1 option available: `saml`)      | `saml`                                              |
 | `tap.auth.approvedEmails`                 | List of approved email addresses for authentication              | `[]`                                                    |
@@ -205,6 +207,7 @@ Example for overriding image names:
 | `tap.globalFilter`                        | Prepends to any KFL filter and can be used to limit what is visible in the dashboard. For example, `redact("request.headers.Authorization")` will redact the appropriate field. Another example `!dns` will not show any DNS traffic.      | `""`                                        |
 | `tap.metrics.port`                  | Pod port used to expose Prometheus metrics          | `49100`                                                  |
 | `tap.enabledDissectors`                   | This is an array of strings representing the list of supported protocols. Remove or comment out redundant protocols (e.g., dns).| The default list excludes: `udp` and `tcp` |
+| `tap.mountBpf`                            | BPF filesystem needs to be mounted for eBPF to work properly. This helm value determines whether Kubeshark will attempt to mount the filesystem. This option is not required if filesystem is already mounts. │ `true`|
 | `logs.file`                               | Logs dump path                      | `""`                                                    |
 | `pcapdump.enabled`                        | Enable recording of all traffic captured according to other parameters. Whatever Kubeshark captures, considering pod targeting rules, will be stored in pcap files ready to be viewed by tools                 | `true`                                                                                                  |
 | `pcapdump.maxTime`                        | The time window into the past that will be stored. Older traffic will be discarded.  | `2h`  |

@@ -139,6 +139,12 @@ type NodeSelectorTermsConfig struct {
 	Front   []v1.NodeSelectorTerm `yaml:"front" json:"front" default:"[]"`
 }
 
+type TolerationsConfig struct {
+	Hub     []v1.Toleration `yaml:"hub" json:"hub" default:"[]"`
+	Workers []v1.Toleration `yaml:"workers" json:"workers" default:"[]"`
+	Front   []v1.Toleration `yaml:"front" json:"front" default:"[]"`
+}
+
 type ProbeConfig struct {
 	InitialDelaySeconds int `yaml:"initialDelaySeconds" json:"initialDelaySeconds" default:"15"`
 	PeriodSeconds       int `yaml:"periodSeconds" json:"periodSeconds" default:"10"`
@@ -251,6 +257,25 @@ type PortMapping struct {
 	DIAMETER []uint16 `yaml:"diameter" json:"diameter"`
 }
 
+type SecurityContextConfig struct {
+	Privileged      bool                  `yaml:"privileged" json:"privileged" default:"true"`
+	AppArmorProfile AppArmorProfileConfig `yaml:"appArmorProfile" json:"appArmorProfile"`
+	SeLinuxOptions  SeLinuxOptionsConfig  `yaml:"seLinuxOptions" json:"seLinuxOptions"`
+	Capabilities    CapabilitiesConfig    `yaml:"capabilities" json:"capabilities"`
+}
+
+type AppArmorProfileConfig struct {
+	Type             string `yaml:"type" json:"type"`
+	LocalhostProfile string `yaml:"localhostProfile" json:"localhostProfile"`
+}
+
+type SeLinuxOptionsConfig struct {
+	Level string `yaml:"level" json:"level"`
+	Role  string `yaml:"role" json:"role"`
+	Type  string `yaml:"type" json:"type"`
+	User  string `yaml:"user" json:"user"`
+}
+
 type TapConfig struct {
 	Docker                       DockerConfig            `yaml:"docker" json:"docker"`
 	Proxy                        ProxyConfig             `yaml:"proxy" json:"proxy"`
@@ -273,10 +298,10 @@ type TapConfig struct {
 	Tls                          bool                    `yaml:"tls" json:"tls" default:"true"`
 	DisableTlsLog                bool                    `yaml:"disableTlsLog" json:"disableTlsLog" default:"true"`
 	PacketCapture                string                  `yaml:"packetCapture" json:"packetCapture" default:"best"`
-	IgnoreTainted                bool                    `yaml:"ignoreTainted" json:"ignoreTainted" default:"false"`
 	Labels                       map[string]string       `yaml:"labels" json:"labels" default:"{}"`
 	Annotations                  map[string]string       `yaml:"annotations" json:"annotations" default:"{}"`
 	NodeSelectorTerms            NodeSelectorTermsConfig `yaml:"nodeSelectorTerms" json:"nodeSelectorTerms" default:"{}"`
+	Tolerations                  TolerationsConfig       `yaml:"tolerations" json:"tolerations" default:"{}"`
 	Auth                         AuthConfig              `yaml:"auth" json:"auth"`
 	Ingress                      IngressConfig           `yaml:"ingress" json:"ingress"`
 	IPv6                         bool                    `yaml:"ipv6" json:"ipv6" default:"true"`
@@ -286,7 +311,6 @@ type TapConfig struct {
 	Sentry                       SentryConfig            `yaml:"sentry" json:"sentry"`
 	DefaultFilter                string                  `yaml:"defaultFilter" json:"defaultFilter" default:"!dns and !error"`
 	LiveConfigMapChangesDisabled bool                    `yaml:"liveConfigMapChangesDisabled" json:"liveConfigMapChangesDisabled" default:"false"`
-	Capabilities                 CapabilitiesConfig      `yaml:"capabilities" json:"capabilities"`
 	GlobalFilter                 string                  `yaml:"globalFilter" json:"globalFilter" default:""`
 	EnabledDissectors            []string                `yaml:"enabledDissectors" json:"enabledDissectors"`
 	PortMapping                  PortMapping             `yaml:"portMapping" json:"portMapping"`
@@ -294,6 +318,8 @@ type TapConfig struct {
 	Metrics                      MetricsConfig           `yaml:"metrics" json:"metrics"`
 	Pprof                        PprofConfig             `yaml:"pprof" json:"pprof"`
 	Misc                         MiscConfig              `yaml:"misc" json:"misc"`
+	SecurityContext              SecurityContextConfig   `yaml:"securityContext" json:"securityContext"`
+	MountBpf                     bool                    `yaml:"mountBpf" json:"mountBpf" default:"true"`
 }
 
 func (config *TapConfig) PodRegex() *regexp.Regexp {

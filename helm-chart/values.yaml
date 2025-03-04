@@ -78,7 +78,6 @@ tap:
   tls: true
   disableTlsLog: true
   packetCapture: best
-  ignoreTainted: false
   labels: {}
   annotations: {}
   nodeSelectorTerms:
@@ -100,6 +99,12 @@ tap:
         operator: In
         values:
         - linux
+  tolerations:
+    hub: []
+    workers:
+    - operator: Exists
+      effect: NoExecute
+    front: []
   auth:
     enabled: false
     type: saml
@@ -137,19 +142,6 @@ tap:
     environment: production
   defaultFilter: "!dns and !error"
   liveConfigMapChangesDisabled: false
-  capabilities:
-    networkCapture:
-    - NET_RAW
-    - NET_ADMIN
-    serviceMeshCapture:
-    - SYS_ADMIN
-    - SYS_PTRACE
-    - DAC_OVERRIDE
-    ebpfCapture:
-    - SYS_ADMIN
-    - SYS_PTRACE
-    - SYS_RESOURCE
-    - IPC_LOCK
   globalFilter: ""
   enabledDissectors:
   - amqp
@@ -199,6 +191,30 @@ tap:
     duplicateTimeframe: 200ms
     detectDuplicates: false
     staleTimeoutSeconds: 30
+  securityContext:
+    privileged: true
+    appArmorProfile:
+      type: ""
+      localhostProfile: ""
+    seLinuxOptions:
+      level: ""
+      role: ""
+      type: ""
+      user: ""
+    capabilities:
+      networkCapture:
+      - NET_RAW
+      - NET_ADMIN
+      serviceMeshCapture:
+      - SYS_ADMIN
+      - SYS_PTRACE
+      - DAC_OVERRIDE
+      ebpfCapture:
+      - SYS_ADMIN
+      - SYS_PTRACE
+      - SYS_RESOURCE
+      - IPC_LOCK
+  mountBpf: true
 logs:
   file: ""
   grep: ""
@@ -208,6 +224,8 @@ pcapdump:
   maxTime: 1h
   maxSize: 500MB
   time: time
+  debug: false
+  dest: ""
 kube:
   configPath: ""
   context: ""
@@ -215,6 +233,8 @@ dumpLogs: false
 headless: false
 license: ""
 cloudLicenseEnabled: true
+aiAssistantEnabled: false
+demoModeEnabled: false
 supportChatEnabled: true
 internetConnectivity: true
 scripting:
