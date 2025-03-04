@@ -21,4 +21,4 @@ spec:
         {{- end }}
           command: ["/bin/sh", "-c"]
           args:
-            - "kubectl delete cm kubeshark-config-map && kubectl delete secret kubeshark-secret"
+            - "kubectl delete cm kubeshark-config-map || true && kubectl delete secret kubeshark-secret || true"

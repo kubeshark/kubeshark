@@ -69,9 +69,18 @@ rules:
       - secrets
       - configmaps
     verbs:
+      - create
       - get
       - watch
       - list
       - update
       - patch
       - delete
+  - apiGroups:
+      - ""
+      - v1
+    resources:
+      - secrets
+      - configmaps
+    verbs:
+      - create
