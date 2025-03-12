@@ -42,7 +42,7 @@ spec:
               value: 'sample value'
           imagePullPolicy: {{ .Values.tap.docker.imagePullPolicy }}
           volumeMounts:
-            - name: dex-config
+            - name: dex-secret-conf-volume
               mountPath: /etc/dex/dex-config.yaml
               subPath: dex-config.yaml
               readOnly: true
@@ -108,11 +108,8 @@ spec:
         {{- end }}
       {{- end }}
       volumes:
-        - name: dex-config
-          configMap:
-            name: kubeshark-dex-config-map
-            items:
-              - key: "dex-config.yaml"
-                path: "dex-config.yaml"
+        - name: dex-secret-conf-volume
+          secret:
+            secretName: kubeshark-dex-conf-secret
       dnsPolicy: ClusterFirstWithHostNet
       serviceAccountName: {{ include "kubeshark.serviceAccountName" . }}
