@@ -31,7 +31,7 @@ data:
     AUTH_SAML_ROLE_ATTRIBUTE: '{{ .Values.tap.auth.saml.roleAttribute }}'
     AUTH_SAML_ROLES: '{{ .Values.tap.auth.saml.roles | toJson }}'
     AUTH_DEX_REFRESH_TOKEN_LIFETIME: '{{ default "3960h" (((((.Values.tap).auth).dex).expiry).refreshTokens).absoluteLifetime }}'
-    AUTH_DEX_STATE_PARAM_EXPIRY: '{{ default "10m" (((.Values.tap).auth).dex).oauth2StateParamExpiry }}'
+    AUTH_DEX_STATE_PARAM_EXPIRY: '{{ default "10m" ((((.Values.tap).auth).dex).customSettings).oauth2StateParamExpiry }}'
     TELEMETRY_DISABLED: '{{ not .Values.internetConnectivity | ternary "true" (not .Values.tap.telemetry.enabled | ternary "true" "false") }}'
     SCRIPTING_DISABLED: '{{- if .Values.tap.liveConfigMapChangesDisabled -}}
                            {{- if .Values.demoModeEnabled -}}
