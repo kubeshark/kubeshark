@@ -228,7 +228,7 @@ KernelMapping pairs kernel versions with a
                             DriverContainer image. Kernel versions can be matched
                             literally or using a regular expression
 
-## Installing with SAML enabled
+# Installing with SAML enabled
 
 ### Prerequisites:
 
@@ -292,4 +292,86 @@ tap:
         sUpBCu0E3nRJM/QB2ui5KhNR7uvPSL+kSsaEq19/mXqsL+mRi9aqy2wMEvUSU/kt
         UaV5sbRtTzYLxpOSQyi8CEFA+A==
         -----END PRIVATE KEY-----
+```
+
+# Installing with Dex (Federated Identity Provider) enabled
+
+Kubeshark supports [Dex - A Federated OpenID Connect Provider](https://dexidp.io/).
+Dex is an abstraction layer designed for integrating a wide variety of Identity Providers.
+
+To set up Dex as a way to authenticate your users to Kubeshark - you need the following helm values:
+```yaml
+tap: 
+  auth:
+    enabled: true
+    type: dex
+    dex:
+      # This field is REQUIRED!
+      # 
+      # The base path of Dex and the external name of the OpenID Connect service.
+      # This is the canonical URL that all clients MUST use to refer to Dex. If a
+      # path is provided, Dex's HTTP service will listen at a non-root URL.
+      issuer: https://<your-ingress-hostname> OR <0.0.0.0:proxy-port>/dex
+      
+      # Custom Dex settings provisioned by Kubeshark.
+      customSettings:
+        oauth2StateParamExpiry: "10m"
+        
+      # Expiration configuration for tokens, signing keys, etc.
+      expiry:
+        refreshTokens:
+          validIfNotUsedFor: "2160h" # 90 days
+          absoluteLifetime: "3960h"  # 165 days
+
+      # This field is REQUIRED!
+      # 
+      # The storage configuration determines where Dex stores its state.
+      # See the documentation (https://dexidp.io/docs/storage/) for further information.
+      storage:
+        type: memory
+
+      # This field is REQUIRED!
+      #
+      # HTTP service configuration
+      web:
+        http: 0.0.0.0:5556
+
+      # This field is REQUIRED!
+      #
+      # Telemetry configuration
+      telemetry:
+        http: 0.0.0.0:5558
+
+      # This field is REQUIRED!
+      #
+      # Static clients registered in Dex by default.
+      staticClients:
+        - id: kubeshark-hub
+          secret: it can be a random string
+          name: Kubeshark
+          redirectURIs:
+          - https://<your-ingress-hostname> OR <0.0.0.0:proxy-port>/api/oauth2/callback
+
+      # Enable the password database.
+      # It's a "virtual" connector (identity provider) that stores
+      # login credentials in Dex's store.
+      enablePasswordDB: true
+
+      # Connectors are used to authenticate users against upstream identity providers.
+      # See the documentation (https://dexidp.io/docs/connectors/) for further information.
+      #
+      # Attention: 
+      # When you define a new connector, `config.redirectURI` must be: 
+      # http(s)://<your-ingress-hostname> OR <0.0.0.0:proxy-port>/dex/callback
+      # 
+      # Example with Google connector:
+      # connectors:
+      #  - type: google
+      #    id: google
+      #    name: Google
+      #    config:
+      #      clientID: your Google Cloud Auth app client ID
+      #      clientSecret: your Google Auth app client ID
+      #      redirectURI: https://<your-ingress-hostname> OR <0.0.0.0:proxy-port>/dex/callback
+      connectors: []
 ```
