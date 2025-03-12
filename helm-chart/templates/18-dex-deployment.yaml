@@ -37,9 +37,6 @@ spec:
           - dex
           - serve
           - /etc/dex/dex-config.yaml
-          env:
-            - name: SAMPLE_ENV
-              value: 'sample value'
           imagePullPolicy: {{ .Values.tap.docker.imagePullPolicy }}
           volumeMounts:
             - name: dex-secret-conf-volume
