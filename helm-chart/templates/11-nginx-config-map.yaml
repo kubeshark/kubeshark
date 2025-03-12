@@ -45,7 +45,7 @@ data:
         proxy_send_timeout 12s;
         proxy_pass_request_headers on;
       }
-
+{{- if and .Values.tap.auth.enabled (eq .Values.tap.auth.type "dex") }}
        location /dex {
         rewrite ^/dex(.*)$ /dex$1 break;
         proxy_pass http://kubeshark-dex;
@@ -60,7 +60,7 @@ data:
         proxy_send_timeout 12s;
         proxy_pass_request_headers      on;
       }
-
+{{- end }}
       location / {
         root   /usr/share/nginx/html;
         index  index.html index.htm;

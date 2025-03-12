@@ -1,3 +1,5 @@
+{{- if and .Values.tap.auth.enabled (eq .Values.tap.auth.type "dex") }}
+
 ---
 apiVersion: v1
 kind: Service
@@ -19,3 +21,5 @@ spec:
   selector:
     app.kubeshark.co/app: dex
   type: ClusterIP
+
+{{- end }}
