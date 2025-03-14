@@ -294,28 +294,53 @@ tap:
         -----END PRIVATE KEY-----
 ```
 
-# Installing with Dex (Federated Identity Provider) enabled
+# Installing with Dex OIDC authentication
 
-Kubeshark supports [Dex - A Federated OpenID Connect Provider](https://dexidp.io/).
+Choose this option, if you already have a running instance of Dex in your cluster.
+
+Kubeshark supports authentication using [Dex - A Federated OpenID Connect Provider](https://dexidp.io/).
 Dex is an abstraction layer designed for integrating a wide variety of Identity Providers.
 
-To set up Dex as a way to authenticate your users to Kubeshark - you need the following helm values:
+To set up - you need the following helm values:
 ```yaml
 tap: 
   auth:
     enabled: true
     type: dex
-    dex:
+    dexOidc:
+      issuer: <put Dex issuer URL here>
+      clientId: <a client ID from Dex static clients>
+      clientSecret: <a client secret from Dex static clients>
+      refreshTokenLifetime: "3960h" # 165 days
+      oauth2StateParamExpiry: "10m"
+```
+
+# Installing your own Dex IdP
+
+Choose this option, if you need to deploy an instance of Dex along with Kubeshark.
+
+Kubeshark supports authentication using [Dex - A Federated OpenID Connect Provider](https://dexidp.io/).
+Dex is an abstraction layer designed for integrating a wide variety of Identity Providers.
+
+To set up - you need the following helm values:
+```yaml
+tap: 
+  auth:
+    enabled: true
+    type: dex
+    dexOidc:
+      issuer: https://<your-ingress-hostname> OR <0.0.0.0:proxy-port>/dex
+      clientId: kubeshark-hub
+      clientSecret: it can be a random string
+      refreshTokenLifetime: "3960h" # 165 days
+      oauth2StateParamExpiry: "10m"
+    dexConfig:
       # This field is REQUIRED!
       # 
       # The base path of Dex and the external name of the OpenID Connect service.
       # This is the canonical URL that all clients MUST use to refer to Dex. If a
       # path is provided, Dex's HTTP service will listen at a non-root URL.
       issuer: https://<your-ingress-hostname> OR <0.0.0.0:proxy-port>/dex
-      
-      # Custom Dex settings provisioned by Kubeshark.
-      customSettings:
-        oauth2StateParamExpiry: "10m"
         
       # Expiration configuration for tokens, signing keys, etc.
       expiry:
