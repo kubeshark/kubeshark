@@ -31,11 +31,11 @@ spec:
                         {{ .Values.cloudLicenseEnabled | ternary "true" .Values.tap.auth.enabled }}
                       {{- end }}'
             - name: REACT_APP_AUTH_TYPE
-              value: '{{- if .Values.cloudLicenseEnabled -}}
-                  {{ (eq .Values.tap.auth.type "dex") | ternary "dex" "oidc" }}
-                {{- else -}}
-                  {{ .Values.tap.auth.type }}
-                {{- end }}'
+              value: '{{- if and .Values.cloudLicenseEnabled (not (eq .Values.tap.auth.type "dex")) -}}
+                        default
+                      {{- else -}}
+                        {{ .Values.tap.auth.type }}
+                      {{- end }}'
             - name: REACT_APP_AUTH_SAML_IDP_METADATA_URL
               value: '{{ not (eq .Values.tap.auth.saml.idpMetadataUrl "") | ternary .Values.tap.auth.saml.idpMetadataUrl " " }}'
             - name: REACT_APP_TIMEZONE

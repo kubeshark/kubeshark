@@ -1,4 +1,4 @@
-{{- if and .Values.tap.auth.enabled (eq .Values.tap.auth.type "dex") }}
+{{- if .Values.tap.auth.dexConfig }}
 
 ---
 apiVersion: v1
