@@ -302,6 +302,9 @@ you want to set up Dex OIDC authentication for Kubeshark users.
 Kubeshark supports authentication using [Dex - A Federated OpenID Connect Provider](https://dexidp.io/).
 Dex is an abstraction layer designed for integrating a wide variety of Identity Providers.
 
+**Requirement:**
+Your Dex IdP must have a publicly accessible URL.
+
 To set up - you need the following helm values:
 ```yaml
 tap: 
@@ -309,9 +312,9 @@ tap:
     enabled: true
     type: dex
     dexOidc:
-      issuer: <put Dex issuer URL here>
-      clientId: <a client ID from Dex static clients>
-      clientSecret: <a client secret from Dex static clients>
+      issuer: <put Dex IdP issuer URL here>
+      clientId: <a client ID from Dex IdP static clients>
+      clientSecret: <a client secret from Dex IdP static clients>
       refreshTokenLifetime: "3960h" # 165 days
       oauth2StateParamExpiry: "10m"
 ```
@@ -323,9 +326,9 @@ set up Dex OIDC authentication for Kubeshark users.
 
 Depending on Ingress enabled/disabled, your Dex configuration might differ.
 
----
+**Requirement:**
+Please, configure Ingress using `tap.ingress` for your Kubeshark installation. For example:
 
-### 1. You have Ingress enabled:
 ```yaml
 tap:
   ingress:
@@ -347,23 +350,6 @@ The following Dex settings will have these values:
 | `tap.auth.dexConfig.issuer`                           | `https://ks.example.com/dex`                 |
 | `tap.auth.dexConfig.staticClients -> redirectURIs`    | `https://ks.example.com/api/oauth2/callback` |
 | `tap.auth.dexConfig.connectors -> config.redirectURI` | `https://ks.example.com/dex/callback`        |
-
-### 2. You have Ingress disabled:
-
-**Ingress disabled - condition:**<br/>
-Either `tap.ingress.enabled: false` or `tap.ingress` section is not specified in helm `values.yaml`. 
-
-If the condition above matches your case:
-your Kubeshark host will be `localhost:8899` (where `8899` is `tap.proxy.front.port`)
-
-The following Dex settings will have these values:
-
-| Setting                                               | Value                                       |
-|-------------------------------------------------------|---------------------------------------------|
-| `tap.auth.dexOidc.issuer`                             | `http://localhost:8899/dex`                 |
-| `tap.auth.dexConfig.issuer`                           | `http://localhost:8899/dex`                 |
-| `tap.auth.dexConfig.staticClients -> redirectURIs`    | `http://localhost:8899/api/oauth2/callback` |
-| `tap.auth.dexConfig.connectors -> config.redirectURI` | `http://localhost:8899/dex/callback`        |
 
 ---
 
@@ -401,8 +387,8 @@ Use these helm `values.yaml` fields to:
 - Enable OIDC authentication for Kubeshark users
 
 Make sure to:
-- Replace `https://<your-ingress-hostname> OR <0.0.0.0:proxy-port>` with a correct Kubeshark host.
-  - refer to sections **"1. You have Ingress enabled"** and **"2. You have Ingress disabled"** find out Kubeshark host.
+- Replace `<your-ingress-hostname>` with a correct Kubeshark Ingress host (`tap.auth.ingress.host`).
+  - refer to section **Installing with Ingress (EKS) enabled** to find out how you can configure Ingress host.
 
 Helm `values.yaml`:
 ```yaml
@@ -411,7 +397,7 @@ tap:
     enabled: true
     type: dex
     dexOidc:
-      issuer: https://<your-ingress-hostname> OR <0.0.0.0:proxy-port>/dex
+      issuer: https://<your-ingress-hostname>/dex
       
       # Client ID/secret must be taken from `tap.auth.dexConfig.staticClients -> id/secret`
       clientId: kubeshark-hub
@@ -425,7 +411,7 @@ tap:
       # The base path of Dex and the external name of the OpenID Connect service.
       # This is the canonical URL that all clients MUST use to refer to Dex. If a
       # path is provided, Dex's HTTP service will listen at a non-root URL.
-      issuer: https://<your-ingress-hostname> OR <0.0.0.0:proxy-port>/dex
+      issuer: https://<your-ingress-hostname>/dex
         
       # Expiration configuration for tokens, signing keys, etc.
       expiry:
@@ -468,7 +454,7 @@ tap:
           secret: create your own client password
           name: Kubeshark
           redirectURIs:
-          - https://<your-ingress-hostname> OR <0.0.0.0:proxy-port>/api/oauth2/callback
+          - https://<your-ingress-hostname>/api/oauth2/callback
 
       # Enable the password database.
       # It's a "virtual" connector (identity provider) that stores
@@ -480,7 +466,7 @@ tap:
       #
       # Attention: 
       # When you define a new connector, `config.redirectURI` must be: 
-      # http(s)://<your-ingress-hostname> OR <0.0.0.0:proxy-port>/dex/callback
+      # https://<your-ingress-hostname>/dex/callback
       # 
       # Example with Google connector:
       # connectors:
@@ -490,6 +476,6 @@ tap:
       #    config:
       #      clientID: your Google Cloud Auth app client ID
       #      clientSecret: your Google Auth app client ID
-      #      redirectURI: https://<your-ingress-hostname> OR <0.0.0.0:proxy-port>/dex/callback
+      #      redirectURI: https://<your-ingress-hostname>/dex/callback
       connectors: []
 ```
