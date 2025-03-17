@@ -305,19 +305,54 @@ Dex is an abstraction layer designed for integrating a wide variety of Identity 
 **Requirement:**
 Your Dex IdP must have a publicly accessible URL.
 
-To set up - you need the following helm values:
+### Pre-requisites:
+
+**1. If you configured Ingress for Kubeshark:**
+
+(see section: "Installing with Ingress (EKS) enabled")
+
+OAuth2 callback URL is: <br/>
+`https://<kubeshark-ingress-hostname>/api/oauth2/callback`
+
+**2. If you did not configure Ingress for Kubeshark:**
+
+OAuth2 callback URL is: <br/>
+`http://0.0.0.0:8899/api/oauth2/callback`
+
+Use chosen OAuth2 callback URL to replace `<your-kubeshark-host>` in Step 3.
+
+**3. Add this static client to your Dex IdP configuration (`config.yaml`):**
 ```yaml
+staticClients:
+   - id: kubeshark
+     secret: create your own client password
+     name: Kubeshark
+     redirectURIs:
+     - https://<your-kubeshark-host>/api/oauth2/callback
+```
+
+**Final step:**
+
+Add these helm values to set up OIDC authentication powered by your Dex IdP:
+
+```yaml
+# values.yaml
+
 tap: 
   auth:
     enabled: true
     type: dex
     dexOidc:
       issuer: <put Dex IdP issuer URL here>
-      clientId: <a client ID from Dex IdP static clients>
-      clientSecret: <a client secret from Dex IdP static clients>
+      clientId: kubeshark
+      clientSecret: create your own client password
       refreshTokenLifetime: "3960h" # 165 days
       oauth2StateParamExpiry: "10m"
 ```
+
+Once you run `helm install kubeshark kubeshark/kubeshark -f ./values.yaml`, Kubeshark will be installed with (Dex) OIDC authentication enabled.
+
+---
 
 # Installing your own Dex IdP along with Kubeshark
 
@@ -400,7 +435,7 @@ tap:
       issuer: https://<your-ingress-hostname>/dex
       
       # Client ID/secret must be taken from `tap.auth.dexConfig.staticClients -> id/secret`
-      clientId: kubeshark-hub
+      clientId: kubeshark
       clientSecret: create your own client password
       
       refreshTokenLifetime: "3960h" # 165 days
@@ -450,7 +485,7 @@ tap:
       #
       # Static clients registered in Dex by default.
       staticClients:
-        - id: kubeshark-hub
+        - id: kubeshark
           secret: create your own client password
           name: Kubeshark
           redirectURIs:
