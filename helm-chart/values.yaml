@@ -240,6 +240,7 @@ headless: false
 license: ""
 cloudLicenseEnabled: true
 aiAssistantEnabled: false
+demoModeEnabled: false
 supportChatEnabled: true
 internetConnectivity: true
 scripting:

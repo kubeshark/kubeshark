@@ -10,7 +10,7 @@ curl -Lo kubeshark https://github.com/kubeshark/kubeshark/releases/download/_VER
 
 **Mac** (AArch64/Apple M1 silicon)
 ```
-rm -f kubeshark && curl -Lo kubeshark https://github.com/kubeshark/kubeshark/releases/download/_VER_/kubeshark_darwin_arm64 && chmod 755 kubeshark
+curl -Lo kubeshark https://github.com/kubeshark/kubeshark/releases/download/_VER_/kubeshark_darwin_arm64 && chmod 755 kubeshark
 ```
 
 **Linux** (x86-64)
