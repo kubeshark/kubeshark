@@ -1,6 +1,6 @@
 module github.com/kubeshark/kubeshark
 
-go 1.20
+go 1.21.1
 
 require (
 	github.com/creasty/defaults v1.5.2
@@ -9,6 +9,7 @@ require (
 	github.com/goccy/go-yaml v1.11.2
 	github.com/google/go-github/v37 v37.0.0
 	github.com/gorilla/websocket v1.4.2
+	github.com/kubeshark/gopacket v1.1.39
 	github.com/pkg/errors v0.9.1
 	github.com/rivo/tview v0.0.0-20240818110301-fd649dbf1223
 	github.com/robertkrimen/otto v0.2.1
@@ -82,7 +83,6 @@ require (
 	github.com/josharian/intern v1.0.0 // indirect
 	github.com/json-iterator/go v1.1.12 // indirect
 	github.com/klauspost/compress v1.16.0 // indirect
-	github.com/kubeshark/gopacket v1.1.39 // indirect
 	github.com/kubeshark/tracerproto v1.0.0 // indirect
 	github.com/lann/builder v0.0.0-20180802200727-47ae307949d0 // indirect
 	github.com/lann/ps v0.0.0-20150810152359-62de8c46ede0 // indirect

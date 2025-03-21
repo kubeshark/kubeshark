@@ -84,7 +84,8 @@ kubectl-view-kubeshark-resources: ## This command outputs all Kubernetes resourc
 	./kubectl.sh view-kubeshark-resources
 
 generate-helm-values: ## Generate the Helm values from config.yaml
-	./bin/kubeshark__ config > ./helm-chart/values.yaml && sed -i 's/^license:.*/license: ""/' helm-chart/values.yaml && sed -i '1i # find a detailed description here: https://github.com/kubeshark/kubeshark/blob/master/helm-chart/README.md' helm-chart/values.yaml 
+	mv ~/.kubeshark/config.yaml ~/.kubeshark/config.yaml.old; bin/kubeshark__ config>helm-chart/values.yaml;mv ~/.kubeshark/config.yaml.old ~/.kubeshark/config.yaml
+	sed -i 's/^license:.*/license: ""/' helm-chart/values.yaml && sed -i '1i # find a detailed description here: https://github.com/kubeshark/kubeshark/blob/master/helm-chart/README.md' helm-chart/values.yaml 
 
 generate-manifests: ## Generate the manifests from the Helm chart using default configuration
 	helm template kubeshark -n default ./helm-chart > ./manifests/complete.yaml
@@ -181,11 +182,20 @@ release:
 	@cd ../tracer && git checkout master && git pull && git tag -d v$(VERSION); git tag v$(VERSION) && git push origin --tags
 	@cd ../hub && git checkout master && git pull && git tag -d v$(VERSION); git tag v$(VERSION) && git push origin --tags
 	@cd ../front && git checkout master && git pull && git tag -d v$(VERSION); git tag v$(VERSION) && git push origin --tags
-	@cd ../kubeshark && git checkout master && git pull && sed -i 's/^version:.*/version: "$(VERSION)"/' helm-chart/Chart.yaml && make && make generate-helm-values && make generate-manifests
+	@cd ../kubeshark && git checkout master && git pull && sed -i "s/^version:.*/version: \"$(shell echo $(VERSION) | sed -E 's/^([0-9]+\.[0-9]+)\..*/\1/')\"/" helm-chart/Chart.yaml && make
+	@if [ "$(shell uname)" = "Darwin" ]; then \
+		codesign --sign - --force --preserve-metadata=entitlements,requirements,flags,runtime ./bin/kubeshark__; \
+	fi
+	@make generate-helm-values && make generate-manifests
 	@git add -A . && git commit -m ":bookmark: Bump the Helm chart version to $(VERSION)" && git push
 	@git tag -d v$(VERSION); git tag v$(VERSION) && git push origin --tags
-	@cd helm-chart && cp -r . ../../kubeshark.github.io/charts/chart
+	@cd helm-chart && rm -r ../../kubeshark.github.io/charts/chart/* && cp -r . ../../kubeshark.github.io/charts/chart
 	@cd ../../kubeshark.github.io/ && git add -A . && git commit -m ":sparkles: Update the Helm chart" && git push
+	@cd ../kubeshark
+
+release-dry-run:
+	@cd ../kubeshark && git checkout master && git pull && sed -i "s/^version:.*/version: \"$(shell echo $(VERSION) | sed -E 's/^([0-9]+\.[0-9]+)\..*/\1/')\"/" helm-chart/Chart.yaml && make && make generate-helm-values && make generate-manifests
+	@cd helm-chart && rm -r ../../kubeshark.github.io/charts/chart/* && cp -r . ../../kubeshark.github.io/charts/chart
 	@cd ../kubeshark
 
 branch:

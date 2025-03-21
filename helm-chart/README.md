@@ -104,6 +104,20 @@ helm install kubeshark kubeshark/kubeshark \
 
 Please refer to [metrics](./metrics.md) documentation for details.
 
+## Override Tag, Tags, Images
+
+In addition to using a private registry, you can further override the images' tag, specific image tags and specific image names.
+
+Example for overriding image names:
+
+```yaml
+  docker:
+    overrideImage: 
+      worker: docker.io/kubeshark/worker:v52.3.87
+      front:  docker.io/kubeshark/front:v52.3.87
+      hub:    docker.io/kubeshark/hub:v52.3.87
+```
+
 ## Configuration
 
 | Parameter                                 | Description                                   | Default                                                 |
@@ -114,16 +128,17 @@ Please refer to [metrics](./metrics.md) documentation for details.
 | `tap.docker.tagLocked`                    | If `false` - use latest minor tag             | `true`                                                  |
 | `tap.docker.imagePullPolicy`              | Kubernetes image pull policy                  | `Always`                                                |
 | `tap.docker.imagePullSecrets`             | Kubernetes secrets to pull the images         | `[]`                                                    |
-| `tap.docker.overrideTag`                  | DANGER: Used to override specific images, when testing custom features from the Kubeshark team | `""`   |
+| `tap.docker.overrideImage`                | Can be used to directly override image names  | `""`                                                    |
+| `tap.docker.overrideTag`                  | Can be used to override image tags            | `""`                                                    |
 | `tap.proxy.hub.srvPort`                   | Hub server port. Change if already occupied.  | `8898`                                                  |
-| `tap.proxy.worker.srvPort`                | Worker server port. Change if already occupied.| `30001`                                                |
+| `tap.proxy.worker.srvPort`                | Worker server port. Change if already occupied.| `48999`                                                |
 | `tap.proxy.front.port`                    | Front service port. Change if already occupied.| `8899`                                                 |
 | `tap.proxy.host`                          | Change to 0.0.0.0 top open up to the world.   | `127.0.0.1`                                             |
 | `tap.regex`                               | Target (process traffic from) pods that match regex | `.*`                                              |
 | `tap.namespaces`                          | Target pods in namespaces                     | `[]`                                                    |
 | `tap.excludedNamespaces`                  | Exclude pods in namespaces                    | `[]`                                                    |
 | `tap.bpfOverride`                         | When using AF_PACKET as a traffic capture backend, override any existing pod targeting rules and set explicit BPF expression (e.g. `net 0.0.0.0/0`).                                                          | `[]`                                                    |
-| `tap.stopped`                             | Set to `false` to have traffic processing start automatically. When set to `true`, traffic processing is stopped by default, resulting in almost no resource consumption (e.g. Kubeshark is dormant). This property can be dynamically control via the dashboard.      | `true`                                                                                                                                                |
+| `tap.stopped`                             | Set to `false` to have traffic processing start automatically. When set to `true`, traffic processing is stopped by default, resulting in almost no resource consumption (e.g. Kubeshark is dormant). This property can be dynamically control via the dashboard.      | `false`                                                                                                                                                |
 | `tap.release.repo`                        | URL of the Helm chart repository              | `https://helm.kubeshark.co`                             |
 | `tap.release.name`                        | Helm release name                             | `kubeshark`                                             |
 | `tap.release.namespace`                   | Helm release namespace                        | `default`                                               |
@@ -133,25 +148,40 @@ Please refer to [metrics](./metrics.md) documentation for details.
 | `tap.storageLimit`                        | Limit of either the `emptyDir` or `persistentVolumeClaim` | `500Mi`                                     |
 | `tap.storageClass`                        | Storage class of the `PersistentVolumeClaim`          | `standard`                                      |
 | `tap.dryRun`                              | Preview of all pods matching the regex, without tapping them    | `false`                               |
-| `tap.resources.hub.limits.cpu`            | CPU limit for hub                             | `1000m`                                                 |
-| `tap.resources.hub.limits.memory`         | Memory limit for hub                          | `1500Mi`                                                |
+| `tap.dnsConfig.nameservers`               | Nameservers to use for DNS resolution          | `[]`                                                    |
+| `tap.dnsConfig.searches`                  | Search domains to use for DNS resolution       | `[]`                                                    |
+| `tap.dnsConfig.options`                   | DNS options to use for DNS resolution          | `[]`                                                    |
+| `tap.resources.hub.limits.cpu`            | CPU limit for hub                             | `""`  (no limit)                                                 |
+| `tap.resources.hub.limits.memory`         | Memory limit for hub                          | `5Gi`                                                |
 | `tap.resources.hub.requests.cpu`          | CPU request for hub                           | `50m`                                                   |
 | `tap.resources.hub.requests.memory`       | Memory request for hub                        | `50Mi`                                                  |
-| `tap.resources.sniffer.limits.cpu`        | CPU limit for sniffer                         | `1000m`                                                 |
-| `tap.resources.sniffer.limits.memory`     | Memory limit for sniffer                      | `1500Mi`                                                |
+| `tap.resources.sniffer.limits.cpu`        | CPU limit for sniffer                         | `""`  (no limit)                                                    |
+| `tap.resources.sniffer.limits.memory`     | Memory limit for sniffer                      | `3Gi`                                                |
 | `tap.resources.sniffer.requests.cpu`      | CPU request for sniffer                       | `50m`                                                   |
 | `tap.resources.sniffer.requests.memory`   | Memory request for sniffer                    | `50Mi`                                                  |
-| `tap.resources.tracer.limits.cpu`         | CPU limit for tracer                          | `1000m`                                                 |
-| `tap.resources.tracer.limits.memory`      | Memory limit for tracer                       | `1500Mi`                                                |
+| `tap.resources.tracer.limits.cpu`         | CPU limit for tracer                          | `""`  (no limit)                                                     |
+| `tap.resources.tracer.limits.memory`      | Memory limit for tracer                       | `3Gi`                                                |
 | `tap.resources.tracer.requests.cpu`       | CPU request for tracer                        | `50m`                                                   |
 | `tap.resources.tracer.requests.memory`    | Memory request for tracer                     | `50Mi`                                                  |
+| `tap.probes.hub.initialDelaySeconds`      | Initial delay before probing the hub         | `15`                                                    |
+| `tap.probes.hub.periodSeconds`            | Period between probes for the hub             | `10`                                                    |
+| `tap.probes.hub.successThreshold`         | Number of successful probes before considering the hub healthy | `1`                                        |
+| `tap.probes.hub.failureThreshold`         | Number of failed probes before considering the hub unhealthy | `3`                                           |
+| `tap.probes.sniffer.initialDelaySeconds`  | Initial delay before probing the sniffer     | `15`                                                    |
+| `tap.probes.sniffer.periodSeconds`        | Period between probes for the sniffer         | `10`                                                    |
+| `tap.probes.sniffer.successThreshold`     | Number of successful probes before considering the sniffer healthy | `1`                                    |
+| `tap.probes.sniffer.failureThreshold`     | Number of failed probes before considering the sniffer unhealthy | `3`                                       |
 | `tap.serviceMesh`                         | Capture traffic from service meshes like Istio, Linkerd, Consul, etc.          | `true`                                                  |
 | `tap.tls`                                 | Capture the encrypted/TLS traffic from cryptography libraries like OpenSSL                         | `true`                                                  |
-| `tap.disableTlsLog`                       | Suppress logging for TLS/eBPF                 | `false`                                                 |
-| `tap.ignoreTainted`                       | Whether to ignore tainted nodes               | `false`                                                 |
+| `tap.disableTlsLog`                       | Suppress logging for TLS/eBPF                 | `true`                                                 |
 | `tap.labels`                              | Kubernetes labels to apply to all Kubeshark resources  | `{}`                                                    |
 | `tap.annotations`                         | Kubernetes annotations to apply to all Kubeshark resources | `{}`                                                |
-| `tap.nodeSelectorTerms`                   | Node selector terms                           | `[{"matchExpressions":[{"key":"kubernetes.io/os","operator":"In","values":["linux"]}]}]` |
+| `tap.nodeSelectorTerms.workers`                   | Node selector terms for workers components                       | `[{"matchExpressions":[{"key":"kubernetes.io/os","operator":"In","values":["linux"]}]}]` |
+| `tap.nodeSelectorTerms.hub`                   | Node selector terms for hub component                 | `[{"matchExpressions":[{"key":"kubernetes.io/os","operator":"In","values":["linux"]}]}]` |
+| `tap.nodeSelectorTerms.front`                   | Node selector terms for front-end component                         | `[{"matchExpressions":[{"key":"kubernetes.io/os","operator":"In","values":["linux"]}]}]` |
+| `tap.tolerations.workers`                  | Tolerations for workers components                         | `[ {"operator": "Exists", "effect": "NoExecute"}` |
+| `tap.tolerations.hub`                  | Tolerations for hub component                         | `[]` |
+| `tap.tolerations.front`                  | Tolerations for front-end component                         | `[]` |
 | `tap.auth.enabled`                        | Enable authentication                         | `false`                                                 |
 | `tap.auth.type`                           | Authentication type (1 option available: `saml`)      | `saml`                                              |
 | `tap.auth.approvedEmails`                 | List of approved email addresses for authentication              | `[]`                                                    |
@@ -160,7 +190,7 @@ Please refer to [metrics](./metrics.md) documentation for details.
 | `tap.auth.saml.x509crt`                   | A self-signed X.509 `.cert` contents <br/>(effective, if `tap.auth.type = saml`)          | ``                                                      |
 | `tap.auth.saml.x509key`                   | A self-signed X.509 `.key` contents <br/>(effective, if `tap.auth.type = saml`)           | ``                                                      |
 | `tap.auth.saml.roleAttribute`             | A SAML attribute name corresponding to user's authorization role <br/>(effective, if `tap.auth.type = saml`)  | `role` |
-| `tap.auth.saml.roles`                     | A list of SAML authorization roles and their permissions <br/>(effective, if `tap.auth.type = saml`)  | `{"admin":{"canDownloadPCAP":true,"canUpdateTargetedPods":true,"canUseScripting":true, "canStopTrafficCapturing":true, "filter":"","showAdminConsoleLink":true}}` |
+| `tap.auth.saml.roles`                     | A list of SAML authorization roles and their permissions <br/>(effective, if `tap.auth.type = saml`)  | `{"admin":{"canDownloadPCAP":true,"canUpdateTargetedPods":true,"canUseScripting":true, "scriptingPermissions":{"canSave":true, "canActivate":true, "canDelete":true}, "canStopTrafficCapturing":true, "filter":"","showAdminConsoleLink":true}}` |
 | `tap.ingress.enabled`                     | Enable `Ingress`                                | `false`                                                 |
 | `tap.ingress.className`                   | Ingress class name                            | `""`                                                    |
 | `tap.ingress.host`                        | Host of the `Ingress`                          | `ks.svc.cluster.local`                                  |
@@ -168,17 +198,16 @@ Please refer to [metrics](./metrics.md) documentation for details.
 | `tap.ingress.annotations`                 | `Ingress` annotations                           | `{}`                                                    |
 | `tap.ipv6`                                | Enable IPv6 support for the front-end                        | `true`                                                  |
 | `tap.debug`                               | Enable debug mode                             | `false`                                                 |
-| `tap.kernelModule.enabled`                | Use PF_RING kernel module([details](PF_RING.md))      | `false`                                                 |
-| `tap.kernelModule.image`                  | Container image containing PF_RING kernel module with supported kernel version([details](PF_RING.md))      | "kubeshark/pf-ring-module:all"                                                 |
-| `tap.kernelModule.unloadOnDestroy`        | Create additional container which watches for pod termination and unloads PF_RING kernel module. | `false`|
 | `tap.telemetry.enabled`                   | Enable anonymous usage statistics collection           | `true`                                                  |
 | `tap.resourceGuard.enabled`               | Enable resource guard worker process, which watches RAM/disk usage and enables/disables traffic capture based on available resources | `false` |
 | `tap.sentry.enabled`                      | Enable sending of error logs to Sentry          | `false`                                                  |
 | `tap.sentry.environment`                      | Sentry environment to label error logs with      | `production`                                                  |
-| `tap.defaultFilter`                       | Sets the default dashboard KFL filter (e.g. `http`). By default, this value is set to filter out noisy protocols such as DNS, UDP, ICMP and TCP. The user can easily change this in the Dashboard. You can also change this value to change this behavior.        | `"!dns and !tcp and !udp and !icmp"`                                                  |
+| `tap.defaultFilter`                       | Sets the default dashboard KFL filter (e.g. `http`). By default, this value is set to filter out noisy protocols such as DNS, UDP, ICMP and TCP. The user can easily change this, **temporarily**, in the Dashboard. For a permanent change, you should change this value in the `values.yaml` or `config.yaml` file.        | `"!dns and !error"`                                    |
+| `tap.liveConfigMapChangesDisabled`        | If set to `true`, all user functionality (scripting, targeting settings, global & default KFL modification, traffic recording, traffic capturing on/off, protocol dissectors) involving dynamic ConfigMap changes from UI will be disabled     | `false`      |
 | `tap.globalFilter`                        | Prepends to any KFL filter and can be used to limit what is visible in the dashboard. For example, `redact("request.headers.Authorization")` will redact the appropriate field. Another example `!dns` will not show any DNS traffic.      | `""`                                        |
 | `tap.metrics.port`                  | Pod port used to expose Prometheus metrics          | `49100`                                                  |
-| `tap.enabledDissectors`                   | This is an array of strings representing the list of supported protocols. Remove or comment out redundant protocols (e.g., dns).| The default list includes: amqp, dns , http, icmp, kafka, redis,sctp, syscall, tcp, ws.  |
+| `tap.enabledDissectors`                   | This is an array of strings representing the list of supported protocols. Remove or comment out redundant protocols (e.g., dns).| The default list excludes: `udp` and `tcp` |
+| `tap.mountBpf`                            | BPF filesystem needs to be mounted for eBPF to work properly. This helm value determines whether Kubeshark will attempt to mount the filesystem. This option is not required if filesystem is already mounts. │ `true`|
 | `logs.file`                               | Logs dump path                      | `""`                                                    |
 | `pcapdump.enabled`                        | Enable recording of all traffic captured according to other parameters. Whatever Kubeshark captures, considering pod targeting rules, will be stored in pcap files ready to be viewed by tools                 | `true`                                                                                                  |
 | `pcapdump.maxTime`                        | The time window into the past that will be stored. Older traffic will be discarded.  | `2h`  |
@@ -195,7 +224,6 @@ Please refer to [metrics](./metrics.md) documentation for details.
 | `supportChatEnabled`                      | Enable real-time support chat channel based on Intercom | `true` |
 | `serviceMapNewUiEnabled`                  | Enable new experimental version of Service Map UI | `false` |
 | `internetConnectivity`                    | Turns off API requests that are dependant on Internet connectivity such as `telemetry` and `online-support`. | `true` |
-| `dissectorsUpdatingEnabled`                     | Turns off UI for enabling/disabling dissectors | `true` |
 
 KernelMapping pairs kernel versions with a
                             DriverContainer image. Kernel versions can be matched

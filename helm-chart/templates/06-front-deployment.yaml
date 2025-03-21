@@ -37,20 +37,28 @@ spec:
             - name: REACT_APP_TIMEZONE
               value: '{{ not (eq .Values.timezone "") | ternary .Values.timezone " " }}'
             - name: REACT_APP_SCRIPTING_DISABLED
-              value: '{{ .Values.tap.scriptingDisabled }}'
+              value: '{{- if .Values.tap.liveConfigMapChangesDisabled -}}
+                        {{- if .Values.demoModeEnabled -}}
+                          {{ .Values.demoModeEnabled | ternary false true }}
+                        {{- else -}}
+                          true
+                        {{- end }}
+                      {{- else -}}
+                        false
+                      {{- end }}'
             - name: REACT_APP_TARGETED_PODS_UPDATE_DISABLED
-              value: '{{ .Values.tap.targetedPodsUpdateDisabled }}'
+              value: '{{ .Values.tap.liveConfigMapChangesDisabled }}'
             - name: REACT_APP_PRESET_FILTERS_CHANGING_ENABLED
-              value: '{{ .Values.tap.presetFiltersChangingEnabled }}'
+              value: '{{ .Values.tap.liveConfigMapChangesDisabled | ternary "false" "true" }}'
             - name: REACT_APP_BPF_OVERRIDE_DISABLED
-              value: '{{ eq .Values.tap.packetCapture "ebpf" | ternary "true" "false" }}'
+              value: '{{ eq .Values.tap.packetCapture "af_packet" | ternary "false" "true" }}'
             - name: REACT_APP_RECORDING_DISABLED
-              value: '{{ .Values.tap.recordingDisabled }}'
+              value: '{{ .Values.tap.liveConfigMapChangesDisabled }}'
             - name: REACT_APP_STOP_TRAFFIC_CAPTURING_DISABLED
-              value: '{{- if and .Values.tap.stopTrafficCapturingDisabled .Values.tap.stopped -}}
+              value: '{{- if and .Values.tap.liveConfigMapChangesDisabled .Values.tap.stopped -}}
                         false
                       {{- else -}}
-                        {{ .Values.tap.stopTrafficCapturingDisabled | ternary "true" "false" }}
+                        {{ .Values.tap.liveConfigMapChangesDisabled | ternary "true" "false" }}
                       {{- end -}}'
             - name: 'REACT_APP_CLOUD_LICENSE_ENABLED'
               value: '{{- if or (and .Values.cloudLicenseEnabled (not (empty .Values.license))) (not .Values.internetConnectivity) -}}
@@ -58,28 +66,26 @@ spec:
                       {{- else -}}
                         {{ .Values.cloudLicenseEnabled }}
                       {{- end }}'
+            - name: 'REACT_APP_AI_ASSISTANT_ENABLED'
+              value: '{{ .Values.aiAssistantEnabled | ternary "true" "false" }}'
             - name: REACT_APP_SUPPORT_CHAT_ENABLED
               value: '{{ and .Values.supportChatEnabled .Values.internetConnectivity | ternary "true" "false" }}'
             - name: REACT_APP_DISSECTORS_UPDATING_ENABLED
-              value: '{{ .Values.dissectorsUpdatingEnabled | ternary "true" "false" }}'
+              value: '{{ .Values.tap.liveConfigMapChangesDisabled | ternary "false" "true" }}'
             - name: REACT_APP_SERVICE_MAP_NEW_UI_ENABLED
               value: '{{ .Values.serviceMapNewUiEnabled | ternary "true" "false" }}'
             - name: REACT_APP_SENTRY_ENABLED
               value: '{{ (include "sentry.enabled" .) }}'
             - name: REACT_APP_SENTRY_ENVIRONMENT
               value: '{{ .Values.tap.sentry.environment }}'
-        {{- if .Values.tap.docker.overrideTag.front }}
+        {{- if .Values.tap.docker.overrideImage.front }}
+          image: '{{ .Values.tap.docker.overrideImage.front }}'
+        {{- else if .Values.tap.docker.overrideTag.front }}
           image: '{{ .Values.tap.docker.registry }}/front:{{ .Values.tap.docker.overrideTag.front }}'
         {{ else }}
           image: '{{ .Values.tap.docker.registry }}/front:{{ not (eq .Values.tap.docker.tag "") | ternary .Values.tap.docker.tag (include "kubeshark.defaultVersion" .) }}'
         {{- end }}
           imagePullPolicy: {{ .Values.tap.docker.imagePullPolicy }}
-        {{- if .Values.tap.docker.imagePullSecrets }}
-          imagePullSecrets:
-            {{- range .Values.tap.docker.imagePullSecrets }}
-            - name: {{ . }}
-            {{- end }}
-        {{- end }}
           name: kubeshark-front
           livenessProbe:
             periodSeconds: 1
@@ -108,6 +114,59 @@ spec:
               mountPath: /etc/nginx/conf.d/default.conf
               subPath: default.conf
               readOnly: true
+    {{- if .Values.tap.docker.imagePullSecrets }}
+      imagePullSecrets:
+        {{- range .Values.tap.docker.imagePullSecrets }}
+        - name: {{ . }}
+        {{- end }}
+    {{- end }}
+{{- if gt (len .Values.tap.nodeSelectorTerms.front) 0}}
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              {{- toYaml .Values.tap.nodeSelectorTerms.front | nindent 12 }}
+{{- end }}
+      {{- if or .Values.tap.dns.nameservers .Values.tap.dns.searches .Values.tap.dns.options }}
+      dnsConfig:
+        {{- if .Values.tap.dns.nameservers }}
+        nameservers:
+        {{- range .Values.tap.dns.nameservers }}
+          - {{ . | quote }}
+        {{- end }}
+        {{- end }}
+        {{- if .Values.tap.dns.searches }}
+        searches:
+        {{- range .Values.tap.dns.searches }}
+          - {{ . | quote }}
+        {{- end }}
+        {{- end }}
+        {{- if .Values.tap.dns.options }}
+        options:
+        {{- range .Values.tap.dns.options }}
+          - name: {{ .name | quote }}
+            {{- if .value }}
+            value: {{ .value | quote }}
+            {{- end }}
+        {{- end }}
+        {{- end }}
+      {{- end }}
+      {{- if .Values.tap.tolerations.front }}
+      tolerations:
+      {{- range .Values.tap.tolerations.front }}
+        - key: {{ .key | quote }}
+          operator: {{ .operator | quote }}
+          {{- if .value }}
+          value: {{ .value | quote }}
+          {{- end }}
+          {{- if .effect }}
+          effect: {{ .effect | quote }}
+          {{- end }}
+          {{- if .tolerationSeconds }}
+          tolerationSeconds: {{ .tolerationSeconds }}
+          {{- end }}
+      {{- end }}
+      {{- end }}
       volumes:
         - name: nginx-config
           configMap:

@@ -6,13 +6,17 @@ tap:
     tagLocked: true
     imagePullPolicy: Always
     imagePullSecrets: []
+    overrideImage:
+      worker: ""
+      hub: ""
+      front: ""
     overrideTag:
       worker: ""
       hub: ""
       front: ""
   proxy:
     worker:
-      srvPort: 30001
+      srvPort: 48999
     hub:
       srvPort: 8898
     front:
@@ -22,7 +26,7 @@ tap:
   namespaces: []
   excludedNamespaces: []
   bpfOverride: ""
-  stopped: true
+  stopped: false
   release:
     repo: https://helm.kubeshark.co
     name: kubeshark
@@ -33,41 +37,74 @@ tap:
   storageLimit: 5000Mi
   storageClass: standard
   dryRun: false
+  dns:
+    nameservers: []
+    searches: []
+    options: []
   resources:
     hub:
       limits:
-        cpu: 1000m
-        memory: 1500Mi
+        cpu: "0"
+        memory: 5Gi
       requests:
         cpu: 50m
         memory: 50Mi
     sniffer:
       limits:
-        cpu: 1000m
-        memory: 1500Mi
+        cpu: "0"
+        memory: 5Gi
       requests:
         cpu: 50m
         memory: 50Mi
     tracer:
       limits:
-        cpu: 1000m
-        memory: 1500Mi
+        cpu: "0"
+        memory: 5Gi
       requests:
         cpu: 50m
         memory: 50Mi
+  probes:
+    hub:
+      initialDelaySeconds: 15
+      periodSeconds: 10
+      successThreshold: 1
+      failureThreshold: 3
+    sniffer:
+      initialDelaySeconds: 15
+      periodSeconds: 10
+      successThreshold: 1
+      failureThreshold: 3
   serviceMesh: true
   tls: true
-  disableTlsLog: false
+  disableTlsLog: true
   packetCapture: best
-  ignoreTainted: false
   labels: {}
   annotations: {}
   nodeSelectorTerms:
-  - matchExpressions:
-    - key: kubernetes.io/os
-      operator: In
-      values:
-      - linux
+    hub:
+    - matchExpressions:
+      - key: kubernetes.io/os
+        operator: In
+        values:
+        - linux
+    workers:
+    - matchExpressions:
+      - key: kubernetes.io/os
+        operator: In
+        values:
+        - linux
+    front:
+    - matchExpressions:
+      - key: kubernetes.io/os
+        operator: In
+        values:
+        - linux
+  tolerations:
+    hub: []
+    workers:
+    - operator: Exists
+      effect: NoExecute
+    front: []
   auth:
     enabled: false
     type: saml
@@ -81,6 +118,10 @@ tap:
           filter: ""
           canDownloadPCAP: true
           canUseScripting: true
+          scriptingPermissions:
+            canSave: true
+            canActivate: true
+            canDelete: true
           canUpdateTargetedPods: true
           canStopTrafficCapturing: true
           showAdminConsoleLink: true
@@ -92,10 +133,6 @@ tap:
     annotations: {}
   ipv6: true
   debug: false
-  kernelModule:
-    enabled: false
-    image: kubeshark/pf-ring-module:all
-    unloadOnDestroy: false
   telemetry:
     enabled: true
   resourceGuard:
@@ -103,27 +140,8 @@ tap:
   sentry:
     enabled: false
     environment: production
-  defaultFilter: "!dns and !tcp and !udp and !icmp"
-  scriptingDisabled: false
-  targetedPodsUpdateDisabled: false
-  presetFiltersChangingEnabled: false
-  recordingDisabled: false
-  stopTrafficCapturingDisabled: false
-  capabilities:
-    networkCapture:
-    - NET_RAW
-    - NET_ADMIN
-    serviceMeshCapture:
-    - SYS_ADMIN
-    - SYS_PTRACE
-    - DAC_OVERRIDE
-    kernelModule:
-    - SYS_MODULE
-    ebpfCapture:
-    - SYS_ADMIN
-    - SYS_PTRACE
-    - SYS_RESOURCE
-    - IPC_LOCK
+  defaultFilter: "!dns and !error"
+  liveConfigMapChangesDisabled: false
   globalFilter: ""
   enabledDissectors:
   - amqp
@@ -134,10 +152,28 @@ tap:
   - redis
   - sctp
   - syscall
-  - tcp
-  - udp
   - ws
-  - tls
+  - ldap
+  - radius
+  - diameter
+  portMapping:
+    http:
+    - 80
+    - 443
+    - 8080
+    amqp:
+    - 5671
+    - 5672
+    kafka:
+    - 9092
+    redis:
+    - 6379
+    ldap:
+    - 389
+    diameter:
+    - 3868
+  customMacros:
+    https: tls and (http or http2)
   metrics:
     port: 49100
   pprof:
@@ -155,6 +191,30 @@ tap:
     duplicateTimeframe: 200ms
     detectDuplicates: false
     staleTimeoutSeconds: 30
+  securityContext:
+    privileged: true
+    appArmorProfile:
+      type: ""
+      localhostProfile: ""
+    seLinuxOptions:
+      level: ""
+      role: ""
+      type: ""
+      user: ""
+    capabilities:
+      networkCapture:
+      - NET_RAW
+      - NET_ADMIN
+      serviceMeshCapture:
+      - SYS_ADMIN
+      - SYS_PTRACE
+      - DAC_OVERRIDE
+      ebpfCapture:
+      - SYS_ADMIN
+      - SYS_PTRACE
+      - SYS_RESOURCE
+      - IPC_LOCK
+  mountBpf: true
 logs:
   file: ""
   grep: ""
@@ -163,7 +223,9 @@ pcapdump:
   timeInterval: 1m
   maxTime: 1h
   maxSize: 500MB
-  pcapSrcDir: pcapdump
+  time: time
+  debug: false
+  dest: ""
 kube:
   configPath: ""
   context: ""
@@ -171,12 +233,17 @@ dumpLogs: false
 headless: false
 license: ""
 cloudLicenseEnabled: true
+aiAssistantEnabled: false
+demoModeEnabled: false
 supportChatEnabled: true
 serviceMapNewUiEnabled: false
 internetConnectivity: true
-dissectorsUpdatingEnabled: true
 scripting:
   env: {}
   source: ""
+  sources: []
   watchScripts: true
+  active: []
+  console: true
 timezone: ""
+logLevel: warning

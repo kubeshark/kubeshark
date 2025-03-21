@@ -13,6 +13,7 @@ data:
     BPF_OVERRIDE: '{{ .Values.tap.bpfOverride }}'
     STOPPED: '{{ .Values.tap.stopped | ternary "true" "false" }}'
     SCRIPTING_SCRIPTS: '{}'
+    SCRIPTING_ACTIVE_SCRIPTS: '{{ gt (len .Values.scripting.active) 0 | ternary (join "," .Values.scripting.active) "" }}'
     INGRESS_ENABLED: '{{ .Values.tap.ingress.enabled }}'
     INGRESS_HOST: '{{ .Values.tap.ingress.host }}'
     PROXY_FRONT_PORT: '{{ .Values.tap.proxy.front.port }}'
@@ -26,14 +27,22 @@ data:
     AUTH_SAML_ROLE_ATTRIBUTE: '{{ .Values.tap.auth.saml.roleAttribute }}'
     AUTH_SAML_ROLES: '{{ .Values.tap.auth.saml.roles | toJson }}'
     TELEMETRY_DISABLED: '{{ not .Values.internetConnectivity | ternary "true" (not .Values.tap.telemetry.enabled | ternary "true" "false") }}'
-    SCRIPTING_DISABLED: '{{ .Values.tap.scriptingDisabled | ternary "true" "" }}'
-    TARGETED_PODS_UPDATE_DISABLED: '{{ .Values.tap.targetedPodsUpdateDisabled | ternary "true" "" }}'
-    PRESET_FILTERS_CHANGING_ENABLED: '{{ .Values.tap.presetFiltersChangingEnabled | ternary "true" "" }}'
-    RECORDING_DISABLED: '{{ .Values.tap.recordingDisabled | ternary "true" "" }}'
-    STOP_TRAFFIC_CAPTURING_DISABLED: '{{- if and .Values.tap.stopTrafficCapturingDisabled .Values.tap.stopped -}}
+    SCRIPTING_DISABLED: '{{- if .Values.tap.liveConfigMapChangesDisabled -}}
+                           {{- if .Values.demoModeEnabled -}}
+                             {{ .Values.demoModeEnabled | ternary false true }}
+                           {{- else -}}
+                             true
+                           {{- end }}
+                         {{- else -}}
+                           false
+                         {{- end }}'
+    TARGETED_PODS_UPDATE_DISABLED: '{{ .Values.tap.liveConfigMapChangesDisabled | ternary "true" "" }}'
+    PRESET_FILTERS_CHANGING_ENABLED: '{{ .Values.tap.liveConfigMapChangesDisabled | ternary "false" "true" }}'
+    RECORDING_DISABLED: '{{ .Values.tap.liveConfigMapChangesDisabled | ternary "true" "" }}'
+    STOP_TRAFFIC_CAPTURING_DISABLED: '{{- if and .Values.tap.liveConfigMapChangesDisabled .Values.tap.stopped -}}
                                         false
                                       {{- else -}}
-                                        {{ .Values.tap.stopTrafficCapturingDisabled | ternary "true" "false" }}
+                                        {{ .Values.tap.liveConfigMapChangesDisabled | ternary "true" "false" }}
                                       {{- end }}'
     GLOBAL_FILTER: {{ include "kubeshark.escapeDoubleQuotes" .Values.tap.globalFilter | quote }}
     DEFAULT_FILTER: {{ include "kubeshark.escapeDoubleQuotes" .Values.tap.defaultFilter | quote }}
@@ -47,12 +56,14 @@ data:
                             {{- else -}}
                               {{ .Values.cloudLicenseEnabled }}
                             {{- end }}'
+    AI_ASSISTANT_ENABLED: '{{ .Values.aiAssistantEnabled | ternary "true" "false" }}'
     DUPLICATE_TIMEFRAME: '{{ .Values.tap.misc.duplicateTimeframe }}'
     ENABLED_DISSECTORS: '{{ gt (len .Values.tap.enabledDissectors) 0 | ternary (join "," .Values.tap.enabledDissectors) "" }}'
-    DISSECTORS_UPDATING_ENABLED: '{{ .Values.dissectorsUpdatingEnabled | ternary "true" "false" }}'
+    CUSTOM_MACROS: '{{ toJson .Values.tap.customMacros }}'
+    DISSECTORS_UPDATING_ENABLED: '{{ .Values.tap.liveConfigMapChangesDisabled | ternary "false" "true" }}'
     DETECT_DUPLICATES: '{{ .Values.tap.misc.detectDuplicates | ternary "true" "false" }}'
     PCAP_DUMP_ENABLE: '{{ .Values.pcapdump.enabled }}'
     PCAP_TIME_INTERVAL: '{{ .Values.pcapdump.timeInterval }}'
     PCAP_MAX_TIME: '{{ .Values.pcapdump.maxTime }}'
     PCAP_MAX_SIZE: '{{ .Values.pcapdump.maxSize }}'
-    PCAP_SRC_DIR: '{{ .Values.pcapdump.pcapSrcDir }}'
+    PORT_MAPPING: '{{ toJson .Values.tap.portMapping }}'

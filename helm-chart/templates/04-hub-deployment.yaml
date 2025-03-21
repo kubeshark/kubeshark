@@ -31,9 +31,8 @@ spec:
             - ./hub
             - -port
             - "8080"
-          {{- if .Values.tap.debug }}
-            - -debug
-          {{- end }}
+            - -loglevel
+            - '{{ .Values.logLevel | default "warning" }}'
           env:
           - name: POD_NAME
             valueFrom:
@@ -51,43 +50,100 @@ spec:
             value: 'https://api.kubeshark.co'
           - name: PROFILING_ENABLED
             value: '{{ .Values.tap.pprof.enabled }}'
-        {{- if .Values.tap.docker.overrideTag.hub }}
+        {{- if .Values.tap.docker.overrideImage.hub }}
+          image: '{{ .Values.tap.docker.overrideImage.hub }}'
+        {{- else if .Values.tap.docker.overrideTag.hub }}
           image: '{{ .Values.tap.docker.registry }}/hub:{{ .Values.tap.docker.overrideTag.hub }}'
         {{ else }}
           image: '{{ .Values.tap.docker.registry }}/hub:{{ not (eq .Values.tap.docker.tag "") | ternary .Values.tap.docker.tag (include "kubeshark.defaultVersion" .) }}'
         {{- end }}
           imagePullPolicy: {{ .Values.tap.docker.imagePullPolicy }}
-        {{- if .Values.tap.docker.imagePullSecrets }}
-          imagePullSecrets:
-            {{- range .Values.tap.docker.imagePullSecrets }}
-            - name: {{ . }}
-            {{- end }}
-        {{- end }}
           readinessProbe:
-            periodSeconds: 1
-            failureThreshold: 3
-            successThreshold: 1
-            initialDelaySeconds: 3
+            periodSeconds: {{ .Values.tap.probes.hub.periodSeconds }}
+            failureThreshold: {{ .Values.tap.probes.hub.failureThreshold }}
+            successThreshold: {{ .Values.tap.probes.hub.successThreshold }}
+            initialDelaySeconds: {{ .Values.tap.probes.hub.initialDelaySeconds }}
             tcpSocket:
               port: 8080
           livenessProbe:
-            periodSeconds: 1
-            failureThreshold: 3
-            successThreshold: 1
-            initialDelaySeconds: 3
+            periodSeconds: {{ .Values.tap.probes.hub.periodSeconds }}
+            failureThreshold: {{ .Values.tap.probes.hub.failureThreshold }}
+            successThreshold: {{ .Values.tap.probes.hub.successThreshold }}
+            initialDelaySeconds: {{ .Values.tap.probes.hub.initialDelaySeconds }}
             tcpSocket:
               port: 8080
           resources:
             limits:
+              {{ if ne (toString .Values.tap.resources.hub.limits.cpu) "0" }}
               cpu: {{ .Values.tap.resources.hub.limits.cpu }}
+              {{ end }}
+              {{ if ne (toString .Values.tap.resources.hub.limits.memory) "0" }}
               memory: {{ .Values.tap.resources.hub.limits.memory }}
+              {{ end }}
             requests:
+              {{ if ne (toString .Values.tap.resources.hub.requests.cpu) "0" }}
               cpu: {{ .Values.tap.resources.hub.requests.cpu }}
+              {{ end }}
+              {{ if ne (toString .Values.tap.resources.hub.requests.memor) "0" }}
               memory: {{ .Values.tap.resources.hub.requests.memory }}
+              {{ end }}
           volumeMounts:
           - name: saml-x509-volume
             mountPath: "/etc/saml/x509"
             readOnly: true
+    {{- if .Values.tap.docker.imagePullSecrets }}
+      imagePullSecrets:
+        {{- range .Values.tap.docker.imagePullSecrets }}
+        - name: {{ . }}
+        {{- end }}
+    {{- end }}
+{{- if gt (len .Values.tap.nodeSelectorTerms.hub) 0}}
+      affinity:
+        nodeAffinity:
+          requiredDuringSchedulingIgnoredDuringExecution:
+            nodeSelectorTerms:
+              {{- toYaml .Values.tap.nodeSelectorTerms.hub | nindent 12 }}
+{{- end }}
+      {{- if or .Values.tap.dns.nameservers .Values.tap.dns.searches .Values.tap.dns.options }}
+      dnsConfig:
+        {{- if .Values.tap.dns.nameservers }}
+        nameservers:
+        {{- range .Values.tap.dns.nameservers }}
+          - {{ . | quote }}
+        {{- end }}
+        {{- end }}
+        {{- if .Values.tap.dns.searches }}
+        searches:
+        {{- range .Values.tap.dns.searches }}
+          - {{ . | quote }}
+        {{- end }}
+        {{- end }}
+        {{- if .Values.tap.dns.options }}
+        options:
+        {{- range .Values.tap.dns.options }}
+          - name: {{ .name | quote }}
+            {{- if .value }}
+            value: {{ .value | quote }}
+            {{- end }}
+        {{- end }}
+        {{- end }}
+      {{- end }}
+      {{- if .Values.tap.tolerations.hub }}
+      tolerations:
+      {{- range .Values.tap.tolerations.hub }}
+        - key: {{ .key | quote }}
+          operator: {{ .operator | quote }}
+          {{- if .value }}
+          value: {{ .value | quote }}
+          {{- end }}
+          {{- if .effect }}
+          effect: {{ .effect | quote }}
+          {{- end }}
+          {{- if .tolerationSeconds }}
+          tolerationSeconds: {{ .tolerationSeconds }}
+          {{- end }}
+      {{- end }}
+      {{- end }}
       volumes:
       - name: saml-x509-volume
         projected:

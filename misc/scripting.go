@@ -10,20 +10,23 @@ import (
 )
 
 type Script struct {
-	Path  string `json:"path"`
-	Title string `json:"title"`
-	Code  string `json:"code"`
+	Path   string `json:"path"`
+	Title  string `json:"title"`
+	Code   string `json:"code"`
+	Active bool   `json:"active"`
 }
 
 type ConfigMapScript struct {
-	Title string `json:"title"`
-	Code  string `json:"code"`
+	Title  string `json:"title"`
+	Code   string `json:"code"`
+	Active bool   `json:"active"`
 }
 
 func (s *Script) ConfigMap() ConfigMapScript {
 	return ConfigMapScript{
-		Title: s.Title,
-		Code:  s.Code,
+		Title:  s.Title,
+		Code:   s.Code,
+		Active: s.Active,
 	}
 }
 
@@ -58,9 +61,10 @@ func ReadScriptFile(path string) (script *Script, err error) {
 	}
 
 	script = &Script{
-		Path:  path,
-		Title: title,
-		Code:  code,
+		Path:   path,
+		Title:  title,
+		Code:   code,
+		Active: false,
 	}
 
 	return
