@@ -133,7 +133,7 @@ tap:
     annotations: {}
   routing:
     front:
-      basePath: /app
+      basePath: ""
   ipv6: true
   debug: false
   telemetry:
