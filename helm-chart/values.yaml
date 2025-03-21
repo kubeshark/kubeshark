@@ -133,6 +133,7 @@ tap:
     annotations: {}
   routing:
     front:
+      # Example: /custompath
       basePath: ""
   ipv6: true
   debug: false
