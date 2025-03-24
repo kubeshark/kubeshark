@@ -146,7 +146,7 @@ tap:
   watchdog:
     enabled: true
   sentry:
-    enabled: false
+    enabled: true
     environment: production
   defaultFilter: "!dns and !error"
   liveConfigMapChangesDisabled: false
