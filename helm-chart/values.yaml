@@ -141,6 +141,8 @@ tap:
     enabled: true
   resourceGuard:
     enabled: false
+  watchdog:
+    enabled: true
   sentry:
     enabled: false
     environment: production

@@ -61,4 +61,5 @@ func init() {
 	tapCmd.Flags().Bool(configStructs.IngressEnabledLabel, defaultTapConfig.Ingress.Enabled, "Enable Ingress")
 	tapCmd.Flags().Bool(configStructs.TelemetryEnabledLabel, defaultTapConfig.Telemetry.Enabled, "Enable/disable Telemetry")
 	tapCmd.Flags().Bool(configStructs.ResourceGuardEnabledLabel, defaultTapConfig.ResourceGuard.Enabled, "Enable/disable resource guard")
+	tapCmd.Flags().Bool(configStructs.WatchdogEnabled, defaultTapConfig.Watchdog.Enabled, "Enable/disable watchdog")
 }
