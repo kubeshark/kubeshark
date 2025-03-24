@@ -99,6 +99,12 @@ tap:
         operator: In
         values:
         - linux
+    dex:
+    - matchExpressions:
+      - key: kubernetes.io/os
+        operator: In
+        values:
+        - linux
   tolerations:
     hub: []
     workers:
@@ -144,7 +150,7 @@ tap:
   watchdog:
     enabled: true
   sentry:
-    enabled: false
+    enabled: true
     environment: production
   defaultFilter: "!dns and !error"
   liveConfigMapChangesDisabled: false

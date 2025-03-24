@@ -18,14 +18,21 @@ data:
     INGRESS_HOST: '{{ .Values.tap.ingress.host }}'
     PROXY_FRONT_PORT: '{{ .Values.tap.proxy.front.port }}'
     AUTH_ENABLED: '{{- if and .Values.cloudLicenseEnabled (not (empty .Values.license)) -}}
-                      "false"
+                      {{ and .Values.tap.auth.enabled (eq .Values.tap.auth.type "dex") | ternary true false }}
                   {{- else -}}
                       {{ .Values.cloudLicenseEnabled | ternary "true" (.Values.tap.auth.enabled | ternary "true" "") }}
                   {{- end }}'
-    AUTH_TYPE: '{{ .Values.cloudLicenseEnabled | ternary "oidc" (.Values.tap.auth.type) }}'
+    AUTH_TYPE: '{{- if and .Values.cloudLicenseEnabled (not (eq .Values.tap.auth.type "dex")) -}}
+                  default
+                {{- else -}}
+                  {{ .Values.tap.auth.type }}
+                {{- end }}'
     AUTH_SAML_IDP_METADATA_URL: '{{ .Values.tap.auth.saml.idpMetadataUrl }}'
     AUTH_SAML_ROLE_ATTRIBUTE: '{{ .Values.tap.auth.saml.roleAttribute }}'
     AUTH_SAML_ROLES: '{{ .Values.tap.auth.saml.roles | toJson }}'
+    AUTH_OIDC_ISSUER: '{{ default "not set" (((.Values.tap).auth).dexOidc).issuer }}'
+    AUTH_OIDC_REFRESH_TOKEN_LIFETIME: '{{ default "3960h" (((.Values.tap).auth).dexOidc).refreshTokenLifetime }}'
+    AUTH_OIDC_STATE_PARAM_EXPIRY: '{{ default "10m" (((.Values.tap).auth).dexOidc).oauth2StateParamExpiry }}'
     TELEMETRY_DISABLED: '{{ not .Values.internetConnectivity | ternary "true" (not .Values.tap.telemetry.enabled | ternary "true" "false") }}'
     SCRIPTING_DISABLED: '{{- if .Values.tap.liveConfigMapChangesDisabled -}}
                            {{- if .Values.demoModeEnabled -}}
