@@ -44,6 +44,7 @@ const (
 	PcapKubeconfig               = "kubeconfig"
 	PcapDumpEnabled              = "enabled"
 	PcapTime                     = "time"
+	WatchdogEnabled              = "watchdogEnabled"
 )
 
 type ResourceLimitsHub struct {
@@ -217,6 +218,10 @@ type SentryConfig struct {
 	Environment string `yaml:"environment" json:"environment" default:"production"`
 }
 
+type WatchdogConfig struct {
+	Enabled bool `yaml:"enabled" json:"enabled" default:"true"`
+}
+
 type CapabilitiesConfig struct {
 	NetworkCapture     []string `yaml:"networkCapture" json:"networkCapture"  default:"[]"`
 	ServiceMeshCapture []string `yaml:"serviceMeshCapture" json:"serviceMeshCapture"  default:"[]"`
@@ -317,6 +322,7 @@ type TapConfig struct {
 	Debug                        bool                    `yaml:"debug" json:"debug" default:"false"`
 	Telemetry                    TelemetryConfig         `yaml:"telemetry" json:"telemetry"`
 	ResourceGuard                ResourceGuardConfig     `yaml:"resourceGuard" json:"resourceGuard"`
+	Watchdog                     WatchdogConfig          `yaml:"watchdog" json:"watchdog"`
 	Sentry                       SentryConfig            `yaml:"sentry" json:"sentry"`
 	DefaultFilter                string                  `yaml:"defaultFilter" json:"defaultFilter" default:"!dns and !error"`
 	LiveConfigMapChangesDisabled bool                    `yaml:"liveConfigMapChangesDisabled" json:"liveConfigMapChangesDisabled" default:"false"`
