@@ -99,12 +99,6 @@ tap:
         operator: In
         values:
         - linux
-    dex:
-    - matchExpressions:
-      - key: kubernetes.io/os
-        operator: In
-        values:
-        - linux
   tolerations:
     hub: []
     workers:
@@ -139,7 +133,6 @@ tap:
     annotations: {}
   routing:
     front:
-      # Example: /custompath
       basePath: ""
   ipv6: true
   debug: false
@@ -150,7 +143,7 @@ tap:
   watchdog:
     enabled: true
   sentry:
-    enabled: true
+    enabled: false
     environment: production
   defaultFilter: "!dns and !error"
   liveConfigMapChangesDisabled: false
