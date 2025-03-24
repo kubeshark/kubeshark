@@ -99,6 +99,12 @@ tap:
         operator: In
         values:
         - linux
+    dex:
+    - matchExpressions:
+      - key: kubernetes.io/os
+        operator: In
+        values:
+        - linux
   tolerations:
     hub: []
     workers:
@@ -137,6 +143,8 @@ tap:
     enabled: true
   resourceGuard:
     enabled: false
+  watchdog:
+    enabled: true
   sentry:
     enabled: true
     environment: production

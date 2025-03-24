@@ -45,7 +45,22 @@ data:
         proxy_send_timeout 12s;
         proxy_pass_request_headers on;
       }
-
+{{- if .Values.tap.auth.dexConfig }}
+       location /dex {
+        rewrite ^/dex(.*)$ /dex$1 break;
+        proxy_pass http://kubeshark-dex;
+        proxy_set_header   X-Forwarded-For $remote_addr;
+        proxy_set_header   Host $http_host;
+        proxy_set_header Upgrade websocket;
+        proxy_set_header Connection Upgrade;
+        proxy_set_header  Authorization $http_authorization;
+        proxy_pass_header Authorization;
+        proxy_connect_timeout 4s;
+        proxy_read_timeout 120s;
+        proxy_send_timeout 12s;
+        proxy_pass_request_headers      on;
+      }
+{{- end }}
       location / {
         root   /usr/share/nginx/html;
         index  index.html index.htm;
