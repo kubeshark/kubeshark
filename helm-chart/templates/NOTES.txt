@@ -34,7 +34,7 @@ Notices:
 {{ if .Values.tap.ingress.enabled }}
 
 You can now access the application through the following URL:
-http{{ if .Values.tap.ingress.tls }}s{{ end }}://{{ .Values.tap.ingress.host }}
+http{{ if .Values.tap.ingress.tls }}s{{ end }}://{{ .Values.tap.ingress.host }}{{ default "" (((.Values.tap).routing).front).basePath }}/
 
 {{- else }}
 To access the application, follow these steps:
@@ -44,6 +44,6 @@ To access the application, follow these steps:
     kubectl port-forward -n {{ .Release.Namespace }} service/kubeshark-front 8899:80
 
 2. Once port forwarding is done, you can access the application by visiting the following URL in your web browser:
-    http://0.0.0.0:8899
+    http://0.0.0.0:8899{{ default "" (((.Values.tap).routing).front).basePath }}/
 
 {{- end }}
