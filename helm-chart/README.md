@@ -296,6 +296,8 @@ tap:
 
 # Installing with Dex OIDC authentication
 
+[**Click here to see full docs**](https://docs.kubeshark.co/en/saml#installing-with-oidc-enabled-dex-idp).
+
 Choose this option, if **you already have a running instance** of Dex in your cluster & 
 you want to set up Dex OIDC authentication for Kubeshark users.
 
