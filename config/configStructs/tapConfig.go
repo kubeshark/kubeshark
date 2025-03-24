@@ -191,6 +191,14 @@ type IngressConfig struct {
 	Annotations map[string]string       `yaml:"annotations" json:"annotations" default:"{}"`
 }
 
+type RoutingConfig struct {
+	Front FrontRoutingConfig `yaml:"front" json:"front"`
+}
+
+type FrontRoutingConfig struct {
+	BasePath string `yaml:"basePath" json:"basePath" default:""`
+}
+
 type ReleaseConfig struct {
 	Repo      string `yaml:"repo" json:"repo" default:"https://helm.kubeshark.co"`
 	Name      string `yaml:"name" json:"name" default:"kubeshark"`
@@ -309,6 +317,7 @@ type TapConfig struct {
 	Tolerations                  TolerationsConfig       `yaml:"tolerations" json:"tolerations" default:"{}"`
 	Auth                         AuthConfig              `yaml:"auth" json:"auth"`
 	Ingress                      IngressConfig           `yaml:"ingress" json:"ingress"`
+	Routing                      RoutingConfig           `yaml:"routing" json:"routing"`
 	IPv6                         bool                    `yaml:"ipv6" json:"ipv6" default:"true"`
 	Debug                        bool                    `yaml:"debug" json:"debug" default:"false"`
 	Telemetry                    TelemetryConfig         `yaml:"telemetry" json:"telemetry"`

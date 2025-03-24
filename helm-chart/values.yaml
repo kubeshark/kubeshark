@@ -137,6 +137,10 @@ tap:
     host: ks.svc.cluster.local
     tls: []
     annotations: {}
+  routing:
+    front:
+      # Example: /custompath
+      basePath: ""
   ipv6: true
   debug: false
   telemetry:
