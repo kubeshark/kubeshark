@@ -23,7 +23,7 @@ data:
                       {{ .Values.cloudLicenseEnabled | ternary "true" (.Values.tap.auth.enabled | ternary "true" "") }}
                   {{- end }}'
     AUTH_TYPE: '{{- if and .Values.cloudLicenseEnabled (not (eq .Values.tap.auth.type "dex")) -}}
-                  default
+                  oidc
                 {{- else -}}
                   {{ .Values.tap.auth.type }}
                 {{- end }}'

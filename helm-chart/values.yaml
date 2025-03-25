@@ -107,7 +107,7 @@ tap:
     front: []
   auth:
     enabled: false
-    type: saml
+    type: oidc
     saml:
       idpMetadataUrl: ""
       x509crt: ""
