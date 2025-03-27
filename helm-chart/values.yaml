@@ -25,6 +25,10 @@ tap:
   regex: .*
   namespaces: []
   excludedNamespaces: []
+  nodes: []
+  excludedNodes: []
+  targetLabels: {}
+  excludedTargetLabels: {}
   bpfOverride: ""
   stopped: false
   release:
