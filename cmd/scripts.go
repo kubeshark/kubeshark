@@ -123,7 +123,7 @@ func createScript(provider *kubernetes.Provider, script misc.ConfigMapScript) (i
 		}
 
 		if k8serrors.IsConflict(err) {
-			log.Warn().Err(err).Msg("Conflict detected, retrying update...")
+			log.Debug().Err(err).Msg("Conflict detected, retrying update...")
 			time.Sleep(500 * time.Millisecond)
 			continue
 		}
@@ -332,23 +332,29 @@ func watchConfigMap(ctx context.Context, provider *kubernetes.Provider) {
 				continue
 			}
 
-			for event := range watcher.ResultChan() {
-				select {
-				case <-ctx.Done():
-					log.Info().Msg("ConfigMap watcher loop exiting gracefully.")
-					watcher.Stop()
-					return
-
-				default:
+			// Create a goroutine to process events
+			watcherClosed := make(chan struct{})
+			go func() {
+				defer close(watcherClosed)
+				for event := range watcher.ResultChan() {
 					if event.Type == watch.Added {
 						log.Info().Msg("ConfigMap created or modified")
 						runScriptsSync(provider)
 					} else if event.Type == watch.Deleted {
 						log.Warn().Msg("ConfigMap deleted, waiting for recreation...")
-						watcher.Stop()
 						break
 					}
 				}
+			}()
+
+			// Wait for either context cancellation or watcher completion
+			select {
+			case <-ctx.Done():
+				watcher.Stop()
+				log.Info().Msg("ConfigMap watcher stopping due to context cancellation")
+				return
+			case <-watcherClosed:
+				log.Info().Msg("Watcher closed, restarting...")
 			}
 
 			time.Sleep(5 * time.Second)
