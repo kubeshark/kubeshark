@@ -123,7 +123,7 @@ func createScript(provider *kubernetes.Provider, script misc.ConfigMapScript) (i
 		}
 
 		if k8serrors.IsConflict(err) {
-			log.Warn().Err(err).Msg("Conflict detected, retrying update...")
+			log.Debug().Err(err).Msg("Conflict detected, retrying update...")
 			time.Sleep(500 * time.Millisecond)
 			continue
 		}
