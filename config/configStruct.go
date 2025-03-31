@@ -135,6 +135,9 @@ func CreateDefaultConfig() ConfigStruct {
 				LDAP:     []uint16{389},
 				DIAMETER: []uint16{3868},
 			},
+			Dashboard: configStructs.DashboardConfig{
+				CompleteStreamingEnabled: true,
+			},
 		},
 	}
 }

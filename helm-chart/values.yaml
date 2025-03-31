@@ -136,6 +136,8 @@ tap:
       basePath: ""
   ipv6: true
   debug: false
+  dashboard:
+    completeStreamingEnabled: true
   telemetry:
     enabled: true
   resourceGuard:
