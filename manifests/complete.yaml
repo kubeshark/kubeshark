@@ -130,7 +130,7 @@ metadata:
 kind: Secret
 apiVersion: v1
 metadata:
-  name: kubeshark-secret
+  name: kubeshark-secret-default
   namespace: default
   labels:
     app.kubeshark.co/app: hub
@@ -244,7 +244,7 @@ data:
 kind: ConfigMap
 apiVersion: v1
 metadata:
-  name: kubeshark-config-map
+  name: kubeshark-config-map-default
   namespace: default
   labels:
     app.kubeshark.co/app: hub
