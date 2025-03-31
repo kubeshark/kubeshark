@@ -26,12 +26,16 @@ spec:
         - env:
             - name: REACT_APP_AUTH_ENABLED
               value: '{{- if or (and .Values.cloudLicenseEnabled (not (empty .Values.license))) (not .Values.internetConnectivity) -}}
-                      "false"
-                    {{- else -}}
-                      {{ .Values.cloudLicenseEnabled | ternary "true" .Values.tap.auth.enabled }}
-                    {{- end }}'
+                        {{ (and .Values.tap.auth.enabled (eq .Values.tap.auth.type "dex")) | ternary true false }}
+                      {{- else -}}
+                        {{ .Values.cloudLicenseEnabled | ternary "true" .Values.tap.auth.enabled }}
+                      {{- end }}'
             - name: REACT_APP_AUTH_TYPE
-              value: '{{ not (eq .Values.tap.auth.type "") | ternary (.Values.cloudLicenseEnabled | ternary "oidc" .Values.tap.auth.type) " " }}'
+              value: '{{- if and .Values.cloudLicenseEnabled (not (eq .Values.tap.auth.type "dex")) -}}
+                        default
+                      {{- else -}}
+                        {{ .Values.tap.auth.type }}
+                      {{- end }}'
             - name: REACT_APP_AUTH_SAML_IDP_METADATA_URL
               value: '{{ not (eq .Values.tap.auth.saml.idpMetadataUrl "") | ternary .Values.tap.auth.saml.idpMetadataUrl " " }}'
             - name: REACT_APP_TIMEZONE

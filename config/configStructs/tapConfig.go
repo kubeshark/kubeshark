@@ -44,6 +44,7 @@ const (
 	PcapKubeconfig               = "kubeconfig"
 	PcapDumpEnabled              = "enabled"
 	PcapTime                     = "time"
+	WatchdogEnabled              = "watchdogEnabled"
 )
 
 type ResourceLimitsHub struct {
@@ -190,6 +191,14 @@ type IngressConfig struct {
 	Annotations map[string]string       `yaml:"annotations" json:"annotations" default:"{}"`
 }
 
+type RoutingConfig struct {
+	Front FrontRoutingConfig `yaml:"front" json:"front"`
+}
+
+type FrontRoutingConfig struct {
+	BasePath string `yaml:"basePath" json:"basePath" default:""`
+}
+
 type ReleaseConfig struct {
 	Repo      string `yaml:"repo" json:"repo" default:"https://helm.kubeshark.co"`
 	Name      string `yaml:"name" json:"name" default:"kubeshark"`
@@ -207,6 +216,10 @@ type ResourceGuardConfig struct {
 type SentryConfig struct {
 	Enabled     bool   `yaml:"enabled" json:"enabled" default:"false"`
 	Environment string `yaml:"environment" json:"environment" default:"production"`
+}
+
+type WatchdogConfig struct {
+	Enabled bool `yaml:"enabled" json:"enabled" default:"true"`
 }
 
 type CapabilitiesConfig struct {
@@ -304,10 +317,12 @@ type TapConfig struct {
 	Tolerations                  TolerationsConfig       `yaml:"tolerations" json:"tolerations" default:"{}"`
 	Auth                         AuthConfig              `yaml:"auth" json:"auth"`
 	Ingress                      IngressConfig           `yaml:"ingress" json:"ingress"`
+	Routing                      RoutingConfig           `yaml:"routing" json:"routing"`
 	IPv6                         bool                    `yaml:"ipv6" json:"ipv6" default:"true"`
 	Debug                        bool                    `yaml:"debug" json:"debug" default:"false"`
 	Telemetry                    TelemetryConfig         `yaml:"telemetry" json:"telemetry"`
 	ResourceGuard                ResourceGuardConfig     `yaml:"resourceGuard" json:"resourceGuard"`
+	Watchdog                     WatchdogConfig          `yaml:"watchdog" json:"watchdog"`
 	Sentry                       SentryConfig            `yaml:"sentry" json:"sentry"`
 	DefaultFilter                string                  `yaml:"defaultFilter" json:"defaultFilter" default:"!dns and !error"`
 	LiveConfigMapChangesDisabled bool                    `yaml:"liveConfigMapChangesDisabled" json:"liveConfigMapChangesDisabled" default:"false"`

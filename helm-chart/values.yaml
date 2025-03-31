@@ -131,12 +131,17 @@ tap:
     host: ks.svc.cluster.local
     tls: []
     annotations: {}
+  routing:
+    front:
+      basePath: ""
   ipv6: true
   debug: false
   telemetry:
     enabled: true
   resourceGuard:
     enabled: false
+  watchdog:
+    enabled: true
   sentry:
     enabled: false
     environment: production

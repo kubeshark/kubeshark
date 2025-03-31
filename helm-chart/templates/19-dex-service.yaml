@@ -1,0 +1,25 @@
+{{- if .Values.tap.auth.dexConfig }}
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubeshark.co/app: dex
+    {{- include "kubeshark.labels" . | nindent 4 }}
+  annotations:
+  {{- if .Values.tap.annotations }}
+    {{- toYaml .Values.tap.annotations | nindent 4 }}
+  {{- end }}
+  name: kubeshark-dex
+  namespace: {{ .Release.Namespace }}
+spec:
+  ports:
+    - name: kubeshark-dex
+      port: 80
+      targetPort: 5556
+  selector:
+    app.kubeshark.co/app: dex
+  type: ClusterIP
+
+{{- end }}

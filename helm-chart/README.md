@@ -196,11 +196,12 @@ Example for overriding image names:
 | `tap.ingress.host`                        | Host of the `Ingress`                          | `ks.svc.cluster.local`                                  |
 | `tap.ingress.tls`                         | `Ingress` TLS configuration                     | `[]`                                                    |
 | `tap.ingress.annotations`                 | `Ingress` annotations                           | `{}`                                                    |
+| `tap.routing.front.basePath`             | Set this value to serve `front` under specific base path. Example: `/custompath` (forward slash must be present)         | `""`       |
 | `tap.ipv6`                                | Enable IPv6 support for the front-end                        | `true`                                                  |
 | `tap.debug`                               | Enable debug mode                             | `false`                                                 |
 | `tap.telemetry.enabled`                   | Enable anonymous usage statistics collection           | `true`                                                  |
 | `tap.resourceGuard.enabled`               | Enable resource guard worker process, which watches RAM/disk usage and enables/disables traffic capture based on available resources | `false` |
-| `tap.sentry.enabled`                      | Enable sending of error logs to Sentry          | `false`                                                  |
+| `tap.sentry.enabled`                      | Enable sending of error logs to Sentry          | `true` (only for qualified users)                                                  |
 | `tap.sentry.environment`                      | Sentry environment to label error logs with      | `production`                                                  |
 | `tap.defaultFilter`                       | Sets the default dashboard KFL filter (e.g. `http`). By default, this value is set to filter out noisy protocols such as DNS, UDP, ICMP and TCP. The user can easily change this, **temporarily**, in the Dashboard. For a permanent change, you should change this value in the `values.yaml` or `config.yaml` file.        | `"!dns and !error"`                                    |
 | `tap.liveConfigMapChangesDisabled`        | If set to `true`, all user functionality (scripting, targeting settings, global & default KFL modification, traffic recording, traffic capturing on/off, protocol dissectors) involving dynamic ConfigMap changes from UI will be disabled     | `false`      |
@@ -228,7 +229,7 @@ KernelMapping pairs kernel versions with a
                             DriverContainer image. Kernel versions can be matched
                             literally or using a regular expression
 
-## Installing with SAML enabled
+# Installing with SAML enabled
 
 ### Prerequisites:
 
@@ -292,4 +293,227 @@ tap:
         sUpBCu0E3nRJM/QB2ui5KhNR7uvPSL+kSsaEq19/mXqsL+mRi9aqy2wMEvUSU/kt
         UaV5sbRtTzYLxpOSQyi8CEFA+A==
         -----END PRIVATE KEY-----
+```
+
+# Installing with Dex OIDC authentication
+
+[**Click here to see full docs**](https://docs.kubeshark.co/en/saml#installing-with-oidc-enabled-dex-idp).
+
+Choose this option, if **you already have a running instance** of Dex in your cluster & 
+you want to set up Dex OIDC authentication for Kubeshark users.
+
+Kubeshark supports authentication using [Dex - A Federated OpenID Connect Provider](https://dexidp.io/).
+Dex is an abstraction layer designed for integrating a wide variety of Identity Providers.
+
+**Requirement:**
+Your Dex IdP must have a publicly accessible URL.
+
+### Pre-requisites:
+
+**1. If you configured Ingress for Kubeshark:**
+
+(see section: "Installing with Ingress (EKS) enabled")
+
+OAuth2 callback URL is: <br/>
+`https://<kubeshark-ingress-hostname>/api/oauth2/callback`
+
+**2. If you did not configure Ingress for Kubeshark:**
+
+OAuth2 callback URL is: <br/>
+`http://0.0.0.0:8899/api/oauth2/callback`
+
+Use chosen OAuth2 callback URL to replace `<your-kubeshark-host>` in Step 3.
+
+**3. Add this static client to your Dex IdP configuration (`config.yaml`):**
+```yaml
+staticClients:
+   - id: kubeshark
+     secret: create your own client password
+     name: Kubeshark
+     redirectURIs:
+     - https://<your-kubeshark-host>/api/oauth2/callback
+```
+
+**Final step:**
+
+Add these helm values to set up OIDC authentication powered by your Dex IdP:
+
+```yaml
+# values.yaml
+
+tap: 
+  auth:
+    enabled: true
+    type: dex
+    dexOidc:
+      issuer: <put Dex IdP issuer URL here>
+      clientId: kubeshark
+      clientSecret: create your own client password
+      refreshTokenLifetime: "3960h" # 165 days
+      oauth2StateParamExpiry: "10m"
+```
+
+Once you run `helm install kubeshark kubeshark/kubeshark -f ./values.yaml`, Kubeshark will be installed with (Dex) OIDC authentication enabled.
+
+---
+
+# Installing your own Dex IdP along with Kubeshark
+
+Choose this option, if **you need to deploy an instance of Dex IdP** along with Kubeshark & 
+set up Dex OIDC authentication for Kubeshark users.
+
+Depending on Ingress enabled/disabled, your Dex configuration might differ.
+
+**Requirement:**
+Please, configure Ingress using `tap.ingress` for your Kubeshark installation. For example:
+
+```yaml
+tap:
+  ingress:
+    enabled: true
+    className: "alb"
+    host: ks.example.com
+    tls: []
+    annotations:
+      alb.ingress.kubernetes.io/certificate-arn: arn:aws:acm:us-east-1:7..8:certificate/b...65c
+      alb.ingress.kubernetes.io/target-type: ip
+      alb.ingress.kubernetes.io/scheme: internet-facing
+```
+
+The following Dex settings will have these values:
+
+| Setting                                               | Value                                        |
+|-------------------------------------------------------|----------------------------------------------|
+| `tap.auth.dexOidc.issuer`                             | `https://ks.example.com/dex`                 |
+| `tap.auth.dexConfig.issuer`                           | `https://ks.example.com/dex`                 |
+| `tap.auth.dexConfig.staticClients -> redirectURIs`    | `https://ks.example.com/api/oauth2/callback` |
+| `tap.auth.dexConfig.connectors -> config.redirectURI` | `https://ks.example.com/dex/callback`        |
+
+---
+
+### Before proceeding with Dex IdP installation:
+
+Please, make sure to prepare the following things first.
+
+1. Choose **[Connectors](https://dexidp.io/docs/connectors/)** to enable in Dex IdP. 
+   - i.e. how many kind of "Log in with ..." options you'd like to offer your users
+   - You will need to specify connectors in `tap.auth.dexConfig.connectors`
+2. Choose type of **[Storage](https://dexidp.io/docs/configuration/storage/)** to use in Dex IdP. 
+   - You will need to specify storage settings in `tap.auth.dexConfig.storage`
+   - default: `memory`
+3. Decide on the OAuth2 `?state=` param expiration time:
+   - field: `tap.auth.dexOidc.oauth2StateParamExpiry`
+   - default: `10m` (10 minutes)
+   - valid time units are `s`, `m`, `h`
+4. Decide on the refresh token expiration:
+    - field 1: `tap.auth.dexOidc.expiry.refreshTokenLifetime`
+    - field 2: `tap.auth.dexConfig.expiry.refreshTokens.absoluteLifetime`
+    - default: `3960h` (165 days)
+    - valid time units are `s`, `m`, `h`
+5. Create a unique & secure password to set in these fields:
+    - field 1: `tap.auth.dexOidc.clientSecret`
+    - field 2: `tap.auth.dexConfig.staticClients -> secret`
+    - password must be the same for these 2 fields
+6. Discover more possibilities of **[Dex Configuration](https://dexidp.io/docs/configuration/)**
+   - if you decide to include more configuration options, make sure to add them into `tap.auth.dexConfig`
+---
+
+### Once you are ready with all the points described above:
+
+Use these helm `values.yaml` fields to:
+- Deploy your own instance of Dex IdP along with Kubeshark
+- Enable OIDC authentication for Kubeshark users
+
+Make sure to:
+- Replace `<your-ingress-hostname>` with a correct Kubeshark Ingress host (`tap.auth.ingress.host`).
+  - refer to section **Installing with Ingress (EKS) enabled** to find out how you can configure Ingress host.
+
+Helm `values.yaml`:
+```yaml
+tap: 
+  auth:
+    enabled: true
+    type: dex
+    dexOidc:
+      issuer: https://<your-ingress-hostname>/dex
+      
+      # Client ID/secret must be taken from `tap.auth.dexConfig.staticClients -> id/secret`
+      clientId: kubeshark
+      clientSecret: create your own client password
+      
+      refreshTokenLifetime: "3960h" # 165 days
+      oauth2StateParamExpiry: "10m"
+    dexConfig:
+      # This field is REQUIRED!
+      # 
+      # The base path of Dex and the external name of the OpenID Connect service.
+      # This is the canonical URL that all clients MUST use to refer to Dex. If a
+      # path is provided, Dex's HTTP service will listen at a non-root URL.
+      issuer: https://<your-ingress-hostname>/dex
+        
+      # Expiration configuration for tokens, signing keys, etc.
+      expiry:
+        refreshTokens:
+          validIfNotUsedFor: "2160h" # 90 days
+          absoluteLifetime: "3960h"  # 165 days
+
+      # This field is REQUIRED!
+      # 
+      # The storage configuration determines where Dex stores its state.
+      # See the documentation (https://dexidp.io/docs/storage/) for further information.
+      storage:
+        type: memory
+
+      # This field is REQUIRED!
+      # 
+      # Attention: 
+      # Do not change this field and its values.
+      # This field is required for internal Kubeshark-to-Dex communication.
+      #
+      # HTTP service configuration
+      web:
+        http: 0.0.0.0:5556
+
+      # This field is REQUIRED!
+      #
+      # Attention: 
+      # Do not change this field and its values.
+      # This field is required for internal Kubeshark-to-Dex communication.
+      #
+      # Telemetry configuration
+      telemetry:
+        http: 0.0.0.0:5558
+
+      # This field is REQUIRED!
+      #
+      # Static clients registered in Dex by default.
+      staticClients:
+        - id: kubeshark
+          secret: create your own client password
+          name: Kubeshark
+          redirectURIs:
+          - https://<your-ingress-hostname>/api/oauth2/callback
+
+      # Enable the password database.
+      # It's a "virtual" connector (identity provider) that stores
+      # login credentials in Dex's store.
+      enablePasswordDB: true
+
+      # Connectors are used to authenticate users against upstream identity providers.
+      # See the documentation (https://dexidp.io/docs/connectors/) for further information.
+      #
+      # Attention: 
+      # When you define a new connector, `config.redirectURI` must be: 
+      # https://<your-ingress-hostname>/dex/callback
+      # 
+      # Example with Google connector:
+      # connectors:
+      #  - type: google
+      #    id: google
+      #    name: Google
+      #    config:
+      #      clientID: your Google Cloud Auth app client ID
+      #      clientSecret: your Google Auth app client ID
+      #      redirectURI: https://<your-ingress-hostname>/dex/callback
+      connectors: []
 ```
