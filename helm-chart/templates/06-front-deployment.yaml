@@ -36,6 +36,12 @@ spec:
                       {{- else -}}
                         {{ .Values.tap.auth.type }}
                       {{- end }}'
+            - name: REACT_APP_COMPLETE_STREAMING_ENABLED
+              value: '{{- if and (hasKey .Values.tap "dashboard") (hasKey .Values.tap.dashboard "completeStreamingEnabled") -}}
+                        {{ eq .Values.tap.dashboard.completeStreamingEnabled true | ternary "true" "false" }}
+                      {{- else -}}
+                        true
+                      {{- end }}'
             - name: REACT_APP_AUTH_SAML_IDP_METADATA_URL
               value: '{{ not (eq .Values.tap.auth.saml.idpMetadataUrl "") | ternary .Values.tap.auth.saml.idpMetadataUrl " " }}'
             - name: REACT_APP_TIMEZONE
