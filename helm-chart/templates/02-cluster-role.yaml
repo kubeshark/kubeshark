@@ -72,3 +72,9 @@ rules:
       - list
       - update
       - patch
+  - apiGroups:
+    - ""
+    resources:
+    - pods/log
+    verbs:
+    - get
