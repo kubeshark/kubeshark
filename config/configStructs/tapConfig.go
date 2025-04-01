@@ -195,6 +195,10 @@ type RoutingConfig struct {
 	Front FrontRoutingConfig `yaml:"front" json:"front"`
 }
 
+type DashboardConfig struct {
+	CompleteStreamingEnabled bool `yaml:"completeStreamingEnabled" json:"completeStreamingEnabled" default:"true"`
+}
+
 type FrontRoutingConfig struct {
 	BasePath string `yaml:"basePath" json:"basePath" default:""`
 }
@@ -320,6 +324,7 @@ type TapConfig struct {
 	Routing                      RoutingConfig           `yaml:"routing" json:"routing"`
 	IPv6                         bool                    `yaml:"ipv6" json:"ipv6" default:"true"`
 	Debug                        bool                    `yaml:"debug" json:"debug" default:"false"`
+	Dashboard                    DashboardConfig         `yaml:"dashboard" json:"dashboard"`
 	Telemetry                    TelemetryConfig         `yaml:"telemetry" json:"telemetry"`
 	ResourceGuard                ResourceGuardConfig     `yaml:"resourceGuard" json:"resourceGuard"`
 	Watchdog                     WatchdogConfig          `yaml:"watchdog" json:"watchdog"`
