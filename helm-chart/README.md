@@ -222,7 +222,7 @@ Example for overriding image names:
 | `scripting.source`                        | Source directory of the scripts                | `""`                                                    |
 | `scripting.watchScripts`                  | Enable watch mode for the scripts in source directory          | `true`                                                  |
 | `timezone`                                | IANA time zone applied to time shown in the front-end | `""` (local time zone applies) |
-| `supportChatEnabled`                      | Enable real-time support chat channel based on Intercom | `true` |
+| `supportChatEnabled`                      | Enable real-time support chat channel based on Intercom | `false` |
 | `internetConnectivity`                    | Turns off API requests that are dependant on Internet connectivity such as `telemetry` and `online-support`. | `true` |
 
 KernelMapping pairs kernel versions with a
