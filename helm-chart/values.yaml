@@ -238,7 +238,7 @@ dumpLogs: false
 headless: false
 license: ""
 cloudLicenseEnabled: true
-aiAssistantEnabled: false
+aiAssistantEnabled: true
 demoModeEnabled: false
 supportChatEnabled: false
 internetConnectivity: true
