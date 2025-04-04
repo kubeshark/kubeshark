@@ -33,6 +33,7 @@ metadata:
   name: kubeshark-persistent-volume-claim
   namespace: {{ .Release.Namespace }}
 spec:
+  volumeMode: {{ .Values.tap.persistentStoragePvcVolumeMode }}
   accessModes:
     - ReadWriteMany
   resources:
