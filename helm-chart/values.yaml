@@ -99,6 +99,12 @@ tap:
         operator: In
         values:
         - linux
+    dex:
+    - matchExpressions:
+      - key: kubernetes.io/os
+        operator: In
+        values:
+        - linux
   tolerations:
     hub: []
     workers:
