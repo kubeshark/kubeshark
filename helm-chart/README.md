@@ -354,6 +354,17 @@ tap:
       bypassSslCaCheck: false
 ```
 
+---
+
+**Note:**<br/>
+Set `tap.auth.dexOidc.bypassSslCaCheck: true`
+to allow Kubeshark communication with Dex IdP having an unknown SSL Certificate Authority.
+
+This setting allows you to prevent such SSL CA-related errors:<br/>
+`tls: failed to verify certificate: x509: certificate signed by unknown authority`
+
+---
+
 Once you run `helm install kubeshark kubeshark/kubeshark -f ./values.yaml`, Kubeshark will be installed with (Dex) OIDC authentication enabled.
 
 ---
