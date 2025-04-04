@@ -351,6 +351,7 @@ tap:
       clientSecret: create your own client password
       refreshTokenLifetime: "3960h" # 165 days
       oauth2StateParamExpiry: "10m"
+      bypassSslCaCheck: false
 ```
 
 Once you run `helm install kubeshark kubeshark/kubeshark -f ./values.yaml`, Kubeshark will be installed with (Dex) OIDC authentication enabled.
@@ -443,6 +444,7 @@ tap:
       
       refreshTokenLifetime: "3960h" # 165 days
       oauth2StateParamExpiry: "10m"
+      bypassSslCaCheck: false
     dexConfig:
       # This field is REQUIRED!
       # 
