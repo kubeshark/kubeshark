@@ -99,6 +99,12 @@ tap:
         operator: In
         values:
         - linux
+    dex:
+    - matchExpressions:
+      - key: kubernetes.io/os
+        operator: In
+        values:
+        - linux
   tolerations:
     hub: []
     workers:
@@ -136,6 +142,8 @@ tap:
       basePath: ""
   ipv6: true
   debug: false
+  dashboard:
+    completeStreamingEnabled: true
   telemetry:
     enabled: true
   resourceGuard:

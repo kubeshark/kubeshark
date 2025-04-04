@@ -138,6 +138,7 @@ type NodeSelectorTermsConfig struct {
 	Hub     []v1.NodeSelectorTerm `yaml:"hub" json:"hub" default:"[]"`
 	Workers []v1.NodeSelectorTerm `yaml:"workers" json:"workers" default:"[]"`
 	Front   []v1.NodeSelectorTerm `yaml:"front" json:"front" default:"[]"`
+	Dex     []v1.NodeSelectorTerm `yaml:"dex" json:"dex" default:"[]"`
 }
 
 type TolerationsConfig struct {
@@ -193,6 +194,10 @@ type IngressConfig struct {
 
 type RoutingConfig struct {
 	Front FrontRoutingConfig `yaml:"front" json:"front"`
+}
+
+type DashboardConfig struct {
+	CompleteStreamingEnabled bool `yaml:"completeStreamingEnabled" json:"completeStreamingEnabled" default:"true"`
 }
 
 type FrontRoutingConfig struct {
@@ -320,6 +325,7 @@ type TapConfig struct {
 	Routing                      RoutingConfig           `yaml:"routing" json:"routing"`
 	IPv6                         bool                    `yaml:"ipv6" json:"ipv6" default:"true"`
 	Debug                        bool                    `yaml:"debug" json:"debug" default:"false"`
+	Dashboard                    DashboardConfig         `yaml:"dashboard" json:"dashboard"`
 	Telemetry                    TelemetryConfig         `yaml:"telemetry" json:"telemetry"`
 	ResourceGuard                ResourceGuardConfig     `yaml:"resourceGuard" json:"resourceGuard"`
 	Watchdog                     WatchdogConfig          `yaml:"watchdog" json:"watchdog"`
