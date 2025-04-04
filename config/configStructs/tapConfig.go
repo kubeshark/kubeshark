@@ -138,6 +138,7 @@ type NodeSelectorTermsConfig struct {
 	Hub     []v1.NodeSelectorTerm `yaml:"hub" json:"hub" default:"[]"`
 	Workers []v1.NodeSelectorTerm `yaml:"workers" json:"workers" default:"[]"`
 	Front   []v1.NodeSelectorTerm `yaml:"front" json:"front" default:"[]"`
+	Dex     []v1.NodeSelectorTerm `yaml:"dex" json:"dex" default:"[]"`
 }
 
 type TolerationsConfig struct {

@@ -33,6 +33,15 @@ data:
     AUTH_OIDC_ISSUER: '{{ default "not set" (((.Values.tap).auth).dexOidc).issuer }}'
     AUTH_OIDC_REFRESH_TOKEN_LIFETIME: '{{ default "3960h" (((.Values.tap).auth).dexOidc).refreshTokenLifetime }}'
     AUTH_OIDC_STATE_PARAM_EXPIRY: '{{ default "10m" (((.Values.tap).auth).dexOidc).oauth2StateParamExpiry }}'
+    AUTH_OIDC_BYPASS_SSL_CA_CHECK: '{{- if and
+                                      (hasKey .Values.tap "auth")
+                                      (hasKey .Values.tap.auth "dexOidc")
+                                      (hasKey .Values.tap.auth.dexOidc "bypassSslCaCheck")
+                                    -}}
+                                      {{ eq .Values.tap.auth.dexOidc.bypassSslCaCheck true | ternary "true" "false" }}
+                                    {{- else -}}
+                                      false
+                                    {{- end }}'
     TELEMETRY_DISABLED: '{{ not .Values.internetConnectivity | ternary "true" (not .Values.tap.telemetry.enabled | ternary "true" "false") }}'
     SCRIPTING_DISABLED: '{{- if .Values.tap.liveConfigMapChangesDisabled -}}
                            {{- if .Values.demoModeEnabled -}}
