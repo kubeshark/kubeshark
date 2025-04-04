@@ -33,6 +33,7 @@ tap:
     namespace: default
   persistentStorage: false
   persistentStorageStatic: false
+  persistentStoragePvcVolumeMode: Filesystem
   efsFileSytemIdAndPath: ""
   storageLimit: 5000Mi
   storageClass: standard
