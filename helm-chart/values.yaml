@@ -242,9 +242,9 @@ dumpLogs: false
 headless: false
 license: ""
 cloudLicenseEnabled: true
-aiAssistantEnabled: false
+aiAssistantEnabled: true
 demoModeEnabled: false
-supportChatEnabled: true
+supportChatEnabled: false
 internetConnectivity: true
 scripting:
   env: {}
