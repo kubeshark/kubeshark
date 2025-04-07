@@ -33,6 +33,7 @@ tap:
     namespace: default
   persistentStorage: false
   persistentStorageStatic: false
+  persistentStoragePvcVolumeMode: FileSystem
   efsFileSytemIdAndPath: ""
   storageLimit: 5000Mi
   storageClass: standard
@@ -99,12 +100,7 @@ tap:
         operator: In
         values:
         - linux
-    dex:
-    - matchExpressions:
-      - key: kubernetes.io/os
-        operator: In
-        values:
-        - linux
+    dex: []
   tolerations:
     hub: []
     workers:

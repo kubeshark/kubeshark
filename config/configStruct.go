@@ -50,6 +50,17 @@ func CreateDefaultConfig() ConfigStruct {
 						},
 					},
 				},
+				Dex: []v1.NodeSelectorTerm{
+					{
+						MatchExpressions: []v1.NodeSelectorRequirement{
+							{
+								Key:      "kubernetes.io/os",
+								Operator: v1.NodeSelectorOpIn,
+								Values:   []string{"linux"},
+							},
+						},
+					},
+				},
 			},
 			Tolerations: configStructs.TolerationsConfig{
 				Workers: []v1.Toleration{
