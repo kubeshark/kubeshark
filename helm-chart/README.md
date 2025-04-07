@@ -144,6 +144,7 @@ Example for overriding image names:
 | `tap.release.namespace`                   | Helm release namespace                        | `default`                                               |
 | `tap.persistentStorage`                   | Use `persistentVolumeClaim` instead of `emptyDir` | `false`                                             |
 | `tap.persistentStorageStatic`             | Use static persistent volume provisioning (explicitly defined `PersistentVolume` ) | `false`            |
+| `tap.persistentStoragePvcVolumeMode` | Set the pvc volume mode (Filesystem\|Block) | `Filesystem` |
 | `tap.efsFileSytemIdAndPath`               | [EFS file system ID and, optionally, subpath and/or access point](https://github.com/kubernetes-sigs/aws-efs-csi-driver/blob/master/examples/kubernetes/access_points/README.md) `<FileSystemId>:<Path>:<AccessPointId>`  | ""                             |
 | `tap.storageLimit`                        | Limit of either the `emptyDir` or `persistentVolumeClaim` | `500Mi`                                     |
 | `tap.storageClass`                        | Storage class of the `PersistentVolumeClaim`          | `standard`                                      |
