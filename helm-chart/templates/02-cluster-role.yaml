@@ -82,5 +82,7 @@ rules:
     resources:
       - secrets
       - configmaps
+      - pods/log
     verbs:
       - create
+      - get

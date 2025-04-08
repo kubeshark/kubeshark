@@ -33,6 +33,7 @@ tap:
     namespace: default
   persistentStorage: false
   persistentStorageStatic: false
+  persistentStoragePvcVolumeMode: FileSystem
   efsFileSytemIdAndPath: ""
   storageLimit: 5000Mi
   storageClass: standard
@@ -99,6 +100,7 @@ tap:
         operator: In
         values:
         - linux
+    dex: []
   tolerations:
     hub: []
     workers:
@@ -136,6 +138,8 @@ tap:
       basePath: ""
   ipv6: true
   debug: false
+  dashboard:
+    completeStreamingEnabled: true
   telemetry:
     enabled: true
   resourceGuard:
@@ -238,9 +242,9 @@ dumpLogs: false
 headless: false
 license: ""
 cloudLicenseEnabled: true
-aiAssistantEnabled: false
+aiAssistantEnabled: true
 demoModeEnabled: false
-supportChatEnabled: true
+supportChatEnabled: false
 internetConnectivity: true
 scripting:
   env: {}
