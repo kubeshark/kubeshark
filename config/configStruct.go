@@ -172,9 +172,9 @@ type ConfigStruct struct {
 	HeadlessMode         bool                          `yaml:"headless" json:"headless" default:"false"`
 	License              string                        `yaml:"license" json:"license" default:""`
 	CloudLicenseEnabled  bool                          `yaml:"cloudLicenseEnabled" json:"cloudLicenseEnabled" default:"true"`
-	AiAssistantEnabled   bool                          `yaml:"aiAssistantEnabled" json:"aiAssistantEnabled" default:"false"`
+	AiAssistantEnabled   bool                          `yaml:"aiAssistantEnabled" json:"aiAssistantEnabled" default:"true"`
 	DemoModeEnabled      bool                          `yaml:"demoModeEnabled" json:"demoModeEnabled" default:"false"`
-	SupportChatEnabled   bool                          `yaml:"supportChatEnabled" json:"supportChatEnabled" default:"true"`
+	SupportChatEnabled   bool                          `yaml:"supportChatEnabled" json:"supportChatEnabled" default:"false"`
 	InternetConnectivity bool                          `yaml:"internetConnectivity" json:"internetConnectivity" default:"true"`
 	Scripting            configStructs.ScriptingConfig `yaml:"scripting" json:"scripting"`
 	Manifests            ManifestsConfig               `yaml:"manifests,omitempty" json:"manifests,omitempty"`
