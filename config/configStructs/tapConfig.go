@@ -148,8 +148,8 @@ type TolerationsConfig struct {
 }
 
 type ProbeConfig struct {
-	InitialDelaySeconds int `yaml:"initialDelaySeconds" json:"initialDelaySeconds" default:"15"`
-	PeriodSeconds       int `yaml:"periodSeconds" json:"periodSeconds" default:"10"`
+	InitialDelaySeconds int `yaml:"initialDelaySeconds" json:"initialDelaySeconds" default:"5"`
+	PeriodSeconds       int `yaml:"periodSeconds" json:"periodSeconds" default:"5"`
 	SuccessThreshold    int `yaml:"successThreshold" json:"successThreshold" default:"1"`
 	FailureThreshold    int `yaml:"failureThreshold" json:"failureThreshold" default:"3"`
 }

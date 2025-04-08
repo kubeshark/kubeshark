@@ -66,13 +66,13 @@ tap:
         memory: 50Mi
   probes:
     hub:
-      initialDelaySeconds: 15
-      periodSeconds: 10
+      initialDelaySeconds: 5
+      periodSeconds: 5
       successThreshold: 1
       failureThreshold: 3
     sniffer:
-      initialDelaySeconds: 15
-      periodSeconds: 10
+      initialDelaySeconds: 5
+      periodSeconds: 5
       successThreshold: 1
       failureThreshold: 3
   serviceMesh: true
