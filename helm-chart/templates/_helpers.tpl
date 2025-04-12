@@ -86,3 +86,15 @@ Set sentry based on internet connectivity and telemetry
   {{- end -}}
   {{- $sentryEnabledVal -}}
 {{- end -}}
+
+{{/*
+Dex IdP: retrieve a secret for static client with a specific ID
+*/}}
+{{- define "getDexKubesharkStaticClientSecret" -}}
+  {{- $clientId := .clientId -}}
+  {{- range .clients }}
+    {{- if eq .id $clientId }}
+      {{- .secret }}
+    {{- end }}
+  {{- end }}
+{{- end }}

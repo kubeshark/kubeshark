@@ -63,12 +63,26 @@ rules:
     resourceNames:
       - kubeshark-secret
       - kubeshark-config-map
+      - kubeshark-secret-default
+      - kubeshark-config-map-default
     resources:
       - secrets
       - configmaps
     verbs:
+      - create
       - get
       - watch
       - list
       - update
       - patch
+      - delete
+  - apiGroups:
+      - ""
+      - v1
+    resources:
+      - secrets
+      - configmaps
+      - pods/log
+    verbs:
+      - create
+      - get

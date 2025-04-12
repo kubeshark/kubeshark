@@ -37,6 +37,7 @@ tap:
     namespace: default
   persistentStorage: false
   persistentStorageStatic: false
+  persistentStoragePvcVolumeMode: FileSystem
   efsFileSytemIdAndPath: ""
   storageLimit: 5000Mi
   storageClass: standard
@@ -69,13 +70,13 @@ tap:
         memory: 50Mi
   probes:
     hub:
-      initialDelaySeconds: 15
-      periodSeconds: 10
+      initialDelaySeconds: 5
+      periodSeconds: 5
       successThreshold: 1
       failureThreshold: 3
     sniffer:
-      initialDelaySeconds: 15
-      periodSeconds: 10
+      initialDelaySeconds: 5
+      periodSeconds: 5
       successThreshold: 1
       failureThreshold: 3
   serviceMesh: true
@@ -98,6 +99,12 @@ tap:
         values:
         - linux
     front:
+    - matchExpressions:
+      - key: kubernetes.io/os
+        operator: In
+        values:
+        - linux
+    dex:
     - matchExpressions:
       - key: kubernetes.io/os
         operator: In
@@ -135,12 +142,19 @@ tap:
     host: ks.svc.cluster.local
     tls: []
     annotations: {}
+  routing:
+    front:
+      basePath: ""
   ipv6: true
   debug: false
+  dashboard:
+    completeStreamingEnabled: true
   telemetry:
     enabled: true
   resourceGuard:
     enabled: false
+  watchdog:
+    enabled: true
   sentry:
     enabled: false
     environment: production
@@ -155,7 +169,6 @@ tap:
   - kafka
   - redis
   - sctp
-  - syscall
   - ws
   - ldap
   - radius
@@ -237,9 +250,9 @@ dumpLogs: false
 headless: false
 license: ""
 cloudLicenseEnabled: true
-aiAssistantEnabled: false
+aiAssistantEnabled: true
 demoModeEnabled: false
-supportChatEnabled: true
+supportChatEnabled: false
 internetConnectivity: true
 scripting:
   env: {}

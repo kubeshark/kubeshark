@@ -20,8 +20,8 @@ data:
       client_header_buffer_size   32k;
       large_client_header_buffers 8 64k;
 
-      location /api {
-        rewrite ^/api(.*)$ $1 break;
+      location {{ default "" (((.Values.tap).routing).front).basePath }}/api {
+        rewrite ^{{ default "" (((.Values.tap).routing).front).basePath }}/api(.*)$ $1 break;
         proxy_pass http://kubeshark-hub;
         proxy_set_header   X-Forwarded-For $remote_addr;
         proxy_set_header   Host $http_host;
@@ -35,8 +35,8 @@ data:
         proxy_pass_request_headers      on;
       }
 
-      location /saml {
-        rewrite ^/saml(.*)$ /saml$1 break;
+      location {{ default "" (((.Values.tap).routing).front).basePath }}/saml {
+        rewrite ^{{ default "" (((.Values.tap).routing).front).basePath }}/saml(.*)$ /saml$1 break;
         proxy_pass http://kubeshark-hub;
         proxy_set_header   X-Forwarded-For $remote_addr;
         proxy_set_header   Host $http_host;
@@ -45,6 +45,34 @@ data:
         proxy_send_timeout 12s;
         proxy_pass_request_headers on;
       }
+
+{{- if .Values.tap.auth.dexConfig }}
+       location /dex {
+        rewrite ^{{ default "" (((.Values.tap).routing).front).basePath }}/dex(.*)$ /dex$1 break;
+        proxy_pass http://kubeshark-dex;
+        proxy_set_header   X-Forwarded-For $remote_addr;
+        proxy_set_header   Host $http_host;
+        proxy_set_header Upgrade websocket;
+        proxy_set_header Connection Upgrade;
+        proxy_set_header  Authorization $http_authorization;
+        proxy_pass_header Authorization;
+        proxy_connect_timeout 4s;
+        proxy_read_timeout 120s;
+        proxy_send_timeout 12s;
+        proxy_pass_request_headers      on;
+      }
+{{- end }}
+
+{{- if (((.Values.tap).routing).front).basePath }}
+      location {{ .Values.tap.routing.front.basePath }} {
+        rewrite ^{{ .Values.tap.routing.front.basePath }}(.*)$ $1 break;
+        root   /usr/share/nginx/html;
+        index  index.html index.htm;
+        try_files $uri $uri/ /index.html;
+        expires -1;
+        add_header Cache-Control no-cache;
+      }
+{{- end }}
 
       location / {
         root   /usr/share/nginx/html;

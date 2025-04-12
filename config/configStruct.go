@@ -50,6 +50,17 @@ func CreateDefaultConfig() ConfigStruct {
 						},
 					},
 				},
+				Dex: []v1.NodeSelectorTerm{
+					{
+						MatchExpressions: []v1.NodeSelectorRequirement{
+							{
+								Key:      "kubernetes.io/os",
+								Operator: v1.NodeSelectorOpIn,
+								Values:   []string{"linux"},
+							},
+						},
+					},
+				},
 			},
 			Tolerations: configStructs.TolerationsConfig{
 				Workers: []v1.Toleration{
@@ -118,7 +129,7 @@ func CreateDefaultConfig() ConfigStruct {
 				"kafka",
 				"redis",
 				"sctp",
-				"syscall",
+				// "syscall",
 				// "tcp",
 				// "udp",
 				"ws",
@@ -134,6 +145,9 @@ func CreateDefaultConfig() ConfigStruct {
 				REDIS:    []uint16{6379},
 				LDAP:     []uint16{389},
 				DIAMETER: []uint16{3868},
+			},
+			Dashboard: configStructs.DashboardConfig{
+				CompleteStreamingEnabled: true,
 			},
 		},
 	}
@@ -158,9 +172,9 @@ type ConfigStruct struct {
 	HeadlessMode         bool                          `yaml:"headless" json:"headless" default:"false"`
 	License              string                        `yaml:"license" json:"license" default:""`
 	CloudLicenseEnabled  bool                          `yaml:"cloudLicenseEnabled" json:"cloudLicenseEnabled" default:"true"`
-	AiAssistantEnabled   bool                          `yaml:"aiAssistantEnabled" json:"aiAssistantEnabled" default:"false"`
+	AiAssistantEnabled   bool                          `yaml:"aiAssistantEnabled" json:"aiAssistantEnabled" default:"true"`
 	DemoModeEnabled      bool                          `yaml:"demoModeEnabled" json:"demoModeEnabled" default:"false"`
-	SupportChatEnabled   bool                          `yaml:"supportChatEnabled" json:"supportChatEnabled" default:"true"`
+	SupportChatEnabled   bool                          `yaml:"supportChatEnabled" json:"supportChatEnabled" default:"false"`
 	InternetConnectivity bool                          `yaml:"internetConnectivity" json:"internetConnectivity" default:"true"`
 	Scripting            configStructs.ScriptingConfig `yaml:"scripting" json:"scripting"`
 	Manifests            ManifestsConfig               `yaml:"manifests,omitempty" json:"manifests,omitempty"`
