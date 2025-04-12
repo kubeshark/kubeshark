@@ -272,6 +272,7 @@ data:
     AUTH_OIDC_ISSUER: 'not set'
     AUTH_OIDC_REFRESH_TOKEN_LIFETIME: '3960h'
     AUTH_OIDC_STATE_PARAM_EXPIRY: '10m'
+    AUTH_OIDC_BYPASS_SSL_CA_CHECK: 'false'
     TELEMETRY_DISABLED: 'false'
     SCRIPTING_DISABLED: 'false'
     TARGETED_PODS_UPDATE_DISABLED: ''
@@ -286,9 +287,9 @@ data:
     PCAP_ERROR_TTL: '60s'
     TIMEZONE: ' '
     CLOUD_LICENSE_ENABLED: 'true'
-    AI_ASSISTANT_ENABLED: 'false'
+    AI_ASSISTANT_ENABLED: 'true'
     DUPLICATE_TIMEFRAME: '200ms'
-    ENABLED_DISSECTORS: 'amqp,dns,http,icmp,kafka,redis,sctp,syscall,ws,ldap,radius,diameter'
+    ENABLED_DISSECTORS: 'amqp,dns,http,icmp,kafka,redis,sctp,ws,ldap,radius,diameter'
     CUSTOM_MACROS: '{"https":"tls and (http or http2)"}'
     DISSECTORS_UPDATING_ENABLED: 'true'
     DETECT_DUPLICATES: 'false'
@@ -388,15 +389,29 @@ rules:
     resourceNames:
       - kubeshark-secret
       - kubeshark-config-map
+      - kubeshark-secret-default
+      - kubeshark-config-map-default
     resources:
       - secrets
       - configmaps
     verbs:
+      - create
       - get
       - watch
       - list
       - update
       - patch
+      - delete
+  - apiGroups:
+      - ""
+      - v1
+    resources:
+      - secrets
+      - configmaps
+      - pods/log
+    verbs:
+      - create
+      - get
 ---
 # Source: kubeshark/templates/03-cluster-role-binding.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -635,17 +650,17 @@ spec:
           securityContext:
             privileged: true
           readinessProbe:
-            periodSeconds: 10
+            periodSeconds: 5
             failureThreshold: 3
             successThreshold: 1
-            initialDelaySeconds: 15
+            initialDelaySeconds: 5
             tcpSocket:
               port: 48999
           livenessProbe:
-            periodSeconds: 10
+            periodSeconds: 5
             failureThreshold: 3
             successThreshold: 1
-            initialDelaySeconds: 15
+            initialDelaySeconds: 5
             tcpSocket:
               port: 48999
           volumeMounts:
@@ -812,17 +827,17 @@ spec:
           image: 'docker.io/kubeshark/hub:v52.6'
           imagePullPolicy: Always
           readinessProbe:
-            periodSeconds: 10
+            periodSeconds: 5
             failureThreshold: 3
             successThreshold: 1
-            initialDelaySeconds: 15
+            initialDelaySeconds: 5
             tcpSocket:
               port: 8080
           livenessProbe:
-            periodSeconds: 10
+            periodSeconds: 5
             failureThreshold: 3
             successThreshold: 1
-            initialDelaySeconds: 15
+            initialDelaySeconds: 5
             tcpSocket:
               port: 8080
           resources:
@@ -903,6 +918,8 @@ spec:
               value: 'true'
             - name: REACT_APP_AUTH_TYPE
               value: 'default'
+            - name: REACT_APP_COMPLETE_STREAMING_ENABLED
+              value: 'true'
             - name: REACT_APP_AUTH_SAML_IDP_METADATA_URL
               value: ' '
             - name: REACT_APP_TIMEZONE
@@ -922,9 +939,9 @@ spec:
             - name: 'REACT_APP_CLOUD_LICENSE_ENABLED'
               value: 'true'
             - name: 'REACT_APP_AI_ASSISTANT_ENABLED'
-              value: 'false'
-            - name: REACT_APP_SUPPORT_CHAT_ENABLED
               value: 'true'
+            - name: REACT_APP_SUPPORT_CHAT_ENABLED
+              value: 'false'
             - name: REACT_APP_DISSECTORS_UPDATING_ENABLED
               value: 'true'
             - name: REACT_APP_SENTRY_ENABLED
@@ -976,3 +993,23 @@ spec:
             name: kubeshark-nginx-config-map
       dnsPolicy: ClusterFirstWithHostNet
       serviceAccountName: kubeshark-service-account
+---
+# Source: kubeshark/templates/18-cleanup-job.yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: kubeshark-cleanup-job
+  annotations:
+    "helm.sh/hook": pre-delete
+    "helm.sh/hook-delete-policy": hook-succeeded
+spec:
+  template:
+    spec:
+      serviceAccountName: kubeshark-service-account
+      restartPolicy: Never
+      containers:
+        - name: cleanup
+          image: 'docker.io/kubeshark/hub:v52.6'
+          command: ["/bin/sh", "-c"]
+          args:
+            - "kubectl delete cm kubeshark-config-map || true && kubectl delete secret kubeshark-secret || true"
