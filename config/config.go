@@ -147,7 +147,12 @@ func GetConfigFilePath(cmd *cobra.Command) string {
 		configPathOverride, err := cmd.Flags().GetString(ConfigPathFlag)
 		if err == nil {
 			if configPathOverride != "" {
-				return filepath.Join(cwd, configPathOverride)
+				resolvedConfigPath, err := filepath.Abs(configPathOverride)
+				if err != nil {
+					log.Error().Err(err).Msg("--config-path flag path cannot be resolved")
+				} else {
+					return resolvedConfigPath
+				}
 			}
 		} else {
 			log.Error().Err(err).Msg("--config-path flag parser error")
