@@ -151,6 +151,8 @@ tap:
     enabled: false
   watchdog:
     enabled: true
+  gitops:
+    enabled: false
   sentry:
     enabled: false
     environment: production

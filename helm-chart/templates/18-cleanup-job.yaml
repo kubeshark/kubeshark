@@ -1,3 +1,4 @@
+{{ if .Values.tap.gitops.enabled -}}
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -19,6 +20,5 @@ spec:
         {{ else }}
           image: '{{ .Values.tap.docker.registry }}/hub:{{ not (eq .Values.tap.docker.tag "") | ternary .Values.tap.docker.tag (include "kubeshark.defaultVersion" .) }}'
         {{- end }}
-          command: ["/bin/sh", "-c"]
-          args:
-            - "kubectl delete cm kubeshark-config-map || true && kubectl delete secret kubeshark-secret || true"
+          command: ["/app/cleanup"]
+{{ end -}}

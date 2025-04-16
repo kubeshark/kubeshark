@@ -33,6 +33,9 @@ spec:
             - "8080"
             - -loglevel
             - '{{ .Values.logLevel | default "warning" }}'
+            {{- if .Values.tap.gitops.enabled }}
+            - -gitops
+            {{- end }}
           env:
           - name: POD_NAME
             valueFrom:

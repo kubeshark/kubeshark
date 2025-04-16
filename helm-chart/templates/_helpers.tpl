@@ -50,6 +50,18 @@ Create the name of the service account to use
 {{- end }}
 
 {{/*
+Set configmap and secret names based on gitops.enabled
+*/}}
+{{- define "kubeshark.configmapName" -}}
+kubeshark-config-map{{ if .Values.tap.gitops.enabled }}-default{{ end }}
+{{- end -}}
+
+{{- define "kubeshark.secretName" -}}
+kubeshark-secret{{ if .Values.tap.gitops.enabled }}-default{{ end }}
+{{- end -}}
+
+
+{{/*
 Escape double quotes in a string
 */}}
 {{- define "kubeshark.escapeDoubleQuotes" -}}
