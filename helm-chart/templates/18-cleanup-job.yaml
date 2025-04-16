@@ -1,3 +1,4 @@
+{{ if .Values.tap.gitops.enabled -}}
 apiVersion: batch/v1
 kind: Job
 metadata:
@@ -20,3 +21,4 @@ spec:
           image: '{{ .Values.tap.docker.registry }}/hub:{{ not (eq .Values.tap.docker.tag "") | ternary .Values.tap.docker.tag (include "kubeshark.defaultVersion" .) }}'
         {{- end }}
           command: ["/app/cleanup"]
+{{ end -}}
