@@ -28,6 +28,7 @@ const (
 	FieldNameTag   = "yaml"
 	ReadonlyTag    = "readonly"
 	DebugFlag      = "debug"
+	ConfigPathFlag = "config-path"
 )
 
 var (
@@ -82,7 +83,7 @@ func InitConfig(cmd *cobra.Command) error {
 		return err
 	}
 
-	ConfigFilePath = path.Join(misc.GetDotFolderPath(), "config.yaml")
+	ConfigFilePath = GetConfigFilePath(cmd)
 	if err := loadConfigFile(&Config, utils.Contains([]string{
 		"manifests",
 		"license",
@@ -134,21 +135,44 @@ func WriteConfig(config *ConfigStruct) error {
 	return nil
 }
 
-func loadConfigFile(config *ConfigStruct, silent bool) error {
+func GetConfigFilePath(cmd *cobra.Command) string {
+	defaultConfigPath := path.Join(misc.GetDotFolderPath(), "config.yaml")
+
 	cwd, err := os.Getwd()
 	if err != nil {
-		return err
+		return defaultConfigPath
+	}
+
+	if cmd != nil {
+		configPathOverride, err := cmd.Flags().GetString(ConfigPathFlag)
+		if err == nil {
+			if configPathOverride != "" {
+				resolvedConfigPath, err := filepath.Abs(configPathOverride)
+				if err != nil {
+					log.Error().Err(err).Msg("--config-path flag path cannot be resolved")
+				} else {
+					return resolvedConfigPath
+				}
+			}
+		} else {
+			log.Error().Err(err).Msg("--config-path flag parser error")
+		}
 	}
 
 	cwdConfig := filepath.Join(cwd, fmt.Sprintf("%s.yaml", misc.Program))
 	reader, err := os.Open(cwdConfig)
 	if err != nil {
-		reader, err = os.Open(ConfigFilePath)
-		if err != nil {
-			return err
-		}
+		return defaultConfigPath
 	} else {
-		ConfigFilePath = cwdConfig
+		reader.Close()
+		return cwdConfig
+	}
+}
+
+func loadConfigFile(config *ConfigStruct, silent bool) error {
+	reader, err := os.Open(ConfigFilePath)
+	if err != nil {
+		return err
 	}
 	defer reader.Close()
 
@@ -176,9 +200,14 @@ func initFlag(f *pflag.Flag) {
 
 	flagPath = append(flagPath, strings.Split(f.Name, "-")...)
 
+	flagPathJoined := strings.Join(flagPath, ".")
+	if strings.HasSuffix(flagPathJoined, ".config.path") {
+		return
+	}
+
 	sliceValue, isSliceValue := f.Value.(pflag.SliceValue)
 	if !isSliceValue {
-		if err := mergeFlagValue(configElemValue, flagPath, strings.Join(flagPath, "."), f.Value.String()); err != nil {
+		if err := mergeFlagValue(configElemValue, flagPath, flagPathJoined, f.Value.String()); err != nil {
 			log.Warn().Err(err).Send()
 		}
 		return
@@ -191,7 +220,7 @@ func initFlag(f *pflag.Flag) {
 		return
 	}
 
-	if err := mergeFlagValues(configElemValue, flagPath, strings.Join(flagPath, "."), sliceValue.GetSlice()); err != nil {
+	if err := mergeFlagValues(configElemValue, flagPath, flagPathJoined, sliceValue.GetSlice()); err != nil {
 		log.Warn().Err(err).Send()
 	}
 }
