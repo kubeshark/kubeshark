@@ -2,7 +2,6 @@ package cmd
 
 import (
 	"fmt"
-	"path"
 
 	"github.com/creasty/defaults"
 	"github.com/kubeshark/kubeshark/config"
@@ -52,5 +51,5 @@ func init() {
 		log.Debug().Err(err).Send()
 	}
 
-	configCmd.Flags().BoolP(configStructs.RegenerateConfigName, "r", defaultConfig.Config.Regenerate, fmt.Sprintf("Regenerate the config file with default values to path %s", path.Join(misc.GetDotFolderPath(), "config.yaml")))
+	configCmd.Flags().BoolP(configStructs.RegenerateConfigName, "r", defaultConfig.Config.Regenerate, fmt.Sprintf("Regenerate the config file with default values to path %s", config.GetConfigFilePath(nil)))
 }
