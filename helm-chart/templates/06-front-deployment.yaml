@@ -83,7 +83,7 @@ spec:
             - name: REACT_APP_DISSECTORS_UPDATING_ENABLED
               value: '{{ .Values.tap.liveConfigMapChangesDisabled | ternary "false" "true" }}'
             - name: REACT_APP_PCAPDUMP_ENABLED
-              value: '{{ .Values.pcapdump.enabled | ternary "true" "false" }}''
+              value: '{{ .Values.pcapdump.enabled | ternary "true" "false" }}'
             - name: REACT_APP_SENTRY_ENABLED
               value: '{{ (include "sentry.enabled" .) }}'
             - name: REACT_APP_SENTRY_ENVIRONMENT
