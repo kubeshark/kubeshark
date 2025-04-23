@@ -258,6 +258,7 @@ scripting:
   sources: []
   watchScripts: true
   active: []
+  activateOnCreation: true
   console: true
 timezone: ""
 logLevel: warning
