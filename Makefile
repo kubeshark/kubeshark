@@ -198,9 +198,6 @@ release-dry-run:
 	@cd helm-chart && rm -r ../../kubeshark.github.io/charts/chart/* && cp -r . ../../kubeshark.github.io/charts/chart
 	@cd ../kubeshark
 
-release-test:
-	@sed "s/^version:.*/version: \"$(shell echo $(VERSION) | sed -E 's/^([0-9]+\.[0-9]+\.[0-9]+)\..*/\1/')\"/" helm-chart/Chart.yaml
-
 branch:
 	@cd ../worker && git checkout master && git pull && git checkout -b $(name); git push --set-upstream origin $(name)
 	@cd ../hub && git checkout master && git pull && git checkout -b $(name); git push --set-upstream origin $(name)
