@@ -312,7 +312,7 @@ type TapConfig struct {
 	PersistentStoragePvcVolumeMode string                  `yaml:"persistentStoragePvcVolumeMode" json:"persistentStoragePvcVolumeMode" default:"FileSystem"`
 	EfsFileSytemIdAndPath          string                  `yaml:"efsFileSytemIdAndPath" json:"efsFileSytemIdAndPath" default:""`
 	Secrets                        []string                `yaml:"secrets" json:"secrets" default:"[]"`
-	StorageLimit                   string                  `yaml:"storageLimit" json:"storageLimit" default:"5000Mi"`
+	StorageLimit                   string                  `yaml:"storageLimit" json:"storageLimit" default:"5Gi"`
 	StorageClass                   string                  `yaml:"storageClass" json:"storageClass" default:"standard"`
 	DryRun                         bool                    `yaml:"dryRun" json:"dryRun" default:"false"`
 	DnsConfig                      DnsConfig               `yaml:"dns" json:"dns"`

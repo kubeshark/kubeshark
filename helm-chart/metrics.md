@@ -41,6 +41,7 @@ prometheus:
 | --- | --- | --- | 
 | kubeshark_received_packets_total | Counter | Total number of packets received | 
 | kubeshark_dropped_packets_total | Counter | Total number of packets dropped | 
+| kubeshark_dropped_chunks_total  | Counter | Total number of dropped packet chunks | 
 | kubeshark_processed_bytes_total | Counter | Total number of bytes processed |
 | kubeshark_tcp_packets_total | Counter | Total number of TCP packets | 
 | kubeshark_dns_packets_total | Counter | Total number of DNS packets | 
