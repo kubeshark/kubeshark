@@ -35,6 +35,7 @@ tap:
   persistentStorageStatic: false
   persistentStoragePvcVolumeMode: FileSystem
   efsFileSytemIdAndPath: ""
+  secrets: []
   storageLimit: 5000Mi
   storageClass: standard
   dryRun: false
