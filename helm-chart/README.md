@@ -202,6 +202,7 @@ Example for overriding image names:
 | `tap.debug`                               | Enable debug mode                             | `false`                                                 |
 | `tap.telemetry.enabled`                   | Enable anonymous usage statistics collection           | `true`                                                  |
 | `tap.resourceGuard.enabled`               | Enable resource guard worker process, which watches RAM/disk usage and enables/disables traffic capture based on available resources | `false` |
+| `tap.secrets`                             | List of secrets to be used as source for environment variables (e.g. `kubeshark-license`) | `[]`                                                    |
 | `tap.sentry.enabled`                      | Enable sending of error logs to Sentry          | `true` (only for qualified users)                                                  |
 | `tap.sentry.environment`                      | Sentry environment to label error logs with      | `production`                                                  |
 | `tap.defaultFilter`                       | Sets the default dashboard KFL filter (e.g. `http`). By default, this value is set to filter out noisy protocols such as DNS, UDP, ICMP and TCP. The user can easily change this, **temporarily**, in the Dashboard. For a permanent change, you should change this value in the `values.yaml` or `config.yaml` file.        | `"!dns and !error"`                                    |

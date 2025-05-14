@@ -36,6 +36,13 @@ spec:
             {{- if .Values.tap.gitops.enabled }}
             - -gitops
             {{- end }}
+          {{- if .Values.tap.secrets }}
+          envFrom:
+            {{- range .Values.tap.secrets }}
+            - secretRef:
+                name: {{ . }}
+            {{- end }}
+          {{- end }}
           env:
           - name: POD_NAME
             valueFrom:
