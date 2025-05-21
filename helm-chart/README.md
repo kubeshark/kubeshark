@@ -210,7 +210,6 @@ Example for overriding image names:
 | `tap.metrics.port`                  | Pod port used to expose Prometheus metrics          | `49100`                                                  |
 | `tap.enabledDissectors`                   | This is an array of strings representing the list of supported protocols. Remove or comment out redundant protocols (e.g., dns).| The default list excludes: `udp` and `tcp` |
 | `tap.mountBpf`                            | BPF filesystem needs to be mounted for eBPF to work properly. This helm value determines whether Kubeshark will attempt to mount the filesystem. This option is not required if filesystem is already mounts. │ `true`|
-| `tap.cleanupDataDir`                      | Data directory cleanup is required in case it is not emptyDir. │ `true`|
 | `tap.gitops.enabled`                          | Enable GitOps functionality. This will allow you to use GitOps to manage your Kubeshark configuration. | `false` |
 | `logs.file`                               | Logs dump path                      | `""`                                                    |
 | `pcapdump.enabled`                        | Enable recording of all traffic captured according to other parameters. Whatever Kubeshark captures, considering pod targeting rules, will be stored in pcap files ready to be viewed by tools                 | `true`                                                                                                  |
