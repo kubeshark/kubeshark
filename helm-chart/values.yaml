@@ -230,6 +230,7 @@ tap:
       - SYS_RESOURCE
       - IPC_LOCK
   mountBpf: true
+  cleanupDataDir: true
 logs:
   file: ""
   grep: ""
