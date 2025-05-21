@@ -25,8 +25,10 @@ spec:
       name: kubeshark-worker-daemon-set
       namespace: kubeshark
     spec:
-      {{- if .Values.tap.mountBpf }}
+      {{- if or .Values.tap.mountBpf .Values.tap.persistentStorage}}
       initContainers:
+      {{- end }}
+      {{- if .Values.tap.mountBpf }}
         - command:
           - /bin/sh
           - -c
@@ -44,6 +46,27 @@ spec:
           - mountPath: /sys
             name: sys
             mountPropagation: Bidirectional
+      {{- end }}
+      {{- if .Values.tap.persistentStorage }}
+        - command:
+          - /bin/sh
+          - -c
+          - mkdir -p /app/data/$NODE_NAME && rm -rf /app/data/$NODE_NAME/tracer_*
+          {{- if .Values.tap.docker.overrideTag.worker }}
+          image: '{{ .Values.tap.docker.registry }}/worker:{{ .Values.tap.docker.overrideTag.worker }}{{ include "kubeshark.dockerTagDebugVersion" . }}'
+        {{ else }}
+          image: '{{ .Values.tap.docker.registry }}/worker:{{ not (eq .Values.tap.docker.tag "") | ternary .Values.tap.docker.tag (include "kubeshark.defaultVersion" .) }}{{ include "kubeshark.dockerTagDebugVersion" . }}'
+        {{- end }}
+          imagePullPolicy: {{ .Values.tap.docker.imagePullPolicy }}
+          name: cleanup-data-dir
+          env:
+            - name: NODE_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: spec.nodeName
+          volumeMounts:
+          - mountPath: /app/data
+            name: data
       {{- end }}
       containers:
         - command:
