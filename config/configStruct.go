@@ -128,7 +128,7 @@ func CreateDefaultConfig() ConfigStruct {
 				"icmp",
 				"kafka",
 				"redis",
-				"sctp",
+				// "sctp",
 				// "syscall",
 				// "tcp",
 				// "udp",
