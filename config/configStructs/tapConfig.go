@@ -224,7 +224,7 @@ type SentryConfig struct {
 }
 
 type WatchdogConfig struct {
-	Enabled bool `yaml:"enabled" json:"enabled" default:"true"`
+	Enabled bool `yaml:"enabled" json:"enabled" default:"false"`
 }
 
 type GitopsConfig struct {
