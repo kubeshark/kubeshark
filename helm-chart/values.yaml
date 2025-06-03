@@ -151,7 +151,7 @@ tap:
   resourceGuard:
     enabled: false
   watchdog:
-    enabled: true
+    enabled: false
   gitops:
     enabled: false
   sentry:
@@ -167,7 +167,6 @@ tap:
   - icmp
   - kafka
   - redis
-  - sctp
   - ws
   - ldap
   - radius
