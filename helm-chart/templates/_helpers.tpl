@@ -80,7 +80,7 @@ Create docker tag default version
 */}}
 {{- define "kubeshark.defaultVersion" -}}
 {{- $defaultVersion := (printf "v%s" .Chart.Version) -}}
-{{- if not .Values.tap.docker.tagLocked }}
+{{- if .Values.tap.docker.tagLocked }}
   {{- $defaultVersion = regexReplaceAll "^([^.]+\\.[^.]+).*" $defaultVersion "$1" -}}
 {{- end }}
 {{- $defaultVersion }}
