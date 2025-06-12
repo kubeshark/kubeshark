@@ -250,7 +250,7 @@ license: ""
 cloudLicenseEnabled: true
 aiAssistantEnabled: true
 demoModeEnabled: false
-supportChatEnabled: false
+supportChatEnabled: true
 internetConnectivity: true
 scripting:
   env: {}
