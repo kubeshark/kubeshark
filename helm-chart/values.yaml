@@ -2,7 +2,7 @@
 tap:
   docker:
     registry: docker.io/kubeshark
-    tag: "v52.7"
+    tag: ""
     tagLocked: true
     imagePullPolicy: Always
     imagePullSecrets: []
