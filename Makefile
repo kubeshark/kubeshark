@@ -194,9 +194,15 @@ release:
 	@cd ../kubeshark
 
 release-dry-run:
-	@cd ../kubeshark && git checkout master && git pull && sed -i "s/^version:.*/version: \"$(shell echo $(VERSION) | sed -E 's/^([0-9]+\.[0-9]+\.[0-9]+)\..*/\1/')\"/" helm-chart/Chart.yaml && make && make generate-helm-values && make generate-manifests
-	@cd helm-chart && rm -r ../../kubeshark.github.io/charts/chart/* && cp -r . ../../kubeshark.github.io/charts/chart
-	@cd ../kubeshark
+	@cd ../worker && git checkout master && git pull 
+	@cd ../tracer && git checkout master && git pull 
+	@cd ../hub && git checkout master && git pull
+	@cd ../front && git checkout master && git pull 
+	@cd ../kubeshark && git checkout master && git pull && sed -i "s/^version:.*/version: \"$(shell echo $(VERSION) | sed -E 's/^([0-9]+\.[0-9]+\.[0-9]+)\..*/\1/')\"/" helm-chart/Chart.yaml && make
+	@if [ "$(shell uname)" = "Darwin" ]; then \
+		codesign --sign - --force --preserve-metadata=entitlements,requirements,flags,runtime ./bin/kubeshark__; \
+	fi
+	@make generate-helm-values && make generate-manifests
 
 branch:
 	@cd ../worker && git checkout master && git pull && git checkout -b $(name); git push --set-upstream origin $(name)
