@@ -7,8 +7,8 @@ metadata:
   labels:
     app.kubeshark.co/app: dex
     {{- include "kubeshark.labels" . | nindent 4 }}
-  annotations:
   {{- if .Values.tap.annotations }}
+  annotations:
     {{- toYaml .Values.tap.annotations | nindent 4 }}
   {{- end }}
   name: {{ include "kubeshark.name" . }}-dex
@@ -69,12 +69,6 @@ spec:
             requests:
               cpu: 50m
               memory: 50Mi
-    {{- if .Values.tap.docker.imagePullSecrets }}
-      imagePullSecrets:
-        {{- range .Values.tap.docker.imagePullSecrets }}
-        - name: {{ . }}
-        {{- end }}
-    {{- end }}
 {{- if gt (len .Values.tap.nodeSelectorTerms.dex) 0}}
       affinity:
         nodeAffinity:

@@ -4,8 +4,8 @@ metadata:
   labels:
     app.kubeshark.co/app: front
     {{- include "kubeshark.labels" . | nindent 4 }}
-  annotations:
   {{- if .Values.tap.annotations }}
+  annotations:
     {{- toYaml .Values.tap.annotations | nindent 4 }}
   {{- end }}
   name: {{ include "kubeshark.name" . }}-front
@@ -122,12 +122,6 @@ spec:
               mountPath: /etc/nginx/conf.d/default.conf
               subPath: default.conf
               readOnly: true
-    {{- if .Values.tap.docker.imagePullSecrets }}
-      imagePullSecrets:
-        {{- range .Values.tap.docker.imagePullSecrets }}
-        - name: {{ . }}
-        {{- end }}
-    {{- end }}
 {{- if gt (len .Values.tap.nodeSelectorTerms.front) 0}}
       affinity:
         nodeAffinity:

@@ -26,8 +26,8 @@ kind: PersistentVolumeClaim
 metadata:
   labels:
     {{- include "kubeshark.labels" . | nindent 4 }}
-  annotations:
   {{- if .Values.tap.annotations }}
+  annotations:
     {{- toYaml .Values.tap.annotations | nindent 4 }}
   {{- end }}
   name: kubeshark-persistent-volume-claim
