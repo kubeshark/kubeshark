@@ -6,8 +6,8 @@ metadata:
     app.kubeshark.co/app: worker
     sidecar.istio.io/inject: "false"
     {{- include "kubeshark.labels" . | nindent 4 }}
-  annotations:
   {{- if .Values.tap.annotations }}
+  annotations:
     {{- toYaml .Values.tap.annotations | nindent 4 }}
   {{- end }}
   name: kubeshark-worker-daemon-set
@@ -107,12 +107,6 @@ spec:
           image: '{{ .Values.tap.docker.registry }}/worker:{{ not (eq .Values.tap.docker.tag "") | ternary .Values.tap.docker.tag (include "kubeshark.defaultVersion" .) }}{{ include "kubeshark.dockerTagDebugVersion" . }}'
         {{- end }}
           imagePullPolicy: {{ .Values.tap.docker.imagePullPolicy }}
-        {{- if .Values.tap.docker.imagePullSecrets }}
-          imagePullSecrets:
-            {{- range .Values.tap.docker.imagePullSecrets }}
-            - name: {{ . }}
-            {{- end }}
-        {{- end }}
           name: sniffer
           ports:
             - containerPort: {{ .Values.tap.metrics.port }}
@@ -353,12 +347,6 @@ spec:
           {{- end }}
       {{- end }}
       {{- end }}
-    {{- if .Values.tap.docker.imagePullSecrets }}
-      imagePullSecrets:
-        {{- range .Values.tap.docker.imagePullSecrets }}
-        - name: {{ . }}
-        {{- end }}
-    {{- end }}
 {{- if gt (len .Values.tap.nodeSelectorTerms.workers) 0}}
       affinity:
         nodeAffinity:

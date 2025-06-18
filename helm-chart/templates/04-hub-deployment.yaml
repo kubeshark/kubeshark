@@ -5,8 +5,8 @@ metadata:
   labels:
     app.kubeshark.co/app: hub
     {{- include "kubeshark.labels" . | nindent 4 }}
-  annotations:
   {{- if .Values.tap.annotations }}
+  annotations:
     {{- toYaml .Values.tap.annotations | nindent 4 }}
   {{- end }}
   name: {{ include "kubeshark.name" . }}-hub
@@ -101,12 +101,6 @@ spec:
           - name: saml-x509-volume
             mountPath: "/etc/saml/x509"
             readOnly: true
-    {{- if .Values.tap.docker.imagePullSecrets }}
-      imagePullSecrets:
-        {{- range .Values.tap.docker.imagePullSecrets }}
-        - name: {{ . }}
-        {{- end }}
-    {{- end }}
 {{- if gt (len .Values.tap.nodeSelectorTerms.hub) 0}}
       affinity:
         nodeAffinity:
