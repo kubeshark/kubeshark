@@ -424,7 +424,6 @@ func postFrontStarted(ctx context.Context, kubernetesProvider *kubernetes.Provid
 		time.Sleep(100 * time.Millisecond)
 	}
 
-
 	if (config.Config.Scripting.Source != "" || len(config.Config.Scripting.Sources) > 0) && config.Config.Scripting.WatchScripts {
 		watchScripts(ctx, kubernetesProvider, false)
 	}
@@ -439,8 +438,26 @@ func updateConfig(kubernetesProvider *kubernetes.Provider) {
 	_, _ = kubernetes.SetConfig(kubernetesProvider, kubernetes.CONFIG_POD_REGEX, config.Config.Tap.PodRegexStr)
 	_, _ = kubernetes.SetConfig(kubernetesProvider, kubernetes.CONFIG_NAMESPACES, strings.Join(config.Config.Tap.Namespaces, ","))
 	_, _ = kubernetes.SetConfig(kubernetesProvider, kubernetes.CONFIG_EXCLUDED_NAMESPACES, strings.Join(config.Config.Tap.ExcludedNamespaces, ","))
+	_, _ = kubernetes.SetConfig(kubernetesProvider, kubernetes.CONFIG_NODES, strings.Join(config.Config.Tap.Nodes, ","))
+	_, _ = kubernetes.SetConfig(kubernetesProvider, kubernetes.CONFIG_EXCLUDED_NODES, strings.Join(config.Config.Tap.ExcludedNodes, ","))
 
-	data, err := json.Marshal(config.Config.Scripting.Env)
+	data, err := json.Marshal(config.Config.Tap.TargetLabels)
+	if err != nil {
+		log.Error().Str("config", kubernetes.CONFIG_TARGET_LABELS).Err(err).Send()
+		return
+	} else {
+		_, _ = kubernetes.SetConfig(kubernetesProvider, kubernetes.CONFIG_TARGET_LABELS, string(data))
+	}
+
+	data, err = json.Marshal(config.Config.Tap.ExcludedTargetLabels)
+	if err != nil {
+		log.Error().Str("config", kubernetes.CONFIG_EXCLUDED_TARGET_LABELS).Err(err).Send()
+		return
+	} else {
+		_, _ = kubernetes.SetConfig(kubernetesProvider, kubernetes.CONFIG_EXCLUDED_TARGET_LABELS, string(data))
+	}
+
+	data, err = json.Marshal(config.Config.Scripting.Env)
 	if err != nil {
 		log.Error().Str("config", kubernetes.CONFIG_SCRIPTING_ENV).Err(err).Send()
 		return
