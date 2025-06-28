@@ -12,7 +12,7 @@ import (
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 )
 
-// formatError wraps error with a detailed message that is meant for the user.
+// FormatError wraps error with a detailed message that is meant for the user.
 // While the errors are meant to be displayed, they are not meant to be exported as classes outsite of CLI.
 func FormatError(err error) error {
 	var errorNew error
