@@ -33,11 +33,11 @@
 
 Think [TCPDump](https://en.wikipedia.org/wiki/Tcpdump) and [Wireshark](https://www.wireshark.org/) reimagined for Kubernetes.
 
-### Service-Map w/Kubernetes Context
+#### Service-Map w/Kubernetes Context
 
 ![Service Map with Kubernetes Context](https://github.com/kubeshark/assets/raw/master/png/kubeshark-servicemap.png)
 
-### Cluster-Wide PCAP Recording
+#### Cluster-Wide PCAP Recording
 
 ![Cluster-Wide PCAP Recording](https://github.com/kubeshark/assets/raw/master/png/pcap-recording.png)
 
@@ -80,24 +80,6 @@ Clone this repository and run the `make` command to build it. After the build is
 ## Documentation
 
 To learn more, read the [documentation](https://docs.kubeshark.co).
-
-## Additional Use Cases
-
-### Dump All Cluster-wide Traffic into a Single PCAP File
-
-Record **all** cluster traffic and consolidate it into a single PCAP file (tcpdump-style).
-
-Run Kubeshark to start capturing traffic:
-```shell
-kubeshark tap --set headless=true
-```
-> You can press `^C` to stop the command. Kubeshark will continue running in the background.
-
-Take a snapshot of traffic (e.g., from the past 5 minutes):
-```shell
-kubeshark pcapdump --time 5m
-```
-> Read more [here](https://docs.kubeshark.co/en/pcapdump).
 
 ## Contributing
 
