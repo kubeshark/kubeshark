@@ -27,11 +27,15 @@
   </b>
 </p>
 
-**Kubeshark** is a network observability platform for [**Kubernetes**](https://kubernetes.io/), providing real-time, protocol-level visibility into Kubernetes’ network. It enables users to inspect all internal and external cluster connections, API calls, and data in transit. Additionally, Kubeshark detects suspicious network behaviors, triggers automated actions, and provides deep insights into the network.
+**Kubeshark** is a network observability platform for Kubernetes, providing real-time, cluster-wide visibility into Kubernetes’ network. It enables users to inspect all internal and external cluster communications, API calls, and data in transit. Additionally, Kubeshark detects anomalies and emergent behaviors, trigger autonomous remediations, and generate deep network insights.
 
 ![Simple UI](https://github.com/kubeshark/assets/raw/master/png/kubeshark-ui.png)
 
 Think [TCPDump](https://en.wikipedia.org/wiki/Tcpdump) and [Wireshark](https://www.wireshark.org/) reimagined for Kubernetes.
+
+### Service-Map w/Kubernetes Context
+
+![Service Map with Kubernetes Context](https://github.com/kubeshark/assets/raw/master/png/kubeshark-servicemap.png)
 
 ## Getting Started
 Download **Kubeshark**'s binary distribution [latest release](https://github.com/kubeshark/kubeshark/releases/latest) or use one of the following methods to deploy **Kubeshark**. The [web-based dashboard](https://docs.kubeshark.co/en/ui) should open in your browser, showing a real-time view of your cluster's traffic.
