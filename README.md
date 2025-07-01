@@ -37,6 +37,10 @@ Think [TCPDump](https://en.wikipedia.org/wiki/Tcpdump) and [Wireshark](https://w
 
 ![Service Map with Kubernetes Context](https://github.com/kubeshark/assets/raw/master/png/kubeshark-servicemap.png)
 
+### Cluster-Wide PCAP Recording
+
+![Cluster-Wide PCAP Recording](https://github.com/kubeshark/assets/raw/master/png/pcap-recording.png)
+
 ## Getting Started
 Download **Kubeshark**'s binary distribution [latest release](https://github.com/kubeshark/kubeshark/releases/latest) or use one of the following methods to deploy **Kubeshark**. The [web-based dashboard](https://docs.kubeshark.co/en/ui) should open in your browser, showing a real-time view of your cluster's traffic.
 
