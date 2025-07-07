@@ -80,6 +80,8 @@ spec:
               value: '{{ .Values.aiAssistantEnabled | ternary "true" "false" }}'
             - name: REACT_APP_SUPPORT_CHAT_ENABLED
               value: '{{ and .Values.supportChatEnabled .Values.internetConnectivity | ternary "true" "false" }}'
+            - name: REACT_APP_API2_BETA_ENABLED
+              value: '{{ .Values.api2BetaEnabled | ternary "true" "false" }}'
             - name: REACT_APP_DISSECTORS_UPDATING_ENABLED
               value: '{{ .Values.tap.liveConfigMapChangesDisabled | ternary "false" "true" }}'
             - name: REACT_APP_SENTRY_ENABLED

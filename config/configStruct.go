@@ -175,6 +175,7 @@ type ConfigStruct struct {
 	AiAssistantEnabled   bool                          `yaml:"aiAssistantEnabled" json:"aiAssistantEnabled" default:"true"`
 	DemoModeEnabled      bool                          `yaml:"demoModeEnabled" json:"demoModeEnabled" default:"false"`
 	SupportChatEnabled   bool                          `yaml:"supportChatEnabled" json:"supportChatEnabled" default:"true"`
+	Api2BetaEnabled      bool                          `yaml:"api2BetaEnabled" json:"api2BetaEnabled" default:"false"`
 	InternetConnectivity bool                          `yaml:"internetConnectivity" json:"internetConnectivity" default:"true"`
 	Scripting            configStructs.ScriptingConfig `yaml:"scripting" json:"scripting"`
 	Manifests            ManifestsConfig               `yaml:"manifests,omitempty" json:"manifests,omitempty"`

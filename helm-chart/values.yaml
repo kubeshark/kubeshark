@@ -251,6 +251,7 @@ cloudLicenseEnabled: true
 aiAssistantEnabled: true
 demoModeEnabled: false
 supportChatEnabled: true
+api2BetaEnabled: false
 internetConnectivity: true
 scripting:
   env: {}
