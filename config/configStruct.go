@@ -137,6 +137,7 @@ func CreateDefaultConfig() ConfigStruct {
 				"ldap",
 				"radius",
 				"diameter",
+				// "expert",
 			},
 			PortMapping: configStructs.PortMapping{
 				HTTP:     []uint16{80, 443, 8080},
