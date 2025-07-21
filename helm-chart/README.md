@@ -112,7 +112,7 @@ Example for overriding image names:
 
 ```yaml
   docker:
-    overrideImage: 
+    overrideImage:
       worker: docker.io/kubeshark/worker:v52.3.87
       front:  docker.io/kubeshark/front:v52.3.87
       hub:    docker.io/kubeshark/hub:v52.3.87
@@ -180,6 +180,7 @@ Example for overriding image names:
 | `tap.nodeSelectorTerms.workers`                   | Node selector terms for workers components                       | `[{"matchExpressions":[{"key":"kubernetes.io/os","operator":"In","values":["linux"]}]}]` |
 | `tap.nodeSelectorTerms.hub`                   | Node selector terms for hub component                 | `[{"matchExpressions":[{"key":"kubernetes.io/os","operator":"In","values":["linux"]}]}]` |
 | `tap.nodeSelectorTerms.front`                   | Node selector terms for front-end component                         | `[{"matchExpressions":[{"key":"kubernetes.io/os","operator":"In","values":["linux"]}]}]` |
+| `tap.priorityClass`                   | Priority class name for Kubeshark components                         | `""`                                                |
 | `tap.tolerations.workers`                  | Tolerations for workers components                         | `[ {"operator": "Exists", "effect": "NoExecute"}` |
 | `tap.tolerations.hub`                  | Tolerations for hub component                         | `[]` |
 | `tap.tolerations.front`                  | Tolerations for front-end component                         | `[]` |
@@ -302,7 +303,7 @@ tap:
 
 [**Click here to see full docs**](https://docs.kubeshark.co/en/saml#installing-with-oidc-enabled-dex-idp).
 
-Choose this option, if **you already have a running instance** of Dex in your cluster & 
+Choose this option, if **you already have a running instance** of Dex in your cluster &
 you want to set up Dex OIDC authentication for Kubeshark users.
 
 Kubeshark supports authentication using [Dex - A Federated OpenID Connect Provider](https://dexidp.io/).
@@ -344,7 +345,7 @@ Add these helm values to set up OIDC authentication powered by your Dex IdP:
 ```yaml
 # values.yaml
 
-tap: 
+tap:
   auth:
     enabled: true
     type: dex
@@ -374,7 +375,7 @@ Once you run `helm install kubeshark kubeshark/kubeshark -f ./values.yaml`, Kube
 
 # Installing your own Dex IdP along with Kubeshark
 
-Choose this option, if **you need to deploy an instance of Dex IdP** along with Kubeshark & 
+Choose this option, if **you need to deploy an instance of Dex IdP** along with Kubeshark &
 set up Dex OIDC authentication for Kubeshark users.
 
 Depending on Ingress enabled/disabled, your Dex configuration might differ.
@@ -410,10 +411,10 @@ The following Dex settings will have these values:
 
 Please, make sure to prepare the following things first.
 
-1. Choose **[Connectors](https://dexidp.io/docs/connectors/)** to enable in Dex IdP. 
+1. Choose **[Connectors](https://dexidp.io/docs/connectors/)** to enable in Dex IdP.
    - i.e. how many kind of "Log in with ..." options you'd like to offer your users
    - You will need to specify connectors in `tap.auth.dexConfig.connectors`
-2. Choose type of **[Storage](https://dexidp.io/docs/configuration/storage/)** to use in Dex IdP. 
+2. Choose type of **[Storage](https://dexidp.io/docs/configuration/storage/)** to use in Dex IdP.
    - You will need to specify storage settings in `tap.auth.dexConfig.storage`
    - default: `memory`
 3. Decide on the OAuth2 `?state=` param expiration time:
@@ -445,28 +446,28 @@ Make sure to:
 
 Helm `values.yaml`:
 ```yaml
-tap: 
+tap:
   auth:
     enabled: true
     type: dex
     dexOidc:
       issuer: https://<your-ingress-hostname>/dex
-      
+
       # Client ID/secret must be taken from `tap.auth.dexConfig.staticClients -> id/secret`
       clientId: kubeshark
       clientSecret: create your own client password
-      
+
       refreshTokenLifetime: "3960h" # 165 days
       oauth2StateParamExpiry: "10m"
       bypassSslCaCheck: false
     dexConfig:
       # This field is REQUIRED!
-      # 
+      #
       # The base path of Dex and the external name of the OpenID Connect service.
       # This is the canonical URL that all clients MUST use to refer to Dex. If a
       # path is provided, Dex's HTTP service will listen at a non-root URL.
       issuer: https://<your-ingress-hostname>/dex
-        
+
       # Expiration configuration for tokens, signing keys, etc.
       expiry:
         refreshTokens:
@@ -474,15 +475,15 @@ tap:
           absoluteLifetime: "3960h"  # 165 days
 
       # This field is REQUIRED!
-      # 
+      #
       # The storage configuration determines where Dex stores its state.
       # See the documentation (https://dexidp.io/docs/storage/) for further information.
       storage:
         type: memory
 
       # This field is REQUIRED!
-      # 
-      # Attention: 
+      #
+      # Attention:
       # Do not change this field and its values.
       # This field is required for internal Kubeshark-to-Dex communication.
       #
@@ -492,7 +493,7 @@ tap:
 
       # This field is REQUIRED!
       #
-      # Attention: 
+      # Attention:
       # Do not change this field and its values.
       # This field is required for internal Kubeshark-to-Dex communication.
       #
@@ -518,10 +519,10 @@ tap:
       # Connectors are used to authenticate users against upstream identity providers.
       # See the documentation (https://dexidp.io/docs/connectors/) for further information.
       #
-      # Attention: 
-      # When you define a new connector, `config.redirectURI` must be: 
+      # Attention:
+      # When you define a new connector, `config.redirectURI` must be:
       # https://<your-ingress-hostname>/dex/callback
-      # 
+      #
       # Example with Google connector:
       # connectors:
       #  - type: google
