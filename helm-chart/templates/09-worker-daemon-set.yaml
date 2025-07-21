@@ -331,6 +331,9 @@ spec:
       dnsPolicy: ClusterFirstWithHostNet
       hostNetwork: true
       serviceAccountName: {{ include "kubeshark.serviceAccountName" . }}
+      {{- if .Values.tap.priorityClass }}
+      priorityClassName: {{ .Values.tap.priorityClass | quote }}
+      {{- end }}
       {{- if .Values.tap.tolerations.workers }}
       tolerations:
       {{- range .Values.tap.tolerations.workers }}

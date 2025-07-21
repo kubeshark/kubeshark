@@ -180,6 +180,7 @@ Example for overriding image names:
 | `tap.nodeSelectorTerms.workers`                   | Node selector terms for workers components                       | `[{"matchExpressions":[{"key":"kubernetes.io/os","operator":"In","values":["linux"]}]}]` |
 | `tap.nodeSelectorTerms.hub`                   | Node selector terms for hub component                 | `[{"matchExpressions":[{"key":"kubernetes.io/os","operator":"In","values":["linux"]}]}]` |
 | `tap.nodeSelectorTerms.front`                   | Node selector terms for front-end component                         | `[{"matchExpressions":[{"key":"kubernetes.io/os","operator":"In","values":["linux"]}]}]` |
+| `tap.priorityClass`                   | Priority class name for Kubeshark components                         | `""`                                                |
 | `tap.tolerations.workers`                  | Tolerations for workers components                         | `[ {"operator": "Exists", "effect": "NoExecute"}` |
 | `tap.tolerations.hub`                  | Tolerations for hub component                         | `[]` |
 | `tap.tolerations.front`                  | Tolerations for front-end component                         | `[]` |

@@ -10,6 +10,9 @@ spec:
   template:
     spec:
       serviceAccountName: {{ include "kubeshark.serviceAccountName" . }}
+      {{- if .Values.tap.priorityClass }}
+      priorityClassName: {{ .Values.tap.priorityClass | quote }}
+      {{- end }}
       restartPolicy: Never
       containers:
         - name: cleanup
