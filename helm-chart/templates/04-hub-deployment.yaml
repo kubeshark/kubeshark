@@ -25,6 +25,9 @@ spec:
     spec:
       dnsPolicy: ClusterFirstWithHostNet
       serviceAccountName: {{ include "kubeshark.serviceAccountName" . }}
+      {{- if .Values.tap.priorityClass }}
+      priorityClassName: {{ .Values.tap.priorityClass | quote }}
+      {{- end }}
       containers:
         - name: hub
           command:
