@@ -1,6 +1,4 @@
 # find a detailed description here: https://github.com/kubeshark/kubeshark/blob/master/helm-chart/README.md
-hostNetwork: true
-
 tap:
   docker:
     registry: docker.io/kubeshark
@@ -78,6 +76,7 @@ tap:
       periodSeconds: 5
       successThreshold: 1
       failureThreshold: 3
+  hostNetwork: true
   serviceMesh: true
   tls: true
   disableTlsLog: true
