@@ -76,6 +76,7 @@ tap:
       periodSeconds: 5
       successThreshold: 1
       failureThreshold: 3
+  hostNetwork: true
   serviceMesh: true
   tls: true
   disableTlsLog: true
