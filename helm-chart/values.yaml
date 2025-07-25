@@ -1,4 +1,6 @@
 # find a detailed description here: https://github.com/kubeshark/kubeshark/blob/master/helm-chart/README.md
+hostNetwork: true
+
 tap:
   docker:
     registry: docker.io/kubeshark
