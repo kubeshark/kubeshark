@@ -189,7 +189,7 @@ release:
 	@make generate-helm-values && make generate-manifests
 	@git add -A . && git commit -m ":bookmark: Bump the Helm chart version to $(VERSION)" && git push
 	@git tag -d v$(VERSION); git tag v$(VERSION) && git push origin --tags
-	@cd helm-chart && rm -r ../../kubeshark.github.io/charts/chart/* && cp -r . ../../kubeshark.github.io/charts/chart
+	@cd helm-chart && rm -r ../../kubeshark.github.io/charts/chart/* && cp -r . ../../kubeshark.github.io/charts/chart/
 	@cd ../../kubeshark.github.io/ && git add -A . && git commit -m ":sparkles: Update the Helm chart" && git push
 	@cd ../kubeshark
 

@@ -252,7 +252,7 @@ cloudLicenseEnabled: true
 aiAssistantEnabled: true
 demoModeEnabled: false
 supportChatEnabled: true
-betaEnabled: true
+betaEnabled: false
 internetConnectivity: true
 scripting:
   env: {}
