@@ -328,6 +328,7 @@ type TapConfig struct {
 	Tolerations                    TolerationsConfig       `yaml:"tolerations" json:"tolerations" default:"{}"`
 	Auth                           AuthConfig              `yaml:"auth" json:"auth"`
 	Ingress                        IngressConfig           `yaml:"ingress" json:"ingress"`
+	PriorityClass                  string                  `yaml:"priorityClass" json:"priorityClass" default:""`
 	Routing                        RoutingConfig           `yaml:"routing" json:"routing"`
 	IPv6                           bool                    `yaml:"ipv6" json:"ipv6" default:"true"`
 	Debug                          bool                    `yaml:"debug" json:"debug" default:"false"`
