@@ -11,7 +11,7 @@ data:
     NAMESPACES: '{{ gt (len .Values.tap.namespaces) 0 | ternary (join "," .Values.tap.namespaces) "" }}'
     EXCLUDED_NAMESPACES: '{{ gt (len .Values.tap.excludedNamespaces) 0 | ternary (join "," .Values.tap.excludedNamespaces) "" }}'
     BPF_OVERRIDE: '{{ .Values.tap.bpfOverride }}'
-    STOPPED: '{{ .Values.tap.stopped | ternary "true" "false" }}'
+    STOPPED: '{{ .Values.tap.capture.stopped | ternary "true" "false" }}'
     SCRIPTING_SCRIPTS: '{}'
     SCRIPTING_ACTIVE_SCRIPTS: '{{ gt (len .Values.scripting.active) 0 | ternary (join "," .Values.scripting.active) "" }}'
     INGRESS_ENABLED: '{{ .Values.tap.ingress.enabled }}'
@@ -55,7 +55,7 @@ data:
     TARGETED_PODS_UPDATE_DISABLED: '{{ .Values.tap.liveConfigMapChangesDisabled | ternary "true" "" }}'
     PRESET_FILTERS_CHANGING_ENABLED: '{{ .Values.tap.liveConfigMapChangesDisabled | ternary "false" "true" }}'
     RECORDING_DISABLED: '{{ .Values.tap.liveConfigMapChangesDisabled | ternary "true" "" }}'
-    STOP_TRAFFIC_CAPTURING_DISABLED: '{{- if and .Values.tap.liveConfigMapChangesDisabled .Values.tap.stopped -}}
+    STOP_TRAFFIC_CAPTURING_DISABLED: '{{- if and .Values.tap.liveConfigMapChangesDisabled .Values.tap.capture.stopped -}}
                                         false
                                       {{- else -}}
                                         {{ .Values.tap.liveConfigMapChangesDisabled | ternary "true" "false" }}
