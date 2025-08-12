@@ -26,7 +26,9 @@ tap:
   namespaces: []
   excludedNamespaces: []
   bpfOverride: ""
-  stopped: false
+  capture:
+    stopped: false
+    stopAfter: 5m
   release:
     repo: https://helm.kubeshark.co
     name: kubeshark

@@ -149,6 +149,10 @@ func CreateDefaultConfig() ConfigStruct {
 			Dashboard: configStructs.DashboardConfig{
 				CompleteStreamingEnabled: true,
 			},
+			Capture: configStructs.CaptureConfig{
+				Stopped:   false,
+				StopAfter: "5m",
+			},
 		},
 	}
 }

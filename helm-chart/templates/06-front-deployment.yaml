@@ -65,7 +65,7 @@ spec:
             - name: REACT_APP_RECORDING_DISABLED
               value: '{{ .Values.tap.liveConfigMapChangesDisabled }}'
             - name: REACT_APP_STOP_TRAFFIC_CAPTURING_DISABLED
-              value: '{{- if and .Values.tap.liveConfigMapChangesDisabled .Values.tap.stopped -}}
+              value: '{{- if and .Values.tap.liveConfigMapChangesDisabled .Values.tap.capture.stopped -}}
                         false
                       {{- else -}}
                         {{ .Values.tap.liveConfigMapChangesDisabled | ternary "true" "false" }}
