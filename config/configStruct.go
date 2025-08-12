@@ -151,7 +151,7 @@ func CreateDefaultConfig() ConfigStruct {
 			},
 			Capture: configStructs.CaptureConfig{
 				Stopped:   false,
-				StopAfter: "30s",
+				StopAfter: "5m",
 			},
 		},
 	}

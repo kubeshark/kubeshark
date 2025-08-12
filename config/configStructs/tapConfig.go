@@ -300,7 +300,7 @@ type SeLinuxOptionsConfig struct {
 
 type CaptureConfig struct {
 	Stopped   bool   `yaml:"stopped" json:"stopped" default:"false"`
-	StopAfter string `yaml:"stopAfter" json:"stopAfter" default:"30s"`
+	StopAfter string `yaml:"stopAfter" json:"stopAfter" default:"5m"`
 }
 
 type TapConfig struct {

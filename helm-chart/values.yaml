@@ -28,7 +28,7 @@ tap:
   bpfOverride: ""
   capture:
     stopped: false
-    stopAfter: 30s
+    stopAfter: 5m
   release:
     repo: https://helm.kubeshark.co
     name: kubeshark
