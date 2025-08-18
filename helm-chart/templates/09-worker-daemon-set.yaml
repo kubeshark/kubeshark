@@ -394,10 +394,12 @@ spec:
         - hostPath:
             path: /etc/os-release
           name: os-release
+        {{- if .Values.tap.tls }}
         - hostPath:
             path: /
           name: root
         - name: data
+        {{- end }}
 {{- if .Values.tap.persistentStorage }}
           persistentVolumeClaim:
             claimName: kubeshark-persistent-volume-claim
