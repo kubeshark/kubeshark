@@ -309,6 +309,10 @@ type TapConfig struct {
 	PodRegexStr                    string                  `yaml:"regex" json:"regex" default:".*"`
 	Namespaces                     []string                `yaml:"namespaces" json:"namespaces" default:"[]"`
 	ExcludedNamespaces             []string                `yaml:"excludedNamespaces" json:"excludedNamespaces" default:"[]"`
+	Nodes                          []string                `yaml:"nodes" json:"nodes" default:"[]"`
+	ExcludedNodes                  []string                `yaml:"excludedNodes" json:"excludedNodes" default:"[]"`
+	TargetLabels                   map[string]string       `yaml:"targetLabels" json:"targetLabels" default:"{}"`
+	ExcludedTargetLabels           map[string]string       `yaml:"excludedTargetLabels" json:"excludedTargetLabels" default:"{}"`
 	BpfOverride                    string                  `yaml:"bpfOverride" json:"bpfOverride" default:""`
 	Capture                        CaptureConfig           `yaml:"capture" json:"capture"`
 	Release                        ReleaseConfig           `yaml:"release" json:"release"`
