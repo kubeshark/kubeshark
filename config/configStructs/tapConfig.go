@@ -188,6 +188,7 @@ type IngressConfig struct {
 	Enabled     bool                    `yaml:"enabled" json:"enabled" default:"false"`
 	ClassName   string                  `yaml:"className" json:"className" default:""`
 	Host        string                  `yaml:"host" json:"host" default:"ks.svc.cluster.local"`
+	Path        string                  `yaml:"path" json:"path" default:"/"`
 	TLS         []networking.IngressTLS `yaml:"tls" json:"tls" default:"[]"`
 	Annotations map[string]string       `yaml:"annotations" json:"annotations" default:"{}"`
 }
