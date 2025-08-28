@@ -148,6 +148,7 @@ tap:
   ipv6: true
   debug: false
   dashboard:
+    streamingType: connect-rpc
     completeStreamingEnabled: true
   telemetry:
     enabled: true
