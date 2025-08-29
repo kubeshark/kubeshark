@@ -139,6 +139,7 @@ tap:
     enabled: false
     className: ""
     host: ks.svc.cluster.local
+    path: /
     tls: []
     annotations: {}
   priorityClass: ""

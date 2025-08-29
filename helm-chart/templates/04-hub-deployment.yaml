@@ -37,7 +37,7 @@ spec:
             - -loglevel
             - '{{ .Values.logLevel | default "warning" }}'
             - -capture-stop-after
-            - "{{ .Values.tap.capture.stopAfter | default "5m" }}"
+            - "{{ if hasKey .Values.tap.capture "stopAfter" }}{{ .Values.tap.capture.stopAfter }}{{ else }}5m{{ end }}"
             {{- if .Values.tap.gitops.enabled }}
             - -gitops
             {{- end }}

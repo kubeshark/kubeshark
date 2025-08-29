@@ -28,7 +28,7 @@ spec:
                 name: kubeshark-front
                 port:
                   number: 80
-            path: /
+            path: {{ default "/" (((.Values).tap).ingress).path }}
             pathType: Prefix
   {{- if .Values.tap.ingress.tls }}
   tls:
