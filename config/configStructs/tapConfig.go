@@ -197,7 +197,7 @@ type RoutingConfig struct {
 }
 
 type DashboardConfig struct {
-	StreamingType            string `yaml:"streamingType" json:"streamingType" default:"websocket"`
+	StreamingType            string `yaml:"streamingType" json:"streamingType" default:""`
 	CompleteStreamingEnabled bool   `yaml:"completeStreamingEnabled" json:"completeStreamingEnabled" default:"true"`
 }
 
