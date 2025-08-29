@@ -43,7 +43,7 @@ spec:
                         true
                       {{- end }}'
             - name: REACT_APP_STREAMING_TYPE
-              value: '{{ default "websocket" .Values.tap.dashboard.streamingType }}'
+              value: '{{ default "websocket" (((.Values).tap).dashboard).streamingType }}'
             - name: REACT_APP_AUTH_SAML_IDP_METADATA_URL
               value: '{{ not (eq .Values.tap.auth.saml.idpMetadataUrl "") | ternary .Values.tap.auth.saml.idpMetadataUrl " " }}'
             - name: REACT_APP_TIMEZONE
