@@ -36,6 +36,8 @@ spec:
             - "8080"
             - -loglevel
             - '{{ .Values.logLevel | default "warning" }}'
+            - -capture-stop-after
+            - "{{ if hasKey .Values.tap.capture "stopAfter" }}{{ .Values.tap.capture.stopAfter }}{{ else }}5m{{ end }}"
             {{- if .Values.tap.gitops.enabled }}
             - -gitops
             {{- end }}

@@ -188,6 +188,7 @@ type IngressConfig struct {
 	Enabled     bool                    `yaml:"enabled" json:"enabled" default:"false"`
 	ClassName   string                  `yaml:"className" json:"className" default:""`
 	Host        string                  `yaml:"host" json:"host" default:"ks.svc.cluster.local"`
+	Path        string                  `yaml:"path" json:"path" default:"/"`
 	TLS         []networking.IngressTLS `yaml:"tls" json:"tls" default:"[]"`
 	Annotations map[string]string       `yaml:"annotations" json:"annotations" default:"{}"`
 }
@@ -197,7 +198,8 @@ type RoutingConfig struct {
 }
 
 type DashboardConfig struct {
-	CompleteStreamingEnabled bool `yaml:"completeStreamingEnabled" json:"completeStreamingEnabled" default:"true"`
+	StreamingType            string `yaml:"streamingType" json:"streamingType" default:""`
+	CompleteStreamingEnabled bool   `yaml:"completeStreamingEnabled" json:"completeStreamingEnabled" default:"true"`
 }
 
 type FrontRoutingConfig struct {
@@ -298,6 +300,11 @@ type SeLinuxOptionsConfig struct {
 	User  string `yaml:"user" json:"user"`
 }
 
+type CaptureConfig struct {
+	Stopped   bool   `yaml:"stopped" json:"stopped" default:"false"`
+	StopAfter string `yaml:"stopAfter" json:"stopAfter" default:"5m"`
+}
+
 type TapConfig struct {
 	Docker                         DockerConfig            `yaml:"docker" json:"docker"`
 	Proxy                          ProxyConfig             `yaml:"proxy" json:"proxy"`
@@ -305,7 +312,7 @@ type TapConfig struct {
 	Namespaces                     []string                `yaml:"namespaces" json:"namespaces" default:"[]"`
 	ExcludedNamespaces             []string                `yaml:"excludedNamespaces" json:"excludedNamespaces" default:"[]"`
 	BpfOverride                    string                  `yaml:"bpfOverride" json:"bpfOverride" default:""`
-	Stopped                        bool                    `yaml:"stopped" json:"stopped" default:"false"`
+	Capture                        CaptureConfig           `yaml:"capture" json:"capture"`
 	Release                        ReleaseConfig           `yaml:"release" json:"release"`
 	PersistentStorage              bool                    `yaml:"persistentStorage" json:"persistentStorage" default:"false"`
 	PersistentStorageStatic        bool                    `yaml:"persistentStorageStatic" json:"persistentStorageStatic" default:"false"`
