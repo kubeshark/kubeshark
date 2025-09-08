@@ -200,6 +200,7 @@ type RoutingConfig struct {
 type DashboardConfig struct {
 	StreamingType            string `yaml:"streamingType" json:"streamingType" default:""`
 	CompleteStreamingEnabled bool   `yaml:"completeStreamingEnabled" json:"completeStreamingEnabled" default:"true"`
+	TextSearchEnabled        bool   `yaml:"textSearchEnabled" json:"textSearchEnabled" default:"false"`
 }
 
 type FrontRoutingConfig struct {

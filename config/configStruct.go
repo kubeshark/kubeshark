@@ -148,6 +148,7 @@ func CreateDefaultConfig() ConfigStruct {
 			},
 			Dashboard: configStructs.DashboardConfig{
 				CompleteStreamingEnabled: true,
+				TextSearchEnabled:        false,
 			},
 			Capture: configStructs.CaptureConfig{
 				Stopped:   false,

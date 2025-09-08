@@ -150,6 +150,7 @@ tap:
   debug: false
   dashboard:
     completeStreamingEnabled: true
+    textSearchEnabled: false
   telemetry:
     enabled: true
   resourceGuard:

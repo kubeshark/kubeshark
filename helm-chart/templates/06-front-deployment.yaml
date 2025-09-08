@@ -44,6 +44,8 @@ spec:
                       {{- end }}'
             - name: REACT_APP_STREAMING_TYPE
               value: '{{ default "" (((.Values).tap).dashboard).streamingType }}'
+            - name: REACT_APP_TEXT_SEARCH_ENABLED
+              value: '{{ default false (((.Values).tap).dashboard).textSearchEnabled | ternary true false }}'
             - name: REACT_APP_AUTH_SAML_IDP_METADATA_URL
               value: '{{ not (eq .Values.tap.auth.saml.idpMetadataUrl "") | ternary .Values.tap.auth.saml.idpMetadataUrl " " }}'
             - name: REACT_APP_TIMEZONE
