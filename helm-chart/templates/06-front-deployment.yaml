@@ -24,31 +24,31 @@ spec:
     spec:
       containers:
         - env:
-            - name: REACT_APP_AUTH_ENABLED
+            - name: VITE_AUTH_ENABLED
               value: '{{- if or (and .Values.cloudLicenseEnabled (not (empty .Values.license))) (not .Values.internetConnectivity) -}}
                         {{ (and .Values.tap.auth.enabled (eq .Values.tap.auth.type "dex")) | ternary true false }}
                       {{- else -}}
                         {{ .Values.cloudLicenseEnabled | ternary "true" .Values.tap.auth.enabled }}
                       {{- end }}'
-            - name: REACT_APP_AUTH_TYPE
+            - name: VITE_AUTH_TYPE
               value: '{{- if and .Values.cloudLicenseEnabled (not (eq .Values.tap.auth.type "dex")) -}}
                         default
                       {{- else -}}
                         {{ .Values.tap.auth.type }}
                       {{- end }}'
-            - name: REACT_APP_COMPLETE_STREAMING_ENABLED
+            - name: VITE_COMPLETE_STREAMING_ENABLED
               value: '{{- if and (hasKey .Values.tap "dashboard") (hasKey .Values.tap.dashboard "completeStreamingEnabled") -}}
                         {{ eq .Values.tap.dashboard.completeStreamingEnabled true | ternary "true" "false" }}
                       {{- else -}}
                         true
                       {{- end }}'
-            - name: REACT_APP_STREAMING_TYPE
+            - name: VITE_STREAMING_TYPE
               value: '{{ default "" (((.Values).tap).dashboard).streamingType }}'
-            - name: REACT_APP_AUTH_SAML_IDP_METADATA_URL
+            - name: VITE_AUTH_SAML_IDP_METADATA_URL
               value: '{{ not (eq .Values.tap.auth.saml.idpMetadataUrl "") | ternary .Values.tap.auth.saml.idpMetadataUrl " " }}'
-            - name: REACT_APP_TIMEZONE
+            - name: VITE_TIMEZONE
               value: '{{ not (eq .Values.timezone "") | ternary .Values.timezone " " }}'
-            - name: REACT_APP_SCRIPTING_DISABLED
+            - name: VITE_SCRIPTING_DISABLED
               value: '{{- if .Values.tap.liveConfigMapChangesDisabled -}}
                         {{- if .Values.demoModeEnabled -}}
                           {{ .Values.demoModeEnabled | ternary false true }}
@@ -58,37 +58,37 @@ spec:
                       {{- else -}}
                         false
                       {{- end }}'
-            - name: REACT_APP_TARGETED_PODS_UPDATE_DISABLED
+            - name: VITE_TARGETED_PODS_UPDATE_DISABLED
               value: '{{ .Values.tap.liveConfigMapChangesDisabled }}'
-            - name: REACT_APP_PRESET_FILTERS_CHANGING_ENABLED
+            - name: VITE_PRESET_FILTERS_CHANGING_ENABLED
               value: '{{ .Values.tap.liveConfigMapChangesDisabled | ternary "false" "true" }}'
-            - name: REACT_APP_BPF_OVERRIDE_DISABLED
+            - name: VITE_BPF_OVERRIDE_DISABLED
               value: '{{ eq .Values.tap.packetCapture "af_packet" | ternary "false" "true" }}'
-            - name: REACT_APP_RECORDING_DISABLED
+            - name: VITE_RECORDING_DISABLED
               value: '{{ .Values.tap.liveConfigMapChangesDisabled }}'
-            - name: REACT_APP_STOP_TRAFFIC_CAPTURING_DISABLED
+            - name: VITE_STOP_TRAFFIC_CAPTURING_DISABLED
               value: '{{- if and .Values.tap.liveConfigMapChangesDisabled .Values.tap.capture.stopped -}}
                         false
                       {{- else -}}
                         {{ .Values.tap.liveConfigMapChangesDisabled | ternary "true" "false" }}
                       {{- end -}}'
-            - name: 'REACT_APP_CLOUD_LICENSE_ENABLED'
+            - name: 'VITE_CLOUD_LICENSE_ENABLED'
               value: '{{- if or (and .Values.cloudLicenseEnabled (not (empty .Values.license))) (not .Values.internetConnectivity) -}}
                         "false"
                       {{- else -}}
                         {{ .Values.cloudLicenseEnabled }}
                       {{- end }}'
-            - name: 'REACT_APP_AI_ASSISTANT_ENABLED'
+            - name: 'VITE_AI_ASSISTANT_ENABLED'
               value: '{{ .Values.aiAssistantEnabled | ternary "true" "false" }}'
-            - name: REACT_APP_SUPPORT_CHAT_ENABLED
+            - name: VITE_SUPPORT_CHAT_ENABLED
               value: '{{ and .Values.supportChatEnabled .Values.internetConnectivity | ternary "true" "false" }}'
-            - name: REACT_APP_BETA_ENABLED
+            - name: VITE_BETA_ENABLED
               value: '{{ default false .Values.betaEnabled | ternary "true" "false" }}'
-            - name: REACT_APP_DISSECTORS_UPDATING_ENABLED
+            - name: VITE_DISSECTORS_UPDATING_ENABLED
               value: '{{ .Values.tap.liveConfigMapChangesDisabled | ternary "false" "true" }}'
-            - name: REACT_APP_SENTRY_ENABLED
+            - name: VITE_SENTRY_ENABLED
               value: '{{ (include "sentry.enabled" .) }}'
-            - name: REACT_APP_SENTRY_ENVIRONMENT
+            - name: VITE_SENTRY_ENVIRONMENT
               value: '{{ .Values.tap.sentry.environment }}'
         {{- if .Values.tap.docker.overrideImage.front }}
           image: '{{ .Values.tap.docker.overrideImage.front }}'
