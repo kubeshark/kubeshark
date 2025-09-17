@@ -301,8 +301,9 @@ type SeLinuxOptionsConfig struct {
 }
 
 type CaptureConfig struct {
-	Stopped   bool   `yaml:"stopped" json:"stopped" default:"false"`
-	StopAfter string `yaml:"stopAfter" json:"stopAfter" default:"5m"`
+	Stopped         bool    `yaml:"stopped" json:"stopped" default:"false"`
+	StopAfter       string  `yaml:"stopAfter" json:"stopAfter" default:"5m"`
+	DbMaxSizeRatio float64 `yaml:"dbMaxSizeRatio" json:"dbMaxSizeRatio" default:"0.8"`
 }
 
 type TapConfig struct {
