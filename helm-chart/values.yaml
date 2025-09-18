@@ -29,7 +29,7 @@ tap:
   capture:
     stopped: false
     stopAfter: 5m
-    dbMaxSizeRatio: 0.8
+    dbMaxSize: ""
   release:
     repo: https://helm.kubeshark.co
     name: kubeshark

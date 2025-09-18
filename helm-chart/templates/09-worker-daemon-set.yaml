@@ -101,8 +101,8 @@ spec:
             - '{{ .Values.tap.misc.staleTimeoutSeconds }}'
             - -storage-size
             - '{{ .Values.tap.storageLimit }}'
-            - -capture-db-max-size-ratio
-            - '{{ .Values.tap.capture.dbMaxSizeRatio }}'
+            - -capture-db-max-size
+            - '{{ .Values.tap.capture.dbMaxSize }}'
         {{- if .Values.tap.docker.overrideImage.worker }}
           image: '{{ .Values.tap.docker.overrideImage.worker }}'
         {{- else if .Values.tap.docker.overrideTag.worker }}
