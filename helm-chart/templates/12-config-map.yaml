@@ -83,3 +83,5 @@ data:
     PCAP_MAX_TIME: '{{ .Values.pcapdump.maxTime }}'
     PCAP_MAX_SIZE: '{{ .Values.pcapdump.maxSize }}'
     PORT_MAPPING: '{{ toJson .Values.tap.portMapping }}'
+    RAW_CAPTURE: '{{ .Values.tap.capture.raw.enabled | ternary "true" "false" }}'
+    RAW_CAPTURE_STORAGE_SIZE: '{{ .Values.tap.capture.raw.storageSize }}'
