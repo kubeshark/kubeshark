@@ -29,6 +29,7 @@ tap:
   capture:
     stopped: false
     stopAfter: 5m
+    dbMaxSize: ""
   release:
     repo: https://helm.kubeshark.co
     name: kubeshark
@@ -149,6 +150,7 @@ tap:
   ipv6: true
   debug: false
   dashboard:
+    streamingType: ""
     completeStreamingEnabled: true
   telemetry:
     enabled: true
