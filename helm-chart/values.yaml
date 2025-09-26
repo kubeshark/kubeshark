@@ -149,6 +149,7 @@ tap:
   ipv6: true
   debug: false
   dashboard:
+    streamingType: websocket
     completeStreamingEnabled: true
   telemetry:
     enabled: true
