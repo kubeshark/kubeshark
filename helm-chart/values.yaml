@@ -32,6 +32,7 @@ tap:
     raw:
       enabled: false
       storageSize: 1GB
+    dbMaxSize: ""
   release:
     repo: https://helm.kubeshark.co
     name: kubeshark
