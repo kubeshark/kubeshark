@@ -302,7 +302,7 @@ type SeLinuxOptionsConfig struct {
 
 type RawCaptureConfig struct {
 	Enabled     bool   `yaml:"enabled" json:"enabled" default:"false"`
-	StorageSize string `yaml:"storageSize" json:"storageSize" default:"1GB"`
+	StorageSize string `yaml:"storageSize" json:"storageSize" default:"1Gi"`
 }
 
 type CaptureConfig struct {

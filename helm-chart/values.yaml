@@ -31,7 +31,7 @@ tap:
     stopAfter: 5m
     raw:
       enabled: false
-      storageSize: 1GB
+      storageSize: 1Gi
     dbMaxSize: ""
   release:
     repo: https://helm.kubeshark.co
