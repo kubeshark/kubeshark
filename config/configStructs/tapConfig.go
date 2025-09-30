@@ -300,9 +300,15 @@ type SeLinuxOptionsConfig struct {
 	User  string `yaml:"user" json:"user"`
 }
 
+type RawCaptureConfig struct {
+	Enabled     bool   `yaml:"enabled" json:"enabled" default:"false"`
+	StorageSize string `yaml:"storageSize" json:"storageSize" default:"1Gi"`
+}
+
 type CaptureConfig struct {
-	Stopped     bool   `yaml:"stopped" json:"stopped" default:"false"`
-	StopAfter   string `yaml:"stopAfter" json:"stopAfter" default:"5m"`
+	Stopped   bool             `yaml:"stopped" json:"stopped" default:"false"`
+	StopAfter string           `yaml:"stopAfter" json:"stopAfter" default:"5m"`
+	Raw       RawCaptureConfig `yaml:"raw" json:"raw"`
 	DbMaxSize   string `yaml:"dbMaxSize" json:"dbMaxSize" default:""`
 }
 
