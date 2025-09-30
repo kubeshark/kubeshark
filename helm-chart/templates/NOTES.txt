@@ -28,7 +28,7 @@ Notices:
 - Support chat using Intercom is enabled. It can be disabled using `--set supportChatEnabled=false`
 {{- end }}
 {{- if eq .Values.license ""}}
-- No license key was detected. You can either log-in/sign-up through the dashboard, or download the license key from https://console.kubeshark.co/ and add it as `LICENSE` via mounted secret (`tap.secrets`).
+- No license key was detected. You can either log-in/sign-up through the dashboard, or download the license key from https://console.kubeshark.co/ and add it as 'license: <license>' in helm values or as `--set license=<license>` or as `LICENSE` via mounted secret (`tap.secrets`).
 {{- end }}
 
 {{ if .Values.tap.ingress.enabled }}
