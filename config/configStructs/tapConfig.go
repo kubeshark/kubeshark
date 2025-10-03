@@ -352,7 +352,7 @@ type TapConfig struct {
 	Watchdog                       WatchdogConfig          `yaml:"watchdog" json:"watchdog"`
 	Gitops                         GitopsConfig            `yaml:"gitops" json:"gitops"`
 	Sentry                         SentryConfig            `yaml:"sentry" json:"sentry"`
-	DefaultFilter                  string                  `yaml:"defaultFilter" json:"defaultFilter" default:"!dns and !error"`
+	DefaultFilter                  string                  `yaml:"defaultFilter" json:"defaultFilter" default:""`
 	LiveConfigMapChangesDisabled   bool                    `yaml:"liveConfigMapChangesDisabled" json:"liveConfigMapChangesDisabled" default:"false"`
 	GlobalFilter                   string                  `yaml:"globalFilter" json:"globalFilter" default:""`
 	EnabledDissectors              []string                `yaml:"enabledDissectors" json:"enabledDissectors"`
