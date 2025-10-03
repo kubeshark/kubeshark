@@ -166,7 +166,7 @@ tap:
   sentry:
     enabled: false
     environment: production
-  defaultFilter: "!dns and !error"
+  defaultFilter: ""
   liveConfigMapChangesDisabled: false
   globalFilter: ""
   enabledDissectors:
@@ -259,7 +259,7 @@ license: ""
 cloudLicenseEnabled: true
 aiAssistantEnabled: true
 demoModeEnabled: false
-supportChatEnabled: true
+supportChatEnabled: false
 betaEnabled: false
 internetConnectivity: true
 scripting:
