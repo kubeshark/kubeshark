@@ -603,7 +603,7 @@ spec:
             - -storage-size
             - '5Gi'
             - -capture-db-max-size
-            - ''
+            - '500Mi'
           image: 'docker.io/kubeshark/worker:v52.9'
           imagePullPolicy: Always
           name: sniffer
