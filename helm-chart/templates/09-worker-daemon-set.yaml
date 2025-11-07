@@ -103,6 +103,7 @@ spec:
             - '{{ .Values.tap.storageLimit }}'
             - -capture-db-max-size
             - '{{ .Values.tap.capture.dbMaxSize }}'
+            - -save-objects-pcaps
         {{- if .Values.tap.docker.overrideImage.worker }}
           image: '{{ .Values.tap.docker.overrideImage.worker }}'
         {{- else if .Values.tap.docker.overrideTag.worker }}
