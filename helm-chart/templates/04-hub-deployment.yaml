@@ -38,6 +38,8 @@ spec:
             - '{{ .Values.logLevel | default "warning" }}'
             - -capture-stop-after
             - "{{ if hasKey .Values.tap.capture "stopAfter" }}{{ .Values.tap.capture.stopAfter }}{{ else }}5m{{ end }}"
+            - -snapshot-size-limit
+            - '{{ .Values.tap.snapshots.storageSize }}'
             {{- if .Values.tap.gitops.enabled }}
             - -gitops
             {{- end }}
@@ -65,8 +67,6 @@ spec:
             value: 'https://api.kubeshark.co'
           - name: PROFILING_ENABLED
             value: '{{ .Values.tap.pprof.enabled }}'
-          - name: SNAPSHOT_SIZE_LIMIT
-            value: '{{ .Values.tap.snapshots.storageSize }}'
         {{- if .Values.tap.docker.overrideImage.hub }}
           image: '{{ .Values.tap.docker.overrideImage.hub }}'
         {{- else if .Values.tap.docker.overrideTag.hub }}
