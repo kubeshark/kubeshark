@@ -38,6 +38,8 @@ spec:
             - '{{ .Values.logLevel | default "warning" }}'
             - -capture-stop-after
             - "{{ if hasKey .Values.tap.capture "stopAfter" }}{{ .Values.tap.capture.stopAfter }}{{ else }}5m{{ end }}"
+            - -snapshot-size-limit
+            - '{{ .Values.tap.snapshots.storageSize }}'
             {{- if .Values.tap.gitops.enabled }}
             - -gitops
             {{- end }}
@@ -106,6 +108,8 @@ spec:
           - name: saml-x509-volume
             mountPath: "/etc/saml/x509"
             readOnly: true
+          - name: snapshots-volume
+            mountPath: "/app/data/snapshots"
 {{- if gt (len .Values.tap.nodeSelectorTerms.hub) 0}}
       affinity:
         nodeAffinity:
@@ -167,3 +171,11 @@ spec:
               items:
               - key: AUTH_SAML_X509_KEY
                 path: kubeshark.key
+      - name: snapshots-volume
+        {{- if .Values.tap.snapshots.storageClass }}
+        persistentVolumeClaim:
+          claimName: {{ include "kubeshark.name" . }}-snapshots-pvc
+        {{- else }}
+        emptyDir:
+          sizeLimit: {{ .Values.tap.snapshots.storageSize }}
+        {{- end }}

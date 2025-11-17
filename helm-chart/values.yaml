@@ -33,6 +33,9 @@ tap:
       enabled: false
       storageSize: 1Gi
     dbMaxSize: 500Mi
+  snapshots:
+    storageClass: ""
+    storageSize: 1Gi
   release:
     repo: https://helm.kubeshark.co
     name: kubeshark
