@@ -369,6 +369,7 @@ type TapConfig struct {
 	Misc                           MiscConfig              `yaml:"misc" json:"misc"`
 	SecurityContext                SecurityContextConfig   `yaml:"securityContext" json:"securityContext"`
 	MountBpf                       bool                    `yaml:"mountBpf" json:"mountBpf" default:"true"`
+	HostNetwork                    bool                    `yaml:"hostNetwork" json:"hostNetwork" default:"true"`
 }
 
 func (config *TapConfig) PodRegex() *regexp.Regexp {
