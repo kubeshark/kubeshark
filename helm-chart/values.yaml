@@ -37,7 +37,7 @@ tap:
     storageClass: ""
     storageSize: 1Gi
   release:
-    repo: https://helm.kubeshark.co
+    repo: https://helm.kubehq.com
     name: kubeshark
     namespace: default
   persistentStorage: false
