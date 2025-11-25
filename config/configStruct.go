@@ -174,7 +174,7 @@ type ConfigStruct struct {
 	Kube                 KubeConfig                    `yaml:"kube" json:"kube"`
 	DumpLogs             bool                          `yaml:"dumpLogs" json:"dumpLogs" default:"false"`
 	HeadlessMode         bool                          `yaml:"headless" json:"headless" default:"false"`
-	License              string                        `yaml:"license" json:"license" default:""`
+	License              string                        `yaml:"license" json:"license" default:"FN7QGAIBA5GGSY3FNZZWKAP7QAAACAYBARCGC5DBAEFAAAIBKIA77AQAAEAVGAP7QIAAAAAK76AQKAIC76CAAAAA7YAUX74AAH7566ZCMVWWC2LMEI5CE43VOBYG64TUIBVXKYTFNBYS42LPEIWCE5LTMVZESZBCHIRFKMZVPFTFMZT2KVQTGSLZNVLW2MRZON3E23CONNJFCQ2UEIWCEYLDMNSXG42UN5VWK3RCHIRCELBCMVSGS5DJN5XCEORCIVHFIRKSKBJESU2FEIWCE3TPMRSXGIR2GEYDALBCOBXWI4ZCHIYCYITFNZSCEORRG43DOMRQGU3TKMRQGAYCYITJNZUXI2LBNRBWC4DBMNUXI6JCHIYCYITDMFYGCY3JOR4SEORQFQRGC4DQL5UWIIR2EJIDEUDZMZ2E62LQOAZEKY2YLBJHS2LWJZ3WYSTLKVGUQ3JCPUATCAUYM2YD3AF64FKEAT2FC7NP4DZZFQ6MXCBHEUSJMUOHOLTD65W2CJUDAVWZ4LNCDOMNO7CFGVJAKBOACMICXQARA3MDGGYJ47CLCZZHEMW72ZCNK26NPIPDEGPUDPWEYZBVNZHV2R3NEJPGMVL3CQ5C3QPSEOXOUAA="`
 	CloudLicenseEnabled  bool                          `yaml:"cloudLicenseEnabled" json:"cloudLicenseEnabled" default:"true"`
 	AiAssistantEnabled   bool                          `yaml:"aiAssistantEnabled" json:"aiAssistantEnabled" default:"true"`
 	DemoModeEnabled      bool                          `yaml:"demoModeEnabled" json:"demoModeEnabled" default:"false"`

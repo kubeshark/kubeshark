@@ -138,7 +138,7 @@ metadata:
     app.kubernetes.io/version: "52.9.0"
     app.kubernetes.io/managed-by: Helm
 stringData:
-    LICENSE: ''
+    LICENSE: 'FN7QGAIBA5GGSY3FNZZWKAP7QAAACAYBARCGC5DBAEFAAAIBKIA77AQAAEAVGAP7QIAAAAAK76AQKAIC76CAAAAA7YAUX74AAH7566ZCMVWWC2LMEI5CE43VOBYG64TUIBVXKYTFNBYS42LPEIWCE5LTMVZESZBCHIRFKMZVPFTFMZT2KVQTGSLZNVLW2MRZON3E23CONNJFCQ2UEIWCEYLDMNSXG42UN5VWK3RCHIRCELBCMVSGS5DJN5XCEORCIVHFIRKSKBJESU2FEIWCE3TPMRSXGIR2GEYDALBCOBXWI4ZCHIYCYITFNZSCEORRG43DOMRQGU3TKMRQGAYCYITJNZUXI2LBNRBWC4DBMNUXI6JCHIYCYITDMFYGCY3JOR4SEORQFQRGC4DQL5UWIIR2EJIDEUDZMZ2E62LQOAZEKY2YLBJHS2LWJZ3WYSTLKVGUQ3JCPUATCAUYM2YD3AF64FKEAT2FC7NP4DZZFQ6MXCBHEUSJMUOHOLTD65W2CJUDAVWZ4LNCDOMNO7CFGVJAKBOACMICXQARA3MDGGYJ47CLCZZHEMW72ZCNK26NPIPDEGPUDPWEYZBVNZHV2R3NEJPGMVL3CQ5C3QPSEOXOUAA='
     SCRIPTING_ENV: '{}'
     OIDC_CLIENT_ID: 'not set'
     OIDC_CLIENT_SECRET: 'not set'
@@ -262,7 +262,7 @@ data:
     INGRESS_ENABLED: 'false'
     INGRESS_HOST: 'ks.svc.cluster.local'
     PROXY_FRONT_PORT: '8899'
-    AUTH_ENABLED: 'true'
+    AUTH_ENABLED: 'false'
     AUTH_TYPE: 'default'
     AUTH_SAML_IDP_METADATA_URL: ''
     AUTH_SAML_ROLE_ATTRIBUTE: 'role'
@@ -284,7 +284,7 @@ data:
     PCAP_TTL: '10s'
     PCAP_ERROR_TTL: '60s'
     TIMEZONE: ' '
-    CLOUD_LICENSE_ENABLED: 'true'
+    CLOUD_LICENSE_ENABLED: 'false'
     AI_ASSISTANT_ENABLED: 'true'
     DUPLICATE_TIMEFRAME: '200ms'
     ENABLED_DISSECTORS: 'amqp,dns,http,icmp,kafka,redis,ws,ldap,radius,diameter'
@@ -806,6 +806,8 @@ spec:
             - 'warning'
             - -capture-stop-after
             - "5m"
+            - -snapshot-size-limit
+            - '1Gi'
           env:
           - name: POD_NAME
             valueFrom:
@@ -856,6 +858,8 @@ spec:
           - name: saml-x509-volume
             mountPath: "/etc/saml/x509"
             readOnly: true
+          - name: snapshots-volume
+            mountPath: "/app/data/snapshots"
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
@@ -879,6 +883,9 @@ spec:
               items:
               - key: AUTH_SAML_X509_KEY
                 path: kubeshark.key
+      - name: snapshots-volume
+        emptyDir:
+          sizeLimit: 1Gi
 ---
 # Source: kubeshark/templates/06-front-deployment.yaml
 apiVersion: apps/v1
@@ -913,7 +920,7 @@ spec:
       containers:
         - env:
             - name: REACT_APP_AUTH_ENABLED
-              value: 'true'
+              value: 'false'
             - name: REACT_APP_AUTH_TYPE
               value: 'default'
             - name: REACT_APP_COMPLETE_STREAMING_ENABLED
@@ -937,7 +944,7 @@ spec:
             - name: REACT_APP_STOP_TRAFFIC_CAPTURING_DISABLED
               value: 'false'
             - name: 'REACT_APP_CLOUD_LICENSE_ENABLED'
-              value: 'true'
+              value: '"false"'
             - name: 'REACT_APP_AI_ASSISTANT_ENABLED'
               value: 'true'
             - name: REACT_APP_SUPPORT_CHAT_ENABLED
