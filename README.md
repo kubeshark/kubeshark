@@ -21,7 +21,7 @@
 </p>
 <p align="center">
   <b>
-    We're currently experiencing issues and our team is working around the clock to resolve them as quickly as possible. We'll keep you updated once everything is back to normal. In the meantime, feel free to reach out to us on <a href="https://join.slack.com/t/kubeshark/shared_invite/zt-3jdcdgxdv-1qNkhBh9c6CFoE7bSPkpBQ">Slack</a> or email us at <a href="mailto:support@kubehq.io">support@kubehq.io</a>.
+    We're currently experiencing issues and our team is working around the clock to resolve them as quickly as possible. We'll keep you updated once everything is back to normal. In the meantime, feel free to reach out to us on <a href="https://join.slack.com/t/kubeshark/shared_invite/zt-3jdcdgxdv-1qNkhBh9c6CFoE7bSPkpBQ">Slack</a> or email us at <a href="mailto:support@kubehq.io">support@kubehq.io</a>. We will get you up and runinng in no time!
   </b>
 </p>
 
