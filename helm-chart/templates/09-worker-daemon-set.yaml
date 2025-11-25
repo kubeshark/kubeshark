@@ -333,7 +333,7 @@ spec:
               readOnly: true
       {{- end }}
       dnsPolicy: ClusterFirstWithHostNet
-      hostNetwork: true
+      hostNetwork: {{ .Values.tap.hostNetwork }}
       serviceAccountName: {{ include "kubeshark.serviceAccountName" . }}
       {{- if .Values.tap.priorityClass }}
       priorityClassName: {{ .Values.tap.priorityClass | quote }}

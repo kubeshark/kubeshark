@@ -242,6 +242,7 @@ tap:
       - SYS_RESOURCE
       - IPC_LOCK
   mountBpf: true
+  hostNetwork: true
 logs:
   file: ""
   grep: ""
