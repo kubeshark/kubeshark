@@ -40,7 +40,7 @@ Think [TCPDump](https://en.wikipedia.org/wiki/Tcpdump) and [Wireshark](https://w
 ![Cluster-Wide PCAP Recording](https://github.com/kubeshark/assets/raw/master/png/pcap-recording.png)
 
 ## Getting Started
-Download **Kubeshark**'s binary distribution [latest release](https://github.com/kubeshark/kubeshark/releases/latest) or use one of the following methods to deploy **Kubeshark**. The [web-based dashboard](https://docs.kubeshark.co/en/ui) should open in your browser, showing a real-time view of your cluster's traffic.
+Download **Kubeshark**'s binary distribution [latest release](https://github.com/kubeshark/kubeshark/releases/latest) or use one of the following methods to deploy **Kubeshark**. The [web-based dashboard](https://docs.kubehq.com/en/ui) should open in your browser, showing a real-time view of your cluster's traffic.
 
 ### Homebrew
 
@@ -61,7 +61,7 @@ kubeshark clean
 Add the Helm repository and install the chart:
 
 ```shell
-helm repo add kubeshark https://helm.kubeshark.co
+helm repo add kubeshark https://helm.kubehq.com
 helm install kubeshark kubeshark/kubeshark
 ```
 Follow the on-screen instructions how to connect to the dashboard.
@@ -77,7 +77,7 @@ Clone this repository and run the `make` command to build it. After the build is
 
 ## Documentation
 
-To learn more, read the [documentation](https://docs.kubeshark.co).
+To learn more, read the [documentation](https://docs.kubehq.com).
 
 ## Contributing
 
