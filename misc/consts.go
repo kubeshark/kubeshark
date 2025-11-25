@@ -10,8 +10,8 @@ var (
 	Software       = "Kubeshark"
 	Program        = "kubeshark"
 	Description    = "The API Traffic Analyzer for Kubernetes"
-	Website        = "https://kubeshark.co"
-	Email          = "info@kubeshark.co"
+	Website        = "https://kubehq.com"
+	Email          = "support@kubehq.io"
 	Ver            = "0.0.0"
 	Branch         = "master"
 	GitCommitHash  = "" // this var is overridden using ldflags in makefile when building
