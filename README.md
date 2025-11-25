@@ -15,15 +15,13 @@
     <a href="https://discord.gg/WkvRGMUcx7">
       <img alt="Discord" src="https://img.shields.io/discord/1042559155224973352?logo=Discord&style=flat-square&label=discord">
     </a>
-    <a href="https://join.slack.com/t/kubeshark/shared_invite/zt-1m90td3n7-VHxN_~V5kVp80SfQW3SfpA">
+    <a href="https://join.slack.com/t/kubeshark/shared_invite/zt-3jdcdgxdv-1qNkhBh9c6CFoE7bSPkpBQ">
       <img alt="Slack" src="https://img.shields.io/badge/slack-join_chat-green?logo=Slack&style=flat-square&label=slack">
     </a>
 </p>
-
 <p align="center">
   <b>
-    Want to see Kubeshark in action right now? Visit this
-    <a href="https://demo.kubeshark.co/">live demo deployment</a> of Kubeshark.
+    We're currently experiencing issues and our team is working around the clock to resolve them as quickly as possible. We'll keep you updated once everything is back to normal. In the meantime, feel free to reach out to us on <a href="https://join.slack.com/t/kubeshark/shared_invite/zt-3jdcdgxdv-1qNkhBh9c6CFoE7bSPkpBQ">Slack</a> or email us at <a href="mailto:support@kubehq.io">support@kubehq.io</a>.
   </b>
 </p>
 
