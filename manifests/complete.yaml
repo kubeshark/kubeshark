@@ -4,10 +4,10 @@ apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   labels:
-    helm.sh/chart: kubeshark-52.9.0
+    helm.sh/chart: kubeshark-52.10
     app.kubernetes.io/name: kubeshark
     app.kubernetes.io/instance: kubeshark
-    app.kubernetes.io/version: "52.9.0"
+    app.kubernetes.io/version: "52.10"
     app.kubernetes.io/managed-by: Helm
   name: kubeshark-hub-network-policy
   namespace: default
@@ -33,10 +33,10 @@ apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   labels:
-    helm.sh/chart: kubeshark-52.9.0
+    helm.sh/chart: kubeshark-52.10
     app.kubernetes.io/name: kubeshark
     app.kubernetes.io/instance: kubeshark
-    app.kubernetes.io/version: "52.9.0"
+    app.kubernetes.io/version: "52.10"
     app.kubernetes.io/managed-by: Helm
   annotations:
   name: kubeshark-front-network-policy
@@ -60,10 +60,10 @@ apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   labels:
-    helm.sh/chart: kubeshark-52.9.0
+    helm.sh/chart: kubeshark-52.10
     app.kubernetes.io/name: kubeshark
     app.kubernetes.io/instance: kubeshark
-    app.kubernetes.io/version: "52.9.0"
+    app.kubernetes.io/version: "52.10"
     app.kubernetes.io/managed-by: Helm
   annotations:
   name: kubeshark-dex-network-policy
@@ -87,10 +87,10 @@ apiVersion: networking.k8s.io/v1
 kind: NetworkPolicy
 metadata:
   labels:
-    helm.sh/chart: kubeshark-52.9.0
+    helm.sh/chart: kubeshark-52.10
     app.kubernetes.io/name: kubeshark
     app.kubernetes.io/instance: kubeshark
-    app.kubernetes.io/version: "52.9.0"
+    app.kubernetes.io/version: "52.10"
     app.kubernetes.io/managed-by: Helm
   annotations:
   name: kubeshark-worker-network-policy
@@ -116,10 +116,10 @@ apiVersion: v1
 kind: ServiceAccount
 metadata:
   labels:
-    helm.sh/chart: kubeshark-52.9.0
+    helm.sh/chart: kubeshark-52.10
     app.kubernetes.io/name: kubeshark
     app.kubernetes.io/instance: kubeshark
-    app.kubernetes.io/version: "52.9.0"
+    app.kubernetes.io/version: "52.10"
     app.kubernetes.io/managed-by: Helm
   name: kubeshark-service-account
   namespace: default
@@ -132,10 +132,10 @@ metadata:
   namespace: default
   labels:
     app.kubehq.com/app: hub
-    helm.sh/chart: kubeshark-52.9.0
+    helm.sh/chart: kubeshark-52.10
     app.kubernetes.io/name: kubeshark
     app.kubernetes.io/instance: kubeshark
-    app.kubernetes.io/version: "52.9.0"
+    app.kubernetes.io/version: "52.10"
     app.kubernetes.io/managed-by: Helm
 stringData:
     LICENSE: ''
@@ -151,10 +151,10 @@ metadata:
   namespace: default
   labels:
     app.kubehq.com/app: hub
-    helm.sh/chart: kubeshark-52.9.0
+    helm.sh/chart: kubeshark-52.10
     app.kubernetes.io/name: kubeshark
     app.kubernetes.io/instance: kubeshark
-    app.kubernetes.io/version: "52.9.0"
+    app.kubernetes.io/version: "52.10"
     app.kubernetes.io/managed-by: Helm
 stringData:
   AUTH_SAML_X509_CRT: |
@@ -167,10 +167,10 @@ metadata:
   namespace: default
   labels:
     app.kubehq.com/app: hub
-    helm.sh/chart: kubeshark-52.9.0
+    helm.sh/chart: kubeshark-52.10
     app.kubernetes.io/name: kubeshark
     app.kubernetes.io/instance: kubeshark
-    app.kubernetes.io/version: "52.9.0"
+    app.kubernetes.io/version: "52.10"
     app.kubernetes.io/managed-by: Helm
 stringData:
   AUTH_SAML_X509_KEY: |
@@ -182,10 +182,10 @@ metadata:
   name: kubeshark-nginx-config-map
   namespace: default
   labels:
-    helm.sh/chart: kubeshark-52.9.0
+    helm.sh/chart: kubeshark-52.10
     app.kubernetes.io/name: kubeshark
     app.kubernetes.io/instance: kubeshark
-    app.kubernetes.io/version: "52.9.0"
+    app.kubernetes.io/version: "52.10"
     app.kubernetes.io/managed-by: Helm
 data:
   default.conf: |
@@ -246,10 +246,10 @@ metadata:
   namespace: default
   labels:
     app.kubehq.com/app: hub
-    helm.sh/chart: kubeshark-52.9.0
+    helm.sh/chart: kubeshark-52.10
     app.kubernetes.io/name: kubeshark
     app.kubernetes.io/instance: kubeshark
-    app.kubernetes.io/version: "52.9.0"
+    app.kubernetes.io/version: "52.10"
     app.kubernetes.io/managed-by: Helm
 data:
     POD_REGEX: '.*'
@@ -304,10 +304,10 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRole
 metadata:
   labels:
-    helm.sh/chart: kubeshark-52.9.0
+    helm.sh/chart: kubeshark-52.10
     app.kubernetes.io/name: kubeshark
     app.kubernetes.io/instance: kubeshark
-    app.kubernetes.io/version: "52.9.0"
+    app.kubernetes.io/version: "52.10"
     app.kubernetes.io/managed-by: Helm
   name: kubeshark-cluster-role-default
   namespace: default
@@ -351,10 +351,10 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: ClusterRoleBinding
 metadata:
   labels:
-    helm.sh/chart: kubeshark-52.9.0
+    helm.sh/chart: kubeshark-52.10
     app.kubernetes.io/name: kubeshark
     app.kubernetes.io/instance: kubeshark
-    app.kubernetes.io/version: "52.9.0"
+    app.kubernetes.io/version: "52.10"
     app.kubernetes.io/managed-by: Helm
   name: kubeshark-cluster-role-binding-default
   namespace: default
@@ -372,10 +372,10 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: Role
 metadata:
   labels:
-    helm.sh/chart: kubeshark-52.9.0
+    helm.sh/chart: kubeshark-52.10
     app.kubernetes.io/name: kubeshark
     app.kubernetes.io/instance: kubeshark
-    app.kubernetes.io/version: "52.9.0"
+    app.kubernetes.io/version: "52.10"
     app.kubernetes.io/managed-by: Helm
   annotations:
   name: kubeshark-self-config-role
@@ -416,10 +416,10 @@ apiVersion: rbac.authorization.k8s.io/v1
 kind: RoleBinding
 metadata:
   labels:
-    helm.sh/chart: kubeshark-52.9.0
+    helm.sh/chart: kubeshark-52.10
     app.kubernetes.io/name: kubeshark
     app.kubernetes.io/instance: kubeshark
-    app.kubernetes.io/version: "52.9.0"
+    app.kubernetes.io/version: "52.10"
     app.kubernetes.io/managed-by: Helm
   annotations:
   name: kubeshark-self-config-role-binding
@@ -439,10 +439,10 @@ kind: Service
 metadata:
   labels:
     app.kubehq.com/app: hub
-    helm.sh/chart: kubeshark-52.9.0
+    helm.sh/chart: kubeshark-52.10
     app.kubernetes.io/name: kubeshark
     app.kubernetes.io/instance: kubeshark
-    app.kubernetes.io/version: "52.9.0"
+    app.kubernetes.io/version: "52.10"
     app.kubernetes.io/managed-by: Helm
   name: kubeshark-hub
   namespace: default
@@ -460,10 +460,10 @@ apiVersion: v1
 kind: Service
 metadata:
   labels:
-    helm.sh/chart: kubeshark-52.9.0
+    helm.sh/chart: kubeshark-52.10
     app.kubernetes.io/name: kubeshark
     app.kubernetes.io/instance: kubeshark
-    app.kubernetes.io/version: "52.9.0"
+    app.kubernetes.io/version: "52.10"
     app.kubernetes.io/managed-by: Helm
   name: kubeshark-front
   namespace: default
@@ -481,10 +481,10 @@ kind: Service
 apiVersion: v1
 metadata:
   labels:
-    helm.sh/chart: kubeshark-52.9.0
+    helm.sh/chart: kubeshark-52.10
     app.kubernetes.io/name: kubeshark
     app.kubernetes.io/instance: kubeshark
-    app.kubernetes.io/version: "52.9.0"
+    app.kubernetes.io/version: "52.10"
     app.kubernetes.io/managed-by: Helm
   annotations:
     prometheus.io/scrape: 'true'
@@ -494,10 +494,10 @@ metadata:
 spec:
   selector:
     app.kubehq.com/app: worker
-    helm.sh/chart: kubeshark-52.9.0
+    helm.sh/chart: kubeshark-52.10
     app.kubernetes.io/name: kubeshark
     app.kubernetes.io/instance: kubeshark
-    app.kubernetes.io/version: "52.9.0"
+    app.kubernetes.io/version: "52.10"
     app.kubernetes.io/managed-by: Helm
   ports:
   - name: metrics
@@ -510,10 +510,10 @@ kind: Service
 apiVersion: v1
 metadata:
   labels:
-    helm.sh/chart: kubeshark-52.9.0
+    helm.sh/chart: kubeshark-52.10
     app.kubernetes.io/name: kubeshark
     app.kubernetes.io/instance: kubeshark
-    app.kubernetes.io/version: "52.9.0"
+    app.kubernetes.io/version: "52.10"
     app.kubernetes.io/managed-by: Helm
   annotations:
     prometheus.io/scrape: 'true'
@@ -523,10 +523,10 @@ metadata:
 spec:
   selector:
     app.kubehq.com/app: hub
-    helm.sh/chart: kubeshark-52.9.0
+    helm.sh/chart: kubeshark-52.10
     app.kubernetes.io/name: kubeshark
     app.kubernetes.io/instance: kubeshark
-    app.kubernetes.io/version: "52.9.0"
+    app.kubernetes.io/version: "52.10"
     app.kubernetes.io/managed-by: Helm
   ports:
   - name: metrics
@@ -541,10 +541,10 @@ metadata:
   labels:
     app.kubehq.com/app: worker
     sidecar.istio.io/inject: "false"
-    helm.sh/chart: kubeshark-52.9.0
+    helm.sh/chart: kubeshark-52.10
     app.kubernetes.io/name: kubeshark
     app.kubernetes.io/instance: kubeshark
-    app.kubernetes.io/version: "52.9.0"
+    app.kubernetes.io/version: "52.10"
     app.kubernetes.io/managed-by: Helm
   name: kubeshark-worker-daemon-set
   namespace: default
@@ -558,10 +558,10 @@ spec:
     metadata:
       labels:
         app.kubehq.com/app: worker
-        helm.sh/chart: kubeshark-52.9.0
+        helm.sh/chart: kubeshark-52.10
         app.kubernetes.io/name: kubeshark
         app.kubernetes.io/instance: kubeshark
-        app.kubernetes.io/version: "52.9.0"
+        app.kubernetes.io/version: "52.10"
         app.kubernetes.io/managed-by: Helm
       name: kubeshark-worker-daemon-set
       namespace: kubeshark
@@ -571,7 +571,7 @@ spec:
           - /bin/sh
           - -c
           - mkdir -p /sys/fs/bpf && mount | grep -q '/sys/fs/bpf' || mount -t bpf bpf /sys/fs/bpf
-          image: 'docker.io/kubeshark/worker:v52.9'
+          image: 'docker.io/kubeshark/worker:v52.10'
           imagePullPolicy: Always
           name: mount-bpf
           securityContext:
@@ -604,7 +604,7 @@ spec:
             - '5Gi'
             - -capture-db-max-size
             - '500Mi'
-          image: 'docker.io/kubeshark/worker:v52.9'
+          image: 'docker.io/kubeshark/worker:v52.10'
           imagePullPolicy: Always
           name: sniffer
           ports:
@@ -678,7 +678,7 @@ spec:
             - -disable-tls-log
             - -loglevel
             - 'warning'
-          image: 'docker.io/kubeshark/worker:v52.9'
+          image: 'docker.io/kubeshark/worker:v52.10'
           imagePullPolicy: Always
           name: tracer
           env:
@@ -770,10 +770,10 @@ kind: Deployment
 metadata:
   labels:
     app.kubehq.com/app: hub
-    helm.sh/chart: kubeshark-52.9.0
+    helm.sh/chart: kubeshark-52.10
     app.kubernetes.io/name: kubeshark
     app.kubernetes.io/instance: kubeshark
-    app.kubernetes.io/version: "52.9.0"
+    app.kubernetes.io/version: "52.10"
     app.kubernetes.io/managed-by: Helm
   name: kubeshark-hub
   namespace: default
@@ -788,10 +788,10 @@ spec:
     metadata:
       labels:
         app.kubehq.com/app: hub
-        helm.sh/chart: kubeshark-52.9.0
+        helm.sh/chart: kubeshark-52.10
         app.kubernetes.io/name: kubeshark
         app.kubernetes.io/instance: kubeshark
-        app.kubernetes.io/version: "52.9.0"
+        app.kubernetes.io/version: "52.10"
         app.kubernetes.io/managed-by: Helm
     spec:
       dnsPolicy: ClusterFirstWithHostNet
@@ -806,6 +806,8 @@ spec:
             - 'warning'
             - -capture-stop-after
             - "5m"
+            - -snapshot-size-limit
+            - '1Gi'
           env:
           - name: POD_NAME
             valueFrom:
@@ -823,7 +825,7 @@ spec:
             value: 'https://api.kubehq.com'
           - name: PROFILING_ENABLED
             value: 'false'
-          image: 'docker.io/kubeshark/hub:v52.9'
+          image: 'docker.io/kubeshark/hub:v52.10'
           imagePullPolicy: Always
           readinessProbe:
             periodSeconds: 5
@@ -856,6 +858,8 @@ spec:
           - name: saml-x509-volume
             mountPath: "/etc/saml/x509"
             readOnly: true
+          - name: snapshots-volume
+            mountPath: "/app/data/snapshots"
       affinity:
         nodeAffinity:
           requiredDuringSchedulingIgnoredDuringExecution:
@@ -879,6 +883,9 @@ spec:
               items:
               - key: AUTH_SAML_X509_KEY
                 path: kubeshark.key
+      - name: snapshots-volume
+        emptyDir:
+          sizeLimit: 1Gi
 ---
 # Source: kubeshark/templates/06-front-deployment.yaml
 apiVersion: apps/v1
@@ -886,10 +893,10 @@ kind: Deployment
 metadata:
   labels:
     app.kubehq.com/app: front
-    helm.sh/chart: kubeshark-52.9.0
+    helm.sh/chart: kubeshark-52.10
     app.kubernetes.io/name: kubeshark
     app.kubernetes.io/instance: kubeshark
-    app.kubernetes.io/version: "52.9.0"
+    app.kubernetes.io/version: "52.10"
     app.kubernetes.io/managed-by: Helm
   name: kubeshark-front
   namespace: default
@@ -904,10 +911,10 @@ spec:
     metadata:
       labels:
         app.kubehq.com/app: front
-        helm.sh/chart: kubeshark-52.9.0
+        helm.sh/chart: kubeshark-52.10
         app.kubernetes.io/name: kubeshark
         app.kubernetes.io/instance: kubeshark
-        app.kubernetes.io/version: "52.9.0"
+        app.kubernetes.io/version: "52.10"
         app.kubernetes.io/managed-by: Helm
     spec:
       containers:
@@ -950,7 +957,7 @@ spec:
               value: 'false'
             - name: REACT_APP_SENTRY_ENVIRONMENT
               value: 'production'
-          image: 'docker.io/kubeshark/front:v52.9'
+          image: 'docker.io/kubeshark/front:v52.10'
           imagePullPolicy: Always
           name: kubeshark-front
           livenessProbe:
