@@ -16,5 +16,5 @@ spec:
       port: 80
       targetPort: 8080
   selector:
-    app.kubeshark.co/app: front
+    app.kubehq.com/app: front
   type: ClusterIP

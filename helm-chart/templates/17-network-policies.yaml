@@ -12,7 +12,7 @@ metadata:
 spec:
   podSelector:
     matchLabels:
-      app.kubeshark.co/app: hub
+      app.kubehq.com/app: hub
   policyTypes:
     - Ingress
     - Egress
@@ -40,7 +40,7 @@ metadata:
 spec:
   podSelector:
     matchLabels:
-      app.kubeshark.co/app: front
+      app.kubehq.com/app: front
   policyTypes:
     - Ingress
     - Egress
@@ -65,7 +65,7 @@ metadata:
 spec:
   podSelector:
     matchLabels:
-      app.kubeshark.co/app: dex
+      app.kubehq.com/app: dex
   policyTypes:
     - Ingress
     - Egress
@@ -90,7 +90,7 @@ metadata:
 spec:
   podSelector:
     matchLabels:
-      app.kubeshark.co/app: worker
+      app.kubehq.com/app: worker
   policyTypes:
     - Ingress
     - Egress
