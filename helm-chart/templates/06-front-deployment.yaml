@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    app.kubeshark.co/app: front
+    app.kubehq.com/app: front
     {{- include "kubeshark.labels" . | nindent 4 }}
   {{- if .Values.tap.annotations }}
   annotations:
@@ -14,12 +14,12 @@ spec:
   replicas: 1  # Set the desired number of replicas
   selector:
     matchLabels:
-      app.kubeshark.co/app: front
+      app.kubehq.com/app: front
       {{- include "kubeshark.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       labels:
-        app.kubeshark.co/app: front
+        app.kubehq.com/app: front
         {{- include "kubeshark.labels" . | nindent 8 }}
     spec:
       containers:
