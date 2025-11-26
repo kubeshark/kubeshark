@@ -10,7 +10,7 @@ var (
 	Software       = "Kubeshark"
 	Program        = "kubeshark"
 	Description    = "The API Traffic Analyzer for Kubernetes"
-	Website        = "https://kubehq.com"
+	Website        = "https://www.kubehq.com"
 	Email          = "support@kubehq.io"
 	Ver            = "0.0.0"
 	Branch         = "master"
