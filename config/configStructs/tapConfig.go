@@ -207,7 +207,7 @@ type FrontRoutingConfig struct {
 }
 
 type ReleaseConfig struct {
-	Repo      string `yaml:"repo" json:"repo" default:"https://helm.kubeshark.co"`
+	Repo      string `yaml:"repo" json:"repo" default:"https://helm.kubehq.com"`
 	Name      string `yaml:"name" json:"name" default:"kubeshark"`
 	Namespace string `yaml:"namespace" json:"namespace" default:"default"`
 }
@@ -314,7 +314,7 @@ type CaptureConfig struct {
 	Stopped   bool             `yaml:"stopped" json:"stopped" default:"false"`
 	StopAfter string           `yaml:"stopAfter" json:"stopAfter" default:"5m"`
 	Raw       RawCaptureConfig `yaml:"raw" json:"raw"`
-	DbMaxSize   string `yaml:"dbMaxSize" json:"dbMaxSize" default:"500Mi"`
+	DbMaxSize string           `yaml:"dbMaxSize" json:"dbMaxSize" default:"500Mi"`
 }
 
 type TapConfig struct {
