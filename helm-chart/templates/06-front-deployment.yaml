@@ -86,6 +86,8 @@ spec:
               value: '{{ default false .Values.betaEnabled | ternary "true" "false" }}'
             - name: REACT_APP_DISSECTORS_UPDATING_ENABLED
               value: '{{ .Values.tap.liveConfigMapChangesDisabled | ternary "false" "true" }}'
+            - name: REACT_APP_RAW_CAPTURE_ENABLED
+              value: '{{ .Values.tap.capture.raw.enabled | ternary "true" "false" }}'
             - name: REACT_APP_SENTRY_ENABLED
               value: '{{ (include "sentry.enabled" .) }}'
             - name: REACT_APP_SENTRY_ENVIRONMENT
