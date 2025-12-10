@@ -251,8 +251,8 @@ type PprofConfig struct {
 
 type MiscConfig struct {
 	JsonTTL                     string `yaml:"jsonTTL" json:"jsonTTL" default:"5m"`
-	PcapTTL                     string `yaml:"pcapTTL" json:"pcapTTL" default:"10s"`
-	PcapErrorTTL                string `yaml:"pcapErrorTTL" json:"pcapErrorTTL" default:"60s"`
+	PcapTTL                     string `yaml:"pcapTTL" json:"pcapTTL" default:"0"`
+	PcapErrorTTL                string `yaml:"pcapErrorTTL" json:"pcapErrorTTL" default:"0"`
 	TrafficSampleRate           int    `yaml:"trafficSampleRate" json:"trafficSampleRate" default:"100"`
 	TcpStreamChannelTimeoutMs   int    `yaml:"tcpStreamChannelTimeoutMs" json:"tcpStreamChannelTimeoutMs" default:"10000"`
 	TcpStreamChannelTimeoutShow bool   `yaml:"tcpStreamChannelTimeoutShow" json:"tcpStreamChannelTimeoutShow" default:"false"`
@@ -263,7 +263,7 @@ type MiscConfig struct {
 }
 
 type PcapDumpConfig struct {
-	PcapDumpEnabled  bool   `yaml:"enabled" json:"enabled" default:"true"`
+	PcapDumpEnabled  bool   `yaml:"enabled" json:"enabled" default:"false"`
 	PcapTimeInterval string `yaml:"timeInterval" json:"timeInterval" default:"1m"`
 	PcapMaxTime      string `yaml:"maxTime" json:"maxTime" default:"1h"`
 	PcapMaxSize      string `yaml:"maxSize" json:"maxSize" default:"500MB"`
