@@ -301,13 +301,13 @@ type SeLinuxOptionsConfig struct {
 }
 
 type RawCaptureConfig struct {
-	Enabled     bool   `yaml:"enabled" json:"enabled" default:"false"`
+	Enabled     bool   `yaml:"enabled" json:"enabled" default:"true"`
 	StorageSize string `yaml:"storageSize" json:"storageSize" default:"1Gi"`
 }
 
 type SnapshotsConfig struct {
 	StorageClass string `yaml:"storageClass" json:"storageClass" default:""`
-	StorageSize  string `yaml:"storageSize" json:"storageSize" default:"1Gi"`
+	StorageSize  string `yaml:"storageSize" json:"storageSize" default:"20Gi"`
 }
 
 type CaptureConfig struct {
