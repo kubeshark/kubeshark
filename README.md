@@ -48,7 +48,8 @@ Imagine having a cluster-wide [TCPDump](https://www.tcpdump.org/)-like capabilit
 4. **Optionally** select the time frame (default: last one hour)
 5. Press **Create**
 
-![The Snapshots Tab](/snapshots.png)
+<img width="3342" height="1206" alt="image" src="https://github.com/user-attachments/assets/e8e47996-52b7-4028-9698-f059a13ffdb7" />
+
 
 Once the snapshot is ready, click the PCAP file to export its contents and open it in Wireshark.
 
