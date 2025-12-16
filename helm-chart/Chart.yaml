@@ -1,6 +1,6 @@
 apiVersion: v2
 name: kubeshark
-version: "52.10.3"
+version: "52.11.0"
 description: The API Traffic Analyzer for Kubernetes
 home: https://www.kubehq.com
 keywords:
