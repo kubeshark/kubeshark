@@ -84,7 +84,9 @@ kubectl-view-kubeshark-resources: ## This command outputs all Kubernetes resourc
 	./kubectl.sh view-kubeshark-resources
 
 generate-helm-values: ## Generate the Helm values from config.yaml
-	mv ~/.kubeshark/config.yaml ~/.kubeshark/config.yaml.old; bin/kubeshark__ config>helm-chart/values.yaml;mv ~/.kubeshark/config.yaml.old ~/.kubeshark/config.yaml
+# 	[ -f ~/.kubeshark/config.yaml ] && mv ~/.kubeshark/config.yaml ~/.kubeshark/config.yaml.old
+	bin/kubeshark__ config>helm-chart/values.yaml
+# 	[ -f ~/.kubeshark/config.yaml.old ] && mv ~/.kubeshark/config.yaml.old ~/.kubeshark/config.yaml
 # 	sed -i 's/^license:.*/license: ""/' helm-chart/values.yaml && sed -i '1i # find a detailed description here: https://github.com/kubeshark/kubeshark/blob/master/helm-chart/README.md' helm-chart/values.yaml 
 
 generate-manifests: ## Generate the manifests from the Helm chart using default configuration
@@ -189,8 +191,8 @@ release:
 	@make generate-helm-values && make generate-manifests
 	@git add -A . && git commit -m ":bookmark: Bump the Helm chart version to $(VERSION)" && git push
 	@git tag -d v$(VERSION); git tag v$(VERSION) && git push origin --tags
-	@cd helm-chart && rm -rf ../../kubeshark.github.io/charts/chart && mkdir ../../kubeshark.github.io/charts/chart && cp -r . ../../kubeshark.github.io/charts/chart/
-	@cd ../../kubeshark.github.io/ && git add -A . && git commit -m ":sparkles: Update the Helm chart" && git push
+	@rm -rf ../kubeshark.github.io/charts/chart && mkdir ../kubeshark.github.io/charts/chart && cp -r helm-chart/ ../kubeshark.github.io/charts/chart/
+	@cd ../kubeshark.github.io/ && git add -A . && git commit -m ":sparkles: Update the Helm chart" && git push
 	@cd ../kubeshark
 
 release-dry-run:
@@ -198,11 +200,14 @@ release-dry-run:
 	@cd ../tracer && git checkout master && git pull 
 	@cd ../hub && git checkout master && git pull
 	@cd ../front && git checkout master && git pull 
-	@cd ../kubeshark && git checkout master && git pull && sed -i "s/^version:.*/version: \"$(shell echo $(VERSION) | sed -E 's/^([0-9]+\.[0-9]+\.[0-9]+)\..*/\1/')\"/" helm-chart/Chart.yaml && make
+	@cd ../kubeshark && sed -i "s/^version:.*/version: \"$(shell echo $(VERSION) | sed -E 's/^([0-9]+\.[0-9]+\.[0-9]+)\..*/\1/')\"/" helm-chart/Chart.yaml && make
 	@if [ "$(shell uname)" = "Darwin" ]; then \
 		codesign --sign - --force --preserve-metadata=entitlements,requirements,flags,runtime ./bin/kubeshark__; \
 	fi
 	@make generate-helm-values && make generate-manifests
+	@rm -rf ../kubeshark.github.io/charts/chart && mkdir ../kubeshark.github.io/charts/chart && cp -r helm-chart/ ../kubeshark.github.io/charts/chart/
+	@cd ../kubeshark.github.io/
+	@cd ../kubeshark
 
 branch:
 	@cd ../worker && git checkout master && git pull && git checkout -b $(name); git push --set-upstream origin $(name)

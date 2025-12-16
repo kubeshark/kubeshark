@@ -42,8 +42,9 @@ To access the application, follow these steps:
 1. Perform port forwarding with the following commands:
 
     kubectl port-forward -n {{ .Release.Namespace }} service/kubeshark-front 8899:80
+    you could also run: `kubeshark proxy` (which simply manages the port-forward connection)
 
 2. Once port forwarding is done, you can access the application by visiting the following URL in your web browser:
-    http://0.0.0.0:8899{{ default "" (((.Values.tap).routing).front).basePath }}/
+    http://127.0.0.1:8899{{ default "" (((.Values.tap).routing).front).basePath }}/
 
 {{- end }}

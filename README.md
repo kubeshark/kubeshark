@@ -26,19 +26,32 @@
   </b>
 </p>
 
-**Kubeshark** is a network observability platform for Kubernetes, providing real-time, cluster-wide visibility into Kubernetes’ network. It enables users to inspect all internal and external cluster communications, API calls, and data in transit. Additionally, Kubeshark detects anomalies and emergent behaviors, trigger autonomous remediations, and generate deep network insights.
+**Kubeshark** is an API traffic analyzer for Kubernetes, providing deep packet inspection with complete API and Kubernetes contexts, retaining cluster-wide L4 traffic (PCAP), and using minimal production compute resources.
 
 ![Simple UI](https://github.com/kubeshark/assets/raw/master/png/kubeshark-ui.png)
 
 Think [TCPDump](https://en.wikipedia.org/wiki/Tcpdump) and [Wireshark](https://www.wireshark.org/) reimagined for Kubernetes.
 
+Access cluster-wide PCAP traffic by pressing a single button, without the need to install `tcpdump` or manually copy files. Understand the traffic context in relation to the API and Kubernetes contexts.
+
 #### Service-Map w/Kubernetes Context
 
 ![Service Map with Kubernetes Context](https://github.com/kubeshark/assets/raw/master/png/kubeshark-servicemap.png)
 
-#### Cluster-Wide PCAP Recording
+#### Export Cluster-Wide L4 Traffic (PCAP)
 
-![Cluster-Wide PCAP Recording](https://github.com/kubeshark/assets/raw/master/png/pcap-recording.png)
+Imagine having a cluster-wide [TCPDump](https://www.tcpdump.org/)-like capability—exporting a single [PCAP](https://www.ietf.org/archive/id/draft-gharris-opsawg-pcap-01.html) file that consolidates traffic from multiple nodes, all accessible with a single click.
+
+1. Go to the **Snapshots** tab
+2. Create a new snapshot
+3. **Optionally** select the nodes (default: all nodes)
+4. **Optionally** select the time frame (default: last one hour)
+5. Press **Create**
+
+<img width="3342" height="1206" alt="image" src="https://github.com/user-attachments/assets/e8e47996-52b7-4028-9698-f059a13ffdb7" />
+
+
+Once the snapshot is ready, click the PCAP file to export its contents and open it in Wireshark.
 
 ## Getting Started
 Download **Kubeshark**'s binary distribution [latest release](https://github.com/kubeshark/kubeshark/releases/latest) or use one of the following methods to deploy **Kubeshark**. The [web-based dashboard](https://docs.kubehq.com/en/ui) should open in your browser, showing a real-time view of your cluster's traffic.

@@ -198,7 +198,7 @@ type RoutingConfig struct {
 }
 
 type DashboardConfig struct {
-	StreamingType            string `yaml:"streamingType" json:"streamingType" default:""`
+	StreamingType            string `yaml:"streamingType" json:"streamingType" default:"connect-rpc"`
 	CompleteStreamingEnabled bool   `yaml:"completeStreamingEnabled" json:"completeStreamingEnabled" default:"true"`
 }
 
@@ -251,8 +251,8 @@ type PprofConfig struct {
 
 type MiscConfig struct {
 	JsonTTL                     string `yaml:"jsonTTL" json:"jsonTTL" default:"5m"`
-	PcapTTL                     string `yaml:"pcapTTL" json:"pcapTTL" default:"10s"`
-	PcapErrorTTL                string `yaml:"pcapErrorTTL" json:"pcapErrorTTL" default:"60s"`
+	PcapTTL                     string `yaml:"pcapTTL" json:"pcapTTL" default:"0"`
+	PcapErrorTTL                string `yaml:"pcapErrorTTL" json:"pcapErrorTTL" default:"0"`
 	TrafficSampleRate           int    `yaml:"trafficSampleRate" json:"trafficSampleRate" default:"100"`
 	TcpStreamChannelTimeoutMs   int    `yaml:"tcpStreamChannelTimeoutMs" json:"tcpStreamChannelTimeoutMs" default:"10000"`
 	TcpStreamChannelTimeoutShow bool   `yaml:"tcpStreamChannelTimeoutShow" json:"tcpStreamChannelTimeoutShow" default:"false"`
@@ -263,7 +263,7 @@ type MiscConfig struct {
 }
 
 type PcapDumpConfig struct {
-	PcapDumpEnabled  bool   `yaml:"enabled" json:"enabled" default:"true"`
+	PcapDumpEnabled  bool   `yaml:"enabled" json:"enabled" default:"false"`
 	PcapTimeInterval string `yaml:"timeInterval" json:"timeInterval" default:"1m"`
 	PcapMaxTime      string `yaml:"maxTime" json:"maxTime" default:"1h"`
 	PcapMaxSize      string `yaml:"maxSize" json:"maxSize" default:"500MB"`
@@ -301,13 +301,13 @@ type SeLinuxOptionsConfig struct {
 }
 
 type RawCaptureConfig struct {
-	Enabled     bool   `yaml:"enabled" json:"enabled" default:"false"`
+	Enabled     bool   `yaml:"enabled" json:"enabled" default:"true"`
 	StorageSize string `yaml:"storageSize" json:"storageSize" default:"1Gi"`
 }
 
 type SnapshotsConfig struct {
 	StorageClass string `yaml:"storageClass" json:"storageClass" default:""`
-	StorageSize  string `yaml:"storageSize" json:"storageSize" default:"1Gi"`
+	StorageSize  string `yaml:"storageSize" json:"storageSize" default:"20Gi"`
 }
 
 type CaptureConfig struct {
@@ -332,7 +332,7 @@ type TapConfig struct {
 	PersistentStoragePvcVolumeMode string                  `yaml:"persistentStoragePvcVolumeMode" json:"persistentStoragePvcVolumeMode" default:"FileSystem"`
 	EfsFileSytemIdAndPath          string                  `yaml:"efsFileSytemIdAndPath" json:"efsFileSytemIdAndPath" default:""`
 	Secrets                        []string                `yaml:"secrets" json:"secrets" default:"[]"`
-	StorageLimit                   string                  `yaml:"storageLimit" json:"storageLimit" default:"5Gi"`
+	StorageLimit                   string                  `yaml:"storageLimit" json:"storageLimit" default:"10Gi"`
 	StorageClass                   string                  `yaml:"storageClass" json:"storageClass" default:"standard"`
 	DryRun                         bool                    `yaml:"dryRun" json:"dryRun" default:"false"`
 	DnsConfig                      DnsConfig               `yaml:"dns" json:"dns"`
