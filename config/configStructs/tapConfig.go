@@ -310,6 +310,10 @@ type SnapshotsConfig struct {
 	StorageSize  string `yaml:"storageSize" json:"storageSize" default:"20Gi"`
 }
 
+type DelayedDissectionConfig struct {
+	Image string `yaml:"image" json:"image" default:"kubeshark/worker:master"`
+}
+
 type CaptureConfig struct {
 	Stopped   bool             `yaml:"stopped" json:"stopped" default:"false"`
 	StopAfter string           `yaml:"stopAfter" json:"stopAfter" default:"5m"`
@@ -325,6 +329,7 @@ type TapConfig struct {
 	ExcludedNamespaces             []string                `yaml:"excludedNamespaces" json:"excludedNamespaces" default:"[]"`
 	BpfOverride                    string                  `yaml:"bpfOverride" json:"bpfOverride" default:""`
 	Capture                        CaptureConfig           `yaml:"capture" json:"capture"`
+	DelayedDissection              DelayedDissectionConfig `yaml:"delayedDissection" json:"delayedDissection"`
 	Snapshots                      SnapshotsConfig         `yaml:"snapshots" json:"snapshots"`
 	Release                        ReleaseConfig           `yaml:"release" json:"release"`
 	PersistentStorage              bool                    `yaml:"persistentStorage" json:"persistentStorage" default:"false"`
