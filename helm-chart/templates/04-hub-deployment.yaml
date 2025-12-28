@@ -44,6 +44,14 @@ spec:
             - -dissector-image
             - '{{ .Values.tap.delayedDissection.image }}'
             {{- end }}
+            {{- if .Values.tap.delayedDissection.cpu }}
+            - -dissector-cpu
+            - '{{ .Values.tap.delayedDissection.cpu }}'
+            {{- end }}
+            {{- if .Values.tap.delayedDissection.memory }}
+            - -dissector-memory
+            - '{{ .Values.tap.delayedDissection.memory }}'
+            {{- end }}
             {{- if .Values.tap.gitops.enabled }}
             - -gitops
             {{- end }}

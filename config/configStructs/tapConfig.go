@@ -311,7 +311,9 @@ type SnapshotsConfig struct {
 }
 
 type DelayedDissectionConfig struct {
-	Image string `yaml:"image" json:"image" default:"kubeshark/worker:master"`
+	Image  string `yaml:"image" json:"image" default:"kubeshark/worker:master"`
+	CPU    string `yaml:"cpu" json:"cpu" default:"1"`
+	Memory string `yaml:"memory" json:"memory" default:"2Gi"`
 }
 
 type CaptureConfig struct {
