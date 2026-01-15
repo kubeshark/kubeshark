@@ -32,6 +32,10 @@ tap:
       enabled: true
       storageSize: 1Gi
     dbMaxSize: 500Mi
+  delayedDissection:
+    image: kubeshark/worker:master
+    cpu: "1"
+    memory: 2Gi
   snapshots:
     storageClass: ""
     storageSize: 20Gi

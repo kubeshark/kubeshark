@@ -86,3 +86,9 @@ rules:
     verbs:
       - create
       - get
+  - apiGroups:
+      - batch
+    resources:
+      - jobs
+    verbs:
+      - "*"
