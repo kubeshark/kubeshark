@@ -56,7 +56,7 @@ Imagine having a cluster-wide [TCPDump](https://www.tcpdump.org/)-like capabilit
 Once the snapshot is ready, click the PCAP file to export its contents and open it in Wireshark.
 
 ## Getting Started
-Download **Kubeshark**'s binary distribution [latest release](https://github.com/kubeshark/kubeshark/releases/latest) or use one of the following methods to deploy **Kubeshark**. The [web-based dashboard](https://docs.kubehq.com/en/ui) should open in your browser, showing a real-time view of your cluster's traffic.
+Download **Kubeshark**'s binary distribution [latest release](https://github.com/kubeshark/kubeshark/releases/latest) or use one of the following methods to deploy **Kubeshark**. The [web-based dashboard](https://docs.kubeshark.com/en/ui) should open in your browser, showing a real-time view of your cluster's traffic.
 
 ### Homebrew
 
@@ -93,7 +93,7 @@ Clone this repository and run the `make` command to build it. After the build is
 
 ## Documentation
 
-To learn more, read the [documentation](https://docs.kubehq.com).
+To learn more, read the [documentation](https://docs.kubeshark.com).
 
 ## Contributing
 
