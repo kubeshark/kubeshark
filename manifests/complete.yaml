@@ -819,7 +819,7 @@ spec:
             - -dissector-cpu
             - '1'
             - -dissector-memory
-            - '2Gi'
+            - '4Gi'
           env:
           - name: POD_NAME
             valueFrom:
