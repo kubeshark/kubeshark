@@ -16,7 +16,7 @@ keywords:
   - api
 kubeVersion: '>= 1.16.0-0'
 maintainers:
-  - email: info@kubehq.com
+  - email: support@kubeshark.com
     name: Kubeshark
     url: https://www.kubeshark.com
 sources:
