@@ -2,7 +2,7 @@ apiVersion: v2
 name: kubeshark
 version: "52.11.7"
 description: The API Traffic Analyzer for Kubernetes
-home: https://www.kubeshark.com
+home: https://kubeshark.com
 keywords:
   - kubeshark
   - packet capture
@@ -18,7 +18,7 @@ kubeVersion: '>= 1.16.0-0'
 maintainers:
   - email: support@kubeshark.com
     name: Kubeshark
-    url: https://www.kubeshark.com
+    url: https://kubeshark.com
 sources:
   - https://github.com/kubeshark/kubeshark/tree/master/helm-chart
 type: application
