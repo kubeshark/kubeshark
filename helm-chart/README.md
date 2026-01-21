@@ -69,7 +69,7 @@ When it's necessary, you can use:
 --set license=YOUR_LICENSE_GOES_HERE
 ```
 
-Get your license from Kubeshark's [Admin Console](https://console.kubehq.com/).
+Get your license from Kubeshark's [Admin Console](https://console.kubeshark.com/).
 
 ## Installing with Ingress (EKS) enabled
 
@@ -308,7 +308,7 @@ tap:
 
 # Installing with Dex OIDC authentication
 
-[**Click here to see full docs**](https://docs.kubehq.com/en/saml#installing-with-oidc-enabled-dex-idp).
+[**Click here to see full docs**](https://docs.kubeshark.com/en/saml#installing-with-oidc-enabled-dex-idp).
 
 Choose this option, if **you already have a running instance** of Dex in your cluster &
 you want to set up Dex OIDC authentication for Kubeshark users.

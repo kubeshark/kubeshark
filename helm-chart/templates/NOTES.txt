@@ -30,7 +30,8 @@ Notices:
 {{- if eq .Values.license ""}}
 - No license key was detected. 
 - Authenticate through the dashboard to activate a complementary COMMUNITY license.
-- If you have an Enterprise license, download the license key from https://console.kubeshark.com/ and add it as 'license: <license>' in helm values or as `--set license=<license>` or as `LICENSE` via mounted secret (`tap.secrets`).
+- If you have an Enterprise license, download the license key from https://console.kubeshark.com/
+- An Enterprise license-key can be added as 'license: <license>' in helm values or as `--set license=<license>` or as `LICENSE` via mounted secret (`tap.secrets`).
 - Contact us to get an Enterprise license: https://kubeshark.com/contact-us.
 {{- end }}
 {{ if .Values.tap.ingress.enabled }}
