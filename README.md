@@ -91,7 +91,7 @@ Clone this repository and run the `make` command to build it. After the build is
 
 ## Documentation
 
-To learn more, read the [documentation](https://docs.kubehq.com).
+To learn more, read the [documentation](https://docs.kubeshark.com).
 
 ## Contributing
 
