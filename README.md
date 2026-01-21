@@ -22,11 +22,9 @@
 <p align="center">
   <b>
     Want to see Kubeshark in action right now? Visit this
-    <a href="https://kubeshark.kubehq.com/">live demo deployment</a> of Kubeshark.
+    <a href="https://demo.kubeshark.com/">live demo deployment</a> of Kubeshark.
   </b>
 </p>
-
-> Latest release enables free deployment on clusters with up to 100 nodes.
 
 **Kubeshark** is an API traffic analyzer for Kubernetes, providing deep packet inspection with complete API and Kubernetes contexts, retaining cluster-wide L4 traffic (PCAP), and using minimal production compute resources.
 
@@ -56,7 +54,7 @@ Imagine having a cluster-wide [TCPDump](https://www.tcpdump.org/)-like capabilit
 Once the snapshot is ready, click the PCAP file to export its contents and open it in Wireshark.
 
 ## Getting Started
-Download **Kubeshark**'s binary distribution [latest release](https://github.com/kubeshark/kubeshark/releases/latest) or use one of the following methods to deploy **Kubeshark**. The [web-based dashboard](https://docs.kubehq.com/en/ui) should open in your browser, showing a real-time view of your cluster's traffic.
+Download **Kubeshark**'s binary distribution [latest release](https://github.com/kubeshark/kubeshark/releases/latest) or use one of the following methods to deploy **Kubeshark**. The [web-based dashboard](https://docs.kubeshark.com/en/ui) should open in your browser, showing a real-time view of your cluster's traffic.
 
 ### Homebrew
 
