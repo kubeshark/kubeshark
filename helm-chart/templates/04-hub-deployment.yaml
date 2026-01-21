@@ -76,7 +76,7 @@ spec:
           - name: SENTRY_ENVIRONMENT
             value: '{{ .Values.tap.sentry.environment }}'
           - name: KUBESHARK_CLOUD_API_URL
-            value: 'https://api.kubehq.com'
+            value: 'https://api.kubeshark.com'
           - name: PROFILING_ENABLED
             value: '{{ .Values.tap.pprof.enabled }}'
         {{- if .Values.tap.docker.overrideImage.hub }}

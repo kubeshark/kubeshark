@@ -631,7 +631,7 @@ spec:
           - name: TCP_STREAM_CHANNEL_TIMEOUT_SHOW
             value: 'false'
           - name: KUBESHARK_CLOUD_API_URL
-            value: 'https://api.kubehq.com'
+            value: 'https://api.kubeshark.com'
           - name: PROFILING_ENABLED
             value: 'false'
           - name: SENTRY_ENABLED
@@ -834,7 +834,7 @@ spec:
           - name: SENTRY_ENVIRONMENT
             value: 'production'
           - name: KUBESHARK_CLOUD_API_URL
-            value: 'https://api.kubehq.com'
+            value: 'https://api.kubeshark.com'
           - name: PROFILING_ENABLED
             value: 'false'
           image: 'docker.io/kubeshark/hub:v52.11'
