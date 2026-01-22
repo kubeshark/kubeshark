@@ -14,7 +14,7 @@ metadata:
 spec:
   podSelector:
     matchLabels:
-      app.kubehq.com/app: hub
+      app.kubeshark.com/app: hub
   policyTypes:
     - Ingress
     - Egress
@@ -44,7 +44,7 @@ metadata:
 spec:
   podSelector:
     matchLabels:
-      app.kubehq.com/app: front
+      app.kubeshark.com/app: front
   policyTypes:
     - Ingress
     - Egress
@@ -71,7 +71,7 @@ metadata:
 spec:
   podSelector:
     matchLabels:
-      app.kubehq.com/app: dex
+      app.kubeshark.com/app: dex
   policyTypes:
     - Ingress
     - Egress
@@ -98,7 +98,7 @@ metadata:
 spec:
   podSelector:
     matchLabels:
-      app.kubehq.com/app: worker
+      app.kubeshark.com/app: worker
   policyTypes:
     - Ingress
     - Egress
@@ -131,7 +131,7 @@ metadata:
   name: kubeshark-secret
   namespace: default
   labels:
-    app.kubehq.com/app: hub
+    app.kubeshark.com/app: hub
     helm.sh/chart: kubeshark-52.11.7
     app.kubernetes.io/name: kubeshark
     app.kubernetes.io/instance: kubeshark
@@ -150,7 +150,7 @@ metadata:
   name: kubeshark-saml-x509-crt-secret
   namespace: default
   labels:
-    app.kubehq.com/app: hub
+    app.kubeshark.com/app: hub
     helm.sh/chart: kubeshark-52.11.7
     app.kubernetes.io/name: kubeshark
     app.kubernetes.io/instance: kubeshark
@@ -166,7 +166,7 @@ metadata:
   name: kubeshark-saml-x509-key-secret
   namespace: default
   labels:
-    app.kubehq.com/app: hub
+    app.kubeshark.com/app: hub
     helm.sh/chart: kubeshark-52.11.7
     app.kubernetes.io/name: kubeshark
     app.kubernetes.io/instance: kubeshark
@@ -245,7 +245,7 @@ metadata:
   name: kubeshark-config-map
   namespace: default
   labels:
-    app.kubehq.com/app: hub
+    app.kubeshark.com/app: hub
     helm.sh/chart: kubeshark-52.11.7
     app.kubernetes.io/name: kubeshark
     app.kubernetes.io/instance: kubeshark
@@ -444,7 +444,7 @@ apiVersion: v1
 kind: Service
 metadata:
   labels:
-    app.kubehq.com/app: hub
+    app.kubeshark.com/app: hub
     helm.sh/chart: kubeshark-52.11.7
     app.kubernetes.io/name: kubeshark
     app.kubernetes.io/instance: kubeshark
@@ -458,7 +458,7 @@ spec:
       port: 80
       targetPort: 8080
   selector:
-    app.kubehq.com/app: hub
+    app.kubeshark.com/app: hub
   type: ClusterIP
 ---
 # Source: kubeshark/templates/07-front-service.yaml
@@ -479,7 +479,7 @@ spec:
       port: 80
       targetPort: 8080
   selector:
-    app.kubehq.com/app: front
+    app.kubeshark.com/app: front
   type: ClusterIP
 ---
 # Source: kubeshark/templates/15-worker-service-metrics.yaml
@@ -499,7 +499,7 @@ metadata:
   namespace: default
 spec:
   selector:
-    app.kubehq.com/app: worker
+    app.kubeshark.com/app: worker
     helm.sh/chart: kubeshark-52.11.7
     app.kubernetes.io/name: kubeshark
     app.kubernetes.io/instance: kubeshark
@@ -528,7 +528,7 @@ metadata:
   namespace: default
 spec:
   selector:
-    app.kubehq.com/app: hub
+    app.kubeshark.com/app: hub
     helm.sh/chart: kubeshark-52.11.7
     app.kubernetes.io/name: kubeshark
     app.kubernetes.io/instance: kubeshark
@@ -545,7 +545,7 @@ apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   labels:
-    app.kubehq.com/app: worker
+    app.kubeshark.com/app: worker
     sidecar.istio.io/inject: "false"
     helm.sh/chart: kubeshark-52.11.7
     app.kubernetes.io/name: kubeshark
@@ -557,13 +557,13 @@ metadata:
 spec:
   selector:
     matchLabels:
-      app.kubehq.com/app: worker
+      app.kubeshark.com/app: worker
       app.kubernetes.io/name: kubeshark
       app.kubernetes.io/instance: kubeshark
   template:
     metadata:
       labels:
-        app.kubehq.com/app: worker
+        app.kubeshark.com/app: worker
         helm.sh/chart: kubeshark-52.11.7
         app.kubernetes.io/name: kubeshark
         app.kubernetes.io/instance: kubeshark
@@ -631,7 +631,7 @@ spec:
           - name: TCP_STREAM_CHANNEL_TIMEOUT_SHOW
             value: 'false'
           - name: KUBESHARK_CLOUD_API_URL
-            value: 'https://api.kubehq.com'
+            value: 'https://api.kubeshark.com'
           - name: PROFILING_ENABLED
             value: 'false'
           - name: SENTRY_ENABLED
@@ -775,7 +775,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    app.kubehq.com/app: hub
+    app.kubeshark.com/app: hub
     helm.sh/chart: kubeshark-52.11.7
     app.kubernetes.io/name: kubeshark
     app.kubernetes.io/instance: kubeshark
@@ -787,13 +787,13 @@ spec:
   replicas: 1  # Set the desired number of replicas
   selector:
     matchLabels:
-      app.kubehq.com/app: hub
+      app.kubeshark.com/app: hub
       app.kubernetes.io/name: kubeshark
       app.kubernetes.io/instance: kubeshark
   template:
     metadata:
       labels:
-        app.kubehq.com/app: hub
+        app.kubeshark.com/app: hub
         helm.sh/chart: kubeshark-52.11.7
         app.kubernetes.io/name: kubeshark
         app.kubernetes.io/instance: kubeshark
@@ -834,7 +834,7 @@ spec:
           - name: SENTRY_ENVIRONMENT
             value: 'production'
           - name: KUBESHARK_CLOUD_API_URL
-            value: 'https://api.kubehq.com'
+            value: 'https://api.kubeshark.com'
           - name: PROFILING_ENABLED
             value: 'false'
           image: 'docker.io/kubeshark/hub:v52.11'
@@ -904,7 +904,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    app.kubehq.com/app: front
+    app.kubeshark.com/app: front
     helm.sh/chart: kubeshark-52.11.7
     app.kubernetes.io/name: kubeshark
     app.kubernetes.io/instance: kubeshark
@@ -916,13 +916,13 @@ spec:
   replicas: 1  # Set the desired number of replicas
   selector:
     matchLabels:
-      app.kubehq.com/app: front
+      app.kubeshark.com/app: front
       app.kubernetes.io/name: kubeshark
       app.kubernetes.io/instance: kubeshark
   template:
     metadata:
       labels:
-        app.kubehq.com/app: front
+        app.kubeshark.com/app: front
         helm.sh/chart: kubeshark-52.11.7
         app.kubernetes.io/name: kubeshark
         app.kubernetes.io/instance: kubeshark

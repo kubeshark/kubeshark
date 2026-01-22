@@ -5,7 +5,7 @@ apiVersion: v1
 kind: Service
 metadata:
   labels:
-    app.kubehq.com/app: dex
+    app.kubeshark.com/app: dex
     {{- include "kubeshark.labels" . | nindent 4 }}
   {{- if .Values.tap.annotations }}
   annotations:
@@ -19,7 +19,7 @@ spec:
       port: 80
       targetPort: 5556
   selector:
-    app.kubehq.com/app: dex
+    app.kubeshark.com/app: dex
   type: ClusterIP
 
 {{- end }}
