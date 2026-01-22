@@ -35,7 +35,7 @@ tap:
   delayedDissection:
     image: kubeshark/worker:master
     cpu: "1"
-    memory: 2Gi
+    memory: 4Gi
   snapshots:
     storageClass: ""
     storageSize: 20Gi
