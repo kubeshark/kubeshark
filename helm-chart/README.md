@@ -5,7 +5,7 @@
 Add the Helm repo for Kubeshark:
 
 ```shell
-helm repo add kubeshark https://helm.kubehq.com
+helm repo add kubeshark https://helm.kubeshark.com
 ```
 
 then install Kubeshark:
@@ -69,7 +69,7 @@ When it's necessary, you can use:
 --set license=YOUR_LICENSE_GOES_HERE
 ```
 
-Get your license from Kubeshark's [Admin Console](https://console.kubehq.com/).
+Get your license from Kubeshark's [Admin Console](https://console.kubeshark.com/).
 
 ## Installing with Ingress (EKS) enabled
 
@@ -145,7 +145,7 @@ Example for overriding image names:
 | `tap.capture.dbMaxSize`                           | Maximum size for capture database (e.g., `4Gi`, `2000Mi`). When empty, automatically uses 80% of allocated storage (`tap.storageLimit`).     | `""`                                                                                                                                                                                                                                             |
 | `tap.snapshots.storageClass`                      | Storage class for snapshots volume. When empty, uses `emptyDir`. When set, creates a PVC with this storage class | `""`                                                                                                                                                                                                                                             |
 | `tap.snapshots.storageSize`                       | Storage size for snapshots volume (supports K8s quantity format: `1Gi`, `500Mi`, etc.)     | `10Gi`                                                                                                                                                                                                                                            |
-| `tap.release.repo`                        | URL of the Helm chart repository              | `https://helm.kubehq.com`                                                                                                                                                                                                                        |
+| `tap.release.repo`                        | URL of the Helm chart repository              | `https://helm.kubeshark.com`                                                                                                                                                                                                                        |
 | `tap.release.name`                        | Helm release name                             | `kubeshark`                                                                                                                                                                                                                                      |
 | `tap.release.namespace`                   | Helm release namespace                        | `default`                                                                                                                                                                                                                                        |
 | `tap.persistentStorage`                   | Use `persistentVolumeClaim` instead of `emptyDir` | `false`                                                                                                                                                                                                                                          |
@@ -308,7 +308,7 @@ tap:
 
 # Installing with Dex OIDC authentication
 
-[**Click here to see full docs**](https://docs.kubehq.com/en/saml#installing-with-oidc-enabled-dex-idp).
+[**Click here to see full docs**](https://docs.kubeshark.com/en/saml#installing-with-oidc-enabled-dex-idp).
 
 Choose this option, if **you already have a running instance** of Dex in your cluster &
 you want to set up Dex OIDC authentication for Kubeshark users.

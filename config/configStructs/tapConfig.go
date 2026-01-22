@@ -207,7 +207,7 @@ type FrontRoutingConfig struct {
 }
 
 type ReleaseConfig struct {
-	Repo      string `yaml:"repo" json:"repo" default:"https://helm.kubehq.com"`
+	Repo      string `yaml:"repo" json:"repo" default:"https://helm.kubeshark.com"`
 	Name      string `yaml:"name" json:"name" default:"kubeshark"`
 	Namespace string `yaml:"namespace" json:"namespace" default:"default"`
 }

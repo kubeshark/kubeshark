@@ -22,7 +22,7 @@
 <p align="center">
   <b>
     Want to see Kubeshark in action right now? Visit this
-    <a href="https://kubeshark.kubehq.com/">live demo deployment</a> of Kubeshark.
+    <a href="https://demo.kubeshark.com/">live demo deployment</a> of Kubeshark.
   </b>
 </p>
 
@@ -77,7 +77,7 @@ kubeshark clean
 Add the Helm repository and install the chart:
 
 ```shell
-helm repo add kubeshark https://helm.kubehq.com
+helm repo add kubeshark https://helm.kubeshark.com
 helm install kubeshark kubeshark/kubeshark
 ```
 Follow the on-screen instructions how to connect to the dashboard.
