@@ -26,8 +26,6 @@
   </b>
 </p>
 
-> Latest release enables free deployment on clusters with up to 100 nodes.
-
 **Kubeshark** is an API traffic analyzer for Kubernetes, providing deep packet inspection with complete API and Kubernetes contexts, retaining cluster-wide L4 traffic (PCAP), and using minimal production compute resources.
 
 ![Simple UI](https://github.com/kubeshark/assets/raw/master/png/kubeshark-ui.png)
