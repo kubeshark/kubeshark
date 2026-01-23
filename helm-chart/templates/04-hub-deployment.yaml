@@ -3,7 +3,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    app.kubehq.com/app: hub
+    app.kubeshark.com/app: hub
     {{- include "kubeshark.labels" . | nindent 4 }}
   {{- if .Values.tap.annotations }}
   annotations:
@@ -15,12 +15,12 @@ spec:
   replicas: 1  # Set the desired number of replicas
   selector:
     matchLabels:
-      app.kubehq.com/app: hub
+      app.kubeshark.com/app: hub
       {{- include "kubeshark.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       labels:
-        app.kubehq.com/app: hub
+        app.kubeshark.com/app: hub
         {{- include "kubeshark.labels" . | nindent 8 }}
     spec:
       dnsPolicy: ClusterFirstWithHostNet
@@ -76,7 +76,7 @@ spec:
           - name: SENTRY_ENVIRONMENT
             value: '{{ .Values.tap.sentry.environment }}'
           - name: KUBESHARK_CLOUD_API_URL
-            value: 'https://api.kubehq.com'
+            value: 'https://api.kubeshark.com'
           - name: PROFILING_ENABLED
             value: '{{ .Values.tap.pprof.enabled }}'
         {{- if .Values.tap.docker.overrideImage.hub }}

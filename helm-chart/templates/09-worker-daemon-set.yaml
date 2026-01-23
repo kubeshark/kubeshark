@@ -3,7 +3,7 @@ apiVersion: apps/v1
 kind: DaemonSet
 metadata:
   labels:
-    app.kubehq.com/app: worker
+    app.kubeshark.com/app: worker
     sidecar.istio.io/inject: "false"
     {{- include "kubeshark.labels" . | nindent 4 }}
   {{- if .Values.tap.annotations }}
@@ -15,12 +15,12 @@ metadata:
 spec:
   selector:
     matchLabels:
-      app.kubehq.com/app: worker
+      app.kubeshark.com/app: worker
       {{- include "kubeshark.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       labels:
-        app.kubehq.com/app: worker
+        app.kubeshark.com/app: worker
         {{- include "kubeshark.labels" . | nindent 8 }}
       name: kubeshark-worker-daemon-set
       namespace: kubeshark
@@ -130,7 +130,7 @@ spec:
           - name: TCP_STREAM_CHANNEL_TIMEOUT_SHOW
             value: '{{ .Values.tap.misc.tcpStreamChannelTimeoutShow }}'
           - name: KUBESHARK_CLOUD_API_URL
-            value: 'https://api.kubehq.com'
+            value: 'https://api.kubeshark.com'
           - name: PROFILING_ENABLED
             value: '{{ .Values.tap.pprof.enabled }}'
           - name: SENTRY_ENABLED

@@ -14,7 +14,7 @@ metadata:
   namespace: {{ .Release.Namespace }}
 spec:
   selector:
-    app.kubehq.com/app: hub
+    app.kubeshark.com/app: hub
     {{- include "kubeshark.labels" . | nindent 4 }}
   ports:
   - name: metrics

@@ -4,7 +4,7 @@ metadata:
   name: {{ include "kubeshark.configmapName" . }}
   namespace: {{ .Release.Namespace }}
   labels:
-    app.kubehq.com/app: hub
+    app.kubeshark.com/app: hub
     {{- include "kubeshark.labels" . | nindent 4 }}
 data:
     POD_REGEX: '{{ .Values.tap.regex }}'

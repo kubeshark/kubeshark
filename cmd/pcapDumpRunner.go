@@ -24,7 +24,7 @@ import (
 )
 
 const (
-	label                 = "app.kubehq.com/app=worker"
+	label                 = "app.kubeshark.com/app=worker"
 	srcDir                = "pcapdump"
 	maxSnaplen     uint32 = 262144
 	maxTimePerFile        = time.Minute * 5

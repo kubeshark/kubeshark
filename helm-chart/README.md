@@ -5,7 +5,7 @@
 Add the Helm repo for Kubeshark:
 
 ```shell
-helm repo add kubeshark https://helm.kubehq.com
+helm repo add kubeshark https://helm.kubeshark.com
 ```
 
 then install Kubeshark:
@@ -145,7 +145,7 @@ Example for overriding image names:
 | `tap.capture.dbMaxSize`                           | Maximum size for capture database (e.g., `4Gi`, `2000Mi`). When empty, automatically uses 80% of allocated storage (`tap.storageLimit`).     | `""`                                                                                                                                                                                                                                             |
 | `tap.snapshots.storageClass`                      | Storage class for snapshots volume. When empty, uses `emptyDir`. When set, creates a PVC with this storage class | `""`                                                                                                                                                                                                                                             |
 | `tap.snapshots.storageSize`                       | Storage size for snapshots volume (supports K8s quantity format: `1Gi`, `500Mi`, etc.)     | `10Gi`                                                                                                                                                                                                                                            |
-| `tap.release.repo`                        | URL of the Helm chart repository              | `https://helm.kubehq.com`                                                                                                                                                                                                                        |
+| `tap.release.repo`                        | URL of the Helm chart repository              | `https://helm.kubeshark.com`                                                                                                                                                                                                                        |
 | `tap.release.name`                        | Helm release name                             | `kubeshark`                                                                                                                                                                                                                                      |
 | `tap.release.namespace`                   | Helm release namespace                        | `default`                                                                                                                                                                                                                                        |
 | `tap.persistentStorage`                   | Use `persistentVolumeClaim` instead of `emptyDir` | `false`                                                                                                                                                                                                                                          |

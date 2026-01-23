@@ -35,12 +35,12 @@ tap:
   delayedDissection:
     image: kubeshark/worker:master
     cpu: "1"
-    memory: 2Gi
+    memory: 4Gi
   snapshots:
     storageClass: ""
     storageSize: 20Gi
   release:
-    repo: https://helm.kubehq.com
+    repo: https://helm.kubeshark.com
     name: kubeshark
     namespace: default
   persistentStorage: false
