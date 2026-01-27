@@ -1,4 +1,3 @@
-# find a detailed description here: https://github.com/kubeshark/kubeshark/blob/master/helm-chart/README.md
 tap:
   docker:
     registry: docker.io/kubeshark
@@ -30,11 +29,18 @@ tap:
     stopped: false
     stopAfter: 5m
     raw:
-      enabled: false
+      enabled: true
       storageSize: 1Gi
     dbMaxSize: 500Mi
+  delayedDissection:
+    image: kubeshark/worker:master
+    cpu: "1"
+    memory: 4Gi
+  snapshots:
+    storageClass: ""
+    storageSize: 20Gi
   release:
-    repo: https://helm.kubeshark.co
+    repo: https://helm.kubeshark.com
     name: kubeshark
     namespace: default
   persistentStorage: false
@@ -42,7 +48,7 @@ tap:
   persistentStoragePvcVolumeMode: FileSystem
   efsFileSytemIdAndPath: ""
   secrets: []
-  storageLimit: 5Gi
+  storageLimit: 10Gi
   storageClass: standard
   dryRun: false
   dns:
@@ -153,7 +159,7 @@ tap:
   ipv6: true
   debug: false
   dashboard:
-    streamingType: ""
+    streamingType: connect-rpc
     completeStreamingEnabled: true
   telemetry:
     enabled: true
@@ -180,6 +186,8 @@ tap:
   - ldap
   - radius
   - diameter
+  - udp-flow
+  - tcp-flow
   portMapping:
     http:
     - 80
@@ -206,8 +214,8 @@ tap:
     view: flamegraph
   misc:
     jsonTTL: 5m
-    pcapTTL: 10s
-    pcapErrorTTL: 60s
+    pcapTTL: "0"
+    pcapErrorTTL: "0"
     trafficSampleRate: 100
     tcpStreamChannelTimeoutMs: 10000
     tcpStreamChannelTimeoutShow: false
@@ -239,11 +247,12 @@ tap:
       - SYS_RESOURCE
       - IPC_LOCK
   mountBpf: true
+  hostNetwork: true
 logs:
   file: ""
   grep: ""
 pcapdump:
-  enabled: true
+  enabled: false
   timeInterval: 1m
   maxTime: 1h
   maxSize: 500MB

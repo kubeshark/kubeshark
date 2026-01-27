@@ -1,0 +1,22 @@
+---
+{{- if .Values.tap.snapshots.storageClass }}
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  labels:
+    {{- include "kubeshark.labels" . | nindent 4 }}
+  {{- if .Values.tap.annotations }}
+  annotations:
+    {{- toYaml .Values.tap.annotations | nindent 4 }}
+  {{- end }}
+  name: {{ include "kubeshark.name" . }}-snapshots-pvc
+  namespace: {{ .Release.Namespace }}
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: {{ .Values.tap.snapshots.storageSize }}
+  storageClassName: {{ .Values.tap.snapshots.storageClass }}
+status: {}
+{{- end }}

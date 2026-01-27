@@ -3,7 +3,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   labels:
-    app.kubeshark.co/app: hub
+    app.kubeshark.com/app: hub
     {{- include "kubeshark.labels" . | nindent 4 }}
   {{- if .Values.tap.annotations }}
   annotations:
@@ -15,12 +15,12 @@ spec:
   replicas: 1  # Set the desired number of replicas
   selector:
     matchLabels:
-      app.kubeshark.co/app: hub
+      app.kubeshark.com/app: hub
       {{- include "kubeshark.selectorLabels" . | nindent 6 }}
   template:
     metadata:
       labels:
-        app.kubeshark.co/app: hub
+        app.kubeshark.com/app: hub
         {{- include "kubeshark.labels" . | nindent 8 }}
     spec:
       dnsPolicy: ClusterFirstWithHostNet
@@ -38,6 +38,20 @@ spec:
             - '{{ .Values.logLevel | default "warning" }}'
             - -capture-stop-after
             - "{{ if hasKey .Values.tap.capture "stopAfter" }}{{ .Values.tap.capture.stopAfter }}{{ else }}5m{{ end }}"
+            - -snapshot-size-limit
+            - '{{ .Values.tap.snapshots.storageSize }}'
+            {{- if .Values.tap.delayedDissection.image }}
+            - -dissector-image
+            - '{{ .Values.tap.delayedDissection.image }}'
+            {{- end }}
+            {{- if .Values.tap.delayedDissection.cpu }}
+            - -dissector-cpu
+            - '{{ .Values.tap.delayedDissection.cpu }}'
+            {{- end }}
+            {{- if .Values.tap.delayedDissection.memory }}
+            - -dissector-memory
+            - '{{ .Values.tap.delayedDissection.memory }}'
+            {{- end }}
             {{- if .Values.tap.gitops.enabled }}
             - -gitops
             {{- end }}
@@ -62,7 +76,7 @@ spec:
           - name: SENTRY_ENVIRONMENT
             value: '{{ .Values.tap.sentry.environment }}'
           - name: KUBESHARK_CLOUD_API_URL
-            value: 'https://api.kubeshark.co'
+            value: 'https://api.kubeshark.com'
           - name: PROFILING_ENABLED
             value: '{{ .Values.tap.pprof.enabled }}'
         {{- if .Values.tap.docker.overrideImage.hub }}
@@ -106,6 +120,8 @@ spec:
           - name: saml-x509-volume
             mountPath: "/etc/saml/x509"
             readOnly: true
+          - name: snapshots-volume
+            mountPath: "/app/data/snapshots"
 {{- if gt (len .Values.tap.nodeSelectorTerms.hub) 0}}
       affinity:
         nodeAffinity:
@@ -167,3 +183,11 @@ spec:
               items:
               - key: AUTH_SAML_X509_KEY
                 path: kubeshark.key
+      - name: snapshots-volume
+        {{- if .Values.tap.snapshots.storageClass }}
+        persistentVolumeClaim:
+          claimName: {{ include "kubeshark.name" . }}-snapshots-pvc
+        {{- else }}
+        emptyDir:
+          sizeLimit: {{ .Values.tap.snapshots.storageSize }}
+        {{- end }}

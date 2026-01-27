@@ -198,7 +198,7 @@ type RoutingConfig struct {
 }
 
 type DashboardConfig struct {
-	StreamingType            string `yaml:"streamingType" json:"streamingType" default:""`
+	StreamingType            string `yaml:"streamingType" json:"streamingType" default:"connect-rpc"`
 	CompleteStreamingEnabled bool   `yaml:"completeStreamingEnabled" json:"completeStreamingEnabled" default:"true"`
 }
 
@@ -207,7 +207,7 @@ type FrontRoutingConfig struct {
 }
 
 type ReleaseConfig struct {
-	Repo      string `yaml:"repo" json:"repo" default:"https://helm.kubeshark.co"`
+	Repo      string `yaml:"repo" json:"repo" default:"https://helm.kubeshark.com"`
 	Name      string `yaml:"name" json:"name" default:"kubeshark"`
 	Namespace string `yaml:"namespace" json:"namespace" default:"default"`
 }
@@ -251,8 +251,8 @@ type PprofConfig struct {
 
 type MiscConfig struct {
 	JsonTTL                     string `yaml:"jsonTTL" json:"jsonTTL" default:"5m"`
-	PcapTTL                     string `yaml:"pcapTTL" json:"pcapTTL" default:"10s"`
-	PcapErrorTTL                string `yaml:"pcapErrorTTL" json:"pcapErrorTTL" default:"60s"`
+	PcapTTL                     string `yaml:"pcapTTL" json:"pcapTTL" default:"0"`
+	PcapErrorTTL                string `yaml:"pcapErrorTTL" json:"pcapErrorTTL" default:"0"`
 	TrafficSampleRate           int    `yaml:"trafficSampleRate" json:"trafficSampleRate" default:"100"`
 	TcpStreamChannelTimeoutMs   int    `yaml:"tcpStreamChannelTimeoutMs" json:"tcpStreamChannelTimeoutMs" default:"10000"`
 	TcpStreamChannelTimeoutShow bool   `yaml:"tcpStreamChannelTimeoutShow" json:"tcpStreamChannelTimeoutShow" default:"false"`
@@ -263,7 +263,7 @@ type MiscConfig struct {
 }
 
 type PcapDumpConfig struct {
-	PcapDumpEnabled  bool   `yaml:"enabled" json:"enabled" default:"true"`
+	PcapDumpEnabled  bool   `yaml:"enabled" json:"enabled" default:"false"`
 	PcapTimeInterval string `yaml:"timeInterval" json:"timeInterval" default:"1m"`
 	PcapMaxTime      string `yaml:"maxTime" json:"maxTime" default:"1h"`
 	PcapMaxSize      string `yaml:"maxSize" json:"maxSize" default:"500MB"`
@@ -301,15 +301,26 @@ type SeLinuxOptionsConfig struct {
 }
 
 type RawCaptureConfig struct {
-	Enabled     bool   `yaml:"enabled" json:"enabled" default:"false"`
+	Enabled     bool   `yaml:"enabled" json:"enabled" default:"true"`
 	StorageSize string `yaml:"storageSize" json:"storageSize" default:"1Gi"`
+}
+
+type SnapshotsConfig struct {
+	StorageClass string `yaml:"storageClass" json:"storageClass" default:""`
+	StorageSize  string `yaml:"storageSize" json:"storageSize" default:"20Gi"`
+}
+
+type DelayedDissectionConfig struct {
+	Image  string `yaml:"image" json:"image" default:"kubeshark/worker:master"`
+	CPU    string `yaml:"cpu" json:"cpu" default:"1"`
+	Memory string `yaml:"memory" json:"memory" default:"4Gi"`
 }
 
 type CaptureConfig struct {
 	Stopped   bool             `yaml:"stopped" json:"stopped" default:"false"`
 	StopAfter string           `yaml:"stopAfter" json:"stopAfter" default:"5m"`
 	Raw       RawCaptureConfig `yaml:"raw" json:"raw"`
-	DbMaxSize   string `yaml:"dbMaxSize" json:"dbMaxSize" default:"500Mi"`
+	DbMaxSize string           `yaml:"dbMaxSize" json:"dbMaxSize" default:"500Mi"`
 }
 
 type TapConfig struct {
@@ -320,13 +331,15 @@ type TapConfig struct {
 	ExcludedNamespaces             []string                `yaml:"excludedNamespaces" json:"excludedNamespaces" default:"[]"`
 	BpfOverride                    string                  `yaml:"bpfOverride" json:"bpfOverride" default:""`
 	Capture                        CaptureConfig           `yaml:"capture" json:"capture"`
+	DelayedDissection              DelayedDissectionConfig `yaml:"delayedDissection" json:"delayedDissection"`
+	Snapshots                      SnapshotsConfig         `yaml:"snapshots" json:"snapshots"`
 	Release                        ReleaseConfig           `yaml:"release" json:"release"`
 	PersistentStorage              bool                    `yaml:"persistentStorage" json:"persistentStorage" default:"false"`
 	PersistentStorageStatic        bool                    `yaml:"persistentStorageStatic" json:"persistentStorageStatic" default:"false"`
 	PersistentStoragePvcVolumeMode string                  `yaml:"persistentStoragePvcVolumeMode" json:"persistentStoragePvcVolumeMode" default:"FileSystem"`
 	EfsFileSytemIdAndPath          string                  `yaml:"efsFileSytemIdAndPath" json:"efsFileSytemIdAndPath" default:""`
 	Secrets                        []string                `yaml:"secrets" json:"secrets" default:"[]"`
-	StorageLimit                   string                  `yaml:"storageLimit" json:"storageLimit" default:"5Gi"`
+	StorageLimit                   string                  `yaml:"storageLimit" json:"storageLimit" default:"10Gi"`
 	StorageClass                   string                  `yaml:"storageClass" json:"storageClass" default:"standard"`
 	DryRun                         bool                    `yaml:"dryRun" json:"dryRun" default:"false"`
 	DnsConfig                      DnsConfig               `yaml:"dns" json:"dns"`
@@ -363,6 +376,7 @@ type TapConfig struct {
 	Misc                           MiscConfig              `yaml:"misc" json:"misc"`
 	SecurityContext                SecurityContextConfig   `yaml:"securityContext" json:"securityContext"`
 	MountBpf                       bool                    `yaml:"mountBpf" json:"mountBpf" default:"true"`
+	HostNetwork                    bool                    `yaml:"hostNetwork" json:"hostNetwork" default:"true"`
 }
 
 func (config *TapConfig) PodRegex() *regexp.Regexp {
