@@ -51,17 +51,3 @@ jobs:
           tag: ${{ steps.version.outputs.tag }}
           prerelease: false
           bodyFile: 'bin/README.md'
-
-  brew:
-    name: Publish a new Homebrew formulae
-    needs: [release]
-    runs-on: ubuntu-latest
-    steps:
-      - name: Bump core homebrew formula
-        uses: mislav/bump-homebrew-formula-action@v3
-        with:
-          # A PR will be sent to github.com/Homebrew/homebrew-core to update this formula:
-          formula-name: kubeshark
-          push-to: kubeshark/homebrew-core
-        env:
-          COMMITTER_TOKEN: ${{ secrets.COMMITTER_TOKEN }}
