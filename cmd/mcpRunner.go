@@ -43,15 +43,6 @@ type jsonRPCError struct {
 
 // MCP-specific types
 
-type mcpInitializeParams struct {
-	ProtocolVersion string          `json:"protocolVersion"`
-	Capabilities    json.RawMessage `json:"capabilities"`
-	ClientInfo      struct {
-		Name    string `json:"name"`
-		Version string `json:"version"`
-	} `json:"clientInfo"`
-}
-
 type mcpInitializeResult struct {
 	ProtocolVersion string `json:"protocolVersion"`
 	Capabilities    struct {
