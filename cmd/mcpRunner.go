@@ -138,8 +138,8 @@ func runMCP() {
 		}
 	}
 
-	// Hub MCP API is available via frontend at /mcp/*
-	hubMCPURL := fmt.Sprintf("%s/mcp", frontURL)
+	// Hub MCP API is available via frontend at /api/mcp/*
+	hubMCPURL := fmt.Sprintf("%s/api/mcp", frontURL)
 
 	server := &mcpServer{
 		hubBaseURL: hubMCPURL,
