@@ -668,10 +668,20 @@ func (s *mcpServer) callCheckKubesharkStatus(args map[string]any) (string, bool)
 	}
 
 	if exists {
-		return fmt.Sprintf("Kubeshark is running in namespace '%s'. You can use the API tools (list_workloads, list_api_calls, etc.) to query captured traffic.", namespace), false
+		return fmt.Sprintf(`Kubeshark is running in namespace '%s'.
+
+Available tools:
+- stop_kubeshark: Stop Kubeshark and remove resources
+- list_workloads: List pods, services, namespaces with observed traffic
+- list_api_calls: Query captured L7 API transactions (HTTP, gRPC, etc.)
+- get_api_call: Get detailed info about a specific API call
+- get_api_stats: Get aggregated API statistics`, namespace), false
 	}
 
-	return fmt.Sprintf("Kubeshark is not running in namespace '%s'. Use the 'start_kubeshark' tool to start it.", namespace), false
+	return fmt.Sprintf(`Kubeshark is not running in namespace '%s'.
+
+Available tools:
+- start_kubeshark: Start Kubeshark to capture network traffic`, namespace), false
 }
 
 func (s *mcpServer) doGet(path string, query url.Values) (string, bool) {
