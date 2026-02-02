@@ -10,6 +10,9 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"os/exec"
+	"strings"
+	"sync"
 
 	"github.com/kubeshark/kubeshark/config"
 	"github.com/kubeshark/kubeshark/config/configStructs"
@@ -82,20 +85,42 @@ type mcpContent struct {
 // MCP Server
 
 type mcpServer struct {
-	hubBaseURL string
-	httpClient *http.Client
-	stdin      io.Reader
-	stdout     io.Writer
+	hubBaseURL         string
+	httpClient         *http.Client
+	stdin              io.Reader
+	stdout             io.Writer
+	backendInitialized bool
+	backendMu          sync.Mutex
 }
 
 func runMCP() {
 	// Disable zerolog output to stderr (MCP uses stdio)
 	zerolog.SetGlobalLevel(zerolog.Disabled)
 
+	// Initialize the MCP server without requiring the backend to be running
+	// Backend connection will be established lazily when API tools are called
+	server := &mcpServer{
+		httpClient: &http.Client{},
+		stdin:      os.Stdin,
+		stdout:     os.Stdout,
+	}
+
+	server.run()
+}
+
+// ensureBackendConnection establishes connection to Kubeshark backend if not already connected
+// Returns an error message if connection fails, empty string on success
+func (s *mcpServer) ensureBackendConnection() string {
+	s.backendMu.Lock()
+	defer s.backendMu.Unlock()
+
+	if s.backendInitialized {
+		return ""
+	}
+
 	kubernetesProvider, err := getKubernetesProviderForCli(true, true)
 	if err != nil {
-		writeErrorToStderr("Failed to get Kubernetes provider: %v", err)
-		return
+		return fmt.Sprintf("Failed to get Kubernetes provider: %v. Is kubectl configured?", err)
 	}
 
 	ctx, cancel := context.WithCancel(context.Background())
@@ -104,8 +129,7 @@ func runMCP() {
 	// Check if Kubeshark services exist
 	exists, err := kubernetesProvider.DoesServiceExist(ctx, config.Config.Tap.Release.Namespace, kubernetes.FrontServiceName)
 	if err != nil || !exists {
-		writeErrorToStderr("Kubeshark front service not found. Run '%s tap' first.", misc.Program)
-		return
+		return fmt.Sprintf("Kubeshark is not running. Use the 'start_kubeshark' tool to start it first.")
 	}
 
 	// Start proxy to frontend
@@ -124,22 +148,14 @@ func runMCP() {
 		)
 		connector := connect.NewConnector(frontURL, connect.DefaultRetries, connect.DefaultTimeout)
 		if err := connector.TestConnection(""); err != nil {
-			writeErrorToStderr("Couldn't connect to Kubeshark frontend")
-			return
+			return "Couldn't connect to Kubeshark frontend. Is Kubeshark running?"
 		}
 	}
 
 	// Hub MCP API is available via frontend at /api/mcp/*
-	hubMCPURL := fmt.Sprintf("%s/api/mcp", frontURL)
-
-	server := &mcpServer{
-		hubBaseURL: hubMCPURL,
-		httpClient: &http.Client{},
-		stdin:      os.Stdin,
-		stdout:     os.Stdout,
-	}
-
-	server.run()
+	s.hubBaseURL = fmt.Sprintf("%s/api/mcp", frontURL)
+	s.backendInitialized = true
+	return ""
 }
 
 func writeErrorToStderr(format string, args ...any) {
@@ -321,6 +337,53 @@ func (s *mcpServer) handleListTools(req *jsonRPCRequest) {
 				}
 			}`),
 		},
+		{
+			Name:        "start_kubeshark",
+			Description: "Start Kubeshark to capture network traffic in the Kubernetes cluster. This runs 'kubeshark tap' command.",
+			InputSchema: json.RawMessage(`{
+				"type": "object",
+				"properties": {
+					"namespaces": {
+						"type": "string",
+						"description": "Comma-separated list of namespaces to tap (e.g., 'default,kube-system'). If not specified, taps all namespaces."
+					},
+					"pod_regex": {
+						"type": "string",
+						"description": "Regular expression to filter pods by name (e.g., 'nginx.*')"
+					},
+					"release_namespace": {
+						"type": "string",
+						"description": "Namespace where Kubeshark will be installed (default: 'default')"
+					}
+				}
+			}`),
+		},
+		{
+			Name:        "stop_kubeshark",
+			Description: "Stop Kubeshark and remove all its resources from the cluster. This runs 'kubeshark clean' command.",
+			InputSchema: json.RawMessage(`{
+				"type": "object",
+				"properties": {
+					"release_namespace": {
+						"type": "string",
+						"description": "Namespace where Kubeshark is installed (default: 'default')"
+					}
+				}
+			}`),
+		},
+		{
+			Name:        "check_kubeshark_status",
+			Description: "Check if Kubeshark is currently running in the cluster",
+			InputSchema: json.RawMessage(`{
+				"type": "object",
+				"properties": {
+					"release_namespace": {
+						"type": "string",
+						"description": "Namespace where Kubeshark is installed (default: 'default')"
+					}
+				}
+			}`),
+		},
 	}
 
 	s.sendResult(req.ID, mcpListToolsResult{Tools: tools})
@@ -345,6 +408,12 @@ func (s *mcpServer) handleCallTool(req *jsonRPCRequest) {
 		result, isError = s.callGetAPICall(params.Arguments)
 	case "get_api_stats":
 		result, isError = s.callGetAPIStats(params.Arguments)
+	case "start_kubeshark":
+		result, isError = s.callStartKubeshark(params.Arguments)
+	case "stop_kubeshark":
+		result, isError = s.callStopKubeshark(params.Arguments)
+	case "check_kubeshark_status":
+		result, isError = s.callCheckKubesharkStatus(params.Arguments)
 	default:
 		s.sendError(req.ID, -32602, "Unknown tool", params.Name)
 		return
@@ -357,6 +426,10 @@ func (s *mcpServer) handleCallTool(req *jsonRPCRequest) {
 }
 
 func (s *mcpServer) callListWorkloads(args map[string]any) (string, bool) {
+	if errMsg := s.ensureBackendConnection(); errMsg != "" {
+		return errMsg, true
+	}
+
 	query := url.Values{}
 	if v, ok := args["type"].(string); ok && v != "" {
 		query.Set("type", v)
@@ -372,6 +445,10 @@ func (s *mcpServer) callListWorkloads(args map[string]any) (string, bool) {
 }
 
 func (s *mcpServer) callListAPICalls(args map[string]any) (string, bool) {
+	if errMsg := s.ensureBackendConnection(); errMsg != "" {
+		return errMsg, true
+	}
+
 	query := url.Values{}
 	for _, key := range []string{"src_ns", "src_pod", "dst_ns", "dst_pod", "dst_svc", "proto", "method", "path", "status"} {
 		if v, ok := args[key].(string); ok && v != "" {
@@ -386,6 +463,10 @@ func (s *mcpServer) callListAPICalls(args map[string]any) (string, bool) {
 }
 
 func (s *mcpServer) callGetAPICall(args map[string]any) (string, bool) {
+	if errMsg := s.ensureBackendConnection(); errMsg != "" {
+		return errMsg, true
+	}
+
 	id, ok := args["id"].(string)
 	if !ok || id == "" {
 		return "Error: id is required", true
@@ -403,6 +484,10 @@ func (s *mcpServer) callGetAPICall(args map[string]any) (string, bool) {
 }
 
 func (s *mcpServer) callGetAPIStats(args map[string]any) (string, bool) {
+	if errMsg := s.ensureBackendConnection(); errMsg != "" {
+		return errMsg, true
+	}
+
 	query := url.Values{}
 	for _, key := range []string{"ns", "svc", "pod", "group_by"} {
 		if v, ok := args[key].(string); ok && v != "" {
@@ -411,6 +496,97 @@ func (s *mcpServer) callGetAPIStats(args map[string]any) (string, bool) {
 	}
 
 	return s.doGet("/stats", query)
+}
+
+func (s *mcpServer) callStartKubeshark(args map[string]any) (string, bool) {
+	// Build the kubeshark tap command
+	cmdArgs := []string{"tap"}
+
+	// Add pod regex if provided
+	if v, ok := args["pod_regex"].(string); ok && v != "" {
+		cmdArgs = append(cmdArgs, v)
+	}
+
+	// Add namespaces if provided
+	if v, ok := args["namespaces"].(string); ok && v != "" {
+		namespaces := strings.Split(v, ",")
+		for _, ns := range namespaces {
+			ns = strings.TrimSpace(ns)
+			if ns != "" {
+				cmdArgs = append(cmdArgs, "-n", ns)
+			}
+		}
+	}
+
+	// Add release namespace if provided
+	if v, ok := args["release_namespace"].(string); ok && v != "" {
+		cmdArgs = append(cmdArgs, "-s", v)
+	}
+
+	// Execute the command in detached mode (headless)
+	cmdArgs = append(cmdArgs, "--headless")
+
+	cmd := exec.Command(misc.Program, cmdArgs...)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Sprintf("Failed to start Kubeshark: %v\nOutput: %s", err, string(output)), true
+	}
+
+	// Reset backend connection state so next API call will re-establish connection
+	s.backendMu.Lock()
+	s.backendInitialized = false
+	s.backendMu.Unlock()
+
+	return fmt.Sprintf("Kubeshark started successfully.\nCommand: %s %s\nOutput: %s", misc.Program, strings.Join(cmdArgs, " "), string(output)), false
+}
+
+func (s *mcpServer) callStopKubeshark(args map[string]any) (string, bool) {
+	// Build the kubeshark clean command
+	cmdArgs := []string{"clean"}
+
+	// Add release namespace if provided
+	if v, ok := args["release_namespace"].(string); ok && v != "" {
+		cmdArgs = append(cmdArgs, "-s", v)
+	}
+
+	cmd := exec.Command(misc.Program, cmdArgs...)
+	output, err := cmd.CombinedOutput()
+	if err != nil {
+		return fmt.Sprintf("Failed to stop Kubeshark: %v\nOutput: %s", err, string(output)), true
+	}
+
+	// Reset backend connection state
+	s.backendMu.Lock()
+	s.backendInitialized = false
+	s.backendMu.Unlock()
+
+	return fmt.Sprintf("Kubeshark stopped successfully.\nCommand: %s %s\nOutput: %s", misc.Program, strings.Join(cmdArgs, " "), string(output)), false
+}
+
+func (s *mcpServer) callCheckKubesharkStatus(args map[string]any) (string, bool) {
+	namespace := config.Config.Tap.Release.Namespace
+	if v, ok := args["release_namespace"].(string); ok && v != "" {
+		namespace = v
+	}
+
+	kubernetesProvider, err := getKubernetesProviderForCli(true, true)
+	if err != nil {
+		return fmt.Sprintf("Failed to get Kubernetes provider: %v", err), true
+	}
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	exists, err := kubernetesProvider.DoesServiceExist(ctx, namespace, kubernetes.FrontServiceName)
+	if err != nil {
+		return fmt.Sprintf("Error checking Kubeshark status: %v", err), true
+	}
+
+	if exists {
+		return fmt.Sprintf("Kubeshark is running in namespace '%s'. You can use the API tools (list_workloads, list_api_calls, etc.) to query captured traffic.", namespace), false
+	}
+
+	return fmt.Sprintf("Kubeshark is not running in namespace '%s'. Use the 'start_kubeshark' tool to start it.", namespace), false
 }
 
 func (s *mcpServer) doGet(path string, query url.Values) (string, bool) {
