@@ -265,6 +265,7 @@ kube:
 dumpLogs: false
 headless: false
 license: ""
+cloudApiUrl: "https://api.kubeshark.com"
 cloudLicenseEnabled: true
 aiAssistantEnabled: true
 demoModeEnabled: false
