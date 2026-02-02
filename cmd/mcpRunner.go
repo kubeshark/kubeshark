@@ -188,8 +188,9 @@ func (s *mcpServer) handleRequest(req *jsonRPCRequest) {
 	switch req.Method {
 	case "initialize":
 		s.handleInitialize(req)
-	case "initialized":
+	case "initialized", "notifications/initialized":
 		// Notification, no response needed
+		return
 	case "tools/list":
 		s.handleListTools(req)
 	case "tools/call":
