@@ -523,8 +523,8 @@ func (s *mcpServer) callStartKubeshark(args map[string]any) (string, bool) {
 		cmdArgs = append(cmdArgs, "-s", v)
 	}
 
-	// Execute the command in detached mode (headless)
-	cmdArgs = append(cmdArgs, "--headless")
+	// Execute the command in headless mode (no browser popup)
+	cmdArgs = append(cmdArgs, "--set", "headless=true")
 
 	cmd := exec.Command(misc.Program, cmdArgs...)
 	output, err := cmd.CombinedOutput()
