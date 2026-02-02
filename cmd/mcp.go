@@ -13,22 +13,44 @@ var mcpCmd = &cobra.Command{
 	Long: `Run an MCP server over stdio that exposes Kubeshark's L7 API visibility
 to AI assistants like Claude Desktop.
 
-The MCP server establishes a connection to Kubeshark via port-forward and
-provides tools for:
+TOOLS PROVIDED:
+
+Cluster Management (work without Kubeshark running):
+  - check_kubeshark_status: Check if Kubeshark is running in the cluster
+  - start_kubeshark: Start Kubeshark to capture traffic
+  - stop_kubeshark: Stop Kubeshark and clean up resources
+
+Traffic Analysis (require Kubeshark running):
   - list_workloads: Discover pods, services, namespaces, and nodes with L7 traffic
   - list_api_calls: Query L7 API transactions (HTTP, gRPC, etc.)
   - get_api_call: Get detailed information about a specific API call
   - get_api_stats: Get aggregated API statistics
 
-To use with Claude Desktop, add to your claude_desktop_config.json:
+CONFIGURATION:
+
+To use with Claude Desktop, add to your claude_desktop_config.json
+(typically at ~/Library/Application Support/Claude/claude_desktop_config.json):
+
   {
     "mcpServers": {
       "kubeshark": {
-        "command": "kubeshark",
-        "args": ["mcp"]
+        "command": "/path/to/kubeshark",
+        "args": ["mcp"],
+        "env": {
+          "PATH": "/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin",
+          "HOME": "/Users/YOUR_USERNAME",
+          "KUBECONFIG": "/Users/YOUR_USERNAME/.kube/config"
+        }
       }
     }
-  }`,
+  }
+
+IMPORTANT: The "env" section is required because MCP servers run in a sandboxed
+environment without access to your shell's PATH or environment variables. Without
+it, kubectl commands will fail with authentication errors.
+
+For EKS clusters, ensure /usr/local/bin is in PATH (for aws CLI).
+For GKE clusters, ensure gcloud is accessible in PATH.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		runMCP()
 		return nil
