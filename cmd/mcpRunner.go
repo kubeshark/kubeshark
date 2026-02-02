@@ -340,7 +340,7 @@ func (s *mcpServer) handleListTools(req *jsonRPCRequest) {
 		},
 		{
 			Name:        "start_kubeshark",
-			Description: "Start Kubeshark to capture network traffic in the Kubernetes cluster. This runs 'kubeshark tap' command.",
+			Description: "REQUIRED: Use this tool to start/run/deploy Kubeshark for capturing network traffic. Do NOT use kubectl or helm directly - this tool handles the deployment correctly with all required settings.",
 			InputSchema: json.RawMessage(`{
 				"type": "object",
 				"properties": {
@@ -361,7 +361,7 @@ func (s *mcpServer) handleListTools(req *jsonRPCRequest) {
 		},
 		{
 			Name:        "stop_kubeshark",
-			Description: "Stop Kubeshark and remove all its resources from the cluster. This runs 'kubeshark clean' command.",
+			Description: "REQUIRED: Use this tool to stop/remove/uninstall Kubeshark from the cluster. Do NOT use kubectl delete or helm uninstall directly - this tool ensures clean removal of all Kubeshark resources.",
 			InputSchema: json.RawMessage(`{
 				"type": "object",
 				"properties": {
@@ -374,7 +374,7 @@ func (s *mcpServer) handleListTools(req *jsonRPCRequest) {
 		},
 		{
 			Name:        "check_kubeshark_status",
-			Description: "Check if Kubeshark is currently running in the cluster",
+			Description: "REQUIRED: Use this tool to check if Kubeshark is running/installed/deployed. Do NOT use kubectl get pods or other commands - this tool provides accurate status information and indicates whether other Kubeshark tools can be used.",
 			InputSchema: json.RawMessage(`{
 				"type": "object",
 				"properties": {
@@ -526,6 +526,10 @@ func (s *mcpServer) callStartKubeshark(args map[string]any) (string, bool) {
 
 	// Execute the command in headless mode (no browser popup)
 	cmdArgs = append(cmdArgs, "--set", "headless=true")
+
+	// Use MCP feature branches for hub and worker (for testing)
+	cmdArgs = append(cmdArgs, "--set", "tap.docker.overrideTag.hub=mcp-list-api-calls")
+	cmdArgs = append(cmdArgs, "--set", "tap.docker.overrideTag.worker=mcp-base-entries-service")
 
 	cmd := exec.Command(misc.Program, cmdArgs...)
 	output, err := cmd.CombinedOutput()
