@@ -49,12 +49,14 @@ type jsonRPCError struct {
 type mcpInitializeResult struct {
 	ProtocolVersion string `json:"protocolVersion"`
 	Capabilities    struct {
-		Tools struct{} `json:"tools"`
+		Tools   struct{} `json:"tools"`
+		Prompts struct{} `json:"prompts"`
 	} `json:"capabilities"`
 	ServerInfo struct {
 		Name    string `json:"name"`
 		Version string `json:"version"`
 	} `json:"serverInfo"`
+	Instructions string `json:"instructions,omitempty"`
 }
 
 type mcpTool struct {
@@ -80,6 +82,28 @@ type mcpCallToolResult struct {
 type mcpContent struct {
 	Type string `json:"type"`
 	Text string `json:"text"`
+}
+
+type mcpPrompt struct {
+	Name        string `json:"name"`
+	Description string `json:"description,omitempty"`
+}
+
+type mcpListPromptsResult struct {
+	Prompts []mcpPrompt `json:"prompts"`
+}
+
+type mcpGetPromptParams struct {
+	Name string `json:"name"`
+}
+
+type mcpPromptMessage struct {
+	Role    string     `json:"role"`
+	Content mcpContent `json:"content"`
+}
+
+type mcpGetPromptResult struct {
+	Messages []mcpPromptMessage `json:"messages"`
 }
 
 // MCP Server
@@ -195,6 +219,10 @@ func (s *mcpServer) handleRequest(req *jsonRPCRequest) {
 		s.handleListTools(req)
 	case "tools/call":
 		s.handleCallTool(req)
+	case "prompts/list":
+		s.handleListPrompts(req)
+	case "prompts/get":
+		s.handleGetPrompt(req)
 	case "ping":
 		s.sendResult(req.ID, map[string]any{})
 	default:
@@ -205,6 +233,12 @@ func (s *mcpServer) handleRequest(req *jsonRPCRequest) {
 func (s *mcpServer) handleInitialize(req *jsonRPCRequest) {
 	result := mcpInitializeResult{
 		ProtocolVersion: "2024-11-05",
+		Instructions: `When working with Kubeshark, ALWAYS use the provided MCP tools instead of kubectl or helm commands:
+- To check if Kubeshark is running: use 'check_kubeshark_status' (NOT kubectl get pods)
+- To start Kubeshark: use 'start_kubeshark' (NOT kubectl apply or helm install)
+- To stop Kubeshark: use 'stop_kubeshark' (NOT kubectl delete or helm uninstall)
+- To query traffic data: use 'list_workloads', 'list_api_calls', 'get_api_call', 'get_api_stats'
+These tools provide proper integration and accurate results.`,
 	}
 	result.ServerInfo.Name = "kubeshark-mcp"
 	result.ServerInfo.Version = "1.0.0"
@@ -388,6 +422,52 @@ func (s *mcpServer) handleListTools(req *jsonRPCRequest) {
 	}
 
 	s.sendResult(req.ID, mcpListToolsResult{Tools: tools})
+}
+
+func (s *mcpServer) handleListPrompts(req *jsonRPCRequest) {
+	prompts := []mcpPrompt{
+		{
+			Name:        "kubeshark_usage",
+			Description: "Instructions for using Kubeshark MCP tools correctly",
+		},
+	}
+	s.sendResult(req.ID, mcpListPromptsResult{Prompts: prompts})
+}
+
+func (s *mcpServer) handleGetPrompt(req *jsonRPCRequest) {
+	var params mcpGetPromptParams
+	if err := json.Unmarshal(req.Params, &params); err != nil {
+		s.sendError(req.ID, -32602, "Invalid params", err.Error())
+		return
+	}
+
+	if params.Name != "kubeshark_usage" {
+		s.sendError(req.ID, -32602, "Unknown prompt", params.Name)
+		return
+	}
+
+	result := mcpGetPromptResult{
+		Messages: []mcpPromptMessage{
+			{
+				Role: "user",
+				Content: mcpContent{
+					Type: "text",
+					Text: `When working with Kubeshark, you MUST use the MCP tools provided - do NOT use kubectl, helm, or other CLI commands directly.
+
+IMPORTANT RULES:
+1. To check Kubeshark status: ALWAYS use 'check_kubeshark_status' tool (NOT 'kubectl get pods')
+2. To start Kubeshark: ALWAYS use 'start_kubeshark' tool (NOT 'kubectl apply' or 'helm install')
+3. To stop Kubeshark: ALWAYS use 'stop_kubeshark' tool (NOT 'kubectl delete' or 'helm uninstall')
+4. To query captured traffic: Use 'list_workloads', 'list_api_calls', 'get_api_call', 'get_api_stats'
+
+The MCP tools handle all the complexity of deployment, configuration, and API communication. Using kubectl/helm directly may cause issues or provide incomplete information.
+
+When the user asks about Kubeshark status, traffic, or wants to start/stop Kubeshark, use the appropriate MCP tool immediately.`,
+				},
+			},
+		},
+	}
+	s.sendResult(req.ID, result)
 }
 
 func (s *mcpServer) handleCallTool(req *jsonRPCRequest) {

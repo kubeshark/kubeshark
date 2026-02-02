@@ -78,6 +78,24 @@ func TestMCP_Initialize(t *testing.T) {
 	if serverInfo["name"] != "kubeshark-mcp" {
 		t.Errorf("Expected server name kubeshark-mcp, got %v", serverInfo["name"])
 	}
+
+	// Verify instructions are included
+	instructions, ok := result["instructions"].(string)
+	if !ok || instructions == "" {
+		t.Error("Expected non-empty instructions in initialize response")
+	}
+	if !strings.Contains(instructions, "check_kubeshark_status") {
+		t.Error("Instructions should mention check_kubeshark_status tool")
+	}
+
+	// Verify capabilities include prompts
+	capabilities, ok := result["capabilities"].(map[string]any)
+	if !ok {
+		t.Fatalf("capabilities is not a map")
+	}
+	if _, hasPrompts := capabilities["prompts"]; !hasPrompts {
+		t.Error("Expected prompts capability")
+	}
 }
 
 func TestMCP_Ping(t *testing.T) {
@@ -130,6 +148,92 @@ func TestMCP_UnknownMethod(t *testing.T) {
 	}
 	if resp.Error.Message != "Method not found" {
 		t.Errorf("Expected 'Method not found', got %s", resp.Error.Message)
+	}
+}
+
+func TestMCP_PromptsList(t *testing.T) {
+	s := newTestMCPServer()
+	output := sendRequest(s, "prompts/list", 1, nil)
+	resp := parseResponse(t, output)
+
+	if resp.Error != nil {
+		t.Fatalf("Unexpected error: %v", resp.Error)
+	}
+
+	result, ok := resp.Result.(map[string]any)
+	if !ok {
+		t.Fatalf("Result is not a map: %T", resp.Result)
+	}
+
+	prompts, ok := result["prompts"].([]any)
+	if !ok {
+		t.Fatalf("prompts is not an array: %T", result["prompts"])
+	}
+
+	if len(prompts) != 1 {
+		t.Errorf("Expected 1 prompt, got %d", len(prompts))
+	}
+
+	prompt := prompts[0].(map[string]any)
+	if prompt["name"] != "kubeshark_usage" {
+		t.Errorf("Expected prompt name 'kubeshark_usage', got %v", prompt["name"])
+	}
+}
+
+func TestMCP_PromptsGet(t *testing.T) {
+	s := newTestMCPServer()
+	params := map[string]any{"name": "kubeshark_usage"}
+	output := sendRequest(s, "prompts/get", 1, params)
+	resp := parseResponse(t, output)
+
+	if resp.Error != nil {
+		t.Fatalf("Unexpected error: %v", resp.Error)
+	}
+
+	result, ok := resp.Result.(map[string]any)
+	if !ok {
+		t.Fatalf("Result is not a map: %T", resp.Result)
+	}
+
+	messages, ok := result["messages"].([]any)
+	if !ok || len(messages) == 0 {
+		t.Fatalf("Expected messages array with at least one message")
+	}
+
+	msg := messages[0].(map[string]any)
+	if msg["role"] != "user" {
+		t.Errorf("Expected role 'user', got %v", msg["role"])
+	}
+
+	content := msg["content"].(map[string]any)
+	text := content["text"].(string)
+
+	// Verify the prompt contains key instructions
+	expectedPhrases := []string{
+		"check_kubeshark_status",
+		"start_kubeshark",
+		"stop_kubeshark",
+		"NOT",
+		"kubectl",
+	}
+	for _, phrase := range expectedPhrases {
+		if !strings.Contains(text, phrase) {
+			t.Errorf("Prompt should contain '%s'", phrase)
+		}
+	}
+}
+
+func TestMCP_PromptsGet_UnknownPrompt(t *testing.T) {
+	s := newTestMCPServer()
+	params := map[string]any{"name": "unknown_prompt"}
+	output := sendRequest(s, "prompts/get", 1, params)
+	resp := parseResponse(t, output)
+
+	if resp.Error == nil {
+		t.Fatal("Expected error for unknown prompt")
+	}
+	if resp.Error.Code != -32602 {
+		t.Errorf("Expected error code -32602, got %d", resp.Error.Code)
 	}
 }
 
