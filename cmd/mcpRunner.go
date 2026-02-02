@@ -317,6 +317,11 @@ func (s *mcpServer) handleListTools(req *jsonRPCRequest) {
 						"type": "integer",
 						"description": "Maximum number of results (default: 100)",
 						"default": 100
+					},
+					"group_by": {
+						"type": "string",
+						"description": "Group results by: node, ns (namespace), or worker",
+						"enum": ["node", "ns", "worker"]
 					}
 				}
 			}`),
@@ -531,7 +536,7 @@ func (s *mcpServer) callListAPICalls(args map[string]any) (string, bool) {
 	}
 
 	query := url.Values{}
-	for _, key := range []string{"src_ns", "src_pod", "dst_ns", "dst_pod", "dst_svc", "proto", "method", "path", "status"} {
+	for _, key := range []string{"src_ns", "src_pod", "dst_ns", "dst_pod", "dst_svc", "proto", "method", "path", "status", "group_by"} {
 		if v, ok := args[key].(string); ok && v != "" {
 			query.Set(key, v)
 		}
