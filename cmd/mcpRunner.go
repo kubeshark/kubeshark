@@ -115,18 +115,20 @@ type mcpServer struct {
 	stdout             io.Writer
 	backendInitialized bool
 	backendMu          sync.Mutex
+	tapSetFlags        []string // Flags to pass to 'kubeshark tap' when starting
 }
 
-func runMCP() {
+func runMCPWithConfig(tapSetFlags []string) {
 	// Disable zerolog output to stderr (MCP uses stdio)
 	zerolog.SetGlobalLevel(zerolog.Disabled)
 
 	// Initialize the MCP server without requiring the backend to be running
 	// Backend connection will be established lazily when API tools are called
 	server := &mcpServer{
-		httpClient: &http.Client{},
-		stdin:      os.Stdin,
-		stdout:     os.Stdout,
+		httpClient:  &http.Client{},
+		stdin:       os.Stdin,
+		stdout:      os.Stdout,
+		tapSetFlags: tapSetFlags,
 	}
 
 	server.run()
@@ -607,6 +609,11 @@ func (s *mcpServer) callStartKubeshark(args map[string]any) (string, bool) {
 	// Add release namespace if provided
 	if v, ok := args["release_namespace"].(string); ok && v != "" {
 		cmdArgs = append(cmdArgs, "-s", v)
+	}
+
+	// Add any custom --tap-set flags from MCP config
+	for _, setFlag := range s.tapSetFlags {
+		cmdArgs = append(cmdArgs, "--set", setFlag)
 	}
 
 	// Execute the command in headless mode (no browser popup)

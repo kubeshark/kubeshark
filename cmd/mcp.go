@@ -7,6 +7,8 @@ import (
 	"github.com/spf13/cobra"
 )
 
+var mcpTapSetFlags []string
+
 var mcpCmd = &cobra.Command{
 	Use:   "mcp",
 	Short: "Run MCP (Model Context Protocol) server for AI assistant integration",
@@ -50,9 +52,25 @@ environment without access to your shell's PATH or environment variables. Withou
 it, kubectl commands will fail with authentication errors.
 
 For EKS clusters, ensure /usr/local/bin is in PATH (for aws CLI).
-For GKE clusters, ensure gcloud is accessible in PATH.`,
+For GKE clusters, ensure gcloud is accessible in PATH.
+
+CUSTOM DOCKER IMAGES:
+
+To use custom Docker images when starting Kubeshark, add --tap-set flags:
+
+  {
+    "mcpServers": {
+      "kubeshark": {
+        "command": "/path/to/kubeshark",
+        "args": ["mcp", "--tap-set", "tap.docker.tag=v52.3"],
+        ...
+      }
+    }
+  }
+
+Multiple --tap-set flags can be used for different settings.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		runMCP()
+		runMCPWithConfig(mcpTapSetFlags)
 		return nil
 	},
 }
@@ -68,4 +86,5 @@ func init() {
 	mcpCmd.Flags().Uint16(configStructs.ProxyFrontPortLabel, defaultTapConfig.Proxy.Front.Port, "Provide a custom port for the proxy/port-forward")
 	mcpCmd.Flags().String(configStructs.ProxyHostLabel, defaultTapConfig.Proxy.Host, "Provide a custom host for the proxy/port-forward")
 	mcpCmd.Flags().StringP(configStructs.ReleaseNamespaceLabel, "s", defaultTapConfig.Release.Namespace, "Release namespace of Kubeshark")
+	mcpCmd.Flags().StringArrayVar(&mcpTapSetFlags, "tap-set", []string{}, "Set values to pass to 'kubeshark tap' when using start_kubeshark (can be used multiple times)")
 }
