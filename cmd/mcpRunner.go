@@ -612,10 +612,6 @@ func (s *mcpServer) callStartKubeshark(args map[string]any) (string, bool) {
 	// Execute the command in headless mode (no browser popup)
 	cmdArgs = append(cmdArgs, "--set", "headless=true")
 
-	// Use MCP feature branches for hub and worker (for testing)
-	cmdArgs = append(cmdArgs, "--set", "tap.docker.overrideTag.hub=mcp-list-api-calls")
-	cmdArgs = append(cmdArgs, "--set", "tap.docker.overrideTag.worker=mcp-base-entries-service")
-
 	cmd := exec.Command(misc.Program, cmdArgs...)
 	output, err := cmd.CombinedOutput()
 	if err != nil {
