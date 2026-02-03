@@ -174,44 +174,6 @@ func runKubesharkWithTimeout(t *testing.T, binary string, timeout time.Duration,
 	return output, err
 }
 
-// runKubesharkBackground starts the kubeshark binary in the background.
-// Returns a function to stop it and get the output.
-func runKubesharkBackground(t *testing.T, binary string, args ...string) (stop func() (string, error)) {
-	t.Helper()
-
-	ctx, cancel := context.WithCancel(context.Background())
-
-	t.Logf("Starting background: %s %s", binary, strings.Join(args, " "))
-
-	cmd := exec.CommandContext(ctx, binary, args...)
-
-	var stdout, stderr bytes.Buffer
-	cmd.Stdout = &stdout
-	cmd.Stderr = &stderr
-
-	if err := cmd.Start(); err != nil {
-		cancel()
-		t.Fatalf("Failed to start background command: %v", err)
-	}
-
-	return func() (string, error) {
-		cancel()
-		err := cmd.Wait()
-
-		output := stdout.String()
-		if stderr.Len() > 0 {
-			output += "\n[stderr]\n" + stderr.String()
-		}
-
-		// Context cancellation is expected, not an error
-		if ctx.Err() == context.Canceled {
-			return output, nil
-		}
-
-		return output, err
-	}
-}
-
 // cleanupKubeshark ensures Kubeshark is not running in the cluster.
 // TEMPLATE: Modify this for your project's cleanup requirements.
 func cleanupKubeshark(t *testing.T, binary string) {
@@ -272,11 +234,4 @@ func isKubesharkRunning(t *testing.T) bool {
 	}
 
 	return strings.TrimSpace(string(output)) != ""
-}
-
-// sendMCPRequest sends a JSON-RPC request to the MCP server via stdin/stdout.
-// This is a helper specifically for MCP testing.
-func sendMCPRequest(t *testing.T, stdin *bytes.Buffer, request string) {
-	t.Helper()
-	stdin.WriteString(request + "\n")
 }
