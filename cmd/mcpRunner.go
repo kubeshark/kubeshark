@@ -622,11 +622,20 @@ func (s *mcpServer) callStartKubeshark(args map[string]any) (string, bool) {
 	// Execute the command in headless mode (no browser popup)
 	cmdArgs = append(cmdArgs, "--set", "headless=true")
 
+	// Log progress to stderr (MCP clients can see this in their logs)
+	logProgress := func(msg string) {
+		_, _ = fmt.Fprintf(os.Stderr, "[kubeshark-mcp] %s\n", msg)
+	}
+
+	logProgress(fmt.Sprintf("Starting Kubeshark: %s %s", misc.Program, strings.Join(cmdArgs, " ")))
+
 	// Start the command in the background (kubeshark tap runs continuously)
 	cmd := exec.Command(misc.Program, cmdArgs...)
 	if err := cmd.Start(); err != nil {
 		return fmt.Sprintf("Failed to start Kubeshark: %v", err), true
 	}
+
+	logProgress("Kubeshark process started, waiting for pods to be ready...")
 
 	// Wait for Kubeshark to be ready (poll for pods)
 	kubernetesProvider, err := getKubernetesProviderForCli(true, true)
@@ -643,9 +652,15 @@ func (s *mcpServer) callStartKubeshark(args map[string]any) (string, bool) {
 			for _, pod := range pods {
 				if strings.Contains(pod.Name, "hub") && pod.Status.Phase == "Running" {
 					ready = true
+					logProgress("Hub pod is running")
 					break
 				}
 			}
+			if !ready {
+				logProgress(fmt.Sprintf("Waiting for hub pod... (%d pods found, checking status)", len(pods)))
+			}
+		} else if i > 0 && i%3 == 0 {
+			logProgress("Waiting for Kubeshark pods to be created...")
 		}
 		if ready {
 			break
@@ -660,6 +675,7 @@ func (s *mcpServer) callStartKubeshark(args map[string]any) (string, bool) {
 	}
 
 	if !ready {
+		logProgress("Timeout waiting for pods to be ready")
 		return fmt.Sprintf("Kubeshark started but pods are not ready yet. Command: %s %s\nCheck status with check_kubeshark_status tool.", misc.Program, strings.Join(cmdArgs, " ")), false
 	}
 
