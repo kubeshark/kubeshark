@@ -74,6 +74,22 @@ clean: ## Clean all build artifacts.
 test: ## Run cli tests.
 	@go test ./... -coverpkg=./... -race -coverprofile=coverage.out -covermode=atomic
 
+test-integration: ## Run integration tests (requires Kubernetes cluster).
+	@echo "Running integration tests..."
+	@go test -tags=integration -timeout $${INTEGRATION_TIMEOUT:-5m} ./integration/...
+
+test-integration-verbose: ## Run integration tests with verbose output.
+	@echo "Running integration tests (verbose)..."
+	@go test -tags=integration -timeout $${INTEGRATION_TIMEOUT:-5m} -v ./integration/...
+
+test-integration-mcp: ## Run only MCP integration tests.
+	@echo "Running MCP integration tests..."
+	@go test -tags=integration -timeout $${INTEGRATION_TIMEOUT:-5m} -v ./integration/ -run "MCP"
+
+test-integration-short: ## Run quick integration tests (skips long-running tests).
+	@echo "Running quick integration tests..."
+	@go test -tags=integration -timeout $${INTEGRATION_TIMEOUT:-2m} -short -v ./integration/...
+
 lint: ## Lint the source code.
 	golangci-lint run
 
