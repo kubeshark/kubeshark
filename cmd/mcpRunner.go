@@ -153,7 +153,7 @@ func (s *mcpServer) ensureBackendConnection() string {
 	// Check if Kubeshark services exist
 	exists, err := kubernetesProvider.DoesServiceExist(ctx, config.Config.Tap.Release.Namespace, kubernetes.FrontServiceName)
 	if err != nil || !exists {
-		return fmt.Sprintf("Kubeshark is not running. Use the 'start_kubeshark' tool to start it first.")
+		return "Kubeshark is not running. Use the 'start_kubeshark' tool to start it first."
 	}
 
 	// Start proxy to frontend
@@ -699,7 +699,7 @@ func (s *mcpServer) doGet(path string, query url.Values) (string, bool) {
 	if err != nil {
 		return fmt.Sprintf("Error calling Hub API: %v", err), true
 	}
-	defer resp.Body.Close()
+	defer func() { _ = resp.Body.Close() }()
 
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
@@ -746,5 +746,5 @@ func (s *mcpServer) send(resp jsonRPCResponse) {
 		writeErrorToStderr("Failed to marshal response: %v", err)
 		return
 	}
-	fmt.Fprintln(s.stdout, string(data))
+	_, _ = fmt.Fprintln(s.stdout, string(data))
 }

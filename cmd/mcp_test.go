@@ -3,7 +3,6 @@ package cmd
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"net/http/httptest"
 	"strings"
@@ -426,7 +425,7 @@ func TestMCP_ListWorkloads(t *testing.T) {
 			t.Errorf("Expected path /workloads, got %s", r.URL.Path)
 		}
 		w.Header().Set("Content-Type", "application/json")
-		w.Write([]byte(mockResponse))
+		_, _ = w.Write([]byte(mockResponse))
 	})
 	defer mockServer.Close()
 
@@ -463,7 +462,7 @@ func TestMCP_ListWorkloads_WithLabels(t *testing.T) {
 		if r.URL.Query().Get("labels") != "app=nginx" {
 			t.Errorf("Expected labels=app=nginx, got %s", r.URL.Query().Get("labels"))
 		}
-		w.Write([]byte(`{"workloads": []}`))
+		_, _ = w.Write([]byte(`{"workloads": []}`))
 	})
 	defer mockServer.Close()
 
@@ -484,7 +483,7 @@ func TestMCP_ListAPICalls(t *testing.T) {
 		if r.URL.Path != "/calls" {
 			t.Errorf("Expected path /calls, got %s", r.URL.Path)
 		}
-		w.Write([]byte(mockResponse))
+		_, _ = w.Write([]byte(mockResponse))
 	})
 	defer mockServer.Close()
 
@@ -533,7 +532,7 @@ func TestMCP_ListAPICalls_AllFilters(t *testing.T) {
 				t.Errorf("Expected %s=%s, got %s", key, expected, q.Get(key))
 			}
 		}
-		w.Write([]byte(`{"calls": []}`))
+		_, _ = w.Write([]byte(`{"calls": []}`))
 	})
 	defer mockServer.Close()
 
@@ -575,7 +574,7 @@ func TestMCP_GetAPICall(t *testing.T) {
 		if r.URL.Query().Get("include_payload") != "true" {
 			t.Errorf("Expected include_payload=true")
 		}
-		w.Write([]byte(mockResponse))
+		_, _ = w.Write([]byte(mockResponse))
 	})
 	defer mockServer.Close()
 
@@ -647,7 +646,7 @@ func TestMCP_GetAPIStats(t *testing.T) {
 		if r.URL.Query().Get("group_by") != "endpoint" {
 			t.Errorf("Expected group_by=endpoint")
 		}
-		w.Write([]byte(mockResponse))
+		_, _ = w.Write([]byte(mockResponse))
 	})
 	defer mockServer.Close()
 
@@ -678,7 +677,7 @@ func TestMCP_GetAPIStats(t *testing.T) {
 func TestMCP_APITools_BackendError(t *testing.T) {
 	s, mockServer := newTestMCPServerWithMockBackend(func(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
-		w.Write([]byte(`{"error": "Internal server error"}`))
+		_, _ = w.Write([]byte(`{"error": "Internal server error"}`))
 	})
 	defer mockServer.Close()
 
@@ -845,7 +844,7 @@ func TestMCP_ResponseFormat_JSONRPCVersion(t *testing.T) {
 
 func TestMCP_ToolCallResult_ContentFormat(t *testing.T) {
 	s, mockServer := newTestMCPServerWithMockBackend(func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte(`{"data": "test"}`))
+		_, _ = w.Write([]byte(`{"data": "test"}`))
 	})
 	defer mockServer.Close()
 
@@ -1017,7 +1016,7 @@ func TestMCP_PrettyPrintJSON(t *testing.T) {
 	compactJSON := `{"key":"value","nested":{"a":1}}`
 
 	s, mockServer := newTestMCPServerWithMockBackend(func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte(compactJSON))
+		_, _ = w.Write([]byte(compactJSON))
 	})
 	defer mockServer.Close()
 
@@ -1053,7 +1052,7 @@ func TestMCP_URLEncoding(t *testing.T) {
 		if path != "/api/users?id=123" {
 			t.Errorf("Expected path with special chars, got: %s", path)
 		}
-		w.Write([]byte(`{}`))
+		_, _ = w.Write([]byte(`{}`))
 	})
 	defer mockServer.Close()
 
@@ -1074,7 +1073,7 @@ func TestMCP_GetAPICall_URLEscaping(t *testing.T) {
 			// Note: URL.Path is decoded, URL.RawPath is encoded
 			t.Logf("Path: %s, RawPath: %s", r.URL.Path, r.URL.RawPath)
 		}
-		w.Write([]byte(`{"id": "abc/123"}`))
+		_, _ = w.Write([]byte(`{"id": "abc/123"}`))
 	})
 	defer mockServer.Close()
 
@@ -1093,7 +1092,7 @@ func TestMCP_EmptyArguments(t *testing.T) {
 		if r.URL.RawQuery != "" {
 			t.Errorf("Expected no query params, got: %s", r.URL.RawQuery)
 		}
-		w.Write([]byte(`{}`))
+		_, _ = w.Write([]byte(`{}`))
 	})
 	defer mockServer.Close()
 
@@ -1106,7 +1105,7 @@ func TestMCP_EmptyArguments(t *testing.T) {
 
 func TestMCP_NilArguments(t *testing.T) {
 	s, mockServer := newTestMCPServerWithMockBackend(func(w http.ResponseWriter, r *http.Request) {
-		w.Write([]byte(`{}`))
+		_, _ = w.Write([]byte(`{}`))
 	})
 	defer mockServer.Close()
 
@@ -1154,13 +1153,13 @@ func TestMCP_FullConversation(t *testing.T) {
 	mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case "/workloads":
-			w.Write([]byte(`{"workloads": [{"name": "nginx", "namespace": "default"}]}`))
+			_, _ = w.Write([]byte(`{"workloads": [{"name": "nginx", "namespace": "default"}]}`))
 		case "/calls":
-			w.Write([]byte(`{"calls": [{"id": "1", "method": "GET"}]}`))
+			_, _ = w.Write([]byte(`{"calls": [{"id": "1", "method": "GET"}]}`))
 		case "/calls/1":
-			w.Write([]byte(`{"id": "1", "method": "GET", "path": "/health"}`))
+			_, _ = w.Write([]byte(`{"id": "1", "method": "GET", "path": "/health"}`))
 		case "/stats":
-			w.Write([]byte(`{"total": 100}`))
+			_, _ = w.Write([]byte(`{"total": 100}`))
 		default:
 			w.WriteHeader(404)
 		}
@@ -1171,9 +1170,9 @@ func TestMCP_FullConversation(t *testing.T) {
 		`{"jsonrpc":"2.0","id":1,"method":"initialize"}`,
 		`{"jsonrpc":"2.0","method":"notifications/initialized"}`,
 		`{"jsonrpc":"2.0","id":2,"method":"tools/list"}`,
-		fmt.Sprintf(`{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"list_workloads","arguments":{}}}`),
-		fmt.Sprintf(`{"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"list_api_calls","arguments":{}}}`),
-		fmt.Sprintf(`{"jsonrpc":"2.0","id":5,"method":"tools/call","params":{"name":"get_api_call","arguments":{"id":"1"}}}`),
+		`{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"list_workloads","arguments":{}}}`,
+		`{"jsonrpc":"2.0","id":4,"method":"tools/call","params":{"name":"list_api_calls","arguments":{}}}`,
+		`{"jsonrpc":"2.0","id":5,"method":"tools/call","params":{"name":"get_api_call","arguments":{"id":"1"}}}`,
 	}
 
 	input := strings.Join(conversation, "\n") + "\n"
