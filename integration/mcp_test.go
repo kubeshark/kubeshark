@@ -78,8 +78,14 @@ func startMCPSession(t *testing.T, binary string, args ...string) *mcpSession {
 	}
 }
 
-// sendRequest sends a JSON-RPC request and returns the response.
+// sendRequest sends a JSON-RPC request and returns the response (30s timeout).
 func (s *mcpSession) sendRequest(t *testing.T, req MCPRequest) MCPResponse {
+	t.Helper()
+	return s.sendRequestWithTimeout(t, req, 30*time.Second)
+}
+
+// sendRequestWithTimeout sends a JSON-RPC request with a custom timeout.
+func (s *mcpSession) sendRequestWithTimeout(t *testing.T, req MCPRequest, timeout time.Duration) MCPResponse {
 	t.Helper()
 
 	reqBytes, err := json.Marshal(req)
@@ -116,18 +122,24 @@ func (s *mcpSession) sendRequest(t *testing.T, req MCPRequest) MCPResponse {
 		return resp
 	case err := <-errChan:
 		t.Fatalf("Failed to read response: %v", err)
-	case <-time.After(30 * time.Second):
-		t.Fatal("Timeout waiting for MCP response")
+	case <-time.After(timeout):
+		t.Fatalf("Timeout waiting for MCP response after %v", timeout)
 	}
 
 	return MCPResponse{}
 }
 
-// callTool invokes an MCP tool and returns the response.
+// callTool invokes an MCP tool and returns the response (30s timeout).
 func (s *mcpSession) callTool(t *testing.T, id int, toolName string, args map[string]interface{}) MCPResponse {
 	t.Helper()
+	return s.callToolWithTimeout(t, id, toolName, args, 30*time.Second)
+}
 
-	return s.sendRequest(t, MCPRequest{
+// callToolWithTimeout invokes an MCP tool with a custom timeout.
+func (s *mcpSession) callToolWithTimeout(t *testing.T, id int, toolName string, args map[string]interface{}, timeout time.Duration) MCPResponse {
+	t.Helper()
+
+	return s.sendRequestWithTimeout(t, MCPRequest{
 		JSONRPC: "2.0",
 		ID:      id,
 		Method:  "tools/call",
@@ -135,7 +147,7 @@ func (s *mcpSession) callTool(t *testing.T, id int, toolName string, args map[st
 			"name":      toolName,
 			"arguments": args,
 		},
-	})
+	}, timeout)
 }
 
 // close terminates the MCP session.
@@ -330,8 +342,8 @@ func TestMCP_StartKubeshark(t *testing.T) {
 	// Start Kubeshark - this may take a while
 	t.Log("Starting Kubeshark (this may take a few minutes)...")
 
-	// Use a longer timeout for this test
-	resp := session.callTool(t, 2, "start_kubeshark", nil)
+	// Use a longer timeout for start (3 minutes)
+	resp := session.callToolWithTimeout(t, 2, "start_kubeshark", nil, 3*time.Minute)
 
 	if resp.Error != nil {
 		t.Fatalf("start_kubeshark failed: %s", resp.Error.Message)
@@ -374,26 +386,13 @@ func TestMCP_StopKubeshark(t *testing.T) {
 	requireKubernetesCluster(t)
 	binary := getKubesharkBinary(t)
 
-	// If Kubeshark is not running, start it first
-	if !isKubesharkRunning(t) {
-		t.Log("Kubeshark not running, starting it first...")
-		_, err := runKubesharkWithTimeout(t, binary, startupTimeout, "tap", "--set", "headless=true")
-		if err != nil {
-			t.Skipf("Could not start Kubeshark for test: %v", err)
-		}
-		// Wait for it to be ready
-		if err := waitForKubesharkReady(t, binary, startupTimeout); err != nil {
-			t.Skipf("Kubeshark did not become ready: %v", err)
-		}
-	}
-
 	session := startMCPSession(t, binary)
 	defer session.close()
 
-	// Initialize
+	// Initialize first
 	session.sendRequest(t, MCPRequest{
 		JSONRPC: "2.0",
-		ID:      1,
+		ID:      0,
 		Method:  "initialize",
 		Params: map[string]interface{}{
 			"protocolVersion": "2024-11-05",
@@ -402,9 +401,18 @@ func TestMCP_StopKubeshark(t *testing.T) {
 		},
 	})
 
-	// Stop Kubeshark
+	// If Kubeshark is not running, start it first using MCP tool
+	if !isKubesharkRunning(t) {
+		t.Log("Kubeshark not running, starting it first via MCP...")
+		resp := session.callToolWithTimeout(t, 1, "start_kubeshark", nil, 2*time.Minute)
+		if resp.Error != nil {
+			t.Skipf("Could not start Kubeshark for test: %v", resp.Error.Message)
+		}
+	}
+
+	// Stop Kubeshark (use longer timeout - 2 minutes)
 	t.Log("Stopping Kubeshark...")
-	resp := session.callTool(t, 2, "stop_kubeshark", nil)
+	resp := session.callToolWithTimeout(t, 2, "stop_kubeshark", nil, 2*time.Minute)
 
 	if resp.Error != nil {
 		t.Fatalf("stop_kubeshark failed: %s", resp.Error.Message)
@@ -471,9 +479,9 @@ func TestMCP_FullLifecycle(t *testing.T) {
 	}
 	t.Log("Initial status: Kubeshark not running (expected)")
 
-	// Step 2: Start Kubeshark
+	// Step 2: Start Kubeshark (use longer timeout - 3 minutes)
 	t.Log("Step 2: Starting Kubeshark...")
-	resp = session.callTool(t, 3, "start_kubeshark", nil)
+	resp = session.callToolWithTimeout(t, 3, "start_kubeshark", nil, 3*time.Minute)
 	if resp.Error != nil {
 		t.Fatalf("Start failed: %s", resp.Error.Message)
 	}
@@ -503,9 +511,9 @@ func TestMCP_FullLifecycle(t *testing.T) {
 	}
 	t.Log("Status after start: Kubeshark running (expected)")
 
-	// Step 4: Stop Kubeshark
+	// Step 4: Stop Kubeshark (use longer timeout - 2 minutes)
 	t.Log("Step 4: Stopping Kubeshark...")
-	resp = session.callTool(t, 5, "stop_kubeshark", nil)
+	resp = session.callToolWithTimeout(t, 5, "stop_kubeshark", nil, 2*time.Minute)
 	if resp.Error != nil {
 		t.Fatalf("Stop failed: %s", resp.Error.Message)
 	}

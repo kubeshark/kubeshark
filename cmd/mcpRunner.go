@@ -13,6 +13,7 @@ import (
 	"os/exec"
 	"strings"
 	"sync"
+	"time"
 
 	"github.com/kubeshark/kubeshark/config"
 	"github.com/kubeshark/kubeshark/config/configStructs"
@@ -606,8 +607,10 @@ func (s *mcpServer) callStartKubeshark(args map[string]any) (string, bool) {
 		}
 	}
 
-	// Add release namespace if provided
+	// Get release namespace
+	releaseNamespace := config.Config.Tap.Release.Namespace
 	if v, ok := args["release_namespace"].(string); ok && v != "" {
+		releaseNamespace = v
 		cmdArgs = append(cmdArgs, "-s", v)
 	}
 
@@ -619,10 +622,45 @@ func (s *mcpServer) callStartKubeshark(args map[string]any) (string, bool) {
 	// Execute the command in headless mode (no browser popup)
 	cmdArgs = append(cmdArgs, "--set", "headless=true")
 
+	// Start the command in the background (kubeshark tap runs continuously)
 	cmd := exec.Command(misc.Program, cmdArgs...)
-	output, err := cmd.CombinedOutput()
+	if err := cmd.Start(); err != nil {
+		return fmt.Sprintf("Failed to start Kubeshark: %v", err), true
+	}
+
+	// Wait for Kubeshark to be ready (poll for pods)
+	kubernetesProvider, err := getKubernetesProviderForCli(true, true)
 	if err != nil {
-		return fmt.Sprintf("Failed to start Kubeshark: %v\nOutput: %s", err, string(output)), true
+		return fmt.Sprintf("Kubeshark command started but failed to check status: %v", err), true
+	}
+
+	// Poll for up to 2 minutes for pods to be ready
+	ready := false
+	for i := 0; i < 24; i++ { // 24 * 5s = 120s
+		pods, err := kubernetesProvider.ListPodsByAppLabel(context.Background(), releaseNamespace, map[string]string{"app.kubernetes.io/name": "kubeshark"})
+		if err == nil && len(pods) > 0 {
+			// Check if at least hub pod is running
+			for _, pod := range pods {
+				if strings.Contains(pod.Name, "hub") && pod.Status.Phase == "Running" {
+					ready = true
+					break
+				}
+			}
+		}
+		if ready {
+			break
+		}
+		select {
+		case <-context.Background().Done():
+			return "Kubeshark start interrupted", true
+		default:
+			// Sleep 5 seconds before next check
+			<-time.After(5 * time.Second)
+		}
+	}
+
+	if !ready {
+		return fmt.Sprintf("Kubeshark started but pods are not ready yet. Command: %s %s\nCheck status with check_kubeshark_status tool.", misc.Program, strings.Join(cmdArgs, " ")), false
 	}
 
 	// Reset backend connection state so next API call will re-establish connection
@@ -630,7 +668,7 @@ func (s *mcpServer) callStartKubeshark(args map[string]any) (string, bool) {
 	s.backendInitialized = false
 	s.backendMu.Unlock()
 
-	return fmt.Sprintf("Kubeshark started successfully.\nCommand: %s %s\nOutput: %s", misc.Program, strings.Join(cmdArgs, " "), string(output)), false
+	return fmt.Sprintf("Kubeshark started successfully and is ready.\nCommand: %s %s", misc.Program, strings.Join(cmdArgs, " ")), false
 }
 
 func (s *mcpServer) callStopKubeshark(args map[string]any) (string, bool) {
