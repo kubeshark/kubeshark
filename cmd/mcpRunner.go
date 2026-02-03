@@ -117,22 +117,61 @@ type mcpServer struct {
 	backendInitialized bool
 	backendMu          sync.Mutex
 	tapSetFlags        []string // Flags to pass to 'kubeshark tap' when starting
+	directURL          string   // If set, connect directly to this URL (no kubectl/proxy)
+	urlMode            bool     // True when using direct URL mode
 }
 
-func runMCPWithConfig(tapSetFlags []string) {
+func runMCPWithConfig(tapSetFlags []string, directURL string) {
 	// Disable zerolog output to stderr (MCP uses stdio)
 	zerolog.SetGlobalLevel(zerolog.Disabled)
 
-	// Initialize the MCP server without requiring the backend to be running
-	// Backend connection will be established lazily when API tools are called
 	server := &mcpServer{
 		httpClient:  &http.Client{},
 		stdin:       os.Stdin,
 		stdout:      os.Stdout,
 		tapSetFlags: tapSetFlags,
+		directURL:   directURL,
+		urlMode:     directURL != "",
+	}
+
+	// If URL mode, validate the URL is accessible on startup
+	if server.urlMode {
+		if err := server.validateDirectURL(); err != nil {
+			fmt.Fprintf(os.Stderr, "[kubeshark-mcp] Error: %v\n", err)
+			os.Exit(1)
+		}
+		fmt.Fprintf(os.Stderr, "[kubeshark-mcp] Connected to Kubeshark at %s\n", directURL)
 	}
 
 	server.run()
+}
+
+// validateDirectURL checks that the direct URL is accessible
+func (s *mcpServer) validateDirectURL() error {
+	// Normalize URL - ensure it doesn't end with /
+	urlStr := strings.TrimSuffix(s.directURL, "/")
+	s.directURL = urlStr
+
+	// Use a short timeout for validation
+	client := &http.Client{Timeout: 10 * time.Second}
+
+	// Try to reach the MCP API endpoint
+	testURL := fmt.Sprintf("%s/api/mcp/workloads", urlStr)
+	resp, err := client.Get(testURL)
+	if err != nil {
+		return fmt.Errorf("cannot connect to Kubeshark at %s: %v", urlStr, err)
+	}
+	defer func() { _ = resp.Body.Close() }()
+
+	// Accept 200 OK or even 401/403 (means server is there, might need auth)
+	if resp.StatusCode >= 500 {
+		return fmt.Errorf("Kubeshark at %s returned error: %s", urlStr, resp.Status)
+	}
+
+	// Set the hub base URL
+	s.hubBaseURL = fmt.Sprintf("%s/api/mcp", urlStr)
+	s.backendInitialized = true
+	return nil
 }
 
 // ensureBackendConnection establishes connection to Kubeshark backend if not already connected
@@ -142,6 +181,11 @@ func (s *mcpServer) ensureBackendConnection() string {
 	defer s.backendMu.Unlock()
 
 	if s.backendInitialized {
+		return ""
+	}
+
+	// In URL mode, connection was validated at startup
+	if s.urlMode {
 		return ""
 	}
 
@@ -380,7 +424,11 @@ func (s *mcpServer) handleListTools(req *jsonRPCRequest) {
 				}
 			}`),
 		},
-		{
+	}
+
+	// Add cluster management tools only if not in URL mode
+	if !s.urlMode {
+		tools = append(tools, mcpTool{
 			Name:        "start_kubeshark",
 			Description: "REQUIRED: Use this tool to start/run/deploy Kubeshark for capturing network traffic. Do NOT use kubectl or helm directly - this tool handles the deployment correctly with all required settings.",
 			InputSchema: json.RawMessage(`{
@@ -400,8 +448,8 @@ func (s *mcpServer) handleListTools(req *jsonRPCRequest) {
 					}
 				}
 			}`),
-		},
-		{
+		})
+		tools = append(tools, mcpTool{
 			Name:        "stop_kubeshark",
 			Description: "REQUIRED: Use this tool to stop/remove/uninstall Kubeshark from the cluster. Do NOT use kubectl delete or helm uninstall directly - this tool ensures clean removal of all Kubeshark resources.",
 			InputSchema: json.RawMessage(`{
@@ -413,8 +461,8 @@ func (s *mcpServer) handleListTools(req *jsonRPCRequest) {
 					}
 				}
 			}`),
-		},
-		{
+		})
+		tools = append(tools, mcpTool{
 			Name:        "check_kubeshark_status",
 			Description: "REQUIRED: Use this tool to check if Kubeshark is running/installed/deployed. Do NOT use kubectl get pods or other commands - this tool provides accurate status information and indicates whether other Kubeshark tools can be used.",
 			InputSchema: json.RawMessage(`{
@@ -426,7 +474,7 @@ func (s *mcpServer) handleListTools(req *jsonRPCRequest) {
 					}
 				}
 			}`),
-		},
+		})
 	}
 
 	s.sendResult(req.ID, mcpListToolsResult{Tools: tools})
@@ -498,11 +546,23 @@ func (s *mcpServer) handleCallTool(req *jsonRPCRequest) {
 	case "get_api_stats":
 		result, isError = s.callGetAPIStats(params.Arguments)
 	case "start_kubeshark":
-		result, isError = s.callStartKubeshark(params.Arguments)
+		if s.urlMode {
+			result, isError = "This tool is not available in URL mode. Kubeshark is managed externally.", true
+		} else {
+			result, isError = s.callStartKubeshark(params.Arguments)
+		}
 	case "stop_kubeshark":
-		result, isError = s.callStopKubeshark(params.Arguments)
+		if s.urlMode {
+			result, isError = "This tool is not available in URL mode. Kubeshark is managed externally.", true
+		} else {
+			result, isError = s.callStopKubeshark(params.Arguments)
+		}
 	case "check_kubeshark_status":
-		result, isError = s.callCheckKubesharkStatus(params.Arguments)
+		if s.urlMode {
+			result, isError = fmt.Sprintf("Kubeshark is accessible at %s (URL mode - externally managed)", s.directURL), false
+		} else {
+			result, isError = s.callCheckKubesharkStatus(params.Arguments)
+		}
 	default:
 		s.sendError(req.ID, -32602, "Unknown tool", params.Name)
 		return
