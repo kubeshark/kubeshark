@@ -187,7 +187,7 @@ func cleanupKubeshark(t *testing.T, binary string) {
 	t.Log("Cleaning up any existing Kubeshark installation...")
 
 	// Run clean command, ignore errors (might not be installed)
-	_, _ = runKubeshark(t, binary, "clean", "-f")
+	_, _ = runKubeshark(t, binary, "clean")
 
 	// Wait a moment for resources to be deleted
 	time.Sleep(2 * time.Second)
