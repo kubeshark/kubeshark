@@ -44,21 +44,6 @@ To use with Claude Desktop, add to your claude_desktop_config.json
     }
   }
 
-For EKS/GKE clusters that use CLI auth plugins (aws, gcloud), you may also need
-to set the PATH environment variable:
-
-  {
-    "mcpServers": {
-      "kubeshark": {
-        "command": "/path/to/kubeshark",
-        "args": ["mcp", "--kubeconfig", "/Users/YOUR_USERNAME/.kube/config"],
-        "env": {
-          "PATH": "/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin"
-        }
-      }
-    }
-  }
-
 DIRECT URL MODE:
 
 If Kubeshark is already running and accessible via URL (e.g., exposed via ingress),
