@@ -10,6 +10,7 @@ import (
 
 var mcpURL string
 var mcpKubeconfig string
+var mcpListTools bool
 
 var mcpCmd = &cobra.Command{
 	Use:   "mcp",
@@ -81,6 +82,13 @@ Multiple --set flags can be used for different settings.`,
 		if mcpKubeconfig != "" {
 			config.Config.Kube.ConfigPathStr = mcpKubeconfig
 		}
+
+		// Handle --list-tools flag
+		if mcpListTools {
+			listMCPTools(mcpURL)
+			return nil
+		}
+
 		setFlags, _ := cmd.Flags().GetStringSlice(config.SetCommandName)
 		runMCPWithConfig(setFlags, mcpURL)
 		return nil
@@ -100,4 +108,5 @@ func init() {
 	mcpCmd.Flags().StringP(configStructs.ReleaseNamespaceLabel, "s", defaultTapConfig.Release.Namespace, "Release namespace of Kubeshark")
 	mcpCmd.Flags().StringVar(&mcpURL, "url", "", "Direct URL to Kubeshark (e.g., https://kubeshark.example.com). When set, connects directly without kubectl/proxy and disables start/stop/check tools.")
 	mcpCmd.Flags().StringVar(&mcpKubeconfig, "kubeconfig", "", "Path to kubeconfig file (e.g., /Users/me/.kube/config)")
+	mcpCmd.Flags().BoolVar(&mcpListTools, "list-tools", false, "List available MCP tools and exit")
 }

@@ -865,3 +865,30 @@ func (s *mcpServer) send(resp jsonRPCResponse) {
 	}
 	_, _ = fmt.Fprintln(s.stdout, string(data))
 }
+
+// listMCPTools prints available MCP tools to stdout
+func listMCPTools(directURL string) {
+	fmt.Println("MCP Tools")
+	fmt.Println("=========")
+	fmt.Println()
+
+	// CLI tools (always available, work without Kubeshark running)
+	if directURL == "" {
+		fmt.Println("Cluster Management (work without Kubeshark running):")
+		fmt.Println("  check_kubeshark_status  Check if Kubeshark is running in the cluster")
+		fmt.Println("  start_kubeshark         Start Kubeshark to capture traffic")
+		fmt.Println("  stop_kubeshark          Stop Kubeshark and clean up resources")
+		fmt.Println()
+	} else {
+		fmt.Printf("URL Mode: %s\n", directURL)
+		fmt.Println("  (Cluster management tools disabled - Kubeshark managed externally)")
+		fmt.Println()
+	}
+
+	// API tools (require Kubeshark running)
+	fmt.Println("Traffic Analysis (require Kubeshark running):")
+	fmt.Println("  list_workloads          List pods, services, namespaces, nodes with L7 traffic")
+	fmt.Println("  list_api_calls          Query L7 API transactions (HTTP, gRPC, etc.)")
+	fmt.Println("  get_api_call            Get detailed information about a specific API call")
+	fmt.Println("  get_api_stats           Get aggregated API statistics")
+}
