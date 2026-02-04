@@ -317,10 +317,11 @@ type DelayedDissectionConfig struct {
 }
 
 type CaptureConfig struct {
-	Stopped   bool             `yaml:"stopped" json:"stopped" default:"false"`
-	StopAfter string           `yaml:"stopAfter" json:"stopAfter" default:"5m"`
-	Raw       RawCaptureConfig `yaml:"raw" json:"raw"`
-	DbMaxSize string           `yaml:"dbMaxSize" json:"dbMaxSize" default:"500Mi"`
+	Stopped     bool             `yaml:"stopped" json:"stopped" default:"false"`
+	StopAfter   string           `yaml:"stopAfter" json:"stopAfter" default:"5m"`
+	CaptureSelf bool             `yaml:"captureSelf" json:"captureSelf" default:"false"`
+	Raw         RawCaptureConfig `yaml:"raw" json:"raw"`
+	DbMaxSize   string           `yaml:"dbMaxSize" json:"dbMaxSize" default:"500Mi"`
 }
 
 type TapConfig struct {

@@ -12,6 +12,7 @@ data:
     EXCLUDED_NAMESPACES: '{{ gt (len .Values.tap.excludedNamespaces) 0 | ternary (join "," .Values.tap.excludedNamespaces) "" }}'
     BPF_OVERRIDE: '{{ .Values.tap.bpfOverride }}'
     STOPPED: '{{ .Values.tap.capture.stopped | ternary "true" "false" }}'
+    CAPTURE_SELF: '{{ .Values.tap.capture.captureSelf | ternary "true" "false" }}'
     SCRIPTING_SCRIPTS: '{}'
     SCRIPTING_ACTIVE_SCRIPTS: '{{ gt (len .Values.scripting.active) 0 | ternary (join "," .Values.scripting.active) "" }}'
     INGRESS_ENABLED: '{{ .Values.tap.ingress.enabled }}'
