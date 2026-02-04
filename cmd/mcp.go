@@ -9,6 +9,7 @@ import (
 )
 
 var mcpURL string
+var mcpKubeconfig string
 
 var mcpCmd = &cobra.Command{
 	Use:   "mcp",
@@ -38,22 +39,25 @@ To use with Claude Desktop, add to your claude_desktop_config.json
     "mcpServers": {
       "kubeshark": {
         "command": "/path/to/kubeshark",
-        "args": ["mcp"],
-        "env": {
-          "PATH": "/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin",
-          "HOME": "/Users/YOUR_USERNAME",
-          "KUBECONFIG": "/Users/YOUR_USERNAME/.kube/config"
-        }
+        "args": ["mcp", "--kubeconfig", "/Users/YOUR_USERNAME/.kube/config"]
       }
     }
   }
 
-IMPORTANT: The "env" section is required because MCP servers run in a sandboxed
-environment without access to your shell's PATH or environment variables. Without
-it, kubectl commands will fail with authentication errors.
+For EKS/GKE clusters that use CLI auth plugins (aws, gcloud), you may also need
+to set the PATH environment variable:
 
-For EKS clusters, ensure /usr/local/bin is in PATH (for aws CLI).
-For GKE clusters, ensure gcloud is accessible in PATH.
+  {
+    "mcpServers": {
+      "kubeshark": {
+        "command": "/path/to/kubeshark",
+        "args": ["mcp", "--kubeconfig", "/Users/YOUR_USERNAME/.kube/config"],
+        "env": {
+          "PATH": "/usr/local/bin:/opt/homebrew/bin:/usr/bin:/bin"
+        }
+      }
+    }
+  }
 
 DIRECT URL MODE:
 
@@ -88,6 +92,10 @@ To use custom settings when starting Kubeshark, use the --set flag:
 
 Multiple --set flags can be used for different settings.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
+		// Set kubeconfig path if provided
+		if mcpKubeconfig != "" {
+			config.Config.Kube.ConfigPathStr = mcpKubeconfig
+		}
 		setFlags, _ := cmd.Flags().GetStringSlice(config.SetCommandName)
 		runMCPWithConfig(setFlags, mcpURL)
 		return nil
@@ -106,4 +114,5 @@ func init() {
 	mcpCmd.Flags().String(configStructs.ProxyHostLabel, defaultTapConfig.Proxy.Host, "Provide a custom host for the proxy/port-forward")
 	mcpCmd.Flags().StringP(configStructs.ReleaseNamespaceLabel, "s", defaultTapConfig.Release.Namespace, "Release namespace of Kubeshark")
 	mcpCmd.Flags().StringVar(&mcpURL, "url", "", "Direct URL to Kubeshark (e.g., https://kubeshark.example.com). When set, connects directly without kubectl/proxy and disables start/stop/check tools.")
+	mcpCmd.Flags().StringVar(&mcpKubeconfig, "kubeconfig", "", "Path to kubeconfig file (e.g., /Users/me/.kube/config)")
 }
