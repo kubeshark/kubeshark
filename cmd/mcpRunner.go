@@ -872,23 +872,47 @@ func listMCPTools(directURL string) {
 	fmt.Println("=========")
 	fmt.Println()
 
-	// CLI tools (always available, work without Kubeshark running)
-	if directURL == "" {
-		fmt.Println("Cluster Management (work without Kubeshark running):")
-		fmt.Println("  check_kubeshark_status  Check if Kubeshark is running in the cluster")
-		fmt.Println("  start_kubeshark         Start Kubeshark to capture traffic")
-		fmt.Println("  stop_kubeshark          Stop Kubeshark and clean up resources")
+	// URL mode - no cluster management, just check connection
+	if directURL != "" {
+		fmt.Printf("URL Mode: %s\n\n", directURL)
+		fmt.Println("Cluster management tools disabled (Kubeshark managed externally)")
 		fmt.Println()
-	} else {
-		fmt.Printf("URL Mode: %s\n", directURL)
-		fmt.Println("  (Cluster management tools disabled - Kubeshark managed externally)")
-		fmt.Println()
+
+		hubURL := strings.TrimSuffix(directURL, "/") + "/api/mcp"
+		checkAPIConnection(hubURL)
+		return
 	}
 
-	// API tools (require Kubeshark running)
-	fmt.Println("Traffic Analysis (require Kubeshark running):")
-	fmt.Println("  list_workloads          List pods, services, namespaces, nodes with L7 traffic")
-	fmt.Println("  list_api_calls          Query L7 API transactions (HTTP, gRPC, etc.)")
-	fmt.Println("  get_api_call            Get detailed information about a specific API call")
-	fmt.Println("  get_api_stats           Get aggregated API statistics")
+	// Normal mode - show cluster management tools
+	fmt.Println("Cluster Management:")
+	fmt.Println("  check_kubeshark_status  Check if Kubeshark is running in the cluster")
+	fmt.Println("  start_kubeshark         Start Kubeshark to capture traffic")
+	fmt.Println("  stop_kubeshark          Stop Kubeshark and clean up resources")
+	fmt.Println()
+	fmt.Println("Note: MCP automatically proxies to Kubeshark when connected.")
+	fmt.Println()
+
+	// Try to connect to Kubeshark via proxy
+	hubURL := fmt.Sprintf("http://%s:%d/api/mcp",
+		config.Config.Tap.Proxy.Host,
+		config.Config.Tap.Proxy.Front.Port)
+	checkAPIConnection(hubURL)
+}
+
+// checkAPIConnection checks if Kubeshark API is reachable
+func checkAPIConnection(hubURL string) {
+	client := &http.Client{Timeout: 3 * time.Second}
+	resp, err := client.Get(hubURL + "/workloads")
+	if err != nil {
+		fmt.Println("Kubeshark API: Not connected")
+		return
+	}
+	defer func() { _ = resp.Body.Close() }()
+
+	if resp.StatusCode >= 500 {
+		fmt.Println("Kubeshark API: Not connected")
+		return
+	}
+
+	fmt.Printf("Kubeshark API: Connected (%s)\n", hubURL)
 }
