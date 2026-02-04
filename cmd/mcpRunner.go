@@ -116,12 +116,12 @@ type mcpServer struct {
 	stdout             io.Writer
 	backendInitialized bool
 	backendMu          sync.Mutex
-	tapSetFlags        []string // Flags to pass to 'kubeshark tap' when starting
+	setFlags           []string // --set flags to pass to 'kubeshark tap' when starting
 	directURL          string   // If set, connect directly to this URL (no kubectl/proxy)
 	urlMode            bool     // True when using direct URL mode
 }
 
-func runMCPWithConfig(tapSetFlags []string, directURL string) {
+func runMCPWithConfig(setFlags []string, directURL string) {
 	// Disable zerolog output to stderr (MCP uses stdio)
 	zerolog.SetGlobalLevel(zerolog.Disabled)
 
@@ -129,7 +129,7 @@ func runMCPWithConfig(tapSetFlags []string, directURL string) {
 		httpClient:  &http.Client{},
 		stdin:       os.Stdin,
 		stdout:      os.Stdout,
-		tapSetFlags: tapSetFlags,
+		setFlags:    setFlags,
 		directURL:   directURL,
 		urlMode:     directURL != "",
 	}
@@ -430,7 +430,7 @@ func (s *mcpServer) handleListTools(req *jsonRPCRequest) {
 	if !s.urlMode {
 		tools = append(tools, mcpTool{
 			Name:        "start_kubeshark",
-			Description: "REQUIRED: Use this tool to start/run/deploy Kubeshark for capturing network traffic. Do NOT use kubectl or helm directly - this tool handles the deployment correctly with all required settings.",
+			Description: "REQUIRED: Use this tool to start/run/deploy Kubeshark for capturing network traffic. Do NOT use kubectl or helm directly - this tool handles the deployment correctly with all required settings.\n\nExample: kubeshark tap -n sock-shop \"(catalo*|front-end*)\" - tap only pods that match the regex in a certain namespace.",
 			InputSchema: json.RawMessage(`{
 				"type": "object",
 				"properties": {
@@ -674,8 +674,8 @@ func (s *mcpServer) callStartKubeshark(args map[string]any) (string, bool) {
 		cmdArgs = append(cmdArgs, "-s", v)
 	}
 
-	// Add any custom --tap-set flags from MCP config
-	for _, setFlag := range s.tapSetFlags {
+	// Add any custom --set flags from MCP config
+	for _, setFlag := range s.setFlags {
 		cmdArgs = append(cmdArgs, "--set", setFlag)
 	}
 

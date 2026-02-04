@@ -582,13 +582,13 @@ func TestMCP_APIToolsRequireKubeshark(t *testing.T) {
 	}
 }
 
-// TestMCP_TapSetFlags tests that --tap-set flags are passed correctly.
-func TestMCP_TapSetFlags(t *testing.T) {
+// TestMCP_SetFlags tests that --set flags are passed correctly.
+func TestMCP_SetFlags(t *testing.T) {
 	requireKubernetesCluster(t)
 	binary := getKubesharkBinary(t)
 
-	// Start MCP with custom tap-set flags
-	session := startMCPSession(t, binary, "--tap-set", "tap.namespaces={default}")
+	// Start MCP with custom --set flags
+	session := startMCPSession(t, binary, "--set", "tap.namespaces={default}")
 	defer session.close()
 
 	// Initialize
@@ -611,10 +611,10 @@ func TestMCP_TapSetFlags(t *testing.T) {
 	})
 
 	if resp.Error != nil {
-		t.Fatalf("tools/list failed with tap-set flags: %s", resp.Error.Message)
+		t.Fatalf("tools/list failed with --set flags: %s", resp.Error.Message)
 	}
 
-	t.Log("MCP server started successfully with --tap-set flags")
+	t.Log("MCP server started successfully with --set flags")
 }
 
 // BenchmarkMCP_CheckStatus benchmarks the check_kubeshark_status tool.
