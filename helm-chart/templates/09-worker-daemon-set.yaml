@@ -103,6 +103,8 @@ spec:
             - '{{ .Values.tap.storageLimit }}'
             - -capture-db-max-size
             - '{{ .Values.tap.capture.dbMaxSize }}'
+            - -cloud-api-url
+            - '{{ .Values.cloudApiUrl }}'
         {{- if .Values.tap.docker.overrideImage.worker }}
           image: '{{ .Values.tap.docker.overrideImage.worker }}'
         {{- else if .Values.tap.docker.overrideTag.worker }}
@@ -129,8 +131,6 @@ spec:
             value: '{{ .Values.tap.misc.tcpStreamChannelTimeoutMs }}'
           - name: TCP_STREAM_CHANNEL_TIMEOUT_SHOW
             value: '{{ .Values.tap.misc.tcpStreamChannelTimeoutShow }}'
-          - name: KUBESHARK_CLOUD_API_URL
-            value: 'https://api.kubeshark.com'
           - name: PROFILING_ENABLED
             value: '{{ .Values.tap.pprof.enabled }}'
           - name: SENTRY_ENABLED

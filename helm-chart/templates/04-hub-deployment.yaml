@@ -55,6 +55,8 @@ spec:
             {{- if .Values.tap.gitops.enabled }}
             - -gitops
             {{- end }}
+            - -cloud-api-url
+            - '{{ .Values.cloudApiUrl }}'
           {{- if .Values.tap.secrets }}
           envFrom:
             {{- range .Values.tap.secrets }}
@@ -75,8 +77,6 @@ spec:
             value: '{{ (include "sentry.enabled" .) }}'
           - name: SENTRY_ENVIRONMENT
             value: '{{ .Values.tap.sentry.environment }}'
-          - name: KUBESHARK_CLOUD_API_URL
-            value: 'https://api.kubeshark.com'
           - name: PROFILING_ENABLED
             value: '{{ .Values.tap.pprof.enabled }}'
         {{- if .Values.tap.docker.overrideImage.hub }}
