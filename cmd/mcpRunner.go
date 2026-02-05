@@ -8,7 +8,6 @@ import (
 	"fmt"
 	"io"
 	"net/http"
-	"net/url"
 	"os"
 	"os/exec"
 	"strings"
@@ -86,8 +85,15 @@ type mcpContent struct {
 }
 
 type mcpPrompt struct {
+	Name        string            `json:"name"`
+	Description string            `json:"description,omitempty"`
+	Arguments   []mcpPromptArg    `json:"arguments,omitempty"`
+}
+
+type mcpPromptArg struct {
 	Name        string `json:"name"`
 	Description string `json:"description,omitempty"`
+	Required    bool   `json:"required,omitempty"`
 }
 
 type mcpListPromptsResult struct {
@@ -107,6 +113,34 @@ type mcpGetPromptResult struct {
 	Messages []mcpPromptMessage `json:"messages"`
 }
 
+// Hub MCP API response types
+
+type hubMCPResponse struct {
+	Name        string          `json:"name"`
+	Description string          `json:"description"`
+	Version     string          `json:"version"`
+	Tools       []hubMCPTool    `json:"tools"`
+	Prompts     []hubMCPPrompt  `json:"prompts"`
+}
+
+type hubMCPTool struct {
+	Name        string          `json:"name"`
+	Description string          `json:"description"`
+	InputSchema json.RawMessage `json:"inputSchema"`
+}
+
+type hubMCPPrompt struct {
+	Name        string              `json:"name"`
+	Description string              `json:"description,omitempty"`
+	Arguments   []hubMCPPromptArg   `json:"arguments,omitempty"`
+}
+
+type hubMCPPromptArg struct {
+	Name        string `json:"name"`
+	Description string `json:"description,omitempty"`
+	Required    bool   `json:"required,omitempty"`
+}
+
 // MCP Server
 
 type mcpServer struct {
@@ -119,19 +153,26 @@ type mcpServer struct {
 	setFlags           []string // --set flags to pass to 'kubeshark tap' when starting
 	directURL          string   // If set, connect directly to this URL (no kubectl/proxy)
 	urlMode            bool     // True when using direct URL mode
+	allowDestructive   bool     // If true, enable start/stop tools
+	cachedHubMCP       *hubMCPResponse // Cached tools/prompts from Hub
+	cachedAt           time.Time       // When the cache was populated
+	hubMCPMu           sync.Mutex
 }
 
-func runMCPWithConfig(setFlags []string, directURL string) {
+const hubMCPCacheTTL = 5 * time.Minute
+
+func runMCPWithConfig(setFlags []string, directURL string, allowDestructive bool) {
 	// Disable zerolog output to stderr (MCP uses stdio)
 	zerolog.SetGlobalLevel(zerolog.Disabled)
 
 	server := &mcpServer{
-		httpClient:  &http.Client{},
-		stdin:       os.Stdin,
-		stdout:      os.Stdout,
-		setFlags:    setFlags,
-		directURL:   directURL,
-		urlMode:     directURL != "",
+		httpClient:       &http.Client{},
+		stdin:            os.Stdin,
+		stdout:           os.Stdout,
+		setFlags:         setFlags,
+		directURL:        directURL,
+		urlMode:          directURL != "",
+		allowDestructive: allowDestructive,
 	}
 
 	// If URL mode, validate the URL is accessible on startup
@@ -155,17 +196,23 @@ func (s *mcpServer) validateDirectURL() error {
 	// Use a short timeout for validation
 	client := &http.Client{Timeout: 10 * time.Second}
 
-	// Try to reach the MCP API endpoint
-	testURL := fmt.Sprintf("%s/api/mcp/workloads", urlStr)
+	// Try to reach the MCP API base endpoint which returns tool definitions
+	testURL := fmt.Sprintf("%s/api/mcp", urlStr)
 	resp, err := client.Get(testURL)
 	if err != nil {
 		return fmt.Errorf("cannot connect to Kubeshark at %s: %v", urlStr, err)
 	}
 	defer func() { _ = resp.Body.Close() }()
 
-	// Accept 200 OK or even 401/403 (means server is there, might need auth)
-	if resp.StatusCode >= 500 {
-		return fmt.Errorf("Kubeshark at %s returned error: %s", urlStr, resp.Status)
+	// Try to parse the MCP response to validate it's a valid Kubeshark endpoint
+	var mcpInfo hubMCPResponse
+	if err := json.NewDecoder(resp.Body).Decode(&mcpInfo); err != nil {
+		return fmt.Errorf("invalid response from Kubeshark at %s: %v", urlStr, err)
+	}
+
+	// Verify it looks like a valid MCP response
+	if mcpInfo.Name == "" && len(mcpInfo.Tools) == 0 {
+		return fmt.Errorf("Kubeshark at %s does not appear to have MCP enabled", urlStr)
 	}
 
 	// Set the hub base URL
@@ -229,6 +276,51 @@ func (s *mcpServer) ensureBackendConnection() string {
 	return ""
 }
 
+// fetchHubMCP fetches tools and prompts from the Hub's /api/mcp endpoint
+// Returns nil if Hub is not available or returns an error
+func (s *mcpServer) fetchHubMCP() *hubMCPResponse {
+	s.hubMCPMu.Lock()
+	defer s.hubMCPMu.Unlock()
+
+	// Return cached if available and not expired
+	if s.cachedHubMCP != nil && time.Since(s.cachedAt) < hubMCPCacheTTL {
+		return s.cachedHubMCP
+	}
+
+	// Ensure backend connection first
+	if errMsg := s.ensureBackendConnection(); errMsg != "" {
+		return nil
+	}
+
+	// Fetch from Hub - the base URL is like http://host/api/mcp, we need http://host/api/mcp
+	// The Hub's MCP info endpoint is at the base path
+	resp, err := s.httpClient.Get(s.hubBaseURL)
+	if err != nil {
+		return nil
+	}
+	defer func() { _ = resp.Body.Close() }()
+
+	if resp.StatusCode >= 400 {
+		return nil
+	}
+
+	var hubMCP hubMCPResponse
+	if err := json.NewDecoder(resp.Body).Decode(&hubMCP); err != nil {
+		return nil
+	}
+
+	s.cachedHubMCP = &hubMCP
+	s.cachedAt = time.Now()
+	return s.cachedHubMCP
+}
+
+// invalidateHubMCPCache clears the cached Hub MCP data
+func (s *mcpServer) invalidateHubMCPCache() {
+	s.hubMCPMu.Lock()
+	defer s.hubMCPMu.Unlock()
+	s.cachedHubMCP = nil
+}
+
 func writeErrorToStderr(format string, args ...any) {
 	fmt.Fprintf(os.Stderr, format+"\n", args...)
 }
@@ -278,14 +370,59 @@ func (s *mcpServer) handleRequest(req *jsonRPCRequest) {
 }
 
 func (s *mcpServer) handleInitialize(req *jsonRPCRequest) {
+	var instructions string
+	if s.urlMode {
+		instructions = fmt.Sprintf(`Kubeshark MCP Server - Connected to: %s
+
+This server provides read-only access to Kubeshark's traffic analysis capabilities.
+Cluster management tools (start/stop) are disabled in URL mode.
+
+Available tools for traffic analysis:
+- list_workloads: List pods, services, namespaces with observed traffic
+- list_api_calls: Query L7 API transactions (HTTP, gRPC, etc.)
+- list_l4_flows: View L4 (TCP/UDP) network flows
+- get_api_stats: Get aggregated API statistics
+- And more - use tools/list to see all available tools
+
+Use the MCP tools directly - do NOT use kubectl or curl to access Kubeshark.`, s.directURL)
+	} else if s.allowDestructive {
+		instructions = `Kubeshark MCP Server - Proxy Mode (Destructive Operations ENABLED)
+
+This server proxies to a Kubeshark deployment in your Kubernetes cluster.
+
+⚠️ DESTRUCTIVE OPERATIONS ENABLED (--allow-destructive flag is set):
+- start_kubeshark: Deploys Kubeshark to your cluster (runs 'kubeshark tap')
+- stop_kubeshark: Removes Kubeshark from your cluster (runs 'kubeshark clean')
+
+ALWAYS confirm with the user before using start_kubeshark or stop_kubeshark.
+
+Safe operations:
+- check_kubeshark_status: Check if Kubeshark is running (read-only)
+
+Traffic analysis tools (require Kubeshark to be running):
+- list_workloads, list_api_calls, list_l4_flows, get_api_stats, and more
+
+Use the MCP tools - do NOT use kubectl, helm, or curl directly.`
+	} else {
+		instructions = `Kubeshark MCP Server - Proxy Mode (Read-Only)
+
+This server proxies to an existing Kubeshark deployment in your Kubernetes cluster.
+
+Destructive operations (start/stop) are DISABLED for safety.
+To enable them, restart with --allow-destructive flag.
+
+Available operations:
+- check_kubeshark_status: Check if Kubeshark is running (read-only)
+
+Traffic analysis tools (require Kubeshark to be running):
+- list_workloads, list_api_calls, list_l4_flows, get_api_stats, and more
+
+Use the MCP tools - do NOT use kubectl, helm, or curl directly.`
+	}
+
 	result := mcpInitializeResult{
 		ProtocolVersion: "2024-11-05",
-		Instructions: `When working with Kubeshark, ALWAYS use the provided MCP tools instead of kubectl or helm commands:
-- To check if Kubeshark is running: use 'check_kubeshark_status' (NOT kubectl get pods)
-- To start Kubeshark: use 'start_kubeshark' (NOT kubectl apply or helm install)
-- To stop Kubeshark: use 'stop_kubeshark' (NOT kubectl delete or helm uninstall)
-- To query traffic data: use 'list_workloads', 'list_api_calls', 'get_api_call', 'get_api_stats'
-These tools provide proper integration and accurate results.`,
+		Instructions:    instructions,
 	}
 	result.ServerInfo.Name = "kubeshark-mcp"
 	result.ServerInfo.Version = "1.0.0"
@@ -294,143 +431,30 @@ These tools provide proper integration and accurate results.`,
 }
 
 func (s *mcpServer) handleListTools(req *jsonRPCRequest) {
-	tools := []mcpTool{
-		{
-			Name:        "list_workloads",
-			Description: "List Kubernetes workloads (pods, services, namespaces, nodes) with L7 API traffic observed by Kubeshark",
-			InputSchema: json.RawMessage(`{
-				"type": "object",
-				"properties": {
-					"type": {
-						"type": "string",
-						"description": "Workload type: pod, service, namespace, or node",
-						"enum": ["pod", "service", "namespace", "node"],
-						"default": "pod"
-					},
-					"ns": {
-						"type": "string",
-						"description": "Filter by namespace"
-					},
-					"labels": {
-						"type": "string",
-						"description": "Filter by labels (format: key=value,key2=value2)"
-					}
-				}
-			}`),
-		},
-		{
-			Name:        "list_api_calls",
-			Description: "Query L7 API transactions (HTTP, gRPC, etc.) captured by Kubeshark",
-			InputSchema: json.RawMessage(`{
-				"type": "object",
-				"properties": {
-					"src_ns": {
-						"type": "string",
-						"description": "Filter by source namespace(s), comma-separated"
-					},
-					"src_pod": {
-						"type": "string",
-						"description": "Filter by source pod name (prefix match)"
-					},
-					"dst_ns": {
-						"type": "string",
-						"description": "Filter by destination namespace(s), comma-separated"
-					},
-					"dst_pod": {
-						"type": "string",
-						"description": "Filter by destination pod name (prefix match)"
-					},
-					"dst_svc": {
-						"type": "string",
-						"description": "Filter by destination service name"
-					},
-					"proto": {
-						"type": "string",
-						"description": "Filter by protocol (http, grpc, redis, kafka, etc.)"
-					},
-					"method": {
-						"type": "string",
-						"description": "Filter by HTTP method or gRPC method"
-					},
-					"path": {
-						"type": "string",
-						"description": "Filter by request path (prefix match)"
-					},
-					"status": {
-						"type": "string",
-						"description": "Filter by status: ok, error, or specific code"
-					},
-					"limit": {
-						"type": "integer",
-						"description": "Maximum number of results (default: 100)",
-						"default": 100
-					},
-					"group_by": {
-						"type": "string",
-						"description": "Group results by: node, ns (namespace), or worker",
-						"enum": ["node", "ns", "worker"]
-					}
-				}
-			}`),
-		},
-		{
-			Name:        "get_api_call",
-			Description: "Get detailed information about a specific API call by ID",
-			InputSchema: json.RawMessage(`{
-				"type": "object",
-				"properties": {
-					"id": {
-						"type": "string",
-						"description": "The API call ID"
-					},
-					"include_headers": {
-						"type": "boolean",
-						"description": "Include request/response headers",
-						"default": false
-					},
-					"include_payload": {
-						"type": "boolean",
-						"description": "Include request/response payload (truncated to 4KB)",
-						"default": false
-					}
-				},
-				"required": ["id"]
-			}`),
-		},
-		{
-			Name:        "get_api_stats",
-			Description: "Get aggregated statistics for API calls",
-			InputSchema: json.RawMessage(`{
-				"type": "object",
-				"properties": {
-					"ns": {
-						"type": "string",
-						"description": "Filter by namespace"
-					},
-					"svc": {
-						"type": "string",
-						"description": "Filter by service"
-					},
-					"pod": {
-						"type": "string",
-						"description": "Filter by pod"
-					},
-					"group_by": {
-						"type": "string",
-						"description": "Group results by: endpoint, status, src, dst, proto",
-						"enum": ["endpoint", "status", "src", "dst", "proto"],
-						"default": "endpoint"
-					}
-				}
-			}`),
-		},
-	}
+	var tools []mcpTool
 
-	// Add cluster management tools only if not in URL mode
+	// Add check_kubeshark_status if not in URL mode (safe, read-only)
 	if !s.urlMode {
 		tools = append(tools, mcpTool{
+			Name:        "check_kubeshark_status",
+			Description: "Safe: Checks if Kubeshark is currently running in the cluster. This is a read-only operation that does not modify anything.",
+			InputSchema: json.RawMessage(`{
+				"type": "object",
+				"properties": {
+					"release_namespace": {
+						"type": "string",
+						"description": "Namespace where Kubeshark is installed (default: 'default')"
+					}
+				}
+			}`),
+		})
+	}
+
+	// Add destructive tools only if --allow-destructive flag was set (and not in URL mode)
+	if !s.urlMode && s.allowDestructive {
+		tools = append(tools, mcpTool{
 			Name:        "start_kubeshark",
-			Description: "REQUIRED: Use this tool to start/run/deploy Kubeshark for capturing network traffic. Do NOT use kubectl or helm directly - this tool handles the deployment correctly with all required settings.\n\nExample: kubeshark tap -n sock-shop \"(catalo*|front-end*)\" - tap only pods that match the regex in a certain namespace.",
+			Description: "⚠️ DESTRUCTIVE: Deploys Kubeshark to the Kubernetes cluster by running 'kubeshark tap'. This will create pods, services, and other resources in the cluster. ALWAYS confirm with the user before using this tool. Use check_kubeshark_status first to see if Kubeshark is already running.",
 			InputSchema: json.RawMessage(`{
 				"type": "object",
 				"properties": {
@@ -451,7 +475,7 @@ func (s *mcpServer) handleListTools(req *jsonRPCRequest) {
 		})
 		tools = append(tools, mcpTool{
 			Name:        "stop_kubeshark",
-			Description: "REQUIRED: Use this tool to stop/remove/uninstall Kubeshark from the cluster. Do NOT use kubectl delete or helm uninstall directly - this tool ensures clean removal of all Kubeshark resources.",
+			Description: "⚠️ DESTRUCTIVE: Removes Kubeshark from the Kubernetes cluster by running 'kubeshark clean'. This will delete all Kubeshark pods, services, and resources. All captured traffic data will be lost. ALWAYS confirm with the user before using this tool.",
 			InputSchema: json.RawMessage(`{
 				"type": "object",
 				"properties": {
@@ -462,31 +486,50 @@ func (s *mcpServer) handleListTools(req *jsonRPCRequest) {
 				}
 			}`),
 		})
-		tools = append(tools, mcpTool{
-			Name:        "check_kubeshark_status",
-			Description: "REQUIRED: Use this tool to check if Kubeshark is running/installed/deployed. Do NOT use kubectl get pods or other commands - this tool provides accurate status information and indicates whether other Kubeshark tools can be used.",
-			InputSchema: json.RawMessage(`{
-				"type": "object",
-				"properties": {
-					"release_namespace": {
-						"type": "string",
-						"description": "Namespace where Kubeshark is installed (default: 'default')"
-					}
-				}
-			}`),
-		})
+	}
+
+	// Fetch tools from Hub and merge
+	if hubMCP := s.fetchHubMCP(); hubMCP != nil {
+		for _, hubTool := range hubMCP.Tools {
+			tools = append(tools, mcpTool{
+				Name:        hubTool.Name,
+				Description: hubTool.Description,
+				InputSchema: hubTool.InputSchema,
+			})
+		}
 	}
 
 	s.sendResult(req.ID, mcpListToolsResult{Tools: tools})
 }
 
 func (s *mcpServer) handleListPrompts(req *jsonRPCRequest) {
-	prompts := []mcpPrompt{
-		{
-			Name:        "kubeshark_usage",
-			Description: "Instructions for using Kubeshark MCP tools correctly",
-		},
+	var prompts []mcpPrompt
+
+	// Add local prompts
+	prompts = append(prompts, mcpPrompt{
+		Name:        "kubeshark_usage",
+		Description: "Instructions for using Kubeshark MCP tools correctly",
+	})
+
+	// Fetch prompts from Hub and merge
+	if hubMCP := s.fetchHubMCP(); hubMCP != nil {
+		for _, hubPrompt := range hubMCP.Prompts {
+			var args []mcpPromptArg
+			for _, hubArg := range hubPrompt.Arguments {
+				args = append(args, mcpPromptArg{
+					Name:        hubArg.Name,
+					Description: hubArg.Description,
+					Required:    hubArg.Required,
+				})
+			}
+			prompts = append(prompts, mcpPrompt{
+				Name:        hubPrompt.Name,
+				Description: hubPrompt.Description,
+				Arguments:   args,
+			})
+		}
 	}
+
 	s.sendResult(req.ID, mcpListPromptsResult{Prompts: prompts})
 }
 
@@ -497,33 +540,70 @@ func (s *mcpServer) handleGetPrompt(req *jsonRPCRequest) {
 		return
 	}
 
-	if params.Name != "kubeshark_usage" {
-		s.sendError(req.ID, -32602, "Unknown prompt", params.Name)
-		return
-	}
-
-	result := mcpGetPromptResult{
-		Messages: []mcpPromptMessage{
-			{
-				Role: "user",
-				Content: mcpContent{
-					Type: "text",
-					Text: `When working with Kubeshark, you MUST use the MCP tools provided - do NOT use kubectl, helm, or other CLI commands directly.
+	// Handle local prompt
+	if params.Name == "kubeshark_usage" {
+		result := mcpGetPromptResult{
+			Messages: []mcpPromptMessage{
+				{
+					Role: "user",
+					Content: mcpContent{
+						Type: "text",
+						Text: `When working with Kubeshark, you MUST use the MCP tools provided - do NOT use kubectl, helm, or other CLI commands directly.
 
 IMPORTANT RULES:
 1. To check Kubeshark status: ALWAYS use 'check_kubeshark_status' tool (NOT 'kubectl get pods')
 2. To start Kubeshark: ALWAYS use 'start_kubeshark' tool (NOT 'kubectl apply' or 'helm install')
 3. To stop Kubeshark: ALWAYS use 'stop_kubeshark' tool (NOT 'kubectl delete' or 'helm uninstall')
-4. To query captured traffic: Use 'list_workloads', 'list_api_calls', 'get_api_call', 'get_api_stats'
+4. To query captured traffic: Use the available traffic analysis tools
 
 The MCP tools handle all the complexity of deployment, configuration, and API communication. Using kubectl/helm directly may cause issues or provide incomplete information.
 
 When the user asks about Kubeshark status, traffic, or wants to start/stop Kubeshark, use the appropriate MCP tool immediately.`,
+					},
 				},
 			},
-		},
+		}
+		s.sendResult(req.ID, result)
+		return
 	}
-	s.sendResult(req.ID, result)
+
+	// Check if it's a Hub prompt
+	hubMCP := s.fetchHubMCP()
+	if hubMCP != nil {
+		for _, hubPrompt := range hubMCP.Prompts {
+			if hubPrompt.Name == params.Name {
+				// Generate prompt message from Hub prompt definition
+				promptText := fmt.Sprintf("Task: %s\n\n%s", hubPrompt.Name, hubPrompt.Description)
+				if len(hubPrompt.Arguments) > 0 {
+					promptText += "\n\nParameters:\n"
+					for _, arg := range hubPrompt.Arguments {
+						required := ""
+						if arg.Required {
+							required = " (required)"
+						}
+						promptText += fmt.Sprintf("- %s%s: %s\n", arg.Name, required, arg.Description)
+					}
+				}
+				promptText += "\n\nUse the appropriate Kubeshark MCP tools to complete this task."
+
+				result := mcpGetPromptResult{
+					Messages: []mcpPromptMessage{
+						{
+							Role: "user",
+							Content: mcpContent{
+								Type: "text",
+								Text: promptText,
+							},
+						},
+					},
+				}
+				s.sendResult(req.ID, result)
+				return
+			}
+		}
+	}
+
+	s.sendError(req.ID, -32602, "Unknown prompt", params.Name)
 }
 
 func (s *mcpServer) handleCallTool(req *jsonRPCRequest) {
@@ -536,116 +616,97 @@ func (s *mcpServer) handleCallTool(req *jsonRPCRequest) {
 	var result string
 	var isError bool
 
+	// Handle local CLI tools
 	switch params.Name {
-	case "list_workloads":
-		result, isError = s.callListWorkloads(params.Arguments)
-	case "list_api_calls":
-		result, isError = s.callListAPICalls(params.Arguments)
-	case "get_api_call":
-		result, isError = s.callGetAPICall(params.Arguments)
-	case "get_api_stats":
-		result, isError = s.callGetAPIStats(params.Arguments)
 	case "start_kubeshark":
 		if s.urlMode {
 			result, isError = "This tool is not available in URL mode. Kubeshark is managed externally.", true
+		} else if !s.allowDestructive {
+			result, isError = "This tool requires --allow-destructive flag. Destructive operations are disabled for safety.", true
 		} else {
 			result, isError = s.callStartKubeshark(params.Arguments)
 		}
+		s.sendResult(req.ID, mcpCallToolResult{
+			Content: []mcpContent{{Type: "text", Text: result}},
+			IsError: isError,
+		})
+		return
 	case "stop_kubeshark":
 		if s.urlMode {
 			result, isError = "This tool is not available in URL mode. Kubeshark is managed externally.", true
+		} else if !s.allowDestructive {
+			result, isError = "This tool requires --allow-destructive flag. Destructive operations are disabled for safety.", true
 		} else {
 			result, isError = s.callStopKubeshark(params.Arguments)
 		}
+		s.sendResult(req.ID, mcpCallToolResult{
+			Content: []mcpContent{{Type: "text", Text: result}},
+			IsError: isError,
+		})
+		return
 	case "check_kubeshark_status":
 		if s.urlMode {
 			result, isError = fmt.Sprintf("Kubeshark is accessible at %s (URL mode - externally managed)", s.directURL), false
 		} else {
 			result, isError = s.callCheckKubesharkStatus(params.Arguments)
 		}
-	default:
-		s.sendError(req.ID, -32602, "Unknown tool", params.Name)
+		s.sendResult(req.ID, mcpCallToolResult{
+			Content: []mcpContent{{Type: "text", Text: result}},
+			IsError: isError,
+		})
 		return
 	}
 
+	// Forward Hub tools to the API
+	result, isError = s.callHubTool(params.Name, params.Arguments)
 	s.sendResult(req.ID, mcpCallToolResult{
 		Content: []mcpContent{{Type: "text", Text: result}},
 		IsError: isError,
 	})
 }
 
-func (s *mcpServer) callListWorkloads(args map[string]any) (string, bool) {
+// callHubTool forwards a tool call to the Hub's MCP API
+func (s *mcpServer) callHubTool(toolName string, args map[string]any) (string, bool) {
 	if errMsg := s.ensureBackendConnection(); errMsg != "" {
 		return errMsg, true
 	}
 
-	query := url.Values{}
-	if v, ok := args["type"].(string); ok && v != "" {
-		query.Set("type", v)
-	}
-	if v, ok := args["ns"].(string); ok && v != "" {
-		query.Set("ns", v)
-	}
-	if v, ok := args["labels"].(string); ok && v != "" {
-		query.Set("labels", v)
+	// Build the request body
+	requestBody := map[string]any{
+		"tool":      toolName,
+		"arguments": args,
 	}
 
-	return s.doGet("/workloads", query)
+	bodyBytes, err := json.Marshal(requestBody)
+	if err != nil {
+		return fmt.Sprintf("Error encoding request: %v", err), true
+	}
+
+	// POST to /api/mcp/tools/call
+	reqURL := s.hubBaseURL + "/tools/call"
+	resp, err := s.httpClient.Post(reqURL, "application/json", bytes.NewReader(bodyBytes))
+	if err != nil {
+		return fmt.Sprintf("Error calling Hub API: %v", err), true
+	}
+	defer func() { _ = resp.Body.Close() }()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return fmt.Sprintf("Error reading response: %v", err), true
+	}
+
+	if resp.StatusCode >= 400 {
+		return fmt.Sprintf("Hub API error (%d): %s", resp.StatusCode, string(body)), true
+	}
+
+	// Pretty-print JSON for readability
+	var prettyJSON bytes.Buffer
+	if err := json.Indent(&prettyJSON, body, "", "  "); err != nil {
+		return string(body), false
+	}
+	return prettyJSON.String(), false
 }
 
-func (s *mcpServer) callListAPICalls(args map[string]any) (string, bool) {
-	if errMsg := s.ensureBackendConnection(); errMsg != "" {
-		return errMsg, true
-	}
-
-	query := url.Values{}
-	for _, key := range []string{"src_ns", "src_pod", "dst_ns", "dst_pod", "dst_svc", "proto", "method", "path", "status", "group_by"} {
-		if v, ok := args[key].(string); ok && v != "" {
-			query.Set(key, v)
-		}
-	}
-	if v, ok := args["limit"].(float64); ok {
-		query.Set("limit", fmt.Sprintf("%d", int(v)))
-	}
-
-	return s.doGet("/calls", query)
-}
-
-func (s *mcpServer) callGetAPICall(args map[string]any) (string, bool) {
-	if errMsg := s.ensureBackendConnection(); errMsg != "" {
-		return errMsg, true
-	}
-
-	id, ok := args["id"].(string)
-	if !ok || id == "" {
-		return "Error: id is required", true
-	}
-
-	query := url.Values{}
-	if v, ok := args["include_headers"].(bool); ok && v {
-		query.Set("include_headers", "true")
-	}
-	if v, ok := args["include_payload"].(bool); ok && v {
-		query.Set("include_payload", "true")
-	}
-
-	return s.doGet("/calls/"+url.PathEscape(id), query)
-}
-
-func (s *mcpServer) callGetAPIStats(args map[string]any) (string, bool) {
-	if errMsg := s.ensureBackendConnection(); errMsg != "" {
-		return errMsg, true
-	}
-
-	query := url.Values{}
-	for _, key := range []string{"ns", "svc", "pod", "group_by"} {
-		if v, ok := args[key].(string); ok && v != "" {
-			query.Set(key, v)
-		}
-	}
-
-	return s.doGet("/stats", query)
-}
 
 func (s *mcpServer) callStartKubeshark(args map[string]any) (string, bool) {
 	// Build the kubeshark tap command
@@ -744,6 +805,9 @@ func (s *mcpServer) callStartKubeshark(args map[string]any) (string, bool) {
 	s.backendInitialized = false
 	s.backendMu.Unlock()
 
+	// Invalidate cached tools/prompts so they're fetched from the new Hub
+	s.invalidateHubMCPCache()
+
 	return fmt.Sprintf("Kubeshark started successfully and is ready.\nCommand: %s %s", misc.Program, strings.Join(cmdArgs, " ")), false
 }
 
@@ -766,6 +830,9 @@ func (s *mcpServer) callStopKubeshark(args map[string]any) (string, bool) {
 	s.backendMu.Lock()
 	s.backendInitialized = false
 	s.backendMu.Unlock()
+
+	// Invalidate cached tools/prompts
+	s.invalidateHubMCPCache()
 
 	return fmt.Sprintf("Kubeshark stopped successfully.\nCommand: %s %s\nOutput: %s", misc.Program, strings.Join(cmdArgs, " "), string(output)), false
 }
@@ -804,35 +871,6 @@ Available tools:
 
 Available tools:
 - start_kubeshark: Start Kubeshark to capture network traffic`, namespace), false
-}
-
-func (s *mcpServer) doGet(path string, query url.Values) (string, bool) {
-	reqURL := s.hubBaseURL + path
-	if len(query) > 0 {
-		reqURL += "?" + query.Encode()
-	}
-
-	resp, err := s.httpClient.Get(reqURL)
-	if err != nil {
-		return fmt.Sprintf("Error calling Hub API: %v", err), true
-	}
-	defer func() { _ = resp.Body.Close() }()
-
-	body, err := io.ReadAll(resp.Body)
-	if err != nil {
-		return fmt.Sprintf("Error reading response: %v", err), true
-	}
-
-	if resp.StatusCode >= 400 {
-		return fmt.Sprintf("Hub API error (%d): %s", resp.StatusCode, string(body)), true
-	}
-
-	// Pretty-print JSON for readability
-	var prettyJSON bytes.Buffer
-	if err := json.Indent(&prettyJSON, body, "", "  "); err != nil {
-		return string(body), false
-	}
-	return prettyJSON.String(), false
 }
 
 func (s *mcpServer) sendResult(id any, result any) {
@@ -956,44 +994,37 @@ func fetchAndDisplayTools(hubURL string, timeout time.Duration) {
 	}
 	defer func() { _ = resp.Body.Close() }()
 
-	if resp.StatusCode >= 400 {
-		fmt.Printf("Kubeshark API: Error (%s)\n", resp.Status)
-		return
-	}
-
-	// Parse the response - MCP server info with endpoints
-	var mcpInfo struct {
-		Name        string `json:"name"`
-		Description string `json:"description"`
-		Version     string `json:"version"`
-		Endpoints   []struct {
-			Path        string `json:"path"`
-			Method      string `json:"method"`
-			Description string `json:"description"`
-		} `json:"endpoints"`
-	}
+	// Parse the response using the Hub MCP response format
+	var mcpInfo hubMCPResponse
 	if err := json.NewDecoder(resp.Body).Decode(&mcpInfo); err != nil {
 		fmt.Printf("Kubeshark API: Connected (couldn't parse response: %v)\n", err)
 		return
 	}
 
-	if len(mcpInfo.Endpoints) == 0 {
-		fmt.Println("Kubeshark API: Connected (no endpoints available)")
+	if len(mcpInfo.Tools) == 0 {
+		fmt.Println("Kubeshark API: Connected (no tools available)")
 		return
 	}
 
-	fmt.Println("Traffic Analysis:")
-	for _, ep := range mcpInfo.Endpoints {
-		// Extract tool name from path (e.g., /mcp/workloads -> workloads)
-		name := strings.TrimPrefix(ep.Path, "/mcp/")
-		if strings.Contains(name, ":") {
-			continue // Skip parameterized paths like /mcp/calls/:id
+	fmt.Println("Traffic Analysis Tools:")
+	for _, tool := range mcpInfo.Tools {
+		desc := tool.Description
+		if len(desc) > 55 {
+			desc = desc[:52] + "..."
 		}
-		desc := ep.Description
-		if len(desc) > 50 {
-			desc = desc[:47] + "..."
+		fmt.Printf("  %-24s %s\n", tool.Name, desc)
+	}
+
+	if len(mcpInfo.Prompts) > 0 {
+		fmt.Println()
+		fmt.Println("Prompts:")
+		for _, prompt := range mcpInfo.Prompts {
+			desc := prompt.Description
+			if len(desc) > 55 {
+				desc = desc[:52] + "..."
+			}
+			fmt.Printf("  %-24s %s\n", prompt.Name, desc)
 		}
-		fmt.Printf("  %-22s %s\n", name, desc)
 	}
 }
 

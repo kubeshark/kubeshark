@@ -1,10 +1,7 @@
 package cmd
 
 import (
-	"github.com/creasty/defaults"
 	"github.com/kubeshark/kubeshark/config"
-	"github.com/kubeshark/kubeshark/config/configStructs"
-	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 )
 
@@ -12,6 +9,7 @@ var mcpURL string
 var mcpKubeconfig string
 var mcpListTools bool
 var mcpConfig bool
+var mcpAllowDestructive bool
 
 var mcpCmd = &cobra.Command{
 	Use:   "mcp",
@@ -63,6 +61,20 @@ you can connect directly without needing kubectl/kubeconfig:
 In URL mode, cluster management tools (start/stop/check) are disabled since
 Kubeshark is managed externally.
 
+DESTRUCTIVE OPERATIONS:
+
+By default, destructive operations (start_kubeshark, stop_kubeshark) are disabled
+to prevent accidental cluster modifications. To enable them, use --allow-destructive:
+
+  {
+    "mcpServers": {
+      "kubeshark": {
+        "command": "/path/to/kubeshark",
+        "args": ["mcp", "--allow-destructive", "--kubeconfig", "/path/to/.kube/config"]
+      }
+    }
+  }
+
 CUSTOM SETTINGS:
 
 To use custom settings when starting Kubeshark, use the --set flag:
@@ -97,7 +109,7 @@ Multiple --set flags can be used for different settings.`,
 		}
 
 		setFlags, _ := cmd.Flags().GetStringSlice(config.SetCommandName)
-		runMCPWithConfig(setFlags, mcpURL)
+		runMCPWithConfig(setFlags, mcpURL, mcpAllowDestructive)
 		return nil
 	},
 }
@@ -105,16 +117,9 @@ Multiple --set flags can be used for different settings.`,
 func init() {
 	rootCmd.AddCommand(mcpCmd)
 
-	defaultTapConfig := configStructs.TapConfig{}
-	if err := defaults.Set(&defaultTapConfig); err != nil {
-		log.Debug().Err(err).Send()
-	}
-
-	mcpCmd.Flags().Uint16(configStructs.ProxyFrontPortLabel, defaultTapConfig.Proxy.Front.Port, "Provide a custom port for the proxy/port-forward")
-	mcpCmd.Flags().String(configStructs.ProxyHostLabel, defaultTapConfig.Proxy.Host, "Provide a custom host for the proxy/port-forward")
-	mcpCmd.Flags().StringP(configStructs.ReleaseNamespaceLabel, "s", defaultTapConfig.Release.Namespace, "Release namespace of Kubeshark")
 	mcpCmd.Flags().StringVar(&mcpURL, "url", "", "Direct URL to Kubeshark (e.g., https://kubeshark.example.com). When set, connects directly without kubectl/proxy and disables start/stop/check tools.")
 	mcpCmd.Flags().StringVar(&mcpKubeconfig, "kubeconfig", "", "Path to kubeconfig file (e.g., /Users/me/.kube/config)")
 	mcpCmd.Flags().BoolVar(&mcpListTools, "list-tools", false, "List available MCP tools and exit")
 	mcpCmd.Flags().BoolVar(&mcpConfig, "mcp-config", false, "Print MCP client configuration JSON and exit")
+	mcpCmd.Flags().BoolVar(&mcpAllowDestructive, "allow-destructive", false, "Enable destructive operations (start_kubeshark, stop_kubeshark). Without this flag, only read-only traffic analysis tools are available.")
 }

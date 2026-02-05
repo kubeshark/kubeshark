@@ -45,6 +45,7 @@ type mcpSession struct {
 }
 
 // startMCPSession starts an MCP server and returns a session for sending requests.
+// By default, starts in read-only mode (no --allow-destructive).
 func startMCPSession(t *testing.T, binary string, args ...string) *mcpSession {
 	t.Helper()
 
@@ -76,6 +77,13 @@ func startMCPSession(t *testing.T, binary string, args ...string) *mcpSession {
 		stdout: bufio.NewReader(stdout),
 		cancel: cancel,
 	}
+}
+
+// startMCPSessionWithDestructive starts an MCP server with --allow-destructive flag.
+func startMCPSessionWithDestructive(t *testing.T, binary string, args ...string) *mcpSession {
+	t.Helper()
+	allArgs := append([]string{"--allow-destructive"}, args...)
+	return startMCPSession(t, binary, allArgs...)
 }
 
 // sendRequest sends a JSON-RPC request and returns the response (30s timeout).
@@ -197,11 +205,12 @@ func TestMCP_Initialize(t *testing.T) {
 	}
 }
 
-// TestMCP_ToolsList tests that tools/list returns all expected tools.
-func TestMCP_ToolsList(t *testing.T) {
+// TestMCP_ToolsList_ReadOnly tests that tools/list returns only safe tools in read-only mode.
+func TestMCP_ToolsList_ReadOnly(t *testing.T) {
 	requireKubernetesCluster(t)
 	binary := getKubesharkBinary(t)
 
+	// Start without --allow-destructive (read-only mode)
 	session := startMCPSession(t, binary)
 	defer session.close()
 
@@ -240,14 +249,69 @@ func TestMCP_ToolsList(t *testing.T) {
 		t.Fatalf("Failed to parse result: %v", err)
 	}
 
-	expectedTools := []string{
-		"check_kubeshark_status",
-		"start_kubeshark",
-		"stop_kubeshark",
-		"list_workloads",
-		"list_api_calls",
-		"get_api_call",
-		"get_api_stats",
+	toolNames := make(map[string]bool)
+	for _, tool := range result.Tools {
+		toolNames[tool.Name] = true
+	}
+
+	// In read-only mode, check_kubeshark_status should be present
+	if !toolNames["check_kubeshark_status"] {
+		t.Error("Missing expected tool: check_kubeshark_status")
+	}
+
+	// Destructive tools should NOT be present in read-only mode
+	if toolNames["start_kubeshark"] {
+		t.Error("start_kubeshark should not be available in read-only mode")
+	}
+	if toolNames["stop_kubeshark"] {
+		t.Error("stop_kubeshark should not be available in read-only mode")
+	}
+
+	t.Logf("Found %d tools in read-only mode", len(result.Tools))
+}
+
+// TestMCP_ToolsList_WithDestructive tests that tools/list includes destructive tools when flag is set.
+func TestMCP_ToolsList_WithDestructive(t *testing.T) {
+	requireKubernetesCluster(t)
+	binary := getKubesharkBinary(t)
+
+	// Start with --allow-destructive
+	session := startMCPSessionWithDestructive(t, binary)
+	defer session.close()
+
+	// Initialize first
+	session.sendRequest(t, MCPRequest{
+		JSONRPC: "2.0",
+		ID:      1,
+		Method:  "initialize",
+		Params: map[string]interface{}{
+			"protocolVersion": "2024-11-05",
+			"capabilities":    map[string]interface{}{},
+			"clientInfo": map[string]interface{}{
+				"name":    "integration-test",
+				"version": "1.0.0",
+			},
+		},
+	})
+
+	// List tools
+	resp := session.sendRequest(t, MCPRequest{
+		JSONRPC: "2.0",
+		ID:      2,
+		Method:  "tools/list",
+	})
+
+	if resp.Error != nil {
+		t.Fatalf("tools/list failed: %s", resp.Error.Message)
+	}
+
+	var result struct {
+		Tools []struct {
+			Name string `json:"name"`
+		} `json:"tools"`
+	}
+	if err := json.Unmarshal(resp.Result, &result); err != nil {
+		t.Fatalf("Failed to parse result: %v", err)
 	}
 
 	toolNames := make(map[string]bool)
@@ -255,11 +319,20 @@ func TestMCP_ToolsList(t *testing.T) {
 		toolNames[tool.Name] = true
 	}
 
+	// With --allow-destructive, all cluster management tools should be present
+	expectedTools := []string{
+		"check_kubeshark_status",
+		"start_kubeshark",
+		"stop_kubeshark",
+	}
+
 	for _, expected := range expectedTools {
 		if !toolNames[expected] {
 			t.Errorf("Missing expected tool: %s", expected)
 		}
 	}
+
+	t.Logf("Found %d tools with --allow-destructive", len(result.Tools))
 }
 
 // TestMCP_CheckKubesharkStatus_NotRunning tests check_kubeshark_status when Kubeshark is not running.
@@ -324,7 +397,8 @@ func TestMCP_StartKubeshark(t *testing.T) {
 	// Ensure clean state
 	cleanupKubeshark(t, binary)
 
-	session := startMCPSession(t, binary)
+	// Must use --allow-destructive for start_kubeshark
+	session := startMCPSessionWithDestructive(t, binary)
 	defer session.close()
 
 	// Initialize
@@ -377,6 +451,50 @@ func TestMCP_StartKubeshark(t *testing.T) {
 	})
 }
 
+// TestMCP_StartKubeshark_WithoutFlag tests that start_kubeshark fails without --allow-destructive.
+func TestMCP_StartKubeshark_WithoutFlag(t *testing.T) {
+	requireKubernetesCluster(t)
+	binary := getKubesharkBinary(t)
+
+	// Start WITHOUT --allow-destructive
+	session := startMCPSession(t, binary)
+	defer session.close()
+
+	// Initialize
+	session.sendRequest(t, MCPRequest{
+		JSONRPC: "2.0",
+		ID:      1,
+		Method:  "initialize",
+		Params: map[string]interface{}{
+			"protocolVersion": "2024-11-05",
+			"capabilities":    map[string]interface{}{},
+			"clientInfo":      map[string]interface{}{"name": "test", "version": "1.0"},
+		},
+	})
+
+	// Try to call start_kubeshark - should fail
+	resp := session.callTool(t, 2, "start_kubeshark", nil)
+
+	var result struct {
+		Content []struct {
+			Text string `json:"text"`
+		} `json:"content"`
+		IsError bool `json:"isError"`
+	}
+	if err := json.Unmarshal(resp.Result, &result); err != nil {
+		t.Fatalf("Failed to parse result: %v", err)
+	}
+
+	// Should return error about --allow-destructive
+	if !result.IsError {
+		t.Error("Expected isError=true when calling start_kubeshark without --allow-destructive")
+	}
+
+	if len(result.Content) > 0 && !strings.Contains(result.Content[0].Text, "allow-destructive") {
+		t.Errorf("Expected error message about --allow-destructive, got: %s", result.Content[0].Text)
+	}
+}
+
 // TestMCP_StopKubeshark tests the stop_kubeshark tool.
 func TestMCP_StopKubeshark(t *testing.T) {
 	if testing.Short() {
@@ -386,7 +504,8 @@ func TestMCP_StopKubeshark(t *testing.T) {
 	requireKubernetesCluster(t)
 	binary := getKubesharkBinary(t)
 
-	session := startMCPSession(t, binary)
+	// Must use --allow-destructive for stop_kubeshark
+	session := startMCPSessionWithDestructive(t, binary)
 	defer session.close()
 
 	// Initialize first
@@ -444,6 +563,50 @@ func TestMCP_StopKubeshark(t *testing.T) {
 	}
 }
 
+// TestMCP_StopKubeshark_WithoutFlag tests that stop_kubeshark fails without --allow-destructive.
+func TestMCP_StopKubeshark_WithoutFlag(t *testing.T) {
+	requireKubernetesCluster(t)
+	binary := getKubesharkBinary(t)
+
+	// Start WITHOUT --allow-destructive
+	session := startMCPSession(t, binary)
+	defer session.close()
+
+	// Initialize
+	session.sendRequest(t, MCPRequest{
+		JSONRPC: "2.0",
+		ID:      1,
+		Method:  "initialize",
+		Params: map[string]interface{}{
+			"protocolVersion": "2024-11-05",
+			"capabilities":    map[string]interface{}{},
+			"clientInfo":      map[string]interface{}{"name": "test", "version": "1.0"},
+		},
+	})
+
+	// Try to call stop_kubeshark - should fail
+	resp := session.callTool(t, 2, "stop_kubeshark", nil)
+
+	var result struct {
+		Content []struct {
+			Text string `json:"text"`
+		} `json:"content"`
+		IsError bool `json:"isError"`
+	}
+	if err := json.Unmarshal(resp.Result, &result); err != nil {
+		t.Fatalf("Failed to parse result: %v", err)
+	}
+
+	// Should return error about --allow-destructive
+	if !result.IsError {
+		t.Error("Expected isError=true when calling stop_kubeshark without --allow-destructive")
+	}
+
+	if len(result.Content) > 0 && !strings.Contains(result.Content[0].Text, "allow-destructive") {
+		t.Errorf("Expected error message about --allow-destructive, got: %s", result.Content[0].Text)
+	}
+}
+
 // TestMCP_FullLifecycle tests the complete lifecycle: check -> start -> check -> stop -> check
 func TestMCP_FullLifecycle(t *testing.T) {
 	if testing.Short() {
@@ -456,7 +619,8 @@ func TestMCP_FullLifecycle(t *testing.T) {
 	// Ensure clean state
 	cleanupKubeshark(t, binary)
 
-	session := startMCPSession(t, binary)
+	// Must use --allow-destructive for start/stop operations
+	session := startMCPSessionWithDestructive(t, binary)
 	defer session.close()
 
 	// Initialize
