@@ -948,44 +948,51 @@ func establishProxyConnection(timeout time.Duration) (string, error) {
 func fetchAndDisplayTools(hubURL string, timeout time.Duration) {
 	client := &http.Client{Timeout: timeout}
 
-	// Try to fetch tools list from backend
-	resp, err := client.Get(hubURL + "/tools")
+	// Fetch tools list from /api/mcp endpoint
+	resp, err := client.Get(strings.TrimSuffix(hubURL, "/mcp") + "/mcp")
 	if err != nil {
 		fmt.Printf("Kubeshark API: Connection failed (%v)\n", err)
 		return
 	}
 	defer func() { _ = resp.Body.Close() }()
 
-	if resp.StatusCode == 404 {
-		// /tools endpoint doesn't exist, just confirm connection works
-		fmt.Println("Traffic Analysis tools available (connected to Kubeshark)")
-		return
-	}
-
 	if resp.StatusCode >= 400 {
 		fmt.Printf("Kubeshark API: Error (%s)\n", resp.Status)
 		return
 	}
 
-	// Parse and display tools
-	var tools []struct {
+	// Parse the response - MCP server info with endpoints
+	var mcpInfo struct {
 		Name        string `json:"name"`
 		Description string `json:"description"`
+		Version     string `json:"version"`
+		Endpoints   []struct {
+			Path        string `json:"path"`
+			Method      string `json:"method"`
+			Description string `json:"description"`
+		} `json:"endpoints"`
 	}
-	if err := json.NewDecoder(resp.Body).Decode(&tools); err != nil {
-		fmt.Println("Traffic Analysis tools available (connected to Kubeshark)")
+	if err := json.NewDecoder(resp.Body).Decode(&mcpInfo); err != nil {
+		fmt.Printf("Kubeshark API: Connected (couldn't parse response: %v)\n", err)
+		return
+	}
+
+	if len(mcpInfo.Endpoints) == 0 {
+		fmt.Println("Kubeshark API: Connected (no endpoints available)")
 		return
 	}
 
 	fmt.Println("Traffic Analysis:")
-	for _, tool := range tools {
-		desc := tool.Description
-		if idx := strings.Index(desc, "\n"); idx > 0 {
-			desc = desc[:idx]
+	for _, ep := range mcpInfo.Endpoints {
+		// Extract tool name from path (e.g., /mcp/workloads -> workloads)
+		name := strings.TrimPrefix(ep.Path, "/mcp/")
+		if strings.Contains(name, ":") {
+			continue // Skip parameterized paths like /mcp/calls/:id
 		}
-		if len(desc) > 55 {
-			desc = desc[:52] + "..."
+		desc := ep.Description
+		if len(desc) > 50 {
+			desc = desc[:47] + "..."
 		}
-		fmt.Printf("  %-22s %s\n", tool.Name, desc)
+		fmt.Printf("  %-22s %s\n", name, desc)
 	}
 }
