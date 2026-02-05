@@ -996,3 +996,44 @@ func fetchAndDisplayTools(hubURL string, timeout time.Duration) {
 		fmt.Printf("  %-22s %s\n", name, desc)
 	}
 }
+
+// printMCPConfig outputs the Claude Desktop configuration JSON
+func printMCPConfig(directURL string, kubeconfig string) {
+	// Get the path to the kubeshark binary
+	binaryPath, err := os.Executable()
+	if err != nil {
+		binaryPath = "kubeshark"
+	}
+
+	// Build args
+	args := []string{"mcp"}
+	if directURL != "" {
+		args = append(args, "--url", directURL)
+	} else if kubeconfig != "" {
+		args = append(args, "--kubeconfig", kubeconfig)
+	} else {
+		// Default to user's kubeconfig
+		kubeconfig = config.Config.KubeConfigPath()
+		if kubeconfig != "" {
+			args = append(args, "--kubeconfig", kubeconfig)
+		}
+	}
+
+	// Build config structure
+	mcpConfig := map[string]any{
+		"mcpServers": map[string]any{
+			"kubeshark": map[string]any{
+				"command": binaryPath,
+				"args":    args,
+			},
+		},
+	}
+
+	// Output as JSON
+	output, err := json.MarshalIndent(mcpConfig, "", "  ")
+	if err != nil {
+		fmt.Fprintf(os.Stderr, "Error generating config: %v\n", err)
+		return
+	}
+	fmt.Println(string(output))
+}

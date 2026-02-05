@@ -11,6 +11,7 @@ import (
 var mcpURL string
 var mcpKubeconfig string
 var mcpListTools bool
+var mcpConfig bool
 
 var mcpCmd = &cobra.Command{
 	Use:   "mcp",
@@ -78,6 +79,12 @@ To use custom settings when starting Kubeshark, use the --set flag:
 
 Multiple --set flags can be used for different settings.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
+		// Handle --mcp-config flag
+		if mcpConfig {
+			printMCPConfig(mcpURL, mcpKubeconfig)
+			return nil
+		}
+
 		// Set kubeconfig path if provided
 		if mcpKubeconfig != "" {
 			config.Config.Kube.ConfigPathStr = mcpKubeconfig
@@ -109,4 +116,5 @@ func init() {
 	mcpCmd.Flags().StringVar(&mcpURL, "url", "", "Direct URL to Kubeshark (e.g., https://kubeshark.example.com). When set, connects directly without kubectl/proxy and disables start/stop/check tools.")
 	mcpCmd.Flags().StringVar(&mcpKubeconfig, "kubeconfig", "", "Path to kubeconfig file (e.g., /Users/me/.kube/config)")
 	mcpCmd.Flags().BoolVar(&mcpListTools, "list-tools", false, "List available MCP tools and exit")
+	mcpCmd.Flags().BoolVar(&mcpConfig, "mcp-config", false, "Print MCP client configuration JSON and exit")
 }
