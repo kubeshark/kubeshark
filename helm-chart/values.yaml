@@ -188,6 +188,8 @@ tap:
   - diameter
   - udp-flow
   - tcp-flow
+  - tcp-flow-full
+  - udp-flow-full
   portMapping:
     http:
     - 80
