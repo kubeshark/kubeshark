@@ -872,14 +872,14 @@ func listMCPTools(directURL string) {
 	fmt.Println("=========")
 	fmt.Println()
 
-	// URL mode - no cluster management, just check connection
+	// URL mode - no cluster management, connect directly
 	if directURL != "" {
 		fmt.Printf("URL Mode: %s\n\n", directURL)
 		fmt.Println("Cluster management tools disabled (Kubeshark managed externally)")
 		fmt.Println()
 
 		hubURL := strings.TrimSuffix(directURL, "/") + "/api/mcp"
-		checkAPIConnection(hubURL)
+		fetchAndDisplayTools(hubURL, 30*time.Second)
 		return
 	}
 
@@ -889,30 +889,103 @@ func listMCPTools(directURL string) {
 	fmt.Println("  start_kubeshark         Start Kubeshark to capture traffic")
 	fmt.Println("  stop_kubeshark          Stop Kubeshark and clean up resources")
 	fmt.Println()
-	fmt.Println("Note: MCP automatically proxies to Kubeshark when connected.")
-	fmt.Println()
 
-	// Try to connect to Kubeshark via proxy
-	hubURL := fmt.Sprintf("http://%s:%d/api/mcp",
-		config.Config.Tap.Proxy.Host,
-		config.Config.Tap.Proxy.Front.Port)
-	checkAPIConnection(hubURL)
+	// Establish proxy connection to Kubeshark
+	fmt.Println("Connecting to Kubeshark...")
+	hubURL, err := establishProxyConnection(30 * time.Second)
+	if err != nil {
+		fmt.Printf("\nKubeshark API: %v\n", err)
+		return
+	}
+
+	fmt.Printf("Connected to: %s\n\n", hubURL)
+	fetchAndDisplayTools(hubURL, 30*time.Second)
 }
 
-// checkAPIConnection checks if Kubeshark API is reachable
-func checkAPIConnection(hubURL string) {
-	client := &http.Client{Timeout: 3 * time.Second}
-	resp, err := client.Get(hubURL + "/workloads")
+// establishProxyConnection sets up proxy to Kubeshark and returns the hub URL
+func establishProxyConnection(timeout time.Duration) (string, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), timeout)
+	defer cancel()
+
+	kubernetesProvider, err := getKubernetesProviderForCli(true, true)
 	if err != nil {
-		fmt.Println("Kubeshark API: Not connected")
+		return "", fmt.Errorf("failed to get Kubernetes provider: %v", err)
+	}
+
+	// Check if Kubeshark services exist
+	exists, err := kubernetesProvider.DoesServiceExist(ctx, config.Config.Tap.Release.Namespace, kubernetes.FrontServiceName)
+	if err != nil {
+		return "", fmt.Errorf("error checking Kubeshark status: %v", err)
+	}
+	if !exists {
+		return "", fmt.Errorf("not running (use start_kubeshark to start)")
+	}
+
+	// Start proxy to frontend
+	frontURL := kubernetes.GetProxyOnPort(config.Config.Tap.Proxy.Front.Port)
+	response, err := http.Get(fmt.Sprintf("%s/", frontURL))
+	if err != nil || response.StatusCode != 200 {
+		startProxyReportErrorIfAny(
+			kubernetesProvider,
+			ctx,
+			kubernetes.FrontServiceName,
+			kubernetes.FrontPodName,
+			configStructs.ProxyFrontPortLabel,
+			config.Config.Tap.Proxy.Front.Port,
+			configStructs.ContainerPort,
+			"",
+		)
+		connector := connect.NewConnector(frontURL, connect.DefaultRetries, connect.DefaultTimeout)
+		if err := connector.TestConnection(""); err != nil {
+			return "", fmt.Errorf("couldn't connect to Kubeshark frontend")
+		}
+	}
+
+	return fmt.Sprintf("%s/api/mcp", frontURL), nil
+}
+
+// fetchAndDisplayTools fetches tools from the Kubeshark API and displays them
+func fetchAndDisplayTools(hubURL string, timeout time.Duration) {
+	client := &http.Client{Timeout: timeout}
+
+	// Try to fetch tools list from backend
+	resp, err := client.Get(hubURL + "/tools")
+	if err != nil {
+		fmt.Printf("Kubeshark API: Connection failed (%v)\n", err)
 		return
 	}
 	defer func() { _ = resp.Body.Close() }()
 
-	if resp.StatusCode >= 500 {
-		fmt.Println("Kubeshark API: Not connected")
+	if resp.StatusCode == 404 {
+		// /tools endpoint doesn't exist, just confirm connection works
+		fmt.Println("Traffic Analysis tools available (connected to Kubeshark)")
 		return
 	}
 
-	fmt.Printf("Kubeshark API: Connected (%s)\n", hubURL)
+	if resp.StatusCode >= 400 {
+		fmt.Printf("Kubeshark API: Error (%s)\n", resp.Status)
+		return
+	}
+
+	// Parse and display tools
+	var tools []struct {
+		Name        string `json:"name"`
+		Description string `json:"description"`
+	}
+	if err := json.NewDecoder(resp.Body).Decode(&tools); err != nil {
+		fmt.Println("Traffic Analysis tools available (connected to Kubeshark)")
+		return
+	}
+
+	fmt.Println("Traffic Analysis:")
+	for _, tool := range tools {
+		desc := tool.Description
+		if idx := strings.Index(desc, "\n"); idx > 0 {
+			desc = desc[:idx]
+		}
+		if len(desc) > 55 {
+			desc = desc[:52] + "..."
+		}
+		fmt.Printf("  %-22s %s\n", tool.Name, desc)
+	}
 }
