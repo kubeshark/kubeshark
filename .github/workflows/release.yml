@@ -43,6 +43,23 @@ jobs:
         run: |
           echo '${{ steps.version.outputs.tag }}' >> bin/version.txt
 
+      - name: Create MCP Registry artifacts
+        shell: bash
+        run: |
+          cd bin
+          # Create .mcpb copies for MCP Registry (URL must contain "mcp")
+          for f in kubeshark_linux_amd64 kubeshark_linux_arm64 kubeshark_darwin_amd64 kubeshark_darwin_arm64; do
+            if [ -f "$f" ]; then
+              cp "$f" "${f/kubeshark_/kubeshark-mcp_}.mcpb"
+              shasum -a 256 "${f/kubeshark_/kubeshark-mcp_}.mcpb" > "${f/kubeshark_/kubeshark-mcp_}.mcpb.sha256"
+            fi
+          done
+          # Handle Windows executable
+          if [ -f "kubeshark.exe" ]; then
+            cp kubeshark.exe kubeshark-mcp_windows_amd64.mcpb
+            shasum -a 256 kubeshark-mcp_windows_amd64.mcpb > kubeshark-mcp_windows_amd64.mcpb.sha256
+          fi
+
       - name: Release
         uses: ncipollo/release-action@v1
         with:

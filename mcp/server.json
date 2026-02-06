@@ -1,9 +1,9 @@
 {
-  "$schema": "https://registry.modelcontextprotocol.io/schemas/server.schema.json",
-  "name": "com.kubeshark/mcp",
+  "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+  "name": "io.github.kubeshark/mcp",
   "displayName": "Kubeshark",
-  "description": "Real-time Kubernetes network traffic visibility and API analysis. Query L7 API transactions (HTTP, gRPC, Redis, Kafka, DNS), L4 network flows, and manage Kubeshark deployments directly from AI assistants.",
-  "icon": "https://kubeshark.com/favicon.ico",
+  "description": "Real-time Kubernetes network traffic visibility and API analysis for HTTP, gRPC, Redis, Kafka, DNS.",
+  "icon": "https://raw.githubusercontent.com/kubeshark/assets/refs/heads/master/logo/ico/icon.ico",
   "repository": {
     "url": "https://github.com/kubeshark/kubeshark",
     "source": "github"
@@ -43,21 +43,43 @@
   ],
   "packages": [
     {
-      "registryType": "github-releases",
-      "name": "kubeshark/kubeshark",
-      "version": "52.12.0",
-      "runtime": "binary",
-      "platforms": [
-        "darwin-arm64",
-        "darwin-amd64",
-        "linux-arm64",
-        "linux-amd64",
-        "windows-amd64"
-      ],
+      "registryType": "mcpb",
+      "identifier": "https://github.com/kubeshark/kubeshark/releases/download/v52.12.0/kubeshark-mcp_darwin_arm64.mcpb",
+      "fileSha256": "UPDATE_AFTER_RELEASE",
       "transport": {
-        "type": "stdio",
-        "command": "kubeshark",
-        "args": ["mcp"]
+        "type": "stdio"
+      }
+    },
+    {
+      "registryType": "mcpb",
+      "identifier": "https://github.com/kubeshark/kubeshark/releases/download/v52.12.0/kubeshark-mcp_darwin_amd64.mcpb",
+      "fileSha256": "UPDATE_AFTER_RELEASE",
+      "transport": {
+        "type": "stdio"
+      }
+    },
+    {
+      "registryType": "mcpb",
+      "identifier": "https://github.com/kubeshark/kubeshark/releases/download/v52.12.0/kubeshark-mcp_linux_arm64.mcpb",
+      "fileSha256": "UPDATE_AFTER_RELEASE",
+      "transport": {
+        "type": "stdio"
+      }
+    },
+    {
+      "registryType": "mcpb",
+      "identifier": "https://github.com/kubeshark/kubeshark/releases/download/v52.12.0/kubeshark-mcp_linux_amd64.mcpb",
+      "fileSha256": "UPDATE_AFTER_RELEASE",
+      "transport": {
+        "type": "stdio"
+      }
+    },
+    {
+      "registryType": "mcpb",
+      "identifier": "https://github.com/kubeshark/kubeshark/releases/download/v52.12.0/kubeshark-mcp_windows_amd64.mcpb",
+      "fileSha256": "UPDATE_AFTER_RELEASE",
+      "transport": {
+        "type": "stdio"
       }
     }
   ],

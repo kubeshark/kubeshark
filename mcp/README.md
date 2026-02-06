@@ -59,6 +59,18 @@ Add to your Claude Desktop configuration:
   }
 }
 ```
+or:
+
+```json
+{
+  "mcpServers": {
+    "kubeshark": {
+      "command": "kubeshark",
+      "args": ["mcp"]
+    }
+  }
+}
+```
 
 #### With Destructive Operations
 
