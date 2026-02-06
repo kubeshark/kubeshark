@@ -166,7 +166,7 @@ func runMCPWithConfig(setFlags []string, directURL string, allowDestructive bool
 	zerolog.SetGlobalLevel(zerolog.Disabled)
 
 	server := &mcpServer{
-		httpClient:       &http.Client{},
+		httpClient:       &http.Client{Timeout: 30 * time.Second},
 		stdin:            os.Stdin,
 		stdout:           os.Stdout,
 		setFlags:         setFlags,
@@ -250,9 +250,12 @@ func (s *mcpServer) ensureBackendConnection() string {
 		return "Kubeshark is not running. Use the 'start_kubeshark' tool to start it first."
 	}
 
-	// Start proxy to frontend
+	// Start proxy to frontend and verify connectivity
 	frontURL := kubernetes.GetProxyOnPort(config.Config.Tap.Proxy.Front.Port)
 	response, err := http.Get(fmt.Sprintf("%s/", frontURL))
+	if response != nil && response.Body != nil {
+		defer func() { _ = response.Body.Close() }()
+	}
 	if err != nil || response.StatusCode != 200 {
 		startProxyReportErrorIfAny(
 			kubernetesProvider,
@@ -345,6 +348,11 @@ func (s *mcpServer) run() {
 
 		s.handleRequest(&req)
 	}
+
+	// Check for scanner errors (e.g., stdin closed, read errors)
+	if err := scanner.Err(); err != nil {
+		writeErrorToStderr("[kubeshark-mcp] Scanner error: %v", err)
+	}
 }
 
 func (s *mcpServer) handleRequest(req *jsonRPCRequest) {
@@ -433,22 +441,20 @@ Use the MCP tools - do NOT use kubectl, helm, or curl directly.`
 func (s *mcpServer) handleListTools(req *jsonRPCRequest) {
 	var tools []mcpTool
 
-	// Add check_kubeshark_status if not in URL mode (safe, read-only)
-	if !s.urlMode {
-		tools = append(tools, mcpTool{
-			Name:        "check_kubeshark_status",
-			Description: "Safe: Checks if Kubeshark is currently running in the cluster. This is a read-only operation that does not modify anything.",
-			InputSchema: json.RawMessage(`{
-				"type": "object",
-				"properties": {
-					"release_namespace": {
-						"type": "string",
-						"description": "Namespace where Kubeshark is installed (default: 'default')"
-					}
+	// Add check_kubeshark_status - safe, read-only operation that works in both modes
+	tools = append(tools, mcpTool{
+		Name:        "check_kubeshark_status",
+		Description: "Safe: Checks if Kubeshark is currently running and accessible. In URL mode, confirms connectivity to the remote instance. In local mode, checks cluster pods. This is a read-only operation.",
+		InputSchema: json.RawMessage(`{
+			"type": "object",
+			"properties": {
+				"release_namespace": {
+					"type": "string",
+					"description": "Namespace where Kubeshark is installed (default: 'default'). Only used in local mode."
 				}
-			}`),
-		})
-	}
+			}
+		}`),
+	})
 
 	// Add destructive tools only if --allow-destructive flag was set (and not in URL mode)
 	if !s.urlMode && s.allowDestructive {
@@ -756,6 +762,11 @@ func (s *mcpServer) callStartKubeshark(args map[string]any) (string, bool) {
 		return fmt.Sprintf("Failed to start Kubeshark: %v", err), true
 	}
 
+	// Wait for the process in a goroutine to prevent zombie processes
+	go func() {
+		_ = cmd.Wait()
+	}()
+
 	logProgress("Kubeshark process started, waiting for pods to be ready...")
 
 	// Wait for Kubeshark to be ready (poll for pods)
@@ -786,13 +797,8 @@ func (s *mcpServer) callStartKubeshark(args map[string]any) (string, bool) {
 		if ready {
 			break
 		}
-		select {
-		case <-context.Background().Done():
-			return "Kubeshark start interrupted", true
-		default:
-			// Sleep 5 seconds before next check
-			<-time.After(5 * time.Second)
-		}
+		// Sleep 5 seconds before next check
+		time.Sleep(5 * time.Second)
 	}
 
 	if !ready {
@@ -959,9 +965,12 @@ func establishProxyConnection(timeout time.Duration) (string, error) {
 		return "", fmt.Errorf("not running (use start_kubeshark to start)")
 	}
 
-	// Start proxy to frontend
+	// Start proxy to frontend and verify connectivity
 	frontURL := kubernetes.GetProxyOnPort(config.Config.Tap.Proxy.Front.Port)
 	response, err := http.Get(fmt.Sprintf("%s/", frontURL))
+	if response != nil && response.Body != nil {
+		defer func() { _ = response.Body.Close() }()
+	}
 	if err != nil || response.StatusCode != 200 {
 		startProxyReportErrorIfAny(
 			kubernetesProvider,

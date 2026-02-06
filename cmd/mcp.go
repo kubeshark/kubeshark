@@ -58,8 +58,8 @@ you can connect directly without needing kubectl/kubeconfig:
     }
   }
 
-In URL mode, cluster management tools (start/stop/check) are disabled since
-Kubeshark is managed externally.
+In URL mode, destructive tools (start/stop) are disabled since Kubeshark is
+managed externally. The check_kubeshark_status tool remains available to confirm connectivity.
 
 DESTRUCTIVE OPERATIONS:
 
@@ -117,7 +117,7 @@ Multiple --set flags can be used for different settings.`,
 func init() {
 	rootCmd.AddCommand(mcpCmd)
 
-	mcpCmd.Flags().StringVar(&mcpURL, "url", "", "Direct URL to Kubeshark (e.g., https://kubeshark.example.com). When set, connects directly without kubectl/proxy and disables start/stop/check tools.")
+	mcpCmd.Flags().StringVar(&mcpURL, "url", "", "Direct URL to Kubeshark (e.g., https://kubeshark.example.com). When set, connects directly without kubectl/proxy and disables start/stop tools.")
 	mcpCmd.Flags().StringVar(&mcpKubeconfig, "kubeconfig", "", "Path to kubeconfig file (e.g., /Users/me/.kube/config)")
 	mcpCmd.Flags().BoolVar(&mcpListTools, "list-tools", false, "List available MCP tools and exit")
 	mcpCmd.Flags().BoolVar(&mcpConfig, "mcp-config", false, "Print MCP client configuration JSON and exit")
