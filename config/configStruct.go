@@ -116,6 +116,7 @@ func CreateDefaultConfig() ConfigStruct {
 							},
 							CanUpdateTargetedPods:   true,
 							CanStopTrafficCapturing: true,
+							CanControlDissection:    true,
 							ShowAdminConsoleLink:    true,
 						},
 					},
@@ -154,8 +155,10 @@ func CreateDefaultConfig() ConfigStruct {
 				CompleteStreamingEnabled: true,
 			},
 			Capture: configStructs.CaptureConfig{
-				Stopped:   false,
-				StopAfter: "5m",
+				Dissection: configStructs.DissectionConfig{
+					Enabled:   true,
+					StopAfter: "5m",
+				},
 			},
 		},
 	}

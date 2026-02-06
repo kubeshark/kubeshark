@@ -26,8 +26,9 @@ tap:
   excludedNamespaces: []
   bpfOverride: ""
   capture:
-    stopped: false
-    stopAfter: 5m
+    dissection:
+      enabled: true
+      stopAfter: 5m
     captureSelf: false
     raw:
       enabled: true
@@ -145,6 +146,7 @@ tap:
             canDelete: true
           canUpdateTargetedPods: true
           canStopTrafficCapturing: true
+          canControlDissection: true
           showAdminConsoleLink: true
   ingress:
     enabled: false
