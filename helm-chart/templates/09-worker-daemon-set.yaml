@@ -402,8 +402,8 @@ spec:
         - hostPath:
             path: /
           name: root
-        - name: data
         {{- end }}
+        - name: data
 {{- if .Values.tap.persistentStorage }}
           persistentVolumeClaim:
             claimName: kubeshark-persistent-volume-claim

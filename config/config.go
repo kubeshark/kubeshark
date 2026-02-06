@@ -58,6 +58,7 @@ func InitConfig(cmd *cobra.Command) error {
 		"pro",
 		"manifests",
 		"license",
+		"mcp",
 	}, cmd.Use) {
 		go version.CheckNewerVersion()
 	}
