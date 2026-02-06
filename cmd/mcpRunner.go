@@ -212,7 +212,7 @@ func (s *mcpServer) validateDirectURL() error {
 
 	// Verify it looks like a valid MCP response
 	if mcpInfo.Name == "" && len(mcpInfo.Tools) == 0 {
-		return fmt.Errorf("Kubeshark at %s does not appear to have MCP enabled", urlStr)
+		return fmt.Errorf("kubeshark at %s does not appear to have MCP enabled", urlStr)
 	}
 
 	// Set the hub base URL
@@ -497,11 +497,7 @@ func (s *mcpServer) handleListTools(req *jsonRPCRequest) {
 	// Fetch tools from Hub and merge
 	if hubMCP := s.fetchHubMCP(); hubMCP != nil {
 		for _, hubTool := range hubMCP.Tools {
-			tools = append(tools, mcpTool{
-				Name:        hubTool.Name,
-				Description: hubTool.Description,
-				InputSchema: hubTool.InputSchema,
-			})
+			tools = append(tools, mcpTool(hubTool))
 		}
 	}
 
@@ -522,11 +518,7 @@ func (s *mcpServer) handleListPrompts(req *jsonRPCRequest) {
 		for _, hubPrompt := range hubMCP.Prompts {
 			var args []mcpPromptArg
 			for _, hubArg := range hubPrompt.Arguments {
-				args = append(args, mcpPromptArg{
-					Name:        hubArg.Name,
-					Description: hubArg.Description,
-					Required:    hubArg.Required,
-				})
+				args = append(args, mcpPromptArg(hubArg))
 			}
 			prompts = append(prompts, mcpPrompt{
 				Name:        hubPrompt.Name,
