@@ -1,17 +1,7 @@
 //go:build integration
 
 // Package integration contains integration tests that run against a real Kubernetes cluster.
-//
-// These tests are excluded from normal `go test` runs and require the `integration` build tag.
 // Run with: go test -tags=integration ./integration/...
-//
-// REUSABLE TEMPLATE:
-// This file provides a reusable pattern for integration testing CLI tools.
-// To adapt for another project:
-// 1. Change binaryName to your project's binary name
-// 2. Update buildBinary() with your build command
-// 3. Modify cleanupResources() for your cleanup logic
-// 4. Adjust healthCheck() for your service's health verification
 package integration
 
 import (
@@ -28,14 +18,8 @@ import (
 )
 
 const (
-	// binaryName is the name of the binary to test
-	// TEMPLATE: Change this to your project's binary name
-	binaryName = "kubeshark"
-
-	// defaultTimeout for command execution
+	binaryName     = "kubeshark"
 	defaultTimeout = 2 * time.Minute
-
-	// startupTimeout for services that need time to initialize
 	startupTimeout = 3 * time.Minute
 )
 
@@ -47,21 +31,21 @@ var (
 )
 
 // requireKubernetesCluster skips the test if no Kubernetes cluster is available.
-// TEMPLATE: Modify this check based on your infrastructure requirements.
 func requireKubernetesCluster(t *testing.T) {
 	t.Helper()
-
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	cmd := exec.CommandContext(ctx, "kubectl", "cluster-info")
-	if err := cmd.Run(); err != nil {
-		t.Skip("Skipping: no Kubernetes cluster available (kubectl cluster-info failed)")
+	if !hasKubernetesCluster() {
+		t.Skip("Skipping: no Kubernetes cluster available")
 	}
 }
 
+// hasKubernetesCluster returns true if a Kubernetes cluster is accessible.
+func hasKubernetesCluster() bool {
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	return exec.CommandContext(ctx, "kubectl", "cluster-info").Run() == nil
+}
+
 // getKubesharkBinary returns the path to the kubeshark binary, building it if necessary.
-// TEMPLATE: Adapt the build command for your project.
 func getKubesharkBinary(t *testing.T) string {
 	t.Helper()
 
@@ -86,7 +70,6 @@ func getKubesharkBinary(t *testing.T) string {
 }
 
 // buildBinary compiles the binary and returns its path.
-// TEMPLATE: Change the build command and paths for your project.
 func buildBinary(t *testing.T) (string, error) {
 	t.Helper()
 
@@ -103,7 +86,6 @@ func buildBinary(t *testing.T) (string, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), 2*time.Minute)
 	defer cancel()
 
-	// TEMPLATE: Modify this build command for your project
 	cmd := exec.CommandContext(ctx, "go", "build",
 		"-o", outputPath,
 		filepath.Join(projectRoot, binaryName+".go"),
@@ -175,7 +157,6 @@ func runKubesharkWithTimeout(t *testing.T, binary string, timeout time.Duration,
 }
 
 // cleanupKubeshark ensures Kubeshark is not running in the cluster.
-// TEMPLATE: Modify this for your project's cleanup requirements.
 func cleanupKubeshark(t *testing.T, binary string) {
 	t.Helper()
 
@@ -194,7 +175,6 @@ func cleanupKubeshark(t *testing.T, binary string) {
 }
 
 // waitForKubesharkReady waits for Kubeshark to be ready after starting.
-// TEMPLATE: Modify this for your project's readiness check.
 func waitForKubesharkReady(t *testing.T, binary string, timeout time.Duration) error {
 	t.Helper()
 

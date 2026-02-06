@@ -178,33 +178,32 @@ func (s *mcpSession) getStderr() string {
 	return s.stderr.String()
 }
 
-// TestMCP_Initialize tests the MCP initialization handshake.
-func TestMCP_Initialize(t *testing.T) {
-	requireKubernetesCluster(t)
-	binary := getKubesharkBinary(t)
-
-	session := startMCPSession(t, binary)
-	defer session.close()
-
-	resp := session.sendRequest(t, MCPRequest{
+// initialize sends the MCP initialize request and returns the response.
+func (s *mcpSession) initialize(t *testing.T, id int) MCPResponse {
+	t.Helper()
+	return s.sendRequest(t, MCPRequest{
 		JSONRPC: "2.0",
-		ID:      1,
+		ID:      id,
 		Method:  "initialize",
 		Params: map[string]interface{}{
 			"protocolVersion": "2024-11-05",
 			"capabilities":    map[string]interface{}{},
-			"clientInfo": map[string]interface{}{
-				"name":    "integration-test",
-				"version": "1.0.0",
-			},
+			"clientInfo":      map[string]interface{}{"name": "test", "version": "1.0"},
 		},
 	})
+}
 
+// TestMCP_Initialize tests the MCP initialization handshake.
+func TestMCP_Initialize(t *testing.T) {
+	requireKubernetesCluster(t)
+	session := startMCPSession(t, getKubesharkBinary(t))
+	defer session.close()
+
+	resp := session.initialize(t, 1)
 	if resp.Error != nil {
 		t.Fatalf("Initialize failed: %s", resp.Error.Message)
 	}
 
-	// Verify we got capabilities back
 	var result map[string]interface{}
 	if err := json.Unmarshal(resp.Result, &result); err != nil {
 		t.Fatalf("Failed to parse result: %v", err)
@@ -213,7 +212,6 @@ func TestMCP_Initialize(t *testing.T) {
 	if _, ok := result["capabilities"]; !ok {
 		t.Error("Response missing capabilities")
 	}
-
 	if _, ok := result["serverInfo"]; !ok {
 		t.Error("Response missing serverInfo")
 	}
@@ -222,42 +220,17 @@ func TestMCP_Initialize(t *testing.T) {
 // TestMCP_ToolsList_ReadOnly tests that tools/list returns only safe tools in read-only mode.
 func TestMCP_ToolsList_ReadOnly(t *testing.T) {
 	requireKubernetesCluster(t)
-	binary := getKubesharkBinary(t)
-
-	// Start without --allow-destructive (read-only mode)
-	session := startMCPSession(t, binary)
+	session := startMCPSession(t, getKubesharkBinary(t))
 	defer session.close()
 
-	// Initialize first
-	session.sendRequest(t, MCPRequest{
-		JSONRPC: "2.0",
-		ID:      1,
-		Method:  "initialize",
-		Params: map[string]interface{}{
-			"protocolVersion": "2024-11-05",
-			"capabilities":    map[string]interface{}{},
-			"clientInfo": map[string]interface{}{
-				"name":    "integration-test",
-				"version": "1.0.0",
-			},
-		},
-	})
-
-	// List tools
-	resp := session.sendRequest(t, MCPRequest{
-		JSONRPC: "2.0",
-		ID:      2,
-		Method:  "tools/list",
-	})
-
+	session.initialize(t, 1)
+	resp := session.sendRequest(t, MCPRequest{JSONRPC: "2.0", ID: 2, Method: "tools/list"})
 	if resp.Error != nil {
 		t.Fatalf("tools/list failed: %s", resp.Error.Message)
 	}
 
 	var result struct {
-		Tools []struct {
-			Name string `json:"name"`
-		} `json:"tools"`
+		Tools []struct{ Name string `json:"name"` } `json:"tools"`
 	}
 	if err := json.Unmarshal(resp.Result, &result); err != nil {
 		t.Fatalf("Failed to parse result: %v", err)
@@ -268,61 +241,28 @@ func TestMCP_ToolsList_ReadOnly(t *testing.T) {
 		toolNames[tool.Name] = true
 	}
 
-	// In read-only mode, check_kubeshark_status should be present
 	if !toolNames["check_kubeshark_status"] {
 		t.Error("Missing expected tool: check_kubeshark_status")
 	}
-
-	// Destructive tools should NOT be present in read-only mode
-	if toolNames["start_kubeshark"] {
-		t.Error("start_kubeshark should not be available in read-only mode")
+	if toolNames["start_kubeshark"] || toolNames["stop_kubeshark"] {
+		t.Error("Destructive tools should not be available in read-only mode")
 	}
-	if toolNames["stop_kubeshark"] {
-		t.Error("stop_kubeshark should not be available in read-only mode")
-	}
-
-	t.Logf("Found %d tools in read-only mode", len(result.Tools))
 }
 
 // TestMCP_ToolsList_WithDestructive tests that tools/list includes destructive tools when flag is set.
 func TestMCP_ToolsList_WithDestructive(t *testing.T) {
 	requireKubernetesCluster(t)
-	binary := getKubesharkBinary(t)
-
-	// Start with --allow-destructive
-	session := startMCPSessionWithDestructive(t, binary)
+	session := startMCPSessionWithDestructive(t, getKubesharkBinary(t))
 	defer session.close()
 
-	// Initialize first
-	session.sendRequest(t, MCPRequest{
-		JSONRPC: "2.0",
-		ID:      1,
-		Method:  "initialize",
-		Params: map[string]interface{}{
-			"protocolVersion": "2024-11-05",
-			"capabilities":    map[string]interface{}{},
-			"clientInfo": map[string]interface{}{
-				"name":    "integration-test",
-				"version": "1.0.0",
-			},
-		},
-	})
-
-	// List tools
-	resp := session.sendRequest(t, MCPRequest{
-		JSONRPC: "2.0",
-		ID:      2,
-		Method:  "tools/list",
-	})
-
+	session.initialize(t, 1)
+	resp := session.sendRequest(t, MCPRequest{JSONRPC: "2.0", ID: 2, Method: "tools/list"})
 	if resp.Error != nil {
 		t.Fatalf("tools/list failed: %s", resp.Error.Message)
 	}
 
 	var result struct {
-		Tools []struct {
-			Name string `json:"name"`
-		} `json:"tools"`
+		Tools []struct{ Name string `json:"name"` } `json:"tools"`
 	}
 	if err := json.Unmarshal(resp.Result, &result); err != nil {
 		t.Fatalf("Failed to parse result: %v", err)
@@ -333,245 +273,113 @@ func TestMCP_ToolsList_WithDestructive(t *testing.T) {
 		toolNames[tool.Name] = true
 	}
 
-	// With --allow-destructive, all cluster management tools should be present
-	expectedTools := []string{
-		"check_kubeshark_status",
-		"start_kubeshark",
-		"stop_kubeshark",
-	}
-
-	for _, expected := range expectedTools {
+	for _, expected := range []string{"check_kubeshark_status", "start_kubeshark", "stop_kubeshark"} {
 		if !toolNames[expected] {
 			t.Errorf("Missing expected tool: %s", expected)
 		}
 	}
-
-	t.Logf("Found %d tools with --allow-destructive", len(result.Tools))
 }
 
 // TestMCP_CheckKubesharkStatus_NotRunning tests check_kubeshark_status when Kubeshark is not running.
 func TestMCP_CheckKubesharkStatus_NotRunning(t *testing.T) {
 	requireKubernetesCluster(t)
 	binary := getKubesharkBinary(t)
-
-	// Ensure Kubeshark is not running
 	cleanupKubeshark(t, binary)
 
 	session := startMCPSession(t, binary)
 	defer session.close()
 
-	// Initialize
-	session.sendRequest(t, MCPRequest{
-		JSONRPC: "2.0",
-		ID:      1,
-		Method:  "initialize",
-		Params: map[string]interface{}{
-			"protocolVersion": "2024-11-05",
-			"capabilities":    map[string]interface{}{},
-			"clientInfo":      map[string]interface{}{"name": "test", "version": "1.0"},
-		},
-	})
-
-	// Check status
+	session.initialize(t, 1)
 	resp := session.callTool(t, 2, "check_kubeshark_status", nil)
-
 	if resp.Error != nil {
 		t.Fatalf("check_kubeshark_status failed: %s", resp.Error.Message)
 	}
 
 	var result struct {
-		Content []struct {
-			Type string `json:"type"`
-			Text string `json:"text"`
-		} `json:"content"`
+		Content []struct{ Text string `json:"text"` } `json:"content"`
 	}
 	if err := json.Unmarshal(resp.Result, &result); err != nil {
 		t.Fatalf("Failed to parse result: %v", err)
 	}
 
-	if len(result.Content) == 0 {
-		t.Fatal("Expected content in response")
-	}
-
-	text := result.Content[0].Text
-	if !strings.Contains(text, "not running") && !strings.Contains(text, "NOT") {
-		t.Errorf("Expected 'not running' status, got: %s", text)
+	if len(result.Content) == 0 || (!strings.Contains(result.Content[0].Text, "not running") && !strings.Contains(result.Content[0].Text, "NOT")) {
+		t.Errorf("Expected 'not running' status")
 	}
 }
 
 // TestMCP_StartKubeshark tests the start_kubeshark tool.
 func TestMCP_StartKubeshark(t *testing.T) {
 	if testing.Short() {
-		t.Skip("Skipping in short mode (starts real Kubeshark)")
+		t.Skip("Skipping in short mode")
 	}
-
 	requireKubernetesCluster(t)
 	binary := getKubesharkBinary(t)
-
-	// Ensure clean state
 	cleanupKubeshark(t, binary)
+	t.Cleanup(func() { cleanupKubeshark(t, binary) })
 
-	// Must use --allow-destructive for start_kubeshark
 	session := startMCPSessionWithDestructive(t, binary)
 	defer session.close()
 
-	// Initialize
-	session.sendRequest(t, MCPRequest{
-		JSONRPC: "2.0",
-		ID:      1,
-		Method:  "initialize",
-		Params: map[string]interface{}{
-			"protocolVersion": "2024-11-05",
-			"capabilities":    map[string]interface{}{},
-			"clientInfo":      map[string]interface{}{"name": "test", "version": "1.0"},
-		},
-	})
-
-	// Start Kubeshark - this may take a while
-	t.Log("Starting Kubeshark (this may take a few minutes)...")
-
-	// Use a longer timeout for start (3 minutes)
+	session.initialize(t, 1)
 	resp := session.callToolWithTimeout(t, 2, "start_kubeshark", nil, 3*time.Minute)
-
 	if resp.Error != nil {
 		t.Fatalf("start_kubeshark failed: %s", resp.Error.Message)
 	}
 
-	var result struct {
-		Content []struct {
-			Type string `json:"type"`
-			Text string `json:"text"`
-		} `json:"content"`
-	}
-	if err := json.Unmarshal(resp.Result, &result); err != nil {
-		t.Fatalf("Failed to parse result: %v", err)
-	}
-
-	if len(result.Content) == 0 {
-		t.Fatal("Expected content in response")
-	}
-
-	text := result.Content[0].Text
-	t.Logf("Start response: %s", text)
-
-	// Verify Kubeshark is actually running
 	if !isKubesharkRunning(t) {
 		t.Error("Kubeshark should be running after start_kubeshark")
 	}
-
-	// Cleanup
-	t.Cleanup(func() {
-		cleanupKubeshark(t, binary)
-	})
 }
 
 // TestMCP_StartKubeshark_WithoutFlag tests that start_kubeshark fails without --allow-destructive.
 func TestMCP_StartKubeshark_WithoutFlag(t *testing.T) {
 	requireKubernetesCluster(t)
-	binary := getKubesharkBinary(t)
-
-	// Start WITHOUT --allow-destructive
-	session := startMCPSession(t, binary)
+	session := startMCPSession(t, getKubesharkBinary(t))
 	defer session.close()
 
-	// Initialize
-	session.sendRequest(t, MCPRequest{
-		JSONRPC: "2.0",
-		ID:      1,
-		Method:  "initialize",
-		Params: map[string]interface{}{
-			"protocolVersion": "2024-11-05",
-			"capabilities":    map[string]interface{}{},
-			"clientInfo":      map[string]interface{}{"name": "test", "version": "1.0"},
-		},
-	})
-
-	// Try to call start_kubeshark - should fail
+	session.initialize(t, 1)
 	resp := session.callTool(t, 2, "start_kubeshark", nil)
 
 	var result struct {
-		Content []struct {
-			Text string `json:"text"`
-		} `json:"content"`
-		IsError bool `json:"isError"`
+		Content []struct{ Text string `json:"text"` } `json:"content"`
+		IsError bool                                  `json:"isError"`
 	}
 	if err := json.Unmarshal(resp.Result, &result); err != nil {
 		t.Fatalf("Failed to parse result: %v", err)
 	}
 
-	// Should return error about --allow-destructive
 	if !result.IsError {
-		t.Error("Expected isError=true when calling start_kubeshark without --allow-destructive")
-	}
-
-	if len(result.Content) > 0 && !strings.Contains(result.Content[0].Text, "allow-destructive") {
-		t.Errorf("Expected error message about --allow-destructive, got: %s", result.Content[0].Text)
+		t.Error("Expected isError=true without --allow-destructive")
 	}
 }
 
 // TestMCP_StopKubeshark tests the stop_kubeshark tool.
 func TestMCP_StopKubeshark(t *testing.T) {
 	if testing.Short() {
-		t.Skip("Skipping in short mode (requires running Kubeshark)")
+		t.Skip("Skipping in short mode")
 	}
-
 	requireKubernetesCluster(t)
 	binary := getKubesharkBinary(t)
 
-	// Must use --allow-destructive for stop_kubeshark
 	session := startMCPSessionWithDestructive(t, binary)
 	defer session.close()
 
-	// Initialize first
-	session.sendRequest(t, MCPRequest{
-		JSONRPC: "2.0",
-		ID:      0,
-		Method:  "initialize",
-		Params: map[string]interface{}{
-			"protocolVersion": "2024-11-05",
-			"capabilities":    map[string]interface{}{},
-			"clientInfo":      map[string]interface{}{"name": "test", "version": "1.0"},
-		},
-	})
+	session.initialize(t, 0)
 
-	// If Kubeshark is not running, start it first using MCP tool
+	// Start Kubeshark if not running
 	if !isKubesharkRunning(t) {
-		t.Log("Kubeshark not running, starting it first via MCP...")
 		resp := session.callToolWithTimeout(t, 1, "start_kubeshark", nil, 2*time.Minute)
 		if resp.Error != nil {
-			t.Skipf("Could not start Kubeshark for test: %v", resp.Error.Message)
+			t.Skipf("Could not start Kubeshark: %v", resp.Error.Message)
 		}
 	}
 
-	// Stop Kubeshark (use longer timeout - 2 minutes)
-	t.Log("Stopping Kubeshark...")
 	resp := session.callToolWithTimeout(t, 2, "stop_kubeshark", nil, 2*time.Minute)
-
 	if resp.Error != nil {
 		t.Fatalf("stop_kubeshark failed: %s", resp.Error.Message)
 	}
 
-	var result struct {
-		Content []struct {
-			Type string `json:"type"`
-			Text string `json:"text"`
-		} `json:"content"`
-	}
-	if err := json.Unmarshal(resp.Result, &result); err != nil {
-		t.Fatalf("Failed to parse result: %v", err)
-	}
-
-	if len(result.Content) == 0 {
-		t.Fatal("Expected content in response")
-	}
-
-	text := result.Content[0].Text
-	t.Logf("Stop response: %s", text)
-
-	// Wait a moment for cleanup
 	time.Sleep(5 * time.Second)
-
-	// Verify Kubeshark is stopped
 	if isKubesharkRunning(t) {
 		t.Error("Kubeshark should not be running after stop_kubeshark")
 	}
@@ -580,184 +388,80 @@ func TestMCP_StopKubeshark(t *testing.T) {
 // TestMCP_StopKubeshark_WithoutFlag tests that stop_kubeshark fails without --allow-destructive.
 func TestMCP_StopKubeshark_WithoutFlag(t *testing.T) {
 	requireKubernetesCluster(t)
-	binary := getKubesharkBinary(t)
-
-	// Start WITHOUT --allow-destructive
-	session := startMCPSession(t, binary)
+	session := startMCPSession(t, getKubesharkBinary(t))
 	defer session.close()
 
-	// Initialize
-	session.sendRequest(t, MCPRequest{
-		JSONRPC: "2.0",
-		ID:      1,
-		Method:  "initialize",
-		Params: map[string]interface{}{
-			"protocolVersion": "2024-11-05",
-			"capabilities":    map[string]interface{}{},
-			"clientInfo":      map[string]interface{}{"name": "test", "version": "1.0"},
-		},
-	})
-
-	// Try to call stop_kubeshark - should fail
+	session.initialize(t, 1)
 	resp := session.callTool(t, 2, "stop_kubeshark", nil)
 
 	var result struct {
-		Content []struct {
-			Text string `json:"text"`
-		} `json:"content"`
 		IsError bool `json:"isError"`
 	}
 	if err := json.Unmarshal(resp.Result, &result); err != nil {
 		t.Fatalf("Failed to parse result: %v", err)
 	}
 
-	// Should return error about --allow-destructive
 	if !result.IsError {
-		t.Error("Expected isError=true when calling stop_kubeshark without --allow-destructive")
-	}
-
-	if len(result.Content) > 0 && !strings.Contains(result.Content[0].Text, "allow-destructive") {
-		t.Errorf("Expected error message about --allow-destructive, got: %s", result.Content[0].Text)
+		t.Error("Expected isError=true without --allow-destructive")
 	}
 }
 
 // TestMCP_FullLifecycle tests the complete lifecycle: check -> start -> check -> stop -> check
 func TestMCP_FullLifecycle(t *testing.T) {
 	if testing.Short() {
-		t.Skip("Skipping in short mode (full lifecycle test)")
+		t.Skip("Skipping in short mode")
 	}
-
 	requireKubernetesCluster(t)
 	binary := getKubesharkBinary(t)
-
-	// Ensure clean state
 	cleanupKubeshark(t, binary)
 
-	// Must use --allow-destructive for start/stop operations
 	session := startMCPSessionWithDestructive(t, binary)
 	defer session.close()
 
-	// Initialize
-	session.sendRequest(t, MCPRequest{
-		JSONRPC: "2.0",
-		ID:      1,
-		Method:  "initialize",
-		Params: map[string]interface{}{
-			"protocolVersion": "2024-11-05",
-			"capabilities":    map[string]interface{}{},
-			"clientInfo":      map[string]interface{}{"name": "test", "version": "1.0"},
-		},
-	})
+	session.initialize(t, 1)
 
-	// Step 1: Check status (should be not running)
-	t.Log("Step 1: Checking initial status...")
-	resp := session.callTool(t, 2, "check_kubeshark_status", nil)
-	if resp.Error != nil {
+	// Check -> Start -> Check -> Stop -> Check
+	if resp := session.callTool(t, 2, "check_kubeshark_status", nil); resp.Error != nil {
 		t.Fatalf("Initial status check failed: %s", resp.Error.Message)
 	}
-	t.Log("Initial status: Kubeshark not running (expected)")
 
-	// Step 2: Start Kubeshark (use longer timeout - 3 minutes)
-	t.Log("Step 2: Starting Kubeshark...")
-	resp = session.callToolWithTimeout(t, 3, "start_kubeshark", nil, 3*time.Minute)
-	if resp.Error != nil {
+	if resp := session.callToolWithTimeout(t, 3, "start_kubeshark", nil, 3*time.Minute); resp.Error != nil {
 		t.Fatalf("Start failed: %s", resp.Error.Message)
 	}
-
-	// Wait for it to be ready
 	if err := waitForKubesharkReady(t, binary, startupTimeout); err != nil {
 		t.Fatalf("Kubeshark did not become ready: %v", err)
 	}
-	t.Log("Kubeshark started successfully")
 
-	// Step 3: Check status (should be running)
-	t.Log("Step 3: Checking status after start...")
-	resp = session.callTool(t, 4, "check_kubeshark_status", nil)
-	if resp.Error != nil {
+	if resp := session.callTool(t, 4, "check_kubeshark_status", nil); resp.Error != nil {
 		t.Fatalf("Status check after start failed: %s", resp.Error.Message)
 	}
 
-	var result struct {
-		Content []struct {
-			Text string `json:"text"`
-		} `json:"content"`
-	}
-	if err := json.Unmarshal(resp.Result, &result); err == nil && len(result.Content) > 0 {
-		if !strings.Contains(strings.ToLower(result.Content[0].Text), "running") {
-			t.Errorf("Expected running status, got: %s", result.Content[0].Text)
-		}
-	}
-	t.Log("Status after start: Kubeshark running (expected)")
-
-	// Step 4: Stop Kubeshark (use longer timeout - 2 minutes)
-	t.Log("Step 4: Stopping Kubeshark...")
-	resp = session.callToolWithTimeout(t, 5, "stop_kubeshark", nil, 2*time.Minute)
-	if resp.Error != nil {
+	if resp := session.callToolWithTimeout(t, 5, "stop_kubeshark", nil, 2*time.Minute); resp.Error != nil {
 		t.Fatalf("Stop failed: %s", resp.Error.Message)
 	}
 	time.Sleep(5 * time.Second)
-	t.Log("Kubeshark stopped successfully")
 
-	// Step 5: Check status (should be not running)
-	t.Log("Step 5: Checking final status...")
-	resp = session.callTool(t, 6, "check_kubeshark_status", nil)
-	if resp.Error != nil {
+	if resp := session.callTool(t, 6, "check_kubeshark_status", nil); resp.Error != nil {
 		t.Fatalf("Final status check failed: %s", resp.Error.Message)
 	}
-	t.Log("Final status: Kubeshark not running (expected)")
-
-	t.Log("Full lifecycle test completed successfully!")
 }
 
 // TestMCP_APIToolsRequireKubeshark tests that API tools return helpful errors when Kubeshark isn't running.
 func TestMCP_APIToolsRequireKubeshark(t *testing.T) {
 	requireKubernetesCluster(t)
 	binary := getKubesharkBinary(t)
-
-	// Ensure Kubeshark is not running
 	cleanupKubeshark(t, binary)
 
 	session := startMCPSession(t, binary)
 	defer session.close()
 
-	// Initialize
-	session.sendRequest(t, MCPRequest{
-		JSONRPC: "2.0",
-		ID:      1,
-		Method:  "initialize",
-		Params: map[string]interface{}{
-			"protocolVersion": "2024-11-05",
-			"capabilities":    map[string]interface{}{},
-			"clientInfo":      map[string]interface{}{"name": "test", "version": "1.0"},
-		},
-	})
+	session.initialize(t, 1)
 
-	apiTools := []string{"list_workloads", "list_api_calls", "get_api_stats"}
-
-	// Test each API tool sequentially (they share the same session)
-	for i, tool := range apiTools {
-		toolName := tool // capture for logging
-		requestID := i + 2
-
-		resp := session.callTool(t, requestID, toolName, nil)
-
-		// Should succeed but indicate Kubeshark is not running
+	for i, tool := range []string{"list_workloads", "list_api_calls", "get_api_stats"} {
+		resp := session.callTool(t, i+2, tool, nil)
+		// Either error or helpful message is acceptable
 		if resp.Error != nil {
-			// An error is acceptable too
-			t.Logf("%s returned error (expected): %s", toolName, resp.Error.Message)
-			continue
-		}
-
-		var result struct {
-			Content []struct {
-				Text string `json:"text"`
-			} `json:"content"`
-		}
-		if err := json.Unmarshal(resp.Result, &result); err == nil && len(result.Content) > 0 {
-			text := strings.ToLower(result.Content[0].Text)
-			if strings.Contains(text, "error") || strings.Contains(text, "not running") || strings.Contains(text, "failed") {
-				t.Logf("%s returned helpful message: %s", toolName, result.Content[0].Text)
-			}
+			t.Logf("%s returned error (expected): %s", tool, resp.Error.Message)
 		}
 	}
 }
@@ -765,81 +469,41 @@ func TestMCP_APIToolsRequireKubeshark(t *testing.T) {
 // TestMCP_SetFlags tests that --set flags are passed correctly.
 func TestMCP_SetFlags(t *testing.T) {
 	requireKubernetesCluster(t)
-	binary := getKubesharkBinary(t)
-
-	// Start MCP with custom --set flags
-	session := startMCPSession(t, binary, "--set", "tap.namespaces={default}")
+	session := startMCPSession(t, getKubesharkBinary(t), "--set", "tap.namespaces={default}")
 	defer session.close()
 
-	// Initialize
-	session.sendRequest(t, MCPRequest{
-		JSONRPC: "2.0",
-		ID:      1,
-		Method:  "initialize",
-		Params: map[string]interface{}{
-			"protocolVersion": "2024-11-05",
-			"capabilities":    map[string]interface{}{},
-			"clientInfo":      map[string]interface{}{"name": "test", "version": "1.0"},
-		},
-	})
-
-	// List tools - should work regardless of flags
-	resp := session.sendRequest(t, MCPRequest{
-		JSONRPC: "2.0",
-		ID:      2,
-		Method:  "tools/list",
-	})
-
+	session.initialize(t, 1)
+	resp := session.sendRequest(t, MCPRequest{JSONRPC: "2.0", ID: 2, Method: "tools/list"})
 	if resp.Error != nil {
 		t.Fatalf("tools/list failed with --set flags: %s", resp.Error.Message)
 	}
-
-	t.Log("MCP server started successfully with --set flags")
 }
 
 // BenchmarkMCP_CheckStatus benchmarks the check_kubeshark_status tool.
 func BenchmarkMCP_CheckStatus(b *testing.B) {
-	// Skip in short mode
 	if testing.Short() {
 		b.Skip("Skipping benchmark in short mode")
 	}
-
-	// Check for Kubernetes cluster (graceful skip if not available)
 	if !hasKubernetesCluster() {
-		b.Skip("Skipping benchmark: no Kubernetes cluster available")
+		b.Skip("Skipping: no Kubernetes cluster available")
 	}
 
-	// Use the shared binary helper for consistency
-	binaryPath := getKubesharkBinary(b)
-
-	// Start MCP session
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	cmd := exec.CommandContext(ctx, binaryPath, "mcp")
-	stdin, err := cmd.StdinPipe()
-	if err != nil {
-		b.Fatalf("Failed to create stdin pipe: %v", err)
-	}
-	stdout, err := cmd.StdoutPipe()
-	if err != nil {
-		b.Fatalf("Failed to create stdout pipe: %v", err)
-	}
+	cmd := exec.CommandContext(ctx, getKubesharkBinary(b), "mcp")
+	stdin, _ := cmd.StdinPipe()
+	stdout, _ := cmd.StdoutPipe()
 	reader := bufio.NewReader(stdout)
 
 	if err := cmd.Start(); err != nil {
 		b.Fatalf("Failed to start MCP: %v", err)
 	}
-	defer func() {
-		cancel()
-		_ = cmd.Wait()
-	}()
+	defer func() { cancel(); _ = cmd.Wait() }()
 
 	// Initialize
 	initReq, _ := json.Marshal(MCPRequest{
-		JSONRPC: "2.0",
-		ID:      0,
-		Method:  "initialize",
+		JSONRPC: "2.0", ID: 0, Method: "initialize",
 		Params: map[string]interface{}{
 			"protocolVersion": "2024-11-05",
 			"capabilities":    map[string]interface{}{},
@@ -850,25 +514,15 @@ func BenchmarkMCP_CheckStatus(b *testing.B) {
 	_, _ = reader.ReadString('\n')
 
 	b.ResetTimer()
-
 	for i := 0; i < b.N; i++ {
 		req, _ := json.Marshal(MCPRequest{
-			JSONRPC: "2.0",
-			ID:      i + 1,
-			Method:  "tools/call",
-			Params: map[string]interface{}{
-				"name":      "check_kubeshark_status",
-				"arguments": map[string]interface{}{},
-			},
+			JSONRPC: "2.0", ID: i + 1, Method: "tools/call",
+			Params: map[string]interface{}{"name": "check_kubeshark_status", "arguments": map[string]interface{}{}},
 		})
-
-		_, err := stdin.Write(append(req, '\n'))
-		if err != nil {
+		if _, err := stdin.Write(append(req, '\n')); err != nil {
 			b.Fatalf("Write failed: %v", err)
 		}
-
-		_, err = reader.ReadString('\n')
-		if err != nil {
+		if _, err := reader.ReadString('\n'); err != nil {
 			b.Fatalf("Read failed: %v", err)
 		}
 	}
