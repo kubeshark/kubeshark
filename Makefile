@@ -74,6 +74,69 @@ clean: ## Clean all build artifacts.
 test: ## Run cli tests.
 	@go test ./... -coverpkg=./... -race -coverprofile=coverage.out -covermode=atomic
 
+test-integration: ## Run integration tests (requires Kubernetes cluster).
+	@echo "Running integration tests..."
+	@LOG_FILE=$$(mktemp /tmp/integration-test.XXXXXX.log); \
+	go test -tags=integration -timeout $${INTEGRATION_TIMEOUT:-5m} -v ./integration/... 2>&1 | tee $$LOG_FILE; \
+	status=$$?; \
+	echo ""; \
+	echo "========================================"; \
+	echo "         INTEGRATION TEST SUMMARY"; \
+	echo "========================================"; \
+	grep -E "^(--- PASS|--- FAIL|--- SKIP)" $$LOG_FILE || true; \
+	echo "----------------------------------------"; \
+	pass=$$(grep -c "^--- PASS" $$LOG_FILE 2>/dev/null || true); \
+	fail=$$(grep -c "^--- FAIL" $$LOG_FILE 2>/dev/null || true); \
+	skip=$$(grep -c "^--- SKIP" $$LOG_FILE 2>/dev/null || true); \
+	echo "PASSED:  $${pass:-0}"; \
+	echo "FAILED:  $${fail:-0}"; \
+	echo "SKIPPED: $${skip:-0}"; \
+	echo "========================================"; \
+	rm -f $$LOG_FILE; \
+	exit $$status
+
+test-integration-mcp: ## Run only MCP integration tests.
+	@echo "Running MCP integration tests..."
+	@LOG_FILE=$$(mktemp /tmp/integration-test.XXXXXX.log); \
+	go test -tags=integration -timeout $${INTEGRATION_TIMEOUT:-5m} -v ./integration/ -run "MCP" 2>&1 | tee $$LOG_FILE; \
+	status=$$?; \
+	echo ""; \
+	echo "========================================"; \
+	echo "         INTEGRATION TEST SUMMARY"; \
+	echo "========================================"; \
+	grep -E "^(--- PASS|--- FAIL|--- SKIP)" $$LOG_FILE || true; \
+	echo "----------------------------------------"; \
+	pass=$$(grep -c "^--- PASS" $$LOG_FILE 2>/dev/null || true); \
+	fail=$$(grep -c "^--- FAIL" $$LOG_FILE 2>/dev/null || true); \
+	skip=$$(grep -c "^--- SKIP" $$LOG_FILE 2>/dev/null || true); \
+	echo "PASSED:  $${pass:-0}"; \
+	echo "FAILED:  $${fail:-0}"; \
+	echo "SKIPPED: $${skip:-0}"; \
+	echo "========================================"; \
+	rm -f $$LOG_FILE; \
+	exit $$status
+
+test-integration-short: ## Run quick integration tests (skips long-running tests).
+	@echo "Running quick integration tests..."
+	@LOG_FILE=$$(mktemp /tmp/integration-test.XXXXXX.log); \
+	go test -tags=integration -timeout $${INTEGRATION_TIMEOUT:-2m} -short -v ./integration/... 2>&1 | tee $$LOG_FILE; \
+	status=$$?; \
+	echo ""; \
+	echo "========================================"; \
+	echo "         INTEGRATION TEST SUMMARY"; \
+	echo "========================================"; \
+	grep -E "^(--- PASS|--- FAIL|--- SKIP)" $$LOG_FILE || true; \
+	echo "----------------------------------------"; \
+	pass=$$(grep -c "^--- PASS" $$LOG_FILE 2>/dev/null || true); \
+	fail=$$(grep -c "^--- FAIL" $$LOG_FILE 2>/dev/null || true); \
+	skip=$$(grep -c "^--- SKIP" $$LOG_FILE 2>/dev/null || true); \
+	echo "PASSED:  $${pass:-0}"; \
+	echo "FAILED:  $${fail:-0}"; \
+	echo "SKIPPED: $${skip:-0}"; \
+	echo "========================================"; \
+	rm -f $$LOG_FILE; \
+	exit $$status
+
 lint: ## Lint the source code.
 	golangci-lint run
 
