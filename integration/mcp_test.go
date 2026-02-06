@@ -41,6 +41,7 @@ type mcpSession struct {
 	cmd    *exec.Cmd
 	stdin  io.WriteCloser
 	stdout *bufio.Reader
+	stderr *bytes.Buffer // Captured stderr for debugging
 	cancel context.CancelFunc
 }
 
@@ -66,6 +67,10 @@ func startMCPSession(t *testing.T, binary string, args ...string) *mcpSession {
 		t.Fatalf("Failed to create stdout pipe: %v", err)
 	}
 
+	// Capture stderr for debugging
+	var stderrBuf bytes.Buffer
+	cmd.Stderr = &stderrBuf
+
 	if err := cmd.Start(); err != nil {
 		cancel()
 		t.Fatalf("Failed to start MCP server: %v", err)
@@ -75,6 +80,7 @@ func startMCPSession(t *testing.T, binary string, args ...string) *mcpSession {
 		cmd:    cmd,
 		stdin:  stdin,
 		stdout: bufio.NewReader(stdout),
+		stderr: &stderrBuf,
 		cancel: cancel,
 	}
 }
@@ -130,11 +136,11 @@ func (s *mcpSession) sendRequestWithTimeout(t *testing.T, req MCPRequest, timeou
 		return resp
 	case err := <-errChan:
 		t.Fatalf("Failed to read response: %v", err)
+		return MCPResponse{}
 	case <-time.After(timeout):
 		t.Fatalf("Timeout waiting for MCP response after %v", timeout)
+		return MCPResponse{}
 	}
-
-	return MCPResponse{}
 }
 
 // callTool invokes an MCP tool and returns the response (30s timeout).
@@ -162,6 +168,14 @@ func (s *mcpSession) callToolWithTimeout(t *testing.T, id int, toolName string, 
 func (s *mcpSession) close() {
 	s.cancel()
 	_ = s.cmd.Wait()
+}
+
+// getStderr returns any captured stderr output (useful for debugging failures).
+func (s *mcpSession) getStderr() string {
+	if s.stderr == nil {
+		return ""
+	}
+	return s.stderr.String()
 }
 
 // TestMCP_Initialize tests the MCP initialization handshake.
@@ -720,29 +734,31 @@ func TestMCP_APIToolsRequireKubeshark(t *testing.T) {
 
 	apiTools := []string{"list_workloads", "list_api_calls", "get_api_stats"}
 
+	// Test each API tool sequentially (they share the same session)
 	for i, tool := range apiTools {
-		t.Run(tool, func(t *testing.T) {
-			resp := session.callTool(t, i+2, tool, nil)
+		toolName := tool // capture for logging
+		requestID := i + 2
 
-			// Should succeed but indicate Kubeshark is not running
-			if resp.Error != nil {
-				// An error is acceptable too
-				t.Logf("%s returned error (expected): %s", tool, resp.Error.Message)
-				return
-			}
+		resp := session.callTool(t, requestID, toolName, nil)
 
-			var result struct {
-				Content []struct {
-					Text string `json:"text"`
-				} `json:"content"`
+		// Should succeed but indicate Kubeshark is not running
+		if resp.Error != nil {
+			// An error is acceptable too
+			t.Logf("%s returned error (expected): %s", toolName, resp.Error.Message)
+			continue
+		}
+
+		var result struct {
+			Content []struct {
+				Text string `json:"text"`
+			} `json:"content"`
+		}
+		if err := json.Unmarshal(resp.Result, &result); err == nil && len(result.Content) > 0 {
+			text := strings.ToLower(result.Content[0].Text)
+			if strings.Contains(text, "error") || strings.Contains(text, "not running") || strings.Contains(text, "failed") {
+				t.Logf("%s returned helpful message: %s", toolName, result.Content[0].Text)
 			}
-			if err := json.Unmarshal(resp.Result, &result); err == nil && len(result.Content) > 0 {
-				text := strings.ToLower(result.Content[0].Text)
-				if strings.Contains(text, "error") || strings.Contains(text, "not running") || strings.Contains(text, "failed") {
-					t.Logf("%s returned helpful message: %s", tool, result.Content[0].Text)
-				}
-			}
-		})
+		}
 	}
 }
 
@@ -788,21 +804,27 @@ func BenchmarkMCP_CheckStatus(b *testing.B) {
 		b.Skip("Skipping benchmark in short mode")
 	}
 
-	// Build binary once
-	projectRoot, err := findProjectRoot()
-	if err != nil {
-		b.Fatalf("Could not find project root: %v", err)
+	// Check for Kubernetes cluster (graceful skip if not available)
+	if !hasKubernetesCluster() {
+		b.Skip("Skipping benchmark: no Kubernetes cluster available")
 	}
 
-	binaryPath := projectRoot + "/bin/kubeshark_integration_test"
+	// Use the shared binary helper for consistency
+	binaryPath := getKubesharkBinary(b)
 
 	// Start MCP session
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
 	cmd := exec.CommandContext(ctx, binaryPath, "mcp")
-	stdin, _ := cmd.StdinPipe()
-	stdout, _ := cmd.StdoutPipe()
+	stdin, err := cmd.StdinPipe()
+	if err != nil {
+		b.Fatalf("Failed to create stdin pipe: %v", err)
+	}
+	stdout, err := cmd.StdoutPipe()
+	if err != nil {
+		b.Fatalf("Failed to create stdout pipe: %v", err)
+	}
 	reader := bufio.NewReader(stdout)
 
 	if err := cmd.Start(); err != nil {
@@ -851,6 +873,3 @@ func BenchmarkMCP_CheckStatus(b *testing.B) {
 		}
 	}
 }
-
-// Helper to avoid unused import errors
-var _ = bytes.Buffer{}
