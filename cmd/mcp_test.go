@@ -236,7 +236,8 @@ func TestMCP_PromptsGet_UnknownPrompt(t *testing.T) {
 	}
 }
 
-func TestMCP_ToolsList(t *testing.T) {
+func TestMCP_ToolsList_CLIOnly(t *testing.T) {
+	// Test tools/list without Hub backend - should only have CLI tools
 	s := newTestMCPServer()
 	output := sendRequest(s, "tools/list", 1, nil)
 	resp := parseResponse(t, output)
@@ -255,15 +256,45 @@ func TestMCP_ToolsList(t *testing.T) {
 		t.Fatalf("tools is not an array: %T", result["tools"])
 	}
 
-	expectedTools := []string{
-		"list_workloads",
-		"list_api_calls",
-		"get_api_call",
-		"get_api_stats",
-		"start_kubeshark",
-		"stop_kubeshark",
-		"check_kubeshark_status",
+	// Without Hub backend and without allowDestructive, only check_kubeshark_status is available
+	if len(tools) != 1 {
+		t.Errorf("Expected 1 tool (check_kubeshark_status only), got %d", len(tools))
 	}
+
+	toolMap := tools[0].(map[string]any)
+	if toolMap["name"] != "check_kubeshark_status" {
+		t.Errorf("Expected check_kubeshark_status, got %v", toolMap["name"])
+	}
+
+	// Verify tool has required fields
+	if _, hasDesc := toolMap["description"]; !hasDesc {
+		t.Error("Tool missing description")
+	}
+	if _, hasSchema := toolMap["inputSchema"]; !hasSchema {
+		t.Error("Tool missing inputSchema")
+	}
+}
+
+func TestMCP_ToolsList_WithDestructive(t *testing.T) {
+	// Test tools/list with allowDestructive enabled
+	s := &mcpServer{
+		httpClient:       &http.Client{},
+		stdin:            &bytes.Buffer{},
+		stdout:           &bytes.Buffer{},
+		allowDestructive: true,
+	}
+	output := sendRequest(s, "tools/list", 1, nil)
+	resp := parseResponse(t, output)
+
+	if resp.Error != nil {
+		t.Fatalf("Unexpected error: %v", resp.Error)
+	}
+
+	result := resp.Result.(map[string]any)
+	tools := result["tools"].([]any)
+
+	// With allowDestructive, should have check_kubeshark_status, start_kubeshark, stop_kubeshark
+	expectedTools := []string{"check_kubeshark_status", "start_kubeshark", "stop_kubeshark"}
 
 	if len(tools) != len(expectedTools) {
 		t.Errorf("Expected %d tools, got %d", len(expectedTools), len(tools))
@@ -271,14 +302,85 @@ func TestMCP_ToolsList(t *testing.T) {
 
 	toolNames := make(map[string]bool)
 	for _, tool := range tools {
-		toolMap, ok := tool.(map[string]any)
-		if !ok {
-			continue
+		toolMap := tool.(map[string]any)
+		toolNames[toolMap["name"].(string)] = true
+	}
+
+	for _, expected := range expectedTools {
+		if !toolNames[expected] {
+			t.Errorf("Missing expected tool: %s", expected)
 		}
-		name, ok := toolMap["name"].(string)
-		if ok {
-			toolNames[name] = true
+	}
+}
+
+func TestMCP_ToolsList_WithHubBackend(t *testing.T) {
+	// Test tools/list with a mock Hub backend that provides tools
+	mockHubMCPResponse := `{
+		"name": "kubeshark-hub",
+		"version": "1.0.0",
+		"tools": [
+			{"name": "list_workloads", "description": "List workloads", "inputSchema": {}},
+			{"name": "list_api_calls", "description": "List API calls", "inputSchema": {}},
+			{"name": "get_api_call", "description": "Get API call details", "inputSchema": {}},
+			{"name": "get_api_stats", "description": "Get API stats", "inputSchema": {}}
+		],
+		"prompts": []
+	}`
+
+	mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		// The Hub MCP endpoint returns tool definitions at the base path
+		if r.URL.Path == "/" || r.URL.Path == "" {
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = w.Write([]byte(mockHubMCPResponse))
+			return
 		}
+		w.WriteHeader(http.StatusNotFound)
+	}))
+	defer mockServer.Close()
+
+	s := &mcpServer{
+		httpClient:         &http.Client{},
+		stdin:              &bytes.Buffer{},
+		stdout:             &bytes.Buffer{},
+		hubBaseURL:         mockServer.URL,
+		backendInitialized: true,
+		allowDestructive:   true,
+	}
+
+	output := sendRequest(s, "tools/list", 1, nil)
+	resp := parseResponse(t, output)
+
+	if resp.Error != nil {
+		t.Fatalf("Unexpected error: %v", resp.Error)
+	}
+
+	result := resp.Result.(map[string]any)
+	tools := result["tools"].([]any)
+
+	// Should have CLI tools (3) + Hub tools (4) = 7 tools
+	expectedTools := []string{
+		"check_kubeshark_status",
+		"start_kubeshark",
+		"stop_kubeshark",
+		"list_workloads",
+		"list_api_calls",
+		"get_api_call",
+		"get_api_stats",
+	}
+
+	if len(tools) != len(expectedTools) {
+		t.Errorf("Expected %d tools, got %d", len(expectedTools), len(tools))
+		for _, tool := range tools {
+			toolMap := tool.(map[string]any)
+			t.Logf("Found tool: %s", toolMap["name"])
+		}
+	}
+
+	toolNames := make(map[string]bool)
+	for _, tool := range tools {
+		toolMap := tool.(map[string]any)
+		name := toolMap["name"].(string)
+		toolNames[name] = true
 
 		// Verify each tool has required fields
 		if _, hasDesc := toolMap["description"]; !hasDesc {
@@ -297,18 +399,37 @@ func TestMCP_ToolsList(t *testing.T) {
 }
 
 func TestMCP_ToolsCallUnknownTool(t *testing.T) {
-	s := newTestMCPServer()
+	// When calling an unknown tool with a mock Hub, the Hub should return a 404
+	s, mockServer := newTestMCPServerWithMockBackend(func(w http.ResponseWriter, r *http.Request) {
+		// Return 404 for unknown tool
+		w.WriteHeader(http.StatusNotFound)
+		_, _ = w.Write([]byte(`{"error": "Unknown tool"}`))
+	})
+	defer mockServer.Close()
+
 	params := mcpCallToolParams{
 		Name: "unknown_tool",
 	}
 	output := sendRequest(s, "tools/call", 1, params)
 	resp := parseResponse(t, output)
 
-	if resp.Error == nil {
-		t.Fatal("Expected error for unknown tool")
+	// Unknown tool calls still return a result (not a JSON-RPC error) but with isError=true
+	if resp.Error != nil {
+		t.Fatalf("Unexpected JSON-RPC error: %v", resp.Error)
 	}
-	if resp.Error.Code != -32602 {
-		t.Errorf("Expected error code -32602, got %d", resp.Error.Code)
+
+	result := resp.Result.(map[string]any)
+	isError, ok := result["isError"].(bool)
+	if !ok || !isError {
+		t.Error("Expected isError=true for unknown tool")
+	}
+
+	// Verify error message mentions the status code
+	content := result["content"].([]any)
+	firstContent := content[0].(map[string]any)
+	text := firstContent["text"].(string)
+	if !strings.Contains(text, "404") {
+		t.Errorf("Expected error to mention 404, got: %s", text)
 	}
 }
 
@@ -417,16 +538,62 @@ func newTestMCPServerWithMockBackend(handler http.HandlerFunc) (*mcpServer, *htt
 	return s, mockServer
 }
 
+// hubToolCallRequest represents the expected structure of POST /tools/call requests
+type hubToolCallRequest struct {
+	Tool      string         `json:"tool"`
+	Arguments map[string]any `json:"arguments"`
+}
+
+// newMockHubHandler creates a mock handler for the Hub's /tools/call endpoint
+// The toolHandler function receives the parsed tool call request and returns the response
+func newMockHubHandler(t *testing.T, toolHandler func(req hubToolCallRequest) (string, int)) http.HandlerFunc {
+	return func(w http.ResponseWriter, r *http.Request) {
+		// All Hub tool calls go to /tools/call
+		if r.URL.Path != "/tools/call" {
+			t.Errorf("Expected path /tools/call, got %s", r.URL.Path)
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+
+		// Must be POST
+		if r.Method != http.MethodPost {
+			t.Errorf("Expected POST method, got %s", r.Method)
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			return
+		}
+
+		// Parse the request body
+		var req hubToolCallRequest
+		if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+			t.Errorf("Failed to parse request body: %v", err)
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		// Call the handler
+		response, status := toolHandler(req)
+		w.WriteHeader(status)
+		_, _ = w.Write([]byte(response))
+	}
+}
+
 func TestMCP_ListWorkloads(t *testing.T) {
 	mockResponse := `{"workloads": [{"name": "test-pod", "namespace": "default"}]}`
 
-	s, mockServer := newTestMCPServerWithMockBackend(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path != "/workloads" {
-			t.Errorf("Expected path /workloads, got %s", r.URL.Path)
+	s, mockServer := newTestMCPServerWithMockBackend(newMockHubHandler(t, func(req hubToolCallRequest) (string, int) {
+		// Verify tool name
+		if req.Tool != "list_workloads" {
+			t.Errorf("Expected tool 'list_workloads', got %s", req.Tool)
 		}
-		w.Header().Set("Content-Type", "application/json")
-		_, _ = w.Write([]byte(mockResponse))
-	})
+		// Verify arguments are in the request body
+		if req.Arguments["type"] != "pod" {
+			t.Errorf("Expected type=pod in arguments, got %v", req.Arguments["type"])
+		}
+		if req.Arguments["ns"] != "default" {
+			t.Errorf("Expected ns=default in arguments, got %v", req.Arguments["ns"])
+		}
+		return mockResponse, http.StatusOK
+	}))
 	defer mockServer.Close()
 
 	params := mcpCallToolParams{
@@ -454,16 +621,20 @@ func TestMCP_ListWorkloads(t *testing.T) {
 }
 
 func TestMCP_ListWorkloads_WithLabels(t *testing.T) {
-	s, mockServer := newTestMCPServerWithMockBackend(func(w http.ResponseWriter, r *http.Request) {
-		// Verify query parameters
-		if r.URL.Query().Get("type") != "service" {
-			t.Errorf("Expected type=service, got %s", r.URL.Query().Get("type"))
+	s, mockServer := newTestMCPServerWithMockBackend(newMockHubHandler(t, func(req hubToolCallRequest) (string, int) {
+		// Verify tool name
+		if req.Tool != "list_workloads" {
+			t.Errorf("Expected tool 'list_workloads', got %s", req.Tool)
 		}
-		if r.URL.Query().Get("labels") != "app=nginx" {
-			t.Errorf("Expected labels=app=nginx, got %s", r.URL.Query().Get("labels"))
+		// Verify arguments are in the POST body
+		if req.Arguments["type"] != "service" {
+			t.Errorf("Expected type=service in arguments, got %v", req.Arguments["type"])
 		}
-		_, _ = w.Write([]byte(`{"workloads": []}`))
-	})
+		if req.Arguments["labels"] != "app=nginx" {
+			t.Errorf("Expected labels=app=nginx in arguments, got %v", req.Arguments["labels"])
+		}
+		return `{"workloads": []}`, http.StatusOK
+	}))
 	defer mockServer.Close()
 
 	params := mcpCallToolParams{
@@ -473,18 +644,35 @@ func TestMCP_ListWorkloads_WithLabels(t *testing.T) {
 			"labels": "app=nginx",
 		},
 	}
-	sendRequest(s, "tools/call", 1, params)
+	output := sendRequest(s, "tools/call", 1, params)
+	resp := parseResponse(t, output)
+
+	// Verify no error
+	if resp.Error != nil {
+		t.Fatalf("Unexpected error: %v", resp.Error)
+	}
 }
 
 func TestMCP_ListAPICalls(t *testing.T) {
 	mockResponse := `{"calls": [{"id": "123", "method": "GET", "path": "/api/v1/users"}]}`
 
-	s, mockServer := newTestMCPServerWithMockBackend(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path != "/calls" {
-			t.Errorf("Expected path /calls, got %s", r.URL.Path)
+	s, mockServer := newTestMCPServerWithMockBackend(newMockHubHandler(t, func(req hubToolCallRequest) (string, int) {
+		// Verify tool name
+		if req.Tool != "list_api_calls" {
+			t.Errorf("Expected tool 'list_api_calls', got %s", req.Tool)
 		}
-		_, _ = w.Write([]byte(mockResponse))
-	})
+		// Verify arguments are in the POST body
+		if req.Arguments["proto"] != "http" {
+			t.Errorf("Expected proto=http in arguments, got %v", req.Arguments["proto"])
+		}
+		if req.Arguments["method"] != "GET" {
+			t.Errorf("Expected method=GET in arguments, got %v", req.Arguments["method"])
+		}
+		if req.Arguments["limit"] != float64(50) {
+			t.Errorf("Expected limit=50 in arguments, got %v", req.Arguments["limit"])
+		}
+		return mockResponse, http.StatusOK
+	}))
 	defer mockServer.Close()
 
 	params := mcpCallToolParams{
@@ -513,9 +701,13 @@ func TestMCP_ListAPICalls(t *testing.T) {
 }
 
 func TestMCP_ListAPICalls_AllFilters(t *testing.T) {
-	s, mockServer := newTestMCPServerWithMockBackend(func(w http.ResponseWriter, r *http.Request) {
-		q := r.URL.Query()
-		expectedParams := map[string]string{
+	s, mockServer := newTestMCPServerWithMockBackend(newMockHubHandler(t, func(req hubToolCallRequest) (string, int) {
+		// Verify tool name
+		if req.Tool != "list_api_calls" {
+			t.Errorf("Expected tool 'list_api_calls', got %s", req.Tool)
+		}
+		// Verify all arguments are in the POST body
+		expectedArgs := map[string]any{
 			"src_ns":  "source-ns",
 			"src_pod": "source-pod",
 			"dst_ns":  "dest-ns",
@@ -525,15 +717,15 @@ func TestMCP_ListAPICalls_AllFilters(t *testing.T) {
 			"method":  "GetUser",
 			"path":    "/users",
 			"status":  "error",
-			"limit":   "10",
+			"limit":   float64(10),
 		}
-		for key, expected := range expectedParams {
-			if q.Get(key) != expected {
-				t.Errorf("Expected %s=%s, got %s", key, expected, q.Get(key))
+		for key, expected := range expectedArgs {
+			if req.Arguments[key] != expected {
+				t.Errorf("Expected %s=%v in arguments, got %v", key, expected, req.Arguments[key])
 			}
 		}
-		_, _ = w.Write([]byte(`{"calls": []}`))
-	})
+		return `{"calls": []}`, http.StatusOK
+	}))
 	defer mockServer.Close()
 
 	params := mcpCallToolParams{
@@ -551,7 +743,13 @@ func TestMCP_ListAPICalls_AllFilters(t *testing.T) {
 			"limit":   float64(10),
 		},
 	}
-	sendRequest(s, "tools/call", 1, params)
+	output := sendRequest(s, "tools/call", 1, params)
+	resp := parseResponse(t, output)
+
+	// Verify no error
+	if resp.Error != nil {
+		t.Fatalf("Unexpected error: %v", resp.Error)
+	}
 }
 
 func TestMCP_GetAPICall(t *testing.T) {
@@ -564,18 +762,23 @@ func TestMCP_GetAPICall(t *testing.T) {
 		"response": {"headers": {"X-Request-Id": "xyz"}}
 	}`
 
-	s, mockServer := newTestMCPServerWithMockBackend(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path != "/calls/abc123" {
-			t.Errorf("Expected path /calls/abc123, got %s", r.URL.Path)
+	s, mockServer := newTestMCPServerWithMockBackend(newMockHubHandler(t, func(req hubToolCallRequest) (string, int) {
+		// Verify tool name
+		if req.Tool != "get_api_call" {
+			t.Errorf("Expected tool 'get_api_call', got %s", req.Tool)
 		}
-		if r.URL.Query().Get("include_headers") != "true" {
-			t.Errorf("Expected include_headers=true")
+		// Verify arguments are in the POST body (not URL path or query params)
+		if req.Arguments["id"] != "abc123" {
+			t.Errorf("Expected id=abc123 in arguments, got %v", req.Arguments["id"])
 		}
-		if r.URL.Query().Get("include_payload") != "true" {
-			t.Errorf("Expected include_payload=true")
+		if req.Arguments["include_headers"] != true {
+			t.Errorf("Expected include_headers=true in arguments, got %v", req.Arguments["include_headers"])
 		}
-		_, _ = w.Write([]byte(mockResponse))
-	})
+		if req.Arguments["include_payload"] != true {
+			t.Errorf("Expected include_payload=true in arguments, got %v", req.Arguments["include_payload"])
+		}
+		return mockResponse, http.StatusOK
+	}))
 	defer mockServer.Close()
 
 	params := mcpCallToolParams{
@@ -604,9 +807,15 @@ func TestMCP_GetAPICall(t *testing.T) {
 }
 
 func TestMCP_GetAPICall_MissingID(t *testing.T) {
-	s, mockServer := newTestMCPServerWithMockBackend(func(w http.ResponseWriter, r *http.Request) {
-		t.Error("Should not reach backend when ID is missing")
-	})
+	// Hub tools are forwarded to the Hub, which handles validation
+	// If the Hub requires an ID and returns an error, the test should reflect that
+	s, mockServer := newTestMCPServerWithMockBackend(newMockHubHandler(t, func(req hubToolCallRequest) (string, int) {
+		// Hub validates that ID is required and returns an error
+		if req.Arguments["id"] == nil || req.Arguments["id"] == "" {
+			return `{"error": "id is required"}`, http.StatusBadRequest
+		}
+		return `{}`, http.StatusOK
+	}))
 	defer mockServer.Close()
 
 	params := mcpCallToolParams{
@@ -616,9 +825,13 @@ func TestMCP_GetAPICall_MissingID(t *testing.T) {
 	output := sendRequest(s, "tools/call", 1, params)
 	resp := parseResponse(t, output)
 
+	if resp.Error != nil {
+		t.Fatalf("Unexpected JSON-RPC error: %v", resp.Error)
+	}
+
 	result := resp.Result.(map[string]any)
-	isError := result["isError"].(bool)
-	if !isError {
+	isError, ok := result["isError"].(bool)
+	if !ok || !isError {
 		t.Error("Expected isError=true when ID is missing")
 	}
 
@@ -639,15 +852,20 @@ func TestMCP_GetAPIStats(t *testing.T) {
 		}
 	}`
 
-	s, mockServer := newTestMCPServerWithMockBackend(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path != "/stats" {
-			t.Errorf("Expected path /stats, got %s", r.URL.Path)
+	s, mockServer := newTestMCPServerWithMockBackend(newMockHubHandler(t, func(req hubToolCallRequest) (string, int) {
+		// Verify tool name
+		if req.Tool != "get_api_stats" {
+			t.Errorf("Expected tool 'get_api_stats', got %s", req.Tool)
 		}
-		if r.URL.Query().Get("group_by") != "endpoint" {
-			t.Errorf("Expected group_by=endpoint")
+		// Verify arguments are in the POST body
+		if req.Arguments["ns"] != "production" {
+			t.Errorf("Expected ns=production in arguments, got %v", req.Arguments["ns"])
 		}
-		_, _ = w.Write([]byte(mockResponse))
-	})
+		if req.Arguments["group_by"] != "endpoint" {
+			t.Errorf("Expected group_by=endpoint in arguments, got %v", req.Arguments["group_by"])
+		}
+		return mockResponse, http.StatusOK
+	}))
 	defer mockServer.Close()
 
 	params := mcpCallToolParams{
@@ -1045,15 +1263,14 @@ func TestMCP_PrettyPrintJSON(t *testing.T) {
 // Edge Cases
 // =============================================================================
 
-func TestMCP_URLEncoding(t *testing.T) {
-	s, mockServer := newTestMCPServerWithMockBackend(func(w http.ResponseWriter, r *http.Request) {
-		// Verify special characters are properly encoded
-		path := r.URL.Query().Get("path")
-		if path != "/api/users?id=123" {
-			t.Errorf("Expected path with special chars, got: %s", path)
+func TestMCP_ArgumentsWithSpecialChars(t *testing.T) {
+	s, mockServer := newTestMCPServerWithMockBackend(newMockHubHandler(t, func(req hubToolCallRequest) (string, int) {
+		// Verify special characters are preserved in the POST body
+		if req.Arguments["path"] != "/api/users?id=123" {
+			t.Errorf("Expected path with special chars, got: %v", req.Arguments["path"])
 		}
-		_, _ = w.Write([]byte(`{}`))
-	})
+		return `{}`, http.StatusOK
+	}))
 	defer mockServer.Close()
 
 	params := mcpCallToolParams{
@@ -1062,19 +1279,23 @@ func TestMCP_URLEncoding(t *testing.T) {
 			"path": "/api/users?id=123",
 		},
 	}
-	sendRequest(s, "tools/call", 1, params)
+	output := sendRequest(s, "tools/call", 1, params)
+	resp := parseResponse(t, output)
+
+	// Verify no error
+	if resp.Error != nil {
+		t.Fatalf("Unexpected error: %v", resp.Error)
+	}
 }
 
-func TestMCP_GetAPICall_URLEscaping(t *testing.T) {
-	s, mockServer := newTestMCPServerWithMockBackend(func(w http.ResponseWriter, r *http.Request) {
-		// ID with special characters should be URL-escaped in path
-		expectedPath := "/calls/abc%2F123"
-		if r.URL.RawPath != expectedPath && r.URL.Path != "/calls/abc/123" {
-			// Note: URL.Path is decoded, URL.RawPath is encoded
-			t.Logf("Path: %s, RawPath: %s", r.URL.Path, r.URL.RawPath)
+func TestMCP_GetAPICall_IDWithSpecialChars(t *testing.T) {
+	s, mockServer := newTestMCPServerWithMockBackend(newMockHubHandler(t, func(req hubToolCallRequest) (string, int) {
+		// ID with special characters should be preserved in the POST body
+		if req.Arguments["id"] != "abc/123" {
+			t.Errorf("Expected id=abc/123 in arguments, got: %v", req.Arguments["id"])
 		}
-		_, _ = w.Write([]byte(`{"id": "abc/123"}`))
-	})
+		return `{"id": "abc/123"}`, http.StatusOK
+	}))
 	defer mockServer.Close()
 
 	params := mcpCallToolParams{
@@ -1083,24 +1304,36 @@ func TestMCP_GetAPICall_URLEscaping(t *testing.T) {
 			"id": "abc/123",
 		},
 	}
-	sendRequest(s, "tools/call", 1, params)
+	output := sendRequest(s, "tools/call", 1, params)
+	resp := parseResponse(t, output)
+
+	// Verify no error
+	if resp.Error != nil {
+		t.Fatalf("Unexpected error: %v", resp.Error)
+	}
 }
 
 func TestMCP_EmptyArguments(t *testing.T) {
-	s, mockServer := newTestMCPServerWithMockBackend(func(w http.ResponseWriter, r *http.Request) {
-		// Verify no query params when arguments are empty
-		if r.URL.RawQuery != "" {
-			t.Errorf("Expected no query params, got: %s", r.URL.RawQuery)
+	s, mockServer := newTestMCPServerWithMockBackend(newMockHubHandler(t, func(req hubToolCallRequest) (string, int) {
+		// Verify arguments is an empty map in the POST body
+		if len(req.Arguments) != 0 {
+			t.Errorf("Expected empty arguments, got: %v", req.Arguments)
 		}
-		_, _ = w.Write([]byte(`{}`))
-	})
+		return `{}`, http.StatusOK
+	}))
 	defer mockServer.Close()
 
 	params := mcpCallToolParams{
 		Name:      "list_workloads",
 		Arguments: map[string]any{},
 	}
-	sendRequest(s, "tools/call", 1, params)
+	output := sendRequest(s, "tools/call", 1, params)
+	resp := parseResponse(t, output)
+
+	// Verify no error
+	if resp.Error != nil {
+		t.Fatalf("Unexpected error: %v", resp.Error)
+	}
 }
 
 func TestMCP_NilArguments(t *testing.T) {
@@ -1149,19 +1382,49 @@ func TestMCP_BackendInitialization_Concurrent(t *testing.T) {
 // =============================================================================
 
 func TestMCP_FullConversation(t *testing.T) {
-	// Simulate a typical MCP conversation
+	// Mock Hub MCP endpoint for tool definitions
+	mockHubMCPResponse := `{
+		"name": "kubeshark-hub",
+		"version": "1.0.0",
+		"tools": [
+			{"name": "list_workloads", "description": "List workloads", "inputSchema": {}},
+			{"name": "list_api_calls", "description": "List API calls", "inputSchema": {}},
+			{"name": "get_api_call", "description": "Get API call details", "inputSchema": {}}
+		],
+		"prompts": []
+	}`
+
+	// Simulate a typical MCP conversation with correct /tools/call endpoint
 	mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
-		case "/workloads":
-			_, _ = w.Write([]byte(`{"workloads": [{"name": "nginx", "namespace": "default"}]}`))
-		case "/calls":
-			_, _ = w.Write([]byte(`{"calls": [{"id": "1", "method": "GET"}]}`))
-		case "/calls/1":
-			_, _ = w.Write([]byte(`{"id": "1", "method": "GET", "path": "/health"}`))
-		case "/stats":
-			_, _ = w.Write([]byte(`{"total": 100}`))
+		case "/", "":
+			// Hub MCP info endpoint
+			w.Header().Set("Content-Type", "application/json")
+			_, _ = w.Write([]byte(mockHubMCPResponse))
+		case "/tools/call":
+			// All tool calls go through this endpoint
+			if r.Method != http.MethodPost {
+				w.WriteHeader(http.StatusMethodNotAllowed)
+				return
+			}
+			var req hubToolCallRequest
+			if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
+			// Return response based on tool name
+			switch req.Tool {
+			case "list_workloads":
+				_, _ = w.Write([]byte(`{"workloads": [{"name": "nginx", "namespace": "default"}]}`))
+			case "list_api_calls":
+				_, _ = w.Write([]byte(`{"calls": [{"id": "1", "method": "GET"}]}`))
+			case "get_api_call":
+				_, _ = w.Write([]byte(`{"id": "1", "method": "GET", "path": "/health"}`))
+			default:
+				w.WriteHeader(http.StatusNotFound)
+			}
 		default:
-			w.WriteHeader(404)
+			w.WriteHeader(http.StatusNotFound)
 		}
 	}))
 	defer mockServer.Close()
