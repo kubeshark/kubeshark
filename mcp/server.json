@@ -10,7 +10,7 @@
   },
   "homepage": "https://kubeshark.com",
   "license": "Apache-2.0",
-  "version": "52.12.0",
+  "version": "AUTO_GENERATED_AT_RELEASE",
   "authors": [
     {
       "name": "Kubeshark",
@@ -24,63 +24,38 @@
     "debugging",
     "security"
   ],
-  "tags": [
-    "kubernetes",
-    "network",
-    "traffic",
-    "api",
-    "http",
-    "grpc",
-    "kafka",
-    "redis",
-    "dns",
-    "pcap",
-    "wireshark",
-    "tcpdump",
-    "observability",
-    "debugging",
-    "microservices"
-  ],
+  "_note": "version and packages.fileSha256 are auto-generated at release time by .github/workflows/release.yml",
+  "tags": ["kubernetes", "network", "traffic", "api", "http", "grpc", "kafka", "redis", "dns", "pcap", "wireshark", "tcpdump", "observability", "debugging", "microservices"],
   "packages": [
     {
       "registryType": "mcpb",
-      "identifier": "https://github.com/kubeshark/kubeshark/releases/download/v52.12.0/kubeshark-mcp_darwin_arm64.mcpb",
-      "fileSha256": "UPDATE_AFTER_RELEASE",
-      "transport": {
-        "type": "stdio"
-      }
+      "identifier": "https://github.com/kubeshark/kubeshark/releases/download/vX.Y.Z/kubeshark-mcp_darwin_arm64.mcpb",
+      "fileSha256": "AUTO_GENERATED",
+      "transport": { "type": "stdio" }
     },
     {
       "registryType": "mcpb",
-      "identifier": "https://github.com/kubeshark/kubeshark/releases/download/v52.12.0/kubeshark-mcp_darwin_amd64.mcpb",
-      "fileSha256": "UPDATE_AFTER_RELEASE",
-      "transport": {
-        "type": "stdio"
-      }
+      "identifier": "https://github.com/kubeshark/kubeshark/releases/download/vX.Y.Z/kubeshark-mcp_darwin_amd64.mcpb",
+      "fileSha256": "AUTO_GENERATED",
+      "transport": { "type": "stdio" }
     },
     {
       "registryType": "mcpb",
-      "identifier": "https://github.com/kubeshark/kubeshark/releases/download/v52.12.0/kubeshark-mcp_linux_arm64.mcpb",
-      "fileSha256": "UPDATE_AFTER_RELEASE",
-      "transport": {
-        "type": "stdio"
-      }
+      "identifier": "https://github.com/kubeshark/kubeshark/releases/download/vX.Y.Z/kubeshark-mcp_linux_arm64.mcpb",
+      "fileSha256": "AUTO_GENERATED",
+      "transport": { "type": "stdio" }
     },
     {
       "registryType": "mcpb",
-      "identifier": "https://github.com/kubeshark/kubeshark/releases/download/v52.12.0/kubeshark-mcp_linux_amd64.mcpb",
-      "fileSha256": "UPDATE_AFTER_RELEASE",
-      "transport": {
-        "type": "stdio"
-      }
+      "identifier": "https://github.com/kubeshark/kubeshark/releases/download/vX.Y.Z/kubeshark-mcp_linux_amd64.mcpb",
+      "fileSha256": "AUTO_GENERATED",
+      "transport": { "type": "stdio" }
     },
     {
       "registryType": "mcpb",
-      "identifier": "https://github.com/kubeshark/kubeshark/releases/download/v52.12.0/kubeshark-mcp_windows_amd64.mcpb",
-      "fileSha256": "UPDATE_AFTER_RELEASE",
-      "transport": {
-        "type": "stdio"
-      }
+      "identifier": "https://github.com/kubeshark/kubeshark/releases/download/vX.Y.Z/kubeshark-mcp_windows_amd64.mcpb",
+      "fileSha256": "AUTO_GENERATED",
+      "transport": { "type": "stdio" }
     }
   ],
   "tools": [
@@ -158,38 +133,14 @@
     }
   ],
   "prompts": [
-    {
-      "name": "analyze_traffic",
-      "description": "Analyze API traffic patterns and identify issues"
-    },
-    {
-      "name": "find_errors",
-      "description": "Find and summarize API errors and failures"
-    },
-    {
-      "name": "trace_request",
-      "description": "Trace a request path through microservices"
-    },
-    {
-      "name": "show_topology",
-      "description": "Show service communication topology"
-    },
-    {
-      "name": "latency_analysis",
-      "description": "Analyze latency patterns and identify slow endpoints"
-    },
-    {
-      "name": "security_audit",
-      "description": "Audit traffic for security concerns"
-    },
-    {
-      "name": "compare_traffic",
-      "description": "Compare traffic patterns between time periods"
-    },
-    {
-      "name": "debug_connection",
-      "description": "Debug connectivity issues between services"
-    }
+    { "name": "analyze_traffic", "description": "Analyze API traffic patterns and identify issues" },
+    { "name": "find_errors", "description": "Find and summarize API errors and failures" },
+    { "name": "trace_request", "description": "Trace a request path through microservices" },
+    { "name": "show_topology", "description": "Show service communication topology" },
+    { "name": "latency_analysis", "description": "Analyze latency patterns and identify slow endpoints" },
+    { "name": "security_audit", "description": "Audit traffic for security concerns" },
+    { "name": "compare_traffic", "description": "Compare traffic patterns between time periods" },
+    { "name": "debug_connection", "description": "Debug connectivity issues between services" }
   ],
   "configuration": {
     "properties": {
