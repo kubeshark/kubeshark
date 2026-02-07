@@ -181,7 +181,6 @@ type ConfigStruct struct {
 	License              string                        `yaml:"license" json:"license" default:""`
 	CloudApiUrl          string                        `yaml:"cloudApiUrl" json:"cloudApiUrl" default:"https://api.kubeshark.com"`
 	CloudLicenseEnabled  bool                          `yaml:"cloudLicenseEnabled" json:"cloudLicenseEnabled" default:"true"`
-	AiAssistantEnabled   bool                          `yaml:"aiAssistantEnabled" json:"aiAssistantEnabled" default:"true"`
 	DemoModeEnabled      bool                          `yaml:"demoModeEnabled" json:"demoModeEnabled" default:"false"`
 	SupportChatEnabled   bool                          `yaml:"supportChatEnabled" json:"supportChatEnabled" default:"false"`
 	BetaEnabled          bool                          `yaml:"betaEnabled" json:"betaEnabled" default:"false"`
