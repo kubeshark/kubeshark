@@ -1,0 +1,190 @@
+name: MCP Registry Publish
+
+on:
+  release:
+    types: [published]
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Dry run - generate server.json but skip actual publishing'
+        type: boolean
+        default: true
+      release_tag:
+        description: 'Release tag to publish (e.g., v52.13.0)'
+        type: string
+        required: true
+
+jobs:
+  mcp-publish:
+    name: Publish to MCP Registry
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@v3
+
+      - name: Determine version
+        id: version
+        shell: bash
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            VERSION="${{ github.event.inputs.release_tag }}"
+          else
+            VERSION="${{ github.event.release.tag_name }}"
+          fi
+          echo "tag=${VERSION}" >> "$GITHUB_OUTPUT"
+          echo "Publishing MCP server for version: ${VERSION}"
+
+      - name: Download SHA256 files from release
+        shell: bash
+        run: |
+          VERSION="${{ steps.version.outputs.tag }}"
+          mkdir -p bin
+          echo "Downloading SHA256 checksums from release ${VERSION}..."
+          for platform in darwin_arm64 darwin_amd64 linux_arm64 linux_amd64 windows_amd64; do
+            url="https://github.com/kubeshark/kubeshark/releases/download/${VERSION}/kubeshark-mcp_${platform}.mcpb.sha256"
+            echo "  Fetching ${platform}..."
+            if ! curl -sfL "${url}" -o "bin/kubeshark-mcp_${platform}.mcpb.sha256"; then
+              echo "::warning::Failed to download SHA256 for ${platform}"
+            fi
+          done
+          echo "Downloaded checksums:"
+          ls -la bin/*.sha256 2>/dev/null || echo "No SHA256 files found"
+
+      - name: Generate server.json
+        shell: bash
+        run: |
+          VERSION="${{ steps.version.outputs.tag }}"
+          CLEAN_VERSION="${VERSION#v}"
+
+          # Read SHA256 hashes
+          get_sha256() {
+            local file="bin/kubeshark-mcp_$1.mcpb.sha256"
+            if [ -f "$file" ]; then
+              awk '{print $1}' "$file"
+            else
+              echo "HASH_NOT_FOUND"
+            fi
+          }
+
+          DARWIN_ARM64_SHA256=$(get_sha256 "darwin_arm64")
+          DARWIN_AMD64_SHA256=$(get_sha256 "darwin_amd64")
+          LINUX_ARM64_SHA256=$(get_sha256 "linux_arm64")
+          LINUX_AMD64_SHA256=$(get_sha256 "linux_amd64")
+          WINDOWS_AMD64_SHA256=$(get_sha256 "windows_amd64")
+
+          echo "SHA256 hashes:"
+          echo "  darwin_arm64: ${DARWIN_ARM64_SHA256}"
+          echo "  darwin_amd64: ${DARWIN_AMD64_SHA256}"
+          echo "  linux_arm64:  ${LINUX_ARM64_SHA256}"
+          echo "  linux_amd64:  ${LINUX_AMD64_SHA256}"
+          echo "  windows_amd64: ${WINDOWS_AMD64_SHA256}"
+
+          # Generate server.json using jq for proper formatting
+          jq -n \
+            --arg version "$CLEAN_VERSION" \
+            --arg full_version "$VERSION" \
+            --arg darwin_arm64_sha "$DARWIN_ARM64_SHA256" \
+            --arg darwin_amd64_sha "$DARWIN_AMD64_SHA256" \
+            --arg linux_arm64_sha "$LINUX_ARM64_SHA256" \
+            --arg linux_amd64_sha "$LINUX_AMD64_SHA256" \
+            --arg windows_amd64_sha "$WINDOWS_AMD64_SHA256" \
+            '{
+              "$schema": "https://static.modelcontextprotocol.io/schemas/2025-12-11/server.schema.json",
+              "name": "io.github.kubeshark/mcp",
+              "displayName": "Kubeshark",
+              "description": "Real-time Kubernetes network traffic visibility and API analysis for HTTP, gRPC, Redis, Kafka, DNS.",
+              "icon": "https://raw.githubusercontent.com/kubeshark/assets/refs/heads/master/logo/ico/icon.ico",
+              "repository": { "url": "https://github.com/kubeshark/kubeshark", "source": "github" },
+              "homepage": "https://kubeshark.com",
+              "license": "Apache-2.0",
+              "version": $version,
+              "authors": [{ "name": "Kubeshark", "url": "https://kubeshark.com" }],
+              "categories": ["kubernetes", "networking", "observability", "debugging", "security"],
+              "tags": ["kubernetes", "network", "traffic", "api", "http", "grpc", "kafka", "redis", "dns", "pcap", "wireshark", "tcpdump", "observability", "debugging", "microservices"],
+              "packages": [
+                { "registryType": "mcpb", "identifier": ("https://github.com/kubeshark/kubeshark/releases/download/" + $full_version + "/kubeshark-mcp_darwin_arm64.mcpb"), "fileSha256": $darwin_arm64_sha, "transport": { "type": "stdio" } },
+                { "registryType": "mcpb", "identifier": ("https://github.com/kubeshark/kubeshark/releases/download/" + $full_version + "/kubeshark-mcp_darwin_amd64.mcpb"), "fileSha256": $darwin_amd64_sha, "transport": { "type": "stdio" } },
+                { "registryType": "mcpb", "identifier": ("https://github.com/kubeshark/kubeshark/releases/download/" + $full_version + "/kubeshark-mcp_linux_arm64.mcpb"), "fileSha256": $linux_arm64_sha, "transport": { "type": "stdio" } },
+                { "registryType": "mcpb", "identifier": ("https://github.com/kubeshark/kubeshark/releases/download/" + $full_version + "/kubeshark-mcp_linux_amd64.mcpb"), "fileSha256": $linux_amd64_sha, "transport": { "type": "stdio" } },
+                { "registryType": "mcpb", "identifier": ("https://github.com/kubeshark/kubeshark/releases/download/" + $full_version + "/kubeshark-mcp_windows_amd64.mcpb"), "fileSha256": $windows_amd64_sha, "transport": { "type": "stdio" } }
+              ],
+              "tools": [
+                { "name": "check_kubeshark_status", "description": "Check if Kubeshark is currently running in the cluster.", "mode": "proxy" },
+                { "name": "start_kubeshark", "description": "Deploy Kubeshark to the Kubernetes cluster. Requires --allow-destructive flag.", "mode": "proxy", "destructive": true },
+                { "name": "stop_kubeshark", "description": "Remove Kubeshark from the Kubernetes cluster. Requires --allow-destructive flag.", "mode": "proxy", "destructive": true },
+                { "name": "list_workloads", "description": "List pods, services, namespaces, and nodes with observed L7 traffic.", "mode": "all" },
+                { "name": "list_api_calls", "description": "Query L7 API transactions (HTTP, gRPC, Redis, Kafka, DNS) with KFL filtering.", "mode": "all" },
+                { "name": "get_api_call", "description": "Get detailed information about a specific API call including headers and body.", "mode": "all" },
+                { "name": "get_api_stats", "description": "Get aggregated API statistics and metrics.", "mode": "all" },
+                { "name": "list_l4_flows", "description": "List L4 (TCP/UDP) network flows with traffic statistics.", "mode": "all" },
+                { "name": "get_l4_flow_summary", "description": "Get L4 connectivity summary including top talkers and cross-namespace traffic.", "mode": "all" },
+                { "name": "list_snapshots", "description": "List all PCAP snapshots.", "mode": "all" },
+                { "name": "create_snapshot", "description": "Create a new PCAP snapshot of captured traffic.", "mode": "all" },
+                { "name": "get_dissection_status", "description": "Check L7 protocol parsing status.", "mode": "all" },
+                { "name": "enable_dissection", "description": "Enable L7 protocol dissection.", "mode": "all" },
+                { "name": "disable_dissection", "description": "Disable L7 protocol dissection.", "mode": "all" }
+              ],
+              "prompts": [
+                { "name": "analyze_traffic", "description": "Analyze API traffic patterns and identify issues" },
+                { "name": "find_errors", "description": "Find and summarize API errors and failures" },
+                { "name": "trace_request", "description": "Trace a request path through microservices" },
+                { "name": "show_topology", "description": "Show service communication topology" },
+                { "name": "latency_analysis", "description": "Analyze latency patterns and identify slow endpoints" },
+                { "name": "security_audit", "description": "Audit traffic for security concerns" },
+                { "name": "compare_traffic", "description": "Compare traffic patterns between time periods" },
+                { "name": "debug_connection", "description": "Debug connectivity issues between services" }
+              ],
+              "configuration": {
+                "properties": {
+                  "url": { "type": "string", "description": "Direct URL to Kubeshark Hub (e.g., https://kubeshark.example.com). When set, connects directly without kubectl/proxy.", "examples": ["https://kubeshark.example.com", "http://localhost:8899"] },
+                  "kubeconfig": { "type": "string", "description": "Path to kubeconfig file for proxy mode.", "examples": ["~/.kube/config", "/path/to/.kube/config"] },
+                  "allow-destructive": { "type": "boolean", "description": "Enable destructive operations (start_kubeshark, stop_kubeshark). Default: false for safety.", "default": false }
+                }
+              },
+              "modes": {
+                "url": { "description": "Connect directly to an existing Kubeshark deployment via URL. Cluster management tools are disabled.", "args": ["mcp", "--url", "${url}"] },
+                "proxy": { "description": "Connect via kubectl port-forward. Requires kubeconfig access to the cluster.", "args": ["mcp", "--kubeconfig", "${kubeconfig}"] },
+                "proxy-destructive": { "description": "Proxy mode with destructive operations enabled.", "args": ["mcp", "--kubeconfig", "${kubeconfig}", "--allow-destructive"] }
+              }
+            }' > mcp/server.json
+
+          echo ""
+          echo "Generated server.json:"
+          cat mcp/server.json
+
+      - name: Install mcp-publisher
+        shell: bash
+        run: |
+          echo "Installing mcp-publisher..."
+          curl -sfL "https://github.com/modelcontextprotocol/registry/releases/latest/download/mcp-publisher_linux_amd64.tar.gz" | tar xz
+          chmod +x mcp-publisher
+          sudo mv mcp-publisher /usr/local/bin/
+          echo "mcp-publisher installed successfully"
+
+      - name: Publish to MCP Registry
+        if: github.event_name != 'workflow_dispatch' || github.event.inputs.dry_run != 'true'
+        shell: bash
+        run: |
+          cd mcp
+          echo "Publishing to MCP Registry..."
+          if ! mcp-publisher publish; then
+            echo "::error::Failed to publish to MCP Registry"
+            exit 1
+          fi
+          echo "Successfully published to MCP Registry"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Dry-run summary
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.dry_run == 'true'
+        shell: bash
+        run: |
+          echo "=============================================="
+          echo "DRY RUN - Would publish the following server.json"
+          echo "=============================================="
+          cat mcp/server.json
+          echo ""
+          echo "=============================================="
+          echo "SHA256 checksums downloaded:"
+          echo "=============================================="
+          cat bin/*.sha256 2>/dev/null || echo "No SHA256 files found"
