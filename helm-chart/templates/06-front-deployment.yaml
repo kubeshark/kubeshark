@@ -49,7 +49,9 @@ spec:
             - name: REACT_APP_TIMEZONE
               value: '{{ not (eq .Values.timezone "") | ternary .Values.timezone " " }}'
             - name: REACT_APP_SCRIPTING_DISABLED
-              value: '{{- if .Values.tap.liveConfigMapChangesDisabled -}}
+              value: '{{- if eq (.Values.scripting.enabled | toString) "false" -}}
+                        true
+                      {{- else if .Values.tap.liveConfigMapChangesDisabled -}}
                         {{- if .Values.demoModeEnabled -}}
                           {{ .Values.demoModeEnabled | ternary false true }}
                         {{- else -}}

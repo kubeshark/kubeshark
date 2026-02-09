@@ -275,6 +275,7 @@ supportChatEnabled: false
 betaEnabled: false
 internetConnectivity: true
 scripting:
+  enabled: false
   env: {}
   source: ""
   sources: []
