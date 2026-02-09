@@ -14,6 +14,8 @@ jobs:
   release:
     name: Build and publish a new release
     runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.tag }}
     steps:
       - name: Check out the repo
         uses: actions/checkout@v3
@@ -66,3 +68,10 @@ jobs:
           tag: ${{ steps.version.outputs.tag }}
           prerelease: false
           bodyFile: 'bin/README.md'
+
+  mcp-publish:
+    name: Publish to MCP Registry
+    needs: [release]
+    uses: ./.github/workflows/mcp-publish.yml
+    with:
+      release_tag: ${{ needs.release.outputs.version }}

@@ -1,8 +1,12 @@
 name: MCP Registry Publish
 
 on:
-  release:
-    types: [published]
+  workflow_call:
+    inputs:
+      release_tag:
+        description: 'Release tag to publish (e.g., v52.13.0)'
+        type: string
+        required: true
   workflow_dispatch:
     inputs:
       dry_run:
@@ -18,19 +22,19 @@ jobs:
   mcp-publish:
     name: Publish to MCP Registry
     runs-on: ubuntu-latest
+    permissions:
+      id-token: write  # Required for OIDC authentication with MCP Registry
+      contents: read   # Required for checkout
     steps:
       - name: Check out the repo
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
 
       - name: Determine version
         id: version
         shell: bash
         run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            VERSION="${{ github.event.inputs.release_tag }}"
-          else
-            VERSION="${{ github.event.release.tag_name }}"
-          fi
+          # inputs.release_tag works for both workflow_call and workflow_dispatch
+          VERSION="${{ inputs.release_tag }}"
           echo "tag=${VERSION}" >> "$GITHUB_OUTPUT"
           echo "Publishing MCP server for version: ${VERSION}"
 
