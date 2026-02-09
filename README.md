@@ -17,7 +17,9 @@
 
 ---
 
-**Cluster-wide, real-time visibility into every packet, API call, and service interaction.** Replay any moment in time. Resolve incidents at the speed of LLMs. 100% on-premises.
+* **Cluster-wide, real-time visibility into every packet, API call, and service interaction.** 
+* Replay any moment in time. 
+* Resolve incidents at the speed of LLMs. 100% on-premises.
 
 <!-- TODO: Hero image -->
 ![Kubeshark](https://github.com/kubeshark/assets/raw/master/png/stream.png)
@@ -53,7 +55,7 @@ claude mcp add kubeshark -- kubeshark mcp
 - **Zero instrumentation** — no code changes, no SDKs, just deploy
 - **Full payload capture** — request/response bodies, headers, timing
 - **TLS decryption** — see encrypted traffic without managing keys
-- **AI-ready** — query traffic with natural language via [MCP](https://docs.kubeshark.com/en/mcp)
+- **AI-ready** — query traffic with natural language via MCP
 
 ---
 
@@ -65,7 +67,7 @@ Capture and inspect every API call across your cluster—HTTP, gRPC, Redis, Kafk
 
 [Learn more →](https://docs.kubeshark.com/en/v2/l7_api_dissection)
 
-### Service Map
+### L4/L7 Workload Map
 
 Visualize how your services communicate. See dependencies, traffic flow, and identify anomalies at a glance.
 
@@ -93,7 +95,7 @@ Retain every packet. Take snapshots. Export PCAP files. Replay any moment in tim
 <!-- TODO: PCAP/Snapshot screenshot -->
 ![Traffic Retention](https://github.com/kubeshark/assets/raw/master/png/snapshots.png)
 
-[Snapshots guide →](https://docs.kubeshark.com/en/pcap)
+[Snapshots guide →](https://docs.kubeshark.com/en/v2/traffic_snapshots)
 
 ---
 
@@ -106,9 +108,8 @@ Retain every packet. Take snapshots. Export PCAP files. Replay any moment in tim
 | [**L7 API Dissection**](https://docs.kubeshark.com/en/v2/l7_api_dissection) | Request/response matching with full payloads and protocol parsing |
 | [**Protocol Support**](https://docs.kubeshark.com/en/protocols) | HTTP, gRPC, GraphQL, Redis, Kafka, DNS, and more |
 | [**TLS Decryption**](https://docs.kubeshark.com/en/encrypted_traffic) | eBPF-based decryption without key management |
-| [**AI-Powered Analysis**](https://docs.kubeshark.com/en/mcp) | Query traffic with Claude, Cursor, or any MCP-compatible AI |
-| [**KFL Filtering**](https://docs.kubeshark.com/en/filtering) | Wireshark-inspired display filters for precise traffic analysis |
-| [**Long-term Retention**](https://docs.kubeshark.com/en/long_term_retention) | Upload to S3/GCS for compliance and forensics |
+| [**AI-Powered Analysis**](https://docs.kubeshark.com/en/v2/ai_powered_analysis) | Query traffic with Claude, Cursor, or any MCP-compatible AI |
+| [**Display Filters**](https://docs.kubeshark.com/en/v2/kfl2) | Wireshark-inspired display filters for precise traffic analysis |
 | [**100% On-Premises**](https://docs.kubeshark.com/en/air_gapped) | Air-gapped support, no external dependencies |
 
 ---
