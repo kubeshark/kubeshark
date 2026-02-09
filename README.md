@@ -72,13 +72,15 @@ Visualize how your services communicate. See dependencies, traffic flow, and ide
 
 [Learn more →](https://docs.kubeshark.com/en/service-map)
 
-### AI Debugging
+### AI-Powered Root Cause Analysis
 
-Connect your AI assistant and investigate incidents using natural language. Ask questions, get answers—no dashboards, no query languages.
+Resolve production issues in minutes instead of hours. Connect your AI assistant and investigate incidents using natural language. Build network-aware AI agents for forensics, monitoring, compliance, and security.
 
 > *"Why did checkout fail at 2:15 PM?"*
 > *"Which services have error rates above 1%?"*
 > *"Trace request abc123 through all services"*
+
+Works with Claude Code, Cursor, and any MCP-compatible AI.
 
 [MCP setup guide →](https://docs.kubeshark.com/en/mcp)
 
