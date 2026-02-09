@@ -671,7 +671,7 @@ func (s *mcpServer) callHubTool(toolName string, args map[string]any) (string, b
 
 	// Build the request body
 	requestBody := map[string]any{
-		"tool":      toolName,
+		"name":      toolName,
 		"arguments": args,
 	}
 
