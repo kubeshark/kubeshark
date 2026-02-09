@@ -12,6 +12,7 @@ import (
 )
 
 type ScriptingConfig struct {
+	Enabled      bool                   `yaml:"enabled" json:"enabled" default:"false"`
 	Env          map[string]interface{} `yaml:"env" json:"env" default:"{}"`
 	Source       string                 `yaml:"source" json:"source" default:""`
 	Sources      []string               `yaml:"sources" json:"sources" default:"[]"`

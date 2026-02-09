@@ -48,6 +48,12 @@ spec:
               value: '{{ not (eq .Values.tap.auth.saml.idpMetadataUrl "") | ternary .Values.tap.auth.saml.idpMetadataUrl " " }}'
             - name: REACT_APP_TIMEZONE
               value: '{{ not (eq .Values.timezone "") | ternary .Values.timezone " " }}'
+            - name: REACT_APP_SCRIPTING_HIDDEN
+              value: '{{- if and .Values.scripting (eq (.Values.scripting.enabled | toString) "false") -}}
+                        true
+                      {{- else -}}
+                        false
+                      {{- end }}'
             - name: REACT_APP_SCRIPTING_DISABLED
               value: '{{- if .Values.tap.liveConfigMapChangesDisabled -}}
                         {{- if .Values.demoModeEnabled -}}
