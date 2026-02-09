@@ -61,7 +61,7 @@ claude mcp add kubeshark -- kubeshark mcp
 
 Capture and inspect every API call across your cluster—HTTP, gRPC, Redis, Kafka, DNS, and more. Request/response matching with full payloads, parsed according to protocol specifications. Headers, timing, and complete context. Zero instrumentation required.
 
-[Learn more →](https://docs.kubeshark.com/en/traffic)
+[Learn more →](https://docs.kubeshark.com/en/v2/l7_api_dissection)
 
 ### Service Map
 
@@ -70,7 +70,7 @@ Visualize how your services communicate. See dependencies, traffic flow, and ide
 <!-- TODO: Service map screenshot -->
 ![Service Map](https://github.com/kubeshark/assets/raw/master/png/servicemap.png)
 
-[Learn more →](https://docs.kubeshark.com/en/service-map)
+[Learn more →](https://docs.kubeshark.com/en/v2/service_map)
 
 ### AI-Powered Root Cause Analysis
 
