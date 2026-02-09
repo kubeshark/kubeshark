@@ -165,6 +165,13 @@ jobs:
           sudo mv mcp-publisher /usr/local/bin/
           echo "mcp-publisher installed successfully"
 
+      - name: Login to MCP Registry
+        if: github.event_name != 'workflow_dispatch' || github.event.inputs.dry_run != 'true'
+        shell: bash
+        run: mcp-publisher login github
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
       - name: Publish to MCP Registry
         if: github.event_name != 'workflow_dispatch' || github.event.inputs.dry_run != 'true'
         shell: bash
