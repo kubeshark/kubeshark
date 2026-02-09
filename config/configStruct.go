@@ -139,8 +139,8 @@ func CreateDefaultConfig() ConfigStruct {
 				"diameter",
 				"udp-flow",
 				"tcp-flow",
-				"udp-flow-full",
-				"tcp-flow-full",
+				"udp-conn",
+				"tcp-conn",
 			},
 			PortMapping: configStructs.PortMapping{
 				HTTP:     []uint16{80, 443, 8080},
