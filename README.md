@@ -53,6 +53,28 @@ Imagine having a cluster-wide [TCPDump](https://www.tcpdump.org/)-like capabilit
 
 Once the snapshot is ready, click the PCAP file to export its contents and open it in Wireshark.
 
+#### AI-Powered Network Analysis (MCP)
+
+Connect your AI assistant to Kubeshark and query your cluster's network traffic using natural language. Kubeshark implements the [Model Context Protocol (MCP)](https://modelcontextprotocol.io/)—an open standard for connecting AI assistants to external data sources.
+
+```shell
+# Add Kubeshark to Claude Code
+claude mcp add kubeshark -- kubeshark mcp --proxy
+
+# Then ask questions like:
+# "Show me all HTTP 500 errors in the last hour"
+# "Which services communicate with payment-service?"
+# "Investigate why checkout is failing"
+```
+
+**What AI can access:**
+- L7 API transactions (HTTP, gRPC, Redis, Kafka, etc.) with full request/response payloads
+- L4 TCP/UDP flows with connection metrics and TCP handshake RTT
+- Kubernetes context for every request (pod, service, namespace)
+- Snapshots and PCAP exports for forensic analysis
+
+Works with Claude Code, Claude Desktop, Cursor, GitHub Copilot, and any MCP-compatible AI assistant. See the [MCP documentation](https://docs.kubeshark.com/en/mcp) for setup guides and use cases.
+
 ## Getting Started
 Download **Kubeshark**'s binary distribution [latest release](https://github.com/kubeshark/kubeshark/releases/latest) or use one of the following methods to deploy **Kubeshark**. The [web-based dashboard](https://docs.kubeshark.com/en/ui) should open in your browser, showing a real-time view of your cluster's traffic.
 
