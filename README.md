@@ -21,7 +21,6 @@
 * Replay any moment in time. 
 * Resolve incidents at the speed of LLMs. 100% on-premises.
 
-<!-- TODO: Hero image -->
 ![Kubeshark](https://github.com/kubeshark/assets/raw/master/png/stream.png)
 
 ---
@@ -71,7 +70,6 @@ Capture and inspect every API call across your cluster—HTTP, gRPC, Redis, Kafk
 
 Visualize how your services communicate. See dependencies, traffic flow, and identify anomalies at a glance.
 
-<!-- TODO: Service map screenshot -->
 ![Service Map](https://github.com/kubeshark/assets/raw/master/png/servicemap.png)
 
 [Learn more →](https://docs.kubeshark.com/en/v2/service_map)
@@ -92,7 +90,6 @@ Works with Claude Code, Cursor, and any MCP-compatible AI.
 
 Retain every packet. Take snapshots. Export PCAP files. Replay any moment in time.
 
-<!-- TODO: PCAP/Snapshot screenshot -->
 ![Traffic Retention](https://github.com/kubeshark/assets/raw/master/png/snapshots.png)
 
 [Snapshots guide →](https://docs.kubeshark.com/en/v2/traffic_snapshots)
