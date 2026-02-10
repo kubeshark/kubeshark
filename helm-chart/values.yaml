@@ -191,8 +191,8 @@ tap:
   - diameter
   - udp-flow
   - tcp-flow
-  - tcp-flow-full
-  - udp-flow-full
+  - tcp-conn
+  - udp-conn
   portMapping:
     http:
     - 80
@@ -277,6 +277,7 @@ supportChatEnabled: false
 betaEnabled: false
 internetConnectivity: true
 scripting:
+  enabled: false
   env: {}
   source: ""
   sources: []
