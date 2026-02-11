@@ -167,6 +167,7 @@ type Role struct {
 	ScriptingPermissions    ScriptingPermissions `yaml:"scriptingPermissions" json:"scriptingPermissions"`
 	CanUpdateTargetedPods   bool                 `yaml:"canUpdateTargetedPods" json:"canUpdateTargetedPods" default:"false"`
 	CanStopTrafficCapturing bool                 `yaml:"canStopTrafficCapturing" json:"canStopTrafficCapturing" default:"false"`
+	CanControlDissection    bool                 `yaml:"canControlDissection" json:"canControlDissection" default:"false"`
 	ShowAdminConsoleLink    bool                 `yaml:"showAdminConsoleLink" json:"showAdminConsoleLink" default:"false"`
 }
 
@@ -316,9 +317,13 @@ type DelayedDissectionConfig struct {
 	Memory string `yaml:"memory" json:"memory" default:"4Gi"`
 }
 
+type DissectionConfig struct {
+	Enabled   bool   `yaml:"enabled" json:"enabled" default:"true"`
+	StopAfter string `yaml:"stopAfter" json:"stopAfter" default:"5m"`
+}
+
 type CaptureConfig struct {
-	Stopped     bool             `yaml:"stopped" json:"stopped" default:"false"`
-	StopAfter   string           `yaml:"stopAfter" json:"stopAfter" default:"5m"`
+	Dissection  DissectionConfig `yaml:"dissection" json:"dissection"`
 	CaptureSelf bool             `yaml:"captureSelf" json:"captureSelf" default:"false"`
 	Raw         RawCaptureConfig `yaml:"raw" json:"raw"`
 	DbMaxSize   string           `yaml:"dbMaxSize" json:"dbMaxSize" default:"500Mi"`

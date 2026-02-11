@@ -256,7 +256,7 @@ data:
     NAMESPACES: ''
     EXCLUDED_NAMESPACES: ''
     BPF_OVERRIDE: ''
-    STOPPED: 'false'
+    DISSECTION_ENABLED: 'true'
     SCRIPTING_SCRIPTS: '{}'
     SCRIPTING_ACTIVE_SCRIPTS: ''
     INGRESS_ENABLED: 'false'
@@ -276,7 +276,7 @@ data:
     TARGETED_PODS_UPDATE_DISABLED: ''
     PRESET_FILTERS_CHANGING_ENABLED: 'true'
     RECORDING_DISABLED: ''
-    STOP_TRAFFIC_CAPTURING_DISABLED: 'false'
+    DISSECTION_CONTROL_ENABLED: 'true'
     GLOBAL_FILTER: ""
     DEFAULT_FILTER: ""
     TRAFFIC_SAMPLE_RATE: '100'
@@ -296,7 +296,7 @@ data:
     PCAP_MAX_TIME: '1h'
     PCAP_MAX_SIZE: '500MB'
     PORT_MAPPING: '{"amqp":[5671,5672],"diameter":[3868],"http":[80,443,8080],"kafka":[9092],"ldap":[389],"redis":[6379]}'
-    RAW_CAPTURE: 'true'
+    RAW_CAPTURE_ENABLED: 'true'
     RAW_CAPTURE_STORAGE_SIZE: '1Gi'
 ---
 # Source: kubeshark/templates/02-cluster-role.yaml
@@ -953,8 +953,8 @@ spec:
               value: 'true'
             - name: REACT_APP_RECORDING_DISABLED
               value: 'false'
-            - name: REACT_APP_STOP_TRAFFIC_CAPTURING_DISABLED
-              value: 'false'
+            - name: REACT_APP_DISSECTION_CONTROL_ENABLED
+              value: 'true'
             - name: 'REACT_APP_CLOUD_LICENSE_ENABLED'
               value: 'true'
             - name: 'REACT_APP_AI_ASSISTANT_ENABLED'
