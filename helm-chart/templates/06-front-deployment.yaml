@@ -72,6 +72,8 @@ spec:
               value: '{{ eq .Values.tap.packetCapture "af_packet" | ternary "false" "true" }}'
             - name: REACT_APP_RECORDING_DISABLED
               value: '{{ .Values.tap.liveConfigMapChangesDisabled }}'
+            - name: REACT_APP_DISSECTION_ENABLED
+              value: '{{ .Values.tap.capture.dissection.enabled | ternary "true" "false" }}'
             - name: REACT_APP_DISSECTION_CONTROL_ENABLED
               value: '{{- if and .Values.tap.liveConfigMapChangesDisabled (not .Values.tap.capture.dissection.enabled) -}}
                         true
