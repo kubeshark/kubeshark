@@ -72,11 +72,13 @@ spec:
               value: '{{ eq .Values.tap.packetCapture "af_packet" | ternary "false" "true" }}'
             - name: REACT_APP_RECORDING_DISABLED
               value: '{{ .Values.tap.liveConfigMapChangesDisabled }}'
-            - name: REACT_APP_STOP_TRAFFIC_CAPTURING_DISABLED
-              value: '{{- if and .Values.tap.liveConfigMapChangesDisabled .Values.tap.capture.stopped -}}
-                        false
+            - name: REACT_APP_DISSECTION_ENABLED
+              value: '{{ .Values.tap.capture.dissection.enabled | ternary "true" "false" }}'
+            - name: REACT_APP_DISSECTION_CONTROL_ENABLED
+              value: '{{- if and .Values.tap.liveConfigMapChangesDisabled (not .Values.tap.capture.dissection.enabled) -}}
+                        true
                       {{- else -}}
-                        {{ .Values.tap.liveConfigMapChangesDisabled | ternary "true" "false" }}
+                        {{ not .Values.tap.liveConfigMapChangesDisabled | ternary "true" "false" }}
                       {{- end -}}'
             - name: 'REACT_APP_CLOUD_LICENSE_ENABLED'
               value: '{{- if or (and .Values.cloudLicenseEnabled (not (empty .Values.license))) (not .Values.internetConnectivity) -}}

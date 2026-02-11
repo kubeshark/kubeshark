@@ -37,7 +37,7 @@ spec:
             - -loglevel
             - '{{ .Values.logLevel | default "warning" }}'
             - -capture-stop-after
-            - "{{ if hasKey .Values.tap.capture "stopAfter" }}{{ .Values.tap.capture.stopAfter }}{{ else }}5m{{ end }}"
+            - "{{ if hasKey .Values.tap.capture.dissection "stopAfter" }}{{ .Values.tap.capture.dissection.stopAfter }}{{ else }}5m{{ end }}"
             - -snapshot-size-limit
             - '{{ .Values.tap.snapshots.storageSize }}'
             {{- if .Values.tap.delayedDissection.image }}
