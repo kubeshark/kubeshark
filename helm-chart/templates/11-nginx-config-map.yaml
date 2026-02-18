@@ -20,38 +20,6 @@ data:
       client_header_buffer_size   32k;
       large_client_header_buffers 8 64k;
 
-      # Snapshot download endpoint - special configuration for large file streaming
-      # This endpoint supports downloading large snapshot archives via HTTP
-      # with disabled buffering to ensure proper streaming through proxies
-      location {{ default "" (((.Values.tap).routing).front).basePath }}/snapshot/download {
-        rewrite ^{{ default "" (((.Values.tap).routing).front).basePath }}/snapshot/download(.*)$ /snapshot/download$1 break;
-        proxy_pass http://kubeshark-hub;
-        proxy_set_header   X-Forwarded-For $remote_addr;
-        proxy_set_header   Host $http_host;
-        proxy_set_header   X-Real-IP $remote_addr;
-        proxy_set_header  Authorization $http_authorization;
-        proxy_pass_header Authorization;
-
-        # Extended timeouts for large file downloads (1 hour)
-        proxy_connect_timeout 30s;
-        proxy_read_timeout 1h;
-        proxy_send_timeout 1h;
-        
-        # Disable buffering for streaming large files
-        proxy_buffering off;
-        proxy_cache off;
-        
-        # HTTP/1.1 for keepalive and chunked encoding
-        proxy_http_version 1.1;
-        proxy_set_header Connection "";
-        
-        # Increase buffer sizes for headers
-        proxy_buffer_size 64k;
-        proxy_buffers 8 64k;
-        
-        proxy_pass_request_headers on;
-      }
-
       location {{ default "" (((.Values.tap).routing).front).basePath }}/api {
         rewrite ^{{ default "" (((.Values.tap).routing).front).basePath }}/api(.*)$ $1 break;
         proxy_pass http://kubeshark-hub;
