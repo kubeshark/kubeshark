@@ -30,7 +30,7 @@ data:
         proxy_set_header  Authorization $http_authorization;
         proxy_pass_header Authorization;
         proxy_connect_timeout 4s;
-        # Extended timeout for ConnectRPC streaming operations (30 minutes)
+        # Extended timeout for ConnectRPC streaming operations like download/upload
         proxy_read_timeout 30m;
         proxy_send_timeout 30m;
         # Disable buffering for gRPC/Connect streaming
