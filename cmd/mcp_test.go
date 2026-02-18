@@ -218,7 +218,7 @@ func newTestMCPServerWithMockBackend(handler http.HandlerFunc) (*mcpServer, *htt
 }
 
 type hubToolCallRequest struct {
-	Tool      string         `json:"tool"`
+	Tool      string         `json:"name"`
 	Arguments map[string]any `json:"arguments"`
 }
 
