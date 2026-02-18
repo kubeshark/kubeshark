@@ -188,7 +188,7 @@ http and src.namespace == "default" and response.status == 500
 
 ## MCP Registry
 
-Kubeshark is published to the [MCP Registry](https://registry.mcp.io) automatically on each release.
+Kubeshark is published to the [MCP Registry](https://registry.modelcontextprotocol.io/) automatically on each release.
 
 The `server.json` in this directory is a reference file. The actual registry metadata (version, SHA256 hashes) is auto-generated during the release workflow. See [`.github/workflows/release.yml`](../.github/workflows/release.yml) for details.
 
@@ -197,7 +197,7 @@ The `server.json` in this directory is a reference file. The actual registry met
 - [Documentation](https://docs.kubeshark.com/en/mcp)
 - [GitHub](https://github.com/kubeshark/kubeshark)
 - [Website](https://kubeshark.com)
-- [MCP Registry](https://registry.mcp.io)
+- [MCP Registry](https://registry.modelcontextprotocol.io/)
 
 ## License
 
