@@ -18,7 +18,6 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
-	clientk8s "k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/remotecommand"
 )
@@ -39,7 +38,7 @@ type PodFileInfo struct {
 }
 
 // listWorkerPods fetches all worker pods from multiple namespaces
-func listWorkerPods(ctx context.Context, clientset *clientk8s.Clientset, namespaces []string) ([]*PodFileInfo, error) {
+func listWorkerPods(ctx context.Context, clientset *kubernetes.Clientset, namespaces []string) ([]*PodFileInfo, error) {
 	var podFileInfos []*PodFileInfo
 	var errs []error
 	labelSelector := label
@@ -65,7 +64,7 @@ func listWorkerPods(ctx context.Context, clientset *clientk8s.Clientset, namespa
 }
 
 // listFilesInPodDir lists all files in the specified directory inside the pod across multiple namespaces
-func listFilesInPodDir(ctx context.Context, clientset *clientk8s.Clientset, config *rest.Config, pod *PodFileInfo, cutoffTime *time.Time) error {
+func listFilesInPodDir(ctx context.Context, clientset *kubernetes.Clientset, config *rest.Config, pod *PodFileInfo, cutoffTime *time.Time) error {
 	nodeName := pod.Pod.Spec.NodeName
 	srcFilePath := filepath.Join("data", nodeName, srcDir)
 
