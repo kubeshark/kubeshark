@@ -48,6 +48,12 @@ spec:
               value: '{{ not (eq .Values.tap.auth.saml.idpMetadataUrl "") | ternary .Values.tap.auth.saml.idpMetadataUrl " " }}'
             - name: REACT_APP_TIMEZONE
               value: '{{ not (eq .Values.timezone "") | ternary .Values.timezone " " }}'
+            - name: REACT_APP_SCRIPTING_HIDDEN
+              value: '{{- if and .Values.scripting (eq (.Values.scripting.enabled | toString) "false") -}}
+                        true
+                      {{- else -}}
+                        false
+                      {{- end }}'
             - name: REACT_APP_SCRIPTING_DISABLED
               value: '{{- if .Values.tap.liveConfigMapChangesDisabled -}}
                         {{- if .Values.demoModeEnabled -}}
@@ -66,11 +72,13 @@ spec:
               value: '{{ eq .Values.tap.packetCapture "af_packet" | ternary "false" "true" }}'
             - name: REACT_APP_RECORDING_DISABLED
               value: '{{ .Values.tap.liveConfigMapChangesDisabled }}'
-            - name: REACT_APP_STOP_TRAFFIC_CAPTURING_DISABLED
-              value: '{{- if and .Values.tap.liveConfigMapChangesDisabled .Values.tap.capture.stopped -}}
-                        false
+            - name: REACT_APP_DISSECTION_ENABLED
+              value: '{{ .Values.tap.capture.dissection.enabled | ternary "true" "false" }}'
+            - name: REACT_APP_DISSECTION_CONTROL_ENABLED
+              value: '{{- if and .Values.tap.liveConfigMapChangesDisabled (not .Values.tap.capture.dissection.enabled) -}}
+                        true
                       {{- else -}}
-                        {{ .Values.tap.liveConfigMapChangesDisabled | ternary "true" "false" }}
+                        {{ not .Values.tap.liveConfigMapChangesDisabled | ternary "true" "false" }}
                       {{- end -}}'
             - name: 'REACT_APP_CLOUD_LICENSE_ENABLED'
               value: '{{- if or (and .Values.cloudLicenseEnabled (not (empty .Values.license))) (not .Values.internetConnectivity) -}}
@@ -78,8 +86,6 @@ spec:
                       {{- else -}}
                         {{ .Values.cloudLicenseEnabled }}
                       {{- end }}'
-            - name: 'REACT_APP_AI_ASSISTANT_ENABLED'
-              value: '{{ .Values.aiAssistantEnabled | ternary "true" "false" }}'
             - name: REACT_APP_SUPPORT_CHAT_ENABLED
               value: '{{ and .Values.supportChatEnabled .Values.internetConnectivity | ternary "true" "false" }}'
             - name: REACT_APP_BETA_ENABLED

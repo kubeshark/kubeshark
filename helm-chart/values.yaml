@@ -26,8 +26,10 @@ tap:
   excludedNamespaces: []
   bpfOverride: ""
   capture:
-    stopped: false
-    stopAfter: 5m
+    dissection:
+      enabled: true
+      stopAfter: 5m
+    captureSelf: false
     raw:
       enabled: true
       storageSize: 1Gi
@@ -144,6 +146,7 @@ tap:
             canDelete: true
           canUpdateTargetedPods: true
           canStopTrafficCapturing: true
+          canControlDissection: true
           showAdminConsoleLink: true
   ingress:
     enabled: false
@@ -188,6 +191,8 @@ tap:
   - diameter
   - udp-flow
   - tcp-flow
+  - udp-conn
+  - tcp-conn
   portMapping:
     http:
     - 80
@@ -223,6 +228,8 @@ tap:
     duplicateTimeframe: 200ms
     detectDuplicates: false
     staleTimeoutSeconds: 30
+    tcpFlowTimeout: 1200
+    udpFlowTimeout: 1200
   securityContext:
     privileged: true
     appArmorProfile:
@@ -265,13 +272,14 @@ kube:
 dumpLogs: false
 headless: false
 license: ""
+cloudApiUrl: https://api.kubeshark.com
 cloudLicenseEnabled: true
-aiAssistantEnabled: true
 demoModeEnabled: false
 supportChatEnabled: false
 betaEnabled: false
 internetConnectivity: true
 scripting:
+  enabled: false
   env: {}
   source: ""
   sources: []

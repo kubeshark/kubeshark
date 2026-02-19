@@ -64,3 +64,6 @@ scripts/
 
 # CWD config YAML
 kubeshark.yaml
+
+# Claude Code
+CLAUDE.md

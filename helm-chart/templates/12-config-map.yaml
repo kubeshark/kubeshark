@@ -11,7 +11,8 @@ data:
     NAMESPACES: '{{ gt (len .Values.tap.namespaces) 0 | ternary (join "," .Values.tap.namespaces) "" }}'
     EXCLUDED_NAMESPACES: '{{ gt (len .Values.tap.excludedNamespaces) 0 | ternary (join "," .Values.tap.excludedNamespaces) "" }}'
     BPF_OVERRIDE: '{{ .Values.tap.bpfOverride }}'
-    STOPPED: '{{ .Values.tap.capture.stopped | ternary "true" "false" }}'
+    DISSECTION_ENABLED: '{{ .Values.tap.capture.dissection.enabled | ternary "true" "false" }}'
+    CAPTURE_SELF: '{{ .Values.tap.capture.captureSelf | ternary "true" "false" }}'
     SCRIPTING_SCRIPTS: '{}'
     SCRIPTING_ACTIVE_SCRIPTS: '{{ gt (len .Values.scripting.active) 0 | ternary (join "," .Values.scripting.active) "" }}'
     INGRESS_ENABLED: '{{ .Values.tap.ingress.enabled }}'
@@ -55,11 +56,11 @@ data:
     TARGETED_PODS_UPDATE_DISABLED: '{{ .Values.tap.liveConfigMapChangesDisabled | ternary "true" "" }}'
     PRESET_FILTERS_CHANGING_ENABLED: '{{ .Values.tap.liveConfigMapChangesDisabled | ternary "false" "true" }}'
     RECORDING_DISABLED: '{{ .Values.tap.liveConfigMapChangesDisabled | ternary "true" "" }}'
-    STOP_TRAFFIC_CAPTURING_DISABLED: '{{- if and .Values.tap.liveConfigMapChangesDisabled .Values.tap.capture.stopped -}}
-                                        false
-                                      {{- else -}}
-                                        {{ .Values.tap.liveConfigMapChangesDisabled | ternary "true" "false" }}
-                                      {{- end }}'
+    DISSECTION_CONTROL_ENABLED: '{{- if and .Values.tap.liveConfigMapChangesDisabled (not .Values.tap.capture.dissection.enabled) -}}
+                                     true
+                                   {{- else -}}
+                                     {{ not .Values.tap.liveConfigMapChangesDisabled | ternary "true" "false" }}
+                                   {{- end }}'
     GLOBAL_FILTER: {{ include "kubeshark.escapeDoubleQuotes" .Values.tap.globalFilter | quote }}
     DEFAULT_FILTER: {{ include "kubeshark.escapeDoubleQuotes" .Values.tap.defaultFilter | quote }}
     TRAFFIC_SAMPLE_RATE: '{{ .Values.tap.misc.trafficSampleRate }}'
@@ -72,7 +73,6 @@ data:
                             {{- else -}}
                               {{ .Values.cloudLicenseEnabled }}
                             {{- end }}'
-    AI_ASSISTANT_ENABLED: '{{ .Values.aiAssistantEnabled | ternary "true" "false" }}'
     DUPLICATE_TIMEFRAME: '{{ .Values.tap.misc.duplicateTimeframe }}'
     ENABLED_DISSECTORS: '{{ gt (len .Values.tap.enabledDissectors) 0 | ternary (join "," .Values.tap.enabledDissectors) "" }}'
     CUSTOM_MACROS: '{{ toJson .Values.tap.customMacros }}'
@@ -83,5 +83,5 @@ data:
     PCAP_MAX_TIME: '{{ .Values.pcapdump.maxTime }}'
     PCAP_MAX_SIZE: '{{ .Values.pcapdump.maxSize }}'
     PORT_MAPPING: '{{ toJson .Values.tap.portMapping }}'
-    RAW_CAPTURE: '{{ .Values.tap.capture.raw.enabled | ternary "true" "false" }}'
+    RAW_CAPTURE_ENABLED: '{{ .Values.tap.capture.raw.enabled | ternary "true" "false" }}'
     RAW_CAPTURE_STORAGE_SIZE: '{{ .Values.tap.capture.raw.storageSize }}'

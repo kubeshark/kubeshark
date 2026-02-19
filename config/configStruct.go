@@ -116,6 +116,7 @@ func CreateDefaultConfig() ConfigStruct {
 							},
 							CanUpdateTargetedPods:   true,
 							CanStopTrafficCapturing: true,
+							CanControlDissection:    true,
 							ShowAdminConsoleLink:    true,
 						},
 					},
@@ -139,6 +140,8 @@ func CreateDefaultConfig() ConfigStruct {
 				"diameter",
 				"udp-flow",
 				"tcp-flow",
+				"udp-conn",
+				"tcp-conn",
 			},
 			PortMapping: configStructs.PortMapping{
 				HTTP:     []uint16{80, 443, 8080},
@@ -152,8 +155,10 @@ func CreateDefaultConfig() ConfigStruct {
 				CompleteStreamingEnabled: true,
 			},
 			Capture: configStructs.CaptureConfig{
-				Stopped:   false,
-				StopAfter: "5m",
+				Dissection: configStructs.DissectionConfig{
+					Enabled:   true,
+					StopAfter: "5m",
+				},
 			},
 		},
 	}
@@ -177,8 +182,8 @@ type ConfigStruct struct {
 	DumpLogs             bool                          `yaml:"dumpLogs" json:"dumpLogs" default:"false"`
 	HeadlessMode         bool                          `yaml:"headless" json:"headless" default:"false"`
 	License              string                        `yaml:"license" json:"license" default:""`
+	CloudApiUrl          string                        `yaml:"cloudApiUrl" json:"cloudApiUrl" default:"https://api.kubeshark.com"`
 	CloudLicenseEnabled  bool                          `yaml:"cloudLicenseEnabled" json:"cloudLicenseEnabled" default:"true"`
-	AiAssistantEnabled   bool                          `yaml:"aiAssistantEnabled" json:"aiAssistantEnabled" default:"true"`
 	DemoModeEnabled      bool                          `yaml:"demoModeEnabled" json:"demoModeEnabled" default:"false"`
 	SupportChatEnabled   bool                          `yaml:"supportChatEnabled" json:"supportChatEnabled" default:"false"`
 	BetaEnabled          bool                          `yaml:"betaEnabled" json:"betaEnabled" default:"false"`

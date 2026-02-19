@@ -256,7 +256,8 @@ data:
     NAMESPACES: ''
     EXCLUDED_NAMESPACES: ''
     BPF_OVERRIDE: ''
-    STOPPED: 'false'
+    DISSECTION_ENABLED: 'true'
+    CAPTURE_SELF: 'false'
     SCRIPTING_SCRIPTS: '{}'
     SCRIPTING_ACTIVE_SCRIPTS: ''
     INGRESS_ENABLED: 'false'
@@ -266,7 +267,7 @@ data:
     AUTH_TYPE: 'default'
     AUTH_SAML_IDP_METADATA_URL: ''
     AUTH_SAML_ROLE_ATTRIBUTE: 'role'
-    AUTH_SAML_ROLES: '{"admin":{"canDownloadPCAP":true,"canStopTrafficCapturing":true,"canUpdateTargetedPods":true,"canUseScripting":true,"filter":"","scriptingPermissions":{"canActivate":true,"canDelete":true,"canSave":true},"showAdminConsoleLink":true}}'
+    AUTH_SAML_ROLES: '{"admin":{"canControlDissection":true,"canDownloadPCAP":true,"canStopTrafficCapturing":true,"canUpdateTargetedPods":true,"canUseScripting":true,"filter":"","scriptingPermissions":{"canActivate":true,"canDelete":true,"canSave":true},"showAdminConsoleLink":true}}'
     AUTH_OIDC_ISSUER: 'not set'
     AUTH_OIDC_REFRESH_TOKEN_LIFETIME: '3960h'
     AUTH_OIDC_STATE_PARAM_EXPIRY: '10m'
@@ -276,7 +277,7 @@ data:
     TARGETED_PODS_UPDATE_DISABLED: ''
     PRESET_FILTERS_CHANGING_ENABLED: 'true'
     RECORDING_DISABLED: ''
-    STOP_TRAFFIC_CAPTURING_DISABLED: 'false'
+    DISSECTION_CONTROL_ENABLED: 'true'
     GLOBAL_FILTER: ""
     DEFAULT_FILTER: ""
     TRAFFIC_SAMPLE_RATE: '100'
@@ -285,9 +286,8 @@ data:
     PCAP_ERROR_TTL: '0'
     TIMEZONE: ' '
     CLOUD_LICENSE_ENABLED: 'true'
-    AI_ASSISTANT_ENABLED: 'true'
     DUPLICATE_TIMEFRAME: '200ms'
-    ENABLED_DISSECTORS: 'amqp,dns,http,icmp,kafka,redis,ws,ldap,radius,diameter,udp-flow,tcp-flow'
+    ENABLED_DISSECTORS: 'amqp,dns,http,icmp,kafka,redis,ws,ldap,radius,diameter,udp-flow,tcp-flow,udp-conn,tcp-conn'
     CUSTOM_MACROS: '{"https":"tls and (http or http2)"}'
     DISSECTORS_UPDATING_ENABLED: 'true'
     DETECT_DUPLICATES: 'false'
@@ -296,7 +296,7 @@ data:
     PCAP_MAX_TIME: '1h'
     PCAP_MAX_SIZE: '500MB'
     PORT_MAPPING: '{"amqp":[5671,5672],"diameter":[3868],"http":[80,443,8080],"kafka":[9092],"ldap":[389],"redis":[6379]}'
-    RAW_CAPTURE: 'true'
+    RAW_CAPTURE_ENABLED: 'true'
     RAW_CAPTURE_STORAGE_SIZE: '1Gi'
 ---
 # Source: kubeshark/templates/02-cluster-role.yaml
@@ -606,10 +606,16 @@ spec:
             - 'auto'
             - -staletimeout
             - '30'
+            - -tcp-flow-full-timeout
+            - '1200'
+            - -udp-flow-full-timeout
+            - '1200'
             - -storage-size
             - '10Gi'
             - -capture-db-max-size
             - '500Mi'
+            - -cloud-api-url
+            - 'https://api.kubeshark.com'
           image: 'docker.io/kubeshark/worker:v52.12'
           imagePullPolicy: Always
           name: sniffer
@@ -630,8 +636,6 @@ spec:
             value: '10000'
           - name: TCP_STREAM_CHANNEL_TIMEOUT_SHOW
             value: 'false'
-          - name: KUBESHARK_CLOUD_API_URL
-            value: 'https://api.kubeshark.com'
           - name: PROFILING_ENABLED
             value: 'false'
           - name: SENTRY_ENABLED
@@ -820,6 +824,8 @@ spec:
             - '1'
             - -dissector-memory
             - '4Gi'
+            - -cloud-api-url
+            - 'https://api.kubeshark.com'
           env:
           - name: POD_NAME
             valueFrom:
@@ -833,8 +839,6 @@ spec:
             value: 'false'
           - name: SENTRY_ENVIRONMENT
             value: 'production'
-          - name: KUBESHARK_CLOUD_API_URL
-            value: 'https://api.kubeshark.com'
           - name: PROFILING_ENABLED
             value: 'false'
           image: 'docker.io/kubeshark/hub:v52.12'
@@ -943,6 +947,8 @@ spec:
               value: ' '
             - name: REACT_APP_TIMEZONE
               value: ' '
+            - name: REACT_APP_SCRIPTING_HIDDEN
+              value: 'true'
             - name: REACT_APP_SCRIPTING_DISABLED
               value: 'false'
             - name: REACT_APP_TARGETED_PODS_UPDATE_DISABLED
@@ -953,11 +959,11 @@ spec:
               value: 'true'
             - name: REACT_APP_RECORDING_DISABLED
               value: 'false'
-            - name: REACT_APP_STOP_TRAFFIC_CAPTURING_DISABLED
-              value: 'false'
-            - name: 'REACT_APP_CLOUD_LICENSE_ENABLED'
+            - name: REACT_APP_DISSECTION_ENABLED
               value: 'true'
-            - name: 'REACT_APP_AI_ASSISTANT_ENABLED'
+            - name: REACT_APP_DISSECTION_CONTROL_ENABLED
+              value: 'true'
+            - name: 'REACT_APP_CLOUD_LICENSE_ENABLED'
               value: 'true'
             - name: REACT_APP_SUPPORT_CHAT_ENABLED
               value: 'false'
