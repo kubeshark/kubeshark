@@ -261,6 +261,8 @@ type MiscConfig struct {
 	DuplicateTimeframe          string `yaml:"duplicateTimeframe" json:"duplicateTimeframe" default:"200ms"`
 	DetectDuplicates            bool   `yaml:"detectDuplicates" json:"detectDuplicates" default:"false"`
 	StaleTimeoutSeconds         int    `yaml:"staleTimeoutSeconds" json:"staleTimeoutSeconds" default:"30"`
+	TcpFlowTimeout              int    `yaml:"tcpFlowTimeout" json:"tcpFlowTimeout" default:"1200"`
+	UdpFlowTimeout              int    `yaml:"udpFlowTimeout" json:"udpFlowTimeout" default:"1200"`
 }
 
 type PcapDumpConfig struct {
