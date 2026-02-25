@@ -40,10 +40,14 @@ spec:
             - "{{ if hasKey .Values.tap.capture.dissection "stopAfter" }}{{ .Values.tap.capture.dissection.stopAfter }}{{ else }}5m{{ end }}"
             - -snapshot-size-limit
             - '{{ .Values.tap.snapshots.storageSize }}'
-            {{- if .Values.tap.delayedDissection.image }}
             - -dissector-image
-            - '{{ .Values.tap.delayedDissection.image }}'
-            {{- end }}
+          {{- if .Values.tap.docker.overrideImage.worker }}
+            - '{{ .Values.tap.docker.overrideImage.worker }}'
+          {{- else if .Values.tap.docker.overrideTag.worker }}
+            - '{{ .Values.tap.docker.registry }}/worker:{{ .Values.tap.docker.overrideTag.worker }}'
+          {{- else }}
+            - '{{ .Values.tap.docker.registry }}/worker:{{ not (eq .Values.tap.docker.tag "") | ternary .Values.tap.docker.tag (include "kubeshark.defaultVersion" .) }}'
+          {{- end }}
             {{- if .Values.tap.delayedDissection.cpu }}
             - -dissector-cpu
             - '{{ .Values.tap.delayedDissection.cpu }}'
