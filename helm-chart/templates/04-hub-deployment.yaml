@@ -39,7 +39,7 @@ spec:
             - -capture-stop-after
             - "{{ if hasKey .Values.tap.capture.dissection "stopAfter" }}{{ .Values.tap.capture.dissection.stopAfter }}{{ else }}5m{{ end }}"
             - -snapshot-size-limit
-            - '{{ .Values.tap.snapshots.storageSize }}'
+            - '{{ .Values.tap.snapshots.local.storageSize }}'
             {{- if .Values.tap.delayedDissection.image }}
             - -dissector-image
             - '{{ .Values.tap.delayedDissection.image }}'
@@ -57,9 +57,21 @@ spec:
             {{- end }}
             - -cloud-api-url
             - '{{ .Values.cloudApiUrl }}'
-          {{- if .Values.tap.secrets }}
+            {{- if .Values.tap.snapshots.cloud.provider }}
+            - -cloud-storage-provider
+            - '{{ .Values.tap.snapshots.cloud.provider }}'
+            {{- end }}
+          {{- if or .Values.tap.secrets .Values.tap.snapshots.cloud.configMaps .Values.tap.snapshots.cloud.secrets }}
           envFrom:
             {{- range .Values.tap.secrets }}
+            - secretRef:
+                name: {{ . }}
+            {{- end }}
+            {{- range .Values.tap.snapshots.cloud.configMaps }}
+            - configMapRef:
+                name: {{ . }}
+            {{- end }}
+            {{- range .Values.tap.snapshots.cloud.secrets }}
             - secretRef:
                 name: {{ . }}
             {{- end }}
@@ -184,10 +196,10 @@ spec:
               - key: AUTH_SAML_X509_KEY
                 path: kubeshark.key
       - name: snapshots-volume
-        {{- if .Values.tap.snapshots.storageClass }}
+        {{- if .Values.tap.snapshots.local.storageClass }}
         persistentVolumeClaim:
           claimName: {{ include "kubeshark.name" . }}-snapshots-pvc
         {{- else }}
         emptyDir:
-          sizeLimit: {{ .Values.tap.snapshots.storageSize }}
+          sizeLimit: {{ .Values.tap.snapshots.local.storageSize }}
         {{- end }}

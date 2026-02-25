@@ -39,8 +39,13 @@ tap:
     cpu: "1"
     memory: 4Gi
   snapshots:
-    storageClass: ""
-    storageSize: 20Gi
+    local:
+      storageClass: ""
+      storageSize: 20Gi
+    cloud:
+      provider: ""      # cloud storage provider: "s3" (empty = disabled)
+      configMaps: []    # names of ConfigMaps with cloud storage env vars
+      secrets: []       # names of Secrets with cloud storage credentials
   release:
     repo: https://helm.kubeshark.com
     name: kubeshark
