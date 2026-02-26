@@ -67,7 +67,10 @@ func (h *Helm) Install() (rel *release.Release, err error) {
 	client.Namespace = h.releaseNamespace
 	client.ReleaseName = h.releaseName
 
-	chartPath := os.Getenv(fmt.Sprintf("%s_HELM_CHART_PATH", strings.ToUpper(misc.Program)))
+	chartPath := config.Config.Tap.Release.HelmChartPath
+	if chartPath == "" {
+		chartPath = os.Getenv(fmt.Sprintf("%s_HELM_CHART_PATH", strings.ToUpper(misc.Program)))
+	}
 	if chartPath == "" {
 		var chartURL string
 		chartURL, err = repo.FindChartInRepoURL(h.repo, h.releaseName, "", "", "", "", getter.All(&cli.EnvSettings{}))
