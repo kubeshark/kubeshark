@@ -35,7 +35,6 @@ tap:
       storageSize: 1Gi
     dbMaxSize: 500Mi
   delayedDissection:
-    image: kubeshark/worker:master
     cpu: "1"
     memory: 4Gi
   snapshots:
@@ -196,8 +195,8 @@ tap:
   - diameter
   - udp-flow
   - tcp-flow
-  - tcp-conn
   - udp-conn
+  - tcp-conn
   portMapping:
     http:
     - 80
@@ -233,6 +232,8 @@ tap:
     duplicateTimeframe: 200ms
     detectDuplicates: false
     staleTimeoutSeconds: 30
+    tcpFlowTimeout: 1200
+    udpFlowTimeout: 1200
   securityContext:
     privileged: true
     appArmorProfile:
@@ -275,7 +276,7 @@ kube:
 dumpLogs: false
 headless: false
 license: ""
-cloudApiUrl: "https://api.kubeshark.com"
+cloudApiUrl: https://api.kubeshark.com
 cloudLicenseEnabled: true
 demoModeEnabled: false
 supportChatEnabled: false
