@@ -5,8 +5,6 @@ import (
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
-	"os"
-	"path/filepath"
 	"strings"
 	"testing"
 )
@@ -128,18 +126,8 @@ func TestMCP_ToolsList_CLIOnly(t *testing.T) {
 		t.Fatalf("Unexpected error: %v", resp.Error)
 	}
 	tools := resp.Result.(map[string]any)["tools"].([]any)
-	// Should have check_kubeshark_status + get_file_url + download_file = 3 tools
-	if len(tools) != 3 {
-		t.Errorf("Expected 3 tools, got %d", len(tools))
-	}
-	toolNames := make(map[string]bool)
-	for _, tool := range tools {
-		toolNames[tool.(map[string]any)["name"].(string)] = true
-	}
-	for _, expected := range []string{"check_kubeshark_status", "get_file_url", "download_file"} {
-		if !toolNames[expected] {
-			t.Errorf("Missing expected tool: %s", expected)
-		}
+	if len(tools) != 1 || tools[0].(map[string]any)["name"] != "check_kubeshark_status" {
+		t.Error("Expected only check_kubeshark_status tool")
 	}
 }
 
@@ -175,9 +163,9 @@ func TestMCP_ToolsList_WithHubBackend(t *testing.T) {
 		t.Fatalf("Unexpected error: %v", resp.Error)
 	}
 	tools := resp.Result.(map[string]any)["tools"].([]any)
-	// Should have CLI tools (3) + file tools (2) + Hub tools (2) = 7 tools
-	if len(tools) < 7 {
-		t.Errorf("Expected at least 7 tools, got %d", len(tools))
+	// Should have CLI tools (3) + Hub tools (2) = 5 tools
+	if len(tools) < 5 {
+		t.Errorf("Expected at least 5 tools, got %d", len(tools))
 	}
 }
 
@@ -472,187 +460,6 @@ func TestMCP_BackendInitialization_Concurrent(t *testing.T) {
 	}
 	for i := 0; i < 10; i++ {
 		<-done
-	}
-}
-
-func TestMCP_GetFileURL_ProxyMode(t *testing.T) {
-	s := &mcpServer{
-		httpClient:         &http.Client{},
-		stdin:              &bytes.Buffer{},
-		stdout:             &bytes.Buffer{},
-		hubBaseURL:         "http://127.0.0.1:8899/api/mcp",
-		backendInitialized: true,
-	}
-	resp := parseResponse(t, sendRequest(s, "tools/call", 1, mcpCallToolParams{
-		Name:      "get_file_url",
-		Arguments: map[string]any{"path": "/snapshots/abc/data.pcap"},
-	}))
-	if resp.Error != nil {
-		t.Fatalf("Unexpected error: %v", resp.Error)
-	}
-	text := resp.Result.(map[string]any)["content"].([]any)[0].(map[string]any)["text"].(string)
-	expected := "http://127.0.0.1:8899/api/snapshots/abc/data.pcap"
-	if text != expected {
-		t.Errorf("Expected %q, got %q", expected, text)
-	}
-}
-
-func TestMCP_GetFileURL_URLMode(t *testing.T) {
-	s := &mcpServer{
-		httpClient:         &http.Client{},
-		stdin:              &bytes.Buffer{},
-		stdout:             &bytes.Buffer{},
-		hubBaseURL:         "https://kubeshark.example.com/api/mcp",
-		backendInitialized: true,
-		urlMode:            true,
-		directURL:          "https://kubeshark.example.com",
-	}
-	resp := parseResponse(t, sendRequest(s, "tools/call", 1, mcpCallToolParams{
-		Name:      "get_file_url",
-		Arguments: map[string]any{"path": "/snapshots/xyz/export.pcap"},
-	}))
-	if resp.Error != nil {
-		t.Fatalf("Unexpected error: %v", resp.Error)
-	}
-	text := resp.Result.(map[string]any)["content"].([]any)[0].(map[string]any)["text"].(string)
-	expected := "https://kubeshark.example.com/api/snapshots/xyz/export.pcap"
-	if text != expected {
-		t.Errorf("Expected %q, got %q", expected, text)
-	}
-}
-
-func TestMCP_GetFileURL_MissingPath(t *testing.T) {
-	s := &mcpServer{
-		httpClient:         &http.Client{},
-		stdin:              &bytes.Buffer{},
-		stdout:             &bytes.Buffer{},
-		hubBaseURL:         "http://127.0.0.1:8899/api/mcp",
-		backendInitialized: true,
-	}
-	resp := parseResponse(t, sendRequest(s, "tools/call", 1, mcpCallToolParams{
-		Name:      "get_file_url",
-		Arguments: map[string]any{},
-	}))
-	result := resp.Result.(map[string]any)
-	if !result["isError"].(bool) {
-		t.Error("Expected isError=true when path is missing")
-	}
-	text := result["content"].([]any)[0].(map[string]any)["text"].(string)
-	if !strings.Contains(text, "path") {
-		t.Error("Error message should mention 'path'")
-	}
-}
-
-func TestMCP_DownloadFile(t *testing.T) {
-	fileContent := "test pcap data content"
-	mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/api/snapshots/abc/data.pcap" {
-			_, _ = w.Write([]byte(fileContent))
-		} else {
-			w.WriteHeader(http.StatusNotFound)
-		}
-	}))
-	defer mockServer.Close()
-
-	// Use temp dir for download destination
-	tmpDir := t.TempDir()
-	dest := filepath.Join(tmpDir, "downloaded.pcap")
-
-	s := &mcpServer{
-		httpClient:         &http.Client{},
-		stdin:              &bytes.Buffer{},
-		stdout:             &bytes.Buffer{},
-		hubBaseURL:         mockServer.URL + "/api/mcp",
-		backendInitialized: true,
-	}
-	resp := parseResponse(t, sendRequest(s, "tools/call", 1, mcpCallToolParams{
-		Name:      "download_file",
-		Arguments: map[string]any{"path": "/snapshots/abc/data.pcap", "dest": dest},
-	}))
-	if resp.Error != nil {
-		t.Fatalf("Unexpected error: %v", resp.Error)
-	}
-	result := resp.Result.(map[string]any)
-	if result["isError"] != nil && result["isError"].(bool) {
-		t.Fatalf("Expected no error, got: %v", result["content"])
-	}
-
-	text := result["content"].([]any)[0].(map[string]any)["text"].(string)
-	var downloadResult map[string]any
-	if err := json.Unmarshal([]byte(text), &downloadResult); err != nil {
-		t.Fatalf("Failed to parse download result JSON: %v", err)
-	}
-	if downloadResult["path"] != dest {
-		t.Errorf("Expected path %q, got %q", dest, downloadResult["path"])
-	}
-	if downloadResult["size"].(float64) != float64(len(fileContent)) {
-		t.Errorf("Expected size %d, got %v", len(fileContent), downloadResult["size"])
-	}
-
-	// Verify the file was actually written
-	content, err := os.ReadFile(dest)
-	if err != nil {
-		t.Fatalf("Failed to read downloaded file: %v", err)
-	}
-	if string(content) != fileContent {
-		t.Errorf("Expected file content %q, got %q", fileContent, string(content))
-	}
-}
-
-func TestMCP_DownloadFile_CustomDest(t *testing.T) {
-	mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		_, _ = w.Write([]byte("data"))
-	}))
-	defer mockServer.Close()
-
-	tmpDir := t.TempDir()
-	customDest := filepath.Join(tmpDir, "custom-name.pcap")
-
-	s := &mcpServer{
-		httpClient:         &http.Client{},
-		stdin:              &bytes.Buffer{},
-		stdout:             &bytes.Buffer{},
-		hubBaseURL:         mockServer.URL + "/api/mcp",
-		backendInitialized: true,
-	}
-	resp := parseResponse(t, sendRequest(s, "tools/call", 1, mcpCallToolParams{
-		Name:      "download_file",
-		Arguments: map[string]any{"path": "/snapshots/abc/export.pcap", "dest": customDest},
-	}))
-	result := resp.Result.(map[string]any)
-	if result["isError"] != nil && result["isError"].(bool) {
-		t.Fatalf("Expected no error, got: %v", result["content"])
-	}
-
-	text := result["content"].([]any)[0].(map[string]any)["text"].(string)
-	var downloadResult map[string]any
-	if err := json.Unmarshal([]byte(text), &downloadResult); err != nil {
-		t.Fatalf("Failed to parse download result JSON: %v", err)
-	}
-	if downloadResult["path"] != customDest {
-		t.Errorf("Expected path %q, got %q", customDest, downloadResult["path"])
-	}
-
-	if _, err := os.Stat(customDest); os.IsNotExist(err) {
-		t.Error("Expected file to exist at custom destination")
-	}
-}
-
-func TestMCP_ToolsList_IncludesFileTools(t *testing.T) {
-	s := newTestMCPServer()
-	resp := parseResponse(t, sendRequest(s, "tools/list", 1, nil))
-	if resp.Error != nil {
-		t.Fatalf("Unexpected error: %v", resp.Error)
-	}
-	tools := resp.Result.(map[string]any)["tools"].([]any)
-	toolNames := make(map[string]bool)
-	for _, tool := range tools {
-		toolNames[tool.(map[string]any)["name"].(string)] = true
-	}
-	for _, expected := range []string{"get_file_url", "download_file"} {
-		if !toolNames[expected] {
-			t.Errorf("Missing expected tool: %s", expected)
-		}
 	}
 }
 
