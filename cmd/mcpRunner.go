@@ -817,8 +817,17 @@ func (s *mcpServer) callDownloadFile(args map[string]any) (string, bool) {
 		dest = path.Base(filePath)
 	}
 
-	// Download the file
-	resp, err := s.httpClient.Get(fullURL)
+	// Use a dedicated HTTP client for file downloads.
+	// The default s.httpClient has a 30s total timeout which would fail for large files (up to 10GB).
+	// This client sets only connection-level timeouts and lets the body stream without a deadline.
+	downloadClient := &http.Client{
+		Transport: &http.Transport{
+			TLSHandshakeTimeout:   10 * time.Second,
+			ResponseHeaderTimeout: 30 * time.Second,
+		},
+	}
+
+	resp, err := downloadClient.Get(fullURL)
 	if err != nil {
 		return fmt.Sprintf("Error downloading file: %v", err), true
 	}
