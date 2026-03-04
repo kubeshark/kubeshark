@@ -242,31 +242,81 @@ proxy:
 port-forward:
 	kubectl port-forward $$(kubectl get pods | awk '$$1 ~ /^$(POD_PREFIX)/' | awk 'END {print $$1}') $(SRC_PORT):$(DST_PORT)
 
-release:
+release: ## Print release workflow instructions.
+	@echo "Release workflow (3 steps):"
+	@echo ""
+	@echo "  1. make release-pr VERSION=x.y.z"
+	@echo "     Tags sibling repos, bumps version, creates PR."
+	@echo "     Review and merge the PR manually."
+	@echo ""
+	@echo "  2. (automatic) Tag is created when release PR merges."
+	@echo "     Fallback: make release-tag VERSION=x.y.z"
+	@echo ""
+	@echo "  3. make release-helm VERSION=x.y.z"
+	@echo "     Creates PR to update Helm chart on kubeshark.github.io."
+	@echo "     Review and merge the PR manually."
+
+release-pr: ## Step 1: Tag sibling repos, bump version, create release PR.
 	@cd ../worker && git checkout master && git pull && git tag -d v$(VERSION); git tag v$(VERSION) && git push origin --tags
-	@cd ../tracer && git checkout master && git pull && git tag -d v$(VERSION); git tag v$(VERSION) && git push origin --tags
 	@cd ../hub && git checkout master && git pull && git tag -d v$(VERSION); git tag v$(VERSION) && git push origin --tags
 	@cd ../front && git checkout master && git pull && git tag -d v$(VERSION); git tag v$(VERSION) && git push origin --tags
-	@cd ../kubeshark && git checkout master && git pull && sed -i "s/^version:.*/version: \"$(shell echo $(VERSION) | sed -E 's/^([0-9]+\.[0-9]+\.[0-9]+)\..*/\1/')\"/" helm-chart/Chart.yaml && make
+	@cd ../kubeshark && git checkout master && git pull
+	@sed -i "s/^version:.*/version: \"$(shell echo $(VERSION) | sed -E 's/^([0-9]+\.[0-9]+\.[0-9]+)\..*/\1/')\"/" helm-chart/Chart.yaml
+	@$(MAKE) build VER=$(VERSION)
 	@if [ "$(shell uname)" = "Darwin" ]; then \
 		codesign --sign - --force --preserve-metadata=entitlements,requirements,flags,runtime ./bin/kubeshark__; \
 	fi
-	@make generate-helm-values && make generate-manifests
-	@git add -A . && git commit -m ":bookmark: Bump the Helm chart version to $(VERSION)" && git push
-	@git tag -d v$(VERSION); git tag v$(VERSION) && git push origin --tags
-	@rm -rf ../kubeshark.github.io/charts/chart && mkdir ../kubeshark.github.io/charts/chart && cp -r helm-chart/ ../kubeshark.github.io/charts/chart/
-	@cd ../kubeshark.github.io/ && git add -A . && git commit -m ":sparkles: Update the Helm chart" && git push
+	@$(MAKE) generate-helm-values && $(MAKE) generate-manifests
+	@git checkout -b release/v$(VERSION)
+	@git add -A .
+	@git commit -m ":bookmark: Bump the Helm chart version to $(VERSION)"
+	@git push -u origin release/v$(VERSION)
+	@gh pr create --title ":bookmark: Release v$(VERSION)" \
+		--body "Automated release PR for v$(VERSION)." \
+		--base master \
+		--reviewer corst
+	@echo ""
+	@echo "Release PR created. Review and merge it."
+	@echo "Tag will be created automatically, or run: make release-tag VERSION=$(VERSION)"
+
+release-tag: ## Step 2 (fallback): Tag master after release PR is merged.
+	@echo "Verifying release PR was merged..."
+	@if ! gh pr list --state merged --head release/v$(VERSION) --json number --jq '.[0].number' | grep -q .; then \
+		echo "Error: No merged PR found for release/v$(VERSION). Merge the PR first."; \
+		exit 1; \
+	fi
+	@git checkout master && git pull
+	@git tag -d v$(VERSION) 2>/dev/null; git tag v$(VERSION) && git push origin --tags
+	@echo ""
+	@echo "Tagged v$(VERSION) on master. GitHub Actions will build the release."
+	@echo "Once complete, run: make release-helm VERSION=$(VERSION)"
+
+release-helm: ## Step 3: Create PR to update Helm chart on kubeshark.github.io.
+	@rm -rf ../kubeshark.github.io/charts/chart
+	@mkdir ../kubeshark.github.io/charts/chart
+	@cp -r helm-chart/ ../kubeshark.github.io/charts/chart/
+	@cd ../kubeshark.github.io && git checkout master && git pull \
+		&& git checkout -b helm-v$(VERSION) \
+		&& git add -A . \
+		&& git commit -m ":sparkles: Update the Helm chart to v$(VERSION)" \
+		&& git push -u origin helm-v$(VERSION) \
+		&& gh pr create --title ":sparkles: Helm chart v$(VERSION)" \
+			--body "Update Helm chart for release v$(VERSION)." \
+			--base master \
+			--reviewer corst
 	@cd ../kubeshark
+	@echo ""
+	@echo "Helm chart PR created on kubeshark.github.io. Review and merge it."
 
 release-dry-run:
 	@cd ../worker && git checkout master && git pull 
-	@cd ../tracer && git checkout master && git pull 
+	# @cd ../tracer && git checkout master && git pull 
 	@cd ../hub && git checkout master && git pull
 	@cd ../front && git checkout master && git pull 
 	@cd ../kubeshark && sed -i "s/^version:.*/version: \"$(shell echo $(VERSION) | sed -E 's/^([0-9]+\.[0-9]+\.[0-9]+)\..*/\1/')\"/" helm-chart/Chart.yaml && make
-	@if [ "$(shell uname)" = "Darwin" ]; then \
-		codesign --sign - --force --preserve-metadata=entitlements,requirements,flags,runtime ./bin/kubeshark__; \
-	fi
+	# @if [ "$(shell uname)" = "Darwin" ]; then \
+	# 	codesign --sign - --force --preserve-metadata=entitlements,requirements,flags,runtime ./bin/kubeshark__; \
+	# fi
 	@make generate-helm-values && make generate-manifests
 	@rm -rf ../kubeshark.github.io/charts/chart && mkdir ../kubeshark.github.io/charts/chart && cp -r helm-chart/ ../kubeshark.github.io/charts/chart/
 	@cd ../kubeshark.github.io/

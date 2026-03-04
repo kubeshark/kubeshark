@@ -42,13 +42,14 @@ tap:
       storageClass: ""
       storageSize: 20Gi
     cloud:
-      provider: ""      # cloud storage provider: "s3" (empty = disabled)
-      configMaps: []    # names of ConfigMaps with cloud storage env vars
-      secrets: []       # names of Secrets with cloud storage credentials
+      provider: ""
+      configMaps: []
+      secrets: []
   release:
     repo: https://helm.kubeshark.com
     name: kubeshark
     namespace: default
+    helmChartPath: ""
   persistentStorage: false
   persistentStorageStatic: false
   persistentStoragePvcVolumeMode: FileSystem

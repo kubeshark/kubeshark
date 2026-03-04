@@ -1,0 +1,24 @@
+name: Auto-tag release
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [master]
+
+jobs:
+  tag:
+    if: github.event.pull_request.merged == true && startsWith(github.event.pull_request.head.ref, 'release/v')
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+
+      - name: Create and push tag
+        run: |
+          VERSION="${GITHUB_HEAD_REF#release/}"
+          echo "Creating tag $VERSION on master"
+          git tag "$VERSION"
+          git push origin "$VERSION"
