@@ -243,18 +243,15 @@ port-forward:
 	kubectl port-forward $$(kubectl get pods | awk '$$1 ~ /^$(POD_PREFIX)/' | awk 'END {print $$1}') $(SRC_PORT):$(DST_PORT)
 
 release: ## Print release workflow instructions.
-	@echo "Release workflow (3 steps):"
+	@echo "Release workflow (2 steps):"
 	@echo ""
 	@echo "  1. make release-pr VERSION=x.y.z"
-	@echo "     Tags sibling repos, bumps version, creates PR."
-	@echo "     Review and merge the PR manually."
+	@echo "     Tags sibling repos, bumps version, creates PRs"
+	@echo "     (kubeshark + kubeshark.github.io helm chart)."
+	@echo "     Review and merge both PRs manually."
 	@echo ""
 	@echo "  2. (automatic) Tag is created when release PR merges."
 	@echo "     Fallback: make release-tag VERSION=x.y.z"
-	@echo ""
-	@echo "  3. make release-helm VERSION=x.y.z"
-	@echo "     Creates PR to update Helm chart on kubeshark.github.io."
-	@echo "     Review and merge the PR manually."
 
 release-pr: ## Step 1: Tag sibling repos, bump version, create release PR.
 	@cd ../worker && git checkout master && git pull && git tag -d v$(VERSION); git tag v$(VERSION) && git push origin --tags
@@ -275,23 +272,6 @@ release-pr: ## Step 1: Tag sibling repos, bump version, create release PR.
 		--body "Automated release PR for v$(VERSION)." \
 		--base master \
 		--reviewer corest
-	@echo ""
-	@echo "Release PR created. Review and merge it."
-	@echo "Tag will be created automatically, or run: make release-tag VERSION=$(VERSION)"
-
-release-tag: ## Step 2 (fallback): Tag master after release PR is merged.
-	@echo "Verifying release PR was merged..."
-	@if ! gh pr list --state merged --head release/v$(VERSION) --json number --jq '.[0].number' | grep -q .; then \
-		echo "Error: No merged PR found for release/v$(VERSION). Merge the PR first."; \
-		exit 1; \
-	fi
-	@git checkout master && git pull
-	@git tag -d v$(VERSION) 2>/dev/null; git tag v$(VERSION) && git push origin --tags
-	@echo ""
-	@echo "Tagged v$(VERSION) on master. GitHub Actions will build the release."
-	@echo "Once complete, run: make release-helm VERSION=$(VERSION)"
-
-release-helm: ## Step 3: Create PR to update Helm chart on kubeshark.github.io.
 	@rm -rf ../kubeshark.github.io/charts/chart
 	@mkdir ../kubeshark.github.io/charts/chart
 	@cp -r helm-chart/ ../kubeshark.github.io/charts/chart/
@@ -306,7 +286,21 @@ release-helm: ## Step 3: Create PR to update Helm chart on kubeshark.github.io.
 			--reviewer corest
 	@cd ../kubeshark
 	@echo ""
-	@echo "Helm chart PR created on kubeshark.github.io. Review and merge it."
+	@echo "Release PRs created:"
+	@echo "  - kubeshark: Review and merge the release PR."
+	@echo "  - kubeshark.github.io: Review and merge the helm chart PR."
+	@echo "Tag will be created automatically, or run: make release-tag VERSION=$(VERSION)"
+
+release-tag: ## Step 2 (fallback): Tag master after release PR is merged.
+	@echo "Verifying release PR was merged..."
+	@if ! gh pr list --state merged --head release/v$(VERSION) --json number --jq '.[0].number' | grep -q .; then \
+		echo "Error: No merged PR found for release/v$(VERSION). Merge the PR first."; \
+		exit 1; \
+	fi
+	@git checkout master && git pull
+	@git tag -d v$(VERSION) 2>/dev/null; git tag v$(VERSION) && git push origin --tags
+	@echo ""
+	@echo "Tagged v$(VERSION) on master. GitHub Actions will build the release."
 
 release-dry-run:
 	@cd ../worker && git checkout master && git pull 
