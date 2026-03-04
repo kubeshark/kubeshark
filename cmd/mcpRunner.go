@@ -10,7 +10,6 @@ import (
 	"net/http"
 	"os"
 	"os/exec"
-	"path"
 	"strings"
 	"sync"
 	"time"
@@ -325,16 +324,6 @@ func (s *mcpServer) invalidateHubMCPCache() {
 	s.cachedHubMCP = nil
 }
 
-// getBaseURL returns the hub API base URL by stripping /mcp from hubBaseURL.
-// The hub URL is always the frontend URL + /api, and hubBaseURL is frontendURL/api/mcp.
-// Ensures backend connection is established first.
-func (s *mcpServer) getBaseURL() (string, error) {
-	if errMsg := s.ensureBackendConnection(); errMsg != "" {
-		return "", fmt.Errorf("%s", errMsg)
-	}
-	return strings.TrimSuffix(s.hubBaseURL, "/mcp"), nil
-}
-
 func writeErrorToStderr(format string, args ...any) {
 	fmt.Fprintf(os.Stderr, format+"\n", args...)
 }
@@ -390,14 +379,6 @@ func (s *mcpServer) handleRequest(req *jsonRPCRequest) {
 
 func (s *mcpServer) handleInitialize(req *jsonRPCRequest) {
 	var instructions string
-	fileDownloadInstructions := `
-
-Downloading files (e.g., PCAP exports):
-When a tool like export_snapshot_pcap returns a relative file path, you MUST use the file tools to retrieve the file:
-- get_file_url: Resolves the relative path to a full download URL you can share with the user.
-- download_file: Downloads the file to the local filesystem so it can be opened or analyzed.
-Typical workflow: call export_snapshot_pcap → receive a relative path → call download_file with that path → share the local file path with the user.`
-
 	if s.urlMode {
 		instructions = fmt.Sprintf(`Kubeshark MCP Server - Connected to: %s
 
@@ -411,7 +392,7 @@ Available tools for traffic analysis:
 - get_api_stats: Get aggregated API statistics
 - And more - use tools/list to see all available tools
 
-Use the MCP tools directly - do NOT use kubectl or curl to access Kubeshark.`, s.directURL) + fileDownloadInstructions
+Use the MCP tools directly - do NOT use kubectl or curl to access Kubeshark.`, s.directURL)
 	} else if s.allowDestructive {
 		instructions = `Kubeshark MCP Server - Proxy Mode (Destructive Operations ENABLED)
 
@@ -429,7 +410,7 @@ Safe operations:
 Traffic analysis tools (require Kubeshark to be running):
 - list_workloads, list_api_calls, list_l4_flows, get_api_stats, and more
 
-Use the MCP tools - do NOT use kubectl, helm, or curl directly.` + fileDownloadInstructions
+Use the MCP tools - do NOT use kubectl, helm, or curl directly.`
 	} else {
 		instructions = `Kubeshark MCP Server - Proxy Mode (Read-Only)
 
@@ -444,7 +425,7 @@ Available operations:
 Traffic analysis tools (require Kubeshark to be running):
 - list_workloads, list_api_calls, list_l4_flows, get_api_stats, and more
 
-Use the MCP tools - do NOT use kubectl, helm, or curl directly.` + fileDownloadInstructions
+Use the MCP tools - do NOT use kubectl, helm, or curl directly.`
 	}
 
 	result := mcpInitializeResult{
@@ -472,40 +453,6 @@ func (s *mcpServer) handleListTools(req *jsonRPCRequest) {
 					"description": "Namespace where Kubeshark is installed (default: 'default'). Only used in local mode."
 				}
 			}
-		}`),
-	})
-
-	// Add file URL and download tools - available in all modes
-	tools = append(tools, mcpTool{
-		Name:        "get_file_url",
-		Description: "When a tool (e.g., export_snapshot_pcap) returns a relative file path, use this tool to resolve it into a fully-qualified download URL. The URL can be shared with the user for manual download.",
-		InputSchema: json.RawMessage(`{
-			"type": "object",
-			"properties": {
-				"path": {
-					"type": "string",
-					"description": "The relative file path returned by a Hub tool (e.g., '/snapshots/abc/data.pcap')"
-				}
-			},
-			"required": ["path"]
-		}`),
-	})
-	tools = append(tools, mcpTool{
-		Name:        "download_file",
-		Description: "When a tool (e.g., export_snapshot_pcap) returns a relative file path, use this tool to download the file to the local filesystem. This is the preferred way to retrieve PCAP exports and other files from Kubeshark.",
-		InputSchema: json.RawMessage(`{
-			"type": "object",
-			"properties": {
-				"path": {
-					"type": "string",
-					"description": "The relative file path returned by a Hub tool (e.g., '/snapshots/abc/data.pcap')"
-				},
-				"dest": {
-					"type": "string",
-					"description": "Local destination file path. If not provided, uses the filename from the path in the current directory."
-				}
-			},
-			"required": ["path"]
 		}`),
 	})
 
@@ -706,20 +653,6 @@ func (s *mcpServer) handleCallTool(req *jsonRPCRequest) {
 			IsError: isError,
 		})
 		return
-	case "get_file_url":
-		result, isError = s.callGetFileURL(params.Arguments)
-		s.sendResult(req.ID, mcpCallToolResult{
-			Content: []mcpContent{{Type: "text", Text: result}},
-			IsError: isError,
-		})
-		return
-	case "download_file":
-		result, isError = s.callDownloadFile(params.Arguments)
-		s.sendResult(req.ID, mcpCallToolResult{
-			Content: []mcpContent{{Type: "text", Text: result}},
-			IsError: isError,
-		})
-		return
 	}
 
 	// Forward Hub tools to the API
@@ -772,82 +705,6 @@ func (s *mcpServer) callHubTool(toolName string, args map[string]any) (string, b
 	return prettyJSON.String(), false
 }
 
-
-func (s *mcpServer) callGetFileURL(args map[string]any) (string, bool) {
-	filePath, _ := args["path"].(string)
-	if filePath == "" {
-		return "Error: 'path' parameter is required", true
-	}
-
-	baseURL, err := s.getBaseURL()
-	if err != nil {
-		return fmt.Sprintf("Error: %v", err), true
-	}
-
-	// Ensure path starts with /
-	if !strings.HasPrefix(filePath, "/") {
-		filePath = "/" + filePath
-	}
-
-	fullURL := strings.TrimSuffix(baseURL, "/") + filePath
-	return fullURL, false
-}
-
-func (s *mcpServer) callDownloadFile(args map[string]any) (string, bool) {
-	filePath, _ := args["path"].(string)
-	if filePath == "" {
-		return "Error: 'path' parameter is required", true
-	}
-
-	baseURL, err := s.getBaseURL()
-	if err != nil {
-		return fmt.Sprintf("Error: %v", err), true
-	}
-
-	// Ensure path starts with /
-	if !strings.HasPrefix(filePath, "/") {
-		filePath = "/" + filePath
-	}
-
-	fullURL := strings.TrimSuffix(baseURL, "/") + filePath
-
-	// Determine destination file path
-	dest, _ := args["dest"].(string)
-	if dest == "" {
-		dest = path.Base(filePath)
-	}
-
-	// Download the file
-	resp, err := s.httpClient.Get(fullURL)
-	if err != nil {
-		return fmt.Sprintf("Error downloading file: %v", err), true
-	}
-	defer func() { _ = resp.Body.Close() }()
-
-	if resp.StatusCode >= 400 {
-		return fmt.Sprintf("Error downloading file: HTTP %d", resp.StatusCode), true
-	}
-
-	// Write to destination
-	outFile, err := os.Create(dest)
-	if err != nil {
-		return fmt.Sprintf("Error creating file %s: %v", dest, err), true
-	}
-	defer func() { _ = outFile.Close() }()
-
-	written, err := io.Copy(outFile, resp.Body)
-	if err != nil {
-		return fmt.Sprintf("Error writing file %s: %v", dest, err), true
-	}
-
-	result := map[string]any{
-		"url":  fullURL,
-		"path": dest,
-		"size": written,
-	}
-	resultBytes, _ := json.MarshalIndent(result, "", "  ")
-	return string(resultBytes), false
-}
 
 func (s *mcpServer) callStartKubeshark(args map[string]any) (string, bool) {
 	// Build the kubeshark tap command
@@ -1056,11 +913,6 @@ func listMCPTools(directURL string) {
 		fmt.Printf("URL Mode: %s\n\n", directURL)
 		fmt.Println("Cluster management tools disabled (Kubeshark managed externally)")
 		fmt.Println()
-		fmt.Println("Local Tools:")
-		fmt.Println("  check_kubeshark_status  Check if Kubeshark is running")
-		fmt.Println("  get_file_url            Resolve a relative path to a full download URL")
-		fmt.Println("  download_file           Download a file from Kubeshark to local disk")
-		fmt.Println()
 
 		hubURL := strings.TrimSuffix(directURL, "/") + "/api/mcp"
 		fetchAndDisplayTools(hubURL, 30*time.Second)
@@ -1072,10 +924,6 @@ func listMCPTools(directURL string) {
 	fmt.Println("  check_kubeshark_status  Check if Kubeshark is running in the cluster")
 	fmt.Println("  start_kubeshark         Start Kubeshark to capture traffic")
 	fmt.Println("  stop_kubeshark          Stop Kubeshark and clean up resources")
-	fmt.Println()
-	fmt.Println("File Tools:")
-	fmt.Println("  get_file_url            Resolve a relative path to a full download URL")
-	fmt.Println("  download_file           Download a file from Kubeshark to local disk")
 	fmt.Println()
 
 	// Establish proxy connection to Kubeshark
