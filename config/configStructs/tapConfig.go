@@ -45,6 +45,7 @@ const (
 	PcapDumpEnabled              = "enabled"
 	PcapTime                     = "time"
 	WatchdogEnabled              = "watchdogEnabled"
+	HelmChartPathLabel           = "release-helmChartPath"
 )
 
 type ResourceLimitsHub struct {
@@ -211,6 +212,7 @@ type ReleaseConfig struct {
 	Repo      string `yaml:"repo" json:"repo" default:"https://helm.kubeshark.com"`
 	Name      string `yaml:"name" json:"name" default:"kubeshark"`
 	Namespace string `yaml:"namespace" json:"namespace" default:"default"`
+	HelmChartPath string `yaml:"helmChartPath" json:"helmChartPath" default:""`
 }
 
 type TelemetryConfig struct {
