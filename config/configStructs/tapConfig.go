@@ -310,9 +310,20 @@ type RawCaptureConfig struct {
 	StorageSize string `yaml:"storageSize" json:"storageSize" default:"1Gi"`
 }
 
-type SnapshotsConfig struct {
+type SnapshotsLocalConfig struct {
 	StorageClass string `yaml:"storageClass" json:"storageClass" default:""`
 	StorageSize  string `yaml:"storageSize" json:"storageSize" default:"20Gi"`
+}
+
+type SnapshotsCloudConfig struct {
+	Provider   string   `yaml:"provider" json:"provider" default:""`
+	ConfigMaps []string `yaml:"configMaps" json:"configMaps" default:"[]"`
+	Secrets    []string `yaml:"secrets" json:"secrets" default:"[]"`
+}
+
+type SnapshotsConfig struct {
+	Local SnapshotsLocalConfig `yaml:"local" json:"local"`
+	Cloud SnapshotsCloudConfig `yaml:"cloud" json:"cloud"`
 }
 
 type DelayedDissectionConfig struct {

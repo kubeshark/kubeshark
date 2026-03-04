@@ -1,5 +1,5 @@
 ---
-{{- if .Values.tap.snapshots.storageClass }}
+{{- if .Values.tap.snapshots.local.storageClass }}
 apiVersion: v1
 kind: PersistentVolumeClaim
 metadata:
@@ -16,7 +16,7 @@ spec:
     - ReadWriteOnce
   resources:
     requests:
-      storage: {{ .Values.tap.snapshots.storageSize }}
-  storageClassName: {{ .Values.tap.snapshots.storageClass }}
+      storage: {{ .Values.tap.snapshots.local.storageSize }}
+  storageClassName: {{ .Values.tap.snapshots.local.storageClass }}
 status: {}
 {{- end }}
