@@ -274,7 +274,7 @@ release-pr: ## Step 1: Tag sibling repos, bump version, create release PR.
 	@gh pr create --title ":bookmark: Release v$(VERSION)" \
 		--body "Automated release PR for v$(VERSION)." \
 		--base master \
-		--reviewer corst
+		--reviewer corest
 	@echo ""
 	@echo "Release PR created. Review and merge it."
 	@echo "Tag will be created automatically, or run: make release-tag VERSION=$(VERSION)"
@@ -303,7 +303,7 @@ release-helm: ## Step 3: Create PR to update Helm chart on kubeshark.github.io.
 		&& gh pr create --title ":sparkles: Helm chart v$(VERSION)" \
 			--body "Update Helm chart for release v$(VERSION)." \
 			--base master \
-			--reviewer corst
+			--reviewer corest
 	@cd ../kubeshark
 	@echo ""
 	@echo "Helm chart PR created on kubeshark.github.io. Review and merge it."
