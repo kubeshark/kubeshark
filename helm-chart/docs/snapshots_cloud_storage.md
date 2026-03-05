@@ -2,7 +2,7 @@
 
 Kubeshark can upload and download snapshots to cloud object storage, enabling cross-cluster sharing, backup/restore, and long-term retention.
 
-Supported providers: **Amazon S3** (`s3`) and **Azure Blob Storage** (`azblob`).
+Supported providers: **Amazon S3** (`s3`), **Azure Blob Storage** (`azblob`), and **Google Cloud Storage** (`gcs`).
 
 ## Helm Values
 
@@ -10,7 +10,7 @@ Supported providers: **Amazon S3** (`s3`) and **Azure Blob Storage** (`azblob`).
 tap:
   snapshots:
     cloud:
-      provider: ""      # "s3" or "azblob" (empty = disabled)
+      provider: ""      # "s3", "azblob", or "gcs" (empty = disabled)
       configMaps: []    # names of pre-existing ConfigMaps with cloud config env vars
       secrets: []       # names of pre-existing Secrets with cloud credentials
 ```
@@ -223,4 +223,104 @@ tap:
         - kubeshark-azblob-config
       secrets:
         - kubeshark-azblob-creds
+```
+
+---
+
+## Google Cloud Storage
+
+### Environment Variables
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `SNAPSHOT_GCS_BUCKET` | Yes | GCS bucket name |
+| `SNAPSHOT_GCS_PROJECT` | No | GCP project ID |
+| `SNAPSHOT_GCS_CREDENTIALS_JSON` | No | Service account JSON key (empty = use Application Default Credentials) |
+| `SNAPSHOT_CLOUD_PREFIX` | No | Key prefix in the bucket (e.g. `snapshots/`) |
+
+### Authentication Methods
+
+Credentials are resolved in this order:
+
+1. **Service Account JSON Key** -- If `SNAPSHOT_GCS_CREDENTIALS_JSON` is set, the provided JSON key is used directly.
+2. **Application Default Credentials** -- When no JSON key is provided, the GCP SDK default credential chain is used:
+   - **Workload Identity** (GKE pod identity) -- recommended for production on GKE
+   - GCE instance metadata (Compute Engine default service account)
+   - Standard GCP environment variables (`GOOGLE_APPLICATION_CREDENTIALS`)
+   - `gcloud` CLI credentials
+
+The provider validates bucket access on startup via `Bucket.Attrs()`. If the bucket is inaccessible, the hub will fail to start.
+
+### Example: Workload Identity (recommended for GKE)
+
+Create a ConfigMap with bucket configuration:
+
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kubeshark-gcs-config
+data:
+  SNAPSHOT_GCS_BUCKET: my-kubeshark-snapshots
+  SNAPSHOT_GCS_PROJECT: my-gcp-project
+```
+
+Set Helm values:
+
+```yaml
+tap:
+  snapshots:
+    cloud:
+      provider: "gcs"
+      configMaps:
+        - kubeshark-gcs-config
+```
+
+The hub pod's service account must be configured for GKE Workload Identity with a GCP service account that has the **Storage Object Admin** role on the bucket.
+
+### Example: Service Account Key
+
+Create a Secret with the service account JSON key:
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: kubeshark-gcs-creds
+type: Opaque
+stringData:
+  SNAPSHOT_GCS_CREDENTIALS_JSON: |
+    {
+      "type": "service_account",
+      "project_id": "my-gcp-project",
+      "private_key_id": "...",
+      "private_key": "-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n",
+      "client_email": "kubeshark@my-gcp-project.iam.gserviceaccount.com",
+      ...
+    }
+```
+
+Create a ConfigMap with bucket configuration:
+
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kubeshark-gcs-config
+data:
+  SNAPSHOT_GCS_BUCKET: my-kubeshark-snapshots
+  SNAPSHOT_GCS_PROJECT: my-gcp-project
+```
+
+Set Helm values:
+
+```yaml
+tap:
+  snapshots:
+    cloud:
+      provider: "gcs"
+      configMaps:
+        - kubeshark-gcs-config
+      secrets:
+        - kubeshark-gcs-creds
 ```
