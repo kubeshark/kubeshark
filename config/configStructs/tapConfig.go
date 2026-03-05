@@ -315,10 +315,28 @@ type SnapshotsLocalConfig struct {
 	StorageSize  string `yaml:"storageSize" json:"storageSize" default:"20Gi"`
 }
 
+type SnapshotsCloudS3Config struct {
+	Bucket     string `yaml:"bucket" json:"bucket" default:""`
+	Region     string `yaml:"region" json:"region" default:""`
+	AccessKey  string `yaml:"accessKey" json:"accessKey" default:""`
+	SecretKey  string `yaml:"secretKey" json:"secretKey" default:""`
+	RoleArn    string `yaml:"roleArn" json:"roleArn" default:""`
+	ExternalId string `yaml:"externalId" json:"externalId" default:""`
+}
+
+type SnapshotsCloudAzblobConfig struct {
+	StorageAccount string `yaml:"storageAccount" json:"storageAccount" default:""`
+	Container      string `yaml:"container" json:"container" default:""`
+	StorageKey     string `yaml:"storageKey" json:"storageKey" default:""`
+}
+
 type SnapshotsCloudConfig struct {
-	Provider   string   `yaml:"provider" json:"provider" default:""`
-	ConfigMaps []string `yaml:"configMaps" json:"configMaps" default:"[]"`
-	Secrets    []string `yaml:"secrets" json:"secrets" default:"[]"`
+	Provider   string                     `yaml:"provider" json:"provider" default:""`
+	Prefix     string                     `yaml:"prefix" json:"prefix" default:""`
+	ConfigMaps []string                   `yaml:"configMaps" json:"configMaps" default:"[]"`
+	Secrets    []string                   `yaml:"secrets" json:"secrets" default:"[]"`
+	S3         SnapshotsCloudS3Config     `yaml:"s3" json:"s3"`
+	Azblob     SnapshotsCloudAzblobConfig `yaml:"azblob" json:"azblob"`
 }
 
 type SnapshotsConfig struct {
