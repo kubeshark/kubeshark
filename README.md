@@ -64,7 +64,7 @@ Kubeshark exposes all cluster-wide network data via MCP (Model Context Protocol)
 
 Works with Claude Code, Cursor, and any MCP-compatible AI.
 
-![MCP Demo](https://github.com/kubeshark/assets/raw/master/gif/mcp-demo.gif)
+![MCP Demo](https://github.com/kubeshark/assets/raw/8bb4bab5298e3ffdc3afba164c716cc45dd9f19d/gif/mcp-demo.gif)
 
 [MCP setup guide →](https://docs.kubeshark.com/en/mcp)
 
