@@ -1,0 +1,175 @@
+suite: cloud storage template
+templates:
+  - templates/21-cloud-storage.yaml
+tests:
+  - it: should render nothing with default values
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should render ConfigMap with S3 config only
+    set:
+      tap.snapshots.cloud.s3.bucket: my-bucket
+      tap.snapshots.cloud.s3.region: us-east-1
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: ConfigMap
+        documentIndex: 0
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-cloud-config
+        documentIndex: 0
+      - equal:
+          path: data.SNAPSHOT_AWS_BUCKET
+          value: "my-bucket"
+        documentIndex: 0
+      - equal:
+          path: data.SNAPSHOT_AWS_REGION
+          value: "us-east-1"
+        documentIndex: 0
+      - notExists:
+          path: data.SNAPSHOT_AWS_ACCESS_KEY
+        documentIndex: 0
+
+  - it: should render ConfigMap and Secret with S3 config and credentials
+    set:
+      tap.snapshots.cloud.s3.bucket: my-bucket
+      tap.snapshots.cloud.s3.region: us-east-1
+      tap.snapshots.cloud.s3.accessKey: AKIAIOSFODNN7EXAMPLE
+      tap.snapshots.cloud.s3.secretKey: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+    asserts:
+      - hasDocuments:
+          count: 2
+      - isKind:
+          of: ConfigMap
+        documentIndex: 0
+      - equal:
+          path: data.SNAPSHOT_AWS_BUCKET
+          value: "my-bucket"
+        documentIndex: 0
+      - equal:
+          path: data.SNAPSHOT_AWS_REGION
+          value: "us-east-1"
+        documentIndex: 0
+      - isKind:
+          of: Secret
+        documentIndex: 1
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-cloud-secret
+        documentIndex: 1
+      - equal:
+          path: stringData.SNAPSHOT_AWS_ACCESS_KEY
+          value: "AKIAIOSFODNN7EXAMPLE"
+        documentIndex: 1
+      - equal:
+          path: stringData.SNAPSHOT_AWS_SECRET_KEY
+          value: "wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY"
+        documentIndex: 1
+
+  - it: should render ConfigMap with Azure Blob config only
+    set:
+      tap.snapshots.cloud.azblob.storageAccount: myaccount
+      tap.snapshots.cloud.azblob.container: mycontainer
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: ConfigMap
+        documentIndex: 0
+      - equal:
+          path: data.SNAPSHOT_AZBLOB_STORAGE_ACCOUNT
+          value: "myaccount"
+        documentIndex: 0
+      - equal:
+          path: data.SNAPSHOT_AZBLOB_CONTAINER
+          value: "mycontainer"
+        documentIndex: 0
+
+  - it: should render ConfigMap and Secret with Azure Blob config and storage key
+    set:
+      tap.snapshots.cloud.azblob.storageAccount: myaccount
+      tap.snapshots.cloud.azblob.container: mycontainer
+      tap.snapshots.cloud.azblob.storageKey: c29tZWtleQ==
+    asserts:
+      - hasDocuments:
+          count: 2
+      - isKind:
+          of: ConfigMap
+        documentIndex: 0
+      - equal:
+          path: data.SNAPSHOT_AZBLOB_STORAGE_ACCOUNT
+          value: "myaccount"
+        documentIndex: 0
+      - isKind:
+          of: Secret
+        documentIndex: 1
+      - equal:
+          path: stringData.SNAPSHOT_AZBLOB_STORAGE_KEY
+          value: "c29tZWtleQ=="
+        documentIndex: 1
+
+  - it: should render ConfigMap with only prefix
+    set:
+      tap.snapshots.cloud.prefix: snapshots/prod
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: ConfigMap
+        documentIndex: 0
+      - equal:
+          path: data.SNAPSHOT_CLOUD_PREFIX
+          value: "snapshots/prod"
+        documentIndex: 0
+      - notExists:
+          path: data.SNAPSHOT_AWS_BUCKET
+        documentIndex: 0
+      - notExists:
+          path: data.SNAPSHOT_AZBLOB_STORAGE_ACCOUNT
+        documentIndex: 0
+
+  - it: should render ConfigMap with role ARN without credentials (IAM auth)
+    set:
+      tap.snapshots.cloud.s3.bucket: my-bucket
+      tap.snapshots.cloud.s3.region: us-east-1
+      tap.snapshots.cloud.s3.roleArn: arn:aws:iam::123456789012:role/my-role
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: ConfigMap
+        documentIndex: 0
+      - equal:
+          path: data.SNAPSHOT_AWS_ROLE_ARN
+          value: "arn:aws:iam::123456789012:role/my-role"
+        documentIndex: 0
+      - equal:
+          path: data.SNAPSHOT_AWS_BUCKET
+          value: "my-bucket"
+        documentIndex: 0
+
+  - it: should render ConfigMap with externalId
+    set:
+      tap.snapshots.cloud.s3.bucket: my-bucket
+      tap.snapshots.cloud.s3.externalId: ext-12345
+    asserts:
+      - hasDocuments:
+          count: 1
+      - equal:
+          path: data.SNAPSHOT_AWS_EXTERNAL_ID
+          value: "ext-12345"
+        documentIndex: 0
+
+  - it: should set correct namespace
+    release:
+      namespace: kubeshark-ns
+    set:
+      tap.snapshots.cloud.s3.bucket: my-bucket
+    asserts:
+      - equal:
+          path: metadata.namespace
+          value: kubeshark-ns
+        documentIndex: 0

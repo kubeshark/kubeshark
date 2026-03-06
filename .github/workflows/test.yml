@@ -29,3 +29,46 @@ jobs:
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
+
+  helm-tests:
+    name: Helm Chart Tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Check out code
+        uses: actions/checkout@v4
+
+      - name: Set up Helm
+        uses: azure/setup-helm@v4
+
+      - name: Helm lint (default values)
+        run: helm lint ./helm-chart
+
+      - name: Helm lint (S3 values)
+        run: helm lint ./helm-chart -f ./helm-chart/tests/fixtures/values-s3.yaml
+
+      - name: Helm lint (Azure Blob values)
+        run: helm lint ./helm-chart -f ./helm-chart/tests/fixtures/values-azblob.yaml
+
+      - name: Helm lint (cloud refs values)
+        run: helm lint ./helm-chart -f ./helm-chart/tests/fixtures/values-cloud-refs.yaml
+
+      - name: Install helm-unittest plugin
+        run: helm plugin install https://github.com/helm-unittest/helm-unittest
+
+      - name: Run helm unit tests
+        run: helm unittest ./helm-chart
+
+      - name: Install kubeconform
+        run: |
+          curl -sL https://github.com/yannh/kubeconform/releases/latest/download/kubeconform-linux-amd64.tar.gz | tar xz
+          sudo mv kubeconform /usr/local/bin/
+
+      - name: Validate default template
+        run: helm template kubeshark ./helm-chart | kubeconform -strict -kubernetes-version 1.35.0 -summary
+
+      - name: Validate S3 template
+        run: helm template kubeshark ./helm-chart -f ./helm-chart/tests/fixtures/values-s3.yaml | kubeconform -strict -kubernetes-version 1.35.0 -summary
+
+      - name: Validate Azure Blob template
+        run: helm template kubeshark ./helm-chart -f ./helm-chart/tests/fixtures/values-azblob.yaml | kubeconform -strict -kubernetes-version 1.35.0 -summary

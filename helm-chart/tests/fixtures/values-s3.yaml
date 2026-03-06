@@ -1,0 +1,10 @@
+tap:
+  snapshots:
+    cloud:
+      provider: s3
+      prefix: snapshots/
+      s3:
+        bucket: kubeshark-snapshots
+        region: us-east-1
+        accessKey: AKIAIOSFODNN7EXAMPLE
+        secretKey: wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
