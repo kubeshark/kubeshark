@@ -1,0 +1,9 @@
+tap:
+  snapshots:
+    cloud:
+      provider: azblob
+      prefix: snapshots/
+      azblob:
+        storageAccount: kubesharkstore
+        container: snapshots
+        storageKey: c29tZWtleWhlcmU=

@@ -1,0 +1,129 @@
+suite: hub deployment cloud integration
+templates:
+  - templates/04-hub-deployment.yaml
+tests:
+  - it: should not render envFrom with default values
+    asserts:
+      - isKind:
+          of: Deployment
+      - notContains:
+          path: spec.template.spec.containers[0].envFrom
+          any: true
+          content:
+            configMapRef:
+              name: RELEASE-NAME-cloud-config
+
+  - it: should render envFrom with inline S3 config
+    set:
+      tap.snapshots.cloud.s3.bucket: my-bucket
+      tap.snapshots.cloud.s3.region: us-east-1
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].envFrom
+          content:
+            configMapRef:
+              name: RELEASE-NAME-cloud-config
+
+  - it: should render envFrom secret ref with inline credentials
+    set:
+      tap.snapshots.cloud.s3.bucket: my-bucket
+      tap.snapshots.cloud.s3.accessKey: AKIAIOSFODNN7EXAMPLE
+      tap.snapshots.cloud.s3.secretKey: secret
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].envFrom
+          content:
+            configMapRef:
+              name: RELEASE-NAME-cloud-config
+      - contains:
+          path: spec.template.spec.containers[0].envFrom
+          content:
+            secretRef:
+              name: RELEASE-NAME-cloud-secret
+
+  - it: should render envFrom with external configMaps
+    set:
+      tap.snapshots.cloud.configMaps:
+        - my-cloud-config
+        - my-other-config
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].envFrom
+          content:
+            configMapRef:
+              name: my-cloud-config
+      - contains:
+          path: spec.template.spec.containers[0].envFrom
+          content:
+            configMapRef:
+              name: my-other-config
+
+  - it: should render envFrom with external secrets
+    set:
+      tap.snapshots.cloud.secrets:
+        - my-cloud-secret
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].envFrom
+          content:
+            secretRef:
+              name: my-cloud-secret
+
+  - it: should render cloud-storage-provider arg when provider is set
+    set:
+      tap.snapshots.cloud.provider: s3
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].command
+          content: -cloud-storage-provider
+      - contains:
+          path: spec.template.spec.containers[0].command
+          content: s3
+
+  - it: should not render cloud-storage-provider arg with default values
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].command
+          content: -cloud-storage-provider
+
+  - it: should render envFrom with tap.secrets
+    set:
+      tap.secrets:
+        - my-existing-secret
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].envFrom
+          content:
+            secretRef:
+              name: my-existing-secret
+
+  - it: should render both inline and external refs together
+    set:
+      tap.snapshots.cloud.s3.bucket: my-bucket
+      tap.snapshots.cloud.s3.accessKey: key
+      tap.snapshots.cloud.s3.secretKey: secret
+      tap.snapshots.cloud.configMaps:
+        - ext-config
+      tap.snapshots.cloud.secrets:
+        - ext-secret
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].envFrom
+          content:
+            configMapRef:
+              name: ext-config
+      - contains:
+          path: spec.template.spec.containers[0].envFrom
+          content:
+            secretRef:
+              name: ext-secret
+      - contains:
+          path: spec.template.spec.containers[0].envFrom
+          content:
+            configMapRef:
+              name: RELEASE-NAME-cloud-config
+      - contains:
+          path: spec.template.spec.containers[0].envFrom
+          content:
+            secretRef:
+              name: RELEASE-NAME-cloud-secret

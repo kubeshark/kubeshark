@@ -1,0 +1,55 @@
+{{- $hasConfigValues := or .Values.tap.snapshots.cloud.prefix .Values.tap.snapshots.cloud.s3.bucket .Values.tap.snapshots.cloud.s3.region .Values.tap.snapshots.cloud.s3.roleArn .Values.tap.snapshots.cloud.s3.externalId .Values.tap.snapshots.cloud.azblob.storageAccount .Values.tap.snapshots.cloud.azblob.container -}}
+{{- $hasSecretValues := or .Values.tap.snapshots.cloud.s3.accessKey .Values.tap.snapshots.cloud.s3.secretKey .Values.tap.snapshots.cloud.azblob.storageKey -}}
+{{- if $hasConfigValues }}
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  labels:
+    {{- include "kubeshark.labels" . | nindent 4 }}
+  name: {{ include "kubeshark.name" . }}-cloud-config
+  namespace: {{ .Release.Namespace }}
+data:
+  {{- if .Values.tap.snapshots.cloud.prefix }}
+  SNAPSHOT_CLOUD_PREFIX: {{ .Values.tap.snapshots.cloud.prefix | quote }}
+  {{- end }}
+  {{- if .Values.tap.snapshots.cloud.s3.bucket }}
+  SNAPSHOT_AWS_BUCKET: {{ .Values.tap.snapshots.cloud.s3.bucket | quote }}
+  {{- end }}
+  {{- if .Values.tap.snapshots.cloud.s3.region }}
+  SNAPSHOT_AWS_REGION: {{ .Values.tap.snapshots.cloud.s3.region | quote }}
+  {{- end }}
+  {{- if .Values.tap.snapshots.cloud.s3.roleArn }}
+  SNAPSHOT_AWS_ROLE_ARN: {{ .Values.tap.snapshots.cloud.s3.roleArn | quote }}
+  {{- end }}
+  {{- if .Values.tap.snapshots.cloud.s3.externalId }}
+  SNAPSHOT_AWS_EXTERNAL_ID: {{ .Values.tap.snapshots.cloud.s3.externalId | quote }}
+  {{- end }}
+  {{- if .Values.tap.snapshots.cloud.azblob.storageAccount }}
+  SNAPSHOT_AZBLOB_STORAGE_ACCOUNT: {{ .Values.tap.snapshots.cloud.azblob.storageAccount | quote }}
+  {{- end }}
+  {{- if .Values.tap.snapshots.cloud.azblob.container }}
+  SNAPSHOT_AZBLOB_CONTAINER: {{ .Values.tap.snapshots.cloud.azblob.container | quote }}
+  {{- end }}
+{{- end }}
+{{- if $hasSecretValues }}
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  labels:
+    {{- include "kubeshark.labels" . | nindent 4 }}
+  name: {{ include "kubeshark.name" . }}-cloud-secret
+  namespace: {{ .Release.Namespace }}
+type: Opaque
+stringData:
+  {{- if .Values.tap.snapshots.cloud.s3.accessKey }}
+  SNAPSHOT_AWS_ACCESS_KEY: {{ .Values.tap.snapshots.cloud.s3.accessKey | quote }}
+  {{- end }}
+  {{- if .Values.tap.snapshots.cloud.s3.secretKey }}
+  SNAPSHOT_AWS_SECRET_KEY: {{ .Values.tap.snapshots.cloud.s3.secretKey | quote }}
+  {{- end }}
+  {{- if .Values.tap.snapshots.cloud.azblob.storageKey }}
+  SNAPSHOT_AZBLOB_STORAGE_KEY: {{ .Values.tap.snapshots.cloud.azblob.storageKey | quote }}
+  {{- end }}
+{{- end }}
