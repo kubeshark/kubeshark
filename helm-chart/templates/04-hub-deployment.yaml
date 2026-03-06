@@ -39,7 +39,7 @@ spec:
             - -capture-stop-after
             - "{{ if hasKey .Values.tap.capture.dissection "stopAfter" }}{{ .Values.tap.capture.dissection.stopAfter }}{{ else }}5m{{ end }}"
             - -snapshot-size-limit
-            - '{{ .Values.tap.snapshots.storageSize }}'
+            - '{{ .Values.tap.snapshots.local.storageSize }}'
             - -dissector-image
           {{- if .Values.tap.docker.overrideImage.worker }}
             - '{{ .Values.tap.docker.overrideImage.worker }}'
