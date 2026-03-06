@@ -54,7 +54,7 @@ jobs:
         run: helm lint ./helm-chart -f ./helm-chart/tests/fixtures/values-cloud-refs.yaml
 
       - name: Install helm-unittest plugin
-        run: helm plugin install https://github.com/helm-unittest/helm-unittest
+        run: helm plugin install https://github.com/helm-unittest/helm-unittest --verify=false
 
       - name: Run helm unit tests
         run: helm unittest ./helm-chart
