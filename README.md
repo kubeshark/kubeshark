@@ -29,7 +29,7 @@ Network data is available to **AI agents via [MCP](https://docs.kubeshark.com/en
 - **Kubernetes Context** — every packet and API call resolved to pod, service, namespace, and node
 - **PCAP Retention** — point-in-time raw packet snapshots, exportable for Wireshark ([Snapshots →](https://docs.kubeshark.com/en/v2/traffic_snapshots))
 
-![Kubeshark](https://github.com/kubeshark/assets/raw/master/png/stream.png)
+![MCP Demo](https://github.com/kubeshark/assets/raw/master/gif/mcp-demo.gif)
 
 ---
 
