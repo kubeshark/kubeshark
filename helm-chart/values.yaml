@@ -43,8 +43,20 @@ tap:
       storageSize: 20Gi
     cloud:
       provider: ""
+      prefix: ""
       configMaps: []
       secrets: []
+      s3:
+        bucket: ""
+        region: ""
+        accessKey: ""
+        secretKey: ""
+        roleArn: ""
+        externalId: ""
+      azblob:
+        storageAccount: ""
+        container: ""
+        storageKey: ""
   release:
     repo: https://helm.kubeshark.com
     name: kubeshark
