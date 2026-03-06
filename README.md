@@ -29,7 +29,7 @@ Network data is available to **AI agents via [MCP](https://docs.kubeshark.com/en
 - **Kubernetes Context** — every packet and API call resolved to pod, service, namespace, and node
 - **PCAP Retention** — point-in-time raw packet snapshots, exportable for Wireshark ([Snapshots →](https://docs.kubeshark.com/en/v2/traffic_snapshots))
 
-![MCP Demo](https://github.com/kubeshark/assets/raw/master/gif/mcp-demo.gif)
+![Kubeshark](https://github.com/kubeshark/assets/raw/master/png/stream.png)
 
 ---
 
@@ -49,9 +49,22 @@ brew install kubeshark
 claude mcp add kubeshark -- kubeshark mcp
 ```
 
+[MCP setup guide →](https://docs.kubeshark.com/en/mcp)
+
+---
+
+### AI-Powered Network Analysis
+
+Kubeshark exposes all cluster-wide network data via MCP (Model Context Protocol). AI agents can query L4 metrics, investigate L7 API calls, analyze traffic patterns, and run root cause analysis — through natural language. Use cases include incident response, root cause analysis, troubleshooting, debugging, and reliability workflows.
+
 > *"Why did checkout fail at 2:15 PM?"*
 > *"Which services have error rates above 1%?"*
 > *"Show TCP retransmission rates across all node-to-node paths"*
+> *"Trace request abc123 through all services"*
+
+Works with Claude Code, Cursor, and any MCP-compatible AI.
+
+![MCP Demo](https://github.com/kubeshark/assets/raw/master/gif/mcp-demo.gif)
 
 [MCP setup guide →](https://docs.kubeshark.com/en/mcp)
 
@@ -72,18 +85,6 @@ Cluster-wide view of service communication: dependencies, traffic flow, and anom
 ![Service Map](https://github.com/kubeshark/assets/raw/master/png/servicemap.png)
 
 [Learn more →](https://docs.kubeshark.com/en/v2/service_map)
-
-### AI-Powered Network Analysis
-
-Kubeshark exposes all cluster-wide network data via MCP (Model Context Protocol). AI agents can query L4 metrics, investigate L7 API calls, analyze traffic patterns, and run root cause analysis — through natural language.
-
-> *"Trace request abc123 through all services"*
-> *"Which nodes show elevated TCP retransmissions?"*
-> *"Compare latency between AZ-a and AZ-b paths"*
-
-Works with Claude Code, Cursor, and any MCP-compatible AI.
-
-[MCP setup guide →](https://docs.kubeshark.com/en/mcp)
 
 ### Traffic Retention
 
