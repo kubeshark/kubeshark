@@ -394,7 +394,56 @@ tap:
         - kubeshark-gcs-config
 ```
 
-The hub pod's service account must be configured for GKE Workload Identity with a GCP service account that has the **Storage Object Admin** role on the bucket.
+Configure GKE Workload Identity to allow the Kubernetes service account to impersonate the GCP service account:
+
+```bash
+# Ensure the GKE cluster has Workload Identity enabled
+# (--workload-pool=PROJECT_ID.svc.id.goog at cluster creation)
+
+# Create a GCP service account (if not already created)
+gcloud iam service-accounts create kubeshark-gcs \
+  --display-name="Kubeshark GCS Snapshots"
+
+# Grant bucket access (read-write — see Required IAM Permissions above)
+gcloud storage buckets add-iam-policy-binding gs://BUCKET_NAME \
+  --member="serviceAccount:kubeshark-gcs@PROJECT_ID.iam.gserviceaccount.com" \
+  --role="roles/storage.legacyBucketReader"
+gcloud storage buckets add-iam-policy-binding gs://BUCKET_NAME \
+  --member="serviceAccount:kubeshark-gcs@PROJECT_ID.iam.gserviceaccount.com" \
+  --role="roles/storage.objectAdmin"
+
+# Allow the K8s service account to impersonate the GCP service account
+# Note: the K8s SA name is "<release-name>-service-account" (default: "kubeshark-service-account")
+gcloud iam service-accounts add-iam-policy-binding \
+  kubeshark-gcs@PROJECT_ID.iam.gserviceaccount.com \
+  --role="roles/iam.workloadIdentityUser" \
+  --member="serviceAccount:PROJECT_ID.svc.id.goog[NAMESPACE/kubeshark-service-account]"
+```
+
+Set Helm values — the `tap.annotations` field adds the Workload Identity annotation to the service account:
+
+```yaml
+tap:
+  annotations:
+    iam.gke.io/gcp-service-account: kubeshark-gcs@PROJECT_ID.iam.gserviceaccount.com
+  snapshots:
+    cloud:
+      provider: "gcs"
+      configMaps:
+        - kubeshark-gcs-config
+```
+
+Or via `--set`:
+
+```bash
+helm install kubeshark kubeshark/kubeshark \
+  --set tap.snapshots.cloud.provider=gcs \
+  --set tap.snapshots.cloud.gcs.bucket=BUCKET_NAME \
+  --set tap.snapshots.cloud.gcs.project=PROJECT_ID \
+  --set tap.annotations."iam\.gke\.io/gcp-service-account"=kubeshark-gcs@PROJECT_ID.iam.gserviceaccount.com
+```
+
+No `credentialsJson` secret is needed — GKE injects credentials automatically via the Workload Identity metadata server.
 
 ### Example: Service Account Key
 
