@@ -309,6 +309,44 @@ Credentials are resolved in this order:
 
 The provider validates bucket access on startup via `Bucket.Attrs()`. If the bucket is inaccessible, the hub will fail to start.
 
+### Required IAM Permissions
+
+The service account needs different IAM roles depending on the access level:
+
+**Read-only** (download, list, and sync snapshots from cloud):
+
+| Role | Permissions provided | Purpose |
+|------|---------------------|---------|
+| `roles/storage.legacyBucketReader` | `storage.buckets.get`, `storage.objects.list` | Hub startup (bucket validation) + listing snapshots |
+| `roles/storage.objectViewer` | `storage.objects.get`, `storage.objects.list` | Downloading snapshots, checking existence, reading metadata |
+
+```bash
+gcloud storage buckets add-iam-policy-binding gs://BUCKET_NAME \
+  --member="serviceAccount:SA_EMAIL" \
+  --role="roles/storage.legacyBucketReader"
+gcloud storage buckets add-iam-policy-binding gs://BUCKET_NAME \
+  --member="serviceAccount:SA_EMAIL" \
+  --role="roles/storage.objectViewer"
+```
+
+**Read-write** (upload and delete snapshots in addition to read):
+
+Add `roles/storage.objectAdmin` instead of `roles/storage.objectViewer` to also grant `storage.objects.create` and `storage.objects.delete`:
+
+| Role | Permissions provided | Purpose |
+|------|---------------------|---------|
+| `roles/storage.legacyBucketReader` | `storage.buckets.get`, `storage.objects.list` | Hub startup (bucket validation) + listing snapshots |
+| `roles/storage.objectAdmin` | `storage.objects.*` | Full object CRUD (upload, download, delete, list, metadata) |
+
+```bash
+gcloud storage buckets add-iam-policy-binding gs://BUCKET_NAME \
+  --member="serviceAccount:SA_EMAIL" \
+  --role="roles/storage.legacyBucketReader"
+gcloud storage buckets add-iam-policy-binding gs://BUCKET_NAME \
+  --member="serviceAccount:SA_EMAIL" \
+  --role="roles/storage.objectAdmin"
+```
+
 ### Example: Inline Values (simplest approach)
 
 ```yaml
