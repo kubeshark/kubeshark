@@ -11,12 +11,34 @@ tap:
   snapshots:
     cloud:
       provider: ""      # "s3", "azblob", or "gcs" (empty = disabled)
+      prefix: ""        # key prefix in the bucket/container (e.g. "snapshots/")
       configMaps: []    # names of pre-existing ConfigMaps with cloud config env vars
       secrets: []       # names of pre-existing Secrets with cloud credentials
+      s3:
+        bucket: ""
+        region: ""
+        accessKey: ""
+        secretKey: ""
+        roleArn: ""
+        externalId: ""
+      azblob:
+        storageAccount: ""
+        container: ""
+        storageKey: ""
+      gcs:
+        bucket: ""
+        project: ""
+        credentialsJson: ""
 ```
 
 - `provider` selects which cloud backend to use. Leave empty to disable cloud storage.
 - `configMaps` and `secrets` are lists of names of existing ConfigMap/Secret resources. They are mounted as `envFrom` on the hub pod, injecting all their keys as environment variables.
+
+### Inline Values (Alternative to External ConfigMaps/Secrets)
+
+Instead of creating ConfigMap and Secret resources manually, you can set cloud storage configuration directly in `values.yaml` or via `--set` flags. The Helm chart will automatically create the necessary ConfigMap and Secret resources.
+
+Both approaches can be used together — inline values are additive to external `configMaps`/`secrets` references.
 
 ---
 
@@ -47,6 +69,29 @@ Credentials are resolved in this order:
    - Shared credentials file (`~/.aws/credentials`)
 
 The provider validates bucket access on startup via `HeadBucket`. If the bucket is inaccessible, the hub will fail to start.
+
+### Example: Inline Values (simplest approach)
+
+```yaml
+tap:
+  snapshots:
+    cloud:
+      provider: "s3"
+      s3:
+        bucket: my-kubeshark-snapshots
+        region: us-east-1
+```
+
+Or with static credentials via `--set`:
+
+```bash
+helm install kubeshark kubeshark/kubeshark \
+  --set tap.snapshots.cloud.provider=s3 \
+  --set tap.snapshots.cloud.s3.bucket=my-kubeshark-snapshots \
+  --set tap.snapshots.cloud.s3.region=us-east-1 \
+  --set tap.snapshots.cloud.s3.accessKey=AKIA... \
+  --set tap.snapshots.cloud.s3.secretKey=wJal...
+```
 
 ### Example: IRSA (recommended for EKS)
 
@@ -159,6 +204,19 @@ Credentials are resolved in this order:
 
 The provider validates container access on startup via `GetProperties`. If the container is inaccessible, the hub will fail to start.
 
+### Example: Inline Values
+
+```yaml
+tap:
+  snapshots:
+    cloud:
+      provider: "azblob"
+      azblob:
+        storageAccount: mykubesharksa
+        container: snapshots
+        storageKey: "base64-encoded-storage-key..."  # optional, omit for DefaultAzureCredential
+```
+
 ### Example: Workload Identity (recommended for AKS)
 
 Create a ConfigMap with storage configuration:
@@ -250,6 +308,28 @@ Credentials are resolved in this order:
    - `gcloud` CLI credentials
 
 The provider validates bucket access on startup via `Bucket.Attrs()`. If the bucket is inaccessible, the hub will fail to start.
+
+### Example: Inline Values (simplest approach)
+
+```yaml
+tap:
+  snapshots:
+    cloud:
+      provider: "gcs"
+      gcs:
+        bucket: my-kubeshark-snapshots
+        project: my-gcp-project
+```
+
+Or with a service account key via `--set`:
+
+```bash
+helm install kubeshark kubeshark/kubeshark \
+  --set tap.snapshots.cloud.provider=gcs \
+  --set tap.snapshots.cloud.gcs.bucket=my-kubeshark-snapshots \
+  --set tap.snapshots.cloud.gcs.project=my-gcp-project \
+  --set-file tap.snapshots.cloud.gcs.credentialsJson=service-account.json
+```
 
 ### Example: Workload Identity (recommended for GKE)
 

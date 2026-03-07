@@ -39,7 +39,7 @@ spec:
             - -capture-stop-after
             - "{{ if hasKey .Values.tap.capture.dissection "stopAfter" }}{{ .Values.tap.capture.dissection.stopAfter }}{{ else }}5m{{ end }}"
             - -snapshot-size-limit
-            - '{{ .Values.tap.snapshots.storageSize }}'
+            - '{{ .Values.tap.snapshots.local.storageSize }}'
             - -dissector-image
           {{- if .Values.tap.docker.overrideImage.worker }}
             - '{{ .Values.tap.docker.overrideImage.worker }}'
@@ -65,7 +65,9 @@ spec:
             - -cloud-storage-provider
             - '{{ .Values.tap.snapshots.cloud.provider }}'
             {{- end }}
-          {{- if or .Values.tap.secrets .Values.tap.snapshots.cloud.configMaps .Values.tap.snapshots.cloud.secrets }}
+          {{- $hasInlineConfig := or .Values.tap.snapshots.cloud.prefix .Values.tap.snapshots.cloud.s3.bucket .Values.tap.snapshots.cloud.s3.region .Values.tap.snapshots.cloud.s3.roleArn .Values.tap.snapshots.cloud.s3.externalId .Values.tap.snapshots.cloud.azblob.storageAccount .Values.tap.snapshots.cloud.azblob.container }}
+          {{- $hasInlineSecrets := or .Values.tap.snapshots.cloud.s3.accessKey .Values.tap.snapshots.cloud.s3.secretKey .Values.tap.snapshots.cloud.azblob.storageKey }}
+          {{- if or .Values.tap.secrets .Values.tap.snapshots.cloud.configMaps .Values.tap.snapshots.cloud.secrets $hasInlineConfig $hasInlineSecrets }}
           envFrom:
             {{- range .Values.tap.secrets }}
             - secretRef:
@@ -78,6 +80,14 @@ spec:
             {{- range .Values.tap.snapshots.cloud.secrets }}
             - secretRef:
                 name: {{ . }}
+            {{- end }}
+            {{- if $hasInlineConfig }}
+            - configMapRef:
+                name: {{ include "kubeshark.name" . }}-cloud-config
+            {{- end }}
+            {{- if $hasInlineSecrets }}
+            - secretRef:
+                name: {{ include "kubeshark.name" . }}-cloud-secret
             {{- end }}
           {{- end }}
           env:

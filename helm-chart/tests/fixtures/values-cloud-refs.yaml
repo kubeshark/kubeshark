@@ -1,0 +1,8 @@
+tap:
+  snapshots:
+    cloud:
+      provider: s3
+      configMaps:
+        - my-cloud-config
+      secrets:
+        - my-cloud-secret

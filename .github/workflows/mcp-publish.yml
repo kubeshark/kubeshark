@@ -168,7 +168,7 @@ jobs:
       - name: Login to MCP Registry
         if: github.event_name != 'workflow_dispatch' || github.event.inputs.dry_run != 'true'
         shell: bash
-        run: mcp-publisher login github
+        run: mcp-publisher login github-oidc
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
