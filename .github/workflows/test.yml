@@ -50,6 +50,9 @@ jobs:
       - name: Helm lint (Azure Blob values)
         run: helm lint ./helm-chart -f ./helm-chart/tests/fixtures/values-azblob.yaml
 
+      - name: Helm lint (GCS values)
+        run: helm lint ./helm-chart -f ./helm-chart/tests/fixtures/values-gcs.yaml
+
       - name: Helm lint (cloud refs values)
         run: helm lint ./helm-chart -f ./helm-chart/tests/fixtures/values-cloud-refs.yaml
 
@@ -72,3 +75,6 @@ jobs:
 
       - name: Validate Azure Blob template
         run: helm template kubeshark ./helm-chart -f ./helm-chart/tests/fixtures/values-azblob.yaml | kubeconform -strict -kubernetes-version 1.35.0 -summary
+
+      - name: Validate GCS template
+        run: helm template kubeshark ./helm-chart -f ./helm-chart/tests/fixtures/values-gcs.yaml | kubeconform -strict -kubernetes-version 1.35.0 -summary

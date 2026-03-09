@@ -41,6 +41,44 @@ tests:
             secretRef:
               name: RELEASE-NAME-cloud-secret
 
+  - it: should render envFrom with inline GCS config
+    set:
+      tap.snapshots.cloud.gcs.bucket: my-gcs-bucket
+      tap.snapshots.cloud.gcs.project: my-gcp-project
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].envFrom
+          content:
+            configMapRef:
+              name: RELEASE-NAME-cloud-config
+
+  - it: should render envFrom secret ref with inline GCS credentials
+    set:
+      tap.snapshots.cloud.gcs.bucket: my-gcs-bucket
+      tap.snapshots.cloud.gcs.credentialsJson: '{"type":"service_account"}'
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].envFrom
+          content:
+            configMapRef:
+              name: RELEASE-NAME-cloud-config
+      - contains:
+          path: spec.template.spec.containers[0].envFrom
+          content:
+            secretRef:
+              name: RELEASE-NAME-cloud-secret
+
+  - it: should render cloud-storage-provider arg when provider is gcs
+    set:
+      tap.snapshots.cloud.provider: gcs
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].command
+          content: -cloud-storage-provider
+      - contains:
+          path: spec.template.spec.containers[0].command
+          content: gcs
+
   - it: should render envFrom with external configMaps
     set:
       tap.snapshots.cloud.configMaps:

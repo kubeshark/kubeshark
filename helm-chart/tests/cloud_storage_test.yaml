@@ -111,6 +111,76 @@ tests:
           value: "c29tZWtleQ=="
         documentIndex: 1
 
+  - it: should render ConfigMap with GCS config only
+    set:
+      tap.snapshots.cloud.gcs.bucket: my-gcs-bucket
+      tap.snapshots.cloud.gcs.project: my-gcp-project
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: ConfigMap
+        documentIndex: 0
+      - equal:
+          path: data.SNAPSHOT_GCS_BUCKET
+          value: "my-gcs-bucket"
+        documentIndex: 0
+      - equal:
+          path: data.SNAPSHOT_GCS_PROJECT
+          value: "my-gcp-project"
+        documentIndex: 0
+      - notExists:
+          path: data.SNAPSHOT_GCS_CREDENTIALS_JSON
+        documentIndex: 0
+
+  - it: should render ConfigMap and Secret with GCS config and credentials
+    set:
+      tap.snapshots.cloud.gcs.bucket: my-gcs-bucket
+      tap.snapshots.cloud.gcs.project: my-gcp-project
+      tap.snapshots.cloud.gcs.credentialsJson: '{"type":"service_account"}'
+    asserts:
+      - hasDocuments:
+          count: 2
+      - isKind:
+          of: ConfigMap
+        documentIndex: 0
+      - equal:
+          path: data.SNAPSHOT_GCS_BUCKET
+          value: "my-gcs-bucket"
+        documentIndex: 0
+      - equal:
+          path: data.SNAPSHOT_GCS_PROJECT
+          value: "my-gcp-project"
+        documentIndex: 0
+      - isKind:
+          of: Secret
+        documentIndex: 1
+      - equal:
+          path: metadata.name
+          value: RELEASE-NAME-cloud-secret
+        documentIndex: 1
+      - equal:
+          path: stringData.SNAPSHOT_GCS_CREDENTIALS_JSON
+          value: '{"type":"service_account"}'
+        documentIndex: 1
+
+  - it: should render ConfigMap with GCS bucket only (no project)
+    set:
+      tap.snapshots.cloud.gcs.bucket: my-gcs-bucket
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: ConfigMap
+        documentIndex: 0
+      - equal:
+          path: data.SNAPSHOT_GCS_BUCKET
+          value: "my-gcs-bucket"
+        documentIndex: 0
+      - notExists:
+          path: data.SNAPSHOT_GCS_PROJECT
+        documentIndex: 0
+
   - it: should render ConfigMap with only prefix
     set:
       tap.snapshots.cloud.prefix: snapshots/prod
@@ -129,6 +199,9 @@ tests:
         documentIndex: 0
       - notExists:
           path: data.SNAPSHOT_AZBLOB_STORAGE_ACCOUNT
+        documentIndex: 0
+      - notExists:
+          path: data.SNAPSHOT_GCS_BUCKET
         documentIndex: 0
 
   - it: should render ConfigMap with role ARN without credentials (IAM auth)
