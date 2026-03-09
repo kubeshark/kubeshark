@@ -161,6 +161,7 @@ func watchHubPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, c
 	podWatchHelper := kubernetes.NewPodWatchHelper(kubernetesProvider, podExactRegex)
 	eventChan, errorChan := kubernetes.FilteredWatch(ctx, podWatchHelper, []string{config.Config.Tap.Release.Namespace}, podWatchHelper)
 	podReady := false
+	podRunning := false
 
 	timeAfter := time.After(120 * time.Second)
 	for {
@@ -199,6 +200,9 @@ func watchHubPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, c
 					ready.Hub = true
 					ready.Unlock()
 					log.Info().Str("pod", kubernetes.HubPodName).Msg("Ready.")
+				} else if modifiedPod.Status.Phase == core.PodRunning && !podRunning {
+					podRunning = true
+					log.Info().Str("pod", kubernetes.HubPodName).Msg("Waiting for readiness...")
 				}
 
 				ready.Lock()
@@ -252,6 +256,7 @@ func watchFrontPod(ctx context.Context, kubernetesProvider *kubernetes.Provider,
 	podWatchHelper := kubernetes.NewPodWatchHelper(kubernetesProvider, podExactRegex)
 	eventChan, errorChan := kubernetes.FilteredWatch(ctx, podWatchHelper, []string{config.Config.Tap.Release.Namespace}, podWatchHelper)
 	podReady := false
+	podRunning := false
 
 	timeAfter := time.After(120 * time.Second)
 	for {
@@ -289,6 +294,9 @@ func watchFrontPod(ctx context.Context, kubernetesProvider *kubernetes.Provider,
 					ready.Front = true
 					ready.Unlock()
 					log.Info().Str("pod", kubernetes.FrontPodName).Msg("Ready.")
+				} else if modifiedPod.Status.Phase == core.PodRunning && !podRunning {
+					podRunning = true
+					log.Info().Str("pod", kubernetes.FrontPodName).Msg("Waiting for readiness...")
 				}
 
 				ready.Lock()
