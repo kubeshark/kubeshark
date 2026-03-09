@@ -1,0 +1,9 @@
+tap:
+  snapshots:
+    cloud:
+      provider: gcs
+      prefix: snapshots/
+      gcs:
+        bucket: kubeshark-snapshots
+        project: my-gcp-project
+        credentialsJson: '{"type":"service_account","project_id":"my-gcp-project"}'

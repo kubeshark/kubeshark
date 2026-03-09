@@ -1,5 +1,5 @@
-{{- $hasConfigValues := or .Values.tap.snapshots.cloud.prefix .Values.tap.snapshots.cloud.s3.bucket .Values.tap.snapshots.cloud.s3.region .Values.tap.snapshots.cloud.s3.roleArn .Values.tap.snapshots.cloud.s3.externalId .Values.tap.snapshots.cloud.azblob.storageAccount .Values.tap.snapshots.cloud.azblob.container -}}
-{{- $hasSecretValues := or .Values.tap.snapshots.cloud.s3.accessKey .Values.tap.snapshots.cloud.s3.secretKey .Values.tap.snapshots.cloud.azblob.storageKey -}}
+{{- $hasConfigValues := or .Values.tap.snapshots.cloud.prefix .Values.tap.snapshots.cloud.s3.bucket .Values.tap.snapshots.cloud.s3.region .Values.tap.snapshots.cloud.s3.roleArn .Values.tap.snapshots.cloud.s3.externalId .Values.tap.snapshots.cloud.azblob.storageAccount .Values.tap.snapshots.cloud.azblob.container .Values.tap.snapshots.cloud.gcs.bucket .Values.tap.snapshots.cloud.gcs.project -}}
+{{- $hasSecretValues := or .Values.tap.snapshots.cloud.s3.accessKey .Values.tap.snapshots.cloud.s3.secretKey .Values.tap.snapshots.cloud.azblob.storageKey .Values.tap.snapshots.cloud.gcs.credentialsJson -}}
 {{- if $hasConfigValues }}
 ---
 apiVersion: v1
@@ -31,6 +31,12 @@ data:
   {{- if .Values.tap.snapshots.cloud.azblob.container }}
   SNAPSHOT_AZBLOB_CONTAINER: {{ .Values.tap.snapshots.cloud.azblob.container | quote }}
   {{- end }}
+  {{- if .Values.tap.snapshots.cloud.gcs.bucket }}
+  SNAPSHOT_GCS_BUCKET: {{ .Values.tap.snapshots.cloud.gcs.bucket | quote }}
+  {{- end }}
+  {{- if .Values.tap.snapshots.cloud.gcs.project }}
+  SNAPSHOT_GCS_PROJECT: {{ .Values.tap.snapshots.cloud.gcs.project | quote }}
+  {{- end }}
 {{- end }}
 {{- if $hasSecretValues }}
 ---
@@ -51,5 +57,8 @@ stringData:
   {{- end }}
   {{- if .Values.tap.snapshots.cloud.azblob.storageKey }}
   SNAPSHOT_AZBLOB_STORAGE_KEY: {{ .Values.tap.snapshots.cloud.azblob.storageKey | quote }}
+  {{- end }}
+  {{- if .Values.tap.snapshots.cloud.gcs.credentialsJson }}
+  SNAPSHOT_GCS_CREDENTIALS_JSON: {{ .Values.tap.snapshots.cloud.gcs.credentialsJson | quote }}
   {{- end }}
 {{- end }}
