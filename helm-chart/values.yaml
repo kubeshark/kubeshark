@@ -57,6 +57,10 @@ tap:
         storageAccount: ""
         container: ""
         storageKey: ""
+      gcs:
+        bucket: ""
+        project: ""
+        credentialsJson: ""
   release:
     repo: https://helm.kubeshark.com
     name: kubeshark

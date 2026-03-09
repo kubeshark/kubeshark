@@ -330,6 +330,12 @@ type SnapshotsCloudAzblobConfig struct {
 	StorageKey     string `yaml:"storageKey" json:"storageKey" default:""`
 }
 
+type SnapshotsCloudGCSConfig struct {
+	Bucket          string `yaml:"bucket" json:"bucket" default:""`
+	Project         string `yaml:"project" json:"project" default:""`
+	CredentialsJson string `yaml:"credentialsJson" json:"credentialsJson" default:""`
+}
+
 type SnapshotsCloudConfig struct {
 	Provider   string                     `yaml:"provider" json:"provider" default:""`
 	Prefix     string                     `yaml:"prefix" json:"prefix" default:""`
@@ -337,6 +343,7 @@ type SnapshotsCloudConfig struct {
 	Secrets    []string                   `yaml:"secrets" json:"secrets" default:"[]"`
 	S3         SnapshotsCloudS3Config     `yaml:"s3" json:"s3"`
 	Azblob     SnapshotsCloudAzblobConfig `yaml:"azblob" json:"azblob"`
+	GCS        SnapshotsCloudGCSConfig    `yaml:"gcs" json:"gcs"`
 }
 
 type SnapshotsConfig struct {

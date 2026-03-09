@@ -2,7 +2,7 @@
 
 Kubeshark can upload and download snapshots to cloud object storage, enabling cross-cluster sharing, backup/restore, and long-term retention.
 
-Supported providers: **Amazon S3** (`s3`) and **Azure Blob Storage** (`azblob`).
+Supported providers: **Amazon S3** (`s3`), **Azure Blob Storage** (`azblob`), and **Google Cloud Storage** (`gcs`).
 
 ## Helm Values
 
@@ -10,7 +10,7 @@ Supported providers: **Amazon S3** (`s3`) and **Azure Blob Storage** (`azblob`).
 tap:
   snapshots:
     cloud:
-      provider: ""      # "s3" or "azblob" (empty = disabled)
+      provider: ""      # "s3", "azblob", or "gcs" (empty = disabled)
       prefix: ""        # key prefix in the bucket/container (e.g. "snapshots/")
       configMaps: []    # names of pre-existing ConfigMaps with cloud config env vars
       secrets: []       # names of pre-existing Secrets with cloud credentials
@@ -25,6 +25,10 @@ tap:
         storageAccount: ""
         container: ""
         storageKey: ""
+      gcs:
+        bucket: ""
+        project: ""
+        credentialsJson: ""
 ```
 
 - `provider` selects which cloud backend to use. Leave empty to disable cloud storage.
@@ -277,4 +281,213 @@ tap:
         - kubeshark-azblob-config
       secrets:
         - kubeshark-azblob-creds
+```
+
+---
+
+## Google Cloud Storage
+
+### Environment Variables
+
+| Variable | Required | Description |
+|----------|----------|-------------|
+| `SNAPSHOT_GCS_BUCKET` | Yes | GCS bucket name |
+| `SNAPSHOT_GCS_PROJECT` | No | GCP project ID |
+| `SNAPSHOT_GCS_CREDENTIALS_JSON` | No | Service account JSON key (empty = use Application Default Credentials) |
+| `SNAPSHOT_CLOUD_PREFIX` | No | Key prefix in the bucket (e.g. `snapshots/`) |
+
+### Authentication Methods
+
+Credentials are resolved in this order:
+
+1. **Service Account JSON Key** -- If `SNAPSHOT_GCS_CREDENTIALS_JSON` is set, the provided JSON key is used directly.
+2. **Application Default Credentials** -- When no JSON key is provided, the GCP SDK default credential chain is used:
+   - **Workload Identity** (GKE pod identity) -- recommended for production on GKE
+   - GCE instance metadata (Compute Engine default service account)
+   - Standard GCP environment variables (`GOOGLE_APPLICATION_CREDENTIALS`)
+   - `gcloud` CLI credentials
+
+The provider validates bucket access on startup via `Bucket.Attrs()`. If the bucket is inaccessible, the hub will fail to start.
+
+### Required IAM Permissions
+
+The service account needs different IAM roles depending on the access level:
+
+**Read-only** (download, list, and sync snapshots from cloud):
+
+| Role | Permissions provided | Purpose |
+|------|---------------------|---------|
+| `roles/storage.legacyBucketReader` | `storage.buckets.get`, `storage.objects.list` | Hub startup (bucket validation) + listing snapshots |
+| `roles/storage.objectViewer` | `storage.objects.get`, `storage.objects.list` | Downloading snapshots, checking existence, reading metadata |
+
+```bash
+gcloud storage buckets add-iam-policy-binding gs://BUCKET_NAME \
+  --member="serviceAccount:SA_EMAIL" \
+  --role="roles/storage.legacyBucketReader"
+gcloud storage buckets add-iam-policy-binding gs://BUCKET_NAME \
+  --member="serviceAccount:SA_EMAIL" \
+  --role="roles/storage.objectViewer"
+```
+
+**Read-write** (upload and delete snapshots in addition to read):
+
+Add `roles/storage.objectAdmin` instead of `roles/storage.objectViewer` to also grant `storage.objects.create` and `storage.objects.delete`:
+
+| Role | Permissions provided | Purpose |
+|------|---------------------|---------|
+| `roles/storage.legacyBucketReader` | `storage.buckets.get`, `storage.objects.list` | Hub startup (bucket validation) + listing snapshots |
+| `roles/storage.objectAdmin` | `storage.objects.*` | Full object CRUD (upload, download, delete, list, metadata) |
+
+```bash
+gcloud storage buckets add-iam-policy-binding gs://BUCKET_NAME \
+  --member="serviceAccount:SA_EMAIL" \
+  --role="roles/storage.legacyBucketReader"
+gcloud storage buckets add-iam-policy-binding gs://BUCKET_NAME \
+  --member="serviceAccount:SA_EMAIL" \
+  --role="roles/storage.objectAdmin"
+```
+
+### Example: Inline Values (simplest approach)
+
+```yaml
+tap:
+  snapshots:
+    cloud:
+      provider: "gcs"
+      gcs:
+        bucket: my-kubeshark-snapshots
+        project: my-gcp-project
+```
+
+Or with a service account key via `--set`:
+
+```bash
+helm install kubeshark kubeshark/kubeshark \
+  --set tap.snapshots.cloud.provider=gcs \
+  --set tap.snapshots.cloud.gcs.bucket=my-kubeshark-snapshots \
+  --set tap.snapshots.cloud.gcs.project=my-gcp-project \
+  --set-file tap.snapshots.cloud.gcs.credentialsJson=service-account.json
+```
+
+### Example: Workload Identity (recommended for GKE)
+
+Create a ConfigMap with bucket configuration:
+
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kubeshark-gcs-config
+data:
+  SNAPSHOT_GCS_BUCKET: my-kubeshark-snapshots
+  SNAPSHOT_GCS_PROJECT: my-gcp-project
+```
+
+Set Helm values:
+
+```yaml
+tap:
+  snapshots:
+    cloud:
+      provider: "gcs"
+      configMaps:
+        - kubeshark-gcs-config
+```
+
+Configure GKE Workload Identity to allow the Kubernetes service account to impersonate the GCP service account:
+
+```bash
+# Ensure the GKE cluster has Workload Identity enabled
+# (--workload-pool=PROJECT_ID.svc.id.goog at cluster creation)
+
+# Create a GCP service account (if not already created)
+gcloud iam service-accounts create kubeshark-gcs \
+  --display-name="Kubeshark GCS Snapshots"
+
+# Grant bucket access (read-write — see Required IAM Permissions above)
+gcloud storage buckets add-iam-policy-binding gs://BUCKET_NAME \
+  --member="serviceAccount:kubeshark-gcs@PROJECT_ID.iam.gserviceaccount.com" \
+  --role="roles/storage.legacyBucketReader"
+gcloud storage buckets add-iam-policy-binding gs://BUCKET_NAME \
+  --member="serviceAccount:kubeshark-gcs@PROJECT_ID.iam.gserviceaccount.com" \
+  --role="roles/storage.objectAdmin"
+
+# Allow the K8s service account to impersonate the GCP service account
+# Note: the K8s SA name is "<release-name>-service-account" (default: "kubeshark-service-account")
+gcloud iam service-accounts add-iam-policy-binding \
+  kubeshark-gcs@PROJECT_ID.iam.gserviceaccount.com \
+  --role="roles/iam.workloadIdentityUser" \
+  --member="serviceAccount:PROJECT_ID.svc.id.goog[NAMESPACE/kubeshark-service-account]"
+```
+
+Set Helm values — the `tap.annotations` field adds the Workload Identity annotation to the service account:
+
+```yaml
+tap:
+  annotations:
+    iam.gke.io/gcp-service-account: kubeshark-gcs@PROJECT_ID.iam.gserviceaccount.com
+  snapshots:
+    cloud:
+      provider: "gcs"
+      configMaps:
+        - kubeshark-gcs-config
+```
+
+Or via `--set`:
+
+```bash
+helm install kubeshark kubeshark/kubeshark \
+  --set tap.snapshots.cloud.provider=gcs \
+  --set tap.snapshots.cloud.gcs.bucket=BUCKET_NAME \
+  --set tap.snapshots.cloud.gcs.project=PROJECT_ID \
+  --set tap.annotations."iam\.gke\.io/gcp-service-account"=kubeshark-gcs@PROJECT_ID.iam.gserviceaccount.com
+```
+
+No `credentialsJson` secret is needed — GKE injects credentials automatically via the Workload Identity metadata server.
+
+### Example: Service Account Key
+
+Create a Secret with the service account JSON key:
+
+```yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: kubeshark-gcs-creds
+type: Opaque
+stringData:
+  SNAPSHOT_GCS_CREDENTIALS_JSON: |
+    {
+      "type": "service_account",
+      "project_id": "my-gcp-project",
+      "private_key_id": "...",
+      "private_key": "-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n",
+      "client_email": "kubeshark@my-gcp-project.iam.gserviceaccount.com",
+      ...
+    }
+```
+
+Create a ConfigMap with bucket configuration:
+
+```yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: kubeshark-gcs-config
+data:
+  SNAPSHOT_GCS_BUCKET: my-kubeshark-snapshots
+  SNAPSHOT_GCS_PROJECT: my-gcp-project
+```
+
+Set Helm values:
+
+```yaml
+tap:
+  snapshots:
+    cloud:
+      provider: "gcs"
+      configMaps:
+        - kubeshark-gcs-config
+      secrets:
+        - kubeshark-gcs-creds
 ```

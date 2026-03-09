@@ -145,6 +145,7 @@ helm-test-full: helm-test ## Run Helm tests with kubeconform schema validation.
 	helm template kubeshark ./helm-chart | kubeconform -strict -kubernetes-version 1.35.0 -summary
 	helm template kubeshark ./helm-chart -f ./helm-chart/tests/fixtures/values-s3.yaml | kubeconform -strict -kubernetes-version 1.35.0 -summary
 	helm template kubeshark ./helm-chart -f ./helm-chart/tests/fixtures/values-azblob.yaml | kubeconform -strict -kubernetes-version 1.35.0 -summary
+	helm template kubeshark ./helm-chart -f ./helm-chart/tests/fixtures/values-gcs.yaml | kubeconform -strict -kubernetes-version 1.35.0 -summary
 
 lint: ## Lint the source code.
 	golangci-lint run
