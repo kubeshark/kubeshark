@@ -147,11 +147,20 @@ func printNoPodsFoundSuggestion(targetNamespaces []string) {
 	log.Warn().Msg(fmt.Sprintf("Did not find any currently running pods that match the regex argument, %s will automatically target matching pods if any are created later%s", misc.Software, suggestionStr))
 }
 
+func isPodReady(pod *core.Pod) bool {
+	for _, condition := range pod.Status.Conditions {
+		if condition.Type == core.PodReady {
+			return condition.Status == core.ConditionTrue
+		}
+	}
+	return false
+}
+
 func watchHubPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, cancel context.CancelFunc) {
 	podExactRegex := regexp.MustCompile(fmt.Sprintf("^%s", kubernetes.HubPodName))
 	podWatchHelper := kubernetes.NewPodWatchHelper(kubernetesProvider, podExactRegex)
 	eventChan, errorChan := kubernetes.FilteredWatch(ctx, podWatchHelper, []string{config.Config.Tap.Release.Namespace}, podWatchHelper)
-	isPodReady := false
+	podReady := false
 
 	timeAfter := time.After(120 * time.Second)
 	for {
@@ -183,8 +192,8 @@ func watchHubPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, c
 					Interface("containers-statuses", modifiedPod.Status.ContainerStatuses).
 					Msg("Watching pod.")
 
-				if modifiedPod.Status.Phase == core.PodRunning && !isPodReady {
-					isPodReady = true
+				if isPodReady(modifiedPod) && !podReady {
+					podReady = true
 
 					ready.Lock()
 					ready.Hub = true
@@ -223,7 +232,7 @@ func watchHubPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, c
 			cancel()
 
 		case <-timeAfter:
-			if !isPodReady {
+			if !podReady {
 				log.Error().
 					Str("pod", kubernetes.HubPodName).
 					Msg("Pod was not ready in time.")
@@ -242,7 +251,7 @@ func watchFrontPod(ctx context.Context, kubernetesProvider *kubernetes.Provider,
 	podExactRegex := regexp.MustCompile(fmt.Sprintf("^%s", kubernetes.FrontPodName))
 	podWatchHelper := kubernetes.NewPodWatchHelper(kubernetesProvider, podExactRegex)
 	eventChan, errorChan := kubernetes.FilteredWatch(ctx, podWatchHelper, []string{config.Config.Tap.Release.Namespace}, podWatchHelper)
-	isPodReady := false
+	podReady := false
 
 	timeAfter := time.After(120 * time.Second)
 	for {
@@ -274,8 +283,8 @@ func watchFrontPod(ctx context.Context, kubernetesProvider *kubernetes.Provider,
 					Interface("containers-statuses", modifiedPod.Status.ContainerStatuses).
 					Msg("Watching pod.")
 
-				if modifiedPod.Status.Phase == core.PodRunning && !isPodReady {
-					isPodReady = true
+				if isPodReady(modifiedPod) && !podReady {
+					podReady = true
 					ready.Lock()
 					ready.Front = true
 					ready.Unlock()
@@ -312,7 +321,7 @@ func watchFrontPod(ctx context.Context, kubernetesProvider *kubernetes.Provider,
 				Msg("Failed creating pod.")
 
 		case <-timeAfter:
-			if !isPodReady {
+			if !podReady {
 				log.Error().
 					Str("pod", kubernetes.FrontPodName).
 					Msg("Pod was not ready in time.")
