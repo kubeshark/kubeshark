@@ -92,6 +92,8 @@ spec:
               value: '{{ default false .Values.betaEnabled | ternary "true" "false" }}'
             - name: REACT_APP_DISSECTORS_UPDATING_ENABLED
               value: '{{ .Values.tap.liveConfigMapChangesDisabled | ternary "false" "true" }}'
+            - name: REACT_APP_CLUSTER_WIDE_MAP_ENABLED
+              value: '{{ .Values.tap.dashboard.clusterWideMapEnabled | ternary "true" "false" }}'
             - name: REACT_APP_RAW_CAPTURE_ENABLED
               value: '{{ .Values.tap.capture.raw.enabled | ternary "true" "false" }}'
             - name: REACT_APP_SENTRY_ENABLED
