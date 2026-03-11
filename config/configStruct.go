@@ -153,6 +153,7 @@ func CreateDefaultConfig() ConfigStruct {
 			},
 			Dashboard: configStructs.DashboardConfig{
 				CompleteStreamingEnabled: true,
+				ClusterWideMapEnabled:    false,
 			},
 			Capture: configStructs.CaptureConfig{
 				Dissection: configStructs.DissectionConfig{
