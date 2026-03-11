@@ -202,6 +202,7 @@ type RoutingConfig struct {
 type DashboardConfig struct {
 	StreamingType            string `yaml:"streamingType" json:"streamingType" default:"connect-rpc"`
 	CompleteStreamingEnabled bool   `yaml:"completeStreamingEnabled" json:"completeStreamingEnabled" default:"true"`
+	ClusterWideMapEnabled    bool   `yaml:"clusterWideMapEnabled" json:"clusterWideMapEnabled" default:"false"`
 }
 
 type FrontRoutingConfig struct {
@@ -209,9 +210,9 @@ type FrontRoutingConfig struct {
 }
 
 type ReleaseConfig struct {
-	Repo      string `yaml:"repo" json:"repo" default:"https://helm.kubeshark.com"`
-	Name      string `yaml:"name" json:"name" default:"kubeshark"`
-	Namespace string `yaml:"namespace" json:"namespace" default:"default"`
+	Repo          string `yaml:"repo" json:"repo" default:"https://helm.kubeshark.com"`
+	Name          string `yaml:"name" json:"name" default:"kubeshark"`
+	Namespace     string `yaml:"namespace" json:"namespace" default:"default"`
 	HelmChartPath string `yaml:"helmChartPath" json:"helmChartPath" default:""`
 }
 
