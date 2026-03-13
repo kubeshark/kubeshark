@@ -26,15 +26,15 @@ spec:
         - env:
             - name: REACT_APP_AUTH_ENABLED
               value: '{{- if or (and .Values.cloudLicenseEnabled (not (empty .Values.license))) (not .Values.internetConnectivity) -}}
-                        {{ (and .Values.tap.auth.enabled (eq .Values.tap.auth.type "dex")) | ternary true false }}
+                        {{ .Values.demoModeEnabled | ternary true ((and .Values.tap.auth.enabled (eq .Values.tap.auth.type "dex")) | ternary true false) }}
                       {{- else -}}
-                        {{ .Values.cloudLicenseEnabled | ternary "true" .Values.tap.auth.enabled }}
+                        {{ .Values.cloudLicenseEnabled | ternary "true" (.Values.demoModeEnabled | ternary "true" .Values.tap.auth.enabled) }}
                       {{- end }}'
             - name: REACT_APP_AUTH_TYPE
               value: '{{- if and .Values.cloudLicenseEnabled (not (eq .Values.tap.auth.type "dex")) -}}
                         default
                       {{- else -}}
-                        {{ .Values.tap.auth.type }}
+                        {{ .Values.demoModeEnabled | ternary "default" .Values.tap.auth.type }}
                       {{- end }}'
             - name: REACT_APP_COMPLETE_STREAMING_ENABLED
               value: '{{- if and (hasKey .Values.tap "dashboard") (hasKey .Values.tap.dashboard "completeStreamingEnabled") -}}
@@ -55,30 +55,22 @@ spec:
                         false
                       {{- end }}'
             - name: REACT_APP_SCRIPTING_DISABLED
-              value: '{{- if .Values.tap.liveConfigMapChangesDisabled -}}
-                        {{- if .Values.demoModeEnabled -}}
-                          {{ .Values.demoModeEnabled | ternary false true }}
-                        {{- else -}}
-                          true
-                        {{- end }}
-                      {{- else -}}
-                        false
-                      {{- end }}'
+              value: '{{ .Values.demoModeEnabled | ternary true false }}'
             - name: REACT_APP_TARGETED_PODS_UPDATE_DISABLED
-              value: '{{ .Values.tap.liveConfigMapChangesDisabled }}'
+              value: '{{ .Values.demoModeEnabled | ternary true false }}'
             - name: REACT_APP_PRESET_FILTERS_CHANGING_ENABLED
-              value: '{{ .Values.tap.liveConfigMapChangesDisabled | ternary "false" "true" }}'
+              value: '{{ .Values.demoModeEnabled | ternary false true }}'
             - name: REACT_APP_BPF_OVERRIDE_DISABLED
               value: '{{ eq .Values.tap.packetCapture "af_packet" | ternary "false" "true" }}'
             - name: REACT_APP_RECORDING_DISABLED
-              value: '{{ .Values.tap.liveConfigMapChangesDisabled }}'
+              value: '{{ .Values.demoModeEnabled | ternary true false }}'
             - name: REACT_APP_DISSECTION_ENABLED
               value: '{{ .Values.tap.capture.dissection.enabled | ternary "true" "false" }}'
             - name: REACT_APP_DISSECTION_CONTROL_ENABLED
-              value: '{{- if and .Values.tap.liveConfigMapChangesDisabled (not .Values.tap.capture.dissection.enabled) -}}
+              value: '{{- if and (not .Values.demoModeEnabled) (not .Values.tap.capture.dissection.enabled) -}}
                         true
                       {{- else -}}
-                        {{ not .Values.tap.liveConfigMapChangesDisabled | ternary "true" "false" }}
+                        {{ not .Values.demoModeEnabled | ternary false true }}
                       {{- end -}}'
             - name: 'REACT_APP_CLOUD_LICENSE_ENABLED'
               value: '{{- if or (and .Values.cloudLicenseEnabled (not (empty .Values.license))) (not .Values.internetConnectivity) -}}
@@ -91,11 +83,11 @@ spec:
             - name: REACT_APP_BETA_ENABLED
               value: '{{ default false .Values.betaEnabled | ternary "true" "false" }}'
             - name: REACT_APP_DISSECTORS_UPDATING_ENABLED
-              value: '{{ .Values.tap.liveConfigMapChangesDisabled | ternary "false" "true" }}'
+              value: '{{ .Values.demoModeEnabled | ternary false true }}'
             - name: REACT_APP_SNAPSHOTS_UPDATING_ENABLED
-              value: '{{ .Values.tap.liveConfigMapChangesDisabled | ternary "false" "true" }}'
+              value: '{{ .Values.demoModeEnabled | ternary false true }}'
             - name: REACT_APP_DEMO_MODE_ENABLED
-              value: '{{ .Values.demoModeEnabled | ternary "true" "false" }}'
+              value: '{{ .Values.demoModeEnabled | ternary true false }}'
             - name: REACT_APP_CLUSTER_WIDE_MAP_ENABLED
               value: '{{ default false (((.Values).tap).dashboard).clusterWideMapEnabled }}'
             - name: REACT_APP_RAW_CAPTURE_ENABLED
