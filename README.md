@@ -21,13 +21,16 @@ Kubeshark captures cluster-wide network traffic at the speed and scale of Kubern
 
 Network data is available to **AI agents via [MCP](https://docs.kubeshark.com/en/mcp)** and to **human operators via a [dashboard](https://docs.kubeshark.com/en/v2)**.
 
-**What's captured, cluster-wide:**
+**Kubeshark captures, processes, and retains cluster-wide network traffic:**
 
-- **L4 Packets & TCP Metrics** — retransmissions, RTT, window saturation, connection lifecycle, packet loss across every node-to-node path ([TCP insights →](https://docs.kubeshark.com/en/mcp/tcp_insights))
-- **L7 API Calls** — real-time request/response matching with full payload parsing: HTTP, gRPC, GraphQL, Redis, Kafka, DNS ([API dissection →](https://docs.kubeshark.com/en/v2/l7_api_dissection))
-- **Decrypted TLS** — eBPF-based TLS decryption without key management
+- **PCAP Retention** — continuous raw packet capture with point-in-time snapshots, exportable for Wireshark ([Snapshots →](https://docs.kubeshark.com/en/v2/traffic_snapshots))
+- **L7 API Dissection** — real-time request/response matching with full payload parsing: HTTP, gRPC, GraphQL, Redis, Kafka, DNS ([API dissection →](https://docs.kubeshark.com/en/v2/l7_api_dissection))
 - **Kubernetes Context** — every packet and API call resolved to pod, service, namespace, and node
-- **PCAP Retention** — point-in-time raw packet snapshots, exportable for Wireshark ([Snapshots →](https://docs.kubeshark.com/en/v2/traffic_snapshots))
+
+**Additional benefits:**
+
+- **Decrypted TLS** — eBPF-based TLS decryption without key management
+- **L4 TCP Insights** — retransmissions, RTT, window saturation, connection lifecycle, packet loss across every node-to-node path ([TCP insights →](https://docs.kubeshark.com/en/mcp/tcp_insights))
 
 ![Kubeshark](https://github.com/kubeshark/assets/raw/master/png/stream.png)
 
@@ -78,6 +81,16 @@ Cluster-wide request/response matching with full payloads, parsed according to p
 
 [Learn more →](https://docs.kubeshark.com/en/v2/l7_api_dissection)
 
+### Cluster-wide PCAP
+
+Generate a cluster-wide PCAP file from any point in time. Filter by time range, specific nodes, and BPF expressions (e.g. `net`, `ip`, `port`, `host`) to capture exactly the traffic you need — across the entire cluster, in a single file. Download and analyze with Wireshark, tshark, or any PCAP-compatible tool — or let your AI agent download and analyze programmatically via MCP.
+
+Store snapshots locally or in S3/Azure Blob for long-term retention.
+
+![Traffic Retention](https://github.com/kubeshark/assets/raw/master/png/snapshots.png)
+
+[Snapshots guide →](https://docs.kubeshark.com/en/v2/traffic_snapshots)
+
 ### L4/L7 Workload Map
 
 Cluster-wide view of service communication: dependencies, traffic flow, and anomalies across all nodes and namespaces.
@@ -85,14 +98,6 @@ Cluster-wide view of service communication: dependencies, traffic flow, and anom
 ![Service Map](https://github.com/kubeshark/assets/raw/master/png/servicemap.png)
 
 [Learn more →](https://docs.kubeshark.com/en/v2/service_map)
-
-### Traffic Retention
-
-Continuous raw packet capture with point-in-time snapshots. Export PCAP files for offline analysis with Wireshark or other tools.
-
-![Traffic Retention](https://github.com/kubeshark/assets/raw/master/png/snapshots.png)
-
-[Snapshots guide →](https://docs.kubeshark.com/en/v2/traffic_snapshots)
 
 ---
 
