@@ -78,6 +78,7 @@ data:
     CUSTOM_MACROS: '{{ toJson .Values.tap.customMacros }}'
     DISSECTORS_UPDATING_ENABLED: '{{ .Values.tap.liveConfigMapChangesDisabled | ternary "false" "true" }}'
     SNAPSHOTS_UPDATING_ENABLED: '{{ .Values.tap.liveConfigMapChangesDisabled | ternary "false" "true" }}'
+    DEMO_MODE_ENABLED: '{{ .Values.demoModeEnabled | ternary "true" "false" }}'
     DETECT_DUPLICATES: '{{ .Values.tap.misc.detectDuplicates | ternary "true" "false" }}'
     PCAP_DUMP_ENABLE: '{{ .Values.pcapdump.enabled }}'
     PCAP_TIME_INTERVAL: '{{ .Values.pcapdump.timeInterval }}'
