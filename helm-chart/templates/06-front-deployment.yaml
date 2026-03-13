@@ -94,6 +94,8 @@ spec:
               value: '{{ .Values.tap.liveConfigMapChangesDisabled | ternary "false" "true" }}'
             - name: REACT_APP_SNAPSHOTS_UPDATING_ENABLED
               value: '{{ .Values.tap.liveConfigMapChangesDisabled | ternary "false" "true" }}'
+            - name: REACT_APP_DEMO_MODE_ENABLED
+              value: '{{ .Values.demoModeEnabled | ternary "true" "false" }}'
             - name: REACT_APP_CLUSTER_WIDE_MAP_ENABLED
               value: '{{ default false (((.Values).tap).dashboard).clusterWideMapEnabled }}'
             - name: REACT_APP_RAW_CAPTURE_ENABLED
