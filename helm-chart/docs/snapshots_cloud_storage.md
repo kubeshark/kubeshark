@@ -95,7 +95,85 @@ helm install kubeshark kubeshark/kubeshark \
 
 ### Example: IRSA (recommended for EKS)
 
-Create a ConfigMap with bucket configuration:
+[IAM Roles for Service Accounts (IRSA)](https://docs.aws.amazon.com/eks/latest/userguide/iam-roles-for-service-accounts.html) lets EKS pods assume an IAM role without static credentials. EKS injects a short-lived token into the pod automatically.
+
+**Prerequisites:**
+
+1. Your EKS cluster must have an [OIDC provider](https://docs.aws.amazon.com/eks/latest/userguide/enable-iam-roles-for-service-accounts.html) associated with it.
+2. An IAM role with a trust policy that allows the Kubeshark service account to assume it.
+
+**Step 1 — Create an IAM policy scoped to your bucket:**
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "s3:GetObject",
+        "s3:PutObject",
+        "s3:DeleteObject",
+        "s3:GetObjectVersion",
+        "s3:DeleteObjectVersion",
+        "s3:ListBucket",
+        "s3:ListBucketVersions",
+        "s3:GetBucketLocation",
+        "s3:GetBucketVersioning"
+      ],
+      "Resource": [
+        "arn:aws:s3:::my-kubeshark-snapshots",
+        "arn:aws:s3:::my-kubeshark-snapshots/*"
+      ]
+    }
+  ]
+}
+```
+
+> For read-only access, remove `s3:PutObject`, `s3:DeleteObject`, and `s3:DeleteObjectVersion`.
+
+**Step 2 — Create an IAM role with IRSA trust policy:**
+
+```bash
+# Get your cluster's OIDC provider URL
+OIDC_PROVIDER=$(aws eks describe-cluster --name CLUSTER_NAME \
+  --query "cluster.identity.oidc.issuer" --output text | sed 's|https://||')
+
+# Create a trust policy
+# The default K8s SA name is "<release-name>-service-account" (e.g. "kubeshark-service-account")
+cat > trust-policy.json <<EOF
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Principal": {
+        "Federated": "arn:aws:iam::ACCOUNT_ID:oidc-provider/${OIDC_PROVIDER}"
+      },
+      "Action": "sts:AssumeRoleWithWebIdentity",
+      "Condition": {
+        "StringEquals": {
+          "${OIDC_PROVIDER}:sub": "system:serviceaccount:NAMESPACE:kubeshark-service-account",
+          "${OIDC_PROVIDER}:aud": "sts.amazonaws.com"
+        }
+      }
+    }
+  ]
+}
+EOF
+
+# Create the role and attach your policy
+aws iam create-role \
+  --role-name KubesharkS3Role \
+  --assume-role-policy-document file://trust-policy.json
+
+aws iam put-role-policy \
+  --role-name KubesharkS3Role \
+  --policy-name KubesharkSnapshotsBucketAccess \
+  --policy-document file://bucket-policy.json
+```
+
+**Step 3 — Create a ConfigMap with bucket configuration:**
 
 ```yaml
 apiVersion: v1
@@ -107,10 +185,12 @@ data:
   SNAPSHOT_AWS_REGION: us-east-1
 ```
 
-Set Helm values:
+**Step 4 — Set Helm values with `tap.annotations` to annotate the service account:**
 
 ```yaml
 tap:
+  annotations:
+    eks.amazonaws.com/role-arn: arn:aws:iam::ACCOUNT_ID:role/KubesharkS3Role
   snapshots:
     cloud:
       provider: "s3"
@@ -118,7 +198,17 @@ tap:
         - kubeshark-s3-config
 ```
 
-The hub pod's service account must be annotated for IRSA with an IAM role that has S3 access to the bucket.
+Or via `--set`:
+
+```bash
+helm install kubeshark kubeshark/kubeshark \
+  --set tap.snapshots.cloud.provider=s3 \
+  --set tap.snapshots.cloud.s3.bucket=my-kubeshark-snapshots \
+  --set tap.snapshots.cloud.s3.region=us-east-1 \
+  --set tap.annotations."eks\.amazonaws\.com/role-arn"=arn:aws:iam::ACCOUNT_ID:role/KubesharkS3Role
+```
+
+No `accessKey`/`secretKey` is needed — EKS injects credentials automatically via the IRSA token.
 
 ### Example: Static Credentials
 
