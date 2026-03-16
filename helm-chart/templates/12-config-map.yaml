@@ -21,12 +21,12 @@ data:
     AUTH_ENABLED: '{{- if and .Values.cloudLicenseEnabled (not (empty .Values.license)) -}}
                         {{ .Values.demoModeEnabled | ternary true ((and .Values.tap.auth.enabled (eq .Values.tap.auth.type "dex")) | ternary true false) }}
                   {{- else -}}
-                        {{ .Values.cloudLicenseEnabled | ternary "true" (.Values.demoModeEnabled | ternary "true" .Values.tap.auth.enabled) }}
+                        {{ .Values.cloudLicenseEnabled | ternary "true" ((default false .Values.demoModeEnabled) | ternary "true" .Values.tap.auth.enabled) }}
                   {{- end }}'
     AUTH_TYPE: '{{- if and .Values.cloudLicenseEnabled (not (eq .Values.tap.auth.type "dex")) -}}
                   default
                 {{- else -}}
-                  {{ .Values.demoModeEnabled | ternary "default" .Values.tap.auth.type }}
+                  {{ (default false .Values.demoModeEnabled) | ternary "default" .Values.tap.auth.type }}
                 {{- end }}'
     AUTH_SAML_IDP_METADATA_URL: '{{ .Values.tap.auth.saml.idpMetadataUrl }}'
     AUTH_SAML_ROLE_ATTRIBUTE: '{{ .Values.tap.auth.saml.roleAttribute }}'
@@ -44,14 +44,14 @@ data:
                                       false
                                     {{- end }}'
     TELEMETRY_DISABLED: '{{ not .Values.internetConnectivity | ternary "true" (not .Values.tap.telemetry.enabled | ternary "true" "false") }}'
-    SCRIPTING_DISABLED: '{{ .Values.demoModeEnabled | ternary true false }}'
-    TARGETED_PODS_UPDATE_DISABLED: '{{ .Values.demoModeEnabled | ternary true false }}'
-    PRESET_FILTERS_CHANGING_ENABLED: '{{ .Values.demoModeEnabled | ternary false true }}'
-    RECORDING_DISABLED: '{{ .Values.demoModeEnabled | ternary true false }}'
+    SCRIPTING_DISABLED: '{{ default false .Values.demoModeEnabled }}'
+    TARGETED_PODS_UPDATE_DISABLED: '{{ default false .Values.demoModeEnabled }}'
+    PRESET_FILTERS_CHANGING_ENABLED: '{{ not (default false .Values.demoModeEnabled) }}'
+    RECORDING_DISABLED: '{{ (default false .Values.demoModeEnabled) | ternary true false }}'
     DISSECTION_CONTROL_ENABLED: '{{- if and (not .Values.demoModeEnabled) (not .Values.tap.capture.dissection.enabled) -}}
                                      true
                                    {{- else -}}
-                                     {{ .Values.demoModeEnabled | ternary false true }}
+                                     {{ (default false .Values.demoModeEnabled) | ternary false true }}
                                    {{- end }}'
     GLOBAL_FILTER: {{ include "kubeshark.escapeDoubleQuotes" .Values.tap.globalFilter | quote }}
     DEFAULT_FILTER: {{ include "kubeshark.escapeDoubleQuotes" .Values.tap.defaultFilter | quote }}
@@ -68,9 +68,9 @@ data:
     DUPLICATE_TIMEFRAME: '{{ .Values.tap.misc.duplicateTimeframe }}'
     ENABLED_DISSECTORS: '{{ gt (len .Values.tap.enabledDissectors) 0 | ternary (join "," .Values.tap.enabledDissectors) "" }}'
     CUSTOM_MACROS: '{{ toJson .Values.tap.customMacros }}'
-    DISSECTORS_UPDATING_ENABLED: '{{ .Values.demoModeEnabled | ternary false true }}'
-    SNAPSHOTS_UPDATING_ENABLED: '{{ .Values.demoModeEnabled | ternary false true }}'
-    DEMO_MODE_ENABLED: '{{ .Values.demoModeEnabled | ternary "true" "false" }}'
+    DISSECTORS_UPDATING_ENABLED: '{{ not (default false .Values.demoModeEnabled) }}'
+    SNAPSHOTS_UPDATING_ENABLED: '{{ not (default false .Values.demoModeEnabled) }}'
+    DEMO_MODE_ENABLED: '{{ default false .Values.demoModeEnabled }}'
     DETECT_DUPLICATES: '{{ .Values.tap.misc.detectDuplicates | ternary "true" "false" }}'
     PCAP_DUMP_ENABLE: '{{ .Values.pcapdump.enabled }}'
     PCAP_TIME_INTERVAL: '{{ .Values.pcapdump.timeInterval }}'
