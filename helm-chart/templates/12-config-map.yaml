@@ -19,7 +19,7 @@ data:
     INGRESS_HOST: '{{ .Values.tap.ingress.host }}'
     PROXY_FRONT_PORT: '{{ .Values.tap.proxy.front.port }}'
     AUTH_ENABLED: '{{- if and .Values.cloudLicenseEnabled (not (empty .Values.license)) -}}
-                        {{ .Values.demoModeEnabled | ternary true ((and .Values.tap.auth.enabled (eq .Values.tap.auth.type "dex")) | ternary true false) }}
+                        {{ (default false .Values.demoModeEnabled) | ternary true ((and .Values.tap.auth.enabled (eq .Values.tap.auth.type "dex")) | ternary true false) }}
                   {{- else -}}
                         {{ .Values.cloudLicenseEnabled | ternary "true" ((default false .Values.demoModeEnabled) | ternary "true" .Values.tap.auth.enabled) }}
                   {{- end }}'
