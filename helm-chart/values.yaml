@@ -198,7 +198,6 @@ tap:
     enabled: false
     environment: production
   defaultFilter: ""
-  liveConfigMapChangesDisabled: false
   globalFilter: ""
   enabledDissectors:
   - amqp
