@@ -2,6 +2,18 @@
 
 [Kubeshark](https://kubeshark.com) MCP (Model Context Protocol) server enables AI assistants like Claude Desktop, Cursor, and other MCP-compatible clients to query real-time Kubernetes network traffic.
 
+## AI Skills
+
+The MCP provides the tools — [AI skills](../skills/) teach agents how to use them.
+Skills turn raw MCP capabilities into domain-specific workflows like root cause
+analysis, traffic filtering, and forensic investigation. See the
+[skills README](../skills/README.md) for installation and usage.
+
+| Skill | Description |
+|-------|-------------|
+| [`network-rca`](../skills/network-rca/) | Network Root Cause Analysis — snapshot-based retrospective investigation with PCAP and dissection routes |
+| [`kfl`](../skills/kfl/) | KFL2 filter expert — write, debug, and optimize traffic queries across all supported protocols |
+
 ## Features
 
 - **L7 API Traffic Analysis**: Query HTTP, gRPC, Redis, Kafka, DNS transactions
@@ -195,42 +207,6 @@ http and src.namespace == "default" and response.status == 500
 Kubeshark is published to the [MCP Registry](https://registry.modelcontextprotocol.io/) automatically on each release.
 
 The `server.json` in this directory is a reference file. The actual registry metadata (version, SHA256 hashes) is auto-generated during the release workflow. See [`.github/workflows/release.yml`](../.github/workflows/release.yml) for details.
-
-## AI Skills
-
-Kubeshark ships open-source AI skills that teach agents how to use the MCP tools
-for specific workflows. Skills live in the [`skills/`](../skills/) directory.
-
-| Skill | Description |
-|-------|-------------|
-| [`network-rca`](../skills/network-rca/) | Network Root Cause Analysis — retrospective traffic analysis via snapshots, dissection, KFL queries, and PCAP extraction |
-| [`kfl`](../skills/kfl/) | KFL2 (Kubeshark Filter Language) — complete reference for writing and optimizing traffic filters |
-
-### Using skills as a plugin
-
-Install skills as a Claude Code plugin directly from this repo:
-
-```
-/plugin marketplace add kubeshark/kubeshark
-/plugin install kubeshark
-```
-
-This loads the skills and bundles the MCP configuration automatically.
-
-### Manual skill installation
-
-```bash
-# Copy to your project
-mkdir -p .claude/skills
-cp -r skills/network-rca .claude/skills/
-cp -r skills/kfl .claude/skills/
-
-# Or symlink for personal use
-ln -s /path/to/kubeshark/skills/network-rca ~/.claude/skills/network-rca
-ln -s /path/to/kubeshark/skills/kfl ~/.claude/skills/kfl
-```
-
-See the [skills README](../skills/README.md) for full details.
 
 ## Links
 
