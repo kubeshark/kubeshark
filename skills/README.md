@@ -41,21 +41,23 @@ Skills trigger automatically based on your conversation.
 
 ### Option 3: Manual installation
 
-Copy or symlink individual skills into your Claude Code skills directory:
+Clone the repo (if you haven't already), then symlink or copy the skills:
 
 ```bash
+git clone https://github.com/kubeshark/kubeshark
+
 # Symlink to stay in sync with the repo (recommended)
 ln -s /path/to/kubeshark/skills/network-rca ~/.claude/skills/network-rca
 ln -s /path/to/kubeshark/skills/kfl ~/.claude/skills/kfl
 
 # Or copy to your project (project scope only)
 mkdir -p .claude/skills
-cp -r skills/network-rca .claude/skills/
-cp -r skills/kfl .claude/skills/
+cp -r /path/to/kubeshark/skills/network-rca .claude/skills/
+cp -r /path/to/kubeshark/skills/kfl .claude/skills/
 
 # Or copy for personal use (all your projects)
-cp -r skills/network-rca ~/.claude/skills/
-cp -r skills/kfl ~/.claude/skills/
+cp -r /path/to/kubeshark/skills/network-rca ~/.claude/skills/
+cp -r /path/to/kubeshark/skills/kfl ~/.claude/skills/
 ```
 
 ### Prerequisites
