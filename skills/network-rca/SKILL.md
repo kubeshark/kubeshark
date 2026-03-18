@@ -219,12 +219,18 @@ a queryable database from the snapshot. Use this route when:
 **KFL requirement**: The Dissection route uses KFL filters for all queries
 (`list_api_calls`, `get_api_stats`, etc.). Before constructing any KFL filter,
 load the KFL skill (`skills/kfl/`). KFL is statically typed — incorrect field
-names or syntax will fail. Do not guess at KFL syntax. If the KFL skill is not
-available, suggest the user install it:
+names or syntax will fail silently or error. If the KFL skill is not available,
+suggest the user install it:
 
 ```bash
 ln -s /path/to/kubeshark/skills/kfl ~/.claude/skills/kfl
 ```
+
+**If the KFL skill cannot be loaded**, only use the exact filter examples shown
+in this skill. Do not improvise or guess at field names, operators, or syntax.
+KFL field names differ from what you might expect (e.g., `status_code` not
+`response.status`, `src.pod.namespace` not `src.namespace`). Using incorrect
+fields produces wrong results without warning.
 
 ### Activate Dissection
 
