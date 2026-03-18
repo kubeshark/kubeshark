@@ -15,6 +15,31 @@ compatible agents.
 | [`network-rca`](network-rca/) | Network Root Cause Analysis. Retrospective traffic analysis via snapshots, with two investigation routes: PCAP (for Wireshark/compliance) and Dissection (for AI-driven API-level investigation). |
 | [`kfl`](kfl/) | KFL2 (Kubeshark Filter Language) expert. Complete reference for writing, debugging, and optimizing CEL-based traffic filters across all supported protocols. |
 
+## Prerequisites
+
+All skills require the Kubeshark MCP:
+
+```bash
+# Claude Code
+claude mcp add kubeshark -- kubeshark mcp
+
+# Without kubectl access (direct URL)
+claude mcp add kubeshark -- kubeshark mcp --url https://kubeshark.example.com
+```
+
+For Claude Desktop, add to `claude_desktop_config.json`:
+
+```json
+{
+  "mcpServers": {
+    "kubeshark": {
+      "command": "kubeshark",
+      "args": ["mcp"]
+    }
+  }
+}
+```
+
 ## Installation
 
 ### Option 1: Plugin (recommended)
@@ -59,31 +84,6 @@ cp -r kubeshark/skills/kfl .claude/skills/
 # Or copy for personal use (all your projects)
 cp -r kubeshark/skills/network-rca ~/.claude/skills/
 cp -r kubeshark/skills/kfl ~/.claude/skills/
-```
-
-### Prerequisites
-
-All skills require the Kubeshark MCP:
-
-```bash
-# Claude Code
-claude mcp add kubeshark -- kubeshark mcp
-
-# Without kubectl access (direct URL)
-claude mcp add kubeshark -- kubeshark mcp --url https://kubeshark.example.com
-```
-
-For Claude Desktop, add to `claude_desktop_config.json`:
-
-```json
-{
-  "mcpServers": {
-    "kubeshark": {
-      "command": "kubeshark",
-      "args": ["mcp"]
-    }
-  }
-}
 ```
 
 ## Contributing
