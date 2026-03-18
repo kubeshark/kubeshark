@@ -34,20 +34,20 @@ Add to your Claude Desktop configuration:
 **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
 **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
 
-#### URL Mode (Recommended for existing deployments)
+#### Default (requires kubectl access / kube context)
 
 ```json
 {
   "mcpServers": {
     "kubeshark": {
       "command": "kubeshark",
-      "args": ["mcp", "--url", "https://kubeshark.example.com"]
+      "args": ["mcp"]
     }
   }
 }
 ```
 
-#### Proxy Mode (Requires kubectl access)
+With an explicit kubeconfig path:
 
 ```json
 {
@@ -59,14 +59,18 @@ Add to your Claude Desktop configuration:
   }
 }
 ```
-or:
+
+#### URL Mode (no kubectl required)
+
+Use this when the machine doesn't have kubectl access or a kube context.
+Connect directly to an existing Kubeshark deployment:
 
 ```json
 {
   "mcpServers": {
     "kubeshark": {
       "command": "kubeshark",
-      "args": ["mcp"]
+      "args": ["mcp", "--url", "https://kubeshark.example.com"]
     }
   }
 }
