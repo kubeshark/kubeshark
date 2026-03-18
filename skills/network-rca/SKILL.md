@@ -162,15 +162,8 @@ for long-term retention, especially for compliance or post-mortem documentation.
 
 ## L7 API Dissection
 
-Think of dissection the way a search engine thinks of indexing. A raw snapshot
-is like the raw internet — billions of packets, impossible to query efficiently.
-Dissection indexes that traffic: it reconstructs packets into structured L7 API
-calls, builds a queryable database of every request, response, header, payload,
-and timing metric. Once dissected, Kubeshark becomes a search engine for your
-network traffic — you type a query (using KFL filters), and get instant,
-precise answers from terabytes of captured data.
-
-Without dissection, you have PCAPs. With dissection, you have answers.
+Dissection reconstructs raw packets into structured L7 API calls — without it,
+you have PCAPs; with it, you have a queryable database.
 
 ### Activate Dissection
 
@@ -195,6 +188,22 @@ Start broad, then narrow:
    understand what went wrong.
 4. Use KFL filters (see below) to slice the traffic by namespace, service,
    protocol, or any combination.
+
+**Example `list_api_calls` response** (filtered to `http && status_code >= 500`):
+```
+┌──────────────────────┬────────┬──────────────────────────┬────────┬───────────┐
+│      Timestamp       │ Method │           URL            │ Status │  Elapsed  │
+├──────────────────────┼────────┼──────────────────────────┼────────┼───────────┤
+│ 2026-03-14 17:23:45  │ POST   │ /api/v1/orders/charge    │ 503    │ 12,340 ms │
+│ 2026-03-14 17:23:46  │ POST   │ /api/v1/orders/charge    │ 503    │ 11,890 ms │
+│ 2026-03-14 17:23:48  │ GET    │ /api/v1/inventory/check  │ 500    │  8,210 ms │
+│ 2026-03-14 17:24:01  │ POST   │ /api/v1/payments/process │ 502    │ 30,000 ms │
+└──────────────────────┴────────┴──────────────────────────┴────────┴───────────┘
+Src: api-gateway (prod)  →  Dst: payment-service (prod)
+```
+
+Use the pattern of repeated failures and high latency to identify the failing
+service chain, then drill into individual calls with `get_api_call`.
 
 ## PCAP Extraction
 
@@ -280,130 +289,18 @@ to understand why.
 8. Follow the dependency chain upstream until you find the originating failure
 9. Export relevant PCAPs for the post-mortem document
 
-### Trend Analysis and Drift Detection
+### Other Use Cases
 
-Take snapshots at regular intervals (daily, weekly) with consistent parameters.
-Compare them to detect:
-
-- **Latency drift** — p95 latency creeping up over days
-- **API surface changes** — new endpoints appearing, old ones disappearing
-- **Error rate trends** — gradual increase in 5xx responses
-- **Traffic pattern shifts** — new service-to-service connections, volume changes
-- **Security posture regression** — unencrypted traffic appearing, new external
-  connections
-
-**Workflow**:
-1. `create_snapshot` with consistent parameters (same time-of-day, same duration)
-2. `start_snapshot_dissection` on each
-3. `get_api_stats` on each — compare metrics side by side
-4. `list_api_calls` with targeted KFL filters — diff the results
-5. Flag anomalies and regressions
-
-This is powerful when combined with scheduled tasks — automate daily snapshot
-creation and comparison to catch drift before it becomes an incident.
-
-### Forensic Evidence Preservation
-
-For compliance, legal, or audit requirements:
-
-1. `create_snapshot` immediately when an incident is detected
-2. `upload_snapshot_to_cloud` — immutable copy in long-term storage
-3. Document the snapshot ID, time window, and chain of custody
-4. The snapshot can be downloaded to any Kubeshark cluster for later analysis,
-   even months later, even on a completely different cluster
-
-### Production-to-Local Replay
-
-Investigate production issues safely on a local cluster:
-
-1. `create_snapshot` on the production cluster
-2. `upload_snapshot_to_cloud`
-3. On a local KinD/minikube cluster with Kubeshark: `download_snapshot_from_cloud`
-4. `start_snapshot_dissection` — full L7 analysis locally
-5. Investigate without touching production
-
-## Composability
-
-This skill is designed to work alongside other Kubeshark-powered skills:
-
-- **API Security Skill** — Run security scans against a snapshot's dissected traffic.
-  Take daily snapshots and diff security findings to detect posture drift.
-- **Incident Response Skill** — Use this skill's snapshot workflow as the evidence
-  preservation and forensic analysis layer within the IR methodology.
-- **Network Engineering Skill** — Use snapshots for baseline traffic characterization
-  and architecture reviews.
-
-When multiple skills are loaded, they share context. A snapshot created here
-can be analyzed by the security skill's OWASP scans or the IR skill's
-7-phase methodology.
+- **Trend analysis** — Take snapshots at regular intervals and compare
+  `get_api_stats` across them to detect latency drift, error rate changes,
+  or new service-to-service connections.
+- **Forensic preservation** — `create_snapshot` + `upload_snapshot_to_cloud`
+  for immutable, long-term evidence. Downloadable to any cluster months later.
+- **Production-to-local replay** — Upload a production snapshot to cloud,
+  download it on a local KinD cluster, and run `start_snapshot_dissection`
+  to investigate safely without touching production.
 
 ## Setup Reference
 
-### Installing the CLI
-
-**Homebrew (macOS)**:
-```bash
-brew install kubeshark
-```
-
-**Linux**:
-```bash
-sh <(curl -Ls https://kubeshark.com/install)
-```
-
-**From source**:
-```bash
-git clone https://github.com/kubeshark/kubeshark
-cd kubeshark && make
-```
-
-### MCP Configuration
-
-**Claude Desktop / Cowork** (`claude_desktop_config.json`):
-```json
-{
-  "mcpServers": {
-    "kubeshark": {
-      "command": "kubeshark",
-      "args": ["mcp"]
-    }
-  }
-}
-```
-
-**Claude Code (CLI)**:
-```bash
-claude mcp add kubeshark -- kubeshark mcp
-```
-
-**Without kubectl access** (direct URL mode):
-```json
-{
-  "mcpServers": {
-    "kubeshark": {
-      "command": "kubeshark",
-      "args": ["mcp", "--url", "https://kubeshark.example.com"]
-    }
-  }
-}
-```
-
-```bash
-# Claude Code equivalent:
-claude mcp add kubeshark -- kubeshark mcp --url https://kubeshark.example.com
-```
-
-### Verification
-
-- Claude Code: `/mcp` to check connection status
-- Terminal: `kubeshark mcp --list-tools`
-- Cluster: `kubectl get pods -l app=kubeshark-hub`
-
-### Troubleshooting
-
-- **Binary not found** → Install via Homebrew or the install script above
-- **Connection refused** → Deploy Kubeshark first: `kubeshark tap`
-- **No L7 data** → Check `get_dissection_status` and `enable_dissection`
-- **Snapshot creation fails** → Verify raw capture is enabled in Kubeshark config
-- **Empty snapshot** → Check `get_data_boundaries` — the requested window may
-  fall outside available data
+For CLI installation, MCP configuration, verification, and troubleshooting,
+see `references/setup.md`.

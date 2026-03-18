@@ -67,6 +67,15 @@ duration("5m")                        // Parse duration
 now()                                 // Current time (snapshot at filter creation)
 ```
 
+### Negation
+
+```
+!http                                // Everything that is NOT HTTP
+http && status_code != 200           // HTTP responses that aren't 200
+http && !path.contains("/health")    // Exclude health checks
+!(src.pod.namespace == "kube-system")  // Exclude system namespace
+```
+
 ## Protocol Detection
 
 Boolean flags that indicate which protocol was detected. Use these as the first
@@ -113,11 +122,13 @@ Match against any direction (src or dst):
 ### Labels and Annotations
 
 ```
-local_labels["app"] == "checkout"
-remote_labels["version"] == "canary"
-"tier" in local_labels               // Label existence
-map_get(local_labels, "env", "") == "prod"   // Safe access
+map_get(local_labels, "app", "") == "checkout"   // Safe access with default
+map_get(remote_labels, "version", "") == "canary"
+"tier" in local_labels                            // Label existence check
 ```
+
+Always use `map_get()` for labels and annotations — direct access like
+`local_labels["app"]` errors if the key doesn't exist.
 
 ### Node and Process
 
@@ -221,19 +232,16 @@ kafka && kafka_request_summary.contains("orders")    // Topic filtering
 kafka && kafka_size > 10000                          // Large messages
 ```
 
-### AMQP
+### AMQP, LDAP, RADIUS, Diameter
 
 ```
-amqp && amqp_method == "basic.publish"
-amqp && amqp_summary.contains("order")
+amqp && amqp_method == "basic.publish"               // AMQP publish
+ldap && ldap_type == "bind"                          // LDAP bind requests
+radius && radius_code_name == "Access-Request"       // RADIUS auth
+diameter && diameter_method.contains("Credit")       // Diameter credit control
 ```
 
-### LDAP
-
-```
-ldap && ldap_type == "bind"                          // Bind requests
-ldap && ldap_summary.contains("search")
-```
+For the full variable list for these protocols, see `references/kfl2-reference.md`.
 
 ## Transport Layer (L4)
 
@@ -269,17 +277,6 @@ src.ip == "10.0.53.101"
 dst.ip.startsWith("192.168.")
 src.port == 8080
 dst.port >= 8000 && dst.port <= 9000
-```
-
-## Capture Source
-
-Filter by how traffic was captured:
-
-```
-capture_source == "ebpf"                // eBPF captured
-capture_source == "ebpf_tls"            // TLS decryption via eBPF
-capture_source == "af_packet"           // AF_PACKET captured
-capture_backend == "ebpf"              // eBPF backend family
 ```
 
 ## Time-Based Filtering

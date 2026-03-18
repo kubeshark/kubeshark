@@ -4,6 +4,22 @@ This is the exhaustive reference for every variable available in KFL2 filters.
 KFL2 is built on Google's CEL (Common Expression Language) and evaluates against
 Kubeshark's protobuf-based `BaseEntry` structure.
 
+## Most Commonly Used Variables
+
+These are the variables you'll reach for in 90% of investigations:
+
+| Variable | Type | What it's for |
+|----------|------|---------------|
+| `status_code` | int | HTTP response status (200, 404, 500) |
+| `method` | string | HTTP method (GET, POST, PUT, DELETE) |
+| `path` | string | URL path without query string |
+| `dst.pod.namespace` | string | Where traffic is going (namespace) |
+| `dst.service.name` | string | Where traffic is going (service) |
+| `src.pod.name` | string | Where traffic comes from (pod) |
+| `elapsed_time` | int | Request duration in microseconds |
+| `dns_questions` | []string | DNS domains being queried |
+| `namespaces` | []string | All namespaces involved (src + dst) |
+
 ## Network-Level Variables
 
 | Variable | Type | Description | Example |
@@ -84,6 +100,8 @@ Boolean variables indicating detected protocol. Use as first filter term for per
 GraphQL requests have `gql` (or `gqlv1`/`gqlv2`) set to true and all HTTP
 variables available.
 
+**Example**: `http && method == "POST" && status_code >= 500 && path.contains("/api")`
+
 ## DNS Variables
 
 | Variable | Type | Description | Example |
@@ -98,6 +116,8 @@ variables available.
 | `dns_total_size` | int | Sum of request + response sizes | |
 
 Supported question types: A, AAAA, NS, CNAME, SOA, MX, TXT, SRV, PTR, ANY.
+
+**Example**: `dns && dns_response && status_code != 0` (failed DNS lookups)
 
 ## TLS Variables
 
@@ -171,6 +191,8 @@ Supported question types: A, AAAA, NS, CNAME, SOA, MX, TXT, SRV, PTR, ANY.
 | `redis_response_size` | int | Response size (0 if absent) | |
 | `redis_total_size` | int | Sum of request + response | |
 
+**Example**: `redis && redis_type == "GET" && redis_key.startsWith("session:")`
+
 ## Kafka Variables
 
 | Variable | Type | Description | Example |
@@ -185,6 +207,8 @@ Supported question types: A, AAAA, NS, CNAME, SOA, MX, TXT, SRV, PTR, ANY.
 | `kafka_request_summary` | string | Request summary/topic | `"orders-topic"` |
 | `kafka_request_size` | int | Request size (0 if absent) | |
 | `kafka_response_size` | int | Response size (0 if absent) | |
+
+**Example**: `kafka && kafka_api_key_name == "PRODUCE" && kafka_request_summary.contains("orders")`
 
 ## AMQP Variables
 
@@ -252,6 +276,8 @@ Supported question types: A, AAAA, NS, CNAME, SOA, MX, TXT, SRV, PTR, ANY.
 | `conn_l7_detected` | []string | L7 protocols detected on connection | `["HTTP", "TLS"]` |
 | `conn_group_id` | int | Connection group identifier | |
 
+**Example**: `conn && conn_state == "open" && conn_local_bytes > 1000000` (high-volume open connections)
+
 ## L4 Flow Tracking Variables
 
 Flows extend connections with rate metrics (packets/bytes per second).
@@ -270,6 +296,8 @@ Flows extend connections with rate metrics (packets/bytes per second).
 | `flow_remote_bps` | int | Remote bytes per second |
 | `flow_l7_detected` | []string | L7 protocols detected on flow |
 | `flow_group_id` | int | Flow group identifier |
+
+**Example**: `tcp_flow && flow_local_bps > 5000000` (high-bandwidth TCP flows)
 
 ## Kubernetes Variables
 
@@ -290,6 +318,8 @@ Flows extend connections with rate metrics (packets/bytes per second).
 service data when pod info is unavailable. This means `dst.pod.namespace` works
 even when only service-level resolution exists.
 
+**Example**: `src.service.name == "api-gateway" && dst.pod.namespace == "production"`
+
 ### Aggregate Collections (Non-Directional)
 
 | Variable | Type | Description |
@@ -309,6 +339,8 @@ even when only service-level resolution exists.
 
 Use `map_get(local_labels, "key", "default")` for safe access that won't error
 on missing keys.
+
+**Example**: `map_get(local_labels, "app", "") == "checkout" && "production" in namespaces`
 
 ### Node Information
 
