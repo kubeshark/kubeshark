@@ -47,17 +47,17 @@ Clone the repo (if you haven't already), then symlink or copy the skills:
 git clone https://github.com/kubeshark/kubeshark
 
 # Symlink to stay in sync with the repo (recommended)
-ln -s /path/to/kubeshark/skills/network-rca ~/.claude/skills/network-rca
-ln -s /path/to/kubeshark/skills/kfl ~/.claude/skills/kfl
+ln -s $PWD/kubeshark/skills/network-rca ~/.claude/skills/network-rca
+ln -s $PWD/kubeshark/skills/kfl ~/.claude/skills/kfl
 
 # Or copy to your project (project scope only)
 mkdir -p .claude/skills
-cp -r /path/to/kubeshark/skills/network-rca .claude/skills/
-cp -r /path/to/kubeshark/skills/kfl .claude/skills/
+cp -r kubeshark/skills/network-rca .claude/skills/
+cp -r kubeshark/skills/kfl .claude/skills/
 
 # Or copy for personal use (all your projects)
-cp -r /path/to/kubeshark/skills/network-rca ~/.claude/skills/
-cp -r /path/to/kubeshark/skills/kfl ~/.claude/skills/
+cp -r kubeshark/skills/network-rca ~/.claude/skills/
+cp -r kubeshark/skills/kfl ~/.claude/skills/
 ```
 
 ### Prerequisites
