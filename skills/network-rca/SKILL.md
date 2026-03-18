@@ -216,6 +216,16 @@ a queryable database from the snapshot. Use this route when:
 - You want structured responses you can analyze programmatically
 - You need to drill into the payload of a specific API call
 
+**KFL requirement**: The Dissection route uses KFL filters for all queries
+(`list_api_calls`, `get_api_stats`, etc.). Before constructing any KFL filter,
+load the KFL skill (`skills/kfl/`). KFL is statically typed — incorrect field
+names or syntax will fail. Do not guess at KFL syntax. If the KFL skill is not
+available, suggest the user install it:
+
+```bash
+ln -s /path/to/kubeshark/skills/kfl ~/.claude/skills/kfl
+```
+
 ### Activate Dissection
 
 **Tool**: `start_snapshot_dissection`
@@ -256,14 +266,6 @@ Use the pattern of repeated failures and high latency to identify the failing
 service chain, then drill into individual calls with `get_api_call`.
 
 ### KFL Filters for Dissected Traffic
-
-**Before writing any KFL filter**, load the KFL skill (`skills/kfl/`). KFL2 is
-statically typed and filters must use exact field names and correct syntax —
-do not guess. If the KFL skill is not available, suggest the user install it:
-
-```bash
-ln -s /path/to/kubeshark/skills/kfl ~/.claude/skills/kfl
-```
 
 Layer filters progressively when investigating:
 
