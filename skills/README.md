@@ -45,10 +45,11 @@ Clone the repo (if you haven't already), then symlink or copy the skills:
 
 ```bash
 git clone https://github.com/kubeshark/kubeshark
+mkdir -p ~/.claude/skills
 
 # Symlink to stay in sync with the repo (recommended)
-ln -s $PWD/kubeshark/skills/network-rca ~/.claude/skills/network-rca
-ln -s $PWD/kubeshark/skills/kfl ~/.claude/skills/kfl
+ln -s kubeshark/skills/network-rca ~/.claude/skills/network-rca
+ln -s kubeshark/skills/kfl ~/.claude/skills/kfl
 
 # Or copy to your project (project scope only)
 mkdir -p .claude/skills
