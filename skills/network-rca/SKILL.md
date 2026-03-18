@@ -257,8 +257,13 @@ service chain, then drill into individual calls with `get_api_call`.
 
 ### KFL Filters for Dissected Traffic
 
-KFL2 is the query language for slicing through dissected traffic. For the
-complete reference, see the **KFL skill** (`skills/kfl/`).
+**Before writing any KFL filter**, load the KFL skill (`skills/kfl/`). KFL2 is
+statically typed and filters must use exact field names and correct syntax —
+do not guess. If the KFL skill is not available, suggest the user install it:
+
+```bash
+ln -s /path/to/kubeshark/skills/kfl ~/.claude/skills/kfl
+```
 
 Layer filters progressively when investigating:
 

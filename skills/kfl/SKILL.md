@@ -1,16 +1,19 @@
 ---
 name: kfl
+user-invocable: false
 description: >
-  KFL2 (Kubeshark Filter Language) expert. Use this skill whenever the user needs to
-  write, debug, or optimize KFL filters for Kubeshark traffic queries. Trigger on any
-  mention of KFL, CEL filters, traffic filtering, display filters, query syntax,
-  filter expressions, "how do I filter", "show me only", "find traffic where",
-  protocol-specific queries (HTTP status codes, DNS lookups, Redis commands, Kafka topics),
-  Kubernetes-aware filtering (by namespace, pod, service, label, annotation),
-  L4 connection/flow filters, capture source filters, time-based queries, or any
-  request to slice/search/narrow network traffic in Kubeshark. Also trigger when other
-  skills need help constructing filters — KFL is the query language for all Kubeshark
-  traffic analysis.
+  KFL2 (Kubeshark Filter Language) reference. This skill MUST be loaded before
+  writing, constructing, or suggesting any KFL filter expression. KFL is statically
+  typed — incorrect field names or syntax will fail silently or error. Do not guess
+  at KFL syntax without this skill loaded. Trigger on any mention of KFL, CEL filters,
+  traffic filtering, display filters, query syntax, filter expressions, write a filter,
+  construct a query, build a KFL, create a filter expression, "how do I filter",
+  "show me only", "find traffic where", protocol-specific queries (HTTP status codes,
+  DNS lookups, Redis commands, Kafka topics), Kubernetes-aware filtering (by namespace,
+  pod, service, label, annotation), L4 connection/flow filters, time-based queries,
+  or any request to slice/search/narrow network traffic in Kubeshark. Also trigger
+  when other skills need to construct filters — KFL is the query language for all
+  Kubeshark traffic analysis.
 ---
 
 # KFL2 — Kubeshark Filter Language
