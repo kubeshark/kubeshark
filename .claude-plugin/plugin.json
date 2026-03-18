@@ -1,0 +1,24 @@
+{
+  "name": "kubeshark",
+  "version": "1.0.0",
+  "description": "Kubernetes network observability skills powered by Kubeshark MCP. Root cause analysis, traffic filtering, snapshot forensics, PCAP extraction, and more.",
+  "author": {
+    "name": "Kubeshark",
+    "url": "https://kubeshark.com"
+  },
+  "homepage": "https://kubeshark.com",
+  "repository": "https://github.com/kubeshark/kubeshark",
+  "license": "Apache-2.0",
+  "keywords": [
+    "kubeshark",
+    "kubernetes",
+    "network",
+    "observability",
+    "traffic",
+    "mcp",
+    "rca",
+    "pcap",
+    "kfl",
+    "ebpf"
+  ]
+}

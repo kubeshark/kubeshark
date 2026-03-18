@@ -192,6 +192,42 @@ Kubeshark is published to the [MCP Registry](https://registry.modelcontextprotoc
 
 The `server.json` in this directory is a reference file. The actual registry metadata (version, SHA256 hashes) is auto-generated during the release workflow. See [`.github/workflows/release.yml`](../.github/workflows/release.yml) for details.
 
+## AI Skills
+
+Kubeshark ships open-source AI skills that teach agents how to use the MCP tools
+for specific workflows. Skills live in the [`skills/`](../skills/) directory.
+
+| Skill | Description |
+|-------|-------------|
+| [`network-rca`](../skills/network-rca/) | Network Root Cause Analysis — retrospective traffic analysis via snapshots, dissection, KFL queries, and PCAP extraction |
+| [`kfl`](../skills/kfl/) | KFL2 (Kubeshark Filter Language) — complete reference for writing and optimizing traffic filters |
+
+### Using skills as a plugin
+
+Install skills as a Claude Code plugin directly from this repo:
+
+```
+/plugin marketplace add kubeshark/kubeshark
+/plugin install kubeshark
+```
+
+This loads the skills and bundles the MCP configuration automatically.
+
+### Manual skill installation
+
+```bash
+# Copy to your project
+mkdir -p .claude/skills
+cp -r skills/network-rca .claude/skills/
+cp -r skills/kfl .claude/skills/
+
+# Or symlink for personal use
+ln -s /path/to/kubeshark/skills/network-rca ~/.claude/skills/network-rca
+ln -s /path/to/kubeshark/skills/kfl ~/.claude/skills/kfl
+```
+
+See the [skills README](../skills/README.md) for full details.
+
 ## Links
 
 - [Documentation](https://docs.kubeshark.com/en/mcp)

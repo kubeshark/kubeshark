@@ -80,32 +80,41 @@ tap:
 
 ## Core Workflow
 
-The general flow for any RCA investigation:
+Every investigation starts with a snapshot. After that, you choose one of two
+investigation routes depending on your goal:
 
 1. **Determine time window** — When did the issue occur? Use `get_data_boundaries`
    to see what raw capture data is available.
 2. **Create or locate a snapshot** — Either take a new snapshot covering the
    incident window, or find an existing one with `list_snapshots`.
-3. **Dissect the snapshot** — Activate L7 dissection so you can query API calls,
-   not just raw packets.
-4. **Investigate** — Use KFL filters to slice through the traffic. Start broad,
-   narrow progressively.
-5. **Extract evidence** — Export filtered PCAPs, resolve workload IPs, pull
-   specific API call details.
-6. **Compare** (optional) — Diff against a known-good snapshot to identify
-   what changed.
+3. **Choose your investigation route** — PCAP or Dissection (see below).
+
+### Choosing the Right Route
+
+| | PCAP Route | Dissection Route |
+|---|---|---|
+| **Speed** | Immediate — no indexing needed | Takes time to index |
+| **Filtering** | Nodes, time window, BPF filters | Kubernetes & API-level (pods, labels, paths, status codes) |
+| **Output** | Cluster-wide PCAP files | Structured query results |
+| **Investigation by** | Human (Wireshark) | AI agent or human (queryable database) |
+| **Best for** | Compliance, sharing with network teams, Wireshark deep-dives | Root cause analysis, API-level debugging, automated investigation |
+
+Both routes are valid and complementary. Use PCAP when you need raw packets
+for human analysis or compliance. Use Dissection when you want an AI agent
+to search and analyze traffic programmatically.
 
 ## Snapshot Operations
 
-### Check Data Boundaries
+Both routes start here. A snapshot is an immutable freeze of all cluster traffic
+in a time window.
 
-Before creating a snapshot, check what raw capture data exists across the cluster.
+### Check Data Boundaries
 
 **Tool**: `get_data_boundaries`
 
-This returns the time window available per node. You can only create snapshots
-within these boundaries — data outside the window has already been rotated out
-of the FIFO buffer.
+Check what raw capture data exists across the cluster. You can only create
+snapshots within these boundaries — data outside the window has been rotated
+out of the FIFO buffer.
 
 **Example response**:
 ```
@@ -122,58 +131,100 @@ Per node:
   └─────────────────────────────┴──────────┴──────────┘
 ```
 
-If the user's incident falls outside the available window, let them know the
-data has been rotated out. Suggest increasing `storageSize` for future coverage.
+If the incident falls outside the available window, the data has been rotated
+out. Suggest increasing `storageSize` for future coverage.
 
 ### Create a Snapshot
 
 **Tool**: `create_snapshot`
 
 Specify nodes (or cluster-wide) and a time window within the data boundaries.
-Snapshots include everything needed to reconstruct the traffic picture:
-raw capture files, Kubernetes pod events, and eBPF cgroup events.
+Snapshots include raw capture files, Kubernetes pod events, and eBPF cgroup events.
 
-Snapshots take time to build. After creating one, check its status.
-
-**Tool**: `get_snapshot`
-
-Wait until status is `completed` before proceeding with dissection or PCAP export.
+Snapshots take time to build. Check status with `get_snapshot` — wait until
+`completed` before proceeding with either route.
 
 ### List Existing Snapshots
 
 **Tool**: `list_snapshots`
 
 Shows all snapshots on the local Hub, with name, size, status, and node count.
-Use this when the user wants to work with a previously captured snapshot.
 
 ### Cloud Storage
 
-Snapshots on the Hub are ephemeral and space-limited. Cloud storage (S3, GCS,
-Azure Blob) provides long-term retention. Snapshots can be downloaded to any
-cluster with Kubeshark — not necessarily the original cluster. This means you can
-download a production snapshot to a local KinD cluster for safe analysis.
+Snapshots on the Hub are ephemeral. Cloud storage (S3, GCS, Azure Blob)
+provides long-term retention. Snapshots can be downloaded to any cluster
+with Kubeshark — not necessarily the original one.
 
 **Check cloud status**: `get_cloud_storage_status`
 **Upload to cloud**: `upload_snapshot_to_cloud`
 **Download from cloud**: `download_snapshot_from_cloud`
 
-When cloud storage is configured, recommend uploading snapshots after analysis
-for long-term retention, especially for compliance or post-mortem documentation.
+---
 
-## L7 API Dissection
+## Route 1: PCAP
 
-Dissection reconstructs raw packets into structured L7 API calls — without it,
-you have PCAPs; with it, you have a queryable database.
+The PCAP route does **not** require dissection. It works directly with the raw
+snapshot data to produce filtered, cluster-wide PCAP files. Use this route when:
+
+- You need raw packets for Wireshark analysis
+- You're sharing captures with network teams
+- You need evidence for compliance or audit
+- A human will perform the investigation (not an AI agent)
+
+### Filtering a PCAP
+
+**Tool**: `export_snapshot_pcap`
+
+Filter the snapshot down to what matters using:
+- **Nodes** — specific cluster nodes only
+- **Time** — sub-window within the snapshot
+- **BPF filter** — standard Berkeley Packet Filter syntax (e.g., `host 10.0.53.101`,
+  `port 8080`, `net 10.0.0.0/16`)
+
+These filters are combinable — select specific nodes, narrow the time range,
+and apply a BPF expression all at once.
+
+### Workload-to-BPF Workflow
+
+When you know the workload names but not their IPs, resolve them from the
+snapshot's metadata. Snapshots preserve pod-to-IP mappings from capture time,
+so resolution is accurate even if pods have been rescheduled since.
+
+**Tool**: `resolve_workload`
+
+**Example workflow** — extract PCAP for specific workloads:
+
+1. Resolve IPs: `resolve_workload` for `orders-594487879c-7ddxf` → `10.0.53.101`
+2. Resolve IPs: `resolve_workload` for `payment-service-6b8f9d-x2k4p` → `10.0.53.205`
+3. Build BPF: `host 10.0.53.101 or host 10.0.53.205`
+4. Export: `export_snapshot_pcap` with that BPF filter
+
+This gives you a cluster-wide PCAP filtered to exactly the workloads involved
+in the incident — ready for Wireshark or long-term storage.
+
+---
+
+## Route 2: Dissection
+
+The Dissection route indexes raw packets into structured L7 API calls, building
+a queryable database from the snapshot. Use this route when:
+
+- An AI agent is performing the investigation
+- You need to search by Kubernetes context (pods, namespaces, labels, services)
+- You need to search by API elements (paths, status codes, headers, payloads)
+- You want structured responses you can analyze programmatically
+- You need to drill into the payload of a specific API call
 
 ### Activate Dissection
 
 **Tool**: `start_snapshot_dissection`
 
-Dissection takes time proportional to the snapshot size — it's parsing every
-packet, reassembling streams, and building the index. After it completes,
-the full query engine is available:
-- `list_api_calls` — Search API transactions with filters (the "Google search" for your traffic)
-- `get_api_call` — Drill into a specific call (headers, body, timing)
+Dissection takes time proportional to snapshot size — it parses every packet,
+reassembles streams, and builds the index. After completion, these tools
+become available:
+- `list_api_calls` — Search API transactions with KFL filters
+- `get_api_call` — Drill into a specific call (headers, body, timing, payload)
 - `get_api_stats` — Aggregated statistics (throughput, error rates, latency)
 
 ### Investigation Strategy
@@ -184,10 +235,9 @@ Start broad, then narrow:
    throughput. Look for spikes or anomalies.
 2. `list_api_calls` filtered by error codes (4xx, 5xx) or high latency — find
    the problematic transactions.
-3. `get_api_call` on specific calls — inspect headers, bodies, timing to
-   understand what went wrong.
-4. Use KFL filters (see below) to slice the traffic by namespace, service,
-   protocol, or any combination.
+3. `get_api_call` on specific calls — inspect headers, bodies, timing, and
+   full payload to understand what went wrong.
+4. Use KFL filters to slice by namespace, service, protocol, or any combination.
 
 **Example `list_api_calls` response** (filtered to `http && status_code >= 500`):
 ```
@@ -205,45 +255,12 @@ Src: api-gateway (prod)  →  Dst: payment-service (prod)
 Use the pattern of repeated failures and high latency to identify the failing
 service chain, then drill into individual calls with `get_api_call`.
 
-## PCAP Extraction
-
-Sometimes you need the raw packets — for Wireshark analysis, sharing with
-network teams, or compliance evidence.
-
-### Export a PCAP
-
-**Tool**: `export_snapshot_pcap`
-
-You can export the full snapshot or filter it down using:
-- **Nodes** — specific nodes only
-- **Time** — sub-window within the snapshot
-- **BPF filter** — standard Berkeley Packet Filter syntax (e.g., `host 10.0.53.101`,
-  `port 8080`, `net 10.0.0.0/16`)
-
-### Resolve Workload IPs
-
-When you care about specific workloads but don't have their IPs, resolve them
-from the snapshot's metadata. Snapshots preserve the pod-to-IP mappings from
-capture time, so you get accurate resolution even if pods have since been
-rescheduled.
-
-**Tool**: `resolve_workload`
-
-**Example**: Resolve the IP of `orders-594487879c-7ddxf` from snapshot `slim-timestamp`
-→ Returns `10.0.53.101`
-
-Then use that IP in a BPF filter to extract only that workload's traffic:
-`export_snapshot_pcap` with BPF `host 10.0.53.101`
-
-## KFL — Kubeshark Filter Language
+### KFL Filters for Dissected Traffic
 
 KFL2 is the query language for slicing through dissected traffic. For the
-complete KFL2 reference (all variables, operators, protocol fields, and examples),
-see the **KFL skill** (`skills/kfl/`).
+complete reference, see the **KFL skill** (`skills/kfl/`).
 
-### RCA-Specific Filter Patterns
-
-Layer filters progressively when investigating an incident:
+Layer filters progressively when investigating:
 
 ```
 // Step 1: Protocol + namespace
@@ -257,9 +274,6 @@ http && dst.pod.namespace == "production" && status_code >= 500 && dst.service.n
 
 // Step 4: Narrow to endpoint
 http && dst.pod.namespace == "production" && status_code >= 500 && dst.service.name == "payment-service" && path.contains("/charge")
-
-// Step 5: Add timing
-http && dst.pod.namespace == "production" && status_code >= 500 && dst.service.name == "payment-service" && path.contains("/charge") && elapsed_time > 2000000
 ```
 
 Other common RCA filters:
@@ -271,23 +285,29 @@ http && elapsed_time > 5000000                        // Slow transactions (> 5s
 conn && conn_state == "open" && conn_local_bytes > 1000000  // High-volume connections
 ```
 
+---
+
+## Combining Both Routes
+
+The two routes are complementary. A common pattern:
+
+1. Start with **Dissection** — let the AI agent search and identify the root cause
+2. Once you've pinpointed the problematic workloads, use `resolve_workload`
+   to get their IPs
+3. Switch to **PCAP** — export a filtered PCAP of just those workloads for
+   Wireshark deep-dive, sharing with the network team, or compliance archival
+
 ## Use Cases
 
 ### Post-Incident RCA
 
-The primary use case. Something broke, it's been resolved, and now you need
-to understand why.
-
 1. Identify the incident time window from alerts, logs, or user reports
 2. Check `get_data_boundaries` — is the window still in raw capture?
-3. `create_snapshot` covering the incident window (add buffer: 15 minutes
-   before and after the reported time)
-4. `start_snapshot_dissection`
-5. `get_api_stats` — look for error rate spikes, latency jumps
-6. `list_api_calls` filtered to errors — identify the failing service chain
-7. `get_api_call` on specific failures — read headers, bodies, timing
-8. Follow the dependency chain upstream until you find the originating failure
-9. Export relevant PCAPs for the post-mortem document
+3. `create_snapshot` covering the incident window (add 15 minutes buffer)
+4. **Dissection route**: `start_snapshot_dissection` → `get_api_stats` →
+   `list_api_calls` → `get_api_call` → follow the dependency chain
+5. **PCAP route**: `resolve_workload` → `export_snapshot_pcap` with BPF →
+   hand off to Wireshark or archive
 
 ### Other Use Cases
 
@@ -297,8 +317,7 @@ to understand why.
 - **Forensic preservation** — `create_snapshot` + `upload_snapshot_to_cloud`
   for immutable, long-term evidence. Downloadable to any cluster months later.
 - **Production-to-local replay** — Upload a production snapshot to cloud,
-  download it on a local KinD cluster, and run `start_snapshot_dissection`
-  to investigate safely without touching production.
+  download it on a local KinD cluster, and investigate safely.
 
 ## Setup Reference
 

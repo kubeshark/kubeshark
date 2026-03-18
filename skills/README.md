@@ -13,11 +13,21 @@ A skill is a `SKILL.md` file (with optional reference docs) that teaches an AI a
 | [`network-rca`](network-rca/) | Network Root Cause Analysis. Retrospective traffic analysis via snapshots, dissection, KFL queries, PCAP extraction, and trend comparison. |
 | [`kfl`](kfl/) | KFL2 (Kubeshark Filter Language) expert. Complete reference for writing, debugging, and optimizing CEL-based traffic filters across all supported protocols. |
 
-## Using a skill
+## Installation
 
-### Claude Code (CLI)
+### Option 1: Plugin (recommended)
 
-Skills are automatically discovered from the `skills/` directory. Clone this repo and point Claude Code at it:
+Install as a Claude Code plugin directly from GitHub:
+
+```
+/plugin marketplace add kubeshark/kubeshark
+/plugin install kubeshark
+```
+
+Skills appear as `/kubeshark:network-rca` and `/kubeshark:kfl`. The plugin
+also bundles the Kubeshark MCP configuration automatically.
+
+### Option 2: Clone and run
 
 ```bash
 git clone https://github.com/kubeshark/kubeshark
@@ -25,19 +35,35 @@ cd kubeshark
 claude
 ```
 
-Skills trigger automatically based on your conversation — ask about root cause analysis, traffic filtering, snapshots, or KFL and the relevant skill loads.
+Skills trigger automatically based on your conversation — ask about root cause
+analysis, traffic filtering, snapshots, or KFL and the relevant skill loads.
 
-### Claude Desktop / Cowork
+### Option 3: Manual installation
 
-Copy the skill folder into your project's `.claude/skills/` directory:
+Copy or symlink individual skills into your Claude Code skills directory:
 
+```bash
+# Project scope (this project only)
+mkdir -p .claude/skills
+cp -r skills/network-rca .claude/skills/
+cp -r skills/kfl .claude/skills/
+
+# Personal scope (all your projects)
+cp -r skills/network-rca ~/.claude/skills/
+cp -r skills/kfl ~/.claude/skills/
+
+# Or symlink to stay in sync with the repo
+ln -s /path/to/kubeshark/skills/network-rca ~/.claude/skills/network-rca
+ln -s /path/to/kubeshark/skills/kfl ~/.claude/skills/kfl
 ```
-your-project/
-└── .claude/
-    └── skills/
-        └── network-rca/
-            └── SKILL.md
-```
+
+Skills are discovered automatically — no restart needed.
+
+### Compatibility
+
+Skills use the open [Agent Skills](https://github.com/anthropics/skills) format
+(`SKILL.md` with YAML frontmatter) and work with any compatible agent, including
+Claude Code, OpenAI Codex CLI, Gemini CLI, and Cursor.
 
 ### Prerequisites
 
