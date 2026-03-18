@@ -43,18 +43,18 @@ analysis, traffic filtering, snapshots, or KFL and the relevant skill loads.
 Copy or symlink individual skills into your Claude Code skills directory:
 
 ```bash
-# Project scope (this project only)
+# Symlink to stay in sync with the repo (recommended)
+ln -s /path/to/kubeshark/skills/network-rca ~/.claude/skills/network-rca
+ln -s /path/to/kubeshark/skills/kfl ~/.claude/skills/kfl
+
+# Or copy to your project (project scope only)
 mkdir -p .claude/skills
 cp -r skills/network-rca .claude/skills/
 cp -r skills/kfl .claude/skills/
 
-# Personal scope (all your projects)
+# Or copy for personal use (all your projects)
 cp -r skills/network-rca ~/.claude/skills/
 cp -r skills/kfl ~/.claude/skills/
-
-# Or symlink to stay in sync with the repo
-ln -s /path/to/kubeshark/skills/network-rca ~/.claude/skills/network-rca
-ln -s /path/to/kubeshark/skills/kfl ~/.claude/skills/kfl
 ```
 
 Skills are discovered automatically — no restart needed.
