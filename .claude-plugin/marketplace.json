@@ -1,0 +1,15 @@
+{
+  "name": "kubeshark",
+  "description": "Kubeshark network observability skills for Kubernetes",
+  "plugins": [
+    {
+      "name": "kubeshark",
+      "description": "Network observability skills powered by Kubeshark MCP — root cause analysis, KFL traffic filtering, snapshot forensics, PCAP extraction.",
+      "source": {
+        "source": "github",
+        "owner": "kubeshark",
+        "repo": "kubeshark"
+      }
+    }
+  ]
+}
