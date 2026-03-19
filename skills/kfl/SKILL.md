@@ -125,13 +125,26 @@ Match against any direction (src or dst):
 ### Labels and Annotations
 
 ```
-map_get(local_labels, "app", "") == "checkout"   // Safe access with default
+// Direct access — works when the label is expected to exist
+local_labels.app == "payment" || remote_labels.app == "payment"
+
+// Safe access with default — use when the label may not exist
+map_get(local_labels, "app", "") == "checkout"
 map_get(remote_labels, "version", "") == "canary"
-"tier" in local_labels                            // Label existence check
+
+// Label existence check
+"tier" in local_labels
 ```
 
-Always use `map_get()` for labels and annotations — direct access like
-`local_labels["app"]` errors if the key doesn't exist.
+Direct access (`local_labels.app`) returns an error if the key doesn't exist.
+Use `map_get()` when you're not sure the label is present on all workloads.
+
+Queries can be as complex as needed — combine labels with any other fields.
+Responses are fast because all API elements are indexed:
+
+```
+local_labels.app == "payment" && http && status_code >= 500 && dst.pod.namespace == "production"
+```
 
 ### Node and Process
 
