@@ -2,6 +2,18 @@
 
 [Kubeshark](https://kubeshark.com) MCP (Model Context Protocol) server enables AI assistants like Claude Desktop, Cursor, and other MCP-compatible clients to query real-time Kubernetes network traffic.
 
+## AI Skills
+
+The MCP provides the tools — [AI skills](../skills/) teach agents how to use them.
+Skills turn raw MCP capabilities into domain-specific workflows like root cause
+analysis, traffic filtering, and forensic investigation. See the
+[skills README](../skills/README.md) for installation and usage.
+
+| Skill | Description |
+|-------|-------------|
+| [`network-rca`](../skills/network-rca/) | Network Root Cause Analysis — snapshot-based retrospective investigation with PCAP and dissection routes |
+| [`kfl`](../skills/kfl/) | KFL2 filter expert — write, debug, and optimize traffic queries across all supported protocols |
+
 ## Features
 
 - **L7 API Traffic Analysis**: Query HTTP, gRPC, Redis, Kafka, DNS transactions
@@ -34,20 +46,20 @@ Add to your Claude Desktop configuration:
 **macOS**: `~/Library/Application Support/Claude/claude_desktop_config.json`
 **Windows**: `%APPDATA%\Claude\claude_desktop_config.json`
 
-#### URL Mode (Recommended for existing deployments)
+#### Default (requires kubectl access / kube context)
 
 ```json
 {
   "mcpServers": {
     "kubeshark": {
       "command": "kubeshark",
-      "args": ["mcp", "--url", "https://kubeshark.example.com"]
+      "args": ["mcp"]
     }
   }
 }
 ```
 
-#### Proxy Mode (Requires kubectl access)
+With an explicit kubeconfig path:
 
 ```json
 {
@@ -59,14 +71,18 @@ Add to your Claude Desktop configuration:
   }
 }
 ```
-or:
+
+#### URL Mode (no kubectl required)
+
+Use this when the machine doesn't have kubectl access or a kube context.
+Connect directly to an existing Kubeshark deployment:
 
 ```json
 {
   "mcpServers": {
     "kubeshark": {
       "command": "kubeshark",
-      "args": ["mcp"]
+      "args": ["mcp", "--url", "https://kubeshark.example.com"]
     }
   }
 }
