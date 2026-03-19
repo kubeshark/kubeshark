@@ -40,9 +40,11 @@ type Readiness struct {
 }
 
 var ready *Readiness
+var proxyOnce sync.Once
 
 func tap() {
 	ready = &Readiness{}
+	proxyOnce = sync.Once{}
 	state.startTime = time.Now()
 	log.Info().Str("registry", config.Config.Tap.Docker.Registry).Str("tag", config.Config.Tap.Docker.Tag).Msg("Using Docker:")
 
@@ -206,16 +208,17 @@ func watchHubPod(ctx context.Context, kubernetesProvider *kubernetes.Provider, c
 				}
 
 				ready.Lock()
-				proxyDone := ready.Proxy
 				hubPodReady := ready.Hub
 				frontPodReady := ready.Front
 				ready.Unlock()
 
-				if !proxyDone && hubPodReady && frontPodReady {
-					ready.Lock()
-					ready.Proxy = true
-					ready.Unlock()
-					postFrontStarted(ctx, kubernetesProvider, cancel)
+				if hubPodReady && frontPodReady {
+					proxyOnce.Do(func() {
+						ready.Lock()
+						ready.Proxy = true
+						ready.Unlock()
+						postFrontStarted(ctx, kubernetesProvider, cancel)
+					})
 				}
 			case kubernetes.EventBookmark:
 				break
@@ -300,16 +303,17 @@ func watchFrontPod(ctx context.Context, kubernetesProvider *kubernetes.Provider,
 				}
 
 				ready.Lock()
-				proxyDone := ready.Proxy
 				hubPodReady := ready.Hub
 				frontPodReady := ready.Front
 				ready.Unlock()
 
-				if !proxyDone && hubPodReady && frontPodReady {
-					ready.Lock()
-					ready.Proxy = true
-					ready.Unlock()
-					postFrontStarted(ctx, kubernetesProvider, cancel)
+				if hubPodReady && frontPodReady {
+					proxyOnce.Do(func() {
+						ready.Lock()
+						ready.Proxy = true
+						ready.Unlock()
+						postFrontStarted(ctx, kubernetesProvider, cancel)
+					})
 				}
 			case kubernetes.EventBookmark:
 				break
@@ -446,9 +450,6 @@ func postFrontStarted(ctx context.Context, kubernetesProvider *kubernetes.Provid
 		watchScripts(ctx, kubernetesProvider, false)
 	}
 
-	if config.Config.Scripting.Console {
-		go runConsoleWithoutProxy()
-	}
 }
 
 func updateConfig(kubernetesProvider *kubernetes.Provider) {
