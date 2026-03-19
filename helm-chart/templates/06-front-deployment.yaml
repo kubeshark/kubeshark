@@ -70,7 +70,7 @@ spec:
               value: '{{- if and (not .Values.demoModeEnabled) (not .Values.tap.capture.dissection.enabled) -}}
                         true
                       {{- else -}}
-                        {{ not (default false .Values.demoModeEnabled) | ternary false true }}
+                        {{ (default false .Values.demoModeEnabled) | ternary false true }}
                       {{- end -}}'
             - name: 'REACT_APP_CLOUD_LICENSE_ENABLED'
               value: '{{- if or (and .Values.cloudLicenseEnabled (not (empty .Values.license))) (not .Values.internetConnectivity) -}}
