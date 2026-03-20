@@ -296,6 +296,27 @@ become available:
 - `get_api_call` — Drill into a specific call (headers, body, timing, payload)
 - `get_api_stats` — Aggregated statistics (throughput, error rates, latency)
 
+### Every Question Is a Query
+
+**Every user prompt that involves APIs, workloads, services, pods, namespaces,
+or Kubernetes semantics should translate into a `list_api_calls` call with an
+appropriate KFL filter.** Do not answer from memory or prior results — always
+run a fresh query that matches what the user is asking.
+
+Examples of user prompts and the queries they should trigger:
+
+| User says | Action |
+|---|---|
+| "Show me all 500 errors" | `list_api_calls` with KFL: `http && status_code == 500` |
+| "What's hitting the payment service?" | `list_api_calls` with KFL: `dst.service.name == "payment-service"` |
+| "Any DNS failures?" | `list_api_calls` with KFL: `dns && status_code != 0` |
+| "Show traffic from namespace prod to staging" | `list_api_calls` with KFL: `src.pod.namespace == "prod" && dst.pod.namespace == "staging"` |
+| "What are the slowest API calls?" | `list_api_calls` with KFL: `http && elapsed_time > 5000000` |
+
+The user's natural language maps to KFL. Your job is to translate intent into
+the right filter and run the query — don't summarize old results or speculate
+without fresh data.
+
 ### Investigation Strategy
 
 Start broad, then narrow:
