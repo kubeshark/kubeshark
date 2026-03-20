@@ -128,6 +128,11 @@ Both routes are valid and complementary. Use PCAP when you need raw packets
 for human analysis or compliance. Use Dissection when you want an AI agent
 to search and analyze traffic programmatically.
 
+**Default to Dissection.** Unless the user explicitly asks for a PCAP file or
+Wireshark export, assume Dissection is needed. Any question about workloads,
+APIs, services, pods, error rates, latency, or traffic patterns requires
+dissected data.
+
 ## Snapshot Operations
 
 Both routes start here. A snapshot is an immutable freeze of all cluster traffic
@@ -257,7 +262,30 @@ KFL field names differ from what you might expect (e.g., `status_code` not
 `response.status`, `src.pod.namespace` not `src.namespace`). Using incorrect
 fields produces wrong results without warning.
 
-### Activate Dissection
+### Dissection Is Required — Do Not Skip This
+
+**Any question about workloads, Kubernetes resources, services, pods, namespaces,
+or API calls requires dissection.** Only the PCAP route works without it. If the
+user asks anything about traffic content, API behavior, error rates, latency,
+or service-to-service communication, you **must** ensure dissection is active
+before attempting to answer.
+
+**Do not wait for dissection to complete on its own — it will not start by itself.**
+
+Follow this sequence every time before using `list_api_calls`, `get_api_call`,
+or `get_api_stats`:
+
+1. **Check status**: Call `get_snapshot_dissection_status` (or `list_snapshot_dissections`)
+   to see if a dissection already exists for this snapshot.
+2. **If dissection exists and is completed** — proceed with your query. No further
+   action needed.
+3. **If dissection is in progress** — wait for it to complete, then proceed.
+4. **If no dissection exists** — you **must** call `start_snapshot_dissection` to
+   trigger it. Then monitor progress with `get_snapshot_dissection_status` until
+   it completes.
+
+Never assume dissection is running. Never wait for a dissection that was not started.
+The agent is responsible for triggering dissection when it is missing.
 
 **Tool**: `start_snapshot_dissection`
 
