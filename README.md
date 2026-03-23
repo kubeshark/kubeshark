@@ -17,17 +17,13 @@
 
 ---
 
-Kubeshark captures cluster-wide network traffic at the speed and scale of Kubernetes, continuously, at the kernel level using eBPF. It consolidates a highly fragmented picture — dozens of nodes, thousands of workloads, millions of connections — into a single, queryable view with full Kubernetes and API context.
+Kubeshark indexes cluster-wide network traffic at the kernel level using eBPF — delivering instant answers to any query using network, API, and Kubernetes semantics.
 
-Network data is available to **AI agents via [MCP](https://docs.kubeshark.com/en/mcp)** and to **human operators via a [dashboard](https://docs.kubeshark.com/en/v2)**.
+**What you can do:**
 
-**What's captured, cluster-wide:**
-
-- **L4 Packets & TCP Metrics** — retransmissions, RTT, window saturation, connection lifecycle, packet loss across every node-to-node path ([TCP insights →](https://docs.kubeshark.com/en/mcp/tcp_insights))
-- **L7 API Calls** — real-time request/response matching with full payload parsing: HTTP, gRPC, GraphQL, Redis, Kafka, DNS ([API dissection →](https://docs.kubeshark.com/en/v2/l7_api_dissection))
-- **Decrypted TLS** — eBPF-based TLS decryption without key management
-- **Kubernetes Context** — every packet and API call resolved to pod, service, namespace, and node
-- **PCAP Retention** — point-in-time raw packet snapshots, exportable for Wireshark ([Snapshots →](https://docs.kubeshark.com/en/v2/traffic_snapshots))
+- **Download Retrospective PCAPs** — cluster-wide packet captures filtered by nodes, time, workloads, and IPs. Store PCAPs for long-term retention and later investigation.
+- **Visualize Network Data** — explore traffic matching queries with API, Kubernetes, or network semantics through a real-time dashboard.
+- **Integrate with AI** — connect your favorite AI assistant (e.g. Claude, Copilot) to include network data in AI-driven workflows like incident response and root cause analysis.
 
 ![Kubeshark](https://github.com/kubeshark/assets/raw/master/png/stream.png)
 
@@ -38,9 +34,12 @@ Network data is available to **AI agents via [MCP](https://docs.kubeshark.com/en
 ```bash
 helm repo add kubeshark https://helm.kubeshark.com
 helm install kubeshark kubeshark/kubeshark
+kubectl port-forward svc/kubeshark-front 8899:80
 ```
 
-Dashboard opens automatically. You're capturing traffic.
+Open `http://localhost:8899` in your browser. You're capturing traffic.
+
+> For production use, we recommend using an [ingress controller](https://docs.kubeshark.com/en/ingress) instead of port-forward.
 
 **Connect an AI agent** via MCP:
 
@@ -53,9 +52,9 @@ claude mcp add kubeshark -- kubeshark mcp
 
 ---
 
-### AI-Powered Network Analysis
+### Network Data for AI Agents
 
-Kubeshark exposes all cluster-wide network data via MCP (Model Context Protocol). AI agents can query L4 metrics, investigate L7 API calls, analyze traffic patterns, and run root cause analysis — through natural language. Use cases include incident response, root cause analysis, troubleshooting, debugging, and reliability workflows.
+Kubeshark exposes cluster-wide network data via [MCP](https://docs.kubeshark.com/en/mcp) — enabling AI agents to query traffic, investigate API calls, and perform root cause analysis through natural language.
 
 > *"Why did checkout fail at 2:15 PM?"*
 > *"Which services have error rates above 1%?"*
@@ -70,25 +69,25 @@ Works with Claude Code, Cursor, and any MCP-compatible AI.
 
 ---
 
-### L7 API Dissection
+### Network Traffic Indexing
 
-Cluster-wide request/response matching with full payloads, parsed according to protocol specifications. HTTP, gRPC, Redis, Kafka, DNS, and more. Every API call resolved to source and destination pod, service, namespace, and node. No code instrumentation required.
+Kubeshark indexes cluster-wide network traffic by parsing it according to protocol specifications, with support for HTTP, gRPC, Redis, Kafka, DNS, and more. This enables queries using Kubernetes semantics (e.g. pod, namespace, node), API semantics (e.g. path, headers, status), and network semantics (e.g. IP, port). No code instrumentation required.
 
 ![API context](https://github.com/kubeshark/assets/raw/master/png/api_context.png)
 
 [Learn more →](https://docs.kubeshark.com/en/v2/l7_api_dissection)
 
-### L4/L7 Workload Map
+### Workload Dependency Map
 
-Cluster-wide view of service communication: dependencies, traffic flow, and anomalies across all nodes and namespaces.
+A visual map of how workloads communicate, showing dependencies, traffic volume, and protocol usage across the cluster.
 
 ![Service Map](https://github.com/kubeshark/assets/raw/master/png/servicemap.png)
 
 [Learn more →](https://docs.kubeshark.com/en/v2/service_map)
 
-### Traffic Retention
+### Traffic Retention & PCAP Export
 
-Continuous raw packet capture with point-in-time snapshots. Export PCAP files for offline analysis with Wireshark or other tools.
+Capture and retain raw network traffic cluster-wide. Download PCAPs scoped by time range, nodes, workloads, and IPs — ready for Wireshark or any PCAP-compatible tool.
 
 ![Traffic Retention](https://github.com/kubeshark/assets/raw/master/png/snapshots.png)
 
