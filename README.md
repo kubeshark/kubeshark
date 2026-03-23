@@ -99,7 +99,6 @@ Capture and retain raw network traffic cluster-wide. Download PCAPs scoped by ti
 
 | Feature | Description |
 |---------|-------------|
-| [**Raw Capture**](https://docs.kubeshark.com/en/v2/raw_capture) | Continuous cluster-wide packet capture with minimal overhead |
 | [**Traffic Snapshots**](https://docs.kubeshark.com/en/v2/traffic_snapshots) | Point-in-time snapshots, export as PCAP for Wireshark |
 | [**L7 API Dissection**](https://docs.kubeshark.com/en/v2/l7_api_dissection) | Request/response matching with full payloads and protocol parsing |
 | [**Protocol Support**](https://docs.kubeshark.com/en/protocols) | HTTP, gRPC, GraphQL, Redis, Kafka, DNS, and more |
