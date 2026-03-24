@@ -617,7 +617,7 @@ spec:
             - -capture-db-max-size
             - '500Mi'
             - -cloud-api-url
-            - 'https://api.kubeshark.com'
+            - ''
           image: 'docker.io/kubeshark/worker:v53.1'
           imagePullPolicy: Always
           name: sniffer
@@ -827,7 +827,7 @@ spec:
             - -dissector-memory
             - '4Gi'
             - -cloud-api-url
-            - 'https://api.kubeshark.com'
+            - ''
           env:
           - name: POD_NAME
             valueFrom:

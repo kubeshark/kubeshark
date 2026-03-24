@@ -23,6 +23,12 @@ spec:
         app.kubeshark.com/app: hub
         {{- include "kubeshark.labels" . | nindent 8 }}
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 1000
+        fsGroup: 1000
+        seccompProfile:
+          type: RuntimeDefault
       dnsPolicy: ClusterFirstWithHostNet
       serviceAccountName: {{ include "kubeshark.serviceAccountName" . }}
       {{- if .Values.tap.priorityClass }}
@@ -142,6 +148,14 @@ spec:
               {{ if ne (toString .Values.tap.resources.hub.requests.memory) "0" }}
               memory: {{ .Values.tap.resources.hub.requests.memory }}
               {{ end }}
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 1000
+            readOnlyRootFilesystem: false
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
           volumeMounts:
           - name: saml-x509-volume
             mountPath: "/etc/saml/x509"

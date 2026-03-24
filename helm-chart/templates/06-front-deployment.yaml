@@ -22,6 +22,12 @@ spec:
         app.kubeshark.com/app: front
         {{- include "kubeshark.labels" . | nindent 8 }}
     spec:
+      securityContext:
+        runAsNonRoot: true
+        runAsUser: 101
+        fsGroup: 101
+        seccompProfile:
+          type: RuntimeDefault
       containers:
         - env:
             - name: REACT_APP_AUTH_ENABLED
@@ -127,6 +133,14 @@ spec:
             requests:
               cpu: 50m
               memory: 50Mi
+          securityContext:
+            runAsNonRoot: true
+            runAsUser: 101
+            readOnlyRootFilesystem: false
+            allowPrivilegeEscalation: false
+            capabilities:
+              drop:
+                - ALL
           volumeMounts:
             - name: nginx-config
               mountPath: /etc/nginx/conf.d/default.conf

@@ -252,7 +252,7 @@ tap:
     tcpFlowTimeout: 1200
     udpFlowTimeout: 1200
   securityContext:
-    privileged: true
+    privileged: false
     appArmorProfile:
       type: ""
       localhostProfile: ""
@@ -275,7 +275,7 @@ tap:
       - SYS_RESOURCE
       - IPC_LOCK
   mountBpf: true
-  hostNetwork: true
+  hostNetwork: false
 logs:
   file: ""
   grep: ""
@@ -293,8 +293,8 @@ kube:
 dumpLogs: false
 headless: false
 license: ""
-cloudApiUrl: https://api.kubeshark.com
-cloudLicenseEnabled: true
+cloudApiUrl: ""
+cloudLicenseEnabled: false
 demoModeEnabled: false
 supportChatEnabled: false
 betaEnabled: false
