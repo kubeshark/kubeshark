@@ -29,6 +29,31 @@ Unlike real-time monitoring, retrospective analysis lets you go back in time:
 reconstruct what happened, compare against known-good baselines, and pinpoint
 root causes with full L4/L7 visibility.
 
+## Timezone Handling
+
+All timestamps presented to the user **must use the local timezone** of the environment
+where the agent is running. Users think in local time ("this happened around 3pm"), and
+UTC-only output adds friction during incident response when speed matters.
+
+### Rules
+
+1. **Detect the local timezone** at the start of every investigation. Use the system
+   clock or environment (e.g., `date +%Z` or equivalent) to determine the timezone.
+2. **Present local time as the primary reference** in all output — summaries, event
+   correlations, time-range references, and tables.
+3. **Show UTC in parentheses** for clarity, e.g., `15:03:22 IST (12:03:22 UTC)`.
+4. **Convert tool responses** — Kubeshark MCP tools return timestamps in UTC. Always
+   convert these to local time before presenting to the user.
+5. **Use local time in natural language** — when describing events, say "the spike at
+   3:23 PM" not "the spike at 12:23 UTC".
+
+### Snapshot Creation
+
+When creating snapshots, Kubeshark MCP tools accept UTC timestamps. Convert the user's
+local time references to UTC before passing them to tools like `create_snapshot` or
+`export_snapshot_pcap`. Confirm the converted window with the user if there's any
+ambiguity.
+
 ## Prerequisites
 
 Before starting any analysis, verify the environment is ready.
@@ -103,6 +128,11 @@ Both routes are valid and complementary. Use PCAP when you need raw packets
 for human analysis or compliance. Use Dissection when you want an AI agent
 to search and analyze traffic programmatically.
 
+**Default to Dissection.** Unless the user explicitly asks for a PCAP file or
+Wireshark export, assume Dissection is needed. Any question about workloads,
+APIs, services, pods, error rates, latency, or traffic patterns requires
+dissected data.
+
 ## Snapshot Operations
 
 Both routes start here. A snapshot is an immutable freeze of all cluster traffic
@@ -116,19 +146,19 @@ Check what raw capture data exists across the cluster. You can only create
 snapshots within these boundaries — data outside the window has been rotated
 out of the FIFO buffer.
 
-**Example response**:
+**Example response** (raw tool output is in UTC — convert to local time before presenting):
 ```
 Cluster-wide:
-  Oldest: 2026-03-14 16:12:34 UTC
-  Newest: 2026-03-14 18:05:20 UTC
+  Oldest: 2026-03-14 18:12:34 IST (16:12:34 UTC)
+  Newest: 2026-03-14 20:05:20 IST (18:05:20 UTC)
 
 Per node:
-  ┌─────────────────────────────┬──────────┬──────────┐
-  │            Node             │  Oldest  │  Newest  │
-  ├─────────────────────────────┼──────────┼──────────┤
-  │ ip-10-0-25-170.ec2.internal │ 16:12:34 │ 18:03:39 │
-  │ ip-10-0-32-115.ec2.internal │ 16:13:45 │ 18:05:20 │
-  └─────────────────────────────┴──────────┴──────────┘
+  ┌─────────────────────────────┬───────────────────────────────┬───────────────────────────────┐
+  │            Node             │            Oldest             │            Newest             │
+  ├─────────────────────────────┼───────────────────────────────┼───────────────────────────────┤
+  │ ip-10-0-25-170.ec2.internal │ 18:12:34 IST (16:12:34 UTC)  │ 20:03:39 IST (18:03:39 UTC)  │
+  │ ip-10-0-32-115.ec2.internal │ 18:13:45 IST (16:13:45 UTC)  │ 20:05:20 IST (18:05:20 UTC)  │
+  └─────────────────────────────┴───────────────────────────────┴───────────────────────────────┘
 ```
 
 If the incident falls outside the available window, the data has been rotated
@@ -232,7 +262,30 @@ KFL field names differ from what you might expect (e.g., `status_code` not
 `response.status`, `src.pod.namespace` not `src.namespace`). Using incorrect
 fields produces wrong results without warning.
 
-### Activate Dissection
+### Dissection Is Required — Do Not Skip This
+
+**Any question about workloads, Kubernetes resources, services, pods, namespaces,
+or API calls requires dissection.** Only the PCAP route works without it. If the
+user asks anything about traffic content, API behavior, error rates, latency,
+or service-to-service communication, you **must** ensure dissection is active
+before attempting to answer.
+
+**Do not wait for dissection to complete on its own — it will not start by itself.**
+
+Follow this sequence every time before using `list_api_calls`, `get_api_call`,
+or `get_api_stats`:
+
+1. **Check status**: Call `get_snapshot_dissection_status` (or `list_snapshot_dissections`)
+   to see if a dissection already exists for this snapshot.
+2. **If dissection exists and is completed** — proceed with your query. No further
+   action needed.
+3. **If dissection is in progress** — wait for it to complete, then proceed.
+4. **If no dissection exists** — you **must** call `start_snapshot_dissection` to
+   trigger it. Then monitor progress with `get_snapshot_dissection_status` until
+   it completes.
+
+Never assume dissection is running. Never wait for a dissection that was not started.
+The agent is responsible for triggering dissection when it is missing.
 
 **Tool**: `start_snapshot_dissection`
 
@@ -242,6 +295,27 @@ become available:
 - `list_api_calls` — Search API transactions with KFL filters
 - `get_api_call` — Drill into a specific call (headers, body, timing, payload)
 - `get_api_stats` — Aggregated statistics (throughput, error rates, latency)
+
+### Every Question Is a Query
+
+**Every user prompt that involves APIs, workloads, services, pods, namespaces,
+or Kubernetes semantics should translate into a `list_api_calls` call with an
+appropriate KFL filter.** Do not answer from memory or prior results — always
+run a fresh query that matches what the user is asking.
+
+Examples of user prompts and the queries they should trigger:
+
+| User says | Action |
+|---|---|
+| "Show me all 500 errors" | `list_api_calls` with KFL: `http && status_code == 500` |
+| "What's hitting the payment service?" | `list_api_calls` with KFL: `dst.service.name == "payment-service"` |
+| "Any DNS failures?" | `list_api_calls` with KFL: `dns && status_code != 0` |
+| "Show traffic from namespace prod to staging" | `list_api_calls` with KFL: `src.pod.namespace == "prod" && dst.pod.namespace == "staging"` |
+| "What are the slowest API calls?" | `list_api_calls` with KFL: `http && elapsed_time > 5000000` |
+
+The user's natural language maps to KFL. Your job is to translate intent into
+the right filter and run the query — don't summarize old results or speculate
+without fresh data.
 
 ### Investigation Strategy
 
@@ -255,16 +329,17 @@ Start broad, then narrow:
    full payload to understand what went wrong.
 4. Use KFL filters to slice by namespace, service, protocol, or any combination.
 
-**Example `list_api_calls` response** (filtered to `http && status_code >= 500`):
+**Example `list_api_calls` response** (filtered to `http && status_code >= 500`,
+timestamps converted from UTC to local):
 ```
-┌──────────────────────┬────────┬──────────────────────────┬────────┬───────────┐
-│      Timestamp       │ Method │           URL            │ Status │  Elapsed  │
-├──────────────────────┼────────┼──────────────────────────┼────────┼───────────┤
-│ 2026-03-14 17:23:45  │ POST   │ /api/v1/orders/charge    │ 503    │ 12,340 ms │
-│ 2026-03-14 17:23:46  │ POST   │ /api/v1/orders/charge    │ 503    │ 11,890 ms │
-│ 2026-03-14 17:23:48  │ GET    │ /api/v1/inventory/check  │ 500    │  8,210 ms │
-│ 2026-03-14 17:24:01  │ POST   │ /api/v1/payments/process │ 502    │ 30,000 ms │
-└──────────────────────┴────────┴──────────────────────────┴────────┴───────────┘
+┌──────────────────────────────────────────┬────────┬──────────────────────────┬────────┬───────────┐
+│                Timestamp                 │ Method │           URL            │ Status │  Elapsed  │
+├──────────────────────────────────────────┼────────┼──────────────────────────┼────────┼───────────┤
+│ 2026-03-14 19:23:45 IST (17:23:45 UTC)  │ POST   │ /api/v1/orders/charge    │ 503    │ 12,340 ms │
+│ 2026-03-14 19:23:46 IST (17:23:46 UTC)  │ POST   │ /api/v1/orders/charge    │ 503    │ 11,890 ms │
+│ 2026-03-14 19:23:48 IST (17:23:48 UTC)  │ GET    │ /api/v1/inventory/check  │ 500    │  8,210 ms │
+│ 2026-03-14 19:24:01 IST (17:24:01 UTC)  │ POST   │ /api/v1/payments/process │ 502    │ 30,000 ms │
+└──────────────────────────────────────────┴────────┴──────────────────────────┴────────┴───────────┘
 Src: api-gateway (prod)  →  Dst: payment-service (prod)
 ```
 
