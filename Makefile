@@ -264,10 +264,10 @@ release: ## Print release workflow instructions.
 	@echo "     Fallback: make release-tag VERSION=x.y.z"
 
 release-pr: ## Step 1: Tag sibling repos, bump version, create release PR.
-# 	@cd ../worker && git checkout master && git pull && git tag -d v$(VERSION); git tag v$(VERSION) && git push origin --tags
-# 	@cd ../hub && git checkout master && git pull && git tag -d v$(VERSION); git tag v$(VERSION) && git push origin --tags
-# 	@cd ../front && git checkout master && git pull && git tag -d v$(VERSION); git tag v$(VERSION) && git push origin --tags
-# 	@cd ../kubeshark && git checkout master && git pull
+	@cd ../worker && git checkout master && git pull && git tag -d v$(VERSION); git tag v$(VERSION) && git push origin --tags
+	@cd ../hub && git checkout master && git pull && git tag -d v$(VERSION); git tag v$(VERSION) && git push origin --tags
+	@cd ../front && git checkout master && git pull && git tag -d v$(VERSION); git tag v$(VERSION) && git push origin --tags
+	@cd ../kubeshark && git checkout master && git pull
 	@sed -i '' "s/^version:.*/version: \"$(shell echo $(VERSION) | sed -E 's/^([0-9]+\.[0-9]+\.[0-9]+)\..*/\1/')\"/" helm-chart/Chart.yaml
 	@$(MAKE) build VER=$(VERSION)
 	@if [ "$(shell uname)" = "Darwin" ]; then \
@@ -282,10 +282,12 @@ release-pr: ## Step 1: Tag sibling repos, bump version, create release PR.
 		--body "Automated release PR for v$(VERSION)." \
 		--base master \
 		--reviewer corest
-	@rm -rf ../kubeshark.github.io/charts/chart
-	@mkdir ../kubeshark.github.io/charts/chart
-	@cp -r helm-chart/ ../kubeshark.github.io/charts/chart/
-	@cd ../kubeshark.github.io && git checkout master && git pull \
+	@git checkout master && git pull
+	@cd ../kubeshark.github.io \
+		&& git checkout master && git pull \
+		&& rm -rf charts/chart \
+		&& mkdir charts/chart \
+		&& cp -r ../kubeshark/helm-chart/ charts/chart/ \
 		&& git checkout -b helm-v$(VERSION) \
 		&& git add -A . \
 		&& git commit -m ":sparkles: Update the Helm chart to v$(VERSION)" \
@@ -293,8 +295,8 @@ release-pr: ## Step 1: Tag sibling repos, bump version, create release PR.
 		&& gh pr create --title ":sparkles: Helm chart v$(VERSION)" \
 			--body "Update Helm chart for release v$(VERSION)." \
 			--base master \
-			--reviewer corest
-	@cd ../kubeshark
+			--reviewer corest \
+		&& git checkout master
 	@echo ""
 	@echo "Release PRs created:"
 	@echo "  - kubeshark: Review and merge the release PR."
