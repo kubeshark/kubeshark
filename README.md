@@ -110,7 +110,7 @@ A visual map of how workloads communicate, showing dependencies, traffic volume,
 
 Capture and retain raw network traffic cluster-wide, including decrypted TLS. Download PCAPs scoped by time range, nodes, workloads, and IPs — ready for Wireshark or any PCAP-compatible tool. Store snapshots in cloud storage (S3, Azure Blob, GCS) for long-term retention and cross-cluster sharing.
 
-![Traffic Retention](https://github.com/kubeshark/assets/raw/master/png/snapshots.png)
+![Traffic Retention](https://github.com/kubeshark/assets/raw/master/png/snapshots-list.png)
 
 [Snapshots guide →](https://docs.kubeshark.com/en/v2/traffic_snapshots) · [Cloud storage →](https://docs.kubeshark.com/en/snapshots_cloud_storage)
 
