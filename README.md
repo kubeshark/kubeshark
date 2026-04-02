@@ -67,15 +67,35 @@ Works with Claude Code, Cursor, and any MCP-compatible AI.
 
 [MCP setup guide →](https://docs.kubeshark.com/en/mcp)
 
+### AI Skills
+
+Open-source, reusable skills that teach AI agents domain-specific workflows on top of Kubeshark's MCP tools:
+
+| Skill | Description |
+|-------|-------------|
+| **[Network RCA](skills/network-rca/)** | Retrospective root cause analysis — snapshots, dissection, PCAP extraction, trend comparison |
+| **[KFL](skills/kfl/)** | KFL (Kubeshark Filter Language) expert — writes, debugs, and optimizes traffic filters |
+
+Install as a Claude Code plugin:
+
+```
+/plugin marketplace add kubeshark/kubeshark
+/plugin install kubeshark
+```
+
+Or clone and use directly — skills trigger automatically based on conversation context.
+
+[AI Skills docs →](https://docs.kubeshark.com/en/mcp/skills)
+
 ---
 
-### Network Traffic Indexing
+### Query with API, Kubernetes, and Network Semantics
 
-Kubeshark indexes cluster-wide network traffic by parsing it according to protocol specifications, with support for HTTP, gRPC, Redis, Kafka, DNS, and more. This enables queries using Kubernetes semantics (e.g. pod, namespace, node), API semantics (e.g. path, headers, status), and network semantics (e.g. IP, port). No code instrumentation required.
+Kubeshark indexes cluster-wide network traffic by parsing it according to protocol specifications, with support for HTTP, gRPC, Redis, Kafka, DNS, and more. A single [KFL query](https://docs.kubeshark.com/en/v2/kfl2) can combine all three semantic layers — Kubernetes identity, API context, and network attributes — to pinpoint exactly the traffic you need. No code instrumentation required.
 
-![API context](https://github.com/kubeshark/assets/raw/master/png/api_context.png)
+![KFL query combining API, Kubernetes, and network semantics](https://github.com/kubeshark/assets/raw/master/png/kfl-semantics.png)
 
-[Learn more →](https://docs.kubeshark.com/en/v2/l7_api_dissection)
+[KFL reference →](https://docs.kubeshark.com/en/v2/kfl2) · [Traffic indexing →](https://docs.kubeshark.com/en/v2/l7_api_dissection)
 
 ### Workload Dependency Map
 
@@ -87,11 +107,11 @@ A visual map of how workloads communicate, showing dependencies, traffic volume,
 
 ### Traffic Retention & PCAP Export
 
-Capture and retain raw network traffic cluster-wide. Download PCAPs scoped by time range, nodes, workloads, and IPs — ready for Wireshark or any PCAP-compatible tool.
+Capture and retain raw network traffic cluster-wide, including decrypted TLS. Download PCAPs scoped by time range, nodes, workloads, and IPs — ready for Wireshark or any PCAP-compatible tool. Store snapshots in cloud storage (S3, Azure Blob, GCS) for long-term retention and cross-cluster sharing.
 
 ![Traffic Retention](https://github.com/kubeshark/assets/raw/master/png/snapshots.png)
 
-[Snapshots guide →](https://docs.kubeshark.com/en/v2/traffic_snapshots)
+[Snapshots guide →](https://docs.kubeshark.com/en/v2/traffic_snapshots) · [Cloud storage →](https://docs.kubeshark.com/en/snapshots_cloud_storage)
 
 ---
 
@@ -99,12 +119,12 @@ Capture and retain raw network traffic cluster-wide. Download PCAPs scoped by ti
 
 | Feature | Description |
 |---------|-------------|
-| [**Traffic Snapshots**](https://docs.kubeshark.com/en/v2/traffic_snapshots) | Point-in-time snapshots, export as PCAP for Wireshark |
-| [**L7 API Dissection**](https://docs.kubeshark.com/en/v2/l7_api_dissection) | Request/response matching with full payloads and protocol parsing |
+| [**Traffic Snapshots**](https://docs.kubeshark.com/en/v2/traffic_snapshots) | Point-in-time snapshots with cloud storage (S3, Azure Blob, GCS), PCAP export for Wireshark |
+| [**Traffic Indexing**](https://docs.kubeshark.com/en/v2/l7_api_dissection) | Real-time and delayed L7 indexing with request/response matching and full payloads |
 | [**Protocol Support**](https://docs.kubeshark.com/en/protocols) | HTTP, gRPC, GraphQL, Redis, Kafka, DNS, and more |
-| [**TLS Decryption**](https://docs.kubeshark.com/en/encrypted_traffic) | eBPF-based decryption without key management |
-| [**AI-Powered Analysis**](https://docs.kubeshark.com/en/v2/ai_powered_analysis) | Query cluster-wide network data with Claude, Cursor, or any MCP-compatible AI |
-| [**Display Filters**](https://docs.kubeshark.com/en/v2/kfl2) | Wireshark-inspired display filters for precise traffic analysis |
+| [**TLS Decryption**](https://docs.kubeshark.com/en/encrypted_traffic) | eBPF-based decryption without key management, included in snapshots |
+| [**AI Integration**](https://docs.kubeshark.com/en/mcp) | MCP server + open-source AI skills for network RCA and traffic filtering |
+| [**KFL Query Language**](https://docs.kubeshark.com/en/v2/kfl2) | CEL-based query language with Kubernetes, API, and network semantics |
 | [**100% On-Premises**](https://docs.kubeshark.com/en/air_gapped) | Air-gapped support, no external dependencies |
 
 ---
