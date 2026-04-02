@@ -23,6 +23,7 @@ Kubeshark indexes cluster-wide network traffic at the kernel level using eBPF �
 
 - **Download Retrospective PCAPs** — cluster-wide packet captures filtered by nodes, time, workloads, and IPs. Store PCAPs for long-term retention and later investigation.
 - **Visualize Network Data** — explore traffic matching queries with API, Kubernetes, or network semantics through a real-time dashboard.
+- **See Encrypted Traffic in Plain Text** — automatically decrypt TLS/mTLS traffic using eBPF, with no key management or sidecars required.
 - **Integrate with AI** — connect your favorite AI assistant (e.g. Claude, Copilot) to include network data in AI-driven workflows like incident response and root cause analysis.
 
 ![Kubeshark](https://github.com/kubeshark/assets/raw/master/png/stream.png)
