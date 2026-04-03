@@ -2,7 +2,9 @@
   "mcpServers": {
     "kubeshark": {
       "command": "kubeshark",
-      "args": ["mcp"]
+      "args": [
+        "mcp"
+      ]
     }
   }
 }

@@ -1,0 +1,24 @@
+{
+  "name": "kubeshark",
+  "version": "0.1.0",
+  "description": "Network observability for Kubernetes from Codex via MCP",
+  "author": {
+    "name": "kubeshark",
+    "url": "https://github.com/kubeshark/kubeshark"
+  },
+  "homepage": "https://github.com/kubeshark/kubeshark",
+  "repository": "https://github.com/kubeshark/kubeshark",
+  "keywords": [
+    "mcp",
+    "codex"
+  ],
+  "mcpServers": "./.mcp.json",
+  "skills": "./skills/",
+  "interface": {
+    "displayName": "Kubeshark MCP",
+    "shortDescription": "Network observability for Kubernetes from Codex via MCP",
+    "longDescription": "eBPF-powered network observability for Kubernetes. Query traffic and investigate API calls via MCP.",
+    "category": "Monitoring",
+    "websiteURL": "https://github.com/kubeshark/kubeshark"
+  }
+}
