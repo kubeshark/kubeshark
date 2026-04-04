@@ -417,7 +417,7 @@ func TestMCP_CommandArgs(t *testing.T) {
 			cmdArgs = append(cmdArgs, v)
 		}
 		if v, _ := tc.args["namespaces"].(string); v != "" {
-			for _, ns := range strings.Split(v, ",") {
+			for ns := range strings.SplitSeq(v, ",") {
 				cmdArgs = append(cmdArgs, "-n", strings.TrimSpace(ns))
 			}
 		}
