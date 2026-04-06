@@ -221,17 +221,47 @@ When you know the workload names but not their IPs, resolve them from the
 snapshot's metadata. Snapshots preserve pod-to-IP mappings from capture time,
 so resolution is accurate even if pods have been rescheduled since.
 
-**Tool**: `resolve_workload`
+**Tool**: `list_workloads`
 
-**Example workflow** — extract PCAP for specific workloads:
+Use `list_workloads` with `name` + `namespace` for a singular lookup (works
+live and against snapshots), or with `snapshot_id` + filters for a broader
+scan.
 
-1. Resolve IPs: `resolve_workload` for `orders-594487879c-7ddxf` → `10.0.53.101`
-2. Resolve IPs: `resolve_workload` for `payment-service-6b8f9d-x2k4p` → `10.0.53.205`
+**Example workflow — singular lookup** — extract PCAP for specific workloads:
+
+1. Resolve IPs: `list_workloads` with `name: "orders-594487879c-7ddxf"`, `namespace: "prod"` → IPs: `["10.0.53.101"]`
+2. Resolve IPs: `list_workloads` with `name: "payment-service-6b8f9d-x2k4p"`, `namespace: "prod"` → IPs: `["10.0.53.205"]`
 3. Build BPF: `host 10.0.53.101 or host 10.0.53.205`
+4. Export: `export_snapshot_pcap` with that BPF filter
+
+**Example workflow — filtered scan** — extract PCAP for all workloads
+matching a pattern in a snapshot:
+
+1. List workloads: `list_workloads` with `snapshot_id`, `namespaces: ["prod"]`,
+   `name_regex: "payment.*"` → returns all matching workloads with their IPs
+2. Collect all IPs from the response
+3. Build BPF: `host 10.0.53.205 or host 10.0.53.210 or ...`
 4. Export: `export_snapshot_pcap` with that BPF filter
 
 This gives you a cluster-wide PCAP filtered to exactly the workloads involved
 in the incident — ready for Wireshark or long-term storage.
+
+### IP-to-Workload Resolution
+
+When you have an IP address (e.g., from a PCAP or L4 flow) and need to
+identify the workload behind it:
+
+**Tool**: `list_ips`
+
+Use `list_ips` with `ip` for a singular lookup (works live and against
+snapshots), or with `snapshot_id` + filters for a broader scan.
+
+**Example — singular lookup**: `list_ips` with `ip: "10.0.53.101"`,
+`snapshot_id: "snap-abc"` → returns pod/service identity for that IP.
+
+**Example — filtered scan**: `list_ips` with `snapshot_id: "snap-abc"`,
+`namespaces: ["prod"]`, `labels: {"app": "payment"}` → returns all IPs
+associated with workloads matching those filters.
 
 ---
 
@@ -380,8 +410,9 @@ conn && conn_state == "open" && conn_local_bytes > 1000000  // High-volume conne
 The two routes are complementary. A common pattern:
 
 1. Start with **Dissection** — let the AI agent search and identify the root cause
-2. Once you've pinpointed the problematic workloads, use `resolve_workload`
-   to get their IPs
+2. Once you've pinpointed the problematic workloads, use `list_workloads`
+   to get their IPs (singular lookup by name+namespace, or filtered scan
+   by namespace/regex/labels against the snapshot)
 3. Switch to **PCAP** — export a filtered PCAP of just those workloads for
    Wireshark deep-dive, sharing with the network team, or compliance archival
 
@@ -394,7 +425,7 @@ The two routes are complementary. A common pattern:
 3. `create_snapshot` covering the incident window (add 15 minutes buffer)
 4. **Dissection route**: `start_snapshot_dissection` → `get_api_stats` →
    `list_api_calls` → `get_api_call` → follow the dependency chain
-5. **PCAP route**: `resolve_workload` → `export_snapshot_pcap` with BPF →
+5. **PCAP route**: `list_workloads` → `export_snapshot_pcap` with BPF →
    hand off to Wireshark or archive
 
 ### Other Use Cases
