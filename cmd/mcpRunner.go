@@ -86,9 +86,9 @@ type mcpContent struct {
 }
 
 type mcpPrompt struct {
-	Name        string            `json:"name"`
-	Description string            `json:"description,omitempty"`
-	Arguments   []mcpPromptArg    `json:"arguments,omitempty"`
+	Name        string         `json:"name"`
+	Description string         `json:"description,omitempty"`
+	Arguments   []mcpPromptArg `json:"arguments,omitempty"`
 }
 
 type mcpPromptArg struct {
@@ -117,11 +117,11 @@ type mcpGetPromptResult struct {
 // Hub MCP API response types
 
 type hubMCPResponse struct {
-	Name        string          `json:"name"`
-	Description string          `json:"description"`
-	Version     string          `json:"version"`
-	Tools       []hubMCPTool    `json:"tools"`
-	Prompts     []hubMCPPrompt  `json:"prompts"`
+	Name        string         `json:"name"`
+	Description string         `json:"description"`
+	Version     string         `json:"version"`
+	Tools       []hubMCPTool   `json:"tools"`
+	Prompts     []hubMCPPrompt `json:"prompts"`
 }
 
 type hubMCPTool struct {
@@ -131,9 +131,9 @@ type hubMCPTool struct {
 }
 
 type hubMCPPrompt struct {
-	Name        string              `json:"name"`
-	Description string              `json:"description,omitempty"`
-	Arguments   []hubMCPPromptArg   `json:"arguments,omitempty"`
+	Name        string            `json:"name"`
+	Description string            `json:"description,omitempty"`
+	Arguments   []hubMCPPromptArg `json:"arguments,omitempty"`
 }
 
 type hubMCPPromptArg struct {
@@ -151,10 +151,10 @@ type mcpServer struct {
 	stdout             io.Writer
 	backendInitialized bool
 	backendMu          sync.Mutex
-	setFlags           []string // --set flags to pass to 'kubeshark tap' when starting
-	directURL          string   // If set, connect directly to this URL (no kubectl/proxy)
-	urlMode            bool     // True when using direct URL mode
-	allowDestructive   bool     // If true, enable start/stop tools
+	setFlags           []string        // --set flags to pass to 'kubeshark tap' when starting
+	directURL          string          // If set, connect directly to this URL (no kubectl/proxy)
+	urlMode            bool            // True when using direct URL mode
+	allowDestructive   bool            // If true, enable start/stop tools
 	cachedHubMCP       *hubMCPResponse // Cached tools/prompts from Hub
 	cachedAt           time.Time       // When the cache was populated
 	hubMCPMu           sync.Mutex
@@ -772,7 +772,6 @@ func (s *mcpServer) callHubTool(toolName string, args map[string]any) (string, b
 	return prettyJSON.String(), false
 }
 
-
 func (s *mcpServer) callGetFileURL(args map[string]any) (string, bool) {
 	filePath, _ := args["path"].(string)
 	if filePath == "" {
@@ -869,8 +868,8 @@ func (s *mcpServer) callStartKubeshark(args map[string]any) (string, bool) {
 
 	// Add namespaces if provided
 	if v, ok := args["namespaces"].(string); ok && v != "" {
-		namespaces := strings.Split(v, ",")
-		for _, ns := range namespaces {
+		namespaces := strings.SplitSeq(v, ",")
+		for ns := range namespaces {
 			ns = strings.TrimSpace(ns)
 			if ns != "" {
 				cmdArgs = append(cmdArgs, "-n", ns)
