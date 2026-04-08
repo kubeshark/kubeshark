@@ -282,6 +282,7 @@ type PortMapping struct {
 	HTTP     []uint16 `yaml:"http" json:"http"`
 	AMQP     []uint16 `yaml:"amqp" json:"amqp"`
 	KAFKA    []uint16 `yaml:"kafka" json:"kafka"`
+	MONGODB  []uint16 `yaml:"mongodb" json:"mongodb"`
 	REDIS    []uint16 `yaml:"redis" json:"redis"`
 	LDAP     []uint16 `yaml:"ldap" json:"ldap"`
 	DIAMETER []uint16 `yaml:"diameter" json:"diameter"`
