@@ -2,7 +2,7 @@ suite: dissection storage configuration
 templates:
   - templates/04-hub-deployment.yaml
 tests:
-  - it: should render dissector-storage-size arg with default values
+  - it: should fallback to snapshot storageSize when dissection storageSize is empty
     asserts:
       - contains:
           path: spec.template.spec.containers[0].command
@@ -11,15 +11,27 @@ tests:
           path: spec.template.spec.containers[0].command
           content: "20Gi"
 
-  - it: should not render dissector-storage-class arg with default values
+  - it: should fallback to snapshot storageClass when dissection storageClass is empty
+    set:
+      tap.snapshots.local.storageClass: gp2
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].command
+          content: -dissector-storage-class
+      - contains:
+          path: spec.template.spec.containers[0].command
+          content: gp2
+
+  - it: should not render dissector-storage-class when both dissection and snapshot storageClass are empty
     asserts:
       - notContains:
           path: spec.template.spec.containers[0].command
           content: -dissector-storage-class
 
-  - it: should render dissector-storage-size arg with custom value
+  - it: should prefer dissection storageSize over snapshot storageSize
     set:
       tap.delayedDissection.storageSize: 100Gi
+      tap.snapshots.local.storageSize: 50Gi
     asserts:
       - contains:
           path: spec.template.spec.containers[0].command
@@ -28,28 +40,11 @@ tests:
           path: spec.template.spec.containers[0].command
           content: "100Gi"
 
-  - it: should render dissector-storage-class arg when set
+  - it: should prefer dissection storageClass over snapshot storageClass
     set:
-      tap.delayedDissection.storageClass: gp3
-    asserts:
-      - contains:
-          path: spec.template.spec.containers[0].command
-          content: -dissector-storage-class
-      - contains:
-          path: spec.template.spec.containers[0].command
-          content: gp3
-
-  - it: should render both storage-size and storage-class when both set
-    set:
-      tap.delayedDissection.storageSize: 50Gi
       tap.delayedDissection.storageClass: io2
+      tap.snapshots.local.storageClass: gp2
     asserts:
-      - contains:
-          path: spec.template.spec.containers[0].command
-          content: -dissector-storage-size
-      - contains:
-          path: spec.template.spec.containers[0].command
-          content: "50Gi"
       - contains:
           path: spec.template.spec.containers[0].command
           content: -dissector-storage-class
@@ -57,36 +52,32 @@ tests:
           path: spec.template.spec.containers[0].command
           content: io2
 
-  - it: should not render dissector-storage-size arg when explicitly empty
+  - it: should fallback to snapshot config for both storageSize and storageClass
+    set:
+      tap.snapshots.local.storageSize: 30Gi
+      tap.snapshots.local.storageClass: gp3
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].command
+          content: -dissector-storage-size
+      - contains:
+          path: spec.template.spec.containers[0].command
+          content: "30Gi"
+      - contains:
+          path: spec.template.spec.containers[0].command
+          content: -dissector-storage-class
+      - contains:
+          path: spec.template.spec.containers[0].command
+          content: gp3
+
+  - it: should not render dissector-storage-size when both dissection and snapshot storageSize are empty
     set:
       tap.delayedDissection.storageSize: ""
+      tap.snapshots.local.storageSize: ""
     asserts:
       - notContains:
           path: spec.template.spec.containers[0].command
           content: -dissector-storage-size
-
-  - it: should not render dissector-storage-class arg when explicitly empty
-    set:
-      tap.delayedDissection.storageClass: ""
-    asserts:
-      - notContains:
-          path: spec.template.spec.containers[0].command
-          content: -dissector-storage-class
-
-  - it: should still render existing dissector-cpu and dissector-memory args
-    asserts:
-      - contains:
-          path: spec.template.spec.containers[0].command
-          content: -dissector-cpu
-      - contains:
-          path: spec.template.spec.containers[0].command
-          content: "1"
-      - contains:
-          path: spec.template.spec.containers[0].command
-          content: -dissector-memory
-      - contains:
-          path: spec.template.spec.containers[0].command
-          content: 4Gi
 
   - it: should render all dissector args together with custom values
     set:
@@ -119,3 +110,18 @@ tests:
       - contains:
           path: spec.template.spec.containers[0].command
           content: local-path
+
+  - it: should still render existing dissector-cpu and dissector-memory args
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].command
+          content: -dissector-cpu
+      - contains:
+          path: spec.template.spec.containers[0].command
+          content: "1"
+      - contains:
+          path: spec.template.spec.containers[0].command
+          content: -dissector-memory
+      - contains:
+          path: spec.template.spec.containers[0].command
+          content: 4Gi

@@ -355,7 +355,7 @@ type SnapshotsConfig struct {
 type DelayedDissectionConfig struct {
 	CPU          string `yaml:"cpu" json:"cpu" default:"1"`
 	Memory       string `yaml:"memory" json:"memory" default:"4Gi"`
-	StorageSize  string `yaml:"storageSize" json:"storageSize" default:"20Gi"`
+	StorageSize  string `yaml:"storageSize" json:"storageSize" default:""`
 	StorageClass string `yaml:"storageClass" json:"storageClass" default:""`
 }
 
