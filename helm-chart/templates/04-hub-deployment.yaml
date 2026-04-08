@@ -56,6 +56,14 @@ spec:
             - -dissector-memory
             - '{{ .Values.tap.delayedDissection.memory }}'
             {{- end }}
+            {{- if .Values.tap.delayedDissection.storageSize }}
+            - -dissector-storage-size
+            - '{{ .Values.tap.delayedDissection.storageSize }}'
+            {{- end }}
+            {{- if .Values.tap.delayedDissection.storageClass }}
+            - -dissector-storage-class
+            - '{{ .Values.tap.delayedDissection.storageClass }}'
+            {{- end }}
             {{- if .Values.tap.gitops.enabled }}
             - -gitops
             {{- end }}
