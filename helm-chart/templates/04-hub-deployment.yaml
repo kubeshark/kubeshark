@@ -56,6 +56,16 @@ spec:
             - -dissector-memory
             - '{{ .Values.tap.delayedDissection.memory }}'
             {{- end }}
+            {{- $dissectorStorageSize := .Values.tap.delayedDissection.storageSize | default .Values.tap.snapshots.local.storageSize }}
+            {{- if $dissectorStorageSize }}
+            - -dissector-storage-size
+            - '{{ $dissectorStorageSize }}'
+            {{- end }}
+            {{- $dissectorStorageClass := .Values.tap.delayedDissection.storageClass | default .Values.tap.snapshots.local.storageClass }}
+            {{- if $dissectorStorageClass }}
+            - -dissector-storage-class
+            - '{{ $dissectorStorageClass }}'
+            {{- end }}
             {{- if .Values.tap.gitops.enabled }}
             - -gitops
             {{- end }}
