@@ -209,6 +209,17 @@ type FrontRoutingConfig struct {
 	BasePath string `yaml:"basePath" json:"basePath" default:""`
 }
 
+type NginxConfig struct {
+	Proxy ProxyNginxConfig `yaml:"proxy" json:"proxy"`
+}
+
+type ProxyNginxConfig struct {
+	BufferSize      string `yaml:"bufferSize" json:"bufferSize" default:"64k"`
+	BuffersCount    string `yaml:"buffersCount" json:"buffersCount" default:"4"`
+	BuffersSize     string `yaml:"buffersSize" json:"buffersSize" default:"128k"`
+	BusyBuffersSize string `yaml:"busyBuffersSize" json:"busyBuffersSize" default:"128k"`
+}
+
 type ReleaseConfig struct {
 	Repo          string `yaml:"repo" json:"repo" default:"https://helm.kubeshark.com"`
 	Name          string `yaml:"name" json:"name" default:"kubeshark"`
@@ -406,6 +417,7 @@ type TapConfig struct {
 	Routing                        RoutingConfig           `yaml:"routing" json:"routing"`
 	IPv6                           bool                    `yaml:"ipv6" json:"ipv6" default:"true"`
 	Debug                          bool                    `yaml:"debug" json:"debug" default:"false"`
+	Nginx                          NginxConfig             `yaml:"nginx" json:"nginx"`
 	Dashboard                      DashboardConfig         `yaml:"dashboard" json:"dashboard"`
 	Telemetry                      TelemetryConfig         `yaml:"telemetry" json:"telemetry"`
 	ResourceGuard                  ResourceGuardConfig     `yaml:"resourceGuard" json:"resourceGuard"`

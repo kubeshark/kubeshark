@@ -153,6 +153,14 @@ func CreateDefaultConfig() ConfigStruct {
 				LDAP:     []uint16{389},
 				DIAMETER: []uint16{3868},
 			},
+			Nginx: configStructs.NginxConfig{
+				Proxy: configStructs.ProxyNginxConfig{
+					BufferSize:      "64k",
+					BuffersCount:    "4",
+					BuffersSize:     "128k",
+					BusyBuffersSize: "128k",
+				},
+			},
 			Dashboard: configStructs.DashboardConfig{
 				CompleteStreamingEnabled: true,
 				ClusterWideMapEnabled:    false,

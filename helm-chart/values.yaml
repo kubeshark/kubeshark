@@ -180,6 +180,12 @@ tap:
   routing:
     front:
       basePath: ""
+  nginx:
+    proxy:
+      bufferSize: 64k
+      buffersCount: 4
+      buffersSize: 128k
+      busyBuffersSize: 128k
   ipv6: true
   debug: false
   dashboard:

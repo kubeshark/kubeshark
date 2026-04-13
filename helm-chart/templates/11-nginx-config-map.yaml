@@ -20,6 +20,10 @@ data:
       client_header_buffer_size   32k;
       large_client_header_buffers 8 64k;
 
+      proxy_buffer_size {{ .Values.tap.nginx.proxy.bufferSize }};
+      proxy_buffers {{ .Values.tap.nginx.proxy.buffersCount }} {{ .Values.tap.nginx.proxy.buffersSize }};
+      proxy_busy_buffers_size {{ .Values.tap.nginx.proxy.busyBuffersSize }};
+
       location {{ default "" (((.Values.tap).routing).front).basePath }}/api {
         rewrite ^{{ default "" (((.Values.tap).routing).front).basePath }}/api(.*)$ $1 break;
         proxy_pass http://kubeshark-hub;
