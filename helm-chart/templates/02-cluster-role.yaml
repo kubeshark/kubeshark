@@ -87,6 +87,15 @@ rules:
       - create
       - get
   - apiGroups:
+      - ""
+    resources:
+      - persistentvolumeclaims
+    verbs:
+      - create
+      - get
+      - list
+      - delete
+  - apiGroups:
       - batch
     resources:
       - jobs

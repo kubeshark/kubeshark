@@ -37,6 +37,8 @@ tap:
   delayedDissection:
     cpu: "1"
     memory: 4Gi
+    storageSize: ""
+    storageClass: ""
   snapshots:
     local:
       storageClass: ""
