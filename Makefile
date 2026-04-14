@@ -278,10 +278,10 @@ release-pr: ## Step 1: Tag sibling repos, bump version, create release PR.
 # 	@git add -A .
 # 	@git commit -m ":bookmark: Bump the Helm chart version to $(VERSION)"
 # 	@git push -u origin release/v$(VERSION)
-	@gh pr create --title ":bookmark: Release v$(VERSION)" \
-		--body "Automated release PR for v$(VERSION)." \
-		--base master \
-		--reviewer corest
+# 	@gh pr create --title ":bookmark: Release v$(VERSION)" \
+# 		--body "Automated release PR for v$(VERSION)." \
+# 		--base master \
+# 		--reviewer corest
 	@git checkout master && git pull
 	@cd ../kubeshark.github.io \
 		&& git checkout master && git pull \
