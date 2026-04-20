@@ -92,6 +92,8 @@ spec:
               value: '{{ default false (((.Values).tap).dashboard).clusterWideMapEnabled }}'
             - name: REACT_APP_RAW_CAPTURE_ENABLED
               value: '{{ .Values.tap.capture.raw.enabled | ternary "true" "false" }}'
+            - name: REACT_APP_ENTRIES_LIMIT
+              value: '{{ default "" (((.Values).tap).dashboard).entriesLimit }}'
             - name: REACT_APP_SENTRY_ENABLED
               value: '{{ (include "sentry.enabled" .) }}'
             - name: REACT_APP_SENTRY_ENVIRONMENT
