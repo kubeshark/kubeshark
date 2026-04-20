@@ -264,41 +264,86 @@ release: ## Print release workflow instructions.
 	@echo "     Fallback: make release-tag VERSION=x.y.z"
 
 release-pr: ## Step 1: Tag sibling repos, bump version, create release PR.
-	@cd ../worker && git checkout master && git pull && git tag -d v$(VERSION); git tag v$(VERSION) && git push origin --tags
-	@cd ../hub && git checkout master && git pull && git tag -d v$(VERSION); git tag v$(VERSION) && git push origin --tags
-	@cd ../front && git checkout master && git pull && git tag -d v$(VERSION); git tag v$(VERSION) && git push origin --tags
+	@if [ -z "$(VERSION)" ]; then echo "ERROR: VERSION is required. Usage: make release-pr VERSION=x.y.z"; exit 1; fi
+	@echo "$(VERSION)" | grep -Eq '^[0-9]+\.[0-9]+\.[0-9]+' || { echo "ERROR: VERSION must be semver (e.g. 53.2.4)"; exit 1; }
+	@for repo in worker hub front; do \
+		echo "==> $$repo: ensuring v$(VERSION) tag"; \
+		(cd ../$$repo && git checkout master && git pull) || exit 1; \
+		if (cd ../$$repo && git ls-remote --tags origin "refs/tags/v$(VERSION)" | grep -q .); then \
+			echo "    v$(VERSION) already on origin — skipping"; \
+		else \
+			(cd ../$$repo && git tag -d v$(VERSION) 2>/dev/null; git tag v$(VERSION) && git push origin "refs/tags/v$(VERSION)") || exit 1; \
+		fi; \
+	done
 	@cd ../kubeshark && git checkout master && git pull
-	@sed -i '' "s/^version:.*/version: \"$(shell echo $(VERSION) | sed -E 's/^([0-9]+\.[0-9]+\.[0-9]+)\..*/\1/')\"/" helm-chart/Chart.yaml
+	@NEW=$$(echo $(VERSION) | sed -E 's/^([0-9]+\.[0-9]+\.[0-9]+).*/\1/'); \
+	CUR=$$(awk '/^version:/ {gsub(/"/,"",$$2); print $$2; exit}' helm-chart/Chart.yaml); \
+	if [ "$$CUR" != "$$NEW" ]; then \
+		sed -i '' "s/^version:.*/version: \"$$NEW\"/" helm-chart/Chart.yaml; \
+	else \
+		echo "Chart.yaml already at $$NEW"; \
+	fi
 	@$(MAKE) build VER=$(VERSION)
 	@if [ "$(shell uname)" = "Darwin" ]; then \
 		codesign --sign - --force --preserve-metadata=entitlements,requirements,flags,runtime ./bin/kubeshark__; \
 	fi
 	@$(MAKE) generate-helm-values && $(MAKE) generate-manifests
-	@git checkout -b release/v$(VERSION)
+	@if git show-ref --verify --quiet refs/heads/release/v$(VERSION); then \
+		git checkout release/v$(VERSION); \
+	else \
+		git checkout -b release/v$(VERSION); \
+	fi
 	@git add -A .
-	@git commit -m ":bookmark: Bump the Helm chart version to $(VERSION)"
-	@git push -u origin release/v$(VERSION)
-	@gh pr create --title ":bookmark: Release v$(VERSION)" \
-		--body "Automated release PR for v$(VERSION)." \
-		--base master \
-		--reviewer corest
-	@git checkout master && git pull
-	@cd ../kubeshark.github.io \
-		&& git checkout master && git pull \
-		&& rm -rf charts/chart \
-		&& mkdir charts/chart \
-		&& cp -r ../kubeshark/helm-chart/ charts/chart/ \
-		&& git checkout -b helm-v$(VERSION) \
-		&& git add -A . \
-		&& git commit -m ":sparkles: Update the Helm chart to v$(VERSION)" \
-		&& git push -u origin helm-v$(VERSION) \
-		&& gh pr create --title ":sparkles: Helm chart v$(VERSION)" \
+	@if ! git diff --cached --quiet; then \
+		git commit -m ":bookmark: Bump the Helm chart version to $(VERSION)"; \
+	else \
+		echo "nothing to commit"; \
+	fi
+	@if git ls-remote --exit-code --heads origin release/v$(VERSION) >/dev/null 2>&1; then \
+		git push origin release/v$(VERSION); \
+	else \
+		git push -u origin release/v$(VERSION); \
+	fi
+	@if gh pr view release/v$(VERSION) --json number >/dev/null 2>&1; then \
+		echo "PR already exists for release/v$(VERSION)"; \
+	else \
+		gh pr create --title ":bookmark: Release v$(VERSION)" \
+			--body "Automated release PR for v$(VERSION)." \
+			--base master \
+			--reviewer corest; \
+	fi
+	@cd ../kubeshark.github.io && git checkout master && git pull \
+		&& rm -rf charts/chart && mkdir -p charts/chart \
+		&& cp -r ../kubeshark/helm-chart/ charts/chart/
+	@cd ../kubeshark.github.io && \
+	if git show-ref --verify --quiet refs/heads/helm-v$(VERSION); then \
+		git checkout helm-v$(VERSION); \
+	else \
+		git checkout -b helm-v$(VERSION); \
+	fi && \
+	git add -A . && \
+	if ! git diff --cached --quiet; then \
+		git commit -m ":sparkles: Update the Helm chart to v$(VERSION)"; \
+	else \
+		echo "nothing to commit"; \
+	fi && \
+	if git ls-remote --exit-code --heads origin helm-v$(VERSION) >/dev/null 2>&1; then \
+		git push origin helm-v$(VERSION); \
+	else \
+		git push -u origin helm-v$(VERSION); \
+	fi && \
+	if ! gh pr view helm-v$(VERSION) --json number >/dev/null 2>&1; then \
+		gh pr create --title ":sparkles: Helm chart v$(VERSION)" \
 			--body "Update Helm chart for release v$(VERSION)." \
 			--base master \
-			--reviewer corest \
-		&& git checkout master
+			--reviewer corest; \
+	else \
+		echo "PR already exists for helm-v$(VERSION)"; \
+	fi && \
+	git checkout master
+	@cd ../kubeshark && git checkout master && git pull
 	@echo ""
-	@echo "Release PRs created:"
+	@echo "Release PRs created (or already present):"
 	@echo "  - kubeshark: Review and merge the release PR."
 	@echo "  - kubeshark.github.io: Review and merge the helm chart PR."
 	@echo "Tag will be created automatically, or run: make release-tag VERSION=$(VERSION)"
