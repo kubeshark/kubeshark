@@ -159,9 +159,8 @@ tap:
     # authenticated user has no matching role in their token/assertion.
     # Empty string means no fallback (authenticated but no elevated permissions).
     defaultRole: ""
-    # Backend-neutral role map shared by SAML and OIDC. Replaces the legacy
-    # `auth.saml.roles` (deprecated, still parsed for YAML back-compat but
-    # ignored by the chart).
+    # Backend-neutral role map shared by SAML and OIDC. Empty/unset grants
+    # nothing — admins opt into elevated access by populating this map.
     roles:
       admin:
         filter: ""

@@ -176,10 +176,6 @@ type SamlConfig struct {
 	IdpMetadataUrl string `yaml:"idpMetadataUrl" json:"idpMetadataUrl"`
 	X509crt        string `yaml:"x509crt" json:"x509crt"`
 	X509key        string `yaml:"x509key" json:"x509key"`
-	// Deprecated: use AuthConfig.RolesClaim. Kept for YAML back-compat; ignored by CLI and Helm chart.
-	RoleAttribute string `yaml:"roleAttribute" json:"roleAttribute"`
-	// Deprecated: use AuthConfig.Roles. Kept for YAML back-compat; ignored by CLI and Helm chart.
-	Roles map[string]Role `yaml:"roles" json:"roles"`
 }
 
 type AuthConfig struct {
