@@ -203,6 +203,7 @@ type DashboardConfig struct {
 	StreamingType            string `yaml:"streamingType" json:"streamingType" default:"connect-rpc"`
 	CompleteStreamingEnabled bool   `yaml:"completeStreamingEnabled" json:"completeStreamingEnabled" default:"true"`
 	ClusterWideMapEnabled    bool   `yaml:"clusterWideMapEnabled" json:"clusterWideMapEnabled" default:"false"`
+	EntriesLimit             string `yaml:"entriesLimit" json:"entriesLimit" default:"300000"`
 }
 
 type FrontRoutingConfig struct {
