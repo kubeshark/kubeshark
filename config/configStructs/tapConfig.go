@@ -173,17 +173,22 @@ type Role struct {
 }
 
 type SamlConfig struct {
-	IdpMetadataUrl string          `yaml:"idpMetadataUrl" json:"idpMetadataUrl"`
-	X509crt        string          `yaml:"x509crt" json:"x509crt"`
-	X509key        string          `yaml:"x509key" json:"x509key"`
-	RoleAttribute  string          `yaml:"roleAttribute" json:"roleAttribute"`
-	Roles          map[string]Role `yaml:"roles" json:"roles"`
+	IdpMetadataUrl string `yaml:"idpMetadataUrl" json:"idpMetadataUrl"`
+	X509crt        string `yaml:"x509crt" json:"x509crt"`
+	X509key        string `yaml:"x509key" json:"x509key"`
+	// Deprecated: use AuthConfig.RolesClaim. Kept for YAML back-compat; ignored by CLI and Helm chart.
+	RoleAttribute string `yaml:"roleAttribute" json:"roleAttribute"`
+	// Deprecated: use AuthConfig.Roles. Kept for YAML back-compat; ignored by CLI and Helm chart.
+	Roles map[string]Role `yaml:"roles" json:"roles"`
 }
 
 type AuthConfig struct {
-	Enabled bool       `yaml:"enabled" json:"enabled" default:"false"`
-	Type    string     `yaml:"type" json:"type" default:"saml"`
-	Saml    SamlConfig `yaml:"saml" json:"saml"`
+	Enabled     bool            `yaml:"enabled" json:"enabled" default:"false"`
+	Type        string          `yaml:"type" json:"type" default:"saml"`
+	Roles       map[string]Role `yaml:"roles" json:"roles"`
+	RolesClaim  string          `yaml:"rolesClaim" json:"rolesClaim"`
+	DefaultRole string          `yaml:"defaultRole" json:"defaultRole"`
+	Saml        SamlConfig      `yaml:"saml" json:"saml"`
 }
 
 type IngressConfig struct {

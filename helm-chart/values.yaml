@@ -153,24 +153,32 @@ tap:
   auth:
     enabled: false
     type: saml
+    # Name of the JWT claim (OIDC) or SAML attribute carrying role memberships.
+    rolesClaim: role
+    # Optional: role name inside `roles` applied as a fallback when an
+    # authenticated user has no matching role in their token/assertion.
+    # Empty string means no fallback (authenticated but no elevated permissions).
+    defaultRole: ""
+    # Backend-neutral role map shared by SAML and OIDC. Replaces the legacy
+    # `auth.saml.roles` (deprecated, still parsed for YAML back-compat but
+    # ignored by the chart).
+    roles:
+      admin:
+        filter: ""
+        canDownloadPCAP: true
+        canUseScripting: true
+        scriptingPermissions:
+          canSave: true
+          canActivate: true
+          canDelete: true
+        canUpdateTargetedPods: true
+        canStopTrafficCapturing: true
+        canControlDissection: true
+        showAdminConsoleLink: true
     saml:
       idpMetadataUrl: ""
       x509crt: ""
       x509key: ""
-      roleAttribute: role
-      roles:
-        admin:
-          filter: ""
-          canDownloadPCAP: true
-          canUseScripting: true
-          scriptingPermissions:
-            canSave: true
-            canActivate: true
-            canDelete: true
-          canUpdateTargetedPods: true
-          canStopTrafficCapturing: true
-          canControlDissection: true
-          showAdminConsoleLink: true
   ingress:
     enabled: false
     className: ""
