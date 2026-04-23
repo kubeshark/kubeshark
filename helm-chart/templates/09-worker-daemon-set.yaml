@@ -246,6 +246,8 @@ spec:
             - -port
             - '{{ add .Values.tap.proxy.worker.srvPort 1 }}'
           {{- end }}
+            - -offset-override-configmap
+            - offset-overrides
             - -loglevel
             - '{{ .Values.logLevel | default "warning" }}'
         {{- if .Values.tap.docker.overrideTag.worker }}
