@@ -152,6 +152,10 @@ tap:
     front: []
   auth:
     enabled: false
+    # Valid values: saml, oidc (generic OIDC — Dex, Okta, Auth0, Keycloak,
+    # Azure AD, Google, …), dex (permanent alias of oidc), descope, default
+    # (also Descope). Was previously misnamed: prior releases routed `oidc`
+    # to Descope. See release notes for migration.
     type: saml
     # Name of the JWT claim (OIDC) or SAML attribute carrying role memberships.
     rolesClaim: role

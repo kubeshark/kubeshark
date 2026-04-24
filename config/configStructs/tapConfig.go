@@ -179,7 +179,17 @@ type SamlConfig struct {
 }
 
 type AuthConfig struct {
-	Enabled     bool            `yaml:"enabled" json:"enabled" default:"false"`
+	Enabled bool `yaml:"enabled" json:"enabled" default:"false"`
+	// Type selects the authentication backend. Valid values:
+	//   saml     — SAML 2.0 SSO
+	//   oidc     — generic OIDC (Dex, Okta, Auth0, Keycloak, Azure AD, …)
+	//   dex      — permanent alias of oidc (kept for back-compat)
+	//   descope  — Descope SDK
+	//   default  — also routes to Descope (kept, not deprecated)
+	//
+	// NOTE: prior releases routed `oidc` to Descope. If you were using `oidc`
+	// to mean Descope, switch to `descope` (or `default`). The rename is a
+	// breaking change documented in the release notes.
 	Type        string          `yaml:"type" json:"type" default:"saml"`
 	Roles       map[string]Role `yaml:"roles" json:"roles"`
 	RolesClaim  string          `yaml:"rolesClaim" json:"rolesClaim"`

@@ -19,11 +19,11 @@ data:
     INGRESS_HOST: '{{ .Values.tap.ingress.host }}'
     PROXY_FRONT_PORT: '{{ .Values.tap.proxy.front.port }}'
     AUTH_ENABLED: '{{- if and .Values.cloudLicenseEnabled (not (empty .Values.license)) -}}
-                        {{ (default false .Values.demoModeEnabled) | ternary true ((and .Values.tap.auth.enabled (eq .Values.tap.auth.type "dex")) | ternary true false) }}
+                        {{ (default false .Values.demoModeEnabled) | ternary true ((and .Values.tap.auth.enabled (or (eq .Values.tap.auth.type "oidc") (eq .Values.tap.auth.type "dex"))) | ternary true false) }}
                   {{- else -}}
                         {{ .Values.cloudLicenseEnabled | ternary "true" ((default false .Values.demoModeEnabled) | ternary "true" .Values.tap.auth.enabled) }}
                   {{- end }}'
-    AUTH_TYPE: '{{- if and .Values.cloudLicenseEnabled (not (eq .Values.tap.auth.type "dex")) -}}
+    AUTH_TYPE: '{{- if and .Values.cloudLicenseEnabled (not (or (eq .Values.tap.auth.type "oidc") (eq .Values.tap.auth.type "dex"))) -}}
                   default
                 {{- else -}}
                   {{ (default false .Values.demoModeEnabled) | ternary "default" .Values.tap.auth.type }}
@@ -32,15 +32,15 @@ data:
     AUTH_ROLES: '{{ .Values.tap.auth.roles | toJson }}'
     AUTH_ROLES_CLAIM: '{{ .Values.tap.auth.rolesClaim }}'
     AUTH_DEFAULT_ROLE: '{{ default "" .Values.tap.auth.defaultRole }}'
-    AUTH_OIDC_ISSUER: '{{ default "not set" (((.Values.tap).auth).dexOidc).issuer }}'
-    AUTH_OIDC_REFRESH_TOKEN_LIFETIME: '{{ default "3960h" (((.Values.tap).auth).dexOidc).refreshTokenLifetime }}'
-    AUTH_OIDC_STATE_PARAM_EXPIRY: '{{ default "10m" (((.Values.tap).auth).dexOidc).oauth2StateParamExpiry }}'
+    AUTH_OIDC_ISSUER: '{{ default "not set" (((.Values.tap).auth).oidc).issuer }}'
+    AUTH_OIDC_REFRESH_TOKEN_LIFETIME: '{{ default "3960h" (((.Values.tap).auth).oidc).refreshTokenLifetime }}'
+    AUTH_OIDC_STATE_PARAM_EXPIRY: '{{ default "10m" (((.Values.tap).auth).oidc).oauth2StateParamExpiry }}'
     AUTH_OIDC_BYPASS_SSL_CA_CHECK: '{{- if and
                                       (hasKey .Values.tap "auth")
-                                      (hasKey .Values.tap.auth "dexOidc")
-                                      (hasKey .Values.tap.auth.dexOidc "bypassSslCaCheck")
+                                      (hasKey .Values.tap.auth "oidc")
+                                      (hasKey .Values.tap.auth.oidc "bypassSslCaCheck")
                                     -}}
-                                      {{ eq .Values.tap.auth.dexOidc.bypassSslCaCheck true | ternary "true" "false" }}
+                                      {{ eq .Values.tap.auth.oidc.bypassSslCaCheck true | ternary "true" "false" }}
                                     {{- else -}}
                                       false
                                     {{- end }}'
