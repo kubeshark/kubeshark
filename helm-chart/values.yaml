@@ -209,6 +209,8 @@ tap:
   - icmp
   - kafka
   - mongodb
+  - mysql
+  - postgresql
   - redis
   - ws
   - ldap
@@ -230,6 +232,10 @@ tap:
     - 9092
     mongodb:
     - 27017
+    mysql:
+    - 3306
+    postgresql:
+    - 5432
     redis:
     - 6379
     ldap:
