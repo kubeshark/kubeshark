@@ -190,11 +190,12 @@ type AuthConfig struct {
 	// NOTE: prior releases routed `oidc` to Descope. If you were using `oidc`
 	// to mean Descope, switch to `descope` (or `default`). The rename is a
 	// breaking change documented in the release notes.
-	Type        string          `yaml:"type" json:"type" default:"saml"`
-	Roles       map[string]Role `yaml:"roles" json:"roles"`
-	RolesClaim  string          `yaml:"rolesClaim" json:"rolesClaim"`
-	DefaultRole string          `yaml:"defaultRole" json:"defaultRole"`
-	Saml        SamlConfig      `yaml:"saml" json:"saml"`
+	Type          string          `yaml:"type" json:"type" default:"saml"`
+	Roles         map[string]Role `yaml:"roles" json:"roles"`
+	RolesClaim    string          `yaml:"rolesClaim" json:"rolesClaim"`
+	DefaultRole   string          `yaml:"defaultRole" json:"defaultRole"`
+	DefaultFilter string          `yaml:"defaultFilter" json:"defaultFilter"`
+	Saml          SamlConfig      `yaml:"saml" json:"saml"`
 }
 
 type IngressConfig struct {

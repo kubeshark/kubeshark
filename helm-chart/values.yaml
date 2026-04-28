@@ -163,6 +163,15 @@ tap:
     # authenticated user has no matching role in their token/assertion.
     # Empty string means no fallback (authenticated but no elevated permissions).
     defaultRole: ""
+    # Optional: KFL filter substituted in for any role whose `filter` field
+    # is empty at filter-extraction time. Opts the deployment into data-level
+    # deny-default — e.g. "1==0" means roles with no explicit scope (including
+    # the minimal-fallback role used when no AUTH_ROLES match) see nothing.
+    # Empty string preserves the legacy allow-all-on-blank behaviour. Roles
+    # wanting to opt out (admin/super) must set their `filter` to a KFL
+    # tautology like "true". Orthogonal to `tap.defaultFilter` (a view-shaping
+    # GLOBAL_FILTER); both can coexist.
+    defaultFilter: ""
     # Backend-neutral role map shared by SAML and OIDC. Empty/unset grants
     # nothing — admins opt into elevated access by populating this map.
     roles:
