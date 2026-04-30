@@ -32,7 +32,6 @@ data:
     AUTH_ROLES: '{{ .Values.tap.auth.roles | toJson }}'
     AUTH_ROLES_CLAIM: '{{ .Values.tap.auth.rolesClaim }}'
     AUTH_DEFAULT_ROLE: '{{ default "" .Values.tap.auth.defaultRole }}'
-    AUTH_DEFAULT_FILTER: {{ include "kubeshark.escapeDoubleQuotes" (default "" .Values.tap.auth.defaultFilter) | quote }}
     AUTH_OIDC_ISSUER: '{{ default "not set" (((.Values.tap).auth).oidc).issuer }}'
     AUTH_OIDC_REFRESH_TOKEN_LIFETIME: '{{ default "3960h" (((.Values.tap).auth).oidc).refreshTokenLifetime }}'
     AUTH_OIDC_STATE_PARAM_EXPIRY: '{{ default "10m" (((.Values.tap).auth).oidc).oauth2StateParamExpiry }}'
