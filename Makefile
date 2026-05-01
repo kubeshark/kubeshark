@@ -302,21 +302,16 @@ release-pr-kubeshark: _release-check-version ## Bump Chart.yaml, build, open rel
 	fi
 	@$(MAKE) generate-helm-values && $(MAKE) generate-manifests
 	@if git show-ref --verify --quiet refs/heads/release/v$(VERSION); then \
-		git checkout release/v$(VERSION); \
-	else \
-		git checkout -b release/v$(VERSION); \
+		git branch -D release/v$(VERSION); \
 	fi
+	@git checkout -b release/v$(VERSION)
 	@git add -A .
 	@if ! git diff --cached --quiet; then \
 		git commit -m ":bookmark: Bump the Helm chart version to $(VERSION)"; \
 	else \
 		echo "nothing to commit"; \
 	fi
-	@if git ls-remote --exit-code --heads origin release/v$(VERSION) >/dev/null 2>&1; then \
-		git push origin release/v$(VERSION); \
-	else \
-		git push -u origin release/v$(VERSION); \
-	fi
+	@git push --force-with-lease -u origin release/v$(VERSION)
 	@if gh pr view release/v$(VERSION) --json number >/dev/null 2>&1; then \
 		echo "PR already exists for release/v$(VERSION)"; \
 	else \
@@ -339,21 +334,16 @@ release-pr-helm: _release-check-version ## Sync helm-chart/ to kubeshark.github.
 		&& cp -r ../kubeshark/helm-chart/ charts/chart/
 	@cd ../kubeshark.github.io && \
 	if git show-ref --verify --quiet refs/heads/helm-v$(VERSION); then \
-		git checkout helm-v$(VERSION); \
-	else \
-		git checkout -b helm-v$(VERSION); \
+		git branch -D helm-v$(VERSION); \
 	fi && \
+	git checkout -b helm-v$(VERSION) && \
 	git add -A . && \
 	if ! git diff --cached --quiet; then \
 		git commit -m ":sparkles: Update the Helm chart to v$(VERSION)"; \
 	else \
 		echo "nothing to commit"; \
 	fi && \
-	if git ls-remote --exit-code --heads origin helm-v$(VERSION) >/dev/null 2>&1; then \
-		git push origin helm-v$(VERSION); \
-	else \
-		git push -u origin helm-v$(VERSION); \
-	fi && \
+	git push --force-with-lease -u origin helm-v$(VERSION) && \
 	if ! gh pr view helm-v$(VERSION) --json number >/dev/null 2>&1; then \
 		gh pr create --title ":sparkles: Helm chart v$(VERSION)" \
 			--body "Update Helm chart for release v$(VERSION)." \
