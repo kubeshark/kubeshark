@@ -39,7 +39,7 @@ These are the variables you'll reach for in 90% of investigations:
 | `index` | int | Entry index for stream uniqueness |
 | `stream` | string | Stream identifier (hex string) |
 | `timestamp` | timestamp | Event time (UTC), use with `timestamp()` function |
-| `elapsed_time` | int | Age since timestamp in microseconds |
+| `elapsed_time` | int | Response-request latency in microseconds |
 | `worker` | string | Worker identifier |
 
 ## Cross-Reference Variables
@@ -67,13 +67,15 @@ Boolean variables indicating detected protocol. Use as first filter term for per
 |----------|----------|----------|----------|
 | `http` | HTTP/1.1, HTTP/2 | `redis` | Redis |
 | `dns` | DNS | `kafka` | Kafka |
-| `tls` | TLS/SSL handshake | `amqp` | AMQP messaging |
+| `tls` | eBPF TLS interception | `amqp` | AMQP messaging |
 | `tcp` | TCP transport | `ldap` | LDAP directory |
 | `udp` | UDP transport | `ws` | WebSocket |
 | `sctp` | SCTP streaming | `gql` | GraphQL (v1 or v2) |
 | `icmp` | ICMP | `gqlv1` | GraphQL v1 only |
-| `radius` | RADIUS auth | `gqlv2` | GraphQL v2 only |
-| `diameter` | Diameter | `conn` | L4 connection tracking |
+| `grpc` | gRPC (HTTP/2 sub-protocol) | `gqlv2` | GraphQL v2 only |
+| `mongodb` | MongoDB | `mysql` | MySQL |
+| `radius` | RADIUS auth | `diameter` | Diameter |
+| | | `conn` | L4 connection tracking |
 | `flow` | L4 flow tracking | `tcp_conn` | TCP connection tracking |
 | `tcp_flow` | TCP flow tracking | `udp_conn` | UDP connection tracking |
 | `udp_flow` | UDP flow tracking | | |
@@ -123,7 +125,7 @@ Supported question types: A, AAAA, NS, CNAME, SOA, MX, TXT, SRV, PTR, ANY.
 
 | Variable | Type | Description | Example |
 |----------|------|-------------|---------|
-| `tls` | bool | TLS payload detected | |
+| `tls` | bool | eBPF TLS interception (alias for `capture_source == "ebpf_tls"`) | |
 | `tls_summary` | string | TLS handshake summary | `"ClientHello"`, `"ServerHello"` |
 | `tls_info` | string | TLS connection details | `"TLS 1.3, AES-256-GCM"` |
 | `tls_request_size` | int | TLS request size in bytes | |
@@ -263,6 +265,55 @@ Supported question types: A, AAAA, NS, CNAME, SOA, MX, TXT, SRV, PTR, ANY.
 | `diameter_response_length` | int | Response size (0 if absent) |
 | `diameter_total_size` | int | Sum of request + response |
 
+## MongoDB Variables
+
+| Variable | Type | Description | Example |
+|----------|------|-------------|---------|
+| `mongodb` | bool | MongoDB payload detected | |
+| `mongodb_command` | string | Operation type | `"find"`, `"insert"`, `"update"`, `"delete"` |
+| `mongodb_database` | string | Database name | `"mydb"` |
+| `mongodb_collection` | string | Collection name | `"users"` |
+| `mongodb_opcode` | string | Operation opcode name | |
+| `mongodb_request_size` | int | Request size in bytes | |
+| `mongodb_response_size` | int | Response size in bytes | |
+| `mongodb_total_size` | int | Combined request + response size | |
+| `mongodb_success` | bool | Operation success status | |
+| `mongodb_error_code` | int | Error code | |
+| `mongodb_error_message` | string | Error description | |
+| `mongodb_error_code_name` | string | Named error code | |
+
+**Example**: `mongodb && mongodb_command == "find" && mongodb_collection == "users"`
+
+## MySQL Variables
+
+| Variable | Type | Description | Example |
+|----------|------|-------------|---------|
+| `mysql` | bool | MySQL payload detected | |
+| `mysql_command` | string | SQL command name | `"COM_QUERY"`, `"COM_STMT_PREPARE"` |
+| `mysql_query` | string | Full SQL query text | `"SELECT * FROM users"` |
+| `mysql_database` | string | Active database name | `"orders_db"` |
+| `mysql_statement_id` | int | Prepared statement identifier | |
+| `mysql_request_size` | int | Request payload size in bytes | |
+| `mysql_response_size` | int | Response payload size in bytes | |
+| `mysql_total_size` | int | Combined request + response size | |
+| `mysql_success` | bool | Response OK status | |
+| `mysql_error_code` | int | MySQL error code | |
+| `mysql_error_message` | string | Error description | |
+
+**Example**: `mysql && mysql_query.contains("SELECT") && !mysql_success`
+
+## gRPC Variables
+
+gRPC is a sub-protocol of HTTP/2. When `grpc` is true, all HTTP variables are also available.
+
+| Variable | Type | Description | Example |
+|----------|------|-------------|---------|
+| `grpc` | bool | gRPC payload detected | |
+| `grpc_method` | string | Trailing method name from gRPC :path | `"SayHello"` (from `/helloworld.Greeter/SayHello`) |
+| `grpc_status` | int | gRPC status code from Grpc-Status trailer | `0`=OK, `5`=NOT_FOUND, `14`=UNAVAILABLE; `-1` on non-gRPC |
+
+**Example**: `grpc && grpc_status != 0 && grpc_method.contains("Create")`
+
 ## L4 Connection Tracking Variables
 
 | Variable | Type | Description | Example |
@@ -319,6 +370,15 @@ service data when pod info is unavailable. This means `dst.pod.namespace` works
 even when only service-level resolution exists.
 
 **Example**: `src.service.name == "api-gateway" && dst.pod.namespace == "production"`
+
+### Summary Name and Namespace
+
+| Variable | Type | Description |
+|----------|------|-------------|
+| `src.name` | string | Worker-enriched summary name of source (pod > service > dns > process) |
+| `dst.name` | string | Worker-enriched summary name of destination |
+| `src.namespace` | string | Source namespace with service fallback |
+| `dst.namespace` | string | Destination namespace with service fallback |
 
 ### Aggregate Collections (Non-Directional)
 

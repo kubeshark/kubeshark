@@ -88,13 +88,15 @@ filter term — they're fast and narrow the search space immediately.
 |------|----------|------|----------|
 | `http` | HTTP/1.1, HTTP/2 | `redis` | Redis |
 | `dns` | DNS | `kafka` | Kafka |
-| `tls` | TLS/SSL | `amqp` | AMQP |
+| `tls` | eBPF TLS interception | `amqp` | AMQP |
 | `tcp` | TCP | `ldap` | LDAP |
 | `udp` | UDP | `ws` | WebSocket |
 | `sctp` | SCTP | `gql` | GraphQL (v1+v2) |
 | `icmp` | ICMP | `gqlv1` / `gqlv2` | GraphQL version-specific |
-| `radius` | RADIUS | `conn` / `flow` | L4 connection/flow tracking |
-| `diameter` | Diameter | `tcp_conn` / `udp_conn` | Transport-specific connections |
+| `grpc` | gRPC (HTTP/2 sub-protocol) | `mongodb` | MongoDB |
+| `mysql` | MySQL | `radius` | RADIUS |
+| `diameter` | Diameter | `conn` / `flow` | L4 connection/flow tracking |
+| | | `tcp_conn` / `udp_conn` | Transport-specific connections |
 
 ## Kubernetes Context
 
@@ -111,6 +113,17 @@ dst.service.namespace == "payments"
 
 Pod fields fall back to service data when pod info is unavailable, so
 `dst.pod.namespace` works even for service-level entries.
+
+### Summary Name and Namespace
+
+Convenience variables that pick the best available identity for a peer:
+
+```
+src.name == "api-gateway"                    // pod > service > dns > process
+dst.name.contains("payment")                 // works across identity types
+src.namespace == "production"                 // pod namespace, falls back to service
+dst.namespace != "kube-system"               // exclude system namespace
+```
 
 ### Aggregate Collections
 
@@ -192,7 +205,13 @@ http && request.headers["content-type"] == "application/json"
 
 // GraphQL (subset of HTTP)
 gql && method == "POST" && status_code >= 400
+
+// Only eBPF-intercepted TLS traffic (decrypted HTTPS)
+tls && http && status_code >= 500
 ```
+
+> **Note on `tls`**: The `tls` flag is an alias for `capture_source == "ebpf_tls"`.
+> It indicates traffic captured via eBPF TLS interception, not TLS protocol dissection.
 
 ## DNS Filtering
 
@@ -233,6 +252,40 @@ kafka && kafka_api_key_name == "PRODUCE"             // Produce operations
 kafka && kafka_client_id == "payment-processor"      // Client filtering
 kafka && kafka_request_summary.contains("orders")    // Topic filtering
 kafka && kafka_size > 10000                          // Large messages
+```
+
+### MongoDB
+
+```
+mongodb && mongodb_command == "find"                  // Find operations
+mongodb && mongodb_collection == "users"              // Collection filtering
+mongodb && mongodb_database == "mydb"                 // Database filtering
+mongodb && !mongodb_success                           // Failed operations
+mongodb && mongodb_error_code != 0                    // Error code filtering
+mongodb && mongodb_total_size > 10000                 // Large operations
+```
+
+### MySQL
+
+```
+mysql && mysql_command == "COM_QUERY"                 // SQL queries
+mysql && mysql_query.contains("SELECT")               // SELECT statements
+mysql && mysql_database == "orders_db"                // Database filtering
+mysql && !mysql_success                               // Failed queries
+mysql && mysql_error_code != 0                        // Error code filtering
+mysql && mysql_total_size > 10000                     // Large queries
+```
+
+### gRPC
+
+gRPC is a sub-protocol of HTTP/2. All HTTP variables are also available on gRPC entries.
+
+```
+grpc && grpc_method == "SayHello"                     // Method filtering
+grpc && grpc_status != 0                              // Non-OK status codes
+grpc && grpc_status == 14                             // UNAVAILABLE
+grpc && grpc_method.contains("Create")                // Method pattern
+grpc && elapsed_time > 1000000                        // Slow gRPC calls (>1s)
 ```
 
 ### AMQP, LDAP, RADIUS, Diameter
@@ -288,7 +341,7 @@ dst.port >= 8000 && dst.port <= 9000
 timestamp > timestamp("2026-03-14T22:00:00Z")
 timestamp >= timestamp("2026-03-14T22:00:00Z") && timestamp <= timestamp("2026-03-14T23:00:00Z")
 timestamp > now() - duration("5m")                   // Last 5 minutes
-elapsed_time > 2000000                               // Older than 2 seconds
+elapsed_time > 2000000                               // Latency > 2 seconds
 ```
 
 ## Building Filters: Progressive Narrowing

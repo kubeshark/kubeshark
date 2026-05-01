@@ -188,7 +188,7 @@ tap:
     streamingType: connect-rpc
     completeStreamingEnabled: true
     clusterWideMapEnabled: false
-    entriesLimit: 300000
+    entriesLimit: "300000"
   telemetry:
     enabled: true
   resourceGuard:
