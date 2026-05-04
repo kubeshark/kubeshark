@@ -207,7 +207,7 @@ tap:
     streamingType: connect-rpc
     completeStreamingEnabled: true
     clusterWideMapEnabled: false
-    entriesLimit: 300000
+    entriesLimit: "300000"
   telemetry:
     enabled: true
   resourceGuard:
@@ -228,6 +228,8 @@ tap:
   - icmp
   - kafka
   - mongodb
+  - mysql
+  - postgresql
   - redis
   - ws
   - ldap
@@ -249,6 +251,10 @@ tap:
     - 9092
     mongodb:
     - 27017
+    mysql:
+    - 3306
+    postgresql:
+    - 5432
     redis:
     - 6379
     ldap:
