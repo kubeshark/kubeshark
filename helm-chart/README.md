@@ -212,14 +212,15 @@ Example for overriding image names:
 | `tap.tolerations.hub`                  | Tolerations for hub component                         | `[]`                                                                                                                                                                                                                                             |
 | `tap.tolerations.front`                  | Tolerations for front-end component                         | `[]`                                                                                                                                                                                                                                             |
 | `tap.auth.enabled`                        | Enable authentication                         | `false`                                                                                                                                                                                                                                          |
-| `tap.auth.type`                           | Authentication type (1 option available: `saml`)      | `saml`                                                                                                                                                                                                                                           |
+| `tap.auth.type`                           | Authentication backend. Valid values: `saml`, `oidc` (generic OIDC — Dex, Okta, Auth0, Keycloak, Azure AD, Google, …), `dex` (permanent alias of `oidc`), `descope`, `default` (also routes to Descope). **Breaking**: prior releases routed `oidc` to Descope — if you were using it for Descope, switch to `descope` or `default`. | `saml`                                                                                                                                                                                                                                           |
 | `tap.auth.approvedEmails`                 | List of approved email addresses for authentication              | `[]`                                                                                                                                                                                                                                             |
 | `tap.auth.approvedDomains`                | List of approved email domains for authentication                | `[]`                                                                                                                                                                                                                                             |
-| `tap.auth.saml.idpMetadataUrl`                    | SAML IDP metadata URL <br/>(effective, if `tap.auth.type = saml`)                                  | ``                                                                                                                                                                                                                                               |
+| `tap.auth.rolesClaim`                     | Name of the JWT claim (OIDC) or SAML attribute carrying role memberships. | `role` |
+| `tap.auth.defaultRole`                    | Optional role name inside `tap.auth.roles` applied as fallback when an authenticated user has no matching role. Empty string = no fallback, zero-valued permissions. | `""` |
+| `tap.auth.roles`                          | Backend-neutral role map shared by SAML and OIDC. Each role's `namespaces` is a comma-separated list controlling which Kubernetes namespaces the role's users see traffic for: `""` = deny all, `"*"` = allow all, `"foo"` = literal namespace, `"foo,bar"` = OR over literals, `"foo-*"` = glob expansion against the cluster's known namespaces. Empty/unset `tap.auth.roles` grants nothing — admins opt into elevated access by populating this map. | `{"admin":{"namespaces":"*","canDownloadPCAP":true,"canUpdateTargetedPods":true,"canUseScripting":true,"scriptingPermissions":{"canSave":true,"canActivate":true,"canDelete":true},"canStopTrafficCapturing":true,"canControlDissection":true,"showAdminConsoleLink":true}}` |
+| `tap.auth.saml.idpMetadataUrl`            | SAML IDP metadata URL <br/>(effective, if `tap.auth.type = saml`)                                  | ``                                                                                                                                                                                                                                               |
 | `tap.auth.saml.x509crt`                   | A self-signed X.509 `.cert` contents <br/>(effective, if `tap.auth.type = saml`)          | ``                                                                                                                                                                                                                                               |
 | `tap.auth.saml.x509key`                   | A self-signed X.509 `.key` contents <br/>(effective, if `tap.auth.type = saml`)           | ``                                                                                                                                                                                                                                               |
-| `tap.auth.saml.roleAttribute`             | A SAML attribute name corresponding to user's authorization role <br/>(effective, if `tap.auth.type = saml`)  | `role`                                                                                                                                                                                                                                           |
-| `tap.auth.saml.roles`                     | A list of SAML authorization roles and their permissions <br/>(effective, if `tap.auth.type = saml`)  | `{"admin":{"canDownloadPCAP":true,"canUpdateTargetedPods":true,"canUseScripting":true, "scriptingPermissions":{"canSave":true, "canActivate":true, "canDelete":true}, "canStopTrafficCapturing":true, "canControlDissection":true, "filter":"","showAdminConsoleLink":true}}` |
 | `tap.ingress.enabled`                     | Enable `Ingress`                                | `false`                                                                                                                                                                                                                                          |
 | `tap.ingress.className`                   | Ingress class name                            | `""`                                                                                                                                                                                                                                             |
 | `tap.ingress.host`                        | Host of the `Ingress`                          | `ks.svc.cluster.local`                                                                                                                                                                                                                           |
@@ -377,8 +378,8 @@ Add these helm values to set up OIDC authentication powered by your Dex IdP:
 tap:
   auth:
     enabled: true
-    type: dex
-    dexOidc:
+    type: oidc  # canonical; `dex` is accepted as a permanent alias
+    oidc:
       issuer: <put Dex IdP issuer URL here>
       clientId: kubeshark
       clientSecret: create your own client password
@@ -390,7 +391,7 @@ tap:
 ---
 
 **Note:**<br/>
-Set `tap.auth.dexOidc.bypassSslCaCheck: true`
+Set `tap.auth.oidc.bypassSslCaCheck: true`
 to allow Kubeshark communication with Dex IdP having an unknown SSL Certificate Authority.
 
 This setting allows you to prevent such SSL CA-related errors:<br/>
@@ -429,7 +430,7 @@ The following Dex settings will have these values:
 
 | Setting                                               | Value                                        |
 |-------------------------------------------------------|----------------------------------------------|
-| `tap.auth.dexOidc.issuer`                             | `https://ks.example.com/dex`                 |
+| `tap.auth.oidc.issuer`                             | `https://ks.example.com/dex`                 |
 | `tap.auth.dexConfig.issuer`                           | `https://ks.example.com/dex`                 |
 | `tap.auth.dexConfig.staticClients -> redirectURIs`    | `https://ks.example.com/api/oauth2/callback` |
 | `tap.auth.dexConfig.connectors -> config.redirectURI` | `https://ks.example.com/dex/callback`        |
@@ -447,16 +448,16 @@ Please, make sure to prepare the following things first.
    - You will need to specify storage settings in `tap.auth.dexConfig.storage`
    - default: `memory`
 3. Decide on the OAuth2 `?state=` param expiration time:
-   - field: `tap.auth.dexOidc.oauth2StateParamExpiry`
+   - field: `tap.auth.oidc.oauth2StateParamExpiry`
    - default: `10m` (10 minutes)
    - valid time units are `s`, `m`, `h`
 4. Decide on the refresh token expiration:
-    - field 1: `tap.auth.dexOidc.expiry.refreshTokenLifetime`
+    - field 1: `tap.auth.oidc.expiry.refreshTokenLifetime`
     - field 2: `tap.auth.dexConfig.expiry.refreshTokens.absoluteLifetime`
     - default: `3960h` (165 days)
     - valid time units are `s`, `m`, `h`
 5. Create a unique & secure password to set in these fields:
-    - field 1: `tap.auth.dexOidc.clientSecret`
+    - field 1: `tap.auth.oidc.clientSecret`
     - field 2: `tap.auth.dexConfig.staticClients -> secret`
     - password must be the same for these 2 fields
 6. Discover more possibilities of **[Dex Configuration](https://dexidp.io/docs/configuration/)**
@@ -478,8 +479,8 @@ Helm `values.yaml`:
 tap:
   auth:
     enabled: true
-    type: dex
-    dexOidc:
+    type: oidc  # canonical; `dex` is accepted as a permanent alias
+    oidc:
       issuer: https://<your-ingress-hostname>/dex
 
       # Client ID/secret must be taken from `tap.auth.dexConfig.staticClients -> id/secret`

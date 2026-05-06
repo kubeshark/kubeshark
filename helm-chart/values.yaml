@@ -152,25 +152,44 @@ tap:
     front: []
   auth:
     enabled: false
+    # Valid values: saml, oidc (generic OIDC — Dex, Okta, Auth0, Keycloak,
+    # Azure AD, Google, …), dex (permanent alias of oidc), descope, default
+    # (also Descope). Was previously misnamed: prior releases routed `oidc`
+    # to Descope. See release notes for migration.
     type: saml
+    # Name of the JWT claim (OIDC) or SAML attribute carrying role memberships.
+    rolesClaim: role
+    # Optional: role name inside `roles` applied as a fallback when an
+    # authenticated user has no matching role in their token/assertion.
+    # Empty string means no fallback (authenticated but no elevated permissions).
+    defaultRole: ""
+    # Backend-neutral role map shared by SAML and OIDC. Empty/unset grants
+    # nothing — admins opt into elevated access by populating this map.
+    #
+    # Per-role `namespaces` controls which Kubernetes namespaces the role's
+    # users are allowed to see traffic for. Comma-separated list:
+    #   ""        — deny all (explicit deny-default for this role).
+    #   "*"       — allow every namespace (no scope filter applied).
+    #   "foo"     — only the literal namespace "foo" (src or dst).
+    #   "foo,bar" — OR over both literal namespaces.
+    #   "foo-*"   — glob expansion against the cluster's known namespaces.
+    roles:
+      admin:
+        namespaces: "*"
+        canDownloadPCAP: true
+        canUseScripting: true
+        scriptingPermissions:
+          canSave: true
+          canActivate: true
+          canDelete: true
+        canUpdateTargetedPods: true
+        canStopTrafficCapturing: true
+        canControlDissection: true
+        showAdminConsoleLink: true
     saml:
       idpMetadataUrl: ""
       x509crt: ""
       x509key: ""
-      roleAttribute: role
-      roles:
-        admin:
-          filter: ""
-          canDownloadPCAP: true
-          canUseScripting: true
-          scriptingPermissions:
-            canSave: true
-            canActivate: true
-            canDelete: true
-          canUpdateTargetedPods: true
-          canStopTrafficCapturing: true
-          canControlDissection: true
-          showAdminConsoleLink: true
   ingress:
     enabled: false
     className: ""

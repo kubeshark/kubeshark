@@ -102,23 +102,21 @@ func CreateDefaultConfig() ConfigStruct {
 				},
 			},
 			Auth: configStructs.AuthConfig{
-				Saml: configStructs.SamlConfig{
-					RoleAttribute: "role",
-					Roles: map[string]configStructs.Role{
-						"admin": {
-							Filter:          "",
-							CanDownloadPCAP: true,
-							CanUseScripting: true,
-							ScriptingPermissions: configStructs.ScriptingPermissions{
-								CanSave:     true,
-								CanActivate: true,
-								CanDelete:   true,
-							},
-							CanUpdateTargetedPods:   true,
-							CanStopTrafficCapturing: true,
-							CanControlDissection:    true,
-							ShowAdminConsoleLink:    true,
+				RolesClaim: "role",
+				Roles: map[string]configStructs.Role{
+					"admin": {
+						Filter:          "",
+						CanDownloadPCAP: true,
+						CanUseScripting: true,
+						ScriptingPermissions: configStructs.ScriptingPermissions{
+							CanSave:     true,
+							CanActivate: true,
+							CanDelete:   true,
 						},
+						CanUpdateTargetedPods:   true,
+						CanStopTrafficCapturing: true,
+						CanControlDissection:    true,
+						ShowAdminConsoleLink:    true,
 					},
 				},
 			},

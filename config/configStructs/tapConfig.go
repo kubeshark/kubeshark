@@ -173,17 +173,29 @@ type Role struct {
 }
 
 type SamlConfig struct {
-	IdpMetadataUrl string          `yaml:"idpMetadataUrl" json:"idpMetadataUrl"`
-	X509crt        string          `yaml:"x509crt" json:"x509crt"`
-	X509key        string          `yaml:"x509key" json:"x509key"`
-	RoleAttribute  string          `yaml:"roleAttribute" json:"roleAttribute"`
-	Roles          map[string]Role `yaml:"roles" json:"roles"`
+	IdpMetadataUrl string `yaml:"idpMetadataUrl" json:"idpMetadataUrl"`
+	X509crt        string `yaml:"x509crt" json:"x509crt"`
+	X509key        string `yaml:"x509key" json:"x509key"`
 }
 
 type AuthConfig struct {
-	Enabled bool       `yaml:"enabled" json:"enabled" default:"false"`
-	Type    string     `yaml:"type" json:"type" default:"saml"`
-	Saml    SamlConfig `yaml:"saml" json:"saml"`
+	Enabled bool `yaml:"enabled" json:"enabled" default:"false"`
+	// Type selects the authentication backend. Valid values:
+	//   saml     — SAML 2.0 SSO
+	//   oidc     — generic OIDC (Dex, Okta, Auth0, Keycloak, Azure AD, …)
+	//   dex      — permanent alias of oidc (kept for back-compat)
+	//   descope  — Descope SDK
+	//   default  — also routes to Descope (kept, not deprecated)
+	//
+	// NOTE: prior releases routed `oidc` to Descope. If you were using `oidc`
+	// to mean Descope, switch to `descope` (or `default`). The rename is a
+	// breaking change documented in the release notes.
+	Type          string          `yaml:"type" json:"type" default:"saml"`
+	Roles         map[string]Role `yaml:"roles" json:"roles"`
+	RolesClaim    string          `yaml:"rolesClaim" json:"rolesClaim"`
+	DefaultRole   string          `yaml:"defaultRole" json:"defaultRole"`
+	DefaultFilter string          `yaml:"defaultFilter" json:"defaultFilter"`
+	Saml          SamlConfig      `yaml:"saml" json:"saml"`
 }
 
 type IngressConfig struct {

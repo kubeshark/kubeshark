@@ -26,12 +26,12 @@ spec:
         - env:
             - name: REACT_APP_AUTH_ENABLED
               value: '{{- if or (and .Values.cloudLicenseEnabled (not (empty .Values.license))) (not .Values.internetConnectivity) -}}
-                        {{ (default false .Values.demoModeEnabled) | ternary true ((and .Values.tap.auth.enabled (eq .Values.tap.auth.type "dex")) | ternary true false) }}
+                        {{ (default false .Values.demoModeEnabled) | ternary true ((and .Values.tap.auth.enabled (or (eq .Values.tap.auth.type "oidc") (eq .Values.tap.auth.type "dex"))) | ternary true false) }}
                       {{- else -}}
                         {{ .Values.cloudLicenseEnabled | ternary "true" ((default false .Values.demoModeEnabled) | ternary "true" .Values.tap.auth.enabled) }}
                       {{- end }}'
             - name: REACT_APP_AUTH_TYPE
-              value: '{{- if and .Values.cloudLicenseEnabled (not (eq .Values.tap.auth.type "dex")) -}}
+              value: '{{- if and .Values.cloudLicenseEnabled (not (or (eq .Values.tap.auth.type "oidc") (eq .Values.tap.auth.type "dex"))) -}}
                         default
                       {{- else -}}
                         {{ (default false .Values.demoModeEnabled) | ternary "default" .Values.tap.auth.type }}
