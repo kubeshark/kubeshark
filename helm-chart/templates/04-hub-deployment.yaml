@@ -69,6 +69,11 @@ spec:
             {{- if .Values.tap.gitops.enabled }}
             - -gitops
             {{- end }}
+            {{- $trustedControllers := .Values.tap.internalAuth.trustedControllers | default list }}
+            {{- if $trustedControllers }}
+            - -trusted-controllers
+            - '{{ join "," $trustedControllers }}'
+            {{- end }}
             - -cloud-api-url
             - '{{ .Values.cloudApiUrl }}'
             {{- if .Values.tap.snapshots.cloud.provider }}

@@ -44,6 +44,16 @@ rules:
     - create
     - update
     - delete
+  # internalauth: hub validates projected SA tokens from in-cluster gRPC
+  # callers (dissection-job today, future helm-deployed services) by issuing
+  # a TokenReview. This admits trusted callers without falling through to the
+  # browser OIDC redirect chain.
+  - apiGroups:
+    - authentication.k8s.io
+    resources:
+    - tokenreviews
+    verbs:
+    - create
 ---
 apiVersion: rbac.authorization.k8s.io/v1
 kind: Role

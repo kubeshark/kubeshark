@@ -39,6 +39,13 @@ tap:
     memory: 4Gi
     storageSize: ""
     storageClass: ""
+  # internalAuth lists controller names whose pods are trusted to authenticate
+  # to hub's internal gRPC services via projected ServiceAccountToken (audience
+  # "kubeshark-hub"). Hub matches each pod's OwnerReferences against this list
+  # by name AND UID, so a forged name alone does not grant trust. Hub-spawned
+  # Jobs (dissection-job) are always trusted regardless of this list.
+  internalAuth:
+    trustedControllers: []
   snapshots:
     local:
       storageClass: ""
