@@ -69,11 +69,11 @@ spec:
             {{- if .Values.tap.gitops.enabled }}
             - -gitops
             {{- end }}
-            {{- $trustedControllers := .Values.tap.internalAuth.trustedControllers | default list }}
-            {{- if $trustedControllers }}
+            {{/* Controllers whose pods may authenticate to hub via projected SA
+                 token (audience kubeshark-hub). Names must match the actual
+                 metadata.name of the controllers deployed by this chart. */}}
             - -trusted-controllers
-            - '{{ join "," $trustedControllers }}'
-            {{- end }}
+            - 'kubeshark-worker-daemon-set'
             - -cloud-api-url
             - '{{ .Values.cloudApiUrl }}'
             {{- if .Values.tap.snapshots.cloud.provider }}
