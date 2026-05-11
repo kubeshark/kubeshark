@@ -69,11 +69,6 @@ spec:
             {{- if .Values.tap.gitops.enabled }}
             - -gitops
             {{- end }}
-            {{/* Controllers whose pods may authenticate to hub via projected SA
-                 token (audience kubeshark-hub). Names must match the actual
-                 metadata.name of the controllers deployed by this chart. */}}
-            - -trusted-controllers
-            - 'kubeshark-worker-daemon-set'
             - -cloud-api-url
             - '{{ .Values.cloudApiUrl }}'
             {{- if .Values.tap.snapshots.cloud.provider }}
