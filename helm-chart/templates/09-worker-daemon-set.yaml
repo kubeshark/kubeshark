@@ -21,7 +21,7 @@ spec:
     metadata:
       labels:
         app.kubeshark.com/app: worker
-        kubeshark.io/hub-internal-auth: "true"
+        kubeshark.io/internal-auth: "true"
         {{- include "kubeshark.labels" . | nindent 8 }}
       name: kubeshark-worker-daemon-set
       namespace: kubeshark
