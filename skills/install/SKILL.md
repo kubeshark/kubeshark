@@ -1,5 +1,6 @@
 ---
 name: install
+user-invocable: true
 description: >
   Kubeshark installation and deployment skill. Use this skill whenever the user wants
   to install Kubeshark, deploy Kubeshark to a Kubernetes cluster, set up Kubeshark,
