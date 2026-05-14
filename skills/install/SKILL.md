@@ -146,17 +146,19 @@ helm repo update
 
 ### Step 2 — Create a Config Directory
 
-Create `~/.kubeshark/` to store configuration files:
+Store all configuration files in `~/.kubeshark/`:
 
 ```bash
 mkdir -p ~/.kubeshark
 ```
 
-Store the custom `values.yaml` here:
+**Before writing any file to `~/.kubeshark/`, check if it already exists.**
+If `~/.kubeshark/values.yaml` (or any target filename) already exists, **ask the
+user** before overwriting. Either:
+1. Back up the existing file first: `cp ~/.kubeshark/values.yaml ~/.kubeshark/values.yaml.bak.$(date +%s)`
+2. Use a descriptive name for the new file (e.g., `values-production.yaml`, `values-staging.yaml`)
 
-```bash
-# ~/.kubeshark/values.yaml
-```
+The user may have multiple values files for different clusters or environments.
 
 ### Step 3 — Build the Values File
 
