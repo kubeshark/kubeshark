@@ -155,23 +155,6 @@ type ProbeConfig struct {
 	FailureThreshold    int `yaml:"failureThreshold" json:"failureThreshold" default:"3"`
 }
 
-type ScriptingPermissions struct {
-	CanSave     bool `yaml:"canSave" json:"canSave" default:"true"`
-	CanActivate bool `yaml:"canActivate" json:"canActivate" default:"true"`
-	CanDelete   bool `yaml:"canDelete" json:"canDelete" default:"true"`
-}
-
-type Role struct {
-	Filter                  string               `yaml:"filter" json:"filter" default:""`
-	CanDownloadPCAP         bool                 `yaml:"canDownloadPCAP" json:"canDownloadPCAP" default:"false"`
-	CanUseScripting         bool                 `yaml:"canUseScripting" json:"canUseScripting" default:"false"`
-	ScriptingPermissions    ScriptingPermissions `yaml:"scriptingPermissions" json:"scriptingPermissions"`
-	CanUpdateTargetedPods   bool                 `yaml:"canUpdateTargetedPods" json:"canUpdateTargetedPods" default:"false"`
-	CanStopTrafficCapturing bool                 `yaml:"canStopTrafficCapturing" json:"canStopTrafficCapturing" default:"false"`
-	CanControlDissection    bool                 `yaml:"canControlDissection" json:"canControlDissection" default:"false"`
-	ShowAdminConsoleLink    bool                 `yaml:"showAdminConsoleLink" json:"showAdminConsoleLink" default:"false"`
-}
-
 type SamlConfig struct {
 	IdpMetadataUrl string `yaml:"idpMetadataUrl" json:"idpMetadataUrl"`
 	X509crt        string `yaml:"x509crt" json:"x509crt"`
@@ -190,12 +173,21 @@ type AuthConfig struct {
 	// NOTE: prior releases routed `oidc` to Descope. If you were using `oidc`
 	// to mean Descope, switch to `descope` (or `default`). The rename is a
 	// breaking change documented in the release notes.
-	Type          string          `yaml:"type" json:"type" default:"saml"`
-	Roles         map[string]Role `yaml:"roles" json:"roles"`
-	RolesClaim    string          `yaml:"rolesClaim" json:"rolesClaim"`
-	DefaultRole   string          `yaml:"defaultRole" json:"defaultRole"`
-	DefaultFilter string          `yaml:"defaultFilter" json:"defaultFilter"`
-	Saml          SamlConfig      `yaml:"saml" json:"saml"`
+	Type       string `yaml:"type" json:"type" default:"saml"`
+	RolesClaim string `yaml:"rolesClaim" json:"rolesClaim"`
+	// DefaultRole is applied when the authenticated user's SSO claim has no
+	// recognized group. Must be one of the four built-in roles
+	// (kubeshark-admin / kubeshark-realtime / kubeshark-snapshot /
+	// kubeshark-viewer) or empty for strict-deny. See hub plans/
+	// permissions-refactoring.md for the capability matrix per role.
+	DefaultRole string `yaml:"defaultRole" json:"defaultRole"`
+	// GroupMapping translates SSO group names into built-in role names.
+	// Optional — groups whose name already matches a built-in role are
+	// identity-matched and don't need an entry here. Use this map when SSO
+	// groups are named differently from the built-in roles (e.g. an existing
+	// AD group "engineering-leads" that should resolve to kubeshark-admin).
+	GroupMapping map[string]string `yaml:"groupMapping" json:"groupMapping"`
+	Saml         SamlConfig        `yaml:"saml" json:"saml"`
 }
 
 type IngressConfig struct {
