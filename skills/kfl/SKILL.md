@@ -14,6 +14,7 @@ description: >
   or any request to slice/search/narrow network traffic in Kubeshark. Also trigger
   when other skills need to construct filters — KFL is the query language for all
   Kubeshark traffic analysis.
+last-updated: 2026-05-08
 ---
 
 # KFL2 — Kubeshark Filter Language
@@ -94,7 +95,8 @@ filter term — they're fast and narrow the search space immediately.
 | `sctp` | SCTP | `gql` | GraphQL (v1+v2) |
 | `icmp` | ICMP | `gqlv1` / `gqlv2` | GraphQL version-specific |
 | `grpc` | gRPC (HTTP/2 sub-protocol) | `mongodb` | MongoDB |
-| `mysql` | MySQL | `radius` | RADIUS |
+| `mysql` | MySQL | `postgresql` | PostgreSQL |
+| `radius` | RADIUS | | |
 | `diameter` | Diameter | `conn` / `flow` | L4 connection/flow tracking |
 | | | `tcp_conn` / `udp_conn` | Transport-specific connections |
 
@@ -275,6 +277,21 @@ mysql && !mysql_success                               // Failed queries
 mysql && mysql_error_code != 0                        // Error code filtering
 mysql && mysql_total_size > 10000                     // Large queries
 ```
+
+### PostgreSQL
+
+```
+postgresql && postgresql_command == "COM_QUERY"              // Query commands
+postgresql && postgresql_query.contains("SELECT")            // SELECT statements
+postgresql && postgresql_database == "orders_db"             // Database filtering
+postgresql && postgresql_user == "admin"                     // User filtering
+postgresql && !postgresql_success                            // Failed queries
+postgresql && postgresql_error_code != ""                    // Error code filtering (SQLSTATE string)
+postgresql && postgresql_total_size > 10000                  // Large queries
+```
+
+> **Note**: `postgresql_error_code` is a **string** (SQLSTATE code like `"23505"`),
+> not an int. This differs from MySQL's `mysql_error_code` which is an int.
 
 ### gRPC
 
