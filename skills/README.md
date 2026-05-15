@@ -15,7 +15,6 @@ compatible agents.
 | [`network-rca`](network-rca/) | Network Root Cause Analysis. Retrospective traffic analysis via snapshots, with two investigation routes: PCAP (for Wireshark/compliance) and Dissection (for AI-driven API-level investigation). |
 | [`kfl`](kfl/) | KFL2 (Kubeshark Filter Language) expert. Complete reference for writing, debugging, and optimizing CEL-based traffic filters across all supported protocols. |
 | [`security-audit`](security-audit/) | Network Security Audit. Systematic 8-phase threat detection across MITRE ATT&CK tactics — C2, exfiltration, lateral movement, credential theft, cryptomining, protocol abuse — using snapshot-based traffic analysis. |
-| [`install`](install/) | Installation & Deployment. Guides CLI and Helm installation, builds custom values files, handles platform-specific config (EKS/GKE/AKS/OpenShift/KinD), auth, ingress, cloud storage, and troubleshooting. |
 
 ## Prerequisites
 
