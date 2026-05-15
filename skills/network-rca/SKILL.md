@@ -109,10 +109,17 @@ Every investigation starts with a snapshot. After that, you choose one of two
 investigation routes depending on your goal:
 
 1. **Determine time window** — When did the issue occur? Use `get_data_boundaries`
-   to see what raw capture data is available.
-2. **Create or locate a snapshot** — Either take a new snapshot covering the
+   to see what raw capture data (L4) is available.
+2. **Check the L7 (dissected) window** — Before any KFL query on *live* data,
+   call `get_l7_data_boundaries`. It returns the per-node + cluster-wide range
+   of dissected API call data plus a `dissection_enabled` flag. Treat L4
+   (`get_data_boundaries`) as the snapshot/PCAP window and L7
+   (`get_l7_data_boundaries`) as the KFL-query window — they can differ
+   significantly because L7 only starts producing entries once dissection is
+   enabled (existing raw capture is **not** retroactively dissected).
+3. **Create or locate a snapshot** — Either take a new snapshot covering the
    incident window, or find an existing one with `list_snapshots`.
-3. **Choose your investigation route** — PCAP or Dissection (see below).
+4. **Choose your investigation route** — PCAP or Dissection (see below).
 
 ### Choosing the Right Route
 
@@ -163,6 +170,34 @@ Per node:
 
 If the incident falls outside the available window, the data has been rotated
 out. Suggest increasing `storageSize` for future coverage.
+
+### Check L7 (Dissected) Data Boundaries
+
+**Tool**: `get_l7_data_boundaries`
+
+Check what *dissected* L7 entries exist across the cluster. This is the
+pre-flight check before any KFL query against live data. The response
+contains:
+
+- `dissection_enabled`: if `false`, KFL queries on live data will return
+  empty regardless of L4 boundaries. Enabling dissection only captures
+  *forward* — raw capture is **not** retroactively dissected.
+- `cluster.oldest_ts` / `cluster.newest_ts`: cluster-wide window where KFL
+  on live data has any chance of returning results.
+- `nodes[].oldest_ts` / `nodes[].newest_ts`: per-node windows for narrowing
+  queries.
+
+**Key distinction:**
+
+| | L4 (`get_data_boundaries`) | L7 (`get_l7_data_boundaries`) |
+|---|---|---|
+| Data | Raw PCAP capture | Dissected API call entries |
+| Useful for | Snapshots, PCAP extraction | KFL queries |
+| Backfill | Comes from FIFO ring buffer | Only forward from dissection-enable |
+
+If the user is asking an API-level question and `dissection_enabled` is
+`false`, enable it first — but tell the user they will only see entries
+captured *after* enabling, never the historical window.
 
 ### Create a Snapshot
 
@@ -421,11 +456,16 @@ The two routes are complementary. A common pattern:
 ### Post-Incident RCA
 
 1. Identify the incident time window from alerts, logs, or user reports
-2. Check `get_data_boundaries` — is the window still in raw capture?
-3. `create_snapshot` covering the incident window (add 15 minutes buffer)
-4. **Dissection route**: `start_snapshot_dissection` → `get_api_stats` →
+2. Check `get_data_boundaries` — is the window still in raw capture (L4)?
+3. Check `get_l7_data_boundaries` — was dissection enabled at that time, and
+   does the window overlap with the L7 entry range? If `dissection_enabled`
+   is `false` or the window predates the L7 range, the Dissection route is
+   limited to whatever entries exist now — falling back to the PCAP route
+   is often the right call.
+4. `create_snapshot` covering the incident window (add 15 minutes buffer)
+5. **Dissection route**: `start_snapshot_dissection` → `get_api_stats` →
    `list_api_calls` → `get_api_call` → follow the dependency chain
-5. **PCAP route**: `list_workloads` → `export_snapshot_pcap` with BPF →
+6. **PCAP route**: `list_workloads` → `export_snapshot_pcap` with BPF →
    hand off to Wireshark or archive
 
 ### Other Use Cases
