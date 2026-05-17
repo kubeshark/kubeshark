@@ -154,7 +154,7 @@ tap:
     enabled: false
     type: saml
     rolesClaim: groups
-    defaultRole: ""
+    defaultRole: kubeshark-viewer
     groupMapping: {}
     saml:
       idpMetadataUrl: ""
