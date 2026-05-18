@@ -105,6 +105,7 @@ func CreateDefaultConfig() ConfigStruct {
 				RolesClaim:   "groups",
 				DefaultRole:  "kubeshark-viewer",
 				GroupMapping: map[string]string{},
+				Roles:        map[string]configStructs.RoleConfig{},
 			},
 			EnabledDissectors: []string{
 				"amqp",

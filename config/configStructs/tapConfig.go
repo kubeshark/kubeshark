@@ -178,16 +178,35 @@ type AuthConfig struct {
 	// DefaultRole is applied when the authenticated user's SSO claim has no
 	// recognized group. Must be one of the four built-in roles
 	// (kubeshark-admin / kubeshark-realtime / kubeshark-snapshot /
-	// kubeshark-viewer) or empty for strict-deny. See hub plans/
-	// permissions-refactoring.md for the capability matrix per role.
+	// kubeshark-viewer), the name of an operator-defined role under
+	// `tap.auth.roles`, or empty for strict-deny.
 	DefaultRole string `yaml:"defaultRole" json:"defaultRole"`
-	// GroupMapping translates SSO group names into built-in role names.
-	// Optional — groups whose name already matches a built-in role are
-	// identity-matched and don't need an entry here. Use this map when SSO
-	// groups are named differently from the built-in roles (e.g. an existing
-	// AD group "engineering-leads" that should resolve to kubeshark-admin).
+	// GroupMapping translates SSO group names into role names (built-in or
+	// operator-defined). Optional — groups whose name already matches a
+	// built-in role are identity-matched and don't need an entry here.
+	// Operator-defined role names MUST appear here to participate in
+	// resolution (identity-match is built-in-only).
 	GroupMapping map[string]string `yaml:"groupMapping" json:"groupMapping"`
-	Saml         SamlConfig        `yaml:"saml" json:"saml"`
+	// Roles is the operator-defined role catalogue, keyed by role name.
+	// Each role has its own capability set + namespace scope. Names with
+	// the `kubeshark-` prefix are reserved for built-ins and will be
+	// rejected at hub startup. Unknown capability strings are dropped
+	// with a warning; empty / "*" namespace specs mean deny-all-data and
+	// allow-all respectively (see hub plans/permissions-decisions.md).
+	Roles map[string]RoleConfig `yaml:"roles" json:"roles"`
+	Saml  SamlConfig            `yaml:"saml" json:"saml"`
+}
+
+// RoleConfig is an operator-defined role declared under tap.auth.roles.
+// Capabilities is the closed vocabulary documented in the hub project
+// (snapshot:read / snapshot:write / snapshot:dissection / dissection:live /
+// dissection:control / pods:target:write / settings:write); unknown
+// capability strings are warn-dropped at hub startup. Namespaces is a
+// comma-separated list with `*` (allow-all) and glob (`foo-*`, `*-bar`,
+// `*mid*`) support; empty string means deny-all-data.
+type RoleConfig struct {
+	Capabilities []string `yaml:"capabilities" json:"capabilities"`
+	Namespaces   string   `yaml:"namespaces" json:"namespaces"`
 }
 
 type IngressConfig struct {

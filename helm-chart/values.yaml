@@ -156,6 +156,7 @@ tap:
     rolesClaim: groups
     defaultRole: kubeshark-viewer
     groupMapping: {}
+    roles: {}
     saml:
       idpMetadataUrl: ""
       x509crt: ""

@@ -32,6 +32,7 @@ data:
     AUTH_ROLES_CLAIM: '{{ .Values.tap.auth.rolesClaim }}'
     AUTH_DEFAULT_ROLE: '{{ default "" .Values.tap.auth.defaultRole }}'
     AUTH_GROUP_MAPPING: '{{ default (dict) .Values.tap.auth.groupMapping | toJson }}'
+    AUTH_ROLES: '{{ default (dict) .Values.tap.auth.roles | toJson }}'
     AUTH_OIDC_ISSUER: '{{ default "not set" (((.Values.tap).auth).oidc).issuer }}'
     AUTH_OIDC_REFRESH_TOKEN_LIFETIME: '{{ default "3960h" (((.Values.tap).auth).oidc).refreshTokenLifetime }}'
     AUTH_OIDC_STATE_PARAM_EXPIRY: '{{ default "10m" (((.Values.tap).auth).oidc).oauth2StateParamExpiry }}'
