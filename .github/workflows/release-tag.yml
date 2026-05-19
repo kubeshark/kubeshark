@@ -15,6 +15,7 @@ jobs:
       - uses: actions/checkout@v5
         with:
           fetch-depth: 0
+          token: ${{ secrets.GH_PAT }}
 
       - name: Create and push tag
         run: |
