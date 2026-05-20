@@ -268,8 +268,8 @@ release: ## Print release workflow instructions.
 	@echo ""
 	@echo "  Shortcut: make release-pr VERSION=x.y.z runs 1 → 2 → 3."
 	@echo ""
-	@echo "  After both PRs merge: tag is created automatically,"
-	@echo "  or run: make release-tag VERSION=x.y.z"
+	@echo "  After both PRs merge, create the release tag:"
+	@echo "  make release-tag VERSION=x.y.z"
 
 # Internal: validate VERSION before any release-* target runs.
 _release-check-version:
@@ -362,14 +362,18 @@ release-pr: release-siblings release-pr-kubeshark release-pr-helm ## Run release
 	@echo "  - kubeshark.github.io: Review and merge the helm chart PR."
 	@echo "Tag will be created automatically, or run: make release-tag VERSION=$(VERSION)"
 
-release-tag: ## Step 2 (fallback): Tag master after release PR is merged.
+release-tag: _release-check-version ## Step 2: Tag master after release PR is merged. Idempotent; re-run to retrigger the release build.
 	@echo "Verifying release PR was merged..."
 	@if ! gh pr list --state merged --head release/v$(VERSION) --json number --jq '.[0].number' | grep -q .; then \
 		echo "Error: No merged PR found for release/v$(VERSION). Merge the PR first."; \
 		exit 1; \
 	fi
 	@git checkout master && git pull
-	@git tag -d v$(VERSION) 2>/dev/null; git tag v$(VERSION) && git push origin --tags
+	@if git ls-remote --tags origin "refs/tags/v$(VERSION)" | grep -q .; then \
+		echo "Tag v$(VERSION) already exists on origin — deleting to retrigger release..."; \
+		git push origin :refs/tags/v$(VERSION); \
+	fi
+	@git tag -d v$(VERSION) 2>/dev/null; git tag v$(VERSION) && git push origin "refs/tags/v$(VERSION)"
 	@echo ""
 	@echo "Tagged v$(VERSION) on master. GitHub Actions will build the release."
 
