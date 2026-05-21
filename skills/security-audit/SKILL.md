@@ -113,25 +113,15 @@ waiting for snapshot creation or dissection.
 
 Confirm Kubeshark is running and which tools are available.
 
-**Tool**: `get_data_boundaries`
-
-Check how far back raw capture data exists. You need this to plan snapshot
-creation in Step 3 — call it now so the data is ready when you need it.
-
-**Tool**: `list_workloads` (no snapshot_id — queries live state)
-
-Get the current workload inventory for the target namespace. This returns
-pod names, namespaces, and IP addresses. Save the IPs — you'll need them
-throughout the audit.
-
-**Note**: `list_workloads` without a `snapshot_id` may fail with some
-Kubeshark versions (`snapshot_id is required for filtered listing`). If
-this happens, use individual lookups with `name` + `namespace` parameters,
-or skip to Step 3 and get the workload inventory from the first snapshot.
-
 ### Step 2: Query Live Traffic
 
-In parallel, query the real-time dissected traffic across key dimensions.
+**Tool**: `get_l7_data_boundaries`
+
+Check the time boundaries of dissected API calls in the real-time database.
+This tells you how far back L7 data is available — use it to understand
+the scope of your real-time queries before running them.
+
+Then query the real-time dissected traffic across key dimensions.
 Use `list_api_calls` and `list_l4_flows` **without** a `snapshot_id` to
 hit the live data.
 
@@ -155,6 +145,12 @@ appear. Treat Section A findings as a fast first pass, not the final word.
 
 While analyzing real-time data, begin creating snapshots for Section B.
 
+**Tool**: `get_data_boundaries`
+
+Check how far back raw capture data exists. Raw capture is the FIFO buffer
+that feeds snapshot creation — this tells you the time window available
+for snapshots (which is different from the L7 boundaries in Step 2).
+
 **CRITICAL: Create snapshots ONE AT A TIME, sequentially.** Kubeshark only
 supports one concurrent snapshot download. Parallel creation will cause
 failures and data loss. The pattern is:
@@ -164,8 +160,7 @@ failures and data loss. The pattern is:
 3. You do NOT need to wait for dissection before creating the next snapshot.
    Create the next snapshot while the previous one dissects.
 
-Use the data boundaries from Step 1 (`get_data_boundaries`) to calculate
-how many snapshots are needed:
+Use `get_data_boundaries` to calculate how many snapshots are needed:
 
 ```
 total_range_ms = newest_timestamp - oldest_timestamp
@@ -247,7 +242,6 @@ wait for dissection to use the first two:
 | Source | Available | Tool | What It Provides |
 |--------|-----------|------|-----------------|
 | **Workloads & IPs** | Immediately | `list_workloads` with `snapshot_id` | Pod names, namespaces, IPs at capture time |
-| **L4 Flows** | Immediately | `list_l4_flows` with `snapshot_id` | TCP/UDP connections: src/dst IPs, ports, bytes, duration |
 | **PCAP Export** | Immediately | `export_snapshot_pcap` | Raw packets filtered by BPF expression |
 | **L7 Dissection** | After indexing | `list_api_calls`, `get_api_call`, `get_api_stats` | DNS queries, HTTP requests, SQL statements, Redis commands, gRPC methods |
 
@@ -261,12 +255,12 @@ Snapshot ready
   ├── Start dissection (background)
   ├── Phase 1: list_workloads (immediate) — workload inventory + IPs
   │            export_snapshot_pcap (immediate) — raw packet evidence
-  ├── Phase 3: list_l4_flows (immediate) — external flows, port scanning
-  ├── Phase 4: list_l4_flows (immediate) — lateral movement, fan-out
   │
   ├── [dissection completes]
   │
   ├── Phase 2: list_api_calls — DNS threat analysis
+  ├── Phase 3: list_api_calls — external HTTP communication
+  ├── Phase 4: list_api_calls — lateral movement, K8s API access
   ├── Phase 5: list_api_calls — protocol abuse (PG, Redis, gRPC)
   ├── Phase 6: list_api_calls — credential access (IMDS, cloud APIs)
   └── Phase 7: correlate all findings
@@ -396,32 +390,14 @@ Compare the count of failed queries to total queries per source pod.
 
 **Goal**: Identify all traffic leaving the cluster. Any pod connecting to
 external IPs or domains needs justification.
-**Data source**: Immediate (no dissection needed). Use L4 flows first,
-then enrich with L7 data from dissection when available.
+**Data source**: L7 dissection (after indexing).
 
-### 3a: L4 External Flows
+**Note**: L4 flow analysis for external communication is covered in
+Section A (Step 2) using `list_l4_flows` against real-time data. In
+Section B, use `list_api_calls` against dissected snapshot data for
+deeper L7 inspection of external traffic.
 
-**Tool**: `list_l4_flows` with `snapshot_id`
-
-This is available immediately — do not wait for dissection. Use the workload
-IPs from Phase 1 to map flows to pod identities.
-
-Look for flows where the destination is NOT a cluster-internal IP (not RFC 1918:
-10.x.x.x, 172.16-31.x.x, 192.168.x.x). Every external flow is a potential
-exfiltration or C2 channel.
-
-**What to flag**:
-
-| Pattern | Threat | Severity |
-|---------|--------|----------|
-| Destination 169.254.169.254 | IMDS metadata credential theft | CRITICAL |
-| Destination port 3333, 14433, 45700 | Stratum mining protocol | CRITICAL |
-| Destination port 4444, 1337 | Reverse shell / backdoor | CRITICAL |
-| Persistent connections to single external IP | C2 beaconing | HIGH |
-| Large outbound data volume (>1MB) to external | Data exfiltration | HIGH |
-| Connections to cloud API endpoints (port 443) | Stolen credential usage | MEDIUM |
-
-### 3b: HTTP External Requests
+### 3a: HTTP External Requests
 
 **Tool**: `list_api_calls` with KFL: `http && !dst.pod.namespace.startsWith("kube")`
 
@@ -440,8 +416,11 @@ Inspect outbound HTTP requests for:
 
 **Goal**: Identify pods communicating with services they shouldn't — crossing
 namespace boundaries, probing infrastructure, or scanning the network.
-**Data source**: L4 flows (immediate) for port scanning detection. L7
-dissection (after indexing) for cross-namespace HTTP and API server analysis.
+**Data source**: L7 dissection (after indexing) for cross-namespace HTTP
+and API server analysis.
+
+**Note**: Port scanning detection via `list_l4_flows` is covered in
+Section A (Step 2) against real-time data.
 
 ### 4a: Cross-Namespace Traffic
 
@@ -468,19 +447,7 @@ A pod hitting **multiple** of these paths is performing systematic enumeration,
 not legitimate API access. Legitimate workloads typically access 1-2 specific
 resources, not sweep across resource types.
 
-### 4c: Port Scanning Detection
-
-**Tool**: `list_l4_flows` with `snapshot_id` (immediate — no dissection needed)
-
-Use the workload IPs from Phase 1 to identify the source pod.
-Look for a single source IP with connections to:
-- Many distinct destination IPs (>10)
-- Many distinct destination ports (>5)
-- High connection failure rate (RST/timeout)
-
-This is a textbook port scan pattern.
-
-### 4d: Service Fingerprinting
+### 4c: Service Fingerprinting
 
 **Tool**: `list_api_calls` with KFL: `http && (path == "/.env" || path == "/actuator/info" || path == "/server-info" || path == "/version")`
 
@@ -488,7 +455,7 @@ These paths are used for service fingerprinting — mapping what software is
 running on internal endpoints. A pod probing multiple services with these
 paths is performing reconnaissance.
 
-### 4e: Service Account Permission Audit via Traffic
+### 4d: Service Account Permission Audit via Traffic
 
 Cross-reference Phase 4b findings (K8s API traffic) with the source pod's
 actual service account to determine if permissions are excessive.
@@ -515,7 +482,7 @@ For each pod making API server calls:
 This converts a network finding (API traffic volume) into an actionable RBAC
 recommendation — telling the user exactly which ClusterRoleBinding to revoke.
 
-### 4f: Cross-Namespace Threat Correlation
+### 4e: Cross-Namespace Threat Correlation
 
 When port scanning or lateral movement targets IPs outside the audited
 namespace (e.g., IPs in the pod CIDR `10.244.x.x` that don't belong to
@@ -602,8 +569,6 @@ cloud API exploitation.
 ### 6a: Instance Metadata Service (IMDS)
 
 **Tool**: `list_api_calls` with KFL: `dst.ip == "169.254.169.254"`
-
-Or use `list_l4_flows` to find connections to 169.254.169.254.
 
 Any pod connecting to this IP is attempting to steal the node's cloud credentials.
 Check the HTTP paths:
