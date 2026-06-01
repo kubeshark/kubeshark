@@ -122,7 +122,7 @@ func CreateDefaultConfig() ConfigStruct {
 				// "tcp",
 				// "udp",
 				"ws",
-				// "tlsx",
+				"tlsx",
 				"ldap",
 				"radius",
 				"diameter",

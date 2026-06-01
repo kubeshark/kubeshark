@@ -203,6 +203,7 @@ tap:
   - postgresql
   - redis
   - ws
+  - tlsx
   - ldap
   - radius
   - diameter
