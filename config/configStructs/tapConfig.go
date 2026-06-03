@@ -192,7 +192,7 @@ type AuthConfig struct {
 	// the `kubeshark-` prefix are reserved for built-ins and will be
 	// rejected at hub startup. Unknown capability strings are dropped
 	// with a warning; empty / "*" namespace specs mean deny-all-data and
-	// allow-all respectively (see hub plans/permissions-decisions.md).
+	// allow-all respectively.
 	Roles map[string]RoleConfig `yaml:"roles" json:"roles"`
 	Saml  SamlConfig            `yaml:"saml" json:"saml"`
 }
