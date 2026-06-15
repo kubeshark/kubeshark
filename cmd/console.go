@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -44,6 +45,18 @@ func init() {
 func runConsoleWithoutProxy() {
 	log.Info().Msg("Starting scripting console ...")
 	time.Sleep(5 * time.Second)
+
+	// Best-effort: mint a scoped ServiceAccount token to authenticate to a
+	// gated Hub as kubeshark-cli; fall back to License-Key when not possible.
+	saToken := ""
+	if provider, err := getKubernetesProviderForCli(true, true); err == nil {
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		if tok, terr := provider.MintHubToken(ctx, config.Config.Tap.Release.Namespace); terr == nil {
+			saToken = tok
+		}
+		cancel()
+	}
+
 	hubUrl := kubernetes.GetHubUrl()
 	for {
 
@@ -66,7 +79,11 @@ func runConsoleWithoutProxy() {
 		}
 		headers := http.Header{}
 		headers.Set(utils.X_KUBESHARK_CAPTURE_HEADER_KEY, utils.X_KUBESHARK_CAPTURE_HEADER_IGNORE_VALUE)
-		headers.Set("License-Key", config.Config.License)
+		if saToken != "" {
+			headers.Set(utils.CLI_AUTH_HEADER, saToken)
+		} else {
+			headers.Set(utils.LICENSE_KEY_HEADER, config.Config.License)
+		}
 
 		c, _, err := websocket.DefaultDialer.Dial(u.String(), headers)
 		if err != nil {
