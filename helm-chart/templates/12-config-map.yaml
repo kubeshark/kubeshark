@@ -33,6 +33,7 @@ data:
     AUTH_CLI_SERVICE_ACCOUNTS: '{{ if (((.Values.tap).auth).cli).enabled }}{{ .Release.Namespace }}:kubeshark-cli{{ end }}'
     AUTH_ROLES_CLAIM: '{{ .Values.tap.auth.rolesClaim }}'
     AUTH_DEFAULT_ROLE: '{{ default "" .Values.tap.auth.defaultRole }}'
+    AUTH_GROUP_MAPPING: '{{ .Values.tap.auth.groupMapping | default dict | toJson }}'
     AUTH_OIDC_ISSUER: '{{ default "not set" (((.Values.tap).auth).oidc).issuer }}'
     AUTH_OIDC_REFRESH_TOKEN_LIFETIME: '{{ default "3960h" (((.Values.tap).auth).oidc).refreshTokenLifetime }}'
     AUTH_OIDC_STATE_PARAM_EXPIRY: '{{ default "10m" (((.Values.tap).auth).oidc).oauth2StateParamExpiry }}'
