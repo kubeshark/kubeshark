@@ -159,6 +159,7 @@ type mcpServer struct {
 	cachedHubMCP       *hubMCPResponse // Cached tools/prompts from Hub
 	cachedAt           time.Time       // When the cache was populated
 	hubMCPMu           sync.Mutex
+	saToken            string // ServiceAccount token for a gated Hub (phase 2a); empty falls back to License-Key
 }
 
 const hubMCPCacheTTL = 5 * time.Minute
@@ -167,13 +168,30 @@ func runMCPWithConfig(setFlags []string, directURL string, allowDestructive bool
 	// Disable zerolog output to stderr (MCP uses stdio)
 	zerolog.SetGlobalLevel(zerolog.Disabled)
 
+	urlMode := directURL != ""
+
+	// Best-effort: mint a scoped ServiceAccount token so the CLI authenticates
+	// to a gated Hub as kubeshark-cli. Falls back to License-Key when minting
+	// isn't possible (no kube access in --url mode, SA missing, or no RBAC).
+	saToken := ""
+	if !urlMode {
+		if provider, err := getKubernetesProviderForCli(true, true); err == nil {
+			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+			if tok, terr := provider.MintHubToken(ctx, config.Config.Tap.Release.Namespace); terr == nil {
+				saToken = tok
+			}
+			cancel()
+		}
+	}
+
 	server := &mcpServer{
-		httpClient:       utils.NewHubHTTPClient(30*time.Second, config.Config.License),
+		httpClient:       utils.NewHubHTTPClientWithToken(30*time.Second, saToken, config.Config.License),
+		saToken:          saToken,
 		stdin:            os.Stdin,
 		stdout:           os.Stdout,
 		setFlags:         setFlags,
 		directURL:        directURL,
-		urlMode:          directURL != "",
+		urlMode:          urlMode,
 		allowDestructive: allowDestructive,
 	}
 
@@ -196,7 +214,7 @@ func (s *mcpServer) validateDirectURL() error {
 	s.directURL = urlStr
 
 	// Use a short timeout for validation
-	client := utils.NewHubHTTPClient(10*time.Second, config.Config.License)
+	client := utils.NewHubHTTPClientWithToken(10*time.Second, s.saToken, config.Config.License)
 
 	// Try to reach the MCP API base endpoint which returns tool definitions
 	testURL := fmt.Sprintf("%s/api/mcp", urlStr)
@@ -825,7 +843,7 @@ func (s *mcpServer) callDownloadFile(args map[string]any) (string, bool) {
 	// The default s.httpClient has a 30s total timeout which would fail for large files (up to 10GB).
 	// This client sets only connection-level timeouts and lets the body stream without a deadline.
 	downloadClient := &http.Client{
-		Transport: utils.HubAuthTransport(config.Config.License, &http.Transport{
+		Transport: utils.HubAuthTransportWithToken(s.saToken, config.Config.License, &http.Transport{
 			TLSHandshakeTimeout:   10 * time.Second,
 			ResponseHeaderTimeout: 30 * time.Second,
 		}),
