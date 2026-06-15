@@ -20,6 +20,7 @@ import (
 	"github.com/kubeshark/kubeshark/internal/connect"
 	"github.com/kubeshark/kubeshark/kubernetes"
 	"github.com/kubeshark/kubeshark/misc"
+	"github.com/kubeshark/kubeshark/utils"
 	"github.com/rs/zerolog"
 )
 
@@ -167,7 +168,7 @@ func runMCPWithConfig(setFlags []string, directURL string, allowDestructive bool
 	zerolog.SetGlobalLevel(zerolog.Disabled)
 
 	server := &mcpServer{
-		httpClient:       &http.Client{Timeout: 30 * time.Second},
+		httpClient:       utils.NewHubHTTPClient(30*time.Second, config.Config.License),
 		stdin:            os.Stdin,
 		stdout:           os.Stdout,
 		setFlags:         setFlags,
@@ -195,7 +196,7 @@ func (s *mcpServer) validateDirectURL() error {
 	s.directURL = urlStr
 
 	// Use a short timeout for validation
-	client := &http.Client{Timeout: 10 * time.Second}
+	client := utils.NewHubHTTPClient(10*time.Second, config.Config.License)
 
 	// Try to reach the MCP API base endpoint which returns tool definitions
 	testURL := fmt.Sprintf("%s/api/mcp", urlStr)
@@ -204,6 +205,10 @@ func (s *mcpServer) validateDirectURL() error {
 		return fmt.Errorf("cannot connect to Kubeshark at %s: %v", urlStr, err)
 	}
 	defer func() { _ = resp.Body.Close() }()
+
+	if utils.IsAuthRequired(resp) {
+		return utils.ErrHubAuthRequired
+	}
 
 	// Try to parse the MCP response to validate it's a valid Kubeshark endpoint
 	var mcpInfo hubMCPResponse
@@ -820,10 +825,10 @@ func (s *mcpServer) callDownloadFile(args map[string]any) (string, bool) {
 	// The default s.httpClient has a 30s total timeout which would fail for large files (up to 10GB).
 	// This client sets only connection-level timeouts and lets the body stream without a deadline.
 	downloadClient := &http.Client{
-		Transport: &http.Transport{
+		Transport: utils.HubAuthTransport(config.Config.License, &http.Transport{
 			TLSHandshakeTimeout:   10 * time.Second,
 			ResponseHeaderTimeout: 30 * time.Second,
-		},
+		}),
 	}
 
 	resp, err := downloadClient.Get(fullURL)
@@ -1145,7 +1150,7 @@ func establishProxyConnection(timeout time.Duration) (string, error) {
 
 // fetchAndDisplayTools fetches tools from the Kubeshark API and displays them
 func fetchAndDisplayTools(hubURL string, timeout time.Duration) {
-	client := &http.Client{Timeout: timeout}
+	client := utils.NewHubHTTPClient(timeout, config.Config.License)
 
 	// Fetch tools list from /api/mcp endpoint
 	resp, err := client.Get(strings.TrimSuffix(hubURL, "/mcp") + "/mcp")

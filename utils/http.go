@@ -2,16 +2,66 @@ package utils
 
 import (
 	"bytes"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"strings"
+	"time"
 )
 
 const (
 	X_KUBESHARK_CAPTURE_HEADER_KEY          = "X-Kubeshark-Capture"
 	X_KUBESHARK_CAPTURE_HEADER_IGNORE_VALUE = "ignore"
+	LICENSE_KEY_HEADER                      = "License-Key"
 )
+
+// ErrHubAuthRequired indicates the Hub rejected the request because auth is
+// enabled but no valid credential was presented (missing/expired license).
+var ErrHubAuthRequired = errors.New("hub requires authentication: set a valid license (config 'license') or credentials")
+
+// licenseKeyRoundTripper attaches the License-Key header to every request so
+// any client built with it authenticates to a gated Hub. License-Key is a
+// custom (non-Authorization) header so it survives the kube API-server
+// service proxy, unlike a bearer token.
+type licenseKeyRoundTripper struct {
+	licenseKey string
+	base       http.RoundTripper
+}
+
+func (rt *licenseKeyRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
+	base := rt.base
+	if base == nil {
+		base = http.DefaultTransport
+	}
+	if rt.licenseKey != "" && req.Header.Get(LICENSE_KEY_HEADER) == "" {
+		req = req.Clone(req.Context())
+		req.Header.Set(LICENSE_KEY_HEADER, rt.licenseKey)
+	}
+	return base.RoundTrip(req)
+}
+
+// NewHubHTTPClient returns an *http.Client that authenticates to the Hub by
+// attaching the License-Key header to every request.
+func NewHubHTTPClient(timeout time.Duration, licenseKey string) *http.Client {
+	return &http.Client{
+		Timeout:   timeout,
+		Transport: &licenseKeyRoundTripper{licenseKey: licenseKey},
+	}
+}
+
+// HubAuthTransport wraps base so requests carry the License-Key header. Use
+// when a client needs custom transport settings (e.g. streaming downloads)
+// but must still authenticate to the Hub.
+func HubAuthTransport(licenseKey string, base http.RoundTripper) http.RoundTripper {
+	return &licenseKeyRoundTripper{licenseKey: licenseKey, base: base}
+}
+
+// IsAuthRequired reports whether the response indicates the Hub demanded
+// authentication — a 401, or a 302 redirect to an SSO login page.
+func IsAuthRequired(resp *http.Response) bool {
+	return resp != nil && (resp.StatusCode == http.StatusUnauthorized || resp.StatusCode == http.StatusFound)
+}
 
 // Get - When err is nil, resp always contains a non-nil resp.Body.
 // Caller should close resp.Body when done reading from it.
