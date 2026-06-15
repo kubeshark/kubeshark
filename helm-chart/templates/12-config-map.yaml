@@ -30,6 +30,7 @@ data:
                 {{- end }}'
     AUTH_SAML_IDP_METADATA_URL: '{{ .Values.tap.auth.saml.idpMetadataUrl }}'
     AUTH_ROLES: '{{ .Values.tap.auth.roles | toJson }}'
+    AUTH_CLI_SERVICE_ACCOUNTS: '{{ if (((.Values.tap).auth).cli).enabled }}{{ .Release.Namespace }}:kubeshark-cli{{ end }}'
     AUTH_ROLES_CLAIM: '{{ .Values.tap.auth.rolesClaim }}'
     AUTH_DEFAULT_ROLE: '{{ default "" .Values.tap.auth.defaultRole }}'
     AUTH_OIDC_ISSUER: '{{ default "not set" (((.Values.tap).auth).oidc).issuer }}'
