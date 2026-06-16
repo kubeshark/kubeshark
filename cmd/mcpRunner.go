@@ -318,14 +318,16 @@ func (s *mcpServer) ensureBackendConnection() string {
 
 // fetchHubMCP fetches tools and prompts from the Hub's /api/mcp endpoint
 // Returns nil if Hub is not available or returns an error
-// hubAuthErrorMessage returns a clear, user-facing explanation for a 401 from
-// the hub, distinguishing an expired/invalid credential from a generic API
-// error. URL mode can't auto-renew, so it points the user at re-minting.
+// hubAuthErrorMessage returns a clear, user-facing explanation for an
+// auth-required hub response (401, or an unfollowed SSO 302/303 redirect),
+// distinguishing a missing/expired credential from a generic API error. URL
+// mode can't auto-renew, so it points the user at re-minting.
 func (s *mcpServer) hubAuthErrorMessage() string {
 	if s.urlMode {
-		return "Hub rejected the request (401 Unauthorized): the --token credential is missing, expired, or invalid. " +
-			"URL mode cannot auto-renew it — mint a fresh token (e.g. `kubectl create token kubeshark-cli --audience kubeshark-hub`) " +
-			"and restart with --token (or KUBESHARK_HUB_TOKEN)."
+		return "Hub requires authentication (401/SSO redirect) and no accepted credential was presented. " +
+			"In URL mode pass a token via --token / KUBESHARK_HUB_TOKEN (mint with " +
+			"`kubectl create token kubeshark-cli --audience kubeshark-hub`) — it can't auto-renew, so re-mint and " +
+			"restart if it expired — or set a valid license (License-Key) if the deployment uses one."
 	}
 	return "Hub rejected the request (401 Unauthorized): the minted kubeshark-cli token was not accepted (check the Hub's AUTH_CLI_SERVICE_ACCOUNTS allowlist and the token audience), or no credential was available — if you lack RBAC to mint the token the CLI falls back to the License-Key, so set a valid license."
 }
@@ -352,7 +354,7 @@ func (s *mcpServer) fetchHubMCP() *hubMCPResponse {
 	}
 	defer func() { _ = resp.Body.Close() }()
 
-	if resp.StatusCode == http.StatusUnauthorized {
+	if utils.IsAuthRequired(resp) {
 		fmt.Fprintf(os.Stderr, "[kubeshark-mcp] %s\n", s.hubAuthErrorMessage())
 		return nil
 	}
@@ -812,7 +814,7 @@ func (s *mcpServer) callHubTool(toolName string, args map[string]any) (string, b
 		return fmt.Sprintf("Error reading response: %v", err), true
 	}
 
-	if resp.StatusCode == http.StatusUnauthorized {
+	if utils.IsAuthRequired(resp) {
 		return s.hubAuthErrorMessage(), true
 	}
 	if resp.StatusCode >= 400 {
@@ -875,6 +877,7 @@ func (s *mcpServer) callDownloadFile(args map[string]any) (string, bool) {
 	// The default s.httpClient has a 30s total timeout which would fail for large files (up to 10GB).
 	// This client sets only connection-level timeouts and lets the body stream without a deadline.
 	downloadClient := &http.Client{
+		CheckRedirect: utils.StopOnSSORedirect,
 		Transport: utils.HubAuthTransportWithTokenSource(s.tokenSource, config.Config.License, &http.Transport{
 			TLSHandshakeTimeout:   10 * time.Second,
 			ResponseHeaderTimeout: 30 * time.Second,
@@ -887,6 +890,11 @@ func (s *mcpServer) callDownloadFile(args map[string]any) (string, bool) {
 	}
 	defer func() { _ = resp.Body.Close() }()
 
+	// Catch auth-required (401 / unfollowed SSO redirect) before treating the
+	// body as a file, so we don't write an HTML login page to disk.
+	if utils.IsAuthRequired(resp) {
+		return s.hubAuthErrorMessage(), true
+	}
 	if resp.StatusCode >= 400 {
 		return fmt.Sprintf("Error downloading file: HTTP %d", resp.StatusCode), true
 	}
@@ -1214,7 +1222,7 @@ func fetchAndDisplayTools(hubURL string, timeout time.Duration, tokenSource func
 	}
 	defer func() { _ = resp.Body.Close() }()
 
-	if resp.StatusCode == http.StatusUnauthorized {
+	if utils.IsAuthRequired(resp) {
 		fmt.Println("Kubeshark API: 401 Unauthorized — the Hub requires a valid credential. In --url mode pass --token (or KUBESHARK_HUB_TOKEN); in proxy mode ensure you have RBAC to mint the kubeshark-cli token.")
 		return
 	}

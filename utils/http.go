@@ -72,12 +72,28 @@ func staticToken(saToken string) func() string {
 	return func() string { return saToken }
 }
 
+// StopOnSSORedirect is an *http.Client CheckRedirect that does NOT follow
+// SSO-style auth redirects (302 Found / 303 See Other) — it returns the
+// redirect response so callers can detect auth-required via IsAuthRequired
+// instead of silently following it to an HTML login page (and, for downloads,
+// writing that page to disk). Other redirects (301/307/308) are still followed.
+func StopOnSSORedirect(req *http.Request, _ []*http.Request) error {
+	if req.Response != nil {
+		switch req.Response.StatusCode {
+		case http.StatusFound, http.StatusSeeOther:
+			return http.ErrUseLastResponse
+		}
+	}
+	return nil
+}
+
 // NewHubHTTPClient returns an *http.Client that authenticates to the Hub with
 // the License-Key header (Phase 1).
 func NewHubHTTPClient(timeout time.Duration, licenseKey string) *http.Client {
 	return &http.Client{
-		Timeout:   timeout,
-		Transport: &hubAuthRoundTripper{licenseKey: licenseKey},
+		Timeout:       timeout,
+		CheckRedirect: StopOnSSORedirect,
+		Transport:     &hubAuthRoundTripper{licenseKey: licenseKey},
 	}
 }
 
@@ -86,8 +102,9 @@ func NewHubHTTPClient(timeout time.Duration, licenseKey string) *http.Client {
 // License-Key.
 func NewHubHTTPClientWithToken(timeout time.Duration, saToken, licenseKey string) *http.Client {
 	return &http.Client{
-		Timeout:   timeout,
-		Transport: &hubAuthRoundTripper{saTokenFunc: staticToken(saToken), licenseKey: licenseKey},
+		Timeout:       timeout,
+		CheckRedirect: StopOnSSORedirect,
+		Transport:     &hubAuthRoundTripper{saTokenFunc: staticToken(saToken), licenseKey: licenseKey},
 	}
 }
 
@@ -97,8 +114,9 @@ func NewHubHTTPClientWithToken(timeout time.Duration, saToken, licenseKey string
 // License-Key.
 func NewHubHTTPClientWithTokenSource(timeout time.Duration, saTokenFunc func() string, licenseKey string) *http.Client {
 	return &http.Client{
-		Timeout:   timeout,
-		Transport: &hubAuthRoundTripper{saTokenFunc: saTokenFunc, licenseKey: licenseKey},
+		Timeout:       timeout,
+		CheckRedirect: StopOnSSORedirect,
+		Transport:     &hubAuthRoundTripper{saTokenFunc: saTokenFunc, licenseKey: licenseKey},
 	}
 }
 
@@ -122,9 +140,11 @@ func HubAuthTransportWithTokenSource(saTokenFunc func() string, licenseKey strin
 }
 
 // IsAuthRequired reports whether the response indicates the Hub demanded
-// authentication — a 401, or a 302 redirect to an SSO login page.
+// authentication — a 401, or a 302/303 redirect to an SSO login page (the
+// hub clients are configured not to follow those; see StopOnSSORedirect).
 func IsAuthRequired(resp *http.Response) bool {
-	return resp != nil && (resp.StatusCode == http.StatusUnauthorized || resp.StatusCode == http.StatusFound)
+	return resp != nil && (resp.StatusCode == http.StatusUnauthorized ||
+		resp.StatusCode == http.StatusFound || resp.StatusCode == http.StatusSeeOther)
 }
 
 // Get - When err is nil, resp always contains a non-nil resp.Body.

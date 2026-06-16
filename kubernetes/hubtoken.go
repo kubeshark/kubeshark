@@ -95,13 +95,18 @@ func (r *HubTokenRenewer) Token() string {
 		tok, expireAt, err := r.provider.mintHubToken(ctx, r.namespace)
 		cancel()
 		if err != nil {
-			// Throttle retries and fall back to the prior token (possibly "",
-			// i.e. the License-Key) so a failing cluster doesn't block every
-			// request on a doomed mint.
+			// Throttle retries so a failing cluster doesn't block every request
+			// on a doomed mint; fall through to the expiry check below.
 			r.nextAttempt = time.Now().Add(hubTokenMintRetryInterval)
-			return r.token
+		} else {
+			r.token, r.expireAt, r.nextAttempt = tok, expireAt, time.Time{}
 		}
-		r.token, r.expireAt, r.nextAttempt = tok, expireAt, time.Time{}
+	}
+	// Never hand out an already-expired token: return "" so the auth
+	// round-tripper falls back to the License-Key instead of looping on 401s
+	// (it prefers any non-empty SA token over the License-Key).
+	if r.token != "" && !r.expireAt.IsZero() && time.Now().After(r.expireAt) {
+		return ""
 	}
 	return r.token
 }
