@@ -29,7 +29,7 @@ moved scripting-console log streaming off the /scripts/logs WebSocket onto a
 Connect-RPC streaming service, and this client has not yet been updated to use
 it, so no logs will stream until the migration lands.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		runConsole()
+		log.Warn().Msg(fmt.Sprintf(utils.Yellow, "The 'console' command is temporarily non-functional and under refactoring: the hub moved scripting-console log streaming off the /scripts/logs WebSocket onto a Connect-RPC service, and this client has not yet been updated. No logs will stream, so the command exits without doing anything."))
 		return nil
 	},
 }
