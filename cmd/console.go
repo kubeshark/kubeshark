@@ -21,7 +21,13 @@ import (
 
 var consoleCmd = &cobra.Command{
 	Use:   "console",
-	Short: "Stream the scripting console logs into shell",
+	Short: "Stream the scripting console logs into shell (temporarily non-functional — under refactoring after hub API changes)",
+	Long: `Stream the scripting console logs into shell.
+
+NOTE: This command is currently non-functional and under refactoring. The hub
+moved scripting-console log streaming off the /scripts/logs WebSocket onto a
+Connect-RPC streaming service, and this client has not yet been updated to use
+it, so no logs will stream until the migration lands.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
 		runConsole()
 		return nil
@@ -122,6 +128,8 @@ func runConsoleWithoutProxy() {
 }
 
 func runConsole() {
+	log.Warn().Msg(fmt.Sprintf(utils.Yellow, "The 'console' command is temporarily non-functional and under refactoring: the hub moved scripting-console log streaming off the /scripts/logs WebSocket onto a Connect-RPC service, and this client has not yet been updated. No logs will stream."))
+
 	go runConsoleWithoutProxy()
 
 	// Create interrupt channel and setup signal handling once
