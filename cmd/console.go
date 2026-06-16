@@ -47,6 +47,7 @@ func init() {
 	consoleCmd.Flags().StringP(configStructs.ReleaseNamespaceLabel, "s", defaultTapConfig.Release.Namespace, "Release namespace of Kubeshark")
 }
 
+//nolint:unused // retained for the in-progress console refactoring; re-wired once the Connect-RPC client lands
 func runConsoleWithoutProxy() {
 	log.Info().Msg("Starting scripting console ...")
 	time.Sleep(5 * time.Second)
@@ -127,6 +128,7 @@ func runConsoleWithoutProxy() {
 	}
 }
 
+//nolint:unused // retained for the in-progress console refactoring; re-wired once the Connect-RPC client lands
 func runConsole() {
 	log.Warn().Msg(fmt.Sprintf(utils.Yellow, "The 'console' command is temporarily non-functional and under refactoring: the hub moved scripting-console log streaming off the /scripts/logs WebSocket onto a Connect-RPC service, and this client has not yet been updated. No logs will stream."))
 
