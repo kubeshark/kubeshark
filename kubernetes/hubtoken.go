@@ -22,6 +22,10 @@ const (
 	// hubTokenRenewMargin re-mints this long before expiry so requests in
 	// flight always carry a comfortably valid token.
 	hubTokenRenewMargin = 5 * time.Minute
+	// hubTokenMintRetryInterval throttles re-minting after a failure so a
+	// cluster where minting can't succeed (no RBAC, SA missing) doesn't pay a
+	// blocking CreateToken round-trip on every request.
+	hubTokenMintRetryInterval = 30 * time.Second
 )
 
 // MintHubToken requests a short-lived ServiceAccount token (audience
@@ -67,9 +71,10 @@ type HubTokenRenewer struct {
 	provider  *Provider
 	namespace string
 
-	mu       sync.Mutex
-	token    string
-	expireAt time.Time
+	mu          sync.Mutex
+	token       string
+	expireAt    time.Time
+	nextAttempt time.Time // earliest time to retry minting after a failure
 }
 
 // NewHubTokenRenewer builds a renewer that mints kubeshark-cli tokens in the
@@ -84,14 +89,19 @@ func NewHubTokenRenewer(provider *Provider, namespace string) *HubTokenRenewer {
 func (r *HubTokenRenewer) Token() string {
 	r.mu.Lock()
 	defer r.mu.Unlock()
-	if r.token == "" || time.Now().After(r.expireAt.Add(-hubTokenRenewMargin)) {
+	needsMint := r.token == "" || time.Now().After(r.expireAt.Add(-hubTokenRenewMargin))
+	if needsMint && time.Now().After(r.nextAttempt) {
 		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 		tok, expireAt, err := r.provider.mintHubToken(ctx, r.namespace)
 		cancel()
 		if err != nil {
+			// Throttle retries and fall back to the prior token (possibly "",
+			// i.e. the License-Key) so a failing cluster doesn't block every
+			// request on a doomed mint.
+			r.nextAttempt = time.Now().Add(hubTokenMintRetryInterval)
 			return r.token
 		}
-		r.token, r.expireAt = tok, expireAt
+		r.token, r.expireAt, r.nextAttempt = tok, expireAt, time.Time{}
 	}
 	return r.token
 }

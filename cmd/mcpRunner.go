@@ -321,7 +321,7 @@ func (s *mcpServer) hubAuthErrorMessage() string {
 			"URL mode cannot auto-renew it — mint a fresh token (e.g. `kubectl create token kubeshark-cli --audience kubeshark-hub`) " +
 			"and restart with --token (or KUBESHARK_HUB_TOKEN)."
 	}
-	return "Hub rejected the request (401 Unauthorized): authentication failed. Ensure you have RBAC to mint the kubeshark-cli token (or set a valid license)."
+	return "Hub rejected the request (401 Unauthorized): the minted kubeshark-cli token was not accepted (check the Hub's AUTH_CLI_SERVICE_ACCOUNTS allowlist and the token audience), or no credential was available — if you lack RBAC to mint the token the CLI falls back to the License-Key, so set a valid license."
 }
 
 func (s *mcpServer) fetchHubMCP() *hubMCPResponse {
