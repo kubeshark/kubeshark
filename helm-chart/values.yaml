@@ -153,22 +153,10 @@ tap:
   auth:
     enabled: false
     type: saml
-    roles:
-      admin:
-        filter: ""
-        canDownloadPCAP: true
-        canUseScripting: true
-        scriptingPermissions:
-          canSave: true
-          canActivate: true
-          canDelete: true
-        canUpdateTargetedPods: true
-        canStopTrafficCapturing: true
-        canControlDissection: true
-        showAdminConsoleLink: true
-    rolesClaim: role
-    defaultRole: ""
-    defaultFilter: ""
+    rolesClaim: groups
+    defaultRole: kubeshark-viewer
+    groupMapping: {}
+    roles: {}
     # CLI ServiceAccount-token auth (gated-auth phase 2a). When enabled, the
     # chart creates a `kubeshark-cli` ServiceAccount and a Role permitting
     # `create` on its token, and the Hub allowlists it via
