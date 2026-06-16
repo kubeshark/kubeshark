@@ -164,32 +164,38 @@ type mcpServer struct {
 
 const hubMCPCacheTTL = 5 * time.Minute
 
+// hubTokenSource builds the SA-token source used to authenticate to a gated
+// Hub. Proxy mode (kube access) returns an auto-renewing minter so long-lived
+// processes keep working past the ~1h token TTL; URL mode returns the static
+// --token / KUBESHARK_HUB_TOKEN (it can't mint without kube access). Returns
+// nil when no token is available, so callers fall back to the License-Key.
+func hubTokenSource(urlMode bool) func() string {
+	if urlMode {
+		staticTok := mcpToken
+		if staticTok == "" {
+			staticTok = os.Getenv("KUBESHARK_HUB_TOKEN")
+		}
+		if staticTok == "" {
+			return nil
+		}
+		return func() string { return staticTok }
+	}
+	provider, err := getKubernetesProviderForCli(true, true)
+	if err != nil {
+		return nil
+	}
+	return kubernetes.NewHubTokenRenewer(provider, config.Config.Tap.Release.Namespace).Token
+}
+
 func runMCPWithConfig(setFlags []string, directURL string, allowDestructive bool) {
 	// Disable zerolog output to stderr (MCP uses stdio)
 	zerolog.SetGlobalLevel(zerolog.Disabled)
 
 	urlMode := directURL != ""
 
-	// Establish the hub SA-token source. Proxy mode (kube access) uses an
-	// auto-renewing minter so a long-lived MCP server keeps working past the
-	// ~1h token TTL. URL mode can't mint (no kube access), so it carries a
-	// fixed token supplied via --token / KUBESHARK_HUB_TOKEN; it cannot
-	// auto-renew, and a 401 surfaces a clear "token expired" message. When no
-	// token is available either way, requests fall back to the License-Key.
-	var tokenSource func() string
-	if urlMode {
-		staticTok := mcpToken
-		if staticTok == "" {
-			staticTok = os.Getenv("KUBESHARK_HUB_TOKEN")
-		}
-		if staticTok != "" {
-			tokenSource = func() string { return staticTok }
-		}
-	} else {
-		if provider, err := getKubernetesProviderForCli(true, true); err == nil {
-			tokenSource = kubernetes.NewHubTokenRenewer(provider, config.Config.Tap.Release.Namespace).Token
-		}
-	}
+	// Hub SA-token source: auto-renewing in proxy mode, the static --token in
+	// URL mode; nil falls back to the License-Key. See hubTokenSource.
+	tokenSource := hubTokenSource(urlMode)
 
 	server := &mcpServer{
 		httpClient:       utils.NewHubHTTPClientWithTokenSource(30*time.Second, tokenSource, config.Config.License),
@@ -1108,6 +1114,10 @@ func listMCPTools(directURL string) {
 	fmt.Println("=========")
 	fmt.Println()
 
+	// Same hub credential as the running server: renewing minter in proxy
+	// mode, static --token in URL mode (nil → License-Key).
+	tokenSource := hubTokenSource(directURL != "")
+
 	// URL mode - no cluster management, connect directly
 	if directURL != "" {
 		fmt.Printf("URL Mode: %s\n\n", directURL)
@@ -1120,7 +1130,7 @@ func listMCPTools(directURL string) {
 		fmt.Println()
 
 		hubURL := strings.TrimSuffix(directURL, "/") + "/api/mcp"
-		fetchAndDisplayTools(hubURL, 30*time.Second)
+		fetchAndDisplayTools(hubURL, 30*time.Second, tokenSource)
 		return
 	}
 
@@ -1144,7 +1154,7 @@ func listMCPTools(directURL string) {
 	}
 
 	fmt.Printf("Connected to: %s\n\n", hubURL)
-	fetchAndDisplayTools(hubURL, 30*time.Second)
+	fetchAndDisplayTools(hubURL, 30*time.Second, tokenSource)
 }
 
 // establishProxyConnection sets up proxy to Kubeshark and returns the hub URL
@@ -1193,8 +1203,8 @@ func establishProxyConnection(timeout time.Duration) (string, error) {
 }
 
 // fetchAndDisplayTools fetches tools from the Kubeshark API and displays them
-func fetchAndDisplayTools(hubURL string, timeout time.Duration) {
-	client := utils.NewHubHTTPClient(timeout, config.Config.License)
+func fetchAndDisplayTools(hubURL string, timeout time.Duration, tokenSource func() string) {
+	client := utils.NewHubHTTPClientWithTokenSource(timeout, tokenSource, config.Config.License)
 
 	// Fetch tools list from /api/mcp endpoint
 	resp, err := client.Get(strings.TrimSuffix(hubURL, "/mcp") + "/mcp")
@@ -1203,6 +1213,11 @@ func fetchAndDisplayTools(hubURL string, timeout time.Duration) {
 		return
 	}
 	defer func() { _ = resp.Body.Close() }()
+
+	if resp.StatusCode == http.StatusUnauthorized {
+		fmt.Println("Kubeshark API: 401 Unauthorized — the Hub requires a valid credential. In --url mode pass --token (or KUBESHARK_HUB_TOKEN); in proxy mode ensure you have RBAC to mint the kubeshark-cli token.")
+		return
+	}
 
 	// Parse the response using the Hub MCP response format
 	var mcpInfo hubMCPResponse
