@@ -29,10 +29,14 @@ var ErrHubAuthRequired = errors.New("hub requires authentication: set a valid li
 // ServiceAccount token (CLI_AUTH_HEADER) when present, falling back to the
 // License-Key (admin/transitional). Both are custom headers so they survive
 // the kube API-server service proxy, unlike an Authorization bearer.
+//
+// The SA token is sourced via saTokenFunc on every request rather than captured
+// once, so a caller with cluster access (proxy mode) can hand in a renewing
+// source and long-lived clients keep working past the token's ~1h expiry.
 type hubAuthRoundTripper struct {
-	saToken    string
-	licenseKey string
-	base       http.RoundTripper
+	saTokenFunc func() string
+	licenseKey  string
+	base        http.RoundTripper
 }
 
 func (rt *hubAuthRoundTripper) RoundTrip(req *http.Request) (*http.Response, error) {
@@ -40,11 +44,15 @@ func (rt *hubAuthRoundTripper) RoundTrip(req *http.Request) (*http.Response, err
 	if base == nil {
 		base = http.DefaultTransport
 	}
+	saToken := ""
+	if rt.saTokenFunc != nil {
+		saToken = rt.saTokenFunc()
+	}
 	switch {
-	case rt.saToken != "":
+	case saToken != "":
 		if req.Header.Get(CLI_AUTH_HEADER) == "" {
 			req = req.Clone(req.Context())
-			req.Header.Set(CLI_AUTH_HEADER, rt.saToken)
+			req.Header.Set(CLI_AUTH_HEADER, saToken)
 		}
 	case rt.licenseKey != "":
 		if req.Header.Get(LICENSE_KEY_HEADER) == "" {
@@ -53,6 +61,15 @@ func (rt *hubAuthRoundTripper) RoundTrip(req *http.Request) (*http.Response, err
 		}
 	}
 	return base.RoundTrip(req)
+}
+
+// staticToken adapts a fixed token string to the saTokenFunc source, returning
+// nil for an empty token so the round-tripper falls back to the License-Key.
+func staticToken(saToken string) func() string {
+	if saToken == "" {
+		return nil
+	}
+	return func() string { return saToken }
 }
 
 // NewHubHTTPClient returns an *http.Client that authenticates to the Hub with
@@ -65,12 +82,23 @@ func NewHubHTTPClient(timeout time.Duration, licenseKey string) *http.Client {
 }
 
 // NewHubHTTPClientWithToken returns an *http.Client that authenticates to the
-// Hub with a ServiceAccount token when saToken is set, otherwise the
+// Hub with a fixed ServiceAccount token when saToken is set, otherwise the
 // License-Key.
 func NewHubHTTPClientWithToken(timeout time.Duration, saToken, licenseKey string) *http.Client {
 	return &http.Client{
 		Timeout:   timeout,
-		Transport: &hubAuthRoundTripper{saToken: saToken, licenseKey: licenseKey},
+		Transport: &hubAuthRoundTripper{saTokenFunc: staticToken(saToken), licenseKey: licenseKey},
+	}
+}
+
+// NewHubHTTPClientWithTokenSource is NewHubHTTPClientWithToken with a token
+// source consulted per request, so a renewing source keeps the client
+// authenticated past the token's expiry. A nil source falls back to the
+// License-Key.
+func NewHubHTTPClientWithTokenSource(timeout time.Duration, saTokenFunc func() string, licenseKey string) *http.Client {
+	return &http.Client{
+		Timeout:   timeout,
+		Transport: &hubAuthRoundTripper{saTokenFunc: saTokenFunc, licenseKey: licenseKey},
 	}
 }
 
@@ -81,10 +109,16 @@ func HubAuthTransport(licenseKey string, base http.RoundTripper) http.RoundTripp
 	return &hubAuthRoundTripper{licenseKey: licenseKey, base: base}
 }
 
-// HubAuthTransportWithToken is HubAuthTransport with a ServiceAccount token
-// (preferred over the License-Key when set).
+// HubAuthTransportWithToken is HubAuthTransport with a fixed ServiceAccount
+// token (preferred over the License-Key when set).
 func HubAuthTransportWithToken(saToken, licenseKey string, base http.RoundTripper) http.RoundTripper {
-	return &hubAuthRoundTripper{saToken: saToken, licenseKey: licenseKey, base: base}
+	return &hubAuthRoundTripper{saTokenFunc: staticToken(saToken), licenseKey: licenseKey, base: base}
+}
+
+// HubAuthTransportWithTokenSource is HubAuthTransportWithToken with a token
+// source consulted per request (see NewHubHTTPClientWithTokenSource).
+func HubAuthTransportWithTokenSource(saTokenFunc func() string, licenseKey string, base http.RoundTripper) http.RoundTripper {
+	return &hubAuthRoundTripper{saTokenFunc: saTokenFunc, licenseKey: licenseKey, base: base}
 }
 
 // IsAuthRequired reports whether the response indicates the Hub demanded

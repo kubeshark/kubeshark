@@ -10,6 +10,7 @@ var mcpKubeconfig string
 var mcpListTools bool
 var mcpConfig bool
 var mcpAllowDestructive bool
+var mcpToken string
 
 var mcpCmd = &cobra.Command{
 	Use:   "mcp",
@@ -118,6 +119,7 @@ func init() {
 	rootCmd.AddCommand(mcpCmd)
 
 	mcpCmd.Flags().StringVar(&mcpURL, "url", "", "Direct URL to Kubeshark (e.g., https://kubeshark.example.com). When set, connects directly without kubectl/proxy and disables start/stop tools.")
+	mcpCmd.Flags().StringVar(&mcpToken, "token", "", "ServiceAccount/bearer token for a gated Hub in --url mode (e.g. from 'kubectl create token kubeshark-cli --audience kubeshark-hub'); also read from KUBESHARK_HUB_TOKEN. Ignored without --url, where the token is minted and auto-renewed from kube access.")
 	mcpCmd.Flags().StringVar(&mcpKubeconfig, "kubeconfig", "", "Path to kubeconfig file (e.g., /Users/me/.kube/config)")
 	mcpCmd.Flags().BoolVar(&mcpListTools, "list-tools", false, "List available MCP tools and exit")
 	mcpCmd.Flags().BoolVar(&mcpConfig, "mcp-config", false, "Print MCP client configuration JSON and exit")
