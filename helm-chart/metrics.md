@@ -34,6 +34,23 @@ prometheus:
             regex: __meta_kubernetes_service_label_(.+)
 ```
 
+## Prometheus Operator ServiceMonitor
+
+If you run the [Prometheus Operator](https://github.com/prometheus-operator/prometheus-operator) (bundled with kube-prometheus-stack), you can let the chart create a `ServiceMonitor` instead of writing the scrape config by hand. It is opt-in and disabled by default:
+
+```yaml
+tap:
+  metrics:
+    serviceMonitor:
+      enabled: true
+      # Match the label your Prometheus selects ServiceMonitors on, e.g.:
+      labels:
+        release: kube-prometheus-stack
+      interval: 30s
+```
+
+The ServiceMonitor selects both the `kubeshark-worker-metrics` and `kubeshark-hub-metrics` services (via the `app.kubeshark.com/metrics` label) and scrapes their `metrics` port. `interval`, `scrapeTimeout`, `path`, `scheme`, `honorLabels`, `relabelings` and `metricRelabelings` are optional passthroughs; leave them empty to use the Prometheus defaults.
+
 
 ## Available metrics
 

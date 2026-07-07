@@ -1,0 +1,55 @@
+suite: metrics service monitor
+templates:
+  - templates/22-service-monitor.yaml
+tests:
+  - it: should not render by default
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should render a ServiceMonitor when enabled
+    set:
+      tap.metrics.serviceMonitor.enabled: true
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: ServiceMonitor
+      - isAPIVersion:
+          of: monitoring.coreos.com/v1
+      - equal:
+          path: metadata.name
+          value: kubeshark-metrics
+      - equal:
+          path: spec.selector.matchLabels['app.kubeshark.com/metrics']
+          value: "true"
+      - equal:
+          path: spec.endpoints[0].port
+          value: metrics
+
+  - it: should not set optional endpoint fields by default
+    set:
+      tap.metrics.serviceMonitor.enabled: true
+    asserts:
+      - notExists:
+          path: spec.endpoints[0].interval
+      - notExists:
+          path: spec.endpoints[0].honorLabels
+
+  - it: should apply custom interval, labels and honorLabels
+    set:
+      tap.metrics.serviceMonitor.enabled: true
+      tap.metrics.serviceMonitor.interval: 30s
+      tap.metrics.serviceMonitor.honorLabels: true
+      tap.metrics.serviceMonitor.labels:
+        release: kube-prometheus-stack
+    asserts:
+      - equal:
+          path: spec.endpoints[0].interval
+          value: 30s
+      - equal:
+          path: spec.endpoints[0].honorLabels
+          value: true
+      - equal:
+          path: metadata.labels['release']
+          value: kube-prometheus-stack
