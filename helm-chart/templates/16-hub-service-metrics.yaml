@@ -3,6 +3,7 @@ kind: Service
 apiVersion: v1
 metadata:
   labels:
+    app.kubeshark.com/metrics: "true"
     {{- include "kubeshark.labels" . | nindent 4 }}
   annotations:
     prometheus.io/scrape: 'true'
