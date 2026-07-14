@@ -155,23 +155,6 @@ type ProbeConfig struct {
 	FailureThreshold    int `yaml:"failureThreshold" json:"failureThreshold" default:"3"`
 }
 
-type ScriptingPermissions struct {
-	CanSave     bool `yaml:"canSave" json:"canSave" default:"true"`
-	CanActivate bool `yaml:"canActivate" json:"canActivate" default:"true"`
-	CanDelete   bool `yaml:"canDelete" json:"canDelete" default:"true"`
-}
-
-type Role struct {
-	Filter                  string               `yaml:"filter" json:"filter" default:""`
-	CanDownloadPCAP         bool                 `yaml:"canDownloadPCAP" json:"canDownloadPCAP" default:"false"`
-	CanUseScripting         bool                 `yaml:"canUseScripting" json:"canUseScripting" default:"false"`
-	ScriptingPermissions    ScriptingPermissions `yaml:"scriptingPermissions" json:"scriptingPermissions"`
-	CanUpdateTargetedPods   bool                 `yaml:"canUpdateTargetedPods" json:"canUpdateTargetedPods" default:"false"`
-	CanStopTrafficCapturing bool                 `yaml:"canStopTrafficCapturing" json:"canStopTrafficCapturing" default:"false"`
-	CanControlDissection    bool                 `yaml:"canControlDissection" json:"canControlDissection" default:"false"`
-	ShowAdminConsoleLink    bool                 `yaml:"showAdminConsoleLink" json:"showAdminConsoleLink" default:"false"`
-}
-
 type SamlConfig struct {
 	IdpMetadataUrl string `yaml:"idpMetadataUrl" json:"idpMetadataUrl"`
 	X509crt        string `yaml:"x509crt" json:"x509crt"`
@@ -190,12 +173,40 @@ type AuthConfig struct {
 	// NOTE: prior releases routed `oidc` to Descope. If you were using `oidc`
 	// to mean Descope, switch to `descope` (or `default`). The rename is a
 	// breaking change documented in the release notes.
-	Type          string          `yaml:"type" json:"type" default:"saml"`
-	Roles         map[string]Role `yaml:"roles" json:"roles"`
-	RolesClaim    string          `yaml:"rolesClaim" json:"rolesClaim"`
-	DefaultRole   string          `yaml:"defaultRole" json:"defaultRole"`
-	DefaultFilter string          `yaml:"defaultFilter" json:"defaultFilter"`
-	Saml          SamlConfig      `yaml:"saml" json:"saml"`
+	Type       string `yaml:"type" json:"type" default:"saml"`
+	RolesClaim string `yaml:"rolesClaim" json:"rolesClaim"`
+	// DefaultRole is applied when the authenticated user's SSO claim has no
+	// recognized group. Must be one of the four built-in roles
+	// (kubeshark-admin / kubeshark-realtime / kubeshark-snapshot /
+	// kubeshark-viewer), the name of an operator-defined role under
+	// `tap.auth.roles`, or empty for strict-deny.
+	DefaultRole string `yaml:"defaultRole" json:"defaultRole"`
+	// GroupMapping translates SSO group names into role names (built-in or
+	// operator-defined). Optional — groups whose name already matches a
+	// built-in role are identity-matched and don't need an entry here.
+	// Operator-defined role names MUST appear here to participate in
+	// resolution (identity-match is built-in-only).
+	GroupMapping map[string]string `yaml:"groupMapping" json:"groupMapping"`
+	// Roles is the operator-defined role catalogue, keyed by role name.
+	// Each role has its own capability set + namespace scope. Names with
+	// the `kubeshark-` prefix are reserved for built-ins and will be
+	// rejected at hub startup. Unknown capability strings are dropped
+	// with a warning; empty / "*" namespace specs mean deny-all-data and
+	// allow-all respectively.
+	Roles map[string]RoleConfig `yaml:"roles" json:"roles"`
+	Saml  SamlConfig            `yaml:"saml" json:"saml"`
+}
+
+// RoleConfig is an operator-defined role declared under tap.auth.roles.
+// Capabilities is the closed vocabulary documented in the hub project
+// (snapshot:read / snapshot:write / snapshot:dissection / dissection:live /
+// dissection:control / pods:target:write / settings:write); unknown
+// capability strings are warn-dropped at hub startup. Namespaces is a
+// comma-separated list with `*` (allow-all) and glob (`foo-*`, `*-bar`,
+// `*mid*`) support; empty string means deny-all-data.
+type RoleConfig struct {
+	Capabilities []string `yaml:"capabilities" json:"capabilities"`
+	Namespaces   string   `yaml:"namespaces" json:"namespaces"`
 }
 
 type IngressConfig struct {
