@@ -88,6 +88,30 @@ Connect directly to an existing Kubeshark deployment:
 }
 ```
 
+For a **gated Hub** (`AUTH_ENABLED=true`), URL mode can't mint a token (no kube
+access), so supply one explicitly via `--token` (or the `KUBESHARK_HUB_TOKEN`
+env var). Mint it from a machine that has cluster access:
+
+```bash
+kubectl create token kubeshark-cli -n <release-namespace> --audience kubeshark-hub
+```
+
+```json
+{
+  "mcpServers": {
+    "kubeshark": {
+      "command": "kubeshark",
+      "args": ["mcp", "--url", "https://kubeshark.example.com", "--token", "<token>"]
+    }
+  }
+}
+```
+
+The token is short-lived (~1h) and URL mode **cannot auto-renew** it; when it
+expires the server reports a clear `401 ... token expired/invalid` message — re-mint
+and restart. Proxy mode (default, with kube access) mints the `kubeshark-cli`
+token automatically and **auto-renews** it, so long-running sessions don't expire.
+
 #### With Destructive Operations
 
 ```json
@@ -179,6 +203,7 @@ Found 5 services connecting to postgres:5432:
 | Option | Description |
 |--------|-------------|
 | `--url` | Direct URL to Kubeshark Hub |
+| `--token` | Hub SA/bearer token for `--url` mode against a gated Hub (also `KUBESHARK_HUB_TOKEN`); ignored in proxy mode, which mints and auto-renews the token |
 | `--kubeconfig` | Path to kubeconfig file |
 | `--allow-destructive` | Enable start/stop operations |
 | `--list-tools` | List available tools and exit |

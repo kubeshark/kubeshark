@@ -157,6 +157,9 @@ tap:
     defaultRole: kubeshark-viewer
     groupMapping: {}
     roles: {}
+    cli:
+      enabled: false
+      subjects: []
     saml:
       idpMetadataUrl: ""
       x509crt: ""
