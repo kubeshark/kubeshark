@@ -146,6 +146,10 @@ spec:
             value: '{{ (include "sentry.enabled" .) }}'
           - name: SENTRY_ENVIRONMENT
             value: '{{ .Values.tap.sentry.environment }}'
+          {{- if (((.Values.tap).auth).enabled) }}
+          - name: HUB_INTERNAL_TOKEN_PATH
+            value: /var/run/secrets/kubeshark/hub-token/token
+          {{- end }}
           resources:
             limits:
               {{ if ne (toString .Values.tap.resources.sniffer.limits.cpu) "0" }}
@@ -235,6 +239,11 @@ spec:
 {{- if .Values.tap.persistentStorage }}
               subPathExpr: $(NODE_NAME)
 {{- end }}
+            {{- if (((.Values.tap).auth).enabled) }}
+            - mountPath: /var/run/secrets/kubeshark/hub-token
+              name: hub-internal-token
+              readOnly: true
+            {{- end }}
       {{- if .Values.tap.tls }}
         - command:
             - ./tracer
@@ -430,3 +439,12 @@ spec:
           emptyDir:
             sizeLimit: {{ .Values.tap.storageLimit }}
 {{- end }}
+        {{- if (((.Values.tap).auth).enabled) }}
+        - name: hub-internal-token
+          projected:
+            sources:
+              - serviceAccountToken:
+                  path: token
+                  audience: kubeshark-hub
+                  expirationSeconds: 3600
+        {{- end }}

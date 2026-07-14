@@ -194,7 +194,37 @@ type AuthConfig struct {
 	// with a warning; empty / "*" namespace specs mean deny-all-data and
 	// allow-all respectively.
 	Roles map[string]RoleConfig `yaml:"roles" json:"roles"`
+	Cli   CliAuthConfig         `yaml:"cli" json:"cli"`
 	Saml  SamlConfig            `yaml:"saml" json:"saml"`
+}
+
+// CliAuthConfig gates ServiceAccount-token auth for the CLI. When enabled, the
+// chart creates a `kubeshark-cli` ServiceAccount plus a Role permitting
+// `create` on its token, and the hub allowlists it via the
+// AUTH_CLI_SERVICE_ACCOUNTS env var. The CLI mints a short-lived token for
+// that SA to authenticate to a gated hub. Map `kubeshark-cli` to a role via
+// GroupMapping (or DefaultRole); without a mapping it falls back to
+// DefaultRole.
+type CliAuthConfig struct {
+	Enabled bool `yaml:"enabled" json:"enabled" default:"false"`
+	// Subjects are the RBAC subjects permitted to mint the kubeshark-cli
+	// token — i.e. who may use the CLI against a gated hub. Rendered verbatim
+	// into the kubeshark-cli-token-minter RoleBinding; empty means the Role is
+	// created but bound to nobody.
+	Subjects []CliAuthSubject `yaml:"subjects" json:"subjects"`
+}
+
+// CliAuthSubject is one entry under tap.auth.cli.subjects, mirroring
+// rbacv1.Subject: Kind is User, Group or ServiceAccount; ApiGroup is
+// rbac.authorization.k8s.io for User and Group and must be empty for
+// ServiceAccount; Namespace applies to ServiceAccount only. The empty-able
+// fields are omitted when unset so the rendered RoleBinding stays valid for
+// every kind.
+type CliAuthSubject struct {
+	Kind      string `yaml:"kind" json:"kind"`
+	Name      string `yaml:"name" json:"name"`
+	ApiGroup  string `yaml:"apiGroup,omitempty" json:"apiGroup,omitempty"`
+	Namespace string `yaml:"namespace,omitempty" json:"namespace,omitempty"`
 }
 
 // RoleConfig is an operator-defined role declared under tap.auth.roles.
