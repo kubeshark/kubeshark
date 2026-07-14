@@ -157,20 +157,8 @@ tap:
     defaultRole: kubeshark-viewer
     groupMapping: {}
     roles: {}
-    # CLI ServiceAccount-token auth (gated-auth phase 2a). When enabled, the
-    # chart creates a `kubeshark-cli` ServiceAccount and a Role permitting
-    # `create` on its token, and the Hub allowlists it via
-    # AUTH_CLI_SERVICE_ACCOUNTS. The CLI mints a short-lived token for that SA
-    # to authenticate to a gated Hub. Map `kubeshark-cli` to a role via
-    # `groupMapping` (or `defaultRole`); without a mapping it falls back to
-    # `defaultRole`.
     cli:
       enabled: false
-      # RBAC subjects allowed to mint the kubeshark-cli token — i.e. who may
-      # use the CLI against a gated Hub. Example:
-      #   - kind: User
-      #     name: alice@example.com
-      #     apiGroup: rbac.authorization.k8s.io
       subjects: []
     saml:
       idpMetadataUrl: ""

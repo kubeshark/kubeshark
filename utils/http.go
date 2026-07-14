@@ -88,7 +88,7 @@ func StopOnSSORedirect(req *http.Request, _ []*http.Request) error {
 }
 
 // NewHubHTTPClient returns an *http.Client that authenticates to the Hub with
-// the License-Key header (Phase 1).
+// the License-Key header.
 func NewHubHTTPClient(timeout time.Duration, licenseKey string) *http.Client {
 	return &http.Client{
 		Timeout:       timeout,

@@ -159,7 +159,7 @@ type mcpServer struct {
 	cachedHubMCP       *hubMCPResponse // Cached tools/prompts from Hub
 	cachedAt           time.Time       // When the cache was populated
 	hubMCPMu           sync.Mutex
-	tokenSource        func() string // hub SA token source (phase 2a); proxy mode auto-renews, URL mode is the static --token. nil → License-Key
+	tokenSource        func() string // hub SA token source; proxy mode auto-renews, URL mode is the static --token. nil → License-Key
 }
 
 const hubMCPCacheTTL = 5 * time.Minute
