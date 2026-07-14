@@ -102,23 +102,10 @@ func CreateDefaultConfig() ConfigStruct {
 				},
 			},
 			Auth: configStructs.AuthConfig{
-				RolesClaim: "role",
-				Roles: map[string]configStructs.Role{
-					"admin": {
-						Filter:          "",
-						CanDownloadPCAP: true,
-						CanUseScripting: true,
-						ScriptingPermissions: configStructs.ScriptingPermissions{
-							CanSave:     true,
-							CanActivate: true,
-							CanDelete:   true,
-						},
-						CanUpdateTargetedPods:   true,
-						CanStopTrafficCapturing: true,
-						CanControlDissection:    true,
-						ShowAdminConsoleLink:    true,
-					},
-				},
+				RolesClaim:   "groups",
+				DefaultRole:  "kubeshark-viewer",
+				GroupMapping: map[string]string{},
+				Roles:        map[string]configStructs.RoleConfig{},
 			},
 			EnabledDissectors: []string{
 				"amqp",
