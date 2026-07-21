@@ -564,6 +564,7 @@ func TestMCP_DownloadFile(t *testing.T) {
 		stdout:             &bytes.Buffer{},
 		hubBaseURL:         mockServer.URL + "/api/mcp",
 		backendInitialized: true,
+		downloadDir:        tmpDir,
 	}
 	resp := parseResponse(t, sendRequest(s, "tools/call", 1, mcpCallToolParams{
 		Name:      "download_file",
@@ -614,6 +615,7 @@ func TestMCP_DownloadFile_CustomDest(t *testing.T) {
 		stdout:             &bytes.Buffer{},
 		hubBaseURL:         mockServer.URL + "/api/mcp",
 		backendInitialized: true,
+		downloadDir:        tmpDir,
 	}
 	resp := parseResponse(t, sendRequest(s, "tools/call", 1, mcpCallToolParams{
 		Name:      "download_file",
@@ -635,6 +637,52 @@ func TestMCP_DownloadFile_CustomDest(t *testing.T) {
 
 	if _, err := os.Stat(customDest); os.IsNotExist(err) {
 		t.Error("Expected file to exist at custom destination")
+	}
+}
+
+// TestMCP_DownloadFile_RejectsTraversal locks in the CWE-22 fix: a dest that
+// escapes the confined download dir (via "../" or an absolute path outside it)
+// and a 'path' containing ".." segments must be refused, and nothing written.
+func TestMCP_DownloadFile_RejectsTraversal(t *testing.T) {
+	mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write([]byte("data"))
+	}))
+	defer mockServer.Close()
+
+	baseDir := t.TempDir()
+	outsideDir := t.TempDir()
+	s := &mcpServer{
+		httpClient:         &http.Client{},
+		stdin:              &bytes.Buffer{},
+		stdout:             &bytes.Buffer{},
+		hubBaseURL:         mockServer.URL + "/api/mcp",
+		backendInitialized: true,
+		downloadDir:        baseDir,
+	}
+
+	cases := []struct {
+		name string
+		args map[string]any
+	}{
+		{"relative-traversal", map[string]any{"path": "/snapshots/abc/data.pcap", "dest": "../escaped.pcap"}},
+		{"absolute-outside-base", map[string]any{"path": "/snapshots/abc/data.pcap", "dest": filepath.Join(outsideDir, "escaped.pcap")}},
+		{"path-dotdot", map[string]any{"path": "/snapshots/../../etc/passwd", "dest": "ok.pcap"}},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			resp := parseResponse(t, sendRequest(s, "tools/call", 1, mcpCallToolParams{
+				Name:      "download_file",
+				Arguments: tc.args,
+			}))
+			result := resp.Result.(map[string]any)
+			if result["isError"] == nil || !result["isError"].(bool) {
+				t.Fatalf("Expected an error for %s, got: %v", tc.name, result["content"])
+			}
+		})
+	}
+
+	if _, err := os.Stat(filepath.Join(outsideDir, "escaped.pcap")); !os.IsNotExist(err) {
+		t.Error("File was written outside the confined download directory")
 	}
 }
 

@@ -11,6 +11,7 @@ import (
 	"os"
 	"os/exec"
 	"path"
+	"path/filepath"
 	"strings"
 	"sync"
 	"time"
@@ -160,6 +161,7 @@ type mcpServer struct {
 	cachedAt           time.Time       // When the cache was populated
 	hubMCPMu           sync.Mutex
 	tokenSource        func() string // hub SA token source; proxy mode auto-renews, URL mode is the static --token. nil → License-Key
+	downloadDir        string        // base dir download_file is confined to (CWE-22); empty → CWD at call time
 }
 
 const hubMCPCacheTTL = 5 * time.Minute
@@ -206,6 +208,7 @@ func runMCPWithConfig(setFlags []string, directURL string, allowDestructive bool
 		directURL:        directURL,
 		urlMode:          urlMode,
 		allowDestructive: allowDestructive,
+		downloadDir:      mcpDownloadDir(),
 	}
 
 	// If URL mode, validate the URL is accessible on startup
@@ -860,17 +863,28 @@ func (s *mcpServer) callDownloadFile(args map[string]any) (string, bool) {
 		return fmt.Sprintf("Error: %v", err), true
 	}
 
-	// Ensure path starts with /
+	// Ensure path starts with / and reject "../" traversal so a caller can't
+	// climb outside the Hub API namespace (CWE-22).
 	if !strings.HasPrefix(filePath, "/") {
 		filePath = "/" + filePath
+	}
+	if hasDotDotSegment(filePath) {
+		return "Error: 'path' must not contain '..' segments", true
 	}
 
 	fullURL := strings.TrimSuffix(baseURL, "/") + filePath
 
-	// Determine destination file path
-	dest, _ := args["dest"].(string)
-	if dest == "" {
-		dest = path.Base(filePath)
+	// Resolve the destination, confined to the working directory so a
+	// caller-supplied 'dest' cannot traverse ("../") or use an absolute path to
+	// write outside it (CWE-22 — arbitrary file write via an induced agent).
+	destArg, _ := args["dest"].(string)
+	baseDir := s.downloadDir
+	if baseDir == "" {
+		baseDir = mcpDownloadDir()
+	}
+	dest, err := secureDownloadDest(baseDir, destArg, filePath)
+	if err != nil {
+		return fmt.Sprintf("Error: %v", err), true
 	}
 
 	// Use a dedicated HTTP client for file downloads.
@@ -899,7 +913,10 @@ func (s *mcpServer) callDownloadFile(args map[string]any) (string, bool) {
 		return fmt.Sprintf("Error downloading file: HTTP %d", resp.StatusCode), true
 	}
 
-	// Write to destination
+	// Write to destination (parent dir is within the confined base).
+	if err := os.MkdirAll(filepath.Dir(dest), 0o755); err != nil {
+		return fmt.Sprintf("Error creating directory for %s: %v", dest, err), true
+	}
 	outFile, err := os.Create(dest)
 	if err != nil {
 		return fmt.Sprintf("Error creating file %s: %v", dest, err), true
@@ -920,14 +937,67 @@ func (s *mcpServer) callDownloadFile(args map[string]any) (string, bool) {
 	return string(resultBytes), false
 }
 
+// hasDotDotSegment reports whether p contains a ".." path segment. Used to
+// reject traversal in the caller-supplied Hub 'path' (CWE-22).
+func hasDotDotSegment(p string) bool {
+	for _, seg := range strings.Split(p, "/") {
+		if seg == ".." {
+			return true
+		}
+	}
+	return false
+}
+
+// mcpDownloadDir is the base directory download_file is confined to. It
+// defaults to the current working directory (the dir the operator launched
+// 'kubeshark mcp' from) and can be relocated via KUBESHARK_MCP_DOWNLOAD_DIR so
+// an operator can widen or move the sandbox intentionally.
+func mcpDownloadDir() string {
+	if d := os.Getenv("KUBESHARK_MCP_DOWNLOAD_DIR"); d != "" {
+		return d
+	}
+	if wd, err := os.Getwd(); err == nil {
+		return wd
+	}
+	return "."
+}
+
+// secureDownloadDest resolves the caller-supplied download destination to an
+// absolute path confined to baseDir. An empty dest falls back to the base name
+// of the Hub file path. A dest (absolute or relative) that resolves outside
+// baseDir via "../" traversal is rejected, so download_file cannot be coerced
+// (e.g. via an induced agent) into writing to arbitrary locations such as
+// ~/.ssh/authorized_keys or ~/.kube/config. See CWE-22.
+func secureDownloadDest(baseDir, dest, filePath string) (string, error) {
+	if dest == "" {
+		dest = path.Base(filePath)
+	}
+	absBase, err := filepath.Abs(baseDir)
+	if err != nil {
+		return "", fmt.Errorf("cannot resolve download directory: %w", err)
+	}
+	full := dest
+	if filepath.IsAbs(full) {
+		full = filepath.Clean(full)
+	} else {
+		full = filepath.Join(absBase, full)
+	}
+	rel, err := filepath.Rel(absBase, full)
+	if err != nil || rel == ".." || strings.HasPrefix(rel, ".."+string(os.PathSeparator)) {
+		return "", fmt.Errorf("destination %q escapes the download directory %q", dest, absBase)
+	}
+	return full, nil
+}
+
 func (s *mcpServer) callStartKubeshark(args map[string]any) (string, bool) {
 	// Build the kubeshark tap command
 	cmdArgs := []string{"tap"}
 
-	// Add pod regex if provided
-	if v, ok := args["pod_regex"].(string); ok && v != "" {
-		cmdArgs = append(cmdArgs, v)
-	}
+	// Capture the caller-supplied pod regex. It is appended LAST, after a "--"
+	// end-of-options separator (see below), so a value beginning with "-"
+	// (e.g. "--set=tap.docker.registry=...") can never be parsed as a flag by
+	// the 'tap' cobra command. See CWE-88 (argument injection).
+	podRegex, _ := args["pod_regex"].(string)
 
 	// Add namespaces if provided
 	if v, ok := args["namespaces"].(string); ok && v != "" {
@@ -954,6 +1024,13 @@ func (s *mcpServer) callStartKubeshark(args map[string]any) (string, bool) {
 
 	// Execute the command in headless mode (no browser popup)
 	cmdArgs = append(cmdArgs, "--set", "headless=true")
+
+	// Append the pod regex as a positional argument, guarded by "--" so it is
+	// always treated as the [POD REGEX] operand and never as a flag (CWE-88).
+	// This must come after every flag above.
+	if podRegex != "" {
+		cmdArgs = append(cmdArgs, "--", podRegex)
+	}
 
 	// Log progress to stderr (MCP clients can see this in their logs)
 	logProgress := func(msg string) {
