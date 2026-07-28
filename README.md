@@ -1,3 +1,5 @@
+[![MCP Toplist](https://mcptoplist.com/badge/io.github.kubeshark%2Fmcp.svg)](https://mcptoplist.com/server/io.github.kubeshark%2Fmcp)
+
 <p align="center">
   <img src="https://raw.githubusercontent.com/kubeshark/assets/master/svg/kubeshark-logo.svg" alt="Kubeshark" height="120px"/>
 </p>
