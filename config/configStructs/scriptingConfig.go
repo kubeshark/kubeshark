@@ -7,8 +7,9 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/kubeshark/kubeshark/misc"
 	"github.com/rs/zerolog/log"
+
+	"github.com/kubeshark/kubeshark/misc"
 )
 
 type ScriptingConfig struct {

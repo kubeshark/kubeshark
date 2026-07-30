@@ -5,10 +5,11 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/kubeshark/kubeshark/config"
-	"github.com/kubeshark/kubeshark/misc"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
+
+	"github.com/kubeshark/kubeshark/config"
+	"github.com/kubeshark/kubeshark/misc"
 )
 
 var versionCmd = &cobra.Command{
