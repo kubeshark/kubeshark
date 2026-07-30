@@ -60,7 +60,7 @@ var pcapDumpCmd = &cobra.Command{
 		if timeIntervalStr != "" {
 			duration, err := time.ParseDuration(timeIntervalStr)
 			if err != nil {
-				return fmt.Errorf("invalid format %w", err)
+				return fmt.Errorf("invalid --time value %q: %w", timeIntervalStr, err)
 			}
 			tempCutoffTime := time.Now().Add(-duration)
 			cutoffTime = &tempCutoffTime
