@@ -4,9 +4,10 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/kubeshark/kubeshark/config/configStructs"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/util/homedir"
+
+	"github.com/kubeshark/kubeshark/config/configStructs"
 )
 
 const (
@@ -132,15 +133,15 @@ func CreateDefaultConfig() ConfigStruct {
 				"tcp-conn",
 			},
 			PortMapping: configStructs.PortMapping{
-				HTTP:     []uint16{80, 443, 8080},
-				AMQP:     []uint16{5671, 5672},
-				KAFKA:    []uint16{9092},
-				MONGODB:  []uint16{27017},
+				HTTP:       []uint16{80, 443, 8080},
+				AMQP:       []uint16{5671, 5672},
+				KAFKA:      []uint16{9092},
+				MONGODB:    []uint16{27017},
 				MYSQL:      []uint16{3306},
 				POSTGRESQL: []uint16{5432},
 				REDIS:      []uint16{6379},
-				LDAP:     []uint16{389},
-				DIAMETER: []uint16{3868},
+				LDAP:       []uint16{389},
+				DIAMETER:   []uint16{3868},
 			},
 			Dashboard: configStructs.DashboardConfig{
 				CompleteStreamingEnabled: true,

@@ -11,12 +11,13 @@ import (
 	"strings"
 	"time"
 
-	"github.com/kubeshark/kubeshark/config"
 	"github.com/rs/zerolog/log"
 	"k8s.io/apimachinery/pkg/util/httpstream"
 	"k8s.io/client-go/tools/portforward"
 	"k8s.io/client-go/transport/spdy"
 	"k8s.io/kubectl/pkg/proxy"
+
+	"github.com/kubeshark/kubeshark/config"
 )
 
 const k8sProxyApiPrefix = "/"
@@ -155,7 +156,7 @@ func getHttpDialer(kubernetesProvider *Provider, namespace string, podName strin
 
 	clientConfigHostUrl, err := url.Parse(kubernetesProvider.clientConfig.Host)
 	if err != nil {
-		return nil, fmt.Errorf("Failed parsing client config host URL %s, error %w", kubernetesProvider.clientConfig.Host, err)
+		return nil, fmt.Errorf("failed parsing client config host URL %s, error %w", kubernetesProvider.clientConfig.Host, err)
 	}
 	path := fmt.Sprintf("%s/api/v1/namespaces/%s/pods/%s/portforward", clientConfigHostUrl.Path, namespace, podName)
 

@@ -27,7 +27,7 @@ jobs:
           go-version-file: 'go.mod'
 
       - name: Go lint
-        uses: golangci/golangci-lint-action@v3
+        uses: golangci/golangci-lint-action@v7
         with:
-          version: latest
+          version: v2.8.0
           args: --timeout=10m

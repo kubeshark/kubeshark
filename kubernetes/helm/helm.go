@@ -8,8 +8,6 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/kubeshark/kubeshark/config"
-	"github.com/kubeshark/kubeshark/misc"
 	"github.com/pkg/errors"
 	"github.com/rs/zerolog/log"
 	"helm.sh/helm/v3/pkg/action"
@@ -22,6 +20,9 @@ import (
 	"helm.sh/helm/v3/pkg/registry"
 	"helm.sh/helm/v3/pkg/release"
 	"helm.sh/helm/v3/pkg/repo"
+
+	"github.com/kubeshark/kubeshark/config"
+	"github.com/kubeshark/kubeshark/misc"
 )
 
 const ENV_HELM_DRIVER = "HELM_DRIVER"
@@ -79,7 +80,7 @@ func (h *Helm) Install() (rel *release.Release, err error) {
 		}
 
 		var cp string
-		cp, err = client.ChartPathOptions.LocateChart(chartURL, settings)
+		cp, err = client.LocateChart(chartURL, settings)
 		if err != nil {
 			return
 		}
@@ -87,7 +88,7 @@ func (h *Helm) Install() (rel *release.Release, err error) {
 		m := &downloader.Manager{
 			Out:              os.Stdout,
 			ChartPath:        cp,
-			Keyring:          client.ChartPathOptions.Keyring,
+			Keyring:          client.Keyring,
 			SkipUpdate:       false,
 			Getters:          getter.All(settings),
 			RepositoryConfig: settings.RepositoryConfig,

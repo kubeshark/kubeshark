@@ -1,8 +1,9 @@
 package cmd
 
 import (
-	"github.com/kubeshark/kubeshark/config"
 	"github.com/spf13/cobra"
+
+	"github.com/kubeshark/kubeshark/config"
 )
 
 var mcpURL string

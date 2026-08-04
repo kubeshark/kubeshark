@@ -13,13 +13,14 @@ import (
 
 	"github.com/creasty/defaults"
 	"github.com/goccy/go-yaml"
-	"github.com/kubeshark/kubeshark/misc"
-	"github.com/kubeshark/kubeshark/misc/version"
-	"github.com/kubeshark/kubeshark/utils"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
+
+	"github.com/kubeshark/kubeshark/misc"
+	"github.com/kubeshark/kubeshark/misc/version"
+	"github.com/kubeshark/kubeshark/utils"
 )
 
 const (
