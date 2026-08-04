@@ -2,9 +2,10 @@ package cmd
 
 import (
 	"github.com/creasty/defaults"
-	"github.com/kubeshark/kubeshark/config/configStructs"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
+
+	"github.com/kubeshark/kubeshark/config/configStructs"
 )
 
 var proxyCmd = &cobra.Command{

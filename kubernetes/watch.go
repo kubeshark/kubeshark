@@ -7,9 +7,10 @@ import (
 	"sync"
 	"time"
 
-	"github.com/kubeshark/kubeshark/debounce"
 	"github.com/rs/zerolog/log"
 	"k8s.io/apimachinery/pkg/watch"
+
+	"github.com/kubeshark/kubeshark/debounce"
 )
 
 type EventFilterer interface {
@@ -47,7 +48,6 @@ func FilteredWatch(ctx context.Context, watcherCreator WatchCreator, targetNames
 				case <-ctx.Done():
 					return
 				default:
-					break
 				}
 
 				if err != nil {

@@ -5,9 +5,10 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/kubeshark/kubeshark/cmd"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
+
+	"github.com/kubeshark/kubeshark/cmd"
 )
 
 func main() {

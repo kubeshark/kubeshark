@@ -8,13 +8,14 @@ import (
 	"regexp"
 	"time"
 
+	"github.com/rs/zerolog/log"
+
 	"github.com/kubeshark/kubeshark/config"
 	"github.com/kubeshark/kubeshark/errormessage"
 	"github.com/kubeshark/kubeshark/internal/connect"
 	"github.com/kubeshark/kubeshark/kubernetes"
 	"github.com/kubeshark/kubeshark/misc"
 	"github.com/kubeshark/kubeshark/misc/fsUtils"
-	"github.com/rs/zerolog/log"
 )
 
 func startProxyReportErrorIfAny(kubernetesProvider *kubernetes.Provider, ctx context.Context, serviceName string, podName string, proxyPortLabel string, srcPort uint16, dstPort uint16, healthCheck string) {

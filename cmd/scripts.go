@@ -12,15 +12,16 @@ import (
 
 	"github.com/creasty/defaults"
 	"github.com/fsnotify/fsnotify"
-	"github.com/kubeshark/kubeshark/config"
-	"github.com/kubeshark/kubeshark/config/configStructs"
-	"github.com/kubeshark/kubeshark/kubernetes"
-	"github.com/kubeshark/kubeshark/misc"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	k8serrors "k8s.io/apimachinery/pkg/api/errors"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/apimachinery/pkg/watch"
+
+	"github.com/kubeshark/kubeshark/config"
+	"github.com/kubeshark/kubeshark/config/configStructs"
+	"github.com/kubeshark/kubeshark/kubernetes"
+	"github.com/kubeshark/kubeshark/misc"
 )
 
 var scriptsCmd = &cobra.Command{
