@@ -284,6 +284,10 @@ spec:
             value: '{{ (include "sentry.enabled" .) }}'
           - name: SENTRY_ENVIRONMENT
             value: '{{ .Values.tap.sentry.environment }}'
+          {{- if eq (include "kubeshark.authEnabled" .) "true" }}
+          - name: HUB_INTERNAL_TOKEN_PATH
+            value: /var/run/secrets/kubeshark/hub-token/token
+          {{- end }}
           resources:
             limits:
               {{ if ne (toString .Values.tap.resources.tracer.limits.cpu) "0" }}
@@ -359,6 +363,11 @@ spec:
               mountPropagation: HostToContainer
               name: root
               readOnly: true
+            {{- if eq (include "kubeshark.authEnabled" .) "true" }}
+            - mountPath: /var/run/secrets/kubeshark/hub-token
+              name: hub-internal-token
+              readOnly: true
+            {{- end }}
       {{- end }}
       dnsPolicy: ClusterFirstWithHostNet
       hostNetwork: {{ .Values.tap.hostNetwork }}
