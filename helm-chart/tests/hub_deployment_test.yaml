@@ -135,6 +135,19 @@ tests:
             secretRef:
               name: my-existing-secret
 
+  - it: should not set Recreate strategy by default (emptyDir snapshots)
+    asserts:
+      - isNull:
+          path: spec.strategy
+
+  - it: should set Recreate strategy when local snapshots storageClass is set
+    set:
+      tap.snapshots.local.storageClass: standard
+    asserts:
+      - equal:
+          path: spec.strategy.type
+          value: Recreate
+
   - it: should render both inline and external refs together
     set:
       tap.snapshots.cloud.s3.bucket: my-bucket
