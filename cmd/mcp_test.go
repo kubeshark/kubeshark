@@ -7,6 +7,7 @@ import (
 	"net/http/httptest"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 )
@@ -564,6 +565,7 @@ func TestMCP_DownloadFile(t *testing.T) {
 		stdout:             &bytes.Buffer{},
 		hubBaseURL:         mockServer.URL + "/api/mcp",
 		backendInitialized: true,
+		downloadDir:        tmpDir,
 	}
 	resp := parseResponse(t, sendRequest(s, "tools/call", 1, mcpCallToolParams{
 		Name:      "download_file",
@@ -614,6 +616,7 @@ func TestMCP_DownloadFile_CustomDest(t *testing.T) {
 		stdout:             &bytes.Buffer{},
 		hubBaseURL:         mockServer.URL + "/api/mcp",
 		backendInitialized: true,
+		downloadDir:        tmpDir,
 	}
 	resp := parseResponse(t, sendRequest(s, "tools/call", 1, mcpCallToolParams{
 		Name:      "download_file",
@@ -635,6 +638,118 @@ func TestMCP_DownloadFile_CustomDest(t *testing.T) {
 
 	if _, err := os.Stat(customDest); os.IsNotExist(err) {
 		t.Error("Expected file to exist at custom destination")
+	}
+}
+
+// TestMCP_DownloadFile_RejectsTraversal locks in the CWE-22 fix: a dest that
+// escapes the confined download dir (via "../" or an absolute path outside it)
+// and a 'path' containing ".." segments must be refused, and nothing written.
+func TestMCP_DownloadFile_RejectsTraversal(t *testing.T) {
+	mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write([]byte("data"))
+	}))
+	defer mockServer.Close()
+
+	baseDir := t.TempDir()
+	outsideDir := t.TempDir()
+	s := &mcpServer{
+		httpClient:         &http.Client{},
+		stdin:              &bytes.Buffer{},
+		stdout:             &bytes.Buffer{},
+		hubBaseURL:         mockServer.URL + "/api/mcp",
+		backendInitialized: true,
+		downloadDir:        baseDir,
+	}
+
+	cases := []struct {
+		name string
+		args map[string]any
+	}{
+		{"relative-traversal", map[string]any{"path": "/snapshots/abc/data.pcap", "dest": "../escaped.pcap"}},
+		{"absolute-outside-base", map[string]any{"path": "/snapshots/abc/data.pcap", "dest": filepath.Join(outsideDir, "escaped.pcap")}},
+		{"path-dotdot", map[string]any{"path": "/snapshots/../../etc/passwd", "dest": "ok.pcap"}},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			resp := parseResponse(t, sendRequest(s, "tools/call", 1, mcpCallToolParams{
+				Name:      "download_file",
+				Arguments: tc.args,
+			}))
+			result := resp.Result.(map[string]any)
+			if result["isError"] == nil || !result["isError"].(bool) {
+				t.Fatalf("Expected an error for %s, got: %v", tc.name, result["content"])
+			}
+		})
+	}
+
+	if _, err := os.Stat(filepath.Join(outsideDir, "escaped.pcap")); !os.IsNotExist(err) {
+		t.Error("File was written outside the confined download directory")
+	}
+}
+
+// TestMCP_DownloadFile_RejectsSymlinkEscape covers the non-lexical half of the
+// CWE-22 fix: a dest that stays inside the download dir lexically but resolves
+// outside it through a symlink must be refused.
+func TestMCP_DownloadFile_RejectsSymlinkEscape(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("symlink creation on Windows requires elevated rights")
+	}
+
+	mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_, _ = w.Write([]byte("data"))
+	}))
+	defer mockServer.Close()
+
+	baseDir := t.TempDir()
+	outsideDir := t.TempDir()
+
+	// A symlinked subdirectory inside the base, pointing outside it.
+	if err := os.Symlink(outsideDir, filepath.Join(baseDir, "linkdir")); err != nil {
+		t.Fatalf("Failed to create dir symlink: %v", err)
+	}
+	// A symlinked file inside the base, pointing at a file outside it.
+	victim := filepath.Join(outsideDir, "victim.pcap")
+	if err := os.WriteFile(victim, []byte("original"), 0o600); err != nil {
+		t.Fatalf("Failed to seed victim file: %v", err)
+	}
+	if err := os.Symlink(victim, filepath.Join(baseDir, "linkfile.pcap")); err != nil {
+		t.Fatalf("Failed to create file symlink: %v", err)
+	}
+
+	s := &mcpServer{
+		httpClient:         &http.Client{},
+		stdin:              &bytes.Buffer{},
+		stdout:             &bytes.Buffer{},
+		hubBaseURL:         mockServer.URL + "/api/mcp",
+		backendInitialized: true,
+		downloadDir:        baseDir,
+	}
+
+	cases := []struct {
+		name string
+		dest string
+	}{
+		{"through-symlinked-dir", "linkdir/escaped.pcap"},
+		{"dest-is-symlink", "linkfile.pcap"},
+	}
+	for _, tc := range cases {
+		t.Run(tc.name, func(t *testing.T) {
+			resp := parseResponse(t, sendRequest(s, "tools/call", 1, mcpCallToolParams{
+				Name:      "download_file",
+				Arguments: map[string]any{"path": "/snapshots/abc/data.pcap", "dest": tc.dest},
+			}))
+			result := resp.Result.(map[string]any)
+			if result["isError"] == nil || !result["isError"].(bool) {
+				t.Fatalf("Expected an error for %s, got: %v", tc.name, result["content"])
+			}
+		})
+	}
+
+	if _, err := os.Stat(filepath.Join(outsideDir, "escaped.pcap")); !os.IsNotExist(err) {
+		t.Error("File was written outside the base through a symlinked directory")
+	}
+	if content, err := os.ReadFile(victim); err != nil || string(content) != "original" {
+		t.Errorf("Victim file outside the base was modified: %q, err %v", content, err)
 	}
 }
 
