@@ -146,7 +146,7 @@ spec:
             value: '{{ (include "sentry.enabled" .) }}'
           - name: SENTRY_ENVIRONMENT
             value: '{{ .Values.tap.sentry.environment }}'
-          {{- if (((.Values.tap).auth).enabled) }}
+          {{- if eq (include "kubeshark.authEnabled" .) "true" }}
           - name: HUB_INTERNAL_TOKEN_PATH
             value: /var/run/secrets/kubeshark/hub-token/token
           {{- end }}
@@ -239,7 +239,7 @@ spec:
 {{- if .Values.tap.persistentStorage }}
               subPathExpr: $(NODE_NAME)
 {{- end }}
-            {{- if (((.Values.tap).auth).enabled) }}
+            {{- if eq (include "kubeshark.authEnabled" .) "true" }}
             - mountPath: /var/run/secrets/kubeshark/hub-token
               name: hub-internal-token
               readOnly: true
@@ -284,6 +284,10 @@ spec:
             value: '{{ (include "sentry.enabled" .) }}'
           - name: SENTRY_ENVIRONMENT
             value: '{{ .Values.tap.sentry.environment }}'
+          {{- if eq (include "kubeshark.authEnabled" .) "true" }}
+          - name: HUB_INTERNAL_TOKEN_PATH
+            value: /var/run/secrets/kubeshark/hub-token/token
+          {{- end }}
           resources:
             limits:
               {{ if ne (toString .Values.tap.resources.tracer.limits.cpu) "0" }}
@@ -359,6 +363,11 @@ spec:
               mountPropagation: HostToContainer
               name: root
               readOnly: true
+            {{- if eq (include "kubeshark.authEnabled" .) "true" }}
+            - mountPath: /var/run/secrets/kubeshark/hub-token
+              name: hub-internal-token
+              readOnly: true
+            {{- end }}
       {{- end }}
       dnsPolicy: ClusterFirstWithHostNet
       hostNetwork: {{ .Values.tap.hostNetwork }}
@@ -439,7 +448,7 @@ spec:
           emptyDir:
             sizeLimit: {{ .Values.tap.storageLimit }}
 {{- end }}
-        {{- if (((.Values.tap).auth).enabled) }}
+        {{- if eq (include "kubeshark.authEnabled" .) "true" }}
         - name: hub-internal-token
           projected:
             sources:
