@@ -706,9 +706,10 @@ func TestMCP_ToolsList_IncludesFileTools(t *testing.T) {
 
 func TestMCP_FullConversation(t *testing.T) {
 	mockServer := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		if r.URL.Path == "/" {
+		switch r.URL.Path {
+		case "/":
 			_, _ = w.Write([]byte(`{"name":"hub","tools":[{"name":"list_workloads","description":"","inputSchema":{}}]}`))
-		} else if r.URL.Path == "/tools/call" {
+		case "/tools/call":
 			_, _ = w.Write([]byte(`{"data":"ok"}`))
 		}
 	}))

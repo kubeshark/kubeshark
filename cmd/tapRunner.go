@@ -16,11 +16,12 @@ import (
 
 	core "k8s.io/api/core/v1"
 
+	"github.com/rs/zerolog/log"
+
 	"github.com/kubeshark/kubeshark/config"
 	"github.com/kubeshark/kubeshark/config/configStructs"
 	"github.com/kubeshark/kubeshark/errormessage"
 	"github.com/kubeshark/kubeshark/kubernetes"
-	"github.com/rs/zerolog/log"
 )
 
 const cleanupTimeout = time.Minute
@@ -444,7 +445,6 @@ func postFrontStarted(ctx context.Context, kubernetesProvider *kubernetes.Provid
 	for !ready.Hub {
 		time.Sleep(100 * time.Millisecond)
 	}
-
 
 	if (config.Config.Scripting.Source != "" || len(config.Config.Scripting.Sources) > 0) && config.Config.Scripting.WatchScripts {
 		watchScripts(ctx, kubernetesProvider, false)

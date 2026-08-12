@@ -148,7 +148,7 @@ func TestMergeSetFlagNotSliceValues(t *testing.T) {
 		{Name: "int field", FieldsSetValues: []FieldSetValues{{SetValues: []string{"int-field=6"}, FieldName: "IntField", FieldValue: 6}}},
 		{Name: "bool field", FieldsSetValues: []FieldSetValues{{SetValues: []string{"bool-field=true"}, FieldName: "BoolField", FieldValue: true}}},
 		{Name: "uint field", FieldsSetValues: []FieldSetValues{{SetValues: []string{"uint-field=6"}, FieldName: "UintField", FieldValue: uint(6)}}},
-		{Name: "four fields combined", FieldsSetValues: []FieldSetValues {
+		{Name: "four fields combined", FieldsSetValues: []FieldSetValues{
 			{SetValues: []string{"string-field=test"}, FieldName: "StringField", FieldValue: "test"},
 			{SetValues: []string{"int-field=6"}, FieldName: "IntField", FieldValue: 6},
 			{SetValues: []string{"bool-field=true"}, FieldName: "BoolField", FieldValue: true},

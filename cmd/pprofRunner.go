@@ -5,12 +5,13 @@ import (
 	"fmt"
 
 	"github.com/go-cmd/cmd"
-	"github.com/kubeshark/kubeshark/config"
-	"github.com/kubeshark/kubeshark/kubernetes"
-	"github.com/kubeshark/kubeshark/utils"
 	"github.com/rivo/tview"
 	"github.com/rs/zerolog/log"
 	v1 "k8s.io/api/core/v1"
+
+	"github.com/kubeshark/kubeshark/config"
+	"github.com/kubeshark/kubeshark/kubernetes"
+	"github.com/kubeshark/kubeshark/utils"
 )
 
 func runPprof() {
