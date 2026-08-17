@@ -1,0 +1,54 @@
+## An auth type that cannot work should stop the install, not render a Hub
+## that authenticates nobody. The chart previously rewrote such settings into
+## a different auth type instead, which is how an operator could ask for SAML
+## and get something else without being told.
+suite: auth validation
+templates:
+  - templates/12-config-map.yaml
+tests:
+  - it: rejects SAML without an IdP metadata URL
+    set:
+      tap.auth.enabled: true
+      tap.auth.type: saml
+    asserts:
+      - failedTemplate:
+          errorPattern: tap.auth.saml.idpMetadataUrl is empty
+
+  - it: accepts SAML with an IdP metadata URL
+    set:
+      tap.auth.enabled: true
+      tap.auth.type: saml
+      tap.auth.saml.idpMetadataUrl: https://idp.example.com/metadata
+    asserts:
+      - equal:
+          path: data.AUTH_TYPE
+          value: saml
+
+  - it: rejects OIDC without an issuer
+    set:
+      tap.auth.enabled: true
+      tap.auth.type: oidc
+    asserts:
+      - failedTemplate:
+          errorPattern: tap.auth.oidc.issuer is empty
+
+  - it: accepts OIDC with an issuer
+    set:
+      tap.auth.enabled: true
+      tap.auth.type: oidc
+      tap.auth.oidc.issuer: https://issuer.example.com
+    asserts:
+      - equal:
+          path: data.AUTH_TYPE
+          value: oidc
+
+  # Incomplete auth settings are only a problem when auth is on. The default
+  # install ships tap.auth.type=saml with no IdP and must still render.
+  - it: ignores incomplete auth settings while auth is off
+    asserts:
+      - equal:
+          path: data.AUTH_ENABLED
+          value: "false"
+      - equal:
+          path: data.AUTH_TYPE
+          value: saml

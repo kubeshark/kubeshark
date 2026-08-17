@@ -269,8 +269,8 @@ data:
     INGRESS_ENABLED: 'false'
     INGRESS_HOST: 'ks.svc.cluster.local'
     PROXY_FRONT_PORT: '8899'
-    AUTH_ENABLED: 'true'
-    AUTH_TYPE: 'default'
+    AUTH_ENABLED: 'false'
+    AUTH_TYPE: 'saml'
     AUTH_SAML_IDP_METADATA_URL: ''
     AUTH_CLI_SERVICE_ACCOUNTS: ''
     AUTH_ROLES_CLAIM: 'groups'
@@ -990,9 +990,9 @@ spec:
       containers:
         - env:
             - name: REACT_APP_AUTH_ENABLED
-              value: 'true'
+              value: 'false'
             - name: REACT_APP_AUTH_TYPE
-              value: 'default'
+              value: 'saml'
             - name: REACT_APP_COMPLETE_STREAMING_ENABLED
               value: 'true'
             - name: REACT_APP_STREAMING_TYPE

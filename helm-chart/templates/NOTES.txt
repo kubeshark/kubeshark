@@ -24,6 +24,16 @@ Overridden front image: {{ .Values.tap.docker.overrideImage.front }}
 Your deployment has been successful. The release is named `{{ .Release.Name }}` and it has been deployed in the `{{ .Release.Namespace }}` namespace.
 
 Notices:
+{{- if not .Values.tap.auth.enabled }}
+- API AUTHENTICATION IS DISABLED (tap.auth.enabled=false, the default).
+- Anyone able to reach the Hub can read captured traffic and change settings.
+- Enable it with `--set tap.auth.enabled=true` plus a `tap.auth.type` of `saml` or `oidc`,
+  and assign roles via `tap.auth.defaultRole` / `tap.auth.groupMapping`.
+- See https://docs.kubeshark.com/en/roles
+{{- else }}
+- API authentication is enabled (tap.auth.type={{ .Values.tap.auth.type }}).
+- Callers with no recognized role resolve to `{{ default "no role, deny-all" .Values.tap.auth.defaultRole }}`.
+{{- end }}
 {{- if .Values.supportChatEnabled}}
 - Support chat using Intercom is enabled. It can be disabled using `--set supportChatEnabled=false`
 {{- end }}
