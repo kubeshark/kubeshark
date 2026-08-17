@@ -175,12 +175,17 @@ type AuthConfig struct {
 	// breaking change documented in the release notes.
 	Type       string `yaml:"type" json:"type" default:"saml"`
 	RolesClaim string `yaml:"rolesClaim" json:"rolesClaim"`
-	// DefaultRole is applied when the authenticated user's SSO claim has no
-	// recognized group. Must be one of the four built-in roles
-	// (kubeshark-admin / kubeshark-realtime / kubeshark-snapshot /
-	// kubeshark-viewer), the name of an operator-defined role under
-	// `tap.auth.roles`, or empty for strict-deny.
-	DefaultRole string `yaml:"defaultRole" json:"defaultRole"`
+	// DefaultRole is applied when a caller has no recognized group, and also
+	// when Enabled is false — with no authentication there is no identity,
+	// but there is still a question of what an unidentified caller may do.
+	// Must be one of the four built-in roles (kubeshark-admin /
+	// kubeshark-realtime / kubeshark-snapshot / kubeshark-viewer) or the name
+	// of an operator-defined role under `tap.auth.roles`.
+	//
+	// With Enabled true, empty means strict-deny. With Enabled false, empty
+	// or unrecognized falls back to kubeshark-admin so an install that never
+	// configured authorization keeps working.
+	DefaultRole string `yaml:"defaultRole" json:"defaultRole" default:"kubeshark-admin"`
 	// GroupMapping translates SSO group names into role names (built-in or
 	// operator-defined). Optional — groups whose name already matches a
 	// built-in role are identity-matched and don't need an entry here.

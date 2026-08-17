@@ -70,3 +70,27 @@ tests:
             mountPath: /var/run/secrets/kubeshark/hub-token
             name: hub-internal-token
             readOnly: true
+
+  # The projection is independent of everything that used to feed the old
+  # auth expression, not just of tap.auth.enabled.
+  - it: projects the token regardless of licensing or demo mode
+    set:
+      license: ABC
+      demoModeEnabled: true
+      cloudLicenseEnabled: false
+    asserts:
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: hub-internal-token
+            projected:
+              sources:
+                - serviceAccountToken:
+                    path: token
+                    audience: kubeshark-hub
+                    expirationSeconds: 3600
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: HUB_INTERNAL_TOKEN_PATH
+            value: /var/run/secrets/kubeshark/hub-token/token

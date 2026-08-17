@@ -116,6 +116,32 @@ tests:
           path: data.AUTH_TYPE
           value: descope
 
+  ## AUTH_DEFAULT_ROLE decides what a caller with no recognized group may do,
+  ## including a caller on a deployment with no authentication at all. Its
+  ## default is admin, so an ungated install behaves as it always has; a
+  ## narrower value yields a read-only deployment with no identity provider
+  ## and no login.
+
+  - it: defaults to admin, so an ungated install is unrestricted
+    asserts:
+      - equal:
+          path: data.AUTH_ENABLED
+          value: "false"
+      - equal:
+          path: data.AUTH_DEFAULT_ROLE
+          value: kubeshark-admin
+
+  - it: carries a narrowed default role with auth off
+    set:
+      tap.auth.defaultRole: kubeshark-viewer
+    asserts:
+      - equal:
+          path: data.AUTH_ENABLED
+          value: "false"
+      - equal:
+          path: data.AUTH_DEFAULT_ROLE
+          value: kubeshark-viewer
+
   ## Role resolution inputs reach the Hub untouched, so `defaultRole` means
   ## what it says for every auth type.
 

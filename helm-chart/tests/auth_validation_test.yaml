@@ -42,6 +42,34 @@ tests:
           path: data.AUTH_TYPE
           value: oidc
 
+  # Descope carries its own configuration, so there is nothing to require.
+  - it: accepts descope without extra settings
+    set:
+      tap.auth.enabled: true
+      tap.auth.type: descope
+    asserts:
+      - equal:
+          path: data.AUTH_TYPE
+          value: descope
+
+  - it: accepts dex with an issuer
+    set:
+      tap.auth.enabled: true
+      tap.auth.type: dex
+      tap.auth.oidc.issuer: https://dex.example.com
+    asserts:
+      - equal:
+          path: data.AUTH_TYPE
+          value: dex
+
+  - it: rejects dex without an issuer
+    set:
+      tap.auth.enabled: true
+      tap.auth.type: dex
+    asserts:
+      - failedTemplate:
+          errorPattern: tap.auth.oidc.issuer is empty
+
   # Incomplete auth settings are only a problem when auth is on. The default
   # install ships tap.auth.type=saml with no IdP and must still render.
   - it: ignores incomplete auth settings while auth is off
@@ -52,3 +80,14 @@ tests:
       - equal:
           path: data.AUTH_TYPE
           value: saml
+
+  - it: ignores incomplete oidc settings while auth is off
+    set:
+      tap.auth.type: oidc
+    asserts:
+      - equal:
+          path: data.AUTH_ENABLED
+          value: "false"
+      - equal:
+          path: data.AUTH_TYPE
+          value: oidc

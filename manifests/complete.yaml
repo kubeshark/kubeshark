@@ -274,7 +274,7 @@ data:
     AUTH_SAML_IDP_METADATA_URL: ''
     AUTH_CLI_SERVICE_ACCOUNTS: ''
     AUTH_ROLES_CLAIM: 'groups'
-    AUTH_DEFAULT_ROLE: 'kubeshark-viewer'
+    AUTH_DEFAULT_ROLE: 'kubeshark-admin'
     AUTH_GROUP_MAPPING: '{}'
     AUTH_ROLES: '{}'
     AUTH_OIDC_ISSUER: 'not set'
