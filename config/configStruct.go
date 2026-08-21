@@ -12,10 +12,19 @@ import (
 
 const (
 	KubeConfigPathConfigName = "kube-configPath"
+
+	// initialConfigVersion is the implicit version of files written before the
+	// schema gained an explicit version field.
+	initialConfigVersion = 1
+
+	// currentConfigVersion identifies the schema written by this CLI. Increment it
+	// only when an older configuration can no longer be loaded safely.
+	currentConfigVersion = initialConfigVersion
 )
 
 func CreateDefaultConfig() ConfigStruct {
 	return ConfigStruct{
+		Version: currentConfigVersion,
 		Tap: configStructs.TapConfig{
 			NodeSelectorTerms: configStructs.NodeSelectorTermsConfig{
 				Workers: []v1.NodeSelectorTerm{
@@ -167,6 +176,7 @@ type ManifestsConfig struct {
 }
 
 type ConfigStruct struct {
+	Version              int                           `yaml:"version" json:"version"`
 	Tap                  configStructs.TapConfig       `yaml:"tap" json:"tap"`
 	Logs                 configStructs.LogsConfig      `yaml:"logs" json:"logs"`
 	Config               configStructs.ConfigConfig    `yaml:"config,omitempty" json:"config,omitempty"`

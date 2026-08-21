@@ -3,7 +3,6 @@ package config
 import (
 	"errors"
 	"fmt"
-	"io"
 	"os"
 	"path"
 	"path/filepath"
@@ -18,6 +17,7 @@ import (
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 
+	"github.com/kubeshark/kubeshark/config/configStructs"
 	"github.com/kubeshark/kubeshark/misc"
 	"github.com/kubeshark/kubeshark/misc/version"
 	"github.com/kubeshark/kubeshark/utils"
@@ -86,13 +86,13 @@ func InitConfig(cmd *cobra.Command) error {
 	}
 
 	ConfigFilePath = GetConfigFilePath(cmd)
-	if err := loadConfigFile(&Config, utils.Contains([]string{
+	if err := loadConfigFileForCommand(&Config, cmd, utils.Contains([]string{
 		"manifests",
 		"license",
 	}, cmd.Use)); err != nil {
 		if !os.IsNotExist(err) {
 			return fmt.Errorf("invalid config, %w\n"+
-				"you can regenerate the file by removing it (%v) and using `kubeshark config -r`", err, ConfigFilePath)
+				"you can regenerate the file (%v) using `kubeshark config -r`", err, ConfigFilePath)
 		}
 	}
 
@@ -108,6 +108,7 @@ func GetConfigWithDefaults() (*ConfigStruct, error) {
 	if err := defaults.Set(&defaultConf); err != nil {
 		return nil, err
 	}
+	defaultConf.Version = currentConfigVersion
 
 	configElem := reflect.ValueOf(&defaultConf).Elem()
 	setZeroForReadonlyFields(configElem)
@@ -116,7 +117,10 @@ func GetConfigWithDefaults() (*ConfigStruct, error) {
 }
 
 func WriteConfig(config *ConfigStruct) error {
-	template, err := utils.PrettyYaml(config)
+	configToWrite := *config
+	configToWrite.Version = currentConfigVersion
+
+	template, err := utils.PrettyYaml(&configToWrite)
 	if err != nil {
 		return fmt.Errorf("failed converting config to yaml, err: %v", err)
 	}
@@ -172,23 +176,66 @@ func GetConfigFilePath(cmd *cobra.Command) string {
 }
 
 func loadConfigFile(config *ConfigStruct, silent bool) error {
-	reader, err := os.Open(ConfigFilePath)
-	if err != nil {
-		return err
-	}
-	defer reader.Close()
-
-	buf, err := io.ReadAll(reader)
+	data, err := os.ReadFile(ConfigFilePath)
 	if err != nil {
 		return err
 	}
 
-	if err := yaml.Unmarshal(buf, config); err != nil {
+	loadedConfig, err := decodeConfig(data, *config)
+	if err != nil {
 		return err
 	}
+	*config = loadedConfig
 
 	if !silent {
 		log.Info().Str("path", ConfigFilePath).Msg("Found config file!")
+	}
+
+	return nil
+}
+
+func loadConfigFileForCommand(config *ConfigStruct, cmd *cobra.Command, silent bool) error {
+	if cmd.Name() == "config" {
+		regenerate, err := cmd.Flags().GetBool(configStructs.RegenerateConfigName)
+		if err != nil {
+			return fmt.Errorf("failed reading --%s flag: %w", configStructs.RegenerateConfigName, err)
+		}
+
+		// Regeneration must work even when the existing file is malformed or uses an
+		// unsupported schema; the command replaces that file instead of consuming it.
+		if regenerate {
+			return nil
+		}
+	}
+
+	return loadConfigFile(config, silent)
+}
+
+func decodeConfig(data []byte, base ConfigStruct) (ConfigStruct, error) {
+	// Start with the implicit legacy version so an omitted field keeps its original
+	// meaning after currentConfigVersion is incremented in the future.
+	base.Version = initialConfigVersion
+	if err := yaml.Unmarshal(data, &base); err != nil {
+		return ConfigStruct{}, err
+	}
+
+	if err := validateConfigVersion(base.Version); err != nil {
+		return ConfigStruct{}, err
+	}
+
+	// Normalize legacy files in memory so every downstream consumer sees an
+	// explicit, supported version.
+	base.Version = currentConfigVersion
+	return base, nil
+}
+
+func validateConfigVersion(configVersion int) error {
+	if configVersion != currentConfigVersion {
+		return fmt.Errorf(
+			"this CLI does not support config version %d (supported version: %d)",
+			configVersion,
+			currentConfigVersion,
+		)
 	}
 
 	return nil
