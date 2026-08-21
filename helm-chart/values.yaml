@@ -1,3 +1,4 @@
+version: 1
 tap:
   docker:
     registry: docker.io/kubeshark
