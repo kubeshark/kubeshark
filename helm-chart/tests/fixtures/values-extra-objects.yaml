@@ -1,0 +1,23 @@
+tap:
+  ingress:
+    enabled: false
+  extraObjects:
+    - apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: '{{ .Release.Name }}-extra-mapping'
+        namespace: '{{ .Release.Namespace }}'
+      data:
+        source: mapping
+    - |
+      apiVersion: v1
+      kind: Service
+      metadata:
+        name: {{ .Release.Name }}-extra-string
+        namespace: {{ .Release.Namespace }}
+      spec:
+        selector:
+          app.kubeshark.com/app: front
+        ports:
+          - port: 80
+            targetPort: 80

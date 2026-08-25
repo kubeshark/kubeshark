@@ -282,6 +282,7 @@ tap:
       - IPC_LOCK
   mountBpf: true
   hostNetwork: true
+  extraObjects: []
 logs:
   file: ""
   grep: ""
