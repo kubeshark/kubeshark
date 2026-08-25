@@ -91,6 +91,51 @@ tap:
       alb.ingress.kubernetes.io/scheme: internet-facing
 ```
 
+## Adding your own resources
+
+`tap.extraObjects` renders arbitrary manifests alongside the chart's own resources, so you can add
+what your cluster needs without forking the chart. Entries are rendered through the template
+engine, so `.Release`, `.Values` and the chart helpers are all available.
+
+On OpenShift, for example, you would disable the ingress and add a `Route` instead:
+
+```yaml
+tap:
+  ingress:
+    enabled: false
+  extraObjects:
+    # A mapping entry, templated field by field.
+    - apiVersion: route.openshift.io/v1
+      kind: Route
+      metadata:
+        name: kubeshark-front
+        namespace: '{{ .Release.Namespace }}'
+        labels:
+          app.kubeshark.com/app: front
+      spec:
+        host: kubeshark.apps.example.com
+        to:
+          kind: Service
+          name: kubeshark-front
+        port:
+          targetPort: kubeshark-front
+        tls:
+          termination: edge
+          insecureEdgeTerminationPolicy: Redirect
+    # A raw YAML string entry, templated as a whole.
+    - |
+      apiVersion: v1
+      kind: ConfigMap
+      metadata:
+        name: {{ .Release.Name }}-extra
+        namespace: {{ .Release.Namespace }}
+      data:
+        note: rendered by tap.extraObjects
+```
+
+The chart never parses these manifests, it only renders them, so anything the cluster accepts works
+here, including CRDs the chart knows nothing about.
+
 ## Disabling IPV6
 
 Not all have IPV6 enabled, hence this has to be disabled as follows:
@@ -242,6 +287,7 @@ Example for overriding image names:
 | `tap.enabledDissectors`                   | This is an array of strings representing the list of supported protocols. Remove or comment out redundant protocols (e.g., dns).| The default list excludes: `udp` and `tcp`                                                                                                                                                                                                       |
 | `tap.mountBpf`                            | BPF filesystem needs to be mounted for eBPF to work properly. This helm value determines whether Kubeshark will attempt to mount the filesystem. This option is not required if filesystem is already mounts. │ `true`|
 | `tap.hostNetwork`                         | Enable host network mode for worker DaemonSet pods. When enabled, worker pods use the host's network namespace for direct network access. | `true`                                                                                                                                                                                                                                           |
+| `tap.extraObjects`                        | Additional manifests to render alongside the chart's own resources. Each entry is either a mapping or a raw YAML string, and both are passed through the template engine. Use it for resources the chart does not ship, such as an OpenShift `Route`. See [Adding your own resources](#adding-your-own-resources). | `[]`                                                                                                                                                                                                                                             |
 | `tap.packetCapture`                       | Packet capture backend: `best`, `af_packet`, or `pf_ring` | `best`                                                                                                                                                                                                                                           |
 | `tap.misc.trafficSampleRate`              | Percentage of traffic to process (0-100)       | `100`                                                                                                                                                                                                                                            |
 | `tap.misc.tcpStreamChannelTimeoutMs`      | Timeout in milliseconds for TCP stream channel | `10000`                                                                                                                                                                                                                                          |
