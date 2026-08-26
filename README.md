@@ -123,7 +123,7 @@ Capture and retain raw network traffic cluster-wide, including decrypted TLS. Do
 | [**Traffic Snapshots**](https://docs.kubeshark.com/en/v2/traffic_snapshots) | Point-in-time snapshots with cloud storage (S3, Azure Blob, GCS), PCAP export for Wireshark |
 | [**Traffic Indexing**](https://docs.kubeshark.com/en/v2/l7_api_dissection) | Real-time and delayed L7 indexing with request/response matching and full payloads |
 | [**Protocol Support**](https://docs.kubeshark.com/en/protocols) | HTTP, gRPC, GraphQL, Redis, Kafka, DNS, and more |
-| [**TLS Decryption**](https://docs.kubeshark.com/en/encrypted_traffic) | eBPF-based decryption without key management, included in snapshots |
+| [**TLS Decryption**](https://docs.kubeshark.com/en/encrypted_traffic) | eBPF-based OpenSSL, BoringSSL (including Envoy/Istio), and Go crypto/tls decryption without key management, included in snapshots |
 | [**AI Integration**](https://docs.kubeshark.com/en/mcp) | MCP server + open-source AI skills for network RCA and traffic filtering |
 | [**KFL Query Language**](https://docs.kubeshark.com/en/v2/kfl2) | CEL-based query language with Kubernetes, API, and network semantics |
 | [**100% On-Premises**](https://docs.kubeshark.com/en/air_gapped) | Air-gapped support, no external dependencies |

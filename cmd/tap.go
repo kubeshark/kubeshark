@@ -12,6 +12,9 @@ import (
 	"github.com/kubeshark/kubeshark/errormessage"
 )
 
+const tlsFlagUsage = "Capture traffic encrypted with OpenSSL, BoringSSL " +
+	"(including Envoy/Istio), or Go crypto/tls libraries"
+
 var tapCmd = &cobra.Command{
 	Use:   "tap [POD REGEX]",
 	Short: "Capture the network traffic in your Kubernetes cluster",
@@ -58,7 +61,7 @@ func init() {
 	tapCmd.Flags().String(configStructs.StorageClassLabel, defaultTapConfig.StorageClass, "Override the default storage class of the PersistentVolumeClaim (per node)")
 	tapCmd.Flags().Bool(configStructs.DryRunLabel, defaultTapConfig.DryRun, "Preview of all pods matching the regex, without tapping them")
 	tapCmd.Flags().Bool(configStructs.ServiceMeshLabel, defaultTapConfig.ServiceMesh, "Capture the encrypted traffic if the cluster is configured with a service mesh and with mTLS")
-	tapCmd.Flags().Bool(configStructs.TlsLabel, defaultTapConfig.Tls, "Capture the traffic that's encrypted with OpenSSL or Go crypto/tls libraries")
+	tapCmd.Flags().Bool(configStructs.TlsLabel, defaultTapConfig.Tls, tlsFlagUsage)
 	tapCmd.Flags().Bool(configStructs.IngressEnabledLabel, defaultTapConfig.Ingress.Enabled, "Enable Ingress")
 	tapCmd.Flags().Bool(configStructs.TelemetryEnabledLabel, defaultTapConfig.Telemetry.Enabled, "Enable/disable Telemetry")
 	tapCmd.Flags().Bool(configStructs.ResourceGuardEnabledLabel, defaultTapConfig.ResourceGuard.Enabled, "Enable/disable resource guard")
