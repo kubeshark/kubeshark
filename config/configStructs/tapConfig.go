@@ -484,8 +484,14 @@ type TapConfig struct {
 	Pprof                          PprofConfig             `yaml:"pprof" json:"pprof"`
 	Misc                           MiscConfig              `yaml:"misc" json:"misc"`
 	SecurityContext                SecurityContextConfig   `yaml:"securityContext" json:"securityContext"`
-	MountBpf                       bool                    `yaml:"mountBpf" json:"mountBpf" default:"true"`
-	HostNetwork                    bool                    `yaml:"hostNetwork" json:"hostNetwork" default:"true"`
+	// NetworkPolicies exposes the Hub's network-policy routes, which create
+	// and remove Kubernetes NetworkPolicy objects and compute pod-reachability
+	// impact. The feature reaches outside Kubeshark's own data, so it is off
+	// unless an operator asks for it, and no role grants it: whether a
+	// deployment offers it at all is not a question about the caller.
+	NetworkPolicies NetworkPoliciesConfig `yaml:"networkPolicies" json:"networkPolicies"`
+	MountBpf        bool                  `yaml:"mountBpf" json:"mountBpf" default:"true"`
+	HostNetwork     bool                  `yaml:"hostNetwork" json:"hostNetwork" default:"true"`
 }
 
 func (config *TapConfig) PodRegex() *regexp.Regexp {
@@ -500,4 +506,8 @@ func (config *TapConfig) Validate() error {
 	}
 
 	return nil
+}
+
+type NetworkPoliciesConfig struct {
+	Enabled bool `yaml:"enabled" json:"enabled" default:"false"`
 }

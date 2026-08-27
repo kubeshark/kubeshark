@@ -78,3 +78,20 @@ tests:
       - equal:
           path: data.SCRIPTING_DISABLED
           value: "false"
+
+  ## Network policies create and remove Kubernetes NetworkPolicy objects, which
+  ## is not a question about who is asking: no role grants it. Like scripting it
+  ## is a deployment-wide switch, and it is off unless an operator asks for it.
+  - it: disables the network-policy routes by default
+    asserts:
+      - equal:
+          path: data.NETWORK_POLICIES_DISABLED
+          value: "true"
+
+  - it: exposes the network-policy routes when the operator asks for them
+    set:
+      tap.networkPolicies.enabled: true
+    asserts:
+      - equal:
+          path: data.NETWORK_POLICIES_DISABLED
+          value: "false"

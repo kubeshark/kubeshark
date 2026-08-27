@@ -280,6 +280,8 @@ tap:
       - SYS_PTRACE
       - SYS_RESOURCE
       - IPC_LOCK
+  networkPolicies:
+    enabled: false
   mountBpf: true
   hostNetwork: true
 logs:

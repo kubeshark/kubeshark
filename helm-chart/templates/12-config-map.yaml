@@ -41,6 +41,7 @@ data:
                                     {{- end }}'
     TELEMETRY_DISABLED: '{{ not .Values.internetConnectivity | ternary "true" (not .Values.tap.telemetry.enabled | ternary "true" "false") }}'
     SCRIPTING_DISABLED: '{{ not (default false ((.Values.scripting).enabled)) }}'
+    NETWORK_POLICIES_DISABLED: '{{ not (default false (((.Values.tap).networkPolicies).enabled)) }}'
     GLOBAL_FILTER: {{ include "kubeshark.escapeDoubleQuotes" .Values.tap.globalFilter | quote }}
     DEFAULT_FILTER: {{ include "kubeshark.escapeDoubleQuotes" .Values.tap.defaultFilter | quote }}
     TRAFFIC_SAMPLE_RATE: '{{ .Values.tap.misc.trafficSampleRate }}'
