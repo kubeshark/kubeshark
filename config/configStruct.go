@@ -104,7 +104,7 @@ func CreateDefaultConfig() ConfigStruct {
 			},
 			Auth: configStructs.AuthConfig{
 				RolesClaim:   "groups",
-				DefaultRole:  "kubeshark-viewer",
+				DefaultRole:  "kubeshark-admin",
 				GroupMapping: map[string]string{},
 				Roles:        map[string]configStructs.RoleConfig{},
 			},
