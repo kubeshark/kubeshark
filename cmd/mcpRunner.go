@@ -944,7 +944,7 @@ func (s *mcpServer) callDownloadFile(args map[string]any) (string, bool) {
 // hasDotDotSegment reports whether p contains a ".." path segment. Used to
 // reject traversal in the caller-supplied Hub 'path' (CWE-22).
 func hasDotDotSegment(p string) bool {
-	for _, seg := range strings.Split(p, "/") {
+	for seg := range strings.SplitSeq(p, "/") {
 		if seg == ".." {
 			return true
 		}
