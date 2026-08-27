@@ -47,23 +47,11 @@ spec:
                         false
                       {{- end }}'
             - name: REACT_APP_SCRIPTING_DISABLED
-              value: '{{ default false .Values.demoModeEnabled }}'
-            - name: REACT_APP_TARGETED_PODS_UPDATE_DISABLED
-              value: '{{ default false .Values.demoModeEnabled }}'
-            - name: REACT_APP_PRESET_FILTERS_CHANGING_ENABLED
-              value: '{{ not (default false .Values.demoModeEnabled) }}'
+              value: '{{ not (default false ((.Values.scripting).enabled)) }}'
             - name: REACT_APP_BPF_OVERRIDE_DISABLED
               value: '{{ eq .Values.tap.packetCapture "af_packet" | ternary "false" "true" }}'
-            - name: REACT_APP_RECORDING_DISABLED
-              value: '{{ default false .Values.demoModeEnabled }}'
             - name: REACT_APP_DISSECTION_ENABLED
               value: '{{ .Values.tap.capture.dissection.enabled | ternary "true" "false" }}'
-            - name: REACT_APP_DISSECTION_CONTROL_ENABLED
-              value: '{{- if and (not .Values.demoModeEnabled) (not .Values.tap.capture.dissection.enabled) -}}
-                        true
-                      {{- else -}}
-                        {{ (default false .Values.demoModeEnabled) | ternary false true }}
-                      {{- end -}}'
             - name: 'REACT_APP_CLOUD_LICENSE_ENABLED'
               value: '{{- if or (and .Values.cloudLicenseEnabled (not (empty .Values.license))) (not .Values.internetConnectivity) -}}
                         false
@@ -74,12 +62,6 @@ spec:
               value: '{{ and .Values.supportChatEnabled .Values.internetConnectivity | ternary "true" "false" }}'
             - name: REACT_APP_BETA_ENABLED
               value: '{{ default false .Values.betaEnabled | ternary "true" "false" }}'
-            - name: REACT_APP_DISSECTORS_UPDATING_ENABLED
-              value: '{{ not (default false .Values.demoModeEnabled) }}'
-            - name: REACT_APP_SNAPSHOTS_UPDATING_ENABLED
-              value: '{{ not (default false .Values.demoModeEnabled) }}'
-            - name: REACT_APP_DEMO_MODE_ENABLED
-              value: '{{ default false .Values.demoModeEnabled }}'
             - name: REACT_APP_CLUSTER_WIDE_MAP_ENABLED
               value: '{{ default false (((.Values).tap).dashboard).clusterWideMapEnabled }}'
             - name: REACT_APP_RAW_CAPTURE_ENABLED

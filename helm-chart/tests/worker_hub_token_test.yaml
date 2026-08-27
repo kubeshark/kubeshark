@@ -73,10 +73,9 @@ tests:
 
   # The projection is independent of everything that used to feed the old
   # auth expression, not just of tap.auth.enabled.
-  - it: projects the token regardless of licensing or demo mode
+  - it: projects the token regardless of licensing
     set:
       license: ABC
-      demoModeEnabled: true
       cloudLicenseEnabled: false
     asserts:
       - contains:

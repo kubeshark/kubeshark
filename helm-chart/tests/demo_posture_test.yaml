@@ -1,0 +1,80 @@
+suite: demo posture
+templates:
+  - templates/12-config-map.yaml
+
+## The demo used to be a product mode: `demoModeEnabled: true` fanned out into
+## eight ConfigMap keys, and the Hub read each one to decide whether a route
+## answered or returned 409. Every one of those restrictions that is really a
+## question of "what may this caller do" is now answered by the role instead,
+## so the demo is a configuration of the same knobs every other deployment has:
+##
+##   tap.auth.enabled: false      -> no identity, nobody logs in
+##   tap.auth.defaultRole: viewer -> and an unidentified caller may only read
+##
+## These tests exist because that equivalence is invisible in the templates:
+## nothing named "demo" remains to read, so only a test can state that the
+## keys are gone and that no value brings them back.
+
+tests:
+  - it: renders none of the keys the demo flag used to fan out into
+    asserts:
+      - notExists:
+          path: data.DEMO_MODE_ENABLED
+      - notExists:
+          path: data.TARGETED_PODS_UPDATE_DISABLED
+      - notExists:
+          path: data.PRESET_FILTERS_CHANGING_ENABLED
+      - notExists:
+          path: data.RECORDING_DISABLED
+      - notExists:
+          path: data.DISSECTION_CONTROL_ENABLED
+      - notExists:
+          path: data.DISSECTORS_UPDATING_ENABLED
+      - notExists:
+          path: data.SNAPSHOTS_UPDATING_ENABLED
+
+  ## demoModeEnabled is not a value any more. Helm accepts unknown --set keys
+  ## silently, so an operator carrying the old line in their values file gets
+  ## no error; what they must not get is the old behaviour reappearing.
+  - it: ignores a leftover demoModeEnabled in an operator's values
+    set:
+      demoModeEnabled: true
+    asserts:
+      - notExists:
+          path: data.DEMO_MODE_ENABLED
+      - equal:
+          path: data.AUTH_ENABLED
+          value: "false"
+
+  ## The demo posture itself. Nothing here is demo-specific; it is the same
+  ## pair of values any read-only deployment would set.
+  - it: renders the demo as an ungated deployment pinned to viewer
+    set:
+      tap.auth.enabled: false
+      tap.auth.defaultRole: kubeshark-viewer
+    asserts:
+      - equal:
+          path: data.AUTH_ENABLED
+          value: "false"
+      - equal:
+          path: data.AUTH_DEFAULT_ROLE
+          value: kubeshark-viewer
+
+  ## Scripting is the one restriction that is not a capability. It stays a
+  ## deployment-wide switch, but it now follows the value that already decides
+  ## whether scripting exists for this install rather than riding on the demo
+  ## flag. Before this, a default install hid the scripting UI while leaving
+  ## the /scripts API answering.
+  - it: disables the scripting API when scripting is not enabled
+    asserts:
+      - equal:
+          path: data.SCRIPTING_DISABLED
+          value: "true"
+
+  - it: enables the scripting API when scripting is enabled
+    set:
+      scripting.enabled: true
+    asserts:
+      - equal:
+          path: data.SCRIPTING_DISABLED
+          value: "false"

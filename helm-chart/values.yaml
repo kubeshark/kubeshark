@@ -301,7 +301,6 @@ headless: false
 license: ""
 cloudApiUrl: https://api.kubeshark.com
 cloudLicenseEnabled: true
-demoModeEnabled: false
 supportChatEnabled: false
 betaEnabled: false
 internetConnectivity: true

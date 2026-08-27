@@ -6,7 +6,7 @@
 ##   * Is the API gated?                  -> tap.auth.enabled
 ##   * Does the dashboard need a login    -> cloudLicenseEnabled + license +
 ##     to fetch a licence key?               internetConnectivity (front only)
-##   * Which features exist at all?       -> demoModeEnabled
+##   * What may an unidentified caller do? -> tap.auth.defaultRole
 ##
 ## These tests pin each answer to its own input, so a future change that
 ## reconnects them fails here rather than in someone's cluster.
@@ -71,19 +71,11 @@ tests:
           path: data.AUTH_TYPE
           value: saml
 
-  - it: is not turned on by demo mode
-    set:
-      demoModeEnabled: true
-    asserts:
-      - equal:
-          path: data.AUTH_ENABLED
-          value: "false"
-
   ## AUTH_TYPE is the operator's choice, verbatim.
   ##
   ## It used to be rewritten to "default" whenever cloud licensing was on and
-  ## the type was not oidc/dex, and unconditionally under demo mode. An
-  ## operator's `saml` therefore became something else on a live cluster.
+  ## the type was not oidc/dex. An operator's `saml` therefore became
+  ## something else on a live cluster.
 
   - it: passes the configured auth type through unchanged
     set:
@@ -105,16 +97,6 @@ tests:
       - equal:
           path: data.AUTH_TYPE
           value: oidc
-
-  - it: does not rewrite the auth type under demo mode
-    set:
-      demoModeEnabled: true
-      tap.auth.enabled: true
-      tap.auth.type: descope
-    asserts:
-      - equal:
-          path: data.AUTH_TYPE
-          value: descope
 
   ## AUTH_DEFAULT_ROLE decides what a caller with no recognized group may do,
   ## including a caller on a deployment with no authentication at all. Its
