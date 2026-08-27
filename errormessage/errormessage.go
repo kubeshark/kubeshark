@@ -13,7 +13,7 @@ import (
 )
 
 // FormatError wraps error with a detailed message that is meant for the user.
-// While the errors are meant to be displayed, they are not meant to be exported as classes outsite of CLI.
+// While the errors are meant to be displayed, they are not meant to be exported as classes outside of CLI.
 func FormatError(err error) error {
 	var errorNew error
 	if k8serrors.IsForbidden(err) {
