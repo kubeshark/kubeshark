@@ -130,7 +130,7 @@ authenticates nobody.
     {{- fail "tap.auth.enabled is true with tap.auth.type=saml but tap.auth.saml.idpMetadataUrl is empty. Set the IdP metadata URL, or pick another tap.auth.type (oidc, dex, descope)." -}}
   {{- end -}}
   {{- if and (or (eq .Values.tap.auth.type "oidc") (eq .Values.tap.auth.type "dex")) (empty (((.Values.tap).auth).oidc).issuer) -}}
-    {{- fail "tap.auth.enabled is true with tap.auth.type=oidc but tap.auth.oidc.issuer is empty. Set the OIDC issuer, or pick another tap.auth.type." -}}
+    {{- fail (printf "tap.auth.enabled is true with tap.auth.type=%s but tap.auth.oidc.issuer is empty. Set the OIDC issuer, or pick another tap.auth.type." .Values.tap.auth.type) -}}
   {{- end -}}
 {{- end -}}
 {{- end -}}

@@ -91,3 +91,15 @@ tests:
       - equal:
           path: data.AUTH_TYPE
           value: oidc
+
+  ## The message names the type the operator actually set. Both oidc and dex
+  ## take the same issuer, so a hard-coded "oidc" sends a dex operator looking
+  ## for a setting they did not configure.
+  - it: names dex in the failure when dex is the configured type
+    set:
+      tap.auth.enabled: true
+      tap.auth.type: dex
+      tap.auth.oidc.issuer: ""
+    asserts:
+      - failedTemplate:
+          errorMessage: "tap.auth.enabled is true with tap.auth.type=dex but tap.auth.oidc.issuer is empty. Set the OIDC issuer, or pick another tap.auth.type."
