@@ -1,0 +1,95 @@
+## Workers authenticate to a gated Hub with a projected ServiceAccount token,
+## audience-bound to kubeshark-hub.
+##
+## The projection used to be conditional on the same expression that decided
+## AUTH_ENABLED, which coupled a DaemonSet rollout to the Hub's auth decision:
+## anything that turned auth on without re-rendering the workers left them
+## holding no token against a Hub that required one. It is now unconditional.
+## The Hub ignores the token when auth is off, so the only cost is a mounted
+## volume, and the two can no longer drift apart.
+suite: worker hub token
+templates:
+  - templates/09-worker-daemon-set.yaml
+tests:
+  - it: projects the token when auth is off
+    asserts:
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: hub-internal-token
+            projected:
+              sources:
+                - serviceAccountToken:
+                    path: token
+                    audience: kubeshark-hub
+                    expirationSeconds: 3600
+
+  - it: projects the token when auth is on
+    set:
+      tap.auth.enabled: true
+      tap.auth.type: oidc
+      tap.auth.oidc.issuer: https://issuer.example.com
+    asserts:
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: hub-internal-token
+            projected:
+              sources:
+                - serviceAccountToken:
+                    path: token
+                    audience: kubeshark-hub
+                    expirationSeconds: 3600
+
+  - it: points the sniffer at the token regardless of auth
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: HUB_INTERNAL_TOKEN_PATH
+            value: /var/run/secrets/kubeshark/hub-token/token
+      - contains:
+          path: spec.template.spec.containers[0].volumeMounts
+          content:
+            mountPath: /var/run/secrets/kubeshark/hub-token
+            name: hub-internal-token
+            readOnly: true
+
+  - it: points the tracer at the token regardless of auth
+    set:
+      tap.tls: true
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[1].env
+          content:
+            name: HUB_INTERNAL_TOKEN_PATH
+            value: /var/run/secrets/kubeshark/hub-token/token
+      - contains:
+          path: spec.template.spec.containers[1].volumeMounts
+          content:
+            mountPath: /var/run/secrets/kubeshark/hub-token
+            name: hub-internal-token
+            readOnly: true
+
+  # The projection is independent of everything that used to feed the old
+  # auth expression, not just of tap.auth.enabled.
+  - it: projects the token regardless of licensing
+    set:
+      license: ABC
+      cloudLicenseEnabled: false
+    asserts:
+      - contains:
+          path: spec.template.spec.volumes
+          content:
+            name: hub-internal-token
+            projected:
+              sources:
+                - serviceAccountToken:
+                    path: token
+                    audience: kubeshark-hub
+                    expirationSeconds: 3600
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: HUB_INTERNAL_TOKEN_PATH
+            value: /var/run/secrets/kubeshark/hub-token/token

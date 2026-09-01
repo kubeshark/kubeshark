@@ -1,0 +1,66 @@
+## The install notes are where an operator learns what their auth settings
+## actually did. A deployment can now be ungated, or read-only with no login
+## at all, and the difference must be stated rather than inferred.
+suite: auth install notes
+templates:
+  - templates/NOTES.txt
+tests:
+  - it: warns that a default install is open to anyone who can reach the Hub
+    asserts:
+      - matchRegex:
+          path: raw
+          pattern: API AUTHENTICATION IS DISABLED
+      - matchRegex:
+          path: raw
+          pattern: every one of them gets the role\n  `kubeshark-admin`
+      - matchRegex:
+          path: raw
+          pattern: Anyone able to reach the Hub can read captured traffic
+      - matchRegex:
+          path: raw
+          pattern: set `tap\.auth\.defaultRole=kubeshark-viewer`
+
+  # A narrowed default role is enforced, so the notes must not repeat the
+  # "anyone can change settings" warning that applies to the admin default.
+  - it: reports a narrowed default role as enforced
+    set:
+      tap.auth.defaultRole: kubeshark-viewer
+    asserts:
+      - matchRegex:
+          path: raw
+          pattern: every one of them gets the role\n  `kubeshark-viewer`
+      - matchRegex:
+          path: raw
+          pattern: That role is enforced
+      - notMatchRegex:
+          path: raw
+          pattern: Anyone able to reach the Hub can read captured traffic
+
+  - it: reports the configured backend when authentication is on
+    set:
+      tap.auth.enabled: true
+      tap.auth.type: oidc
+      tap.auth.oidc.issuer: https://issuer.example.com
+      tap.auth.defaultRole: kubeshark-viewer
+    asserts:
+      - matchRegex:
+          path: raw
+          pattern: API authentication is enabled \(tap\.auth\.type=oidc\)
+      - matchRegex:
+          path: raw
+          pattern: resolve to `kubeshark-viewer`
+      - notMatchRegex:
+          path: raw
+          pattern: API AUTHENTICATION IS DISABLED
+
+  # Empty defaultRole means strict-deny once callers are identified, and the
+  # notes should say so rather than naming a role nobody configured.
+  - it: reports deny-all when authentication is on with no default role
+    set:
+      tap.auth.enabled: true
+      tap.auth.type: descope
+      tap.auth.defaultRole: ""
+    asserts:
+      - matchRegex:
+          path: raw
+          pattern: resolve to `no role, deny-all`

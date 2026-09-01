@@ -104,7 +104,7 @@ func CreateDefaultConfig() ConfigStruct {
 			},
 			Auth: configStructs.AuthConfig{
 				RolesClaim:   "groups",
-				DefaultRole:  "kubeshark-viewer",
+				DefaultRole:  "kubeshark-admin",
 				GroupMapping: map[string]string{},
 				Roles:        map[string]configStructs.RoleConfig{},
 			},
@@ -177,7 +177,6 @@ type ConfigStruct struct {
 	License              string                        `yaml:"license" json:"license" default:""`
 	CloudApiUrl          string                        `yaml:"cloudApiUrl" json:"cloudApiUrl" default:"https://api.kubeshark.com"`
 	CloudLicenseEnabled  bool                          `yaml:"cloudLicenseEnabled" json:"cloudLicenseEnabled" default:"true"`
-	DemoModeEnabled      bool                          `yaml:"demoModeEnabled" json:"demoModeEnabled" default:"false"`
 	SupportChatEnabled   bool                          `yaml:"supportChatEnabled" json:"supportChatEnabled" default:"false"`
 	BetaEnabled          bool                          `yaml:"betaEnabled" json:"betaEnabled" default:"false"`
 	InternetConnectivity bool                          `yaml:"internetConnectivity" json:"internetConnectivity" default:"true"`

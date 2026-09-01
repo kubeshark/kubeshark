@@ -175,12 +175,17 @@ type AuthConfig struct {
 	// breaking change documented in the release notes.
 	Type       string `yaml:"type" json:"type" default:"saml"`
 	RolesClaim string `yaml:"rolesClaim" json:"rolesClaim"`
-	// DefaultRole is applied when the authenticated user's SSO claim has no
-	// recognized group. Must be one of the four built-in roles
-	// (kubeshark-admin / kubeshark-realtime / kubeshark-snapshot /
-	// kubeshark-viewer), the name of an operator-defined role under
-	// `tap.auth.roles`, or empty for strict-deny.
-	DefaultRole string `yaml:"defaultRole" json:"defaultRole"`
+	// DefaultRole is applied when a caller has no recognized group, and also
+	// when Enabled is false — with no authentication there is no identity,
+	// but there is still a question of what an unidentified caller may do.
+	// Must be one of the four built-in roles (kubeshark-admin /
+	// kubeshark-realtime / kubeshark-snapshot / kubeshark-viewer) or the name
+	// of an operator-defined role under `tap.auth.roles`.
+	//
+	// With Enabled true, empty means strict-deny. With Enabled false, empty
+	// or unrecognized falls back to kubeshark-admin so an install that never
+	// configured authorization keeps working.
+	DefaultRole string `yaml:"defaultRole" json:"defaultRole" default:"kubeshark-admin"`
 	// GroupMapping translates SSO group names into role names (built-in or
 	// operator-defined). Optional — groups whose name already matches a
 	// built-in role are identity-matched and don't need an entry here.
@@ -479,8 +484,14 @@ type TapConfig struct {
 	Pprof                          PprofConfig             `yaml:"pprof" json:"pprof"`
 	Misc                           MiscConfig              `yaml:"misc" json:"misc"`
 	SecurityContext                SecurityContextConfig   `yaml:"securityContext" json:"securityContext"`
-	MountBpf                       bool                    `yaml:"mountBpf" json:"mountBpf" default:"true"`
-	HostNetwork                    bool                    `yaml:"hostNetwork" json:"hostNetwork" default:"true"`
+	// NetworkPolicies exposes the Hub's network-policy routes, which create
+	// and remove Kubernetes NetworkPolicy objects and compute pod-reachability
+	// impact. The feature reaches outside Kubeshark's own data, so it is off
+	// unless an operator asks for it, and no role grants it: whether a
+	// deployment offers it at all is not a question about the caller.
+	NetworkPolicies NetworkPoliciesConfig `yaml:"networkPolicies" json:"networkPolicies"`
+	MountBpf        bool                  `yaml:"mountBpf" json:"mountBpf" default:"true"`
+	HostNetwork     bool                  `yaml:"hostNetwork" json:"hostNetwork" default:"true"`
 }
 
 func (config *TapConfig) PodRegex() *regexp.Regexp {
@@ -495,4 +506,8 @@ func (config *TapConfig) Validate() error {
 	}
 
 	return nil
+}
+
+type NetworkPoliciesConfig struct {
+	Enabled bool `yaml:"enabled" json:"enabled" default:"false"`
 }

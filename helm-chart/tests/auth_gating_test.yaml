@@ -1,0 +1,147 @@
+## Whether the Hub gates its API is decided by `tap.auth.enabled` alone.
+##
+## Three separate questions used to share this one switch, and the answers
+## disagreed with what operators had asked for:
+##
+##   * Is the API gated?                  -> tap.auth.enabled
+##   * Does the dashboard need a login    -> cloudLicenseEnabled + license +
+##     to fetch a licence key?               internetConnectivity (front only)
+##   * What may an unidentified caller do? -> tap.auth.defaultRole
+##
+## These tests pin each answer to its own input, so a future change that
+## reconnects them fails here rather than in someone's cluster.
+suite: auth gating
+templates:
+  - templates/12-config-map.yaml
+tests:
+  - it: is off by default, so a default install gates nothing
+    asserts:
+      - equal:
+          path: data.AUTH_ENABLED
+          value: "false"
+
+  - it: follows tap.auth.enabled and nothing else
+    set:
+      tap.auth.enabled: true
+      tap.auth.type: oidc
+      tap.auth.oidc.issuer: https://issuer.example.com
+    asserts:
+      - equal:
+          path: data.AUTH_ENABLED
+          value: "true"
+
+  # A licence key is proof of entitlement, not an authentication decision.
+  # Supplying one used to switch AUTH_ENABLED off.
+  - it: is not turned off by supplying a licence key
+    set:
+      license: ABC
+      tap.auth.enabled: true
+      tap.auth.type: oidc
+      tap.auth.oidc.issuer: https://issuer.example.com
+    asserts:
+      - equal:
+          path: data.AUTH_ENABLED
+          value: "true"
+
+  # Where the licence comes from is unrelated to whether callers are
+  # authenticated. Cloud licensing used to force AUTH_ENABLED on.
+  - it: is not turned on by cloud licensing
+    set:
+      cloudLicenseEnabled: true
+      license: ""
+    asserts:
+      - equal:
+          path: data.AUTH_ENABLED
+          value: "false"
+
+  # This combination is the one that mattered most: an operator asks for SAML
+  # and previously received an unauthenticated Hub, with no error and no
+  # warning, because the licence terms in the old expression won.
+  - it: stays on for SAML alongside cloud licensing
+    set:
+      license: ABC
+      tap.auth.enabled: true
+      tap.auth.type: saml
+      tap.auth.saml.idpMetadataUrl: https://idp.example.com/metadata
+    asserts:
+      - equal:
+          path: data.AUTH_ENABLED
+          value: "true"
+      - equal:
+          path: data.AUTH_TYPE
+          value: saml
+
+  ## AUTH_TYPE is the operator's choice, verbatim.
+  ##
+  ## It used to be rewritten to "default" whenever cloud licensing was on and
+  ## the type was not oidc/dex. An operator's `saml` therefore became
+  ## something else on a live cluster.
+
+  - it: passes the configured auth type through unchanged
+    set:
+      tap.auth.enabled: true
+      tap.auth.type: descope
+    asserts:
+      - equal:
+          path: data.AUTH_TYPE
+          value: descope
+
+  - it: does not rewrite the auth type under cloud licensing
+    set:
+      cloudLicenseEnabled: true
+      license: ""
+      tap.auth.enabled: true
+      tap.auth.type: oidc
+      tap.auth.oidc.issuer: https://issuer.example.com
+    asserts:
+      - equal:
+          path: data.AUTH_TYPE
+          value: oidc
+
+  ## AUTH_DEFAULT_ROLE decides what a caller with no recognized group may do,
+  ## including a caller on a deployment with no authentication at all. Its
+  ## default is admin, so an ungated install behaves as it always has; a
+  ## narrower value yields a read-only deployment with no identity provider
+  ## and no login.
+
+  - it: defaults to admin, so an ungated install is unrestricted
+    asserts:
+      - equal:
+          path: data.AUTH_ENABLED
+          value: "false"
+      - equal:
+          path: data.AUTH_DEFAULT_ROLE
+          value: kubeshark-admin
+
+  - it: carries a narrowed default role with auth off
+    set:
+      tap.auth.defaultRole: kubeshark-viewer
+    asserts:
+      - equal:
+          path: data.AUTH_ENABLED
+          value: "false"
+      - equal:
+          path: data.AUTH_DEFAULT_ROLE
+          value: kubeshark-viewer
+
+  ## Role resolution inputs reach the Hub untouched, so `defaultRole` means
+  ## what it says for every auth type.
+
+  - it: passes role resolution settings through
+    set:
+      tap.auth.enabled: true
+      tap.auth.type: descope
+      tap.auth.defaultRole: kubeshark-viewer
+      tap.auth.rolesClaim: role
+      tap.auth.groupMapping:
+        demo-guest: kubeshark-viewer
+    asserts:
+      - equal:
+          path: data.AUTH_DEFAULT_ROLE
+          value: kubeshark-viewer
+      - equal:
+          path: data.AUTH_ROLES_CLAIM
+          value: role
+      - equal:
+          path: data.AUTH_GROUP_MAPPING
+          value: '{"demo-guest":"kubeshark-viewer"}'

@@ -25,17 +25,9 @@ spec:
       containers:
         - env:
             - name: REACT_APP_AUTH_ENABLED
-              value: '{{- if or (and .Values.cloudLicenseEnabled (not (empty .Values.license))) (not .Values.internetConnectivity) -}}
-                        {{ (default false .Values.demoModeEnabled) | ternary true ((and .Values.tap.auth.enabled (or (eq .Values.tap.auth.type "oidc") (eq .Values.tap.auth.type "dex"))) | ternary true false) }}
-                      {{- else -}}
-                        {{ .Values.cloudLicenseEnabled | ternary "true" ((default false .Values.demoModeEnabled) | ternary "true" .Values.tap.auth.enabled) }}
-                      {{- end }}'
+              value: '{{ include "kubeshark.authEnabled" . }}'
             - name: REACT_APP_AUTH_TYPE
-              value: '{{- if and .Values.cloudLicenseEnabled (not (or (eq .Values.tap.auth.type "oidc") (eq .Values.tap.auth.type "dex"))) -}}
-                        default
-                      {{- else -}}
-                        {{ (default false .Values.demoModeEnabled) | ternary "default" .Values.tap.auth.type }}
-                      {{- end }}'
+              value: '{{ .Values.tap.auth.type }}'
             - name: REACT_APP_COMPLETE_STREAMING_ENABLED
               value: '{{- if and (hasKey .Values.tap "dashboard") (hasKey .Values.tap.dashboard "completeStreamingEnabled") -}}
                         {{ eq .Values.tap.dashboard.completeStreamingEnabled true | ternary "true" "false" }}
@@ -55,26 +47,14 @@ spec:
                         false
                       {{- end }}'
             - name: REACT_APP_SCRIPTING_DISABLED
-              value: '{{ default false .Values.demoModeEnabled }}'
-            - name: REACT_APP_TARGETED_PODS_UPDATE_DISABLED
-              value: '{{ default false .Values.demoModeEnabled }}'
-            - name: REACT_APP_PRESET_FILTERS_CHANGING_ENABLED
-              value: '{{ not (default false .Values.demoModeEnabled) }}'
+              value: '{{ not (default false ((.Values.scripting).enabled)) }}'
             - name: REACT_APP_BPF_OVERRIDE_DISABLED
               value: '{{ eq .Values.tap.packetCapture "af_packet" | ternary "false" "true" }}'
-            - name: REACT_APP_RECORDING_DISABLED
-              value: '{{ default false .Values.demoModeEnabled }}'
             - name: REACT_APP_DISSECTION_ENABLED
               value: '{{ .Values.tap.capture.dissection.enabled | ternary "true" "false" }}'
-            - name: REACT_APP_DISSECTION_CONTROL_ENABLED
-              value: '{{- if and (not .Values.demoModeEnabled) (not .Values.tap.capture.dissection.enabled) -}}
-                        true
-                      {{- else -}}
-                        {{ (default false .Values.demoModeEnabled) | ternary false true }}
-                      {{- end -}}'
             - name: 'REACT_APP_CLOUD_LICENSE_ENABLED'
               value: '{{- if or (and .Values.cloudLicenseEnabled (not (empty .Values.license))) (not .Values.internetConnectivity) -}}
-                        "false"
+                        false
                       {{- else -}}
                         {{ .Values.cloudLicenseEnabled }}
                       {{- end }}'
@@ -82,12 +62,6 @@ spec:
               value: '{{ and .Values.supportChatEnabled .Values.internetConnectivity | ternary "true" "false" }}'
             - name: REACT_APP_BETA_ENABLED
               value: '{{ default false .Values.betaEnabled | ternary "true" "false" }}'
-            - name: REACT_APP_DISSECTORS_UPDATING_ENABLED
-              value: '{{ not (default false .Values.demoModeEnabled) }}'
-            - name: REACT_APP_SNAPSHOTS_UPDATING_ENABLED
-              value: '{{ not (default false .Values.demoModeEnabled) }}'
-            - name: REACT_APP_DEMO_MODE_ENABLED
-              value: '{{ default false .Values.demoModeEnabled }}'
             - name: REACT_APP_CLUSTER_WIDE_MAP_ENABLED
               value: '{{ default false (((.Values).tap).dashboard).clusterWideMapEnabled }}'
             - name: REACT_APP_RAW_CAPTURE_ENABLED

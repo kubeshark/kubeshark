@@ -154,7 +154,7 @@ tap:
     enabled: false
     type: saml
     rolesClaim: groups
-    defaultRole: kubeshark-viewer
+    defaultRole: kubeshark-admin
     groupMapping: {}
     roles: {}
     cli:
@@ -280,6 +280,8 @@ tap:
       - SYS_PTRACE
       - SYS_RESOURCE
       - IPC_LOCK
+  networkPolicies:
+    enabled: false
   mountBpf: true
   hostNetwork: true
 logs:
@@ -301,7 +303,6 @@ headless: false
 license: ""
 cloudApiUrl: https://api.kubeshark.com
 cloudLicenseEnabled: true
-demoModeEnabled: false
 supportChatEnabled: false
 betaEnabled: false
 internetConnectivity: true
