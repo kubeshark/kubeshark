@@ -110,3 +110,17 @@ Dex IdP: retrieve a secret for static client with a specific ID
     {{- end }}
   {{- end }}
 {{- end }}
+
+{{/*
+Single source of truth for whether the hub enforces authentication.
+Consumed by the hub ConfigMap (AUTH_ENABLED) and by the worker DaemonSet, which
+must mount an internal hub token whenever the hub requires one. Keeping the two
+in sync prevents workers from being issued no token while the hub demands one.
+*/}}
+{{- define "kubeshark.authEnabled" -}}
+{{- if and .Values.cloudLicenseEnabled (not (empty .Values.license)) -}}
+{{ (default false .Values.demoModeEnabled) | ternary true ((and .Values.tap.auth.enabled (or (eq .Values.tap.auth.type "oidc") (eq .Values.tap.auth.type "dex"))) | ternary true false) }}
+{{- else -}}
+{{ .Values.cloudLicenseEnabled | ternary "true" ((default false .Values.demoModeEnabled) | ternary "true" .Values.tap.auth.enabled) }}
+{{- end -}}
+{{- end -}}
