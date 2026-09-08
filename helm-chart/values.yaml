@@ -284,6 +284,7 @@ tap:
     enabled: false
   mountBpf: true
   hostNetwork: true
+  extraObjects: []
 logs:
   file: ""
   grep: ""
