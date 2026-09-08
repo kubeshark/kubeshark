@@ -490,9 +490,9 @@ type TapConfig struct {
 	// unless an operator asks for it, and no role grants it: whether a
 	// deployment offers it at all is not a question about the caller.
 	NetworkPolicies NetworkPoliciesConfig `yaml:"networkPolicies" json:"networkPolicies"`
-	MountBpf                       bool                    `yaml:"mountBpf" json:"mountBpf" default:"true"`
-	HostNetwork                    bool                    `yaml:"hostNetwork" json:"hostNetwork" default:"true"`
-	ExtraObjects                   []interface{}           `yaml:"extraObjects" json:"extraObjects" default:"[]"`
+	MountBpf        bool                  `yaml:"mountBpf" json:"mountBpf" default:"true"`
+	HostNetwork     bool                  `yaml:"hostNetwork" json:"hostNetwork" default:"true"`
+	ExtraObjects    []interface{}         `yaml:"extraObjects" json:"extraObjects" default:"[]"`
 }
 
 func (config *TapConfig) PodRegex() *regexp.Regexp {
