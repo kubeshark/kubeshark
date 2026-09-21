@@ -1,6 +1,11 @@
 # Kubeshark release _VER_
 Release notes coming soon ..
 
+## Testing methodology
+
+See [Benchmark Methodology](https://docs.kubeshark.com/en/benchmark_methodology)
+for how Hub streaming benchmarks are run, what they measure, and their limitations.
+
 ## Download Kubeshark for your platform
 
 **Mac** (x86-64/Intel)
