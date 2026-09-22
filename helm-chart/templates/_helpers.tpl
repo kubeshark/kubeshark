@@ -112,15 +112,25 @@ Dex IdP: retrieve a secret for static client with a specific ID
 {{- end }}
 
 {{/*
-Single source of truth for whether the hub enforces authentication.
-Consumed by the hub ConfigMap (AUTH_ENABLED) and by the worker DaemonSet, which
-must mount an internal hub token whenever the hub requires one. Keeping the two
-in sync prevents workers from being issued no token while the hub demands one.
+Whether the Hub enforces authentication and authorization on its API.
+This is `tap.auth.enabled` and nothing else: licensing, demo mode and the
+choice of identity provider do not affect whether the API is gated.
 */}}
 {{- define "kubeshark.authEnabled" -}}
-{{- if and .Values.cloudLicenseEnabled (not (empty .Values.license)) -}}
-{{ (default false .Values.demoModeEnabled) | ternary true ((and .Values.tap.auth.enabled (or (eq .Values.tap.auth.type "oidc") (eq .Values.tap.auth.type "dex"))) | ternary true false) }}
-{{- else -}}
-{{ .Values.cloudLicenseEnabled | ternary "true" ((default false .Values.demoModeEnabled) | ternary "true" .Values.tap.auth.enabled) }}
+{{ .Values.tap.auth.enabled }}
+{{- end -}}
+
+{{/*
+Reject auth settings that cannot work, instead of rendering a Hub that
+authenticates nobody.
+*/}}
+{{- define "kubeshark.validateAuth" -}}
+{{- if .Values.tap.auth.enabled -}}
+  {{- if and (eq .Values.tap.auth.type "saml") (empty .Values.tap.auth.saml.idpMetadataUrl) -}}
+    {{- fail "tap.auth.enabled is true with tap.auth.type=saml but tap.auth.saml.idpMetadataUrl is empty. Set the IdP metadata URL, or pick another tap.auth.type (oidc, dex, descope)." -}}
+  {{- end -}}
+  {{- if and (or (eq .Values.tap.auth.type "oidc") (eq .Values.tap.auth.type "dex")) (empty (((.Values.tap).auth).oidc).issuer) -}}
+    {{- fail (printf "tap.auth.enabled is true with tap.auth.type=%s but tap.auth.oidc.issuer is empty. Set the OIDC issuer, or pick another tap.auth.type." .Values.tap.auth.type) -}}
+  {{- end -}}
 {{- end -}}
 {{- end -}}

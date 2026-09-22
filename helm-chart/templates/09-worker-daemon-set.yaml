@@ -146,10 +146,8 @@ spec:
             value: '{{ (include "sentry.enabled" .) }}'
           - name: SENTRY_ENVIRONMENT
             value: '{{ .Values.tap.sentry.environment }}'
-          {{- if eq (include "kubeshark.authEnabled" .) "true" }}
           - name: HUB_INTERNAL_TOKEN_PATH
             value: /var/run/secrets/kubeshark/hub-token/token
-          {{- end }}
           resources:
             limits:
               {{ if ne (toString .Values.tap.resources.sniffer.limits.cpu) "0" }}
@@ -239,11 +237,9 @@ spec:
 {{- if .Values.tap.persistentStorage }}
               subPathExpr: $(NODE_NAME)
 {{- end }}
-            {{- if eq (include "kubeshark.authEnabled" .) "true" }}
             - mountPath: /var/run/secrets/kubeshark/hub-token
               name: hub-internal-token
               readOnly: true
-            {{- end }}
       {{- if .Values.tap.tls }}
         - command:
             - ./tracer
@@ -284,10 +280,8 @@ spec:
             value: '{{ (include "sentry.enabled" .) }}'
           - name: SENTRY_ENVIRONMENT
             value: '{{ .Values.tap.sentry.environment }}'
-          {{- if eq (include "kubeshark.authEnabled" .) "true" }}
           - name: HUB_INTERNAL_TOKEN_PATH
             value: /var/run/secrets/kubeshark/hub-token/token
-          {{- end }}
           resources:
             limits:
               {{ if ne (toString .Values.tap.resources.tracer.limits.cpu) "0" }}
@@ -363,11 +357,9 @@ spec:
               mountPropagation: HostToContainer
               name: root
               readOnly: true
-            {{- if eq (include "kubeshark.authEnabled" .) "true" }}
             - mountPath: /var/run/secrets/kubeshark/hub-token
               name: hub-internal-token
               readOnly: true
-            {{- end }}
       {{- end }}
       dnsPolicy: ClusterFirstWithHostNet
       hostNetwork: {{ .Values.tap.hostNetwork }}
@@ -448,7 +440,6 @@ spec:
           emptyDir:
             sizeLimit: {{ .Values.tap.storageLimit }}
 {{- end }}
-        {{- if eq (include "kubeshark.authEnabled" .) "true" }}
         - name: hub-internal-token
           projected:
             sources:
@@ -456,4 +447,3 @@ spec:
                   path: token
                   audience: kubeshark-hub
                   expirationSeconds: 3600
-        {{- end }}

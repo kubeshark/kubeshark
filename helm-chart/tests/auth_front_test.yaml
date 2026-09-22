@@ -1,0 +1,108 @@
+## The dashboard needs two independent answers, and they are not the same one.
+##
+##   REACT_APP_AUTH_ENABLED        -> is the Hub API gated? Must agree with the
+##                                    Hub's own AUTH_ENABLED, or the dashboard
+##                                    and the Hub disagree about whether a
+##                                    login is needed.
+##   REACT_APP_CLOUD_LICENSE_ENABLED -> must the dashboard log in to fetch a
+##                                    licence key? True only when cloud
+##                                    licensing is on, no key was supplied,
+##                                    and there is internet to reach the cloud.
+suite: front auth env
+templates:
+  - templates/06-front-deployment.yaml
+tests:
+  - it: reports auth off by default
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: REACT_APP_AUTH_ENABLED
+            value: "false"
+
+  - it: reports auth on when the Hub gates the API
+    set:
+      tap.auth.enabled: true
+      tap.auth.type: oidc
+      tap.auth.oidc.issuer: https://issuer.example.com
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: REACT_APP_AUTH_ENABLED
+            value: "true"
+
+  # The dashboard's value used to be computed by a second, hand-maintained
+  # copy of the Hub's expression, with an extra internetConnectivity term. An
+  # air-gapped install therefore rendered a gated Hub against a dashboard that
+  # never mounted a login, locking everyone out.
+  - it: agrees with the Hub when there is no internet connectivity
+    set:
+      internetConnectivity: false
+      tap.auth.enabled: true
+      tap.auth.type: oidc
+      tap.auth.oidc.issuer: https://issuer.example.com
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: REACT_APP_AUTH_ENABLED
+            value: "true"
+
+  - it: passes the auth type through unchanged
+    set:
+      tap.auth.enabled: true
+      tap.auth.type: saml
+      tap.auth.saml.idpMetadataUrl: https://idp.example.com/metadata
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: REACT_APP_AUTH_TYPE
+            value: saml
+
+  ## Cloud licensing. This flag is what tells the dashboard to run a login for
+  ## licence acquisition, independently of whether the API is gated.
+
+  - it: asks for a cloud licence on a default install
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: REACT_APP_CLOUD_LICENSE_ENABLED
+            value: "true"
+
+  - it: does not ask for a cloud licence when a key was supplied
+    set:
+      license: ABC
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: REACT_APP_CLOUD_LICENSE_ENABLED
+            value: "false"
+
+  - it: does not ask for a cloud licence without internet connectivity
+    set:
+      internetConnectivity: false
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: REACT_APP_CLOUD_LICENSE_ENABLED
+            value: "false"
+
+  # Fetching a licence from the cloud does not gate the API. These two are
+  # rendered from different inputs and are expected to disagree here.
+  - it: asks for a cloud licence while leaving the API ungated
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: REACT_APP_CLOUD_LICENSE_ENABLED
+            value: "true"
+      - contains:
+          path: spec.template.spec.containers[0].env
+          content:
+            name: REACT_APP_AUTH_ENABLED
+            value: "false"

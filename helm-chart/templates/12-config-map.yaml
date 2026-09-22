@@ -18,12 +18,9 @@ data:
     INGRESS_ENABLED: '{{ .Values.tap.ingress.enabled }}'
     INGRESS_HOST: '{{ .Values.tap.ingress.host }}'
     PROXY_FRONT_PORT: '{{ .Values.tap.proxy.front.port }}'
+    {{- include "kubeshark.validateAuth" . }}
     AUTH_ENABLED: '{{ include "kubeshark.authEnabled" . }}'
-    AUTH_TYPE: '{{- if and .Values.cloudLicenseEnabled (not (or (eq .Values.tap.auth.type "oidc") (eq .Values.tap.auth.type "dex"))) -}}
-                  default
-                {{- else -}}
-                  {{ (default false .Values.demoModeEnabled) | ternary "default" .Values.tap.auth.type }}
-                {{- end }}'
+    AUTH_TYPE: '{{ .Values.tap.auth.type }}'
     AUTH_SAML_IDP_METADATA_URL: '{{ .Values.tap.auth.saml.idpMetadataUrl }}'
     AUTH_CLI_SERVICE_ACCOUNTS: '{{ if (((.Values.tap).auth).cli).enabled }}{{ .Release.Namespace }}:kubeshark-cli{{ end }}'
     AUTH_ROLES_CLAIM: '{{ .Values.tap.auth.rolesClaim }}'
@@ -43,15 +40,8 @@ data:
                                       false
                                     {{- end }}'
     TELEMETRY_DISABLED: '{{ not .Values.internetConnectivity | ternary "true" (not .Values.tap.telemetry.enabled | ternary "true" "false") }}'
-    SCRIPTING_DISABLED: '{{ default false .Values.demoModeEnabled }}'
-    TARGETED_PODS_UPDATE_DISABLED: '{{ default false .Values.demoModeEnabled }}'
-    PRESET_FILTERS_CHANGING_ENABLED: '{{ not (default false .Values.demoModeEnabled) }}'
-    RECORDING_DISABLED: '{{ (default false .Values.demoModeEnabled) | ternary true false }}'
-    DISSECTION_CONTROL_ENABLED: '{{- if and (not .Values.demoModeEnabled) (not .Values.tap.capture.dissection.enabled) -}}
-                                     true
-                                   {{- else -}}
-                                     {{ (default false .Values.demoModeEnabled) | ternary false true }}
-                                   {{- end }}'
+    SCRIPTING_DISABLED: '{{ not (default false ((.Values.scripting).enabled)) }}'
+    NETWORK_POLICIES_DISABLED: '{{ not (default false (((.Values.tap).networkPolicies).enabled)) }}'
     GLOBAL_FILTER: {{ include "kubeshark.escapeDoubleQuotes" .Values.tap.globalFilter | quote }}
     DEFAULT_FILTER: {{ include "kubeshark.escapeDoubleQuotes" .Values.tap.defaultFilter | quote }}
     TRAFFIC_SAMPLE_RATE: '{{ .Values.tap.misc.trafficSampleRate }}'
@@ -67,9 +57,6 @@ data:
     DUPLICATE_TIMEFRAME: '{{ .Values.tap.misc.duplicateTimeframe }}'
     ENABLED_DISSECTORS: '{{ gt (len .Values.tap.enabledDissectors) 0 | ternary (join "," .Values.tap.enabledDissectors) "" }}'
     CUSTOM_MACROS: '{{ toJson .Values.tap.customMacros }}'
-    DISSECTORS_UPDATING_ENABLED: '{{ not (default false .Values.demoModeEnabled) }}'
-    SNAPSHOTS_UPDATING_ENABLED: '{{ not (default false .Values.demoModeEnabled) }}'
-    DEMO_MODE_ENABLED: '{{ default false .Values.demoModeEnabled }}'
     DETECT_DUPLICATES: '{{ .Values.tap.misc.detectDuplicates | ternary "true" "false" }}'
     PCAP_DUMP_ENABLE: '{{ .Values.pcapdump.enabled }}'
     PCAP_TIME_INTERVAL: '{{ .Values.pcapdump.timeInterval }}'
