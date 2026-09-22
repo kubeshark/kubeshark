@@ -5,22 +5,26 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
 	"os"
 	"os/exec"
 	"path"
+	"path/filepath"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/rs/zerolog"
 
 	"github.com/kubeshark/kubeshark/config"
 	"github.com/kubeshark/kubeshark/config/configStructs"
 	"github.com/kubeshark/kubeshark/internal/connect"
 	"github.com/kubeshark/kubeshark/kubernetes"
 	"github.com/kubeshark/kubeshark/misc"
-	"github.com/rs/zerolog"
+	"github.com/kubeshark/kubeshark/utils"
 )
 
 // MCP Protocol types (JSON-RPC 2.0)
@@ -158,22 +162,55 @@ type mcpServer struct {
 	cachedHubMCP       *hubMCPResponse // Cached tools/prompts from Hub
 	cachedAt           time.Time       // When the cache was populated
 	hubMCPMu           sync.Mutex
+	tokenSource        func() string // hub SA token source; proxy mode auto-renews, URL mode is the static --token. nil → License-Key
+	downloadDir        string        // base dir download_file is confined to (CWE-22); empty → CWD at call time
 }
 
 const hubMCPCacheTTL = 5 * time.Minute
+
+// hubTokenSource builds the SA-token source used to authenticate to a gated
+// Hub. Proxy mode (kube access) returns an auto-renewing minter so long-lived
+// processes keep working past the ~1h token TTL; URL mode returns the static
+// --token / KUBESHARK_HUB_TOKEN (it can't mint without kube access). Returns
+// nil when no token is available, so callers fall back to the License-Key.
+func hubTokenSource(urlMode bool) func() string {
+	if urlMode {
+		staticTok := mcpToken
+		if staticTok == "" {
+			staticTok = os.Getenv("KUBESHARK_HUB_TOKEN")
+		}
+		if staticTok == "" {
+			return nil
+		}
+		return func() string { return staticTok }
+	}
+	provider, err := getKubernetesProviderForCli(true, true)
+	if err != nil {
+		return nil
+	}
+	return kubernetes.NewHubTokenRenewer(provider, config.Config.Tap.Release.Namespace).Token
+}
 
 func runMCPWithConfig(setFlags []string, directURL string, allowDestructive bool) {
 	// Disable zerolog output to stderr (MCP uses stdio)
 	zerolog.SetGlobalLevel(zerolog.Disabled)
 
+	urlMode := directURL != ""
+
+	// Hub SA-token source: auto-renewing in proxy mode, the static --token in
+	// URL mode; nil falls back to the License-Key. See hubTokenSource.
+	tokenSource := hubTokenSource(urlMode)
+
 	server := &mcpServer{
-		httpClient:       &http.Client{Timeout: 30 * time.Second},
+		httpClient:       utils.NewHubHTTPClientWithTokenSource(30*time.Second, tokenSource, config.Config.License),
+		tokenSource:      tokenSource,
 		stdin:            os.Stdin,
 		stdout:           os.Stdout,
 		setFlags:         setFlags,
 		directURL:        directURL,
-		urlMode:          directURL != "",
+		urlMode:          urlMode,
 		allowDestructive: allowDestructive,
+		downloadDir:      mcpDownloadDir(),
 	}
 
 	// If URL mode, validate the URL is accessible on startup
@@ -195,7 +232,7 @@ func (s *mcpServer) validateDirectURL() error {
 	s.directURL = urlStr
 
 	// Use a short timeout for validation
-	client := &http.Client{Timeout: 10 * time.Second}
+	client := utils.NewHubHTTPClientWithTokenSource(10*time.Second, s.tokenSource, config.Config.License)
 
 	// Try to reach the MCP API base endpoint which returns tool definitions
 	testURL := fmt.Sprintf("%s/api/mcp", urlStr)
@@ -204,6 +241,10 @@ func (s *mcpServer) validateDirectURL() error {
 		return fmt.Errorf("cannot connect to Kubeshark at %s: %v", urlStr, err)
 	}
 	defer func() { _ = resp.Body.Close() }()
+
+	if utils.IsAuthRequired(resp) {
+		return fmt.Errorf("%s", s.hubAuthErrorMessage())
+	}
 
 	// Try to parse the MCP response to validate it's a valid Kubeshark endpoint
 	var mcpInfo hubMCPResponse
@@ -282,6 +323,20 @@ func (s *mcpServer) ensureBackendConnection() string {
 
 // fetchHubMCP fetches tools and prompts from the Hub's /api/mcp endpoint
 // Returns nil if Hub is not available or returns an error
+// hubAuthErrorMessage returns a clear, user-facing explanation for an
+// auth-required hub response (401, or an unfollowed SSO 302/303 redirect),
+// distinguishing a missing/expired credential from a generic API error. URL
+// mode can't auto-renew, so it points the user at re-minting.
+func (s *mcpServer) hubAuthErrorMessage() string {
+	if s.urlMode {
+		return "Hub requires authentication (401/SSO redirect) and no accepted credential was presented. " +
+			"In URL mode pass a token via --token / KUBESHARK_HUB_TOKEN (mint with " +
+			"`kubectl create token kubeshark-cli --audience kubeshark-hub`) — it can't auto-renew, so re-mint and " +
+			"restart if it expired — or set a valid license (License-Key) if the deployment uses one."
+	}
+	return "Hub rejected the request (401 Unauthorized): the minted kubeshark-cli token was not accepted (check the Hub's AUTH_CLI_SERVICE_ACCOUNTS allowlist and the token audience), or no credential was available — if you lack RBAC to mint the token the CLI falls back to the License-Key, so set a valid license."
+}
+
 func (s *mcpServer) fetchHubMCP() *hubMCPResponse {
 	s.hubMCPMu.Lock()
 	defer s.hubMCPMu.Unlock()
@@ -304,6 +359,10 @@ func (s *mcpServer) fetchHubMCP() *hubMCPResponse {
 	}
 	defer func() { _ = resp.Body.Close() }()
 
+	if utils.IsAuthRequired(resp) {
+		fmt.Fprintf(os.Stderr, "[kubeshark-mcp] %s\n", s.hubAuthErrorMessage())
+		return nil
+	}
 	if resp.StatusCode >= 400 {
 		return nil
 	}
@@ -760,6 +819,9 @@ func (s *mcpServer) callHubTool(toolName string, args map[string]any) (string, b
 		return fmt.Sprintf("Error reading response: %v", err), true
 	}
 
+	if utils.IsAuthRequired(resp) {
+		return s.hubAuthErrorMessage(), true
+	}
 	if resp.StatusCode >= 400 {
 		return fmt.Sprintf("Hub API error (%d): %s", resp.StatusCode, string(body)), true
 	}
@@ -803,27 +865,39 @@ func (s *mcpServer) callDownloadFile(args map[string]any) (string, bool) {
 		return fmt.Sprintf("Error: %v", err), true
 	}
 
-	// Ensure path starts with /
+	// Ensure path starts with / and reject "../" traversal so a caller can't
+	// climb outside the Hub API namespace (CWE-22).
 	if !strings.HasPrefix(filePath, "/") {
 		filePath = "/" + filePath
+	}
+	if hasDotDotSegment(filePath) {
+		return "Error: 'path' must not contain '..' segments", true
 	}
 
 	fullURL := strings.TrimSuffix(baseURL, "/") + filePath
 
-	// Determine destination file path
-	dest, _ := args["dest"].(string)
-	if dest == "" {
-		dest = path.Base(filePath)
+	// Resolve the destination, confined to the working directory so a
+	// caller-supplied 'dest' cannot traverse ("../") or use an absolute path to
+	// write outside it (CWE-22 — arbitrary file write via an induced agent).
+	destArg, _ := args["dest"].(string)
+	baseDir := s.downloadDir
+	if baseDir == "" {
+		baseDir = mcpDownloadDir()
+	}
+	dest, err := secureDownloadDest(baseDir, destArg, filePath)
+	if err != nil {
+		return fmt.Sprintf("Error: %v", err), true
 	}
 
 	// Use a dedicated HTTP client for file downloads.
 	// The default s.httpClient has a 30s total timeout which would fail for large files (up to 10GB).
 	// This client sets only connection-level timeouts and lets the body stream without a deadline.
 	downloadClient := &http.Client{
-		Transport: &http.Transport{
+		CheckRedirect: utils.StopOnSSORedirect,
+		Transport: utils.HubAuthTransportWithTokenSource(s.tokenSource, config.Config.License, &http.Transport{
 			TLSHandshakeTimeout:   10 * time.Second,
 			ResponseHeaderTimeout: 30 * time.Second,
-		},
+		}),
 	}
 
 	resp, err := downloadClient.Get(fullURL)
@@ -832,12 +906,22 @@ func (s *mcpServer) callDownloadFile(args map[string]any) (string, bool) {
 	}
 	defer func() { _ = resp.Body.Close() }()
 
+	// Catch auth-required (401 / unfollowed SSO redirect) before treating the
+	// body as a file, so we don't write an HTML login page to disk.
+	if utils.IsAuthRequired(resp) {
+		return s.hubAuthErrorMessage(), true
+	}
 	if resp.StatusCode >= 400 {
 		return fmt.Sprintf("Error downloading file: HTTP %d", resp.StatusCode), true
 	}
 
-	// Write to destination
-	outFile, err := os.Create(dest)
+	// Write to destination (parent dir is within the confined base).
+	if err := os.MkdirAll(filepath.Dir(dest), 0o755); err != nil {
+		return fmt.Sprintf("Error creating directory for %s: %v", dest, err), true
+	}
+	// Refuse to follow a symlink at the final component, so a symlink planted
+	// between the check above and this write cannot redirect the bytes.
+	outFile, err := createNoFollow(dest)
 	if err != nil {
 		return fmt.Sprintf("Error creating file %s: %v", dest, err), true
 	}
@@ -857,14 +941,121 @@ func (s *mcpServer) callDownloadFile(args map[string]any) (string, bool) {
 	return string(resultBytes), false
 }
 
+// hasDotDotSegment reports whether p contains a ".." path segment. Used to
+// reject traversal in the caller-supplied Hub 'path' (CWE-22).
+func hasDotDotSegment(p string) bool {
+	for _, seg := range strings.Split(p, "/") {
+		if seg == ".." {
+			return true
+		}
+	}
+	return false
+}
+
+// mcpDownloadDir is the base directory download_file is confined to. It
+// defaults to the current working directory (the dir the operator launched
+// 'kubeshark mcp' from) and can be relocated via KUBESHARK_MCP_DOWNLOAD_DIR so
+// an operator can widen or move the sandbox intentionally.
+func mcpDownloadDir() string {
+	if d := os.Getenv("KUBESHARK_MCP_DOWNLOAD_DIR"); d != "" {
+		return d
+	}
+	if wd, err := os.Getwd(); err == nil {
+		return wd
+	}
+	return "."
+}
+
+// secureDownloadDest resolves the caller-supplied download destination to an
+// absolute path confined to baseDir. An empty dest falls back to the base name
+// of the Hub file path. A dest (absolute or relative) that resolves outside
+// baseDir via "../" traversal is rejected, so download_file cannot be coerced
+// (e.g. via an induced agent) into writing to arbitrary locations such as
+// ~/.ssh/authorized_keys or ~/.kube/config. See CWE-22.
+//
+// Containment is checked twice: once lexically, then again after resolving
+// symlinks, so a symlinked subdirectory (or a symlinked dest itself) inside the
+// base cannot redirect the write outside it.
+func secureDownloadDest(baseDir, dest, filePath string) (string, error) {
+	if dest == "" {
+		dest = path.Base(filePath)
+	}
+	absBase, err := filepath.Abs(baseDir)
+	if err != nil {
+		return "", fmt.Errorf("cannot resolve download directory: %w", err)
+	}
+	// Resolve symlinks in the base itself, so the comparison below is between
+	// real paths. The operator may legitimately point the download dir at a
+	// symlink (e.g. /tmp on macOS, which is a link to /private/tmp).
+	if resolvedBase, err := filepath.EvalSymlinks(absBase); err == nil {
+		absBase = resolvedBase
+	}
+	full := dest
+	if filepath.IsAbs(full) {
+		full = filepath.Clean(full)
+	} else {
+		full = filepath.Join(absBase, full)
+	}
+	if !pathContained(absBase, full) {
+		return "", fmt.Errorf("destination %q escapes the download directory %q", dest, absBase)
+	}
+	resolvedFull, err := resolveSymlinkedPath(full)
+	if err != nil {
+		return "", fmt.Errorf("cannot resolve destination %q: %w", dest, err)
+	}
+	if !pathContained(absBase, resolvedFull) {
+		return "", fmt.Errorf("destination %q resolves through a symlink to %q, outside the download directory %q", dest, resolvedFull, absBase)
+	}
+	return full, nil
+}
+
+// pathContained reports whether target is base itself or lies beneath it. Both
+// arguments must already be absolute and symlink-resolved.
+func pathContained(base, target string) bool {
+	rel, err := filepath.Rel(base, target)
+	if err != nil {
+		return false
+	}
+	return rel != ".." && !strings.HasPrefix(rel, ".."+string(os.PathSeparator))
+}
+
+// resolveSymlinkedPath resolves symlinks in the deepest existing ancestor of p
+// and re-appends the trailing components that do not exist yet.
+// filepath.EvalSymlinks fails outright on a path that does not exist, which is
+// the normal case for a download destination, hence the walk upwards.
+func resolveSymlinkedPath(p string) (string, error) {
+	cur := filepath.Clean(p)
+	rest := ""
+	for {
+		resolved, err := filepath.EvalSymlinks(cur)
+		if err == nil {
+			if rest == "" {
+				return resolved, nil
+			}
+			return filepath.Join(resolved, rest), nil
+		}
+		if !errors.Is(err, os.ErrNotExist) {
+			return "", err
+		}
+		parent := filepath.Dir(cur)
+		if parent == cur {
+			// Walked up to the root without finding an existing ancestor.
+			return filepath.Clean(p), nil
+		}
+		rest = filepath.Join(filepath.Base(cur), rest)
+		cur = parent
+	}
+}
+
 func (s *mcpServer) callStartKubeshark(args map[string]any) (string, bool) {
 	// Build the kubeshark tap command
 	cmdArgs := []string{"tap"}
 
-	// Add pod regex if provided
-	if v, ok := args["pod_regex"].(string); ok && v != "" {
-		cmdArgs = append(cmdArgs, v)
-	}
+	// Capture the caller-supplied pod regex. It is appended LAST, after a "--"
+	// end-of-options separator (see below), so a value beginning with "-"
+	// (e.g. "--set=tap.docker.registry=...") can never be parsed as a flag by
+	// the 'tap' cobra command. See CWE-88 (argument injection).
+	podRegex, _ := args["pod_regex"].(string)
 
 	// Add namespaces if provided
 	if v, ok := args["namespaces"].(string); ok && v != "" {
@@ -891,6 +1082,13 @@ func (s *mcpServer) callStartKubeshark(args map[string]any) (string, bool) {
 
 	// Execute the command in headless mode (no browser popup)
 	cmdArgs = append(cmdArgs, "--set", "headless=true")
+
+	// Append the pod regex as a positional argument, guarded by "--" so it is
+	// always treated as the [POD REGEX] operand and never as a flag (CWE-88).
+	// This must come after every flag above.
+	if podRegex != "" {
+		cmdArgs = append(cmdArgs, "--", podRegex)
+	}
 
 	// Log progress to stderr (MCP clients can see this in their logs)
 	logProgress := func(msg string) {
@@ -1059,6 +1257,10 @@ func listMCPTools(directURL string) {
 	fmt.Println("=========")
 	fmt.Println()
 
+	// Same hub credential as the running server: renewing minter in proxy
+	// mode, static --token in URL mode (nil → License-Key).
+	tokenSource := hubTokenSource(directURL != "")
+
 	// URL mode - no cluster management, connect directly
 	if directURL != "" {
 		fmt.Printf("URL Mode: %s\n\n", directURL)
@@ -1071,7 +1273,7 @@ func listMCPTools(directURL string) {
 		fmt.Println()
 
 		hubURL := strings.TrimSuffix(directURL, "/") + "/api/mcp"
-		fetchAndDisplayTools(hubURL, 30*time.Second)
+		fetchAndDisplayTools(hubURL, 30*time.Second, tokenSource)
 		return
 	}
 
@@ -1095,7 +1297,7 @@ func listMCPTools(directURL string) {
 	}
 
 	fmt.Printf("Connected to: %s\n\n", hubURL)
-	fetchAndDisplayTools(hubURL, 30*time.Second)
+	fetchAndDisplayTools(hubURL, 30*time.Second, tokenSource)
 }
 
 // establishProxyConnection sets up proxy to Kubeshark and returns the hub URL
@@ -1144,8 +1346,8 @@ func establishProxyConnection(timeout time.Duration) (string, error) {
 }
 
 // fetchAndDisplayTools fetches tools from the Kubeshark API and displays them
-func fetchAndDisplayTools(hubURL string, timeout time.Duration) {
-	client := &http.Client{Timeout: timeout}
+func fetchAndDisplayTools(hubURL string, timeout time.Duration, tokenSource func() string) {
+	client := utils.NewHubHTTPClientWithTokenSource(timeout, tokenSource, config.Config.License)
 
 	// Fetch tools list from /api/mcp endpoint
 	resp, err := client.Get(strings.TrimSuffix(hubURL, "/mcp") + "/mcp")
@@ -1154,6 +1356,11 @@ func fetchAndDisplayTools(hubURL string, timeout time.Duration) {
 		return
 	}
 	defer func() { _ = resp.Body.Close() }()
+
+	if utils.IsAuthRequired(resp) {
+		fmt.Println("Kubeshark API: 401 Unauthorized — the Hub requires a valid credential. In --url mode pass --token (or KUBESHARK_HUB_TOKEN); in proxy mode ensure you have RBAC to mint the kubeshark-cli token.")
+		return
+	}
 
 	// Parse the response using the Hub MCP response format
 	var mcpInfo hubMCPResponse

@@ -155,23 +155,6 @@ type ProbeConfig struct {
 	FailureThreshold    int `yaml:"failureThreshold" json:"failureThreshold" default:"3"`
 }
 
-type ScriptingPermissions struct {
-	CanSave     bool `yaml:"canSave" json:"canSave" default:"true"`
-	CanActivate bool `yaml:"canActivate" json:"canActivate" default:"true"`
-	CanDelete   bool `yaml:"canDelete" json:"canDelete" default:"true"`
-}
-
-type Role struct {
-	Filter                  string               `yaml:"filter" json:"filter" default:""`
-	CanDownloadPCAP         bool                 `yaml:"canDownloadPCAP" json:"canDownloadPCAP" default:"false"`
-	CanUseScripting         bool                 `yaml:"canUseScripting" json:"canUseScripting" default:"false"`
-	ScriptingPermissions    ScriptingPermissions `yaml:"scriptingPermissions" json:"scriptingPermissions"`
-	CanUpdateTargetedPods   bool                 `yaml:"canUpdateTargetedPods" json:"canUpdateTargetedPods" default:"false"`
-	CanStopTrafficCapturing bool                 `yaml:"canStopTrafficCapturing" json:"canStopTrafficCapturing" default:"false"`
-	CanControlDissection    bool                 `yaml:"canControlDissection" json:"canControlDissection" default:"false"`
-	ShowAdminConsoleLink    bool                 `yaml:"showAdminConsoleLink" json:"showAdminConsoleLink" default:"false"`
-}
-
 type SamlConfig struct {
 	IdpMetadataUrl string `yaml:"idpMetadataUrl" json:"idpMetadataUrl"`
 	X509crt        string `yaml:"x509crt" json:"x509crt"`
@@ -190,12 +173,75 @@ type AuthConfig struct {
 	// NOTE: prior releases routed `oidc` to Descope. If you were using `oidc`
 	// to mean Descope, switch to `descope` (or `default`). The rename is a
 	// breaking change documented in the release notes.
-	Type          string          `yaml:"type" json:"type" default:"saml"`
-	Roles         map[string]Role `yaml:"roles" json:"roles"`
-	RolesClaim    string          `yaml:"rolesClaim" json:"rolesClaim"`
-	DefaultRole   string          `yaml:"defaultRole" json:"defaultRole"`
-	DefaultFilter string          `yaml:"defaultFilter" json:"defaultFilter"`
-	Saml          SamlConfig      `yaml:"saml" json:"saml"`
+	Type       string `yaml:"type" json:"type" default:"saml"`
+	RolesClaim string `yaml:"rolesClaim" json:"rolesClaim"`
+	// DefaultRole is applied when a caller has no recognized group, and also
+	// when Enabled is false — with no authentication there is no identity,
+	// but there is still a question of what an unidentified caller may do.
+	// Must be one of the four built-in roles (kubeshark-admin /
+	// kubeshark-realtime / kubeshark-snapshot / kubeshark-viewer) or the name
+	// of an operator-defined role under `tap.auth.roles`.
+	//
+	// With Enabled true, empty means strict-deny. With Enabled false, empty
+	// or unrecognized falls back to kubeshark-admin so an install that never
+	// configured authorization keeps working.
+	DefaultRole string `yaml:"defaultRole" json:"defaultRole" default:"kubeshark-admin"`
+	// GroupMapping translates SSO group names into role names (built-in or
+	// operator-defined). Optional — groups whose name already matches a
+	// built-in role are identity-matched and don't need an entry here.
+	// Operator-defined role names MUST appear here to participate in
+	// resolution (identity-match is built-in-only).
+	GroupMapping map[string]string `yaml:"groupMapping" json:"groupMapping"`
+	// Roles is the operator-defined role catalogue, keyed by role name.
+	// Each role has its own capability set + namespace scope. Names with
+	// the `kubeshark-` prefix are reserved for built-ins and will be
+	// rejected at hub startup. Unknown capability strings are dropped
+	// with a warning; empty / "*" namespace specs mean deny-all-data and
+	// allow-all respectively.
+	Roles map[string]RoleConfig `yaml:"roles" json:"roles"`
+	Cli   CliAuthConfig         `yaml:"cli" json:"cli"`
+	Saml  SamlConfig            `yaml:"saml" json:"saml"`
+}
+
+// CliAuthConfig gates ServiceAccount-token auth for the CLI. When enabled, the
+// chart creates a `kubeshark-cli` ServiceAccount plus a Role permitting
+// `create` on its token, and the hub allowlists it via the
+// AUTH_CLI_SERVICE_ACCOUNTS env var. The CLI mints a short-lived token for
+// that SA to authenticate to a gated hub. Map `kubeshark-cli` to a role via
+// GroupMapping (or DefaultRole); without a mapping it falls back to
+// DefaultRole.
+type CliAuthConfig struct {
+	Enabled bool `yaml:"enabled" json:"enabled" default:"false"`
+	// Subjects are the RBAC subjects permitted to mint the kubeshark-cli
+	// token — i.e. who may use the CLI against a gated hub. Rendered verbatim
+	// into the kubeshark-cli-token-minter RoleBinding; empty means the Role is
+	// created but bound to nobody.
+	Subjects []CliAuthSubject `yaml:"subjects" json:"subjects"`
+}
+
+// CliAuthSubject is one entry under tap.auth.cli.subjects, mirroring
+// rbacv1.Subject: Kind is User, Group or ServiceAccount; ApiGroup is
+// rbac.authorization.k8s.io for User and Group and must be empty for
+// ServiceAccount; Namespace applies to ServiceAccount only. The empty-able
+// fields are omitted when unset so the rendered RoleBinding stays valid for
+// every kind.
+type CliAuthSubject struct {
+	Kind      string `yaml:"kind" json:"kind"`
+	Name      string `yaml:"name" json:"name"`
+	ApiGroup  string `yaml:"apiGroup,omitempty" json:"apiGroup,omitempty"`
+	Namespace string `yaml:"namespace,omitempty" json:"namespace,omitempty"`
+}
+
+// RoleConfig is an operator-defined role declared under tap.auth.roles.
+// Capabilities is the closed vocabulary documented in the hub project
+// (snapshot:read / snapshot:write / snapshot:dissection / dissection:live /
+// dissection:control / pods:target:write / settings:write); unknown
+// capability strings are warn-dropped at hub startup. Namespaces is a
+// comma-separated list with `*` (allow-all) and glob (`foo-*`, `*-bar`,
+// `*mid*`) support; empty string means deny-all-data.
+type RoleConfig struct {
+	Capabilities []string `yaml:"capabilities" json:"capabilities"`
+	Namespaces   string   `yaml:"namespaces" json:"namespaces"`
 }
 
 type IngressConfig struct {
@@ -292,15 +338,15 @@ type PcapDumpConfig struct {
 }
 
 type PortMapping struct {
-	HTTP     []uint16 `yaml:"http" json:"http"`
-	AMQP     []uint16 `yaml:"amqp" json:"amqp"`
-	KAFKA    []uint16 `yaml:"kafka" json:"kafka"`
-	MONGODB  []uint16 `yaml:"mongodb" json:"mongodb"`
+	HTTP       []uint16 `yaml:"http" json:"http"`
+	AMQP       []uint16 `yaml:"amqp" json:"amqp"`
+	KAFKA      []uint16 `yaml:"kafka" json:"kafka"`
+	MONGODB    []uint16 `yaml:"mongodb" json:"mongodb"`
 	MYSQL      []uint16 `yaml:"mysql" json:"mysql"`
 	POSTGRESQL []uint16 `yaml:"postgresql" json:"postgresql"`
 	REDIS      []uint16 `yaml:"redis" json:"redis"`
-	LDAP     []uint16 `yaml:"ldap" json:"ldap"`
-	DIAMETER []uint16 `yaml:"diameter" json:"diameter"`
+	LDAP       []uint16 `yaml:"ldap" json:"ldap"`
+	DIAMETER   []uint16 `yaml:"diameter" json:"diameter"`
 }
 
 type SecurityContextConfig struct {
@@ -438,8 +484,15 @@ type TapConfig struct {
 	Pprof                          PprofConfig             `yaml:"pprof" json:"pprof"`
 	Misc                           MiscConfig              `yaml:"misc" json:"misc"`
 	SecurityContext                SecurityContextConfig   `yaml:"securityContext" json:"securityContext"`
-	MountBpf                       bool                    `yaml:"mountBpf" json:"mountBpf" default:"true"`
-	HostNetwork                    bool                    `yaml:"hostNetwork" json:"hostNetwork" default:"true"`
+	// NetworkPolicies exposes the Hub's network-policy routes, which create
+	// and remove Kubernetes NetworkPolicy objects and compute pod-reachability
+	// impact. The feature reaches outside Kubeshark's own data, so it is off
+	// unless an operator asks for it, and no role grants it: whether a
+	// deployment offers it at all is not a question about the caller.
+	NetworkPolicies NetworkPoliciesConfig `yaml:"networkPolicies" json:"networkPolicies"`
+	MountBpf        bool                  `yaml:"mountBpf" json:"mountBpf" default:"true"`
+	HostNetwork     bool                  `yaml:"hostNetwork" json:"hostNetwork" default:"true"`
+	ExtraObjects    []interface{}         `yaml:"extraObjects" json:"extraObjects" default:"[]"`
 }
 
 func (config *TapConfig) PodRegex() *regexp.Regexp {
@@ -454,4 +507,8 @@ func (config *TapConfig) Validate() error {
 	}
 
 	return nil
+}
+
+type NetworkPoliciesConfig struct {
+	Enabled bool `yaml:"enabled" json:"enabled" default:"false"`
 }

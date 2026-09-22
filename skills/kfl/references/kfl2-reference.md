@@ -1,5 +1,7 @@
 # KFL2 Complete Variable and Field Reference
 
+> Last synced with [kfl2 repo](https://github.com/kubeshark/kfl2): 2026-05-08
+
 This is the exhaustive reference for every variable available in KFL2 filters.
 KFL2 is built on Google's CEL (Common Expression Language) and evaluates against
 Kubeshark's protobuf-based `BaseEntry` structure.
@@ -74,7 +76,8 @@ Boolean variables indicating detected protocol. Use as first filter term for per
 | `icmp` | ICMP | `gqlv1` | GraphQL v1 only |
 | `grpc` | gRPC (HTTP/2 sub-protocol) | `gqlv2` | GraphQL v2 only |
 | `mongodb` | MongoDB | `mysql` | MySQL |
-| `radius` | RADIUS auth | `diameter` | Diameter |
+| `postgresql` | PostgreSQL | `diameter` | Diameter |
+| `radius` | RADIUS auth | | |
 | | | `conn` | L4 connection tracking |
 | `flow` | L4 flow tracking | `tcp_conn` | TCP connection tracking |
 | `tcp_flow` | TCP flow tracking | `udp_conn` | UDP connection tracking |
@@ -301,6 +304,27 @@ Supported question types: A, AAAA, NS, CNAME, SOA, MX, TXT, SRV, PTR, ANY.
 | `mysql_error_message` | string | Error description | |
 
 **Example**: `mysql && mysql_query.contains("SELECT") && !mysql_success`
+
+## PostgreSQL Variables
+
+| Variable | Type | Description | Example |
+|----------|------|-------------|---------|
+| `postgresql` | bool | PostgreSQL payload detected | |
+| `postgresql_command` | string | Command tag | `"SELECT"`, `"INSERT"`, `"UPDATE"` |
+| `postgresql_query` | string | Full SQL query text | `"SELECT * FROM users WHERE id = 1"` |
+| `postgresql_database` | string | Active database name | `"orders_db"` |
+| `postgresql_user` | string | Authenticated user name | `"app_service"` |
+| `postgresql_request_size` | int | Request payload size in bytes | |
+| `postgresql_response_size` | int | Response payload size in bytes | |
+| `postgresql_total_size` | int | Combined request + response size | |
+| `postgresql_success` | bool | Response OK status | |
+| `postgresql_error_code` | **string** | SQLSTATE error code (NOT int) | `"23505"` (unique violation), `"42P01"` (undefined table) |
+| `postgresql_error_message` | string | Error description | |
+
+**Important**: Unlike MySQL's `mysql_error_code` (int), `postgresql_error_code` is a
+**string** because PostgreSQL uses 5-character SQLSTATE codes.
+
+**Example**: `postgresql && postgresql_query.contains("SELECT") && !postgresql_success`
 
 ## gRPC Variables
 

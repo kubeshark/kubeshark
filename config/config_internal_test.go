@@ -148,7 +148,7 @@ func TestMergeSetFlagNotSliceValues(t *testing.T) {
 		{Name: "int field", FieldsSetValues: []FieldSetValues{{SetValues: []string{"int-field=6"}, FieldName: "IntField", FieldValue: 6}}},
 		{Name: "bool field", FieldsSetValues: []FieldSetValues{{SetValues: []string{"bool-field=true"}, FieldName: "BoolField", FieldValue: true}}},
 		{Name: "uint field", FieldsSetValues: []FieldSetValues{{SetValues: []string{"uint-field=6"}, FieldName: "UintField", FieldValue: uint(6)}}},
-		{Name: "four fields combined", FieldsSetValues: []FieldSetValues {
+		{Name: "four fields combined", FieldsSetValues: []FieldSetValues{
 			{SetValues: []string{"string-field=test"}, FieldName: "StringField", FieldValue: "test"},
 			{SetValues: []string{"int-field=6"}, FieldName: "IntField", FieldValue: 6},
 			{SetValues: []string{"bool-field=true"}, FieldName: "BoolField", FieldValue: true},
@@ -381,5 +381,35 @@ func TestGetParsedValueInvalidValue(t *testing.T) {
 				t.Errorf("unexpected parsed value - parsedValue: %v", parsedValue)
 			}
 		})
+	}
+}
+
+// CreateDefaultConfig builds the struct literal that `kubeshark config`
+// serialises into helm-chart/values.yaml, and it sets Auth fields explicitly
+// rather than leaving them to the `default:` struct tags. Two sources of the
+// same default drift silently: the literal wins at runtime, the tag is what a
+// reader checks, and the divergence only surfaces the next time someone runs
+// `make generate-helm-values`.
+//
+// The default role is the one worth pinning. An operator who never configured
+// authorization gets it applied to every caller, so a literal that disagrees
+// with the tag rewrites the chart's default posture from admin to read-only
+// and 403s an install that used to work.
+func TestCreateDefaultConfig_AuthDefaultsMatchStructTags(t *testing.T) {
+	cfg := CreateDefaultConfig()
+
+	field, ok := reflect.TypeOf(cfg.Tap.Auth).FieldByName("DefaultRole")
+	if !ok {
+		t.Fatal("AuthConfig has no DefaultRole field")
+	}
+
+	want := field.Tag.Get("default")
+	if want == "" {
+		t.Fatal("DefaultRole carries no default tag to compare against")
+	}
+	if cfg.Tap.Auth.DefaultRole != want {
+		t.Errorf("CreateDefaultConfig sets DefaultRole=%q, struct tag says %q; "+
+			"generate-helm-values would write the former into values.yaml",
+			cfg.Tap.Auth.DefaultRole, want)
 	}
 }

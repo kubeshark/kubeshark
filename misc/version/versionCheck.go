@@ -8,9 +8,10 @@ import (
 	"strings"
 	"time"
 
+	"github.com/rs/zerolog/log"
+
 	"github.com/kubeshark/kubeshark/misc"
 	"github.com/kubeshark/kubeshark/utils"
-	"github.com/rs/zerolog/log"
 
 	"github.com/google/go-github/v37/github"
 )

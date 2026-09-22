@@ -1,0 +1,36 @@
+version: "2"
+
+run:
+  timeout: 10m
+  go: "1.25.0"
+  modules-download-mode: readonly
+
+linters:
+  default: none
+  enable:
+    - govet
+    - staticcheck
+    - ineffassign
+    - unused
+
+formatters:
+  enable:
+    - gofmt
+    - goimports
+  settings:
+    gofmt:
+      simplify: true
+    goimports:
+      local-prefixes:
+        - github.com/kubeshark/kubeshark
+
+issues:
+  max-issues-per-linter: 0
+  max-same-issues: 0
+
+output:
+  formats:
+    tab:
+      path: stdout
+      colors: true
+      print-linter-name: true

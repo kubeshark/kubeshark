@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"context"
 	"fmt"
 	"net/http"
 	"net/url"
@@ -11,19 +12,26 @@ import (
 
 	"github.com/creasty/defaults"
 	"github.com/gorilla/websocket"
+	"github.com/rs/zerolog/log"
+	"github.com/spf13/cobra"
+
 	"github.com/kubeshark/kubeshark/config"
 	"github.com/kubeshark/kubeshark/config/configStructs"
 	"github.com/kubeshark/kubeshark/kubernetes"
 	"github.com/kubeshark/kubeshark/utils"
-	"github.com/rs/zerolog/log"
-	"github.com/spf13/cobra"
 )
 
 var consoleCmd = &cobra.Command{
 	Use:   "console",
-	Short: "Stream the scripting console logs into shell",
+	Short: "Stream the scripting console logs into shell (temporarily non-functional — under refactoring after hub API changes)",
+	Long: `Stream the scripting console logs into shell.
+
+NOTE: This command is currently non-functional and under refactoring. The hub
+moved scripting-console log streaming off the /scripts/logs WebSocket onto a
+Connect-RPC streaming service, and this client has not yet been updated to use
+it, so no logs will stream until the migration lands.`,
 	RunE: func(cmd *cobra.Command, args []string) error {
-		runConsole()
+		log.Warn().Msg(fmt.Sprintf(utils.Yellow, "The 'console' command is temporarily non-functional and under refactoring: the hub moved scripting-console log streaming off the /scripts/logs WebSocket onto a Connect-RPC service, and this client has not yet been updated. No logs will stream, so the command exits without doing anything."))
 		return nil
 	},
 }
@@ -41,9 +49,22 @@ func init() {
 	consoleCmd.Flags().StringP(configStructs.ReleaseNamespaceLabel, "s", defaultTapConfig.Release.Namespace, "Release namespace of Kubeshark")
 }
 
+//nolint:unused // retained for the in-progress console refactoring; re-wired once the Connect-RPC client lands
 func runConsoleWithoutProxy() {
 	log.Info().Msg("Starting scripting console ...")
 	time.Sleep(5 * time.Second)
+
+	// Best-effort: mint a scoped ServiceAccount token to authenticate to a
+	// gated Hub as kubeshark-cli; fall back to License-Key when not possible.
+	saToken := ""
+	if provider, err := getKubernetesProviderForCli(true, true); err == nil {
+		ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+		if tok, terr := provider.MintHubToken(ctx, config.Config.Tap.Release.Namespace); terr == nil {
+			saToken = tok
+		}
+		cancel()
+	}
+
 	hubUrl := kubernetes.GetHubUrl()
 	for {
 
@@ -66,7 +87,11 @@ func runConsoleWithoutProxy() {
 		}
 		headers := http.Header{}
 		headers.Set(utils.X_KUBESHARK_CAPTURE_HEADER_KEY, utils.X_KUBESHARK_CAPTURE_HEADER_IGNORE_VALUE)
-		headers.Set("License-Key", config.Config.License)
+		if saToken != "" {
+			headers.Set(utils.CLI_AUTH_HEADER, saToken)
+		} else {
+			headers.Set(utils.LICENSE_KEY_HEADER, config.Config.License)
+		}
 
 		c, _, err := websocket.DefaultDialer.Dial(u.String(), headers)
 		if err != nil {
@@ -121,7 +146,10 @@ func runConsoleWithoutProxy() {
 	}
 }
 
+//nolint:unused // retained for the in-progress console refactoring; re-wired once the Connect-RPC client lands
 func runConsole() {
+	log.Warn().Msg(fmt.Sprintf(utils.Yellow, "The 'console' command is temporarily non-functional and under refactoring: the hub moved scripting-console log streaming off the /scripts/logs WebSocket onto a Connect-RPC service, and this client has not yet been updated. No logs will stream."))
+
 	go runConsoleWithoutProxy()
 
 	// Create interrupt channel and setup signal handling once

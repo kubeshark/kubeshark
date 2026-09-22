@@ -1,5 +1,6 @@
 {
   "name": "kubeshark",
+  "owner": { "name": "kubeshark" },
   "description": "Kubeshark network observability skills for Kubernetes",
   "plugins": [
     {

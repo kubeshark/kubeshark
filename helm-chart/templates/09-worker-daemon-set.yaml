@@ -21,6 +21,7 @@ spec:
     metadata:
       labels:
         app.kubeshark.com/app: worker
+        kubeshark.io/internal-auth: "true"
         {{- include "kubeshark.labels" . | nindent 8 }}
       name: kubeshark-worker-daemon-set
       namespace: kubeshark
@@ -145,6 +146,8 @@ spec:
             value: '{{ (include "sentry.enabled" .) }}'
           - name: SENTRY_ENVIRONMENT
             value: '{{ .Values.tap.sentry.environment }}'
+          - name: HUB_INTERNAL_TOKEN_PATH
+            value: /var/run/secrets/kubeshark/hub-token/token
           resources:
             limits:
               {{ if ne (toString .Values.tap.resources.sniffer.limits.cpu) "0" }}
@@ -234,6 +237,9 @@ spec:
 {{- if .Values.tap.persistentStorage }}
               subPathExpr: $(NODE_NAME)
 {{- end }}
+            - mountPath: /var/run/secrets/kubeshark/hub-token
+              name: hub-internal-token
+              readOnly: true
       {{- if .Values.tap.tls }}
         - command:
             - ./tracer
@@ -274,6 +280,8 @@ spec:
             value: '{{ (include "sentry.enabled" .) }}'
           - name: SENTRY_ENVIRONMENT
             value: '{{ .Values.tap.sentry.environment }}'
+          - name: HUB_INTERNAL_TOKEN_PATH
+            value: /var/run/secrets/kubeshark/hub-token/token
           resources:
             limits:
               {{ if ne (toString .Values.tap.resources.tracer.limits.cpu) "0" }}
@@ -348,6 +356,9 @@ spec:
             - mountPath: /hostroot
               mountPropagation: HostToContainer
               name: root
+              readOnly: true
+            - mountPath: /var/run/secrets/kubeshark/hub-token
+              name: hub-internal-token
               readOnly: true
       {{- end }}
       dnsPolicy: ClusterFirstWithHostNet
@@ -429,3 +440,10 @@ spec:
           emptyDir:
             sizeLimit: {{ .Values.tap.storageLimit }}
 {{- end }}
+        - name: hub-internal-token
+          projected:
+            sources:
+              - serviceAccountToken:
+                  path: token
+                  audience: kubeshark-hub
+                  expirationSeconds: 3600

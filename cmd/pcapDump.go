@@ -8,13 +8,14 @@ import (
 	"time"
 
 	"github.com/creasty/defaults"
-	"github.com/kubeshark/kubeshark/config/configStructs"
 	"github.com/rs/zerolog"
 	"github.com/rs/zerolog/log"
 	"github.com/spf13/cobra"
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/homedir"
+
+	"github.com/kubeshark/kubeshark/config/configStructs"
 )
 
 // pcapDumpCmd represents the consolidated pcapdump command
@@ -45,12 +46,12 @@ var pcapDumpCmd = &cobra.Command{
 		// Use the current context in kubeconfig
 		config, err := clientcmd.BuildConfigFromFlags("", kubeconfig)
 		if err != nil {
-			return fmt.Errorf("Error building kubeconfig: %w", err)
+			return fmt.Errorf("error building kubeconfig: %w", err)
 		}
 
 		clientset, err := kubernetes.NewForConfig(config)
 		if err != nil {
-			return fmt.Errorf("Error creating Kubernetes client: %w", err)
+			return fmt.Errorf("error creating Kubernetes client: %w", err)
 		}
 
 		// Parse the `--time` flag
@@ -59,7 +60,7 @@ var pcapDumpCmd = &cobra.Command{
 		if timeIntervalStr != "" {
 			duration, err := time.ParseDuration(timeIntervalStr)
 			if err != nil {
-				return fmt.Errorf("Invalid format %w", err)
+				return fmt.Errorf("invalid --time value %q: %w", timeIntervalStr, err)
 			}
 			tempCutoffTime := time.Now().Add(-duration)
 			cutoffTime = &tempCutoffTime
@@ -70,17 +71,17 @@ var pcapDumpCmd = &cobra.Command{
 		if destDir != "" {
 			info, err := os.Stat(destDir)
 			if os.IsNotExist(err) {
-				return fmt.Errorf("Directory does not exist: %s", destDir)
+				return fmt.Errorf("directory does not exist: %s", destDir)
 			}
 			if err != nil {
-				return fmt.Errorf("Error checking dest directory: %w", err)
+				return fmt.Errorf("error checking dest directory: %w", err)
 			}
 			if !info.IsDir() {
-				return fmt.Errorf("Dest path is not a directory: %s", destDir)
+				return fmt.Errorf("dest path is not a directory: %s", destDir)
 			}
 			tempFile, err := os.CreateTemp(destDir, "write-test-*")
 			if err != nil {
-				return fmt.Errorf("Directory %s is not writable", destDir)
+				return fmt.Errorf("directory %s is not writable", destDir)
 			}
 			_ = os.Remove(tempFile.Name())
 		}

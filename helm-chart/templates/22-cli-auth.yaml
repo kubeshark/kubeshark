@@ -1,0 +1,44 @@
+{{- if (((.Values.tap).auth).cli).enabled }}
+---
+# ServiceAccount the CLI mints a short-lived token for (TokenRequest API) to
+# authenticate to a gated Hub. Its name must match the Hub's
+# AUTH_CLI_SERVICE_ACCOUNTS allowlist and the CLI's kubeshark-cli constant.
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  labels:
+    {{- include "kubeshark.labels" . | nindent 4 }}
+  name: kubeshark-cli
+  namespace: {{ .Release.Namespace }}
+---
+# Permission to mint a token for the kubeshark-cli SA. Binding this Role to a
+# subject is what grants that subject CLI access to a gated Hub.
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  labels:
+    {{- include "kubeshark.labels" . | nindent 4 }}
+  name: kubeshark-cli-token-minter
+  namespace: {{ .Release.Namespace }}
+rules:
+  - apiGroups: [""]
+    resources: ["serviceaccounts/token"]
+    resourceNames: ["kubeshark-cli"]
+    verbs: ["create"]
+{{- with .Values.tap.auth.cli.subjects }}
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  labels:
+    {{- include "kubeshark.labels" $ | nindent 4 }}
+  name: kubeshark-cli-token-minter
+  namespace: {{ $.Release.Namespace }}
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: Role
+  name: kubeshark-cli-token-minter
+subjects:
+  {{- toYaml . | nindent 2 }}
+{{- end }}
+{{- end }}

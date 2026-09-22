@@ -51,7 +51,7 @@ func (connector *Connector) TestConnection(path string) error {
 	}
 
 	if retriesLeft == 0 {
-		return fmt.Errorf("Couldn't reach the URL: %s after %d retries!", connector.url, connector.retries)
+		return fmt.Errorf("couldn't reach the URL: %s after %d retries", connector.url, connector.retries)
 	}
 	return nil
 }

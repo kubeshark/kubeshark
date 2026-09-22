@@ -24,6 +24,22 @@ Overridden front image: {{ .Values.tap.docker.overrideImage.front }}
 Your deployment has been successful. The release is named `{{ .Release.Name }}` and it has been deployed in the `{{ .Release.Namespace }}` namespace.
 
 Notices:
+{{- if not .Values.tap.auth.enabled }}
+- API AUTHENTICATION IS DISABLED (tap.auth.enabled=false, the default).
+- Callers are not identified, and every one of them gets the role
+  `{{ default "kubeshark-admin" .Values.tap.auth.defaultRole }}`.
+{{- if not (eq (default "kubeshark-admin" .Values.tap.auth.defaultRole) "kubeshark-admin") }}
+- That role is enforced, so anyone reaching the Hub is limited to it.
+{{- else }}
+- Anyone able to reach the Hub can read captured traffic and change settings.
+- For a read-only deployment with no login, set `tap.auth.defaultRole=kubeshark-viewer`.
+{{- end }}
+- To identify callers, set `tap.auth.enabled=true` with a `tap.auth.type` of `saml` or `oidc`.
+- See https://docs.kubeshark.com/en/roles
+{{- else }}
+- API authentication is enabled (tap.auth.type={{ .Values.tap.auth.type }}).
+- Callers with no recognized role resolve to `{{ default "no role, deny-all" .Values.tap.auth.defaultRole }}`.
+{{- end }}
 {{- if .Values.supportChatEnabled}}
 - Support chat using Intercom is enabled. It can be disabled using `--set supportChatEnabled=false`
 {{- end }}

@@ -4,9 +4,10 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/kubeshark/kubeshark/config/configStructs"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/util/homedir"
+
+	"github.com/kubeshark/kubeshark/config/configStructs"
 )
 
 const (
@@ -102,23 +103,10 @@ func CreateDefaultConfig() ConfigStruct {
 				},
 			},
 			Auth: configStructs.AuthConfig{
-				RolesClaim: "role",
-				Roles: map[string]configStructs.Role{
-					"admin": {
-						Filter:          "",
-						CanDownloadPCAP: true,
-						CanUseScripting: true,
-						ScriptingPermissions: configStructs.ScriptingPermissions{
-							CanSave:     true,
-							CanActivate: true,
-							CanDelete:   true,
-						},
-						CanUpdateTargetedPods:   true,
-						CanStopTrafficCapturing: true,
-						CanControlDissection:    true,
-						ShowAdminConsoleLink:    true,
-					},
-				},
+				RolesClaim:   "groups",
+				DefaultRole:  "kubeshark-admin",
+				GroupMapping: map[string]string{},
+				Roles:        map[string]configStructs.RoleConfig{},
 			},
 			EnabledDissectors: []string{
 				"amqp",
@@ -135,7 +123,7 @@ func CreateDefaultConfig() ConfigStruct {
 				// "tcp",
 				// "udp",
 				"ws",
-				// "tlsx",
+				"tlsx",
 				"ldap",
 				"radius",
 				"diameter",
@@ -145,15 +133,15 @@ func CreateDefaultConfig() ConfigStruct {
 				"tcp-conn",
 			},
 			PortMapping: configStructs.PortMapping{
-				HTTP:     []uint16{80, 443, 8080},
-				AMQP:     []uint16{5671, 5672},
-				KAFKA:    []uint16{9092},
-				MONGODB:  []uint16{27017},
+				HTTP:       []uint16{80, 443, 8080},
+				AMQP:       []uint16{5671, 5672},
+				KAFKA:      []uint16{9092},
+				MONGODB:    []uint16{27017},
 				MYSQL:      []uint16{3306},
 				POSTGRESQL: []uint16{5432},
 				REDIS:      []uint16{6379},
-				LDAP:     []uint16{389},
-				DIAMETER: []uint16{3868},
+				LDAP:       []uint16{389},
+				DIAMETER:   []uint16{3868},
 			},
 			Dashboard: configStructs.DashboardConfig{
 				CompleteStreamingEnabled: true,
@@ -189,7 +177,6 @@ type ConfigStruct struct {
 	License              string                        `yaml:"license" json:"license" default:""`
 	CloudApiUrl          string                        `yaml:"cloudApiUrl" json:"cloudApiUrl" default:"https://api.kubeshark.com"`
 	CloudLicenseEnabled  bool                          `yaml:"cloudLicenseEnabled" json:"cloudLicenseEnabled" default:"true"`
-	DemoModeEnabled      bool                          `yaml:"demoModeEnabled" json:"demoModeEnabled" default:"false"`
 	SupportChatEnabled   bool                          `yaml:"supportChatEnabled" json:"supportChatEnabled" default:"false"`
 	BetaEnabled          bool                          `yaml:"betaEnabled" json:"betaEnabled" default:"false"`
 	InternetConnectivity bool                          `yaml:"internetConnectivity" json:"internetConnectivity" default:"true"`

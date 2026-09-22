@@ -7,10 +7,11 @@ import (
 	"os"
 	"regexp"
 
+	"github.com/rs/zerolog/log"
+
 	"github.com/kubeshark/kubeshark/config"
 	"github.com/kubeshark/kubeshark/kubernetes"
 	"github.com/kubeshark/kubeshark/misc"
-	"github.com/rs/zerolog/log"
 )
 
 func DumpLogs(ctx context.Context, provider *kubernetes.Provider, filePath string, grep string) error {
@@ -21,7 +22,7 @@ func DumpLogs(ctx context.Context, provider *kubernetes.Provider, filePath strin
 	}
 
 	if len(pods) == 0 {
-		return fmt.Errorf("No %s pods found in namespace %s", misc.Software, config.Config.Tap.Release.Namespace)
+		return fmt.Errorf("no %s pods found in namespace %s", misc.Software, config.Config.Tap.Release.Namespace)
 	}
 
 	newZipFile, err := os.Create(filePath)

@@ -230,7 +230,9 @@ func TestMCP_ToolsList_ReadOnly(t *testing.T) {
 	}
 
 	var result struct {
-		Tools []struct{ Name string `json:"name"` } `json:"tools"`
+		Tools []struct {
+			Name string `json:"name"`
+		} `json:"tools"`
 	}
 	if err := json.Unmarshal(resp.Result, &result); err != nil {
 		t.Fatalf("Failed to parse result: %v", err)
@@ -262,7 +264,9 @@ func TestMCP_ToolsList_WithDestructive(t *testing.T) {
 	}
 
 	var result struct {
-		Tools []struct{ Name string `json:"name"` } `json:"tools"`
+		Tools []struct {
+			Name string `json:"name"`
+		} `json:"tools"`
 	}
 	if err := json.Unmarshal(resp.Result, &result); err != nil {
 		t.Fatalf("Failed to parse result: %v", err)
@@ -296,7 +300,9 @@ func TestMCP_CheckKubesharkStatus_NotRunning(t *testing.T) {
 	}
 
 	var result struct {
-		Content []struct{ Text string `json:"text"` } `json:"content"`
+		Content []struct {
+			Text string `json:"text"`
+		} `json:"content"`
 	}
 	if err := json.Unmarshal(resp.Result, &result); err != nil {
 		t.Fatalf("Failed to parse result: %v", err)
@@ -341,8 +347,10 @@ func TestMCP_StartKubeshark_WithoutFlag(t *testing.T) {
 	resp := session.callTool(t, 2, "start_kubeshark", nil)
 
 	var result struct {
-		Content []struct{ Text string `json:"text"` } `json:"content"`
-		IsError bool                                  `json:"isError"`
+		Content []struct {
+			Text string `json:"text"`
+		} `json:"content"`
+		IsError bool `json:"isError"`
 	}
 	if err := json.Unmarshal(resp.Result, &result); err != nil {
 		t.Fatalf("Failed to parse result: %v", err)

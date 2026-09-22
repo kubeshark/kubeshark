@@ -16,7 +16,7 @@ type PodWatchHelper struct {
 func NewPodWatchHelper(kubernetesProvider *Provider, NameRegexFilter *regexp.Regexp) *PodWatchHelper {
 	return &PodWatchHelper{
 		kubernetesProvider: kubernetesProvider,
-		NameRegexFilter: NameRegexFilter,
+		NameRegexFilter:    NameRegexFilter,
 	}
 }
 

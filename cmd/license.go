@@ -3,8 +3,9 @@ package cmd
 import (
 	"fmt"
 
-	"github.com/kubeshark/kubeshark/config"
 	"github.com/spf13/cobra"
+
+	"github.com/kubeshark/kubeshark/config"
 )
 
 var licenseCmd = &cobra.Command{

@@ -8,7 +8,7 @@ import (
 )
 
 func UnescapeUnicodeCharacters(raw string) string {
-	str, err := strconv.Unquote(strings.Replace(strconv.Quote(raw), `\\u`, `\u`, -1))
+	str, err := strconv.Unquote(strings.ReplaceAll(strconv.Quote(raw), `\\u`, `\u`))
 	if err != nil {
 		log.Error().Err(err).Send()
 		return raw

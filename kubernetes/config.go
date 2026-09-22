@@ -6,11 +6,12 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/kubeshark/kubeshark/config"
-	"github.com/kubeshark/kubeshark/misc"
 	"github.com/rs/zerolog/log"
 	v1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	"github.com/kubeshark/kubeshark/config"
+	"github.com/kubeshark/kubeshark/misc"
 )
 
 const (

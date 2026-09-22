@@ -11,10 +11,6 @@ import (
 	"regexp"
 	"strings"
 
-	"github.com/kubeshark/kubeshark/config"
-	"github.com/kubeshark/kubeshark/misc"
-	"github.com/kubeshark/kubeshark/semver"
-	"github.com/kubeshark/kubeshark/utils"
 	"github.com/rs/zerolog/log"
 	"github.com/tanqiangyes/grep-go/reader"
 	core "k8s.io/api/core/v1"
@@ -25,6 +21,11 @@ import (
 	_ "k8s.io/client-go/plugin/pkg/client/auth"
 	"k8s.io/client-go/rest"
 	"k8s.io/client-go/tools/clientcmd"
+
+	"github.com/kubeshark/kubeshark/config"
+	"github.com/kubeshark/kubeshark/misc"
+	"github.com/kubeshark/kubeshark/semver"
+	"github.com/kubeshark/kubeshark/utils"
 )
 
 type Provider struct {
