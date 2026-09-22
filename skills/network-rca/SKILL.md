@@ -168,6 +168,15 @@ Per node:
   └─────────────────────────────┴───────────────────────────────┴───────────────────────────────┘
 ```
 
+> **Epoch conversion rule**: `get_data_boundaries` returns Unix milliseconds.
+> Always convert programmatically — never estimate or do mental math:
+>
+> ```bash
+> python3 -c "from datetime import datetime, timezone, timedelta; ts=EPOCH_MS/1000; local=timezone(timedelta(hours=OFFSET)); print(datetime.fromtimestamp(ts, tz=local))"
+> ```
+>
+> Off-by-one timezone errors silently shift the investigation window by hours.
+
 If the incident falls outside the available window, the data has been rotated
 out. Suggest increasing `storageSize` for future coverage.
 
