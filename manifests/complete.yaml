@@ -110,6 +110,7 @@ spec:
           port: 49100
   egress:
     - {}
+
 ---
 # Source: kubeshark/templates/01-service-account.yaml
 apiVersion: v1
@@ -123,6 +124,7 @@ metadata:
     app.kubernetes.io/managed-by: Helm
   name: kubeshark-service-account
   namespace: default
+
 ---
 # Source: kubeshark/templates/13-secret.yaml
 kind: Secret
@@ -243,6 +245,7 @@ data:
         root   /usr/share/nginx/html;
       }
     }
+
 ---
 # Source: kubeshark/templates/12-config-map.yaml
 kind: ConfigMap
@@ -269,12 +272,12 @@ data:
     INGRESS_ENABLED: 'false'
     INGRESS_HOST: 'ks.svc.cluster.local'
     PROXY_FRONT_PORT: '8899'
-    AUTH_ENABLED: 'true'
-    AUTH_TYPE: 'default'
+    AUTH_ENABLED: 'false'
+    AUTH_TYPE: 'saml'
     AUTH_SAML_IDP_METADATA_URL: ''
     AUTH_CLI_SERVICE_ACCOUNTS: ''
     AUTH_ROLES_CLAIM: 'groups'
-    AUTH_DEFAULT_ROLE: 'kubeshark-viewer'
+    AUTH_DEFAULT_ROLE: 'kubeshark-admin'
     AUTH_GROUP_MAPPING: '{}'
     AUTH_ROLES: '{}'
     AUTH_OIDC_ISSUER: 'not set'
@@ -282,11 +285,8 @@ data:
     AUTH_OIDC_STATE_PARAM_EXPIRY: '10m'
     AUTH_OIDC_BYPASS_SSL_CA_CHECK: 'false'
     TELEMETRY_DISABLED: 'false'
-    SCRIPTING_DISABLED: 'false'
-    TARGETED_PODS_UPDATE_DISABLED: 'false'
-    PRESET_FILTERS_CHANGING_ENABLED: 'true'
-    RECORDING_DISABLED: 'false'
-    DISSECTION_CONTROL_ENABLED: 'true'
+    SCRIPTING_DISABLED: 'true'
+    NETWORK_POLICIES_DISABLED: 'true'
     GLOBAL_FILTER: ""
     DEFAULT_FILTER: ""
     TRAFFIC_SAMPLE_RATE: '100'
@@ -298,9 +298,6 @@ data:
     DUPLICATE_TIMEFRAME: '200ms'
     ENABLED_DISSECTORS: 'amqp,dns,http,icmp,kafka,mongodb,mysql,postgresql,redis,ws,tlsx,ldap,radius,diameter,udp-flow,tcp-flow,udp-conn,tcp-conn'
     CUSTOM_MACROS: '{"https":"tls and (http or http2)"}'
-    DISSECTORS_UPDATING_ENABLED: 'true'
-    SNAPSHOTS_UPDATING_ENABLED: 'true'
-    DEMO_MODE_ENABLED: 'false'
     DETECT_DUPLICATES: 'false'
     PCAP_DUMP_ENABLE: 'false'
     PCAP_TIME_INTERVAL: '1m'
@@ -309,6 +306,7 @@ data:
     PORT_MAPPING: '{"amqp":[5671,5672],"diameter":[3868],"http":[80,443,8080],"kafka":[9092],"ldap":[389],"mongodb":[27017],"mysql":[3306],"postgresql":[5432],"redis":[6379]}'
     RAW_CAPTURE_ENABLED: 'true'
     RAW_CAPTURE_STORAGE_SIZE: '1Gi'
+
 ---
 # Source: kubeshark/templates/02-cluster-role.yaml
 apiVersion: rbac.authorization.k8s.io/v1
@@ -464,6 +462,7 @@ subjects:
   - kind: ServiceAccount
     name: kubeshark-service-account
     namespace: default
+
 ---
 # Source: kubeshark/templates/05-hub-service.yaml
 apiVersion: v1
@@ -486,6 +485,7 @@ spec:
   selector:
     app.kubeshark.com/app: hub
   type: ClusterIP
+
 ---
 # Source: kubeshark/templates/07-front-service.yaml
 apiVersion: v1
@@ -507,6 +507,7 @@ spec:
   selector:
     app.kubeshark.com/app: front
   type: ClusterIP
+
 ---
 # Source: kubeshark/templates/15-worker-service-metrics.yaml
 kind: Service
@@ -536,6 +537,7 @@ spec:
     protocol: TCP
     port: 49100
     targetPort: 49100
+
 ---
 # Source: kubeshark/templates/16-hub-service-metrics.yaml
 kind: Service
@@ -565,6 +567,7 @@ spec:
     protocol: TCP
     port: 9100
     targetPort: 9100
+
 ---
 # Source: kubeshark/templates/09-worker-daemon-set.yaml
 apiVersion: apps/v1
@@ -825,6 +828,7 @@ spec:
                   path: token
                   audience: kubeshark-hub
                   expirationSeconds: 3600
+
 ---
 # Source: kubeshark/templates/04-hub-deployment.yaml
 apiVersion: apps/v1
@@ -956,6 +960,7 @@ spec:
       - name: snapshots-volume
         emptyDir:
           sizeLimit: 20Gi
+
 ---
 # Source: kubeshark/templates/06-front-deployment.yaml
 apiVersion: apps/v1
@@ -990,9 +995,9 @@ spec:
       containers:
         - env:
             - name: REACT_APP_AUTH_ENABLED
-              value: 'true'
+              value: 'false'
             - name: REACT_APP_AUTH_TYPE
-              value: 'default'
+              value: 'saml'
             - name: REACT_APP_COMPLETE_STREAMING_ENABLED
               value: 'true'
             - name: REACT_APP_STREAMING_TYPE
@@ -1004,30 +1009,16 @@ spec:
             - name: REACT_APP_SCRIPTING_HIDDEN
               value: 'true'
             - name: REACT_APP_SCRIPTING_DISABLED
-              value: 'false'
-            - name: REACT_APP_TARGETED_PODS_UPDATE_DISABLED
-              value: 'false'
-            - name: REACT_APP_PRESET_FILTERS_CHANGING_ENABLED
               value: 'true'
             - name: REACT_APP_BPF_OVERRIDE_DISABLED
               value: 'true'
-            - name: REACT_APP_RECORDING_DISABLED
-              value: 'false'
             - name: REACT_APP_DISSECTION_ENABLED
-              value: 'true'
-            - name: REACT_APP_DISSECTION_CONTROL_ENABLED
               value: 'true'
             - name: 'REACT_APP_CLOUD_LICENSE_ENABLED'
               value: 'true'
             - name: REACT_APP_SUPPORT_CHAT_ENABLED
               value: 'false'
             - name: REACT_APP_BETA_ENABLED
-              value: 'false'
-            - name: REACT_APP_DISSECTORS_UPDATING_ENABLED
-              value: 'true'
-            - name: REACT_APP_SNAPSHOTS_UPDATING_ENABLED
-              value: 'true'
-            - name: REACT_APP_DEMO_MODE_ENABLED
               value: 'false'
             - name: REACT_APP_CLUSTER_WIDE_MAP_ENABLED
               value: 'false'

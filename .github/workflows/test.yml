@@ -56,6 +56,9 @@ jobs:
       - name: Helm lint (cloud refs values)
         run: helm lint ./helm-chart -f ./helm-chart/tests/fixtures/values-cloud-refs.yaml
 
+      - name: Helm lint (extra objects values)
+        run: helm lint ./helm-chart -f ./helm-chart/tests/fixtures/values-extra-objects.yaml
+
       - name: Install helm-unittest plugin
         run: helm plugin install https://github.com/helm-unittest/helm-unittest --verify=false
 
@@ -78,3 +81,6 @@ jobs:
 
       - name: Validate GCS template
         run: helm template kubeshark ./helm-chart -f ./helm-chart/tests/fixtures/values-gcs.yaml | kubeconform -strict -kubernetes-version 1.35.0 -summary
+
+      - name: Validate extra objects template
+        run: helm template kubeshark ./helm-chart -f ./helm-chart/tests/fixtures/values-extra-objects.yaml | kubeconform -strict -kubernetes-version 1.35.0 -summary

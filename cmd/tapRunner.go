@@ -471,17 +471,18 @@ func updateConfig(kubernetesProvider *kubernetes.Provider) {
 		ingressEnabled = "true"
 	}
 
-	authEnabled := ""
-	if config.Config.Tap.Auth.Enabled {
-		authEnabled = "true"
-	}
-
 	_, _ = kubernetes.SetConfig(kubernetesProvider, kubernetes.CONFIG_INGRESS_ENABLED, ingressEnabled)
 	_, _ = kubernetes.SetConfig(kubernetesProvider, kubernetes.CONFIG_INGRESS_HOST, config.Config.Tap.Ingress.Host)
 
 	_, _ = kubernetes.SetConfig(kubernetesProvider, kubernetes.CONFIG_PROXY_FRONT_PORT, fmt.Sprint(config.Config.Tap.Proxy.Front.Port))
 
-	_, _ = kubernetes.SetConfig(kubernetesProvider, kubernetes.CONFIG_AUTH_ENABLED, authEnabled)
-	_, _ = kubernetes.SetConfig(kubernetesProvider, kubernetes.CONFIG_AUTH_TYPE, config.Config.Tap.Auth.Type)
-	_, _ = kubernetes.SetConfig(kubernetesProvider, kubernetes.CONFIG_AUTH_SAML_IDP_METADATA_URL, config.Config.Tap.Auth.Saml.IdpMetadataUrl)
+	// AUTH_ENABLED / AUTH_TYPE / AUTH_SAML_IDP_METADATA_URL are deliberately
+	// not written here. They are rendered by the Helm chart from the values
+	// the release was installed with, and this function runs on the
+	// "existing installation" path, where the CLI's own config is a separate
+	// source that may never have carried auth settings at all. Writing them
+	// meant a plain `kubeshark tap` against a release installed with SSO
+	// silently reconfigured, or disabled, its authentication.
+	//
+	// Change auth with `helm upgrade`, or `kubeshark tap` a fresh release.
 }

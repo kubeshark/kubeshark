@@ -1,0 +1,142 @@
+suite: extra objects template
+templates:
+  - templates/23-extra-objects.yaml
+tests:
+  - it: should render nothing with default values
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should render a mapping entry as-is
+    set:
+      tap.extraObjects:
+        - apiVersion: route.openshift.io/v1
+          kind: Route
+          metadata:
+            name: kubeshark-front
+          spec:
+            to:
+              kind: Service
+              name: kubeshark-front
+            port:
+              targetPort: 80
+            tls:
+              termination: edge
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: Route
+      - equal:
+          path: apiVersion
+          value: route.openshift.io/v1
+      - equal:
+          path: metadata.name
+          value: kubeshark-front
+      - equal:
+          path: spec.to.name
+          value: kubeshark-front
+      - equal:
+          path: spec.tls.termination
+          value: edge
+
+  - it: should render a raw YAML string entry
+    set:
+      tap.extraObjects:
+        - |
+          apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: extra-config
+          data:
+            foo: bar
+    asserts:
+      - hasDocuments:
+          count: 1
+      - isKind:
+          of: ConfigMap
+      - equal:
+          path: metadata.name
+          value: extra-config
+      - equal:
+          path: data.foo
+          value: bar
+
+  - it: should render multiple entries as separate documents
+    set:
+      tap.extraObjects:
+        - apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: first
+        - |
+          apiVersion: v1
+          kind: Secret
+          metadata:
+            name: second
+    asserts:
+      - hasDocuments:
+          count: 2
+      - isKind:
+          of: ConfigMap
+        documentIndex: 0
+      - equal:
+          path: metadata.name
+          value: first
+        documentIndex: 0
+      - isKind:
+          of: Secret
+        documentIndex: 1
+      - equal:
+          path: metadata.name
+          value: second
+        documentIndex: 1
+
+  - it: should evaluate templates inside a mapping entry
+    release:
+      name: my-release
+      namespace: my-namespace
+    set:
+      tap.extraObjects:
+        - apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: '{{ .Release.Name }}-extra'
+            namespace: '{{ .Release.Namespace }}'
+          data:
+            host: '{{ .Values.tap.ingress.host }}'
+    asserts:
+      - equal:
+          path: metadata.name
+          value: my-release-extra
+      - equal:
+          path: metadata.namespace
+          value: my-namespace
+      - equal:
+          path: data.host
+          value: ks.svc.cluster.local
+
+  - it: should evaluate templates inside a raw YAML string entry
+    release:
+      name: my-release
+    set:
+      tap.extraObjects:
+        - |
+          apiVersion: v1
+          kind: ConfigMap
+          metadata:
+            name: {{ .Release.Name }}-from-string
+            labels:
+              {{- include "kubeshark.labels" . | nindent 4 }}
+          data:
+            chart: {{ .Chart.Name }}
+    asserts:
+      - equal:
+          path: metadata.name
+          value: my-release-from-string
+      - equal:
+          path: metadata.labels["app.kubernetes.io/managed-by"]
+          value: Helm
+      - equal:
+          path: data.chart
+          value: kubeshark

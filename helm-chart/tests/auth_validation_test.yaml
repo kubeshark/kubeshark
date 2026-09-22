@@ -1,0 +1,105 @@
+## An auth type that cannot work should stop the install, not render a Hub
+## that authenticates nobody. The chart previously rewrote such settings into
+## a different auth type instead, which is how an operator could ask for SAML
+## and get something else without being told.
+suite: auth validation
+templates:
+  - templates/12-config-map.yaml
+tests:
+  - it: rejects SAML without an IdP metadata URL
+    set:
+      tap.auth.enabled: true
+      tap.auth.type: saml
+    asserts:
+      - failedTemplate:
+          errorPattern: tap.auth.saml.idpMetadataUrl is empty
+
+  - it: accepts SAML with an IdP metadata URL
+    set:
+      tap.auth.enabled: true
+      tap.auth.type: saml
+      tap.auth.saml.idpMetadataUrl: https://idp.example.com/metadata
+    asserts:
+      - equal:
+          path: data.AUTH_TYPE
+          value: saml
+
+  - it: rejects OIDC without an issuer
+    set:
+      tap.auth.enabled: true
+      tap.auth.type: oidc
+    asserts:
+      - failedTemplate:
+          errorPattern: tap.auth.oidc.issuer is empty
+
+  - it: accepts OIDC with an issuer
+    set:
+      tap.auth.enabled: true
+      tap.auth.type: oidc
+      tap.auth.oidc.issuer: https://issuer.example.com
+    asserts:
+      - equal:
+          path: data.AUTH_TYPE
+          value: oidc
+
+  # Descope carries its own configuration, so there is nothing to require.
+  - it: accepts descope without extra settings
+    set:
+      tap.auth.enabled: true
+      tap.auth.type: descope
+    asserts:
+      - equal:
+          path: data.AUTH_TYPE
+          value: descope
+
+  - it: accepts dex with an issuer
+    set:
+      tap.auth.enabled: true
+      tap.auth.type: dex
+      tap.auth.oidc.issuer: https://dex.example.com
+    asserts:
+      - equal:
+          path: data.AUTH_TYPE
+          value: dex
+
+  - it: rejects dex without an issuer
+    set:
+      tap.auth.enabled: true
+      tap.auth.type: dex
+    asserts:
+      - failedTemplate:
+          errorPattern: tap.auth.oidc.issuer is empty
+
+  # Incomplete auth settings are only a problem when auth is on. The default
+  # install ships tap.auth.type=saml with no IdP and must still render.
+  - it: ignores incomplete auth settings while auth is off
+    asserts:
+      - equal:
+          path: data.AUTH_ENABLED
+          value: "false"
+      - equal:
+          path: data.AUTH_TYPE
+          value: saml
+
+  - it: ignores incomplete oidc settings while auth is off
+    set:
+      tap.auth.type: oidc
+    asserts:
+      - equal:
+          path: data.AUTH_ENABLED
+          value: "false"
+      - equal:
+          path: data.AUTH_TYPE
+          value: oidc
+
+  ## The message names the type the operator actually set. Both oidc and dex
+  ## take the same issuer, so a hard-coded "oidc" sends a dex operator looking
+  ## for a setting they did not configure.
+  - it: names dex in the failure when dex is the configured type
+    set:
+      tap.auth.enabled: true
+      tap.auth.type: dex
+      tap.auth.oidc.issuer: ""
+    asserts:
+      - failedTemplate:
+          errorMessage: "tap.auth.enabled is true with tap.auth.type=dex but tap.auth.oidc.issuer is empty. Set the OIDC issuer, or pick another tap.auth.type."
