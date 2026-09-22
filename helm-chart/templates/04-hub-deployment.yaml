@@ -13,6 +13,10 @@ metadata:
   namespace: {{ .Release.Namespace }}
 spec:
   replicas: 1  # Set the desired number of replicas
+  {{- if .Values.tap.snapshots.local.storageClass }}
+  strategy:
+    type: Recreate  # avoid RWO snapshots PVC attach deadlock on upgrade (#1953)
+  {{- end }}
   selector:
     matchLabels:
       app.kubeshark.com/app: hub
