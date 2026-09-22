@@ -302,8 +302,22 @@ type CapabilitiesConfig struct {
 	EBPFCapture        []string `yaml:"ebpfCapture" json:"ebpfCapture"  default:"[]"`
 }
 
+type ServiceMonitorConfig struct {
+	Enabled           bool              `yaml:"enabled" json:"enabled" default:"false"`
+	Labels            map[string]string `yaml:"labels" json:"labels" default:"{}"`
+	Annotations       map[string]string `yaml:"annotations" json:"annotations" default:"{}"`
+	Interval          string            `yaml:"interval" json:"interval" default:""`
+	ScrapeTimeout     string            `yaml:"scrapeTimeout" json:"scrapeTimeout" default:""`
+	Path              string            `yaml:"path" json:"path" default:""`
+	Scheme            string            `yaml:"scheme" json:"scheme" default:""`
+	HonorLabels       bool              `yaml:"honorLabels" json:"honorLabels" default:"false"`
+	Relabelings       []interface{}     `yaml:"relabelings" json:"relabelings" default:"[]"`
+	MetricRelabelings []interface{}     `yaml:"metricRelabelings" json:"metricRelabelings" default:"[]"`
+}
+
 type MetricsConfig struct {
-	Port uint16 `yaml:"port" json:"port" default:"49100"`
+	Port           uint16               `yaml:"port" json:"port" default:"49100"`
+	ServiceMonitor ServiceMonitorConfig `yaml:"serviceMonitor" json:"serviceMonitor"`
 }
 
 type PprofConfig struct {
