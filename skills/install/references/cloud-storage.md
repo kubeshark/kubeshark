@@ -33,6 +33,8 @@ tap:
         secretKey: ""
         roleArn: ""
         externalId: ""
+        endpoint: ""
+        forcePathStyle: false
       azblob:
         storageAccount: ""
         container: ""
