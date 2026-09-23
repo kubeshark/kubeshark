@@ -281,7 +281,7 @@ Any object store that speaks the S3 API works with the `s3` provider. Two extra 
 
 `region` is used only for request signing. When `endpoint` is set and `region` is empty, the hub uses `us-east-1`, which is the default region on StorageGRID, ECS and MinIO. Set it explicitly if the store is configured with a different region name.
 
-Credentials are the store's own S3 access key pair. IAM roles and STS AssumeRole do not apply.
+Credentials are the store's own S3 access key pair. `roleArn` and `externalId` do not apply: STS AssumeRole always targets AWS, so leave them empty when `endpoint` is set.
 
 ```yaml
 tap:
