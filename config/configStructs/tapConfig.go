@@ -379,12 +379,14 @@ type SnapshotsLocalConfig struct {
 }
 
 type SnapshotsCloudS3Config struct {
-	Bucket     string `yaml:"bucket" json:"bucket" default:""`
-	Region     string `yaml:"region" json:"region" default:""`
-	AccessKey  string `yaml:"accessKey" json:"accessKey" default:""`
-	SecretKey  string `yaml:"secretKey" json:"secretKey" default:""`
-	RoleArn    string `yaml:"roleArn" json:"roleArn" default:""`
-	ExternalId string `yaml:"externalId" json:"externalId" default:""`
+	Bucket         string `yaml:"bucket" json:"bucket" default:""`
+	Region         string `yaml:"region" json:"region" default:""`
+	AccessKey      string `yaml:"accessKey" json:"accessKey" default:""`
+	SecretKey      string `yaml:"secretKey" json:"secretKey" default:""`
+	RoleArn        string `yaml:"roleArn" json:"roleArn" default:""`
+	ExternalId     string `yaml:"externalId" json:"externalId" default:""`
+	Endpoint       string `yaml:"endpoint" json:"endpoint" default:""`
+	ForcePathStyle bool   `yaml:"forcePathStyle" json:"forcePathStyle" default:"false"`
 }
 
 type SnapshotsCloudAzblobConfig struct {

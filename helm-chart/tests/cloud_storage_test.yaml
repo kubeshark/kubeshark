@@ -236,6 +236,33 @@ tests:
           value: "ext-12345"
         documentIndex: 0
 
+  - it: should render ConfigMap with S3-compatible endpoint and path-style addressing
+    set:
+      tap.snapshots.cloud.s3.bucket: my-bucket
+      tap.snapshots.cloud.s3.endpoint: https://s3.storagegrid.example.com:10443
+      tap.snapshots.cloud.s3.forcePathStyle: true
+    asserts:
+      - hasDocuments:
+          count: 1
+      - equal:
+          path: data.SNAPSHOT_AWS_ENDPOINT
+          value: "https://s3.storagegrid.example.com:10443"
+        documentIndex: 0
+      - equal:
+          path: data.SNAPSHOT_AWS_FORCE_PATH_STYLE
+          value: "true"
+        documentIndex: 0
+
+  - it: should omit path-style flag when disabled
+    set:
+      tap.snapshots.cloud.s3.bucket: my-bucket
+      tap.snapshots.cloud.s3.endpoint: https://s3.storagegrid.example.com:10443
+      tap.snapshots.cloud.s3.forcePathStyle: false
+    asserts:
+      - notExists:
+          path: data.SNAPSHOT_AWS_FORCE_PATH_STYLE
+        documentIndex: 0
+
   - it: should set correct namespace
     release:
       namespace: kubeshark-ns
