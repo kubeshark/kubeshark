@@ -4,6 +4,11 @@ import (
 	"fmt"
 	"reflect"
 	"testing"
+
+	"github.com/creasty/defaults"
+	"github.com/goccy/go-yaml"
+
+	"github.com/kubeshark/kubeshark/utils"
 )
 
 type ConfigMock struct {
@@ -411,5 +416,36 @@ func TestCreateDefaultConfig_AuthDefaultsMatchStructTags(t *testing.T) {
 		t.Errorf("CreateDefaultConfig sets DefaultRole=%q, struct tag says %q; "+
 			"generate-helm-values would write the former into values.yaml",
 			cfg.Tap.Auth.DefaultRole, want)
+	}
+}
+
+func TestDefaultConfig_KeepsServiceMonitorBlock(t *testing.T) {
+	cfg := CreateDefaultConfig()
+	if err := defaults.Set(&cfg); err != nil {
+		t.Fatal(err)
+	}
+
+	out, err := utils.PrettyYaml(cfg)
+	if err != nil {
+		t.Fatal(err)
+	}
+
+	var parsed struct {
+		Tap struct {
+			Metrics struct {
+				ServiceMonitor map[string]interface{} `yaml:"serviceMonitor"`
+			} `yaml:"metrics"`
+		} `yaml:"tap"`
+	}
+	if err := yaml.Unmarshal([]byte(out), &parsed); err != nil {
+		t.Fatal(err)
+	}
+
+	sm := parsed.Tap.Metrics.ServiceMonitor
+	if sm == nil {
+		t.Fatal("tap.metrics.serviceMonitor missing from the generated config; make generate-helm-values would drop it from values.yaml")
+	}
+	if enabled, ok := sm["enabled"].(bool); !ok || enabled {
+		t.Errorf("tap.metrics.serviceMonitor.enabled = %v, want false", sm["enabled"])
 	}
 }

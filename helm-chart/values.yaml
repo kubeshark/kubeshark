@@ -240,6 +240,17 @@ tap:
     https: tls and (http or http2)
   metrics:
     port: 49100
+    serviceMonitor:
+      enabled: false
+      labels: {}
+      annotations: {}
+      interval: ""
+      scrapeTimeout: ""
+      path: ""
+      scheme: ""
+      honorLabels: false
+      relabelings: []
+      metricRelabelings: []
   pprof:
     enabled: false
     port: 8000
