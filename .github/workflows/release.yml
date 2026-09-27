@@ -75,3 +75,47 @@ jobs:
     uses: ./.github/workflows/mcp-publish.yml
     with:
       release_tag: ${{ needs.release.outputs.version }}
+
+  # A packslip is the release's signed inventory: each binary's digest and
+  # platform, signed with this workflow's identity, plus where to get shell
+  # completions and the AI skills for the same version. Installers such as
+  # mise check downloads against it. See https://packslip.dev.
+  packslip:
+    name: Publish a signed packslip
+    needs: [release]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write      # Upload the bundle to the release.
+      id-token: write      # Sign with this workflow's identity.
+      attestations: write  # Publish build provenance for the binaries.
+    steps:
+      # kubeshark.exe's name says neither its platform nor that it is the
+      # program itself rather than an installer, so a manifest states both.
+      - name: Download the release binaries
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ needs.release.outputs.version }}
+        run: |
+          gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --dir bin \
+            -p kubeshark_linux_amd64 -p kubeshark_linux_arm64 \
+            -p kubeshark_darwin_amd64 -p kubeshark_darwin_arm64 -p kubeshark.exe
+          cat > "$RUNNER_TEMP/packslip.toml" <<'TOML'
+          [[artifact]]
+          path = "bin/kubeshark.exe"
+          os = "windows"
+          arch = "x86_64"
+          format = "raw"
+          TOML
+
+      - uses: jdx/packslip@v1
+        with:
+          artifacts: bin/kubeshark_linux_amd64 bin/kubeshark_linux_arm64 bin/kubeshark_darwin_amd64 bin/kubeshark_darwin_arm64 bin/kubeshark.exe
+          manifest: ${{ runner.temp }}/packslip.toml
+          bin: kubeshark
+          resources: |
+            completion/bash,zsh,fish,powershell=exec:kubeshark completion {shell}
+            skill/install=repo:skills/install
+            skill/kfl=repo:skills/kfl
+            skill/network-rca=repo:skills/network-rca
+            skill/security-audit=repo:skills/security-audit
