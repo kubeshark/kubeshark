@@ -14,6 +14,11 @@ jobs:
   release:
     name: Build and publish a new release
     runs-on: ubuntu-latest
+    permissions:
+      contents: write          # Create the release and upload its assets.
+      id-token: write          # Sign the build provenance below.
+      attestations: write      # Store that provenance.
+      artifact-metadata: write # Record the attested binaries.
     outputs:
       version: ${{ steps.version.outputs.tag }}
     steps:
@@ -37,6 +42,19 @@ jobs:
 
       - name: Build
         run: make build-all VER='${{ steps.version.outputs.tag }}' BUILD_TIMESTAMP='${{ steps.version.outputs.build_timestamp }}'
+
+      # Attest the binaries from the bytes this job just built, so the
+      # packslip job below links this provenance instead of attesting copies
+      # it downloads back from the release.
+      - name: Attest the release binaries
+        uses: actions/attest@v4
+        with:
+          subject-path: |
+            bin/kubeshark_linux_amd64
+            bin/kubeshark_linux_arm64
+            bin/kubeshark_darwin_amd64
+            bin/kubeshark_darwin_arm64
+            bin/kubeshark.exe
 
       - name: Log the version into a .txt file
         shell: bash
@@ -87,7 +105,6 @@ jobs:
     permissions:
       contents: write      # Upload the bundle to the release.
       id-token: write      # Sign with this workflow's identity.
-      attestations: write  # Publish build provenance for the binaries.
     steps:
       # kubeshark.exe's name says neither its platform nor that it is the
       # program itself rather than an installer, so a manifest states both.
@@ -113,6 +130,7 @@ jobs:
           artifacts: bin/kubeshark_linux_amd64 bin/kubeshark_linux_arm64 bin/kubeshark_darwin_amd64 bin/kubeshark_darwin_arm64 bin/kubeshark.exe
           manifest: ${{ runner.temp }}/packslip.toml
           bin: kubeshark
+          attest: link
           resources: |
             completion/bash,zsh,fish,powershell=exec:kubeshark completion {shell}
             skill/install=repo:skills/install
