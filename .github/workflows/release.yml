@@ -14,6 +14,11 @@ jobs:
   release:
     name: Build and publish a new release
     runs-on: ubuntu-latest
+    permissions:
+      contents: write          # Create the release and upload its assets.
+      id-token: write          # Sign the build provenance below.
+      attestations: write      # Store that provenance.
+      artifact-metadata: write # Record the attested binaries.
     outputs:
       version: ${{ steps.version.outputs.tag }}
     steps:
@@ -37,6 +42,19 @@ jobs:
 
       - name: Build
         run: make build-all VER='${{ steps.version.outputs.tag }}' BUILD_TIMESTAMP='${{ steps.version.outputs.build_timestamp }}'
+
+      # Attest the binaries from the bytes this job just built, so the
+      # packslip job below links this provenance instead of attesting copies
+      # it downloads back from the release.
+      - name: Attest the release binaries
+        uses: actions/attest@v4
+        with:
+          subject-path: |
+            bin/kubeshark_linux_amd64
+            bin/kubeshark_linux_arm64
+            bin/kubeshark_darwin_amd64
+            bin/kubeshark_darwin_arm64
+            bin/kubeshark.exe
 
       - name: Log the version into a .txt file
         shell: bash
@@ -75,3 +93,47 @@ jobs:
     uses: ./.github/workflows/mcp-publish.yml
     with:
       release_tag: ${{ needs.release.outputs.version }}
+
+  # A packslip is the release's signed inventory: each binary's digest and
+  # platform, signed with this workflow's identity, plus where to get shell
+  # completions and the AI skills for the same version. Installers such as
+  # mise check downloads against it. See https://packslip.dev.
+  packslip:
+    name: Publish a signed packslip
+    needs: [release]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write      # Upload the bundle to the release.
+      id-token: write      # Sign with this workflow's identity.
+    steps:
+      # kubeshark.exe's name says neither its platform nor that it is the
+      # program itself rather than an installer, so a manifest states both.
+      - name: Download the release binaries
+        shell: bash
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TAG: ${{ needs.release.outputs.version }}
+        run: |
+          gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --dir bin \
+            -p kubeshark_linux_amd64 -p kubeshark_linux_arm64 \
+            -p kubeshark_darwin_amd64 -p kubeshark_darwin_arm64 -p kubeshark.exe
+          cat > "$RUNNER_TEMP/packslip.toml" <<'TOML'
+          [[artifact]]
+          path = "bin/kubeshark.exe"
+          os = "windows"
+          arch = "x86_64"
+          format = "raw"
+          TOML
+
+      - uses: jdx/packslip@v1
+        with:
+          artifacts: bin/kubeshark_linux_amd64 bin/kubeshark_linux_arm64 bin/kubeshark_darwin_amd64 bin/kubeshark_darwin_arm64 bin/kubeshark.exe
+          manifest: ${{ runner.temp }}/packslip.toml
+          bin: kubeshark
+          attest: link
+          resources: |
+            completion/bash,zsh,fish,powershell=exec:kubeshark completion {shell}
+            skill/install=repo:skills/install
+            skill/kfl=repo:skills/kfl
+            skill/network-rca=repo:skills/network-rca
+            skill/security-audit=repo:skills/security-audit
