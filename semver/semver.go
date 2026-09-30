@@ -2,6 +2,7 @@ package semver
 
 import (
 	"regexp"
+	"strconv"
 )
 
 type SemVersion string
@@ -36,21 +37,34 @@ func (v SemVersion) Patch() string {
 }
 
 func (v SemVersion) GreaterThan(v2 SemVersion) bool {
-	if v.Major() > v2.Major() {
+	vMajor, vMinor, vPatch := v.breakdownInt()
+	v2Major, v2Minor, v2Patch := v2.breakdownInt()
+
+	if vMajor > v2Major {
 		return true
-	} else if v.Major() < v2.Major() {
+	} else if vMajor < v2Major {
 		return false
 	}
 
-	if v.Minor() > v2.Minor() {
+	if vMinor > v2Minor {
 		return true
-	} else if v.Minor() < v2.Minor() {
+	} else if vMinor < v2Minor {
 		return false
 	}
 
-	if v.Patch() > v2.Patch() {
+	if vPatch > v2Patch {
 		return true
 	}
 
 	return false
+}
+
+func (v SemVersion) breakdownInt() (int, int, int) {
+	major, minor, patch := v.Breakdown()
+
+	majorInt, _ := strconv.Atoi(major)
+	minorInt, _ := strconv.Atoi(minor)
+	patchInt, _ := strconv.Atoi(patch)
+
+	return majorInt, minorInt, patchInt
 }
