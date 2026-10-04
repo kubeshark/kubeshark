@@ -18,7 +18,6 @@ jobs:
       contents: write          # Create the release and upload its assets.
       id-token: write          # Sign the build provenance below.
       attestations: write      # Store that provenance.
-      artifact-metadata: write # Record the attested binaries.
     outputs:
       version: ${{ steps.version.outputs.tag }}
     steps:
@@ -46,8 +45,10 @@ jobs:
       # Attest the binaries from the bytes this job just built, so the
       # packslip job below links this provenance instead of attesting copies
       # it downloads back from the release.
+      # A Sigstore outage must not stop the release, so this step may fail.
       - name: Attest the release binaries
-        uses: actions/attest@v4
+        continue-on-error: true
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
         with:
           subject-path: |
             bin/kubeshark_linux_amd64
@@ -98,20 +99,41 @@ jobs:
   # platform, signed with this workflow's identity, plus where to get shell
   # completions and the AI skills for the same version. Installers such as
   # mise check downloads against it. See https://packslip.dev.
+  #
+  # Signing runs in a job that can only read the release, and a second job
+  # uploads the one bundle file. Neither job can stop the release or the MCP
+  # Registry publish: a packslip failure just means this release has none.
   packslip:
-    name: Publish a signed packslip
+    name: Sign a packslip
     needs: [release]
     runs-on: ubuntu-latest
+    continue-on-error: true
+    timeout-minutes: 10
     permissions:
-      contents: write      # Upload the bundle to the release.
-      id-token: write      # Sign with this workflow's identity.
+      contents: read  # Download the release binaries.
+      id-token: write # Sign with this workflow's identity.
     steps:
+      # The action checks the packslip binary only against jdx/packslip as a
+      # whole, and release assets can be replaced, so pin the bytes here.
+      # Bump PACKSLIP_VERSION and PACKSLIP_SHA256 with the action pin.
+      - name: Install packslip
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PACKSLIP_VERSION: 1.5.1
+          PACKSLIP_SHA256: d401822be0f4c0494dde170657499fc197709b530e18b547906dafe05c155d45
+        run: |
+          dir="${RUNNER_TEMP}/packslip-pinned"
+          asset="packslip-v${PACKSLIP_VERSION}-linux-x64.tar.xz"
+          gh release download "v${PACKSLIP_VERSION}" --repo jdx/packslip \
+            --pattern "$asset" --dir "$dir"
+          echo "${PACKSLIP_SHA256}  ${dir}/${asset}" | sha256sum --check -
+          tar -xJf "${dir}/${asset}" -C "$dir" --strip-components=1
+
       # kubeshark.exe's name says neither its platform nor that it is the
       # program itself rather than an installer, so a manifest states both.
       - name: Download the release binaries
-        shell: bash
         env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_TOKEN: ${{ github.token }}
           TAG: ${{ needs.release.outputs.version }}
         run: |
           gh release download "$TAG" --repo "$GITHUB_REPOSITORY" --dir bin \
@@ -125,15 +147,43 @@ jobs:
           format = "raw"
           TOML
 
-      - uses: jdx/packslip@v1
+      - uses: jdx/packslip@22be7aeb840156291e1ae795ca37b36a2dc1969c # v1.5.1
+        id: packslip
         with:
+          packslip-path: ${{ runner.temp }}/packslip-pinned/packslip
           artifacts: bin/kubeshark_linux_amd64 bin/kubeshark_linux_arm64 bin/kubeshark_darwin_amd64 bin/kubeshark_darwin_arm64 bin/kubeshark.exe
           manifest: ${{ runner.temp }}/packslip.toml
           bin: kubeshark
           attest: link
+          upload: false
           resources: |
             completion/bash,zsh,fish,powershell=exec:kubeshark completion {shell}
             skill/install=repo:skills/install
             skill/kfl=repo:skills/kfl
             skill/network-rca=repo:skills/network-rca
             skill/security-audit=repo:skills/security-audit
+
+      - uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: packslip-bundle
+          path: ${{ steps.packslip.outputs.bundle }}
+          if-no-files-found: error
+
+  publish-packslip:
+    name: Upload the packslip
+    needs: [release, packslip]
+    if: needs.packslip.result == 'success'
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    timeout-minutes: 5
+    permissions:
+      contents: write # Upload the bundle to the release.
+    steps:
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: packslip-bundle
+      - name: Upload the bundle
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ needs.release.outputs.version }}
+        run: gh release upload "$TAG" packslip.sigstore.json --repo "$GITHUB_REPOSITORY"
