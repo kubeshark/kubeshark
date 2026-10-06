@@ -16,7 +16,6 @@ import (
 	"helm.sh/helm/v3/pkg/cli"
 	"helm.sh/helm/v3/pkg/downloader"
 	"helm.sh/helm/v3/pkg/getter"
-	"helm.sh/helm/v3/pkg/kube"
 	"helm.sh/helm/v3/pkg/registry"
 	"helm.sh/helm/v3/pkg/release"
 	"helm.sh/helm/v3/pkg/repo"
@@ -58,7 +57,7 @@ func parseOCIRef(chartRef string) (string, string, error) {
 func (h *Helm) Install() (rel *release.Release, err error) {
 	kubeConfigPath := config.Config.KubeConfigPath()
 	actionConfig := new(action.Configuration)
-	if err = actionConfig.Init(kube.GetConfig(kubeConfigPath, "", h.releaseNamespace), h.releaseNamespace, os.Getenv(ENV_HELM_DRIVER), func(format string, v ...interface{}) {
+	if err = actionConfig.Init(newRESTClientGetter(kubeConfigPath, h.releaseNamespace), h.releaseNamespace, os.Getenv(ENV_HELM_DRIVER), func(format string, v ...interface{}) {
 		log.Info().Msgf(format, v...)
 	}); err != nil {
 		return
@@ -173,7 +172,7 @@ func (h *Helm) Install() (rel *release.Release, err error) {
 func (h *Helm) Uninstall() (resp *release.UninstallReleaseResponse, err error) {
 	kubeConfigPath := config.Config.KubeConfigPath()
 	actionConfig := new(action.Configuration)
-	if err = actionConfig.Init(kube.GetConfig(kubeConfigPath, "", h.releaseNamespace), h.releaseNamespace, os.Getenv(ENV_HELM_DRIVER), func(format string, v ...interface{}) {
+	if err = actionConfig.Init(newRESTClientGetter(kubeConfigPath, h.releaseNamespace), h.releaseNamespace, os.Getenv(ENV_HELM_DRIVER), func(format string, v ...interface{}) {
 		log.Info().Msgf(format, v...)
 	}); err != nil {
 		return
