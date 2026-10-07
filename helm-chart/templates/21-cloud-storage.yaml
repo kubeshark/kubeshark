@@ -1,4 +1,4 @@
-{{- $hasConfigValues := or .Values.tap.snapshots.cloud.prefix .Values.tap.snapshots.cloud.s3.bucket .Values.tap.snapshots.cloud.s3.region .Values.tap.snapshots.cloud.s3.roleArn .Values.tap.snapshots.cloud.s3.externalId .Values.tap.snapshots.cloud.azblob.storageAccount .Values.tap.snapshots.cloud.azblob.container .Values.tap.snapshots.cloud.gcs.bucket .Values.tap.snapshots.cloud.gcs.project -}}
+{{- $hasConfigValues := or .Values.tap.snapshots.cloud.prefix .Values.tap.snapshots.cloud.s3.bucket .Values.tap.snapshots.cloud.s3.region .Values.tap.snapshots.cloud.s3.roleArn .Values.tap.snapshots.cloud.s3.externalId .Values.tap.snapshots.cloud.s3.endpoint .Values.tap.snapshots.cloud.s3.forcePathStyle .Values.tap.snapshots.cloud.azblob.storageAccount .Values.tap.snapshots.cloud.azblob.container .Values.tap.snapshots.cloud.gcs.bucket .Values.tap.snapshots.cloud.gcs.project -}}
 {{- $hasSecretValues := or .Values.tap.snapshots.cloud.s3.accessKey .Values.tap.snapshots.cloud.s3.secretKey .Values.tap.snapshots.cloud.azblob.storageKey .Values.tap.snapshots.cloud.gcs.credentialsJson -}}
 {{- if $hasConfigValues }}
 ---
@@ -24,6 +24,12 @@ data:
   {{- end }}
   {{- if .Values.tap.snapshots.cloud.s3.externalId }}
   SNAPSHOT_AWS_EXTERNAL_ID: {{ .Values.tap.snapshots.cloud.s3.externalId | quote }}
+  {{- end }}
+  {{- if .Values.tap.snapshots.cloud.s3.endpoint }}
+  SNAPSHOT_AWS_ENDPOINT: {{ .Values.tap.snapshots.cloud.s3.endpoint | quote }}
+  {{- end }}
+  {{- if .Values.tap.snapshots.cloud.s3.forcePathStyle }}
+  SNAPSHOT_AWS_FORCE_PATH_STYLE: "true"
   {{- end }}
   {{- if .Values.tap.snapshots.cloud.azblob.storageAccount }}
   SNAPSHOT_AZBLOB_STORAGE_ACCOUNT: {{ .Values.tap.snapshots.cloud.azblob.storageAccount | quote }}
