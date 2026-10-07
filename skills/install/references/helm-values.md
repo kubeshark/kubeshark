@@ -87,6 +87,8 @@ tap:
         secretKey: ""
         roleArn: ""                  # IAM role ARN (IRSA)
         externalId: ""               # STS external ID
+        endpoint: ""                 # Custom endpoint for S3-compatible storage
+        forcePathStyle: false        # Path-style addressing for S3-compatible storage
       azblob:
         storageAccount: ""
         container: ""

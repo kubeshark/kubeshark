@@ -21,6 +21,8 @@ tap:
         secretKey: ""
         roleArn: ""
         externalId: ""
+        endpoint: ""
+        forcePathStyle: false
       azblob:
         storageAccount: ""
         container: ""
@@ -54,6 +56,8 @@ Both approaches can be used together — inline values are additive to external 
 | `SNAPSHOT_AWS_SECRET_KEY` | No | Static secret access key |
 | `SNAPSHOT_AWS_ROLE_ARN` | No | IAM role ARN to assume via STS (for cross-account access) |
 | `SNAPSHOT_AWS_EXTERNAL_ID` | No | External ID for the STS AssumeRole call |
+| `SNAPSHOT_AWS_ENDPOINT` | No | Custom endpoint URL for S3-compatible storage (empty = Amazon S3) |
+| `SNAPSHOT_AWS_FORCE_PATH_STYLE` | No | `true` to address buckets as `endpoint/bucket/key` instead of `bucket.endpoint/key` |
 | `SNAPSHOT_CLOUD_PREFIX` | No | Key prefix in the bucket (e.g. `snapshots/`) |
 
 ### Authentication Methods
@@ -267,6 +271,44 @@ data:
 ```
 
 The hub will first authenticate using its own credentials (IRSA, static, or default chain), then assume the specified role to access the bucket.
+
+### Example: S3-Compatible Storage (NetApp StorageGRID, Dell ECS, MinIO)
+
+Any object store that speaks the S3 API works with the `s3` provider. Two extra settings are needed:
+
+- `endpoint` points the hub at the store's S3 gateway instead of Amazon S3.
+- `forcePathStyle` addresses buckets as `https://endpoint/bucket/key`. Most on-prem stores need this unless wildcard DNS is configured for `bucket.endpoint`.
+
+`region` is used only for request signing. When `endpoint` is set and `region` is empty, the hub uses `us-east-1`, which is the default region on StorageGRID, ECS and MinIO. Set it explicitly if the store is configured with a different region name.
+
+Credentials are the store's own S3 access key pair. `roleArn` and `externalId` do not apply: STS AssumeRole always targets AWS, so leave them empty when `endpoint` is set.
+
+```yaml
+tap:
+  snapshots:
+    cloud:
+      provider: "s3"
+      s3:
+        bucket: kubeshark-snapshots
+        endpoint: https://s3.storagegrid.example.com:10443
+        forcePathStyle: true
+        accessKey: "<access key from the storage admin>"
+        secretKey: "<secret key from the storage admin>"
+```
+
+Or via `--set`:
+
+```bash
+helm install kubeshark kubeshark/kubeshark \
+  --set tap.snapshots.cloud.provider=s3 \
+  --set tap.snapshots.cloud.s3.bucket=kubeshark-snapshots \
+  --set tap.snapshots.cloud.s3.endpoint=https://s3.storagegrid.example.com:10443 \
+  --set tap.snapshots.cloud.s3.forcePathStyle=true \
+  --set tap.snapshots.cloud.s3.accessKey=... \
+  --set tap.snapshots.cloud.s3.secretKey=...
+```
+
+The store's TLS certificate must be trusted by the hub. If the gateway uses a private CA, the CA bundle has to be made available to the hub container; a self-signed certificate on the gateway will fail the startup `HeadBucket` check.
 
 ---
 
