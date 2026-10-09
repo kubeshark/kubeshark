@@ -1,0 +1,35 @@
+suite: sensitive-data redaction install notes
+templates:
+  - templates/NOTES.txt
+tests:
+  - it: says nothing about redaction when it is off
+    asserts:
+      - notMatchRegex:
+          path: raw
+          pattern: redaction
+
+  - it: warns that packet data stays unredacted while raw capture is on
+    set:
+      tap.redaction.snapshot.enabled: true
+    asserts:
+      - matchRegex:
+          path: raw
+          pattern: "Sensitive-data redaction is enabled \\(real-time: false, snapshot: true\\)"
+      - matchRegex:
+          path: raw
+          pattern: Flow pcaps are not redacted
+      - matchRegex:
+          path: raw
+          pattern: raw and TLS-decrypted pcap files, their downloads and snapshot bundles are not redacted
+
+  - it: drops the raw capture warning when raw capture is off
+    set:
+      tap.redaction.realtime.enabled: true
+      tap.capture.raw.enabled: false
+    asserts:
+      - matchRegex:
+          path: raw
+          pattern: Flow pcaps are not redacted
+      - notMatchRegex:
+          path: raw
+          pattern: Raw capture is enabled
