@@ -1,0 +1,51 @@
+suite: sensitive-data redaction switches
+templates:
+  - templates/09-worker-daemon-set.yaml
+  - templates/04-hub-deployment.yaml
+tests:
+  - it: renders no redaction flags by default
+    asserts:
+      - notContains:
+          path: spec.template.spec.containers[0].command
+          content: -enable-redaction
+        template: templates/09-worker-daemon-set.yaml
+      - notContains:
+          path: spec.template.spec.containers[0].command
+          content: -dissector-redaction
+        template: templates/04-hub-deployment.yaml
+
+  - it: passes real-time redaction and the scan budget to the worker only
+    set:
+      tap.redaction.realtime.enabled: true
+      tap.redaction.maxScanSize: 512Ki
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].command
+          content: -enable-redaction
+        template: templates/09-worker-daemon-set.yaml
+      - contains:
+          path: spec.template.spec.containers[0].command
+          content: 512Ki
+        template: templates/09-worker-daemon-set.yaml
+      - notContains:
+          path: spec.template.spec.containers[0].command
+          content: -dissector-redaction
+        template: templates/04-hub-deployment.yaml
+
+  - it: passes snapshot redaction and the scan budget to the hub only
+    set:
+      tap.redaction.snapshot.enabled: true
+      tap.redaction.maxScanSize: 4Mi
+    asserts:
+      - contains:
+          path: spec.template.spec.containers[0].command
+          content: -dissector-redaction
+        template: templates/04-hub-deployment.yaml
+      - contains:
+          path: spec.template.spec.containers[0].command
+          content: 4Mi
+        template: templates/04-hub-deployment.yaml
+      - notContains:
+          path: spec.template.spec.containers[0].command
+          content: -enable-redaction
+        template: templates/09-worker-daemon-set.yaml

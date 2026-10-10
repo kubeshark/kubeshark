@@ -430,6 +430,16 @@ type SnapshotsConfig struct {
 	Cloud SnapshotsCloudConfig `yaml:"cloud" json:"cloud"`
 }
 
+type RedactionSwitchConfig struct {
+	Enabled bool `yaml:"enabled" json:"enabled" default:"false"`
+}
+
+type RedactionConfig struct {
+	Realtime    RedactionSwitchConfig `yaml:"realtime" json:"realtime"`
+	Snapshot    RedactionSwitchConfig `yaml:"snapshot" json:"snapshot"`
+	MaxScanSize string                `yaml:"maxScanSize" json:"maxScanSize" default:"2Mi"`
+}
+
 type DelayedDissectionConfig struct {
 	CPU          string `yaml:"cpu" json:"cpu" default:"1"`
 	Memory       string `yaml:"memory" json:"memory" default:"4Gi"`
@@ -457,6 +467,7 @@ type TapConfig struct {
 	ExcludedNamespaces             []string                `yaml:"excludedNamespaces" json:"excludedNamespaces" default:"[]"`
 	BpfOverride                    string                  `yaml:"bpfOverride" json:"bpfOverride" default:""`
 	Capture                        CaptureConfig           `yaml:"capture" json:"capture"`
+	Redaction                      RedactionConfig         `yaml:"redaction" json:"redaction"`
 	DelayedDissection              DelayedDissectionConfig `yaml:"delayedDissection" json:"delayedDissection"`
 	Snapshots                      SnapshotsConfig         `yaml:"snapshots" json:"snapshots"`
 	Release                        ReleaseConfig           `yaml:"release" json:"release"`
