@@ -370,9 +370,22 @@ tap:
 headless: false                      # Suppress browser auto-open
 license: ""                          # Kubeshark Pro license key
 timezone: ""                         # Override timezone
-logLevel: warning                    # Log level: debug, info, warning, error
+logLevel: warning                    # Log level: trace, debug, info, warning, error
 
 kube:
   configPath: ""                     # Custom kubeconfig path
   context: ""                        # Kubernetes context name
 ```
+
+### Log levels
+
+`logLevel` applies to the Hub, the sniffer and the tracer, since the chart passes the same
+value to every container. Levels, least verbose first: `error`, `warning` (default), `info`,
+`debug`, `trace`.
+
+`trace` is for diagnosing a specific problem, not for running a deployment. It adds a
+per-request narrative of authentication and authorization, including the decoded OIDC
+`id_token` and `access_token` claim payloads, and the resolved role, capabilities and
+namespace scope for each request. Those claims carry identity data such as subject, email,
+name and group membership, so on a `trace` deployment that data reaches the container logs
+and anything collecting them. Turn it on to answer a question, then turn it back down.
