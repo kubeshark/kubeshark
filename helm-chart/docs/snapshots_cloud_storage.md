@@ -23,6 +23,7 @@ tap:
         externalId: ""
         endpoint: ""
         forcePathStyle: false
+        insecureSkipVerify: false
       azblob:
         storageAccount: ""
         container: ""
@@ -58,6 +59,7 @@ Both approaches can be used together — inline values are additive to external 
 | `SNAPSHOT_AWS_EXTERNAL_ID` | No | External ID for the STS AssumeRole call |
 | `SNAPSHOT_AWS_ENDPOINT` | No | Custom endpoint URL for S3-compatible storage (empty = Amazon S3) |
 | `SNAPSHOT_AWS_FORCE_PATH_STYLE` | No | `true` to address buckets as `endpoint/bucket/key` instead of `bucket.endpoint/key` |
+| `SNAPSHOT_AWS_INSECURE_SKIP_VERIFY` | No | `true` to skip TLS certificate verification for the custom endpoint |
 | `SNAPSHOT_CLOUD_PREFIX` | No | Key prefix in the bucket (e.g. `snapshots/`) |
 
 ### Authentication Methods
@@ -278,6 +280,7 @@ Any object store that speaks the S3 API works with the `s3` provider. Two extra 
 
 - `endpoint` points the hub at the store's S3 gateway instead of Amazon S3.
 - `forcePathStyle` addresses buckets as `https://endpoint/bucket/key`. Most on-prem stores need this unless wildcard DNS is configured for `bucket.endpoint`.
+- `insecureSkipVerify` disables TLS certificate verification for the endpoint. Set it when the store's certificate is signed by a private CA and the hub fails with `x509: certificate signed by unknown authority`. It applies only to the S3 endpoint, not to the STS call.
 
 `region` is used only for request signing. When `endpoint` is set and `region` is empty, the hub uses `us-east-1`, which is the default region on StorageGRID, ECS and MinIO. Set it explicitly if the store is configured with a different region name.
 
