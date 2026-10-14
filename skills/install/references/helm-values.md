@@ -384,8 +384,9 @@ value to every container. Levels, least verbose first: `error`, `warning` (defau
 `debug`, `trace`.
 
 `trace` is for diagnosing a specific problem, not for running a deployment. It adds a
-per-request narrative of authentication and authorization, including the decoded OIDC
-`id_token` and `access_token` claim payloads, and the resolved role, capabilities and
-namespace scope for each request. Those claims carry identity data such as subject, email,
-name and group membership, so on a `trace` deployment that data reaches the container logs
-and anything collecting them. Turn it on to answer a question, then turn it back down.
+per-request narrative of authentication and authorization: the resolved role, capabilities
+and namespace scope, and from the OIDC tokens the subject, issuer, audience, the names of
+the claims present and the value of the configured roles claim. That means the subject
+identifier and the caller's group memberships reach the container logs and anything
+collecting them. Token payloads are not logged in full, and neither are signatures.
+Turn it on to answer a question, then turn it back down.
