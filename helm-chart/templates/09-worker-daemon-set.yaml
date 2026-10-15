@@ -93,6 +93,11 @@ spec:
           {{- if .Values.tap.resourceGuard.enabled }}
             - -enable-resource-guard
           {{- end }}
+          {{- if .Values.tap.redaction.realtime.enabled }}
+            - -enable-redaction
+            - -redaction-max-scan-size
+            - '{{ .Values.tap.redaction.maxScanSize }}'
+          {{- end }}
           {{- if .Values.tap.watchdog.enabled }}
             - -enable-watchdog
           {{- end }}

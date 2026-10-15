@@ -50,6 +50,13 @@ Notices:
 - An Enterprise license-key can be added as 'license: <license>' in helm values or as `--set license=<license>` or as `LICENSE` via mounted secret (`tap.secrets`).
 - Contact us to get an Enterprise license: https://kubeshark.com/contact-us.
 {{- end }}
+{{- if or .Values.tap.redaction.realtime.enabled .Values.tap.redaction.snapshot.enabled }}
+- Sensitive-data redaction is enabled (real-time: {{ .Values.tap.redaction.realtime.enabled }}, snapshot: {{ .Values.tap.redaction.snapshot.enabled }}).
+- Redaction applies to dissected records only. Flow pcaps are not redacted.
+{{- if .Values.tap.capture.raw.enabled }}
+- Raw capture is enabled (tap.capture.raw.enabled=true): raw and TLS-decrypted pcap files, their downloads and snapshot bundles are not redacted.
+{{- end }}
+{{- end }}
 {{ if .Values.tap.ingress.enabled }}
 
 You can now access the application through the following URL:

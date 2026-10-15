@@ -34,6 +34,12 @@ tap:
       enabled: true
       storageSize: 1Gi
     dbMaxSize: 500Mi
+  redaction:
+    realtime:
+      enabled: false
+    snapshot:
+      enabled: false
+    maxScanSize: 2Mi
   delayedDissection:
     cpu: "1"
     memory: 4Gi

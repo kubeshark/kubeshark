@@ -70,6 +70,11 @@ spec:
             - -dissector-storage-class
             - '{{ $dissectorStorageClass }}'
             {{- end }}
+            {{- if .Values.tap.redaction.snapshot.enabled }}
+            - -dissector-redaction
+            - -dissector-redaction-max-scan-size
+            - '{{ .Values.tap.redaction.maxScanSize }}'
+            {{- end }}
             {{- if .Values.tap.gitops.enabled }}
             - -gitops
             {{- end }}
