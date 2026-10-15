@@ -35,6 +35,7 @@ tap:
         externalId: ""
         endpoint: ""
         forcePathStyle: false
+        insecureSkipVerify: false
       azblob:
         storageAccount: ""
         container: ""

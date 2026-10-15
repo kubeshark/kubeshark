@@ -89,6 +89,7 @@ tap:
         externalId: ""               # STS external ID
         endpoint: ""                 # Custom endpoint for S3-compatible storage
         forcePathStyle: false        # Path-style addressing for S3-compatible storage
+        insecureSkipVerify: false    # Skip TLS certificate verification for the custom endpoint
       azblob:
         storageAccount: ""
         container: ""
