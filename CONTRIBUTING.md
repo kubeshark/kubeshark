@@ -17,4 +17,4 @@ Please read and follow the guidelines below.
 * Code coverage for unit tests must not decrease.
 * Code must be usefully commented. Not only for developers on the project, but also for external users of these packages
 * When reviewing PRs, you are encouraged to use Golang's [code review comments page](https://github.com/golang/go/wiki/CodeReviewComments)
-* Project follows [Google JSON Style Guide](https://google.github.io/styleguide/jsoncstyleguide.xml) for the REST APIs that are provided.
+* Project follows [Google JSON Style Guide](https://google.github.io/styleguide/jsoncguide.html) for the REST APIs that are provided.
