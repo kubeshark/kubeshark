@@ -9,7 +9,7 @@ brew install kubeshark
 
 **Linux**:
 ```bash
-sh <(curl -Ls https://kubeshark.com/install)
+sh <(curl -Ls https://raw.githubusercontent.com/kubeshark/kubeshark/master/install.sh)
 ```
 
 **From source**:

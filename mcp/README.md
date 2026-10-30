@@ -31,7 +31,7 @@ analysis, traffic filtering, and forensic investigation. See the
 brew install kubeshark
 
 # Linux
-sh <(curl -Ls https://kubeshark.com/install)
+sh <(curl -Ls https://raw.githubusercontent.com/kubeshark/kubeshark/master/install.sh)
 
 # Windows (PowerShell)
 choco install kubeshark
