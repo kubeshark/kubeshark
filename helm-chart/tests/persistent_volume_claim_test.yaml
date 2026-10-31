@@ -1,0 +1,27 @@
+suite: persistent volume claim
+templates:
+  - templates/08-persistent-volume-claim.yaml
+tests:
+  - it: should not render a PVC by default
+    asserts:
+      - hasDocuments:
+          count: 0
+
+  - it: should default to the Filesystem volume mode accepted by Kubernetes
+    set:
+      tap.persistentStorage: true
+    asserts:
+      - isKind:
+          of: PersistentVolumeClaim
+      - equal:
+          path: spec.volumeMode
+          value: Filesystem
+
+  - it: should honour a Block volume mode override
+    set:
+      tap.persistentStorage: true
+      tap.persistentStoragePvcVolumeMode: Block
+    asserts:
+      - equal:
+          path: spec.volumeMode
+          value: Block
