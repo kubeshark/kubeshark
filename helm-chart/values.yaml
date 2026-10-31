@@ -73,7 +73,7 @@ tap:
     helmChartPath: ""
   persistentStorage: false
   persistentStorageStatic: false
-  persistentStoragePvcVolumeMode: FileSystem
+  persistentStoragePvcVolumeMode: Filesystem
   efsFileSytemIdAndPath: ""
   secrets: []
   storageLimit: 10Gi

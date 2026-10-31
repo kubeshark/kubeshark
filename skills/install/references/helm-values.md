@@ -117,7 +117,7 @@ tap:
 tap:
   persistentStorage: false           # Enable PVC for worker data
   persistentStorageStatic: false     # Static provisioning
-  persistentStoragePvcVolumeMode: FileSystem  # FileSystem or Block
+  persistentStoragePvcVolumeMode: Filesystem  # Filesystem or Block
   efsFileSytemIdAndPath: ""          # EFS file system ID (EKS)
   secrets: []                        # Additional secrets to mount
   storageLimit: 10Gi                 # Max storage per node
