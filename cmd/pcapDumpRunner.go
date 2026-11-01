@@ -104,13 +104,32 @@ func listFilesInPodDir(ctx context.Context, clientset *kubernetes.Clientset, con
 		return nil
 	}
 
+	filteredFiles, fileProcessingErrs := filterPcapFiles(pod.Pod.Name, files, cutoffTime)
+
+	pod.SrcDir = srcDir
+	pod.Files = filteredFiles
+
+	return errors.Join(fileProcessingErrs...)
+}
+
+// filterPcapFiles keeps the names a pod reported that are safe to use and, when
+// a cutoff is given, recent enough. The listing is untrusted input: a name that
+// is not a single path component would traverse out of the source dir inside
+// the pod and out of the destination dir on this host, so it is dropped here
+// rather than sanitised.
+func filterPcapFiles(podName string, files []string, cutoffTime *time.Time) ([]string, []error) {
 	var filteredFiles []string
 	var fileProcessingErrs []error
-	// Filter files based on cutoff time if provided
+
 	for _, file := range files {
+		if !isPlainFileName(file) {
+			fileProcessingErrs = append(fileProcessingErrs, fmt.Errorf("pod %s reported an unusable file name %q", podName, file))
+			continue
+		}
+
 		if cutoffTime != nil {
 			parts := strings.Split(file, "-")
-			if len(parts) < 2 {
+			if len(parts) < 2 || len(parts[len(parts)-1]) < 6 {
 				continue
 			}
 
@@ -125,18 +144,19 @@ func listFilesInPodDir(ctx context.Context, clientset *kubernetes.Clientset, con
 				continue
 			}
 		}
-		// Add file to filtered list
+
 		filteredFiles = append(filteredFiles, file)
 	}
 
-	pod.SrcDir = srcDir
-	pod.Files = filteredFiles
-
-	return errors.Join(fileProcessingErrs...)
+	return filteredFiles, fileProcessingErrs
 }
 
 // copyFileFromPod copies a single file from a pod to a local destination
 func copyFileFromPod(ctx context.Context, clientset *kubernetes.Clientset, config *rest.Config, pod *PodFileInfo, srcFile, destFile string) error {
+	if !isPlainFileName(srcFile) {
+		return fmt.Errorf("refusing to copy unusable file name %q", srcFile)
+	}
+
 	// Construct the complete path using /data, the node name, srcDir, and srcFile
 	nodeName := pod.Pod.Spec.NodeName
 	srcFilePath := filepath.Join("data", nodeName, srcDir, srcFile)
@@ -159,8 +179,9 @@ func copyFileFromPod(ctx context.Context, clientset *kubernetes.Clientset, confi
 		return fmt.Errorf("failed to initialize executor for pod %s in namespace %s: %w", pod.Pod.Name, pod.Pod.Namespace, err)
 	}
 
-	// Create the local file to write the content to
-	outFile, err := os.Create(destFile)
+	// Create the local file to write the content to. O_NOFOLLOW so a symlink
+	// planted at the destination cannot redirect the write.
+	outFile, err := createNoFollow(destFile)
 	if err != nil {
 		return fmt.Errorf("failed to create destination file: %w", err)
 	}
@@ -298,11 +319,15 @@ func copyPcapFiles(clientset *kubernetes.Clientset, config *rest.Config, destDir
 
 			// Copy files from the pod
 			for _, file := range pod.Files {
-				destFile := filepath.Join(destDir, file)
+				destFile, err := secureDestPath(destDir, file)
+				if err != nil {
+					log.Warn().Err(err).Msgf("skipping file %s reported by pod %s in namespace %s", file, pod.Pod.Name, pod.Pod.Namespace)
+					continue
+				}
 
 				// Add a timeout context for file copy
 				ctx, cancel := context.WithTimeout(context.Background(), maxTimePerFile)
-				err := copyFileFromPod(ctx, clientset, config, pod, file, destFile)
+				err = copyFileFromPod(ctx, clientset, config, pod, file, destFile)
 				cancel()
 				if err != nil {
 					log.Debug().Err(err).Msgf("error copying file %s from pod %s in namespace %s", file, pod.Pod.Name, pod.Pod.Namespace)
