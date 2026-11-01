@@ -5,7 +5,6 @@ import (
 	"bytes"
 	"context"
 	"encoding/json"
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -968,83 +967,14 @@ func mcpDownloadDir() string {
 
 // secureDownloadDest resolves the caller-supplied download destination to an
 // absolute path confined to baseDir. An empty dest falls back to the base name
-// of the Hub file path. A dest (absolute or relative) that resolves outside
-// baseDir via "../" traversal is rejected, so download_file cannot be coerced
-// (e.g. via an induced agent) into writing to arbitrary locations such as
-// ~/.ssh/authorized_keys or ~/.kube/config. See CWE-22.
-//
-// Containment is checked twice: once lexically, then again after resolving
-// symlinks, so a symlinked subdirectory (or a symlinked dest itself) inside the
-// base cannot redirect the write outside it.
+// of the Hub file path. Containment is enforced by secureDestPath, so
+// download_file cannot be coerced (e.g. via an induced agent) into writing to
+// arbitrary locations. See CWE-22.
 func secureDownloadDest(baseDir, dest, filePath string) (string, error) {
 	if dest == "" {
 		dest = path.Base(filePath)
 	}
-	absBase, err := filepath.Abs(baseDir)
-	if err != nil {
-		return "", fmt.Errorf("cannot resolve download directory: %w", err)
-	}
-	// Resolve symlinks in the base itself, so the comparison below is between
-	// real paths. The operator may legitimately point the download dir at a
-	// symlink (e.g. /tmp on macOS, which is a link to /private/tmp).
-	if resolvedBase, err := filepath.EvalSymlinks(absBase); err == nil {
-		absBase = resolvedBase
-	}
-	full := dest
-	if filepath.IsAbs(full) {
-		full = filepath.Clean(full)
-	} else {
-		full = filepath.Join(absBase, full)
-	}
-	if !pathContained(absBase, full) {
-		return "", fmt.Errorf("destination %q escapes the download directory %q", dest, absBase)
-	}
-	resolvedFull, err := resolveSymlinkedPath(full)
-	if err != nil {
-		return "", fmt.Errorf("cannot resolve destination %q: %w", dest, err)
-	}
-	if !pathContained(absBase, resolvedFull) {
-		return "", fmt.Errorf("destination %q resolves through a symlink to %q, outside the download directory %q", dest, resolvedFull, absBase)
-	}
-	return full, nil
-}
-
-// pathContained reports whether target is base itself or lies beneath it. Both
-// arguments must already be absolute and symlink-resolved.
-func pathContained(base, target string) bool {
-	rel, err := filepath.Rel(base, target)
-	if err != nil {
-		return false
-	}
-	return rel != ".." && !strings.HasPrefix(rel, ".."+string(os.PathSeparator))
-}
-
-// resolveSymlinkedPath resolves symlinks in the deepest existing ancestor of p
-// and re-appends the trailing components that do not exist yet.
-// filepath.EvalSymlinks fails outright on a path that does not exist, which is
-// the normal case for a download destination, hence the walk upwards.
-func resolveSymlinkedPath(p string) (string, error) {
-	cur := filepath.Clean(p)
-	rest := ""
-	for {
-		resolved, err := filepath.EvalSymlinks(cur)
-		if err == nil {
-			if rest == "" {
-				return resolved, nil
-			}
-			return filepath.Join(resolved, rest), nil
-		}
-		if !errors.Is(err, os.ErrNotExist) {
-			return "", err
-		}
-		parent := filepath.Dir(cur)
-		if parent == cur {
-			// Walked up to the root without finding an existing ancestor.
-			return filepath.Clean(p), nil
-		}
-		rest = filepath.Join(filepath.Base(cur), rest)
-		cur = parent
-	}
+	return secureDestPath(baseDir, dest)
 }
 
 func (s *mcpServer) callStartKubeshark(args map[string]any) (string, bool) {
