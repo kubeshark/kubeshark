@@ -88,6 +88,27 @@ func runScripts() {
 
 }
 
+// scriptIndex returns the key to store a script titled title under: the key of
+// the existing script with that title, so that syncing updates it in place, or
+// otherwise the key after the highest one in use. A script titled "New Script"
+// is never matched against existing ones and always gets a fresh key.
+func scriptIndex(scripts map[int64]misc.ConfigMapScript, title string) int64 {
+	var next, match int64
+	found := false
+	for i, v := range scripts {
+		if i >= next {
+			next = i + 1
+		}
+		if title != "New Script" && v.Title == title && (!found || i < match) {
+			match, found = i, true
+		}
+	}
+	if found {
+		return match
+	}
+	return next
+}
+
 func createScript(provider *kubernetes.Provider, script misc.ConfigMapScript) (index int64, err error) {
 	const maxRetries = 5
 	var scripts map[int64]misc.ConfigMapScript
@@ -98,17 +119,7 @@ func createScript(provider *kubernetes.Provider, script misc.ConfigMapScript) (i
 			return
 		}
 		script.Active = kubernetes.IsActiveScript(provider, script.Title)
-		index = 0
-		if script.Title != "New Script" {
-			for i, v := range scripts {
-				if index <= i {
-					index = i + 1
-				}
-				if v.Title == script.Title {
-					index = int64(i)
-				}
-			}
-		}
+		index = scriptIndex(scripts, script.Title)
 		scripts[index] = script
 
 		log.Info().Str("title", script.Title).Bool("Active", script.Active).Int64("Index", index).Msg("Creating script")
