@@ -112,6 +112,12 @@ expires the server reports a clear `401 ... token expired/invalid` message — r
 and restart. Proxy mode (default, with kube access) mints the `kubeshark-cli`
 token automatically and **auto-renews** it, so long-running sessions don't expire.
 
+Hub requests follow redirects only within the original origin (scheme, hostname,
+and effective port). Cross-origin redirects, including HTTPS-to-HTTP downgrades,
+fail before sending Hub credentials or tool-call bodies to the destination.
+Use the final Hub URL with `--url` rather than an address that redirects to another
+origin. SSO redirects (302/303) still return an authentication-required response.
+
 #### With Destructive Operations
 
 ```json
