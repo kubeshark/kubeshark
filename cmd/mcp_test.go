@@ -396,6 +396,7 @@ func TestMCP_RunLoop_MessageSize(t *testing.T) {
 		{"LF", "\n"},
 		{"CRLF", "\r\n"},
 		{"EOF", ""},
+		{"bare CR at EOF", "\r"},
 	}
 	for _, size := range sizes {
 		for _, ending := range endings {
@@ -403,7 +404,12 @@ func TestMCP_RunLoop_MessageSize(t *testing.T) {
 				prefix := `{"jsonrpc":"2.0","id":1,"method":"ping","params":"`
 				suffix := `"}`
 				input := prefix + strings.Repeat("A", size.size-len(prefix)-len(suffix)) + suffix + ending.text
-				if ending.text != "" {
+				terminated := strings.HasSuffix(ending.text, "\n")
+				messageSize := size.size
+				if !terminated {
+					messageSize += len(ending.text)
+				}
+				if terminated {
 					input += `{"jsonrpc":"2.0","id":2,"method":"ping"}` + "\n"
 				}
 				output := &bytes.Buffer{}
@@ -415,14 +421,14 @@ func TestMCP_RunLoop_MessageSize(t *testing.T) {
 				if err := decoder.Decode(&first); err != nil {
 					t.Fatalf("missing first response: %v", err)
 				}
-				if size.size > limit {
+				if messageSize > limit {
 					if first.JSONRPC != "2.0" || first.ID != nil || first.Error == nil || first.Error.Code != -32600 {
 						t.Fatalf("expected oversized-message error with null ID, got %+v", first)
 					}
 				} else if first.ID != float64(1) || first.Error != nil || first.Result == nil {
 					t.Fatalf("valid boundary-sized ping failed: %+v", first)
 				}
-				if ending.text != "" {
+				if terminated {
 					var next jsonRPCResponse
 					if err := decoder.Decode(&next); err != nil {
 						t.Fatalf("missing response to subsequent ping: %v", err)

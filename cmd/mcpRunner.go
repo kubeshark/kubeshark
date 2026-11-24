@@ -410,8 +410,8 @@ func (s *mcpServer) run() {
 			for err == bufio.ErrBufferFull {
 				_, err = reader.ReadSlice('\n')
 			}
-		} else {
-			line = bytes.TrimSuffix(line, []byte("\n"))
+		} else if bytes.HasSuffix(line, []byte("\n")) {
+			line = line[:len(line)-1]
 			line = bytes.TrimSuffix(line, []byte("\r"))
 		}
 
