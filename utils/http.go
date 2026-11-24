@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"net/http"
+	"net/url"
 	"strings"
 	"time"
 )
@@ -72,19 +73,37 @@ func staticToken(saToken string) func() string {
 	return func() string { return saToken }
 }
 
-// StopOnSSORedirect is an *http.Client CheckRedirect that does NOT follow
-// SSO-style auth redirects (302 Found / 303 See Other) — it returns the
-// redirect response so callers can detect auth-required via IsAuthRequired
-// instead of silently following it to an HTML login page (and, for downloads,
-// writing that page to disk). Other redirects (301/307/308) are still followed.
-func StopOnSSORedirect(req *http.Request, _ []*http.Request) error {
+// StopOnSSORedirect returns SSO responses and rejects redirects outside the Hub origin.
+func StopOnSSORedirect(req *http.Request, via []*http.Request) error {
 	if req.Response != nil {
 		switch req.Response.StatusCode {
 		case http.StatusFound, http.StatusSeeOther:
 			return http.ErrUseLastResponse
 		}
 	}
+	if len(via) == 0 || !sameOrigin(req.URL, via[0].URL) {
+		return errors.New("refusing redirect outside the Hub origin")
+	}
 	return nil
+}
+
+func sameOrigin(a, b *url.URL) bool {
+	return strings.EqualFold(a.Scheme, b.Scheme) &&
+		strings.EqualFold(a.Hostname(), b.Hostname()) &&
+		originPort(a) == originPort(b)
+}
+
+func originPort(u *url.URL) string {
+	if port := u.Port(); port != "" {
+		return port
+	}
+	if strings.EqualFold(u.Scheme, "https") {
+		return "443"
+	}
+	if strings.EqualFold(u.Scheme, "http") {
+		return "80"
+	}
+	return ""
 }
 
 // NewHubHTTPClient returns an *http.Client that authenticates to the Hub with
