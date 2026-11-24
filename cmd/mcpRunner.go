@@ -398,30 +398,41 @@ func writeErrorToStderr(format string, args ...any) {
 	fmt.Fprintf(os.Stderr, format+"\n", args...)
 }
 
+const maxMCPMessageSize = 1024 * 1024
+
 func (s *mcpServer) run() {
-	scanner := bufio.NewScanner(s.stdin)
-	// Increase buffer size for large messages
-	buf := make([]byte, 1024*1024)
-	scanner.Buffer(buf, len(buf))
-
-	for scanner.Scan() {
-		line := scanner.Text()
-		if line == "" {
-			continue
+	reader := bufio.NewReaderSize(s.stdin, maxMCPMessageSize+2)
+	for {
+		line, err := reader.ReadSlice('\n')
+		oversized := err == bufio.ErrBufferFull
+		if oversized {
+			// Drain the whole frame without retaining it or parsing its tail as a request.
+			for err == bufio.ErrBufferFull {
+				_, err = reader.ReadSlice('\n')
+			}
+		} else {
+			line = bytes.TrimSuffix(line, []byte("\n"))
+			line = bytes.TrimSuffix(line, []byte("\r"))
 		}
 
-		var req jsonRPCRequest
-		if err := json.Unmarshal([]byte(line), &req); err != nil {
-			s.sendError(nil, -32700, "Parse error", err.Error())
-			continue
+		switch {
+		case oversized || len(line) > maxMCPMessageSize:
+			s.sendError(nil, -32600, "Invalid Request", fmt.Sprintf("Message exceeds %d-byte limit", maxMCPMessageSize))
+		case len(line) > 0:
+			var req jsonRPCRequest
+			if parseErr := json.Unmarshal(line, &req); parseErr != nil {
+				s.sendError(nil, -32700, "Parse error", parseErr.Error())
+			} else {
+				s.handleRequest(&req)
+			}
 		}
 
-		s.handleRequest(&req)
-	}
-
-	// Check for scanner errors (e.g., stdin closed, read errors)
-	if err := scanner.Err(); err != nil {
-		writeErrorToStderr("[kubeshark-mcp] Scanner error: %v", err)
+		if err != nil {
+			if err != io.EOF {
+				writeErrorToStderr("[kubeshark-mcp] Input error: %v", err)
+			}
+			return
+		}
 	}
 }
 

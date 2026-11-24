@@ -133,6 +133,14 @@ Use the CLI to generate configuration:
 kubeshark mcp --mcp-config --url https://kubeshark.example.com
 ```
 
+## Stdio message limits
+
+Each JSON-RPC message must fit on one line, with at most 1 MiB (1,048,576 bytes)
+excluding its LF or CRLF terminator. An oversized line is discarded through its
+terminator (or EOF) using bounded memory. The server returns an `Invalid Request`
+error (`-32600`) with a null ID, then continues accepting subsequent messages.
+EOF and input read errors still end the session.
+
 ## Available Tools
 
 ### Traffic Analysis (All Modes)
