@@ -3,6 +3,7 @@ package cmd
 import (
 	"bytes"
 	"encoding/json"
+	"io"
 	"net/http"
 	"net/http/httptest"
 	"os"
@@ -374,6 +375,104 @@ func TestMCP_RunLoop_EmptyLines(t *testing.T) {
 	s.run()
 	if lines := strings.Split(strings.TrimSpace(output.String()), "\n"); len(lines) != 1 {
 		t.Fatalf("Expected 1 response, got %d", len(lines))
+	}
+}
+
+func TestMCP_RunLoop_MessageSize(t *testing.T) {
+	const limit = 1024 * 1024
+	sizes := []struct {
+		name string
+		size int
+	}{
+		{"below limit", limit - 1},
+		{"at limit", limit},
+		{"over limit", limit + 1},
+		{"multiple buffers", 4*limit + 17},
+	}
+	endings := []struct {
+		name string
+		text string
+	}{
+		{"LF", "\n"},
+		{"CRLF", "\r\n"},
+		{"EOF", ""},
+		{"bare CR at EOF", "\r"},
+	}
+	for _, size := range sizes {
+		for _, ending := range endings {
+			t.Run(size.name+"/"+ending.name, func(t *testing.T) {
+				prefix := `{"jsonrpc":"2.0","id":1,"method":"ping","params":"`
+				suffix := `"}`
+				input := prefix + strings.Repeat("A", size.size-len(prefix)-len(suffix)) + suffix + ending.text
+				terminated := strings.HasSuffix(ending.text, "\n")
+				messageSize := size.size
+				if !terminated {
+					messageSize += len(ending.text)
+				}
+				if terminated {
+					input += `{"jsonrpc":"2.0","id":2,"method":"ping"}` + "\n"
+				}
+				output := &bytes.Buffer{}
+				s := &mcpServer{stdin: strings.NewReader(input), stdout: output}
+				s.run()
+
+				decoder := json.NewDecoder(output)
+				var first jsonRPCResponse
+				if err := decoder.Decode(&first); err != nil {
+					t.Fatalf("missing first response: %v", err)
+				}
+				if messageSize > limit {
+					if first.JSONRPC != "2.0" || first.ID != nil || first.Error == nil || first.Error.Code != -32600 {
+						t.Fatalf("expected oversized-message error with null ID, got %+v", first)
+					}
+				} else if first.ID != float64(1) || first.Error != nil || first.Result == nil {
+					t.Fatalf("valid boundary-sized ping failed: %+v", first)
+				}
+				if terminated {
+					var next jsonRPCResponse
+					if err := decoder.Decode(&next); err != nil {
+						t.Fatalf("missing response to subsequent ping: %v", err)
+					}
+					if next.ID != float64(2) || next.Error != nil || next.Result == nil {
+						t.Fatalf("subsequent ping failed: %+v", next)
+					}
+				}
+				var extra jsonRPCResponse
+				if err := decoder.Decode(&extra); err != io.EOF {
+					t.Fatalf("unexpected extra response: %+v, error: %v", extra, err)
+				}
+			})
+		}
+	}
+}
+
+func TestMCP_RunLoop_RepeatedOversizedMessages(t *testing.T) {
+	oversized := strings.Repeat("A", 4*1024*1024) + "\n"
+	input := oversized + oversized + "invalid\n" + `{"jsonrpc":"2.0","id":3,"method":"ping"}` + "\n"
+	output := &bytes.Buffer{}
+	s := &mcpServer{stdin: strings.NewReader(input), stdout: output}
+	s.run()
+
+	decoder := json.NewDecoder(output)
+	for _, code := range []int{-32600, -32600, -32700} {
+		var response jsonRPCResponse
+		if err := decoder.Decode(&response); err != nil {
+			t.Fatalf("missing error response: %v", err)
+		}
+		if response.ID != nil || response.Error == nil || response.Error.Code != code {
+			t.Fatalf("expected error code %d with null ID, got %+v", code, response)
+		}
+	}
+	var pong jsonRPCResponse
+	if err := decoder.Decode(&pong); err != nil {
+		t.Fatalf("missing response to subsequent ping: %v", err)
+	}
+	if pong.ID != float64(3) || pong.Error != nil || pong.Result == nil {
+		t.Fatalf("subsequent ping failed: %+v", pong)
+	}
+	var extra jsonRPCResponse
+	if err := decoder.Decode(&extra); err != io.EOF {
+		t.Fatalf("unexpected extra response: %+v, error: %v", extra, err)
 	}
 }
 
